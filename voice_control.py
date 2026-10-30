@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import re
 import threading
+import time
 from pathlib import Path
 from collections.abc import Callable
 
@@ -58,6 +59,43 @@ def speech_to_local_command(text: str) -> str | None:
     }
     # Deliberately exclude arbitrary file paths, programs, shell and GPT.
     return exact.get(words)
+
+
+class WakeWordGate:
+    """Explicit wake name for continuous listening, never a microphone mode.
+
+    A standalone 'Ehi Jarvis' arms exactly one subsequent utterance, for up to
+    10 seconds. Speech without a wake name is ignored as a command. During
+    manual dictation it is text, except recognized wake commands.
+    """
+
+    def __init__(self, *, timeout: float = 10.0,
+                 clock: Callable[[], float] = time.monotonic):
+        self.timeout = timeout
+        self.clock = clock
+        self.armed_until = 0.0
+
+    def reset(self) -> None:
+        self.armed_until = 0.0
+
+    def route(self, speech: str, *, dictation_active: bool = False) -> tuple[str, str]:
+        if not isinstance(speech, str) or not speech.strip():
+            return "ignored", ""
+        spoken = " ".join(speech.casefold().strip(" ,.!?").split())
+        for name in ("ehi jarvis", "hey jarvis", "jarvis"):
+            if spoken == name:
+                self.armed_until = self.clock() + self.timeout
+                return "wake", ""
+            if spoken.startswith(name + " "):
+                self.reset()
+                return "command", spoken[len(name):].strip()
+        if self.clock() < self.armed_until:
+            self.reset()
+            return "command", spoken
+        self.reset()
+        if dictation_active:
+            return "dictation", speech
+        return "ignored", ""
 
 
 class VoiceController:
