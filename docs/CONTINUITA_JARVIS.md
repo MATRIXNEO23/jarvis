@@ -213,3 +213,19 @@ Documentazione della feature: [docs/SECOND_BRAIN.md](https://github.com/MATRIXNE
 **Privacy:** salvataggio persistente solo dopo opt-in; SQLite locale non cifrato, nel profilo Windows; brevi estratti saranno comunque trasmessi a ChatGPT per la comprensione in modalità GPT. Vietata l'archiviazione automatica dei corpi email e di segreti. Il pulsante cancella il Second Brain, non il vecchio `tasks.db` del motore locale. Disattivare non elimina i dati già salvati. Non cancellare `%LOCALAPPDATA%\\Jarvis` durante i test.
 
 **Test fisico ancora da fare**: memoria a breve su due frasi, chiusura/riapertura e recupero di informazioni precedenti, azioni effettivamente eseguite, azzeramento dopo cancellazione, nessun riavvio di azioni vecchie. Nessuna email reale in questo test.
+
+
+## 13. Adattamento vocale Vosk leggero — ramo sperimentale (31 ottobre 2026)
+
+L'utente ha approvato il miglioramento progressivo del riconoscimento vocale senza appesantire l'HP Pavilion i3-2100/10GB RAM, mantenendo Vosk offline, nessuna API a pagamento, nessun secondo modello caricato continuamente, nessun cambio automatico della modalità microfono.
+
+**Sviluppo isolato:** `feature/adaptive-offline-voice`, PR [#5 draft](https://github.com/MATRIXNEO23/jarvis/pull/5), derivato dal Second Brain precedente. **Non toccare le versioni stabili già collaudate.** ZIP sperimentale [Download](https://github.com/MATRIXNEO23/jarvis/tree/main/Download).
+
+Implementazioni:
+- `adaptive_voice.py`: dizionario di correzioni approvate esplicitamente in SQLite locale `%LOCALAPPDATA%\\Jarvis\\second_brain.sqlite3`, massimo 80 correzioni, regex precompilate in RAM e un solo passaggio per frase. Nessun audio archiviato, nessun modello nuovo.
+- In `jarvis.py` pulsante **«Correggi voce...»** apre popup. Il testo Vosk dell'ultima frase è mostrato all'utente; l'utente inserisce la frase effettivamente pronunciata e preme **«Conferma correzione»**. Il modulo estrae la differenza di 1–4 parole, ad esempio «apri blocco moto» → «apri blocco note», imparando la variante del nome applicazione.
+- Applicazione della correzione **prima** del wake gate/comando locale/router GPT e in dettatura. Correzioni che cambiano wake word, verbi di comando, negazioni, conferme o riferimenti a percorsi/script sono rifiutate. Il Second Brain deve essere opt-in per conservare e applicare le correzioni.
+- Pulsante separato per cancellare il solo dizionario correzioni e aggiornamento di `SecondBrain.clear_all` per cancellarle quando si cancella tutta la memoria. Disattivare Second Brain sospende l'applicazione delle correzioni e non cancella i dati salvati.
+- Test `tests/test_adaptive_voice.py` per persistenza, differenza tra frasi, sicurezza, compatibilità Windows/Ubuntu, limite dizionario, non riattivazione dei comandi per effetto di dati pregressi.
+
+**Stato e limiti:** il riconoscitore acustico Vosk resta invariato, non c'è ancora VAD/denoise avanzato, Whisper o training continuo. Questo è un **adattatore testuale controllato**. Prima di dire che «il microfono impara», chiarire sempre che viene migliorato il testo riconosciuto grazie alle correzioni esplicite dell'utente. È necessario un test fisico sul Pavilion per misurare il vantaggio e il costo CPU. La build non è automaticamente approvata all'adozione. Guida [docs/VOCE_ADATTIVA.md](https://github.com/MATRIXNEO23/jarvis/blob/feature/adaptive-offline-voice/docs/VOCE_ADATTIVA.md).
