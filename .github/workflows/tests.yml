@@ -1,14 +1,20 @@
-name: Jarvis local engine tests
+name: Jarvis unit and GPT protocol checks
 
 on:
   push:
     branches: [main]
     paths:
       - '**.py'
+      - '**.mjs'
+      - '**.ps1'
+      - '**.bat'
       - '.github/workflows/tests.yml'
   pull_request:
     paths:
       - '**.py'
+      - '**.mjs'
+      - '**.ps1'
+      - '**.bat'
       - '.github/workflows/tests.yml'
 
 permissions:
@@ -16,7 +22,7 @@ permissions:
 
 jobs:
   unit:
-    name: Python tests
+    name: Python and Node checks (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -27,7 +33,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Syntax check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+      - name: Python syntax
         run: python -m compileall -q .
-      - name: Unit tests
+      - name: GPT JavaScript syntax
+        run: node --check gpt_bridge.mjs
+      - name: Unit tests (no external login)
         run: python -m unittest discover -s tests -v
+      - name: PowerShell setup syntax (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'installa_gpt.ps1'), [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | Out-String | Write-Host
+            exit 1
+          }
