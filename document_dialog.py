@@ -32,7 +32,12 @@ class DocumentDialog:
     def _normalise(phrase: str) -> str:
         if not isinstance(phrase, str):
             return ""
-        return " ".join(re.sub(r"[.,!?;:]+", " ", phrase.casefold()).split())
+        words = " ".join(re.sub(r"[.,!?;:]+", " ", phrase.casefold()).split())
+        for prefix in ("ehi jarvis ", "hey jarvis ", "jarvis "):
+            if words.startswith(prefix):
+                words = words[len(prefix):]
+                break
+        return words
 
     def begin(self, document_id: str, document_name: str, *,
               dirty: bool, saved_path: str | None = None) -> DialogResponse:
