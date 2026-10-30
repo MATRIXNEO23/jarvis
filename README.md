@@ -34,7 +34,7 @@ La progettazione **GPT-first + esecutore locale controllato + funzioni offline**
 - [x] **Interfaccia GPT:** Connetti ChatGPT, Scollega account, Chiedi a GPT, interruttore ON/OFF manuale; il tasto ON **non** equivale a una sessione OAuth connessa.
 - [x] **Verifiche statiche e protocollo:** test Windows/Linux Python, sintassi Node e PowerShell; [smoke test Windows del kit GPT e del dialogo con il processo superato](https://github.com/MATRIXNEO23/jarvis/actions/runs/41087321055). Questo **non** verifica un login reale al piano ChatGPT.
 - [x] **Primo login e risposta GPT sul Pavilion (30/10/2026):** l'utente ha confermato SDK installato, stato «connesso» e risposta pertinente ricevuta. Restano da testare riavvio, riconnessione, quote e consumi.
-- [x] **Prima versione pianificatore GPT -> strumenti locali:** pulsante «Pianifica attività», proposta di massimo 5 passi con rigida lista di strumenti consentiti, anteprima, approvazione esplicita, annullamento fra passi e test CI. **Non ancora provato sul Pavilion**. Le risposte al pulsante «Chiedi a GPT» continuano a essere solo testo.
+- [x] **Prima versione pianificatore GPT -> strumenti locali:** pulsante «Pianifica attività», proposta di massimo 5 passi con rigida lista di strumenti consentiti, anteprima, approvazione esplicita, annullamento fra passi e test CI. **Non ancora provato sul Pavilion**. Le risposte al pulsante «Chiedi a GPT» continuano a essere solo testo. Correzione successiva: arresto ai confini dei passi quando Jarvis viene chiuso, GPT disattivato/scollegato o l'autorizzazione revocata; test automatici Windows/Linux [verificati](https://github.com/MATRIXNEO23/jarvis/actions/runs/41096466572). Un passo gia iniziato non viene forzatamente interrotto.
 - [ ] Comandi vocali, apprendimento procedure, TTS, tray, ricerca web, automazioni e packaging Windows.
 
 ## Primo test del pianificatore (dopo l'aggiornamento dello ZIP)
@@ -44,6 +44,7 @@ La progettazione **GPT-first + esecutore locale controllato + funzioni offline**
 3. Verifica che GPT sia connesso. Premi **Pianifica attività**, quindi scrivi, per esempio: `Apri la calcolatrice e controlla quanta RAM ho disponibile`.
 4. Esamina l'anteprima. Premi **Approva ed esegui** solo se i passi corrispondono a ciò che desideri. Puoi usare **Annulla** per scartare il piano prima dell'esecuzione.
 5. Il programma non elimina, scrive o modifica file e non esegue comandi shell attraverso questo pianificatore. Sono supportati solo i comandi già implementati dall'esecutore locale.
+6. Per provare l'arresto: approva un piano innocuo di più passi e premi «Annulla», oppure disattiva GPT o chiudi Jarvis durante l'esecuzione. Verifica che non partano passi successivi. La singola operazione già iniziata può terminare prima che il blocco abbia effetto.
 
 ## Uso della versione alpha
 
