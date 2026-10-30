@@ -72,6 +72,7 @@ class LocalEngine:
             "• apri blocco note\n"
             "• apri calcolatrice\n"
             "• apri esplora file\n"
+            "• apri disco locale C\n"
             "• apri download\n"
             "• apri browser\n"
             "• cerca nel browser TESTO\n"
@@ -109,6 +110,8 @@ class LocalEngine:
                 action, message = "open_calculator", self._open_app(["calc.exe"], "Calcolatrice")
             elif cmd in ("apri esplora file", "apri esplora risorse"):
                 action, message = "open_explorer", self._open_app(["explorer.exe"], "Esplora file")
+            elif cmd in ("apri disco locale c", "apri unità c", "apri unita c"):
+                action, message = "open_drive_c", self._open_drive_c()
             elif cmd in ("apri download", "apri cartella download"):
                 action, message = "open_downloads", self._open_downloads()
             elif cmd in ("apri browser", "apri il browser", "apri browser predefinito"):
