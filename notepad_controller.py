@@ -37,12 +37,19 @@ class NotepadSession:
     edit: int
     process: object
     saved_path: Path | None = None
+    original_title: str = ""
 
 
 def _class_of(user32, hwnd: int) -> str:
     name = ctypes.create_unicode_buffer(128)
     user32.GetClassNameW(wintypes.HWND(hwnd), name, len(name))
     return name.value
+
+
+def _title_of(user32, hwnd: int) -> str:
+    title = ctypes.create_unicode_buffer(260)
+    user32.GetWindowTextW(wintypes.HWND(hwnd), title, len(title))
+    return title.value.lstrip("* ").strip()
 
 
 def _pid_of(user32, hwnd: int) -> int:
@@ -64,6 +71,10 @@ class ClassicNotepadBridge:
         u.IsWindow.restype = wintypes.BOOL
         u.GetClassNameW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
         u.GetClassNameW.restype = ctypes.c_int
+        u.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+        u.GetWindowTextW.restype = ctypes.c_int
+        u.IsChild.argtypes = [wintypes.HWND, wintypes.HWND]
+        u.IsChild.restype = wintypes.BOOL
         u.GetWindowThreadProcessId.argtypes = [
             wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
         u.GetWindowThreadProcessId.restype = wintypes.DWORD
@@ -121,7 +132,12 @@ class ClassicNotepadBridge:
             found = self._find_window(u, process.pid)
             if found:
                 hwnd, edit = found
-                return NotepadSession(uuid4().hex, process.pid, hwnd, edit, process)
+                title = _title_of(u, hwnd)
+                if not title:
+                    raise NotepadUnavailable(
+                        "Non riesco a identificare in sicurezza il titolo del documento.")
+                return NotepadSession(uuid4().hex, process.pid, hwnd, edit,
+                                      process, original_title=title)
             time.sleep(0.12)
         raise NotepadUnavailable(
             "Non riesco a controllare in sicurezza il Blocco note aperto. "
@@ -135,7 +151,9 @@ class ClassicNotepadBridge:
                 or _pid_of(u, note.hwnd) != note.pid
                 or _pid_of(u, note.edit) != note.pid
                 or _class_of(u, note.hwnd) != "Notepad"
-                or _class_of(u, note.edit) != "Edit"):
+                or _class_of(u, note.edit) != "Edit"
+                or not u.IsChild(wintypes.HWND(note.hwnd), wintypes.HWND(note.edit))
+                or _title_of(u, note.hwnd) != note.original_title):
             raise NotepadUnavailable(
                 "La finestra Blocco note associata a questo documento è cambiata. "
                 "Nessuna azione eseguita.")
