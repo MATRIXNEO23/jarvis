@@ -58,6 +58,14 @@ class LocalEngineTests(TestCase):
         self.assertEqual(result.status, "completed")
         popen.assert_called_once_with(["notepad.exe"], close_fds=True, shell=False)
 
+    def test_open_local_drive_c_is_fixed_and_has_no_shell(self):
+        self.engine.windows = True
+        with patch("local_engine.subprocess.Popen") as popen:
+            result = self.engine.execute("apri disco locale c")
+        self.assertEqual(result.status, "completed")
+        popen.assert_called_once_with(
+            ["explorer.exe", "C:\\"], close_fds=True, shell=False)
+
     def test_open_default_browser_no_shell(self):
         self.engine.windows = True
         with patch("local_engine.webbrowser.open", return_value=True) as browser:
