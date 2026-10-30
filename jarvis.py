@@ -7,6 +7,9 @@ GPT requires the official SDK and an explicit sign-in.
 from __future__ import annotations
 
 import queue
+import json
+import re
+import sqlite3
 from conversation_memory import ConversationMemory
 from second_brain import SecondBrain, BrainError
 from desktop_dictation import DesktopDictation, dictation_voice_action
@@ -145,6 +148,61 @@ def main() -> None:
         output.insert("end", text + "\n\n")
         output.see("end")
         output.configure(state="disabled")
+
+    def memory_status_refresh(note: str = "") -> None:
+        if durable_brain is None or not memory_enabled.get():
+            memory_status.set(note or
+                "Second Brain: solo memoria breve in RAM; archivio locale non attivo.")
+            return
+        try:
+            turns, completed = durable_brain.stats()
+            memory_status.set(
+                f"Second Brain locale attivo: {turns} scambi, {completed} operazioni verificate."
+                + (" " + note if note else ""))
+        except (OSError, sqlite3.Error, ValueError) as exc:
+            memory_status.set("Second Brain: errore di lettura: " + str(exc)[:85])
+
+    def remember_exchange(user: str, reply: str, kind: str = "chat") -> None:
+        if re.search(r"\\b(password|passphrase|token|pin|codice otp)\\b",
+                     user + " " + reply, re.I):
+            return
+        conversation_memory.remember(user, reply, kind)
+        if durable_brain is not None and memory_enabled.get():
+            try:
+                durable_brain.remember_turn(user, reply, kind)
+                memory_status_refresh()
+            except (OSError, sqlite3.Error, BrainError) as exc:
+                memory_status.set("Memoria locale non scritta: " + str(exc)[:95])
+
+    def remember_completed_action(action_id: str, application: str,
+                                  summary: str, receipt_id: str,
+                                  *, filename: str = "", folder: str = "") -> None:
+        if durable_brain is None or not memory_enabled.get():
+            return
+        metadata = {}
+        if filename:
+            metadata["file_name"] = filename[:140]
+        if folder:
+            metadata["folder"] = folder[:140]
+        try:
+            durable_brain.record_completed_action(
+                action_id, application, summary,
+                receipt_id=receipt_id, metadata=metadata, verified=True)
+            memory_status_refresh()
+        except (OSError, sqlite3.Error, BrainError) as exc:
+            memory_status.set("Ricevuta non registrata: " + str(exc)[:90])
+
+    def recent_memory_for_gpt(spoken: str) -> str:
+        short = conversation_memory.context(max_chars=360)
+        if durable_brain is None or not memory_enabled.get():
+            return short
+        try:
+            long = durable_brain.prompt_context(spoken, budget=540)
+        except (OSError, sqlite3.Error, BrainError) as exc:
+            memory_status.set("Ricerca memoria non disponibile: " + str(exc)[:80])
+            return short
+        return json.dumps({"breve": json.loads(short),
+                           "permanente": json.loads(long)}, ensure_ascii=False)
 
     def display_status(state: dict) -> None:
         nonlocal active_gpt, conversation_epoch
