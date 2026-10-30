@@ -1,5 +1,15 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA PROVA ISOLATA — CONVERSAZIONE GPT E DOCUMENTI
+
+**[SCARICA LO ZIP SPERIMENTALE CON GPT CONVERSAZIONALE E BLOCCO NOTE](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/gpt-conversazione-documenti.zip)**
+
+Questa versione aggiunge **Conversazione continua GPT** (senza ripetere «Ehi Jarvis»), risposte vocali e gestione assistita di **nuovi documenti in Blocco note classico**: GPT prepara il testo, Jarvis tenta di inserirlo, chiede se salvare e chiudere, non salvare oppure annullare, e accetta la scelta a voce. Permette un nuovo file `.txt` sul Desktop, in Documenti o Download, per esempio **«sul desktop come poesia di Venezia»**. I file esistenti non vengono mai sovrascritti. La versione è **solo di prova: i test automatici non verificano la reale automazione di Blocco note sul Pavilion**. [Funzioni, limiti e prove necessarie](https://github.com/MATRIXNEO23/jarvis/blob/feature/gpt-conversazione-documenti/docs/CONVERSAZIONE_GPT_DOCUMENTI.md).
+
+**Installazione sul PC:** chiudi Jarvis; estrai lo ZIP in **un'altra cartella**, senza sostituire la precedente, avvia `avvia_jarvis.bat`. Non reinstallare Vosk né il DevKit GPT se sono già presenti. Non cancellare `%LOCALAPPDATA%\\Jarvis`. Il microfono rimane sempre **spento all'avvio**: per provare seleziona manualmente «Conversazione continua GPT», con ChatGPT collegato, e usa documenti di prova non importanti.
+
+**Mantieni anche la versione vocale precedente funzionante:** è ancora disponibile nei link sottostanti. Nessun merge automatico nella versione principale.
+
 **[NUOVA PROVA — JARVIS CON BROWSER, DETTATURA, «EHI JARVIS» E RISPOSTE A VOCE](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/voice-browser-dictation.zip)**
 
 **AGGIORNAMENTO DETTATURA (30/10/2026):** il primo test reale sul Pavilion ha mostrato che Jarvis riconosceva le parole ma Windows rifiutava l'inserimento. La correzione modifica la struttura `SendInput` per Windows 64 bit e aggiunge test specifici: [CI Windows/Linux superata](https://github.com/MATRIXNEO23/jarvis/actions/runs/41129730526). **Da confermare nuovamente sul Pavilion.**
