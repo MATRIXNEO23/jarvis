@@ -103,10 +103,11 @@ def main() -> None:
         output.configure(state="disabled")
 
     def display_status(state: dict) -> None:
-        nonlocal active_gpt
+        nonlocal active_gpt, conversation_epoch
         connected = state.get("status") == "connected" and state.get("sharing") is True
         active_gpt = connected
         if not connected:
+            conversation_epoch += 1
             planner_abort_event.set()
         if not gpt_enabled.get():
             gpt_status.set("GPT: disattivato manualmente")
@@ -144,7 +145,7 @@ def main() -> None:
 
         def worker() -> None:
             try:
-                timeout = 600 if action == "sign_in" else 180 if action == "ask" else 40
+                timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
                 sdk_action = "ask" if action == "conversation" else action
                 epoch = params.pop("epoch", None) if action == "conversation" else None
                 result = service.call(sdk_action, timeout=timeout, **params)
@@ -154,7 +155,7 @@ def main() -> None:
                     output_queue.put(("gpt_ok", action, result))
             except Exception as exc:
                 if action == "conversation":
-                    output_queue.put(("conversation_error", str(exc)[:220]))
+                    output_queue.put(("conversation_error", params.get("epoch"), str(exc)[:220]))
                 else:
                     output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
@@ -353,7 +354,7 @@ def main() -> None:
         run_gpt("ask", prompt=message)
 
     def poll() -> None:
-        nonlocal busy_local, busy_gpt, active_gpt
+        nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch
         if closing:
             return
         try:
@@ -468,8 +469,9 @@ def main() -> None:
                                     "il salvataggio automaticamente. Non lo chiuderò.")
                 elif kind == "conversation_error":
                     busy_gpt = False
-                    write_line("Conversazione GPT: " + data[0])
-                    if voice_mode.get() == GPT_CONVERSATION:
+                    epoch, reason = data
+                    if epoch == conversation_epoch and voice_mode.get() == GPT_CONVERSATION:
+                        write_line("Conversazione GPT: " + reason)
                         speak_result("GPT non è disponibile. Puoi riprovare.")
                 elif kind == "gpt_ok":
                     action, result = data
@@ -522,11 +524,13 @@ def main() -> None:
                     else:
                         write_line("URL di autenticazione inatteso: apertura bloccata.")
                 elif event.get("event") == "fatal":
+                    conversation_epoch += 1
                     planner_abort_event.set()
                     if gpt_enabled.get():
                         gpt_status.set("GPT: modulo non pronto.")
                         write_line("GPT: " + str(event.get("error", "errore")))
                 elif event.get("event") == "stopped" and gpt_enabled.get() and not busy_gpt:
+                    conversation_epoch += 1
                     planner_abort_event.set()
                     active_gpt = False
                     gpt_status.set("GPT: servizio arrestato.")
