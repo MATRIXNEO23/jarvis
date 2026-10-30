@@ -303,14 +303,18 @@ def main() -> None:
             refresh_buttons()
 
     def toggle_memory() -> None:
-        nonlocal durable_brain
+        nonlocal durable_brain, speech_lexicon
         desired = bool(memory_enabled.get())
         previous = bool(settings["memory_enabled"])
         candidate = durable_brain
-        if desired and candidate is None:
+        candidate_lexicon = speech_lexicon
+        if desired:
             try:
-                candidate = SecondBrain()
-            except (OSError, sqlite3.Error, ValueError) as exc:
+                if candidate is None:
+                    candidate = SecondBrain()
+                if candidate_lexicon is None:
+                    candidate_lexicon = SpeechCorrections(candidate.path)
+            except (OSError, sqlite3.Error, ValueError, SpeechCorrectionError) as exc:
                 memory_enabled.set(previous)
                 memory_status_refresh("Impossibile attivare: " + str(exc)[:90])
                 return
@@ -323,6 +327,7 @@ def main() -> None:
             memory_status_refresh("Impossibile salvare l'opzione: " + str(exc)[:90])
             return
         durable_brain = candidate if desired else None
+        speech_lexicon = candidate_lexicon if desired else None
         memory_status_refresh(
             "La memoria già salvata resta sul PC fino a cancellazione esplicita."
             if not desired else "Memoria attiva anche dopo il prossimo riavvio.")
@@ -330,7 +335,7 @@ def main() -> None:
     def clear_saved_memory() -> None:
         if not messagebox.askyesno(
             "Cancella il Second Brain",
-            "Eliminare gli scambi e le operazioni archiviate localmente da Lia? "
+            "Eliminare scambi, operazioni e correzioni vocali archiviate da Lia? "
             "Questa operazione non può essere annullata. "
             "La cronologia delle attività del motore locale resta separata.",
             parent=root,
@@ -340,7 +345,9 @@ def main() -> None:
             target = durable_brain if durable_brain is not None else SecondBrain()
             target.clear_all()
             conversation_memory.clear()
-            memory_status_refresh("Memoria salvata cancellata su richiesta.")
+            if speech_lexicon is not None:
+                speech_lexicon.reload()
+            memory_status_refresh("Memoria e correzioni vocali eliminate su richiesta.")
         except (OSError, sqlite3.Error, ValueError) as exc:
             memory_status.set("Cancellazione memoria non riuscita: " + str(exc)[:100])
 
