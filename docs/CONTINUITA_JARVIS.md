@@ -5,6 +5,8 @@
 **Branch stabile/documentazione:** `main`  
 **Principio:** non considerare una funzione completata senza test automatici e verifica effettiva sul Pavilion quando necessaria.
 
+> **Aggiornamento alla ripresa, 30 ottobre 2026:** il blocco dei test della ricerca web descritto sotto è stato **corretto**. La nuova branch sperimentale ora include anche la chiamata «Ehi Jarvis» in ascolto continuo e la scelta della voce offline Windows con risposte parlate. Le nuove funzioni **non sono state ancora testate fisicamente sul Pavilion**. Lo storico sottostante rimane per tracciabilità; per lo stato attuale leggere la sezione finale.
+
 ## 1. Dove siamo arrivati
 
 Jarvis è un assistente Windows 10 64 bit progettato per HP Pavilion i3-2100, 10 GB RAM, disco HDD; zero costi aggiuntivi, niente API a consumo. Si usa ChatGPT tramite il collegamento già configurato (SDK/DevKit ufficiale) e i comandi locali devono funzionare anche senza GPT.
@@ -82,3 +84,35 @@ I link per il download DEVONO restare **nella pagina GitHub della repository**, 
 7. Mantieni i branch di prova isolati e decidi il merge solo dopo collaudo e consenso.
 
 **Stato della sessione:** l'utente ha richiesto una pausa e di salvare il file di continuità; **non procedere con altre modifiche funzionali o con merge** finché non torna a chiedere di continuare.
+
+## 7. Aggiornamento sviluppo e punto di ripresa dopo la pausa
+
+**Data:** 30/10/2026, dopo il rientro dell'utente. **Branch di lavoro isolato:** feature/voice-browser-dictation. Non è stato fatto alcun merge verso main né verso la versione vocale già collaudata.
+
+### Test fallito nella sessione precedente: risolto
+
+Nel file tests/test_action_planner.py il caso di input non valido ora utilizza una vera nuova riga, anziché i due caratteri letterali backslash+n. La validazione applicativa mantiene il rifiuto dei caratteri di controllo: nessuna policy di sicurezza è stata allentata. [Run corretta, success](https://github.com/MATRIXNEO23/jarvis/actions/runs/41125847511).
+
+### Funzioni sperimentali aggiunte durante questa ripresa
+
+- In **Ascolto continuo**, i comandi richiedono il nome «Ehi Jarvis» o «Jarvis»; «Ehi Jarvis» isolato attiva la finestra di **un comando successivo entro 10 secondi** senza cambiare la modalità del microfono. Il tempo riguarda soltanto l'attesa del comando, non il microfono. In Premi per parlare, il pulsante già costituisce attivazione manuale; nessuna wake word obbligatoria.
+- Il filtro «Ehi Jarvis» distingue i comandi dal parlato libero. Quando la dettatura è attivata manualmente, il parlato comune resta testo, mentre «Ehi Jarvis, disattiva dettatura» è riconosciuto come comando.
+- Nuovo modulo **offline_tts.py**: sintesi vocale locale Windows SAPI tramite PowerShell/System.Speech, senza API a pagamento e senza modelli da scaricare. I testi sono passati tramite JSON su standard input e non interpolati nel codice eseguibile.
+- Nuova interfaccia: **Jarvis risponde a voce** (opzione separata, disabilitata di default), elenco delle voci Windows già installate, scelta voce, pulsante **Prova voce**. Risposte parlate ai comandi completati e alle risposte GPT, limite 600 caratteri per messaggio.
+- Le impostazioni tts_enabled e tts_voice sono persistenti e compatibili con il vecchio settings.json. GPT resta indipendente.
+- Durante la riproduzione audio di Jarvis, il riconoscimento ignora l'audio degli altoparlanti per evitare auto-attivazioni senza spegnere il microfono o passare in standby.
+- Documentazione e test: docs/VOCE_RISPOSTE.md, tests/test_offline_tts.py, test impostazioni e WakeWordGate.
+
+### Verifica automatica
+
+[CI completa Windows/Linux SUCCESS per revisione codice aac2bf0](https://github.com/MATRIXNEO23/jarvis/actions/runs/41126671637), inclusi i nuovi test. Aggiornamenti successivi alla documentazione non alterano la logica testata. **CI verde non equivale a collaudo reale** del motore System.Speech, voci installate, microfono Vosk, audio di ritorno o interazione con altre finestre sul Pavilion.
+
+### Prossimo intervento pratico
+
+1. Verificare che l'ultima CI della branch sia interamente verde e controllare la HEAD, soprattutto dopo modifiche alla documentazione.
+2. L'utente lavora dal PC e parla dal cellulare: la versione di prova e la versione già funzionante sono entrambe disponibili dalla [cartella Download su main](https://github.com/MATRIXNEO23/jarvis/tree/main/Download). **Mai passare soltanto un link in chat come unico canale di download.**
+3. Sul Pavilion conservare la cartella vecchia e testare la nuova ZIP in un'altra cartella. Non reinstallare Vosk se già presente, non cancellare dati LOCALAPPDATA.
+4. Collaudare elencazione di voci (specie italiana), selettore, pulsante Prova, risposta ai comandi e GPT, nessun feedback dal microfono, wake word, ricerca browser, dettatura, cambio focus, avvio in standby e comportamento con Minecraft.
+5. Non effettuare merge o adottare automaticamente la nuova versione prima del collaudo fisico e della decisione separata dell'utente.
+
+**Requisiti fissi invariati:** zero costi aggiuntivi, PC HP Pavilion i3-2100 con 10 GB RAM Windows 10, ascolto continuo sempre selezionato dall'utente e mai spostato in standby autonomamente, microfono sempre spento a ogni nuovo avvio.
