@@ -106,8 +106,10 @@ class VoiceController:
     """
 
     def __init__(self, notify: Callable[[tuple], None],
-                 model_dir: Path | None = None):
+                 model_dir: Path | None = None,
+                 ignore_audio: Callable[[], bool] | None = None):
         self.notify = notify
+        self.ignore_audio = ignore_audio
         self.model_dir = Path(model_dir) if model_dir else model_directory()
         self.mode = STANDBY
         self._lock = threading.RLock()
@@ -211,8 +213,19 @@ class VoiceController:
             with sd.RawInputStream(samplerate=16000, blocksize=4000,
                                    channels=1, dtype="int16") as stream:
                 fragments: list[str] = []
+                suppressed = False
                 while not stop.is_set() and self._is_current(generation):
                     data, overflow = stream.read(4000)
+                    # Keep the microphone open; ignore self-generated speaker audio.
+                    if self.ignore_audio and self.ignore_audio():
+                        if not suppressed:
+                            recognizer = KaldiRecognizer(model, 16000)
+                            fragments.clear()
+                            suppressed = True
+                        continue
+                    if suppressed:
+                        recognizer = KaldiRecognizer(model, 16000)
+                        suppressed = False
                     if overflow:
                         self._report("voice_status", "Audio in ritardo: parla più lentamente.", generation)
                     if recognizer.AcceptWaveform(bytes(data)):
