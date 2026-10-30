@@ -1,8 +1,8 @@
-"""Jarvis alpha — tested local commands + optional official ChatGPT connector.
+"""Jarvis alpha — local commands, optional GPT and opt-in offline voice.
 
-No speech recognition yet: the microphone always starts disabled.
-GPT is enabled in preferences by default, but requires installing the official
-SDK and explicit sign-in in the browser before it can answer.
+The microphone always starts OFF; only a user action opens an audio stream.
+The optional speech model is never loaded at application startup.
+GPT requires the official SDK and an explicit sign-in.
 """
 from __future__ import annotations
 
@@ -16,19 +16,34 @@ from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from planner_ui import open_planner
 from settings import load_settings, save_settings
+from voice_control import (VoiceController, STANDBY, PUSH_TO_TALK, CONTINUOUS,
+                           speech_to_local_command)
 
 
 def main() -> None:
     settings = load_settings()
     root = tk.Tk()
     root.title("Jarvis — alpha")
-    root.geometry("780x640")
-    root.minsize(630, 500)
+    root.geometry("790x720")
+    root.minsize(630, 560)
 
     frame = ttk.Frame(root, padding=15)
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="Jarvis", font=("Segoe UI", 17, "bold")).pack(anchor="w")
-    ttk.Label(frame, text="Microfono: SPENTO all'avvio (voce non ancora installata)").pack(anchor="w", pady=(2, 12))
+    mic_status = tk.StringVar(value="Microfono: SPENTO all'avvio")
+    ttk.Label(frame, textvariable=mic_status, wraplength=710).pack(anchor="w", pady=(2, 6))
+    voice_mode = tk.StringVar(value=STANDBY)
+    audio_controls = ttk.LabelFrame(frame, text="Voce offline — attivazione solo manuale", padding=8)
+    audio_controls.pack(fill="x", pady=(0, 9))
+    mode_buttons = []
+    for label, mode in (("Standby (spento)", STANDBY),
+                        ("Premi per parlare", PUSH_TO_TALK),
+                        ("Ascolto continuo", CONTINUOUS)):
+        button = ttk.Radiobutton(audio_controls, text=label, variable=voice_mode, value=mode)
+        button.pack(side="left", padx=(0, 9))
+        mode_buttons.append(button)
+    ptt_button = ttk.Button(audio_controls, text="Tieni premuto per parlare", state="disabled")
+    ptt_button.pack(side="left")
 
     service = GPTClient()
     output_queue: queue.Queue[tuple] = queue.Queue()
@@ -156,6 +171,26 @@ def main() -> None:
         root.destroy()
         return
 
+    voice = VoiceController(output_queue.put)
+
+    def change_voice_mode() -> None:
+        selected = voice_mode.get()
+        voice.set_mode(selected)
+        ptt_button.configure(state="normal" if selected == PUSH_TO_TALK else "disabled")
+        if selected == STANDBY:
+            mic_status.set("Microfono: SPENTO (standby)")
+        elif selected == PUSH_TO_TALK:
+            mic_status.set("Premi per parlare: microfono spento finché non tieni premuto.")
+        else:
+            mic_status.set("Ascolto continuo selezionato: avvio del microfono richiesto.")
+
+    def ptt_press(event=None) -> None:
+        if voice.press():
+            mic_status.set("Premi per parlare: attivazione del microfono...")
+
+    def ptt_release(event=None) -> None:
+        voice.release()
+
     def submit_plan() -> None:
         if not gpt_enabled.get() or not active_gpt or busy_gpt or closing:
             return
@@ -165,14 +200,15 @@ def main() -> None:
             local_execution_lock, planner_abort_event,
         )
 
-    def submit_local(event=None) -> None:
+    def submit_local(event=None, message_override: str | None = None) -> None:
         nonlocal busy_local
         if busy_local or closing:
             return
-        message = request.get().strip()
+        message = (message_override if message_override is not None else request.get()).strip()
         if not message:
             return
-        request.set("")
+        if message_override is None:
+            request.set("")
         write_line("COMANDO LOCALE > " + message)
         busy_local = True
         refresh_buttons()
@@ -207,7 +243,24 @@ def main() -> None:
         try:
             while True:
                 kind, *data = output_queue.get_nowait()
-                if kind == "local":
+                if kind == "voice_status":
+                    if voice_mode.get() != STANDBY:
+                        mic_status.set(data[0])
+                elif kind == "voice_text":
+                    spoken = str(data[0]).strip()
+                    if voice_mode.get() != STANDBY and spoken:
+                        write_line("VOCE (offline) > " + spoken)
+                        command = speech_to_local_command(spoken)
+                        if command and not busy_local:
+                            submit_local(message_override=command)
+                        elif command:
+                            write_line("Motore occupato; comando non eseguito.")
+                        elif not request.get().strip():
+                            request.set(spoken)
+                            write_line("Testo inserito: controllalo prima di eseguirlo.")
+                        else:
+                            write_line("Testo non eseguito: il campo contiene già una richiesta.")
+                elif kind == "local":
                     result = data[0]
                     busy_local = False
                     write_line(f"[{result.status}] {result.message}")
@@ -266,12 +319,19 @@ def main() -> None:
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
     plan_button.configure(command=submit_plan)
+    for button in mode_buttons:
+        button.configure(command=change_voice_mode)
+    ptt_button.bind("<ButtonPress-1>", ptt_press)
+    ptt_button.bind("<ButtonRelease-1>", ptt_release)
+    root.bind_all("<ButtonRelease-1>", ptt_release, add="+")
+    root.bind("<FocusOut>", ptt_release, add="+")
     input_box.bind("<Return>", submit_local)
 
     def close() -> None:
         nonlocal closing
         closing = True
         planner_abort_event.set()
+        voice.close()
         root.destroy()
         # Non-daemon: ensure the Node child is terminated before Python exits.
         threading.Thread(target=service.stop, daemon=False, name="jarvis-gpt-shutdown").start()
