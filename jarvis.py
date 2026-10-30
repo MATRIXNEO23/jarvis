@@ -36,14 +36,16 @@ def main() -> None:
     audio_controls = ttk.LabelFrame(frame, text="Voce offline — attivazione solo manuale", padding=8)
     audio_controls.pack(fill="x", pady=(0, 9))
     mode_buttons = []
+    mode_row = ttk.Frame(audio_controls)
+    mode_row.pack(fill="x")
     for label, mode in (("Standby (spento)", STANDBY),
                         ("Premi per parlare", PUSH_TO_TALK),
                         ("Ascolto continuo", CONTINUOUS)):
-        button = ttk.Radiobutton(audio_controls, text=label, variable=voice_mode, value=mode)
-        button.pack(side="left", padx=(0, 9))
+        button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
+        button.pack(side="left", padx=(0, 12))
         mode_buttons.append(button)
     ptt_button = ttk.Button(audio_controls, text="Tieni premuto per parlare", state="disabled")
-    ptt_button.pack(side="left")
+    ptt_button.pack(anchor="w", pady=(5, 0))
 
     service = GPTClient()
     output_queue: queue.Queue[tuple] = queue.Queue()
