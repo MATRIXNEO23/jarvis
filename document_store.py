@@ -110,7 +110,7 @@ def save_new_text(path: Path, content: str) -> Path:
     except FileExistsError as exc:
         raise DocumentSaveError("File già esistente: non sarà sovrascritto.") from exc
     try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="") as stream:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\r\n") as stream:
             stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
