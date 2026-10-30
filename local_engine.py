@@ -193,6 +193,10 @@ class LocalEngine:
         subprocess.Popen(argv, close_fds=True, shell=False)
         return label + " avviato."
 
+    def _open_drive_c(self) -> str:
+        # Fixed Windows Explorer destination. No GPT-provided paths or shell.
+        return self._open_app(["explorer.exe", "C:\\"], "Disco locale C")
+
     def _open_downloads(self) -> str:
         if not self.download_dir.is_dir():
             raise FileNotFoundError("Cartella Download non trovata.")
