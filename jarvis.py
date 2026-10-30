@@ -18,6 +18,7 @@ from tkinter import filedialog, messagebox, scrolledtext, ttk
 import webbrowser
 
 from document_dialog import DocumentDialog
+from document_language import classify_document_choice
 from document_store import destination_from_voice
 from managed_documents import ManagedDocuments
 from gpt_client import GPTClient, GPTUnavailable
@@ -293,9 +294,7 @@ def main() -> None:
         can_choose = doc_dialog.phase == "awaiting_close_choice" and not document_busy
         doc_save_button.configure(state="normal" if can_choose else "disabled")
         doc_discard_button.configure(
-            state="normal" if (can_choose or
-                doc_dialog.phase == "awaiting_discard_confirmation") and
-                not document_busy else "disabled")
+            state="normal" if can_choose else "disabled")
         doc_cancel_button.configure(state="normal" if pending else "disabled")
         choose_save_button.configure(
             state="normal" if doc_dialog.phase == "awaiting_save_destination"
@@ -394,13 +393,9 @@ def main() -> None:
         execute_document_choice(doc_dialog.reply(spoken))
 
     def press_discard_button() -> None:
-        if doc_dialog.phase == "awaiting_discard_confirmation":
-            if messagebox.askyesno(
-                "Conferma perdita modifiche",
-                "Vuoi davvero chiudere il documento senza salvare le modifiche?",
-                parent=root):
-                handle_document_confirmation("confermo uscita senza salvare")
-        elif doc_dialog.phase == "awaiting_close_choice":
+        if doc_dialog.phase == "awaiting_close_choice":
+            # The named button itself is an explicit decision after Jarvis
+            # requested a choice; no extra spoken magic phrase.
             handle_document_confirmation("chiudi senza salvare")
 
     def choose_save_destination() -> None:
@@ -534,6 +529,15 @@ def main() -> None:
                                 continue
                             if doc_dialog.phase == "executing" or document_busy:
                                 write_line("Blocco note: operazione in corso, attendi.")
+                                continue
+                            # An explicit natural phrase to discard changes
+                            # is a single authorization: do not ask twice.
+                            direct_choice = classify_document_choice(
+                                spoken, pending=False)
+                            if (doc_dialog.phase == "editing" and
+                                    direct_choice in ("save", "discard")):
+                                decision = doc_dialog.request_close_with_choice(spoken)
+                                execute_document_choice(decision)
                                 continue
                             normalized = " ".join(spoken.casefold().strip(" ,.!?").split())
                             if normalized in (
