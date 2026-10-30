@@ -99,7 +99,7 @@ def parse_conversation_intent(raw: str) -> ConversationIntent:
     if not isinstance(raw, str) or not raw.strip() or len(raw) > MAX_GPT_JSON:
         raise ConversationRejected("Risposta GPT non valida o troppo lunga.")
     raw = raw.strip()
-    fenced = re.fullmatch(r"```(?:json)?\\s*\\n(.*?)\\n```", raw,
+    fenced = re.fullmatch(r"```(?:json)?\s*\n(.*?)\n```", raw,
                           re.I | re.S)
     if fenced:
         raw = fenced.group(1).strip()
