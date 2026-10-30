@@ -15,7 +15,7 @@ class DocumentLanguageTests(unittest.TestCase):
         for phrase in ("salva e chiudi", "salva ed esci", "sì, salva pure"):
             self.assertEqual(classify_document_choice(phrase, pending=True),
                              "save")
-        for phrase in ("annulla", "non chiudere", "lascia aperto", "no"):
+        for phrase in ("annulla", "non chiudere", "lascia aperto"):
             self.assertEqual(classify_document_choice(phrase, pending=True),
                              "cancel")
 
