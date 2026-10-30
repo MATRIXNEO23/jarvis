@@ -356,7 +356,14 @@ def main() -> None:
         brain_controls, text="Cancella memoria salvata", command=clear_saved_memory)
     memory_clear_button.pack(side="right")
     ttk.Label(frame, textvariable=memory_status, wraplength=710).pack(
-        anchor="w", pady=(0, 4))
+        anchor="w", pady=(0, 2))
+    ttk.Label(
+        frame,
+        text="I ricordi restano sul PC. Se usi ChatGPT, gli estratti pertinenti "
+             "vengono inviati al modello per comprendere il contesto; "
+             "non vengono salvati i corpi completi delle email.",
+        wraplength=710
+    ).pack(anchor="w", pady=(0, 4))
 
     ttk.Separator(frame, orient="horizontal").pack(fill="x", pady=(13, 8))
     ttk.Label(frame, text="Digita un comando locale oppure una domanda per GPT").pack(anchor="w", pady=(0, 6))
