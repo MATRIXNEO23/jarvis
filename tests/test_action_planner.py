@@ -43,6 +43,22 @@ class PlannerPolicyTests(unittest.TestCase):
         self.assertIn("PIANO DA APPROVARE", parsed.preview())
         self.assertIn("apertura programma", parsed.preview())
 
+    def test_approved_browser_and_web_search(self):
+        planned = parse_plan(make_plan(step("open_browser"),
+                                       step("web_search", query="Minecraft mod italiane")))
+        self.assertEqual(planned.steps[0].command, "apri browser")
+        self.assertEqual(planned.steps[1].command,
+                         "cerca nel browser Minecraft mod italiane")
+        self.assertIn("rete", planned.preview())
+
+    def test_web_search_rejects_invalid_queries(self):
+        for query in ("", "x" * 161, "a\\nb", None):
+            with self.subTest(query=query):
+                with self.assertRaises(PlanRejected):
+                    parse_plan(make_plan(step("web_search", query=query)))
+        with self.assertRaises(PlanRejected):
+            parse_plan(make_plan(step("open_browser", url="https://evil.example")))
+
     def test_simple_search(self):
         parsed = parse_plan(make_plan(step("find_download", query="Jarvis")))
         self.assertEqual(parsed.steps[0].command, "cerca file Jarvis")
