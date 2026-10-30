@@ -7,6 +7,8 @@ GPT requires the official SDK and an explicit sign-in.
 from __future__ import annotations
 
 import queue
+from conversation_memory import ConversationMemory
+from second_brain import SecondBrain, BrainError
 from desktop_dictation import DesktopDictation, dictation_voice_action
 from conversation_router import (
     ConversationRejected, build_conversation_prompt, parse_conversation_intent,
@@ -120,6 +122,23 @@ def main() -> None:
     document_busy = False
     documents = ManagedDocuments()
     doc_dialog = DocumentDialog()
+    conversation_memory = ConversationMemory()
+    last_user_for_action = ""
+    last_user_for_document = ""
+    memory_enabled = tk.BooleanVar(value=settings["memory_enabled"])
+    memory_status = tk.StringVar(value="Second Brain: inizializzazione.")
+    memory_toggle = ttk.Checkbutton(frame, text="Second Brain locale (ricorda chat e attività)")
+    memory_clear_button = ttk.Button(frame, text="Cancella memoria salvata")
+    durable_brain: SecondBrain | None = None
+    if memory_enabled.get():
+        try:
+            durable_brain = SecondBrain()
+            memory_status.set("Second Brain: attivo (memoria locale sul PC).")
+        except (OSError, ValueError) as exc:
+            memory_enabled.set(False)
+            memory_status.set("Second Brain non disponibile: " + str(exc)[:90])
+    else:
+        memory_status.set("Second Brain: disattivato, conversazione breve solo in RAM.")
 
     def write_line(text: str) -> None:
         output.configure(state="normal")
