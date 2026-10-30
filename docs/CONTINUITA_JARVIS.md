@@ -150,3 +150,14 @@ Richiesta esplicita durante il collaudo: i pulsanti `Attiva dettatura` e `Disatt
 6. Prima di affermare «funziona sul Pavilion», attendere la conferma reale dell'utente. I test automatici da soli non bastano.
 
 **Continuità preservata.** Non introdurre API a consumo, non eliminare la vecchia build, non effettuare merge automatici.
+
+
+## 9. Nuovo requisito: conversazione GPT naturale e controllo vocale dei documenti
+
+**Richiesta confermata dall'utente:** in una modalità **Conversazione continua con GPT** selezionabile manualmente, Jarvis ascolta le frasi senza richiedere «Ehi Jarvis», distingue conversazione/risposte vocali e comandi di Windows, e **scrive direttamente il contenuto richiesto in documenti** senza dover attivare/disattivare la dettatura a ogni operazione. Può inventare testi, inserirli nel documento e, quando l'utente vuole chiudere Blocco note, chiedere **«salva e chiudi», «chiudi senza salvare» o «annulla»**. Se il file non ha nome/percorso, deve chiedere una destinazione. La chiusura senza salvare, se sono presenti modifiche, richiede una conferma esplicita ulteriore. L'utente non programma; tutta l'interazione deve poter essere vocale.
+
+**Il requisito NON è ancora disponibile nel programma installato.** Il riconoscimento continuo Vosk, il TTS SAPI e GPT sono componenti esistenti ma il router naturale, il controller di documenti e l'integrazione Blocco note devono essere sviluppati e provati.
+
+**Sviluppo isolato iniziato** in `feature/gpt-conversazione-documenti`, PR [#3 draft](https://github.com/MATRIXNEO23/jarvis/pull/3), basato sulla versione corretta `feature/voice-browser-dictation`. File nuovo `docs/CONVERSAZIONE_GPT_DOCUMENTI.md` con schema di fiducia e acceptance; `document_dialog.py` è una macchina a stati **senza effetti su file o finestre** per conferme di chiusura/salvataggio, annullamento e revoca, con test in `tests/test_document_dialog.py`. Non confondere questo kernel con una funzionalità completa dell'interfaccia.
+
+**Prossimi passi obbligatori:** validare CI; aggiungere router GPT vincolato a JSON per parlare vs. agire vs. comporre testo; inserimento testo via controller Windows in documento identificato; gestione salvataggi reali con backup/preview; nuova modalità UI manuale; risposte vocali di conferma; test automatizzati e reali sul Pavilion. Nessuna API a pagamento, merge o sostituzione della build funzionante senza consenso.
