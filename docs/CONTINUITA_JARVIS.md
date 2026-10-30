@@ -161,3 +161,15 @@ Richiesta esplicita durante il collaudo: i pulsanti `Attiva dettatura` e `Disatt
 **Sviluppo isolato iniziato** in `feature/gpt-conversazione-documenti`, PR [#3 draft](https://github.com/MATRIXNEO23/jarvis/pull/3), basato sulla versione corretta `feature/voice-browser-dictation`. File nuovo `docs/CONVERSAZIONE_GPT_DOCUMENTI.md` con schema di fiducia e acceptance; `document_dialog.py` è una macchina a stati **senza effetti su file o finestre** per conferme di chiusura/salvataggio, annullamento e revoca, con test in `tests/test_document_dialog.py`. Non confondere questo kernel con una funzionalità completa dell'interfaccia.
 
 **Prossimi passi obbligatori:** validare CI; aggiungere router GPT vincolato a JSON per parlare vs. agire vs. comporre testo; inserimento testo via controller Windows in documento identificato; gestione salvataggi reali con backup/preview; nuova modalità UI manuale; risposte vocali di conferma; test automatizzati e reali sul Pavilion. Nessuna API a pagamento, merge o sostituzione della build funzionante senza consenso.
+
+
+### Aggiornamento primo prototipo funzionale (ramo isolato, stesso giorno)
+
+Nel ramo `feature/gpt-conversazione-documenti` sono stati aggiunti:
+- `conversation_router.py`: prompt strutturato e validazione rigida dei tipi di risposta GPT: conversazione, chiarimento, comando consentito, bozza di documento e richiesta di chiusura. Blocca tool arbitrari, parametri estranei, salvataggi forzati e file scelti dal modello.
+- La modalità microfono **«Conversazione continua GPT»** è ora selezionabile manualmente in `jarvis.py` e `voice_control.py`. In questa modalità il parlato non richiede wake word, i comandi locali già noti rimangono eseguibili offline e le altre frasi vanno al DevKit ChatGPT con risposta TTS Windows. Lo stato conversazionale invalida le risposte tardive al cambio modalità o alla disconnessione.
+- `document_dialog.py`: policy separata di conferma vocale «salva e chiudi», «chiudi senza salvare», «annulla», con scelta destinazione per documenti nuovi e revoca; per ora **non agisce su file né finestre**.
+- Test nuovi per transizioni e parser; GitHub CI [run 41132795533](https://github.com/MATRIXNEO23/jarvis/actions/runs/41132795533) SUCCESS sul codice, con ulteriore verifica sul documento in corso.
+**ATTENZIONE:** quando GPT riceve una richiesta di scrittura, il programma in questo prototipo **mostra soltanto una BOZZA e dichiara che non l'ha inserita**; quando GPT riceve una richiesta di chiudere, risponde che il controllo documenti non è pronto e **non chiude nulla**. I dialoghi di salvataggio non sono ancora cablati alla GUI o a Blocco note. Non far scaricare questa branch come se la funzione completa fosse disponibile; mancano controller Windows, salvataggi verificati, backup e test Pavilion. Tenere la PR #3 in draft e il ramo vocale precedente intatto.
+
+Prossima fase: implementare controller documenti e gestione del focus/Notepad senza `taskkill`, collegare conferme vocali con salvataggio atomico e backup, prove hardware reali, solo poi decidere distribuzione.
