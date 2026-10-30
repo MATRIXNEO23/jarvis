@@ -20,6 +20,12 @@ class ConversationRouterTests(unittest.TestCase):
         self.assertIn("Mi apri blocco note", prompt)
         self.assertNotIn("powershell.exe", prompt)
 
+    def test_catalog_prompt_fits_the_connected_chatgpt_sdk_limit(self):
+        # gpt_bridge.mjs refuses prompts longer than 5000 characters.
+        self.assertLessEqual(
+            len(build_conversation_prompt("x" * 450, has_document=True)),
+            5000)
+
     def test_invalid_utterances_are_not_sent(self):
         for utterance in ("", "x" * 451, "ciao\ncomando", None):
             with self.subTest(value=str(utterance)[:20]):
