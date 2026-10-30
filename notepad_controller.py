@@ -67,25 +67,25 @@ class ClassicNotepadBridge:
         u.GetWindowThreadProcessId.argtypes = [
             wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
         u.GetWindowThreadProcessId.restype = wintypes.DWORD
-        u.EnumWindows.argtypes = [ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM),
-                                  wintypes.LPARAM]
+        u.EnumWindows.argtypes = [ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, ctypes.c_ssize_t),
+                                  ctypes.c_ssize_t]
         u.EnumWindows.restype = wintypes.BOOL
         u.EnumChildWindows.argtypes = [wintypes.HWND,
-                                        ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM),
-                                        wintypes.LPARAM]
+                                        ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, ctypes.c_ssize_t),
+                                        ctypes.c_ssize_t]
         u.EnumChildWindows.restype = wintypes.BOOL
         u.SendMessageTimeoutW.argtypes = [
-            wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM,
+            wintypes.HWND, wintypes.UINT, ctypes.c_size_t, ctypes.c_ssize_t,
             wintypes.UINT, wintypes.UINT, ctypes.POINTER(ctypes.c_size_t)]
-        u.SendMessageTimeoutW.restype = wintypes.LPARAM
+        u.SendMessageTimeoutW.restype = ctypes.c_ssize_t
         u.PostMessageW.argtypes = [wintypes.HWND, wintypes.UINT,
-                                    wintypes.WPARAM, wintypes.LPARAM]
+                                    wintypes.WPARAM, ctypes.c_ssize_t]
         u.PostMessageW.restype = wintypes.BOOL
         return u
 
     @staticmethod
     def _windows(user32, callback, parent: int | None = None):
-        fun = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+        fun = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, ctypes.c_ssize_t)
         results: list[int] = []
         def cb(hwnd, _param):
             n = int(hwnd or 0)
