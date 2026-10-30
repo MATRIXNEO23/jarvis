@@ -72,6 +72,28 @@ class ConversationRouterTests(unittest.TestCase):
         self.assertEqual(intent.content, content)
         self.assertIsNone(intent.plan)
 
+    def test_compose_then_close_requires_separate_voice_confirmation(self):
+        intent = parse_conversation_intent(encode({
+            "kind": "compose_document", "target": "new_notepad",
+            "content": "Un testo creato da GPT.",
+            "close_after": True,
+        }))
+        self.assertTrue(intent.close_after)
+        self.assertEqual(intent.kind, "compose_document")
+        for invalid in ("yes", 1, "false", None):
+            with self.subTest(value=invalid):
+                with self.assertRaises(ConversationRejected):
+                    parse_conversation_intent(encode({
+                        "kind": "compose_document", "target": "new_notepad",
+                        "content": "testo", "close_after": invalid,
+                    }))
+
+    def test_prompt_contains_selected_document_context(self):
+        self.assertIn("Documento Blocco note gestito", build_conversation_prompt(
+            "scrivi nel documento", has_document=True))
+        self.assertIn("NO.", build_conversation_prompt(
+            "scrivi nel documento", has_document=False))
+
     def test_document_requires_identified_target_no_arbitrary_path(self):
         for obj in (
             {"kind": "compose_document", "target": "C:/Users/notes.txt",
