@@ -8,6 +8,9 @@ from __future__ import annotations
 
 import queue
 from desktop_dictation import DesktopDictation, dictation_voice_action
+from conversation_router import (
+    ConversationRejected, build_conversation_prompt, parse_conversation_intent,
+)
 import threading
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, ttk
@@ -19,7 +22,7 @@ from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
 from settings import load_settings, save_settings
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
-                           speech_to_local_command)
+                           GPT_CONVERSATION, speech_to_local_command)
 
 
 def main() -> None:
@@ -42,7 +45,8 @@ def main() -> None:
     mode_row.pack(fill="x")
     for label, mode in (("Standby (spento)", STANDBY),
                         ("Premi per parlare", PUSH_TO_TALK),
-                        ("Ascolto continuo", CONTINUOUS)):
+                        ("Ascolto continuo (Ehi Jarvis)", CONTINUOUS),
+                        ("Conversazione continua GPT", GPT_CONVERSATION)):
         button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
         button.pack(side="left", padx=(0, 12))
         mode_buttons.append(button)
@@ -90,6 +94,7 @@ def main() -> None:
     planner_abort_event = threading.Event()
     closing = False
     active_gpt = False
+    conversation_epoch = 0
 
     def write_line(text: str) -> None:
         output.configure(state="normal")
@@ -140,14 +145,22 @@ def main() -> None:
         def worker() -> None:
             try:
                 timeout = 600 if action == "sign_in" else 180 if action == "ask" else 40
-                result = service.call(action, timeout=timeout, **params)
-                output_queue.put(("gpt_ok", action, result))
+                sdk_action = "ask" if action == "conversation" else action
+                epoch = params.pop("epoch", None) if action == "conversation" else None
+                result = service.call(sdk_action, timeout=timeout, **params)
+                if action == "conversation":
+                    output_queue.put(("conversation_ok", epoch, result))
+                else:
+                    output_queue.put(("gpt_ok", action, result))
             except Exception as exc:
-                output_queue.put(("gpt_error", action, str(exc)[:400]))
+                if action == "conversation":
+                    output_queue.put(("conversation_error", str(exc)[:220]))
+                else:
+                    output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
 
     def toggle_gpt() -> None:
-        nonlocal active_gpt
+        nonlocal active_gpt, conversation_epoch
         previous = settings["gpt_enabled"]
         try:
             settings["gpt_enabled"] = bool(gpt_enabled.get())
@@ -161,6 +174,7 @@ def main() -> None:
             gpt_status.set("GPT: attivo nelle impostazioni; controllo collegamento...")
             run_gpt("status")
         else:
+            conversation_epoch += 1
             planner_abort_event.set()
             active_gpt = False
             gpt_status.set("GPT: disattivato manualmente")
@@ -262,7 +276,9 @@ def main() -> None:
 
 
     def change_voice_mode() -> None:
+        nonlocal conversation_epoch
         selected = voice_mode.get()
+        conversation_epoch += 1
         wake_gate.reset()
         voice.set_mode(selected)
         if selected != CONTINUOUS and dictation.enabled:
@@ -273,8 +289,16 @@ def main() -> None:
             mic_status.set("Microfono: SPENTO (standby)")
         elif selected == PUSH_TO_TALK:
             mic_status.set("Premi per parlare: microfono spento finché non tieni premuto.")
+        elif selected == GPT_CONVERSATION:
+            mic_status.set("Conversazione GPT selezionata: frasi trascritte e inviate a GPT. "
+                           "Parla senza dire Ehi Jarvis.")
+            if not spoken_enabled.get():
+                spoken_enabled.set(True)
+                save_speech_preferences()
+            if not gpt_enabled.get() or not active_gpt:
+                write_line("Conversazione GPT: per le richieste non locali collega ChatGPT.")
         else:
-            mic_status.set("Ascolto continuo selezionato: avvio del microfono richiesto.")
+            mic_status.set("Ascolto continuo con Ehi Jarvis selezionato.")
 
     def ptt_press(event=None) -> None:
         if voice.press():
@@ -345,6 +369,30 @@ def main() -> None:
                 elif kind == "voice_text":
                     spoken = str(data[0]).strip()
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
+                        if voice_mode.get() == GPT_CONVERSATION:
+                            # Explicit opt-in conversation: each recognized phrase
+                            # may go to GPT; safe known local tools remain offline.
+                            command = speech_to_local_command(spoken)
+                            if command:
+                                if not busy_local:
+                                    submit_local(message_override=command)
+                                else:
+                                    write_line("Motore locale occupato: riprova.")
+                            elif gpt_enabled.get() and active_gpt and not busy_gpt:
+                                try:
+                                    prompt = build_conversation_prompt(spoken)
+                                except ConversationRejected as exc:
+                                    write_line("Conversazione: " + str(exc))
+                                else:
+                                    write_line("CONVERSAZIONE GPT > " + spoken)
+                                    run_gpt("conversation", prompt=prompt,
+                                            epoch=conversation_epoch)
+                            elif not active_gpt or not gpt_enabled.get():
+                                speak_result("GPT non è connesso. Puoi ancora usare i comandi locali.")
+                                write_line("GPT non connesso: frase non inviata.")
+                            else:
+                                write_line("GPT sta rispondendo: attendi prima di parlare.")
+                            continue
                         route_type = "command"  # Push-to-talk already requires a manual press.
                         if voice_mode.get() == CONTINUOUS:
                             route_type, spoken = wake_gate.route(
@@ -386,6 +434,43 @@ def main() -> None:
                     write_line(f"[{result.status}] {result.message}")
                     if result.status == "completed":
                         speak_result(result.message)
+                elif kind == "conversation_ok":
+                    busy_gpt = False
+                    epoch, result = data
+                    if (epoch == conversation_epoch and
+                            voice_mode.get() == GPT_CONVERSATION and
+                            gpt_enabled.get() and active_gpt):
+                        try:
+                            intent = parse_conversation_intent(result.get("text", ""))
+                        except ConversationRejected as exc:
+                            write_line("GPT: impossibile interpretare la risposta: " + str(exc))
+                            speak_result("Non ho capito con sicurezza. Puoi ripetere?")
+                        else:
+                            if intent.kind in ("chat", "clarify"):
+                                write_line("JARVIS > " + intent.reply)
+                                speak_result(intent.reply)
+                            elif intent.kind == "tool":
+                                if intent.plan is not None and not busy_local:
+                                    command = intent.plan.steps[0].command
+                                    submit_local(message_override=command)
+                                else:
+                                    speak_result("Sono occupato, riprova.")
+                            elif intent.kind == "compose_document":
+                                # The safe document writer is not integrated yet.
+                                # Never pretend that text has been written.
+                                write_line("BOZZA GPT (non salvata né inserita) > " + intent.content)
+                                speak_result(
+                                    "Ho preparato il testo. La scrittura automatica nei documenti "
+                                    "non è ancora attiva in questa versione sperimentale.")
+                            elif intent.kind == "close_document":
+                                speak_result(
+                                    "Non posso ancora chiudere il documento e gestire "
+                                    "il salvataggio automaticamente. Non lo chiuderò.")
+                elif kind == "conversation_error":
+                    busy_gpt = False
+                    write_line("Conversazione GPT: " + data[0])
+                    if voice_mode.get() == GPT_CONVERSATION:
+                        speak_result("GPT non è disponibile. Puoi riprovare.")
                 elif kind == "gpt_ok":
                     action, result = data
                     busy_gpt = False
