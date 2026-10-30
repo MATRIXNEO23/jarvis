@@ -351,6 +351,84 @@ def main() -> None:
         except (OSError, sqlite3.Error, ValueError) as exc:
             memory_status.set("Cancellazione memoria non riuscita: " + str(exc)[:100])
 
+    def show_voice_corrections() -> None:
+        """User must explicitly review both sentences before saving a rule."""
+        if speech_lexicon is None or not memory_enabled.get():
+            messagebox.showinfo(
+                "Vocabolario vocale di Lia",
+                "Attiva prima Second Brain locale per conservare "
+                "le correzioni vocali tra un avvio e l'altro.",
+                parent=root)
+            return
+        popup = tk.Toplevel(root)
+        popup.title("Correggi il riconoscimento di Lia")
+        popup.geometry("630x270")
+        popup.minsize(550, 240)
+        popup.transient(root)
+        body = ttk.Frame(popup, padding=12)
+        body.pack(fill="both", expand=True)
+        ttk.Label(
+            body, text="Quando Vosk sbaglia una frase, correggila qui. "
+                       "Lia impara soltanto le parole cambiate, "
+                       "non i comandi e le conferme.",
+            wraplength=595).pack(anchor="w", pady=(0, 6))
+        heard = tk.StringVar(value=last_voice_sample.get())
+        intended = tk.StringVar()
+        ttk.Label(body, text="Frase riconosciuta da Vosk:").pack(anchor="w")
+        ttk.Entry(body, textvariable=heard, width=80).pack(
+            fill="x", pady=(0, 6))
+        ttk.Label(body, text="Frase che avevi pronunciato:").pack(anchor="w")
+        entry = ttk.Entry(body, textvariable=intended, width=80)
+        entry.pack(fill="x", pady=(0, 6))
+        result = tk.StringVar(
+            value=f"Correzioni personali: {speech_lexicon.count()} / 80. "
+                  "Esempio: 'apri blocco moto' → 'apri blocco note'.")
+        ttk.Label(body, textvariable=result, wraplength=600).pack(
+            anchor="w", pady=(0, 7))
+        actions = ttk.Frame(body)
+        actions.pack(fill="x")
+
+        def learn() -> None:
+            if speech_lexicon is None or not memory_enabled.get():
+                result.set("Second Brain è disattivato: non salvo correzioni.")
+                return
+            try:
+                before, after = speech_lexicon.learn_phrase(
+                    heard.get(), intended.get(), user_confirmed=True)
+            except (SpeechCorrectionError, OSError, sqlite3.Error) as exc:
+                result.set("Correzione non salvata: " + str(exc)[:160])
+                return
+            result.set(
+                f"Imparato: {before} → {after}. "
+                "Sarà applicato alle prossime frasi riconosciute.")
+            write_line(f"CORREZIONE VOCE > {before} → {after}")
+            heard.set("")
+            intended.set("")
+
+        def reset_personal_words() -> None:
+            if speech_lexicon is None or not memory_enabled.get():
+                result.set("Second Brain disattivato.")
+                return
+            if not messagebox.askyesno(
+                    "Azzera correzioni vocali",
+                    "Cancellare soltanto le correzioni del riconoscimento "
+                    "vocale, lasciando intatti gli altri ricordi di Lia?",
+                    parent=popup):
+                return
+            try:
+                speech_lexicon.clear()
+                result.set("Dizionario di correzioni vocali azzerato.")
+            except (OSError, sqlite3.Error) as exc:
+                result.set("Cancellazione non riuscita: " + str(exc)[:120])
+
+        ttk.Button(actions, text="Conferma correzione", command=learn).pack(
+            side="left")
+        ttk.Button(actions, text="Azzera correzioni",
+                   command=reset_personal_words).pack(side="left", padx=(8, 0))
+        ttk.Button(actions, text="Chiudi", command=popup.destroy).pack(
+            side="right")
+        entry.focus_set()
+
     ttk.Checkbutton(
         frame, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
         variable=gpt_enabled, command=toggle_gpt
@@ -1062,6 +1140,7 @@ def main() -> None:
     ask_button.configure(command=submit_gpt)
     plan_button.configure(command=submit_plan)
     dictation_button.configure(command=toggle_dictation)
+    voice_correction_button.configure(command=show_voice_corrections)
     choose_save_button.configure(command=choose_save_destination)
     doc_save_button.configure(
         command=lambda: handle_document_confirmation("salva e chiudi"))
