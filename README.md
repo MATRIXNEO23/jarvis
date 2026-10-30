@@ -4,9 +4,13 @@ Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo *
 
 ## Download diretto per Windows
 
-**[SCARICA JARVIS — ZIP COMPLETO (versione aggiornata)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/main.zip)**
+**[SCARICA JARVIS — ZIP COMPLETO AGGIORNATO CON VOCE OFFLINE (PROVA)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/offline-voice-pavilion.zip)**
 
-[Cartella Download con istruzioni semplici](Download/README.md). Non serve cercare gli artifact di GitHub Actions: lo ZIP contiene tutta la repository e i file `installa_gpt.bat` e `avvia_jarvis.bat`. Versione **alpha**; il primo login e una risposta GPT sono stati provati sul Pavilion il 30/10/2026. Le altre funzioni richiedono collaudi specifici.
+Questa e' la **versione di prova con voce italiana offline**. Il codice e' nel branch `feature/offline-voice-pavilion`, separato dal ramo stabile `main`. I test automatici Windows/Linux sono superati; **il microfono reale sul Pavilion non e' ancora stato collaudato**. Scarica lo ZIP, estrailo in **una cartella nuova**, avvia **`installa_voce.bat`** (installazione facoltativa dei moduli vocali e del modello italiano), poi **`avvia_jarvis.bat`**. **All'avvio il microfono e' spento** e le modalita' si selezionano solo manualmente.
+
+**[SCARICA JARVIS — ZIP PRECEDENTE SENZA VOCE (MAIN)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/main.zip)**
+
+[Cartella Download con istruzioni semplici](Download/README.md) · [Guida alla voce offline](https://github.com/MATRIXNEO23/jarvis/blob/feature/offline-voice-pavilion/docs/VOCE_OFFLINE.md) · [Verifica CI voce](https://github.com/MATRIXNEO23/jarvis/actions/runs/41099757267). Non serve cercare gli artifact di GitHub Actions. La versione e' ancora **alpha**, non un installer Windows autonomo; ChatGPT e pianificatore sono stati provati sul Pavilion, mentre la voce richiede collaudo.
 
 ## Architettura e roadmap
 
@@ -37,7 +41,7 @@ La progettazione **GPT-first + esecutore locale controllato + funzioni offline**
 - [x] **Prima versione pianificatore GPT -> strumenti locali:** pulsante «Pianifica attività», proposta di massimo 5 passi con rigida lista di strumenti consentiti, anteprima, approvazione esplicita, annullamento fra passi e test CI. **Non ancora provato sul Pavilion**. Le risposte al pulsante «Chiedi a GPT» continuano a essere solo testo. Correzione successiva: arresto ai confini dei passi quando Jarvis viene chiuso, GPT disattivato/scollegato o l'autorizzazione revocata; test automatici Windows/Linux [verificati](https://github.com/MATRIXNEO23/jarvis/actions/runs/41096466572). Un passo gia iniziato non viene forzatamente interrotto.
 - [ ] Comandi vocali, apprendimento procedure, TTS, tray, ricerca web, automazioni e packaging Windows.
 
-## Primo test del pianificatore (dopo l'aggiornamento dello ZIP)
+## Primo test del pianificatore (versione precedente senza voce)
 
 1. Chiudi Jarvis se è aperto. Scarica nuovamente lo ZIP dal link in cima alla pagina, poi estrailo **in una cartella nuova** (non sovrascrivere o eliminare i dati in `%LOCALAPPDATA%\\Jarvis`).
 2. Apri la nuova cartella `jarvis-main` e avvia `avvia_jarvis.bat`. L'SDK già installato nella cartella runtime utente non va reinstallato, a meno che non compaia un errore.
