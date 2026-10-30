@@ -799,8 +799,28 @@ def main() -> None:
                             doc_dialog.saved_path = str(result.saved_path)
                         choose_save_button.configure(state="disabled")
                     announce_document(result.message)
+                    source = last_user_for_document or operation
+                    last_user_for_document = ""
+                    remember_exchange(source, result.message, "action")
+                    if result.kind in ("opened", "created", "appended",
+                                       "saved_and_closed", "closed_without_saving",
+                                       "saved_but_open", "closed"):
+                        from uuid import uuid4
+                        action_name = ("notepad.open" if result.kind == "opened"
+                                       else "notepad.write" if result.kind in (
+                                           "created", "appended")
+                                       else "notepad.save" if result.kind == "saved_but_open"
+                                       else "notepad.close")
+                        filename = (result.saved_path.name
+                                    if result.saved_path is not None else "")
+                        folder = (result.saved_path.parent.name
+                                  if result.saved_path is not None else "")
+                        remember_completed_action(
+                            action_name, "Blocco note", result.message,
+                            "jarvis:" + uuid4().hex,
+                            filename=filename, folder=folder)
                     if close_after and result.kind in ("created", "appended"):
-                        ask_to_close_document()
+                        ask_to_close_document(source)
                 elif kind == "document_error":
                     document_busy = False
                     operation, reason = data
@@ -816,7 +836,11 @@ def main() -> None:
                         doc_dialog.begin(documents.current.ident,
                                          "Nuovo Blocco note", dirty=True)
                     choose_save_button.configure(state="disabled")
-                    announce_document("Operazione non riuscita; nessun documento chiuso: " + reason)
+                    error_message = "Operazione non riuscita; nessun documento chiuso: " + reason
+                    announce_document(error_message)
+                    remember_exchange(last_user_for_document or operation,
+                                      error_message, "error")
+                    last_user_for_document = ""
                 elif kind == "conversation_ok":
                     busy_gpt = False
                     epoch, doc_snapshot, original_phrase, result = data
