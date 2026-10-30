@@ -17,8 +17,8 @@ from collections.abc import Callable
 # The PowerShell source is fixed. User text and voice names are JSON data on stdin.
 _PS_SCRIPT = r"""
 $ErrorActionPreference = 'Stop'
-[Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false)
-[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 Add-Type -AssemblyName System.Speech
 $request = [Console]::In.ReadToEnd() | ConvertFrom-Json
 $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
@@ -105,7 +105,7 @@ class OfflineSpeaker:
             try:
                 item = self._messages.get(timeout=0.3)
             except queue.Empty:
-                break
+                continue
             if item is None:
                 break
             text, voice = item
