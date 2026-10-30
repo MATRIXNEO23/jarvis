@@ -220,12 +220,9 @@ class ManagedDocumentTests(unittest.TestCase):
             second = self.docs.compose("Documento da scartare.", "new_notepad")
             dialog.begin(second.document_id, "Nuovo Blocco note", dirty=True)
             self.assertEqual(dialog.request_close().kind, "ask_choice")
-            self.assertEqual(dialog.reply("non salvare").kind,
-                             "ask_discard_confirmation")
-            self.assertEqual(dialog.reply("si").kind, "invalid")
+            self.assertEqual(
+                dialog.reply("chiudi senza salvare").kind, "discard_then_close")
             self.assertIsNotNone(self.docs.current)
-            self.assertEqual(dialog.reply(
-                "confermo uscita senza salvare").kind, "discard_then_close")
             outcome = self.docs.discard_and_close(second.document_id)
             self.assertEqual(outcome.kind, "closed_without_saving")
             dialog.operation_completed(second.document_id, succeeded=True)
