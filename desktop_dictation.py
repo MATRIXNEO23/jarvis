@@ -50,6 +50,11 @@ def foreground_editor() -> FocusedWindow | None:
     if os.name != "nt":
         return None
     user32 = ctypes.windll.user32
+    user32.GetForegroundWindow.restype = wintypes.HWND
+    user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+    user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+    user32.GetGUIThreadInfo.argtypes = [wintypes.DWORD, ctypes.POINTER(_GUIThreadInfo)]
+    user32.GetGUIThreadInfo.restype = wintypes.BOOL
     hwnd = int(user32.GetForegroundWindow() or 0)
     if not hwnd:
         return None
