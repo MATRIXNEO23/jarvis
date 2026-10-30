@@ -116,3 +116,37 @@ Nel file tests/test_action_planner.py il caso di input non valido ora utilizza u
 5. Non effettuare merge o adottare automaticamente la nuova versione prima del collaudo fisico e della decisione separata dell'utente.
 
 **Requisiti fissi invariati:** zero costi aggiuntivi, PC HP Pavilion i3-2100 con 10 GB RAM Windows 10, ascolto continuo sempre selezionato dall'utente e mai spostato in standby autonomamente, microfono sempre spento a ogni nuovo avvio.
+
+
+## 8. Collaudo reale: bug dettatura e correzione del 30/10/2026
+
+Durante il collaudo effettivo della nuova versione `feature/voice-browser-dictation` sul Pavilion, l'utente ha confermato che:
+- Vosk riconosce il parlato (ad es. «ciao»); il microfono e l'ascolto continuo funzionano.
+- Durante dettatura, **né Blocco note né il browser ricevevano testo**; Jarvis stampava «Windows non ha inserito il testo; controlla la finestra selezionata».
+- La dettatura era selezionata («Disattiva dettatura» visibile) e Blocco note aveva il focus, quindi il problema non era soltanto la selezione del campo.
+
+### Causa individuata nel codice, correzione pubblicata
+
+In `desktop_dictation.py` la union `_InputUnion` conteneva solo `KEYBDINPUT` e il `ctypes.sizeof(_Input)` risultava **32 byte su architettura 64 bit**, mentre `SendInput` per Win64 richiede **40 byte**. Windows respinge una `cbSize` errata. Aggiunto layout completo di `MOUSEINPUT` alla union, verifica preventiva `sizeof(INPUT)==40` Win64 (28 Win32), gestione esplicita `GetLastError` e testo UI che non dichiara mai che i caratteri sono comparsi se Windows ha soltanto accettato gli eventi. Regressioni in `tests/test_desktop_dictation.py`: dimensione ABI, invio Unicode con mock Windows e errore 87.
+
+**CI nuovo codice test superata:** [run 41129624639](https://github.com/MATRIXNEO23/jarvis/actions/runs/41129624639). La successiva [run 41129730526](https://github.com/MATRIXNEO23/jarvis/actions/runs/41129730526) ha superato tutti i test con nuove prove dei comandi vocali attiva/disattiva. Le prove automatiche **non sostituiscono** la verifica sul Pavilion di caratteri davvero scritti.
+
+### Richiesta ulteriore utente: attivazione/disattivazione dettatura con la voce
+
+Richiesta esplicita durante il collaudo: i pulsanti `Attiva dettatura` e `Disattiva dettatura` devono avere equivalenti pronunciabili senza mouse. **Già presenti nel routing**, ora coperti da test di integrazione logica tra `WakeWordGate`, `dictation_voice_action` e `DesktopDictation`, nel branch sperimentale:
+- «**Ehi Jarvis, attiva dettatura**» (oppure «Ehi Jarvis», pausa, «attiva dettatura»).
+- «**Ehi Jarvis, disattiva dettatura**»; alternativa «Ehi Jarvis, interrompi dettatura».
+- Dopo l'attivazione il parlato normale viene scritto nel campo selezionato senza wake word. I comandi richiedono sempre il nome esplicito nell'ascolto continuo, in conformità al requisito utente. Pronunciare «disattiva dettatura» come testo libero senza chiamare Jarvis **non** deve poter spegnere autonomamente la dettatura.
+- Il microfono non cambia modalità automaticamente; spegnere la dettatura non equivale a standby.
+- Documentato in `docs/DETTATURA_BROWSER.md`.
+
+### Stato e istruzioni per la ripresa del test
+
+1. Nel branch sperimentale `feature/voice-browser-dictation` sono stati pubblicati il fix e i test; la vecchia versione vocale `feature/offline-voice-pavilion` **non è stata modificata**; nessun merge richiesto/autorizzato.
+2. Il download ZIP del ramo di prova si trova come **primo link** della pagina `main/Download/README.md` del repository GitHub, accessibile direttamente dal PC dell'utente.
+3. **Chiudere il Jarvis ancora aperto, estrarre lo ZIP aggiornato in una cartella nuova** (senza eliminare il vecchio) e avviare `avvia_jarvis.bat`. Non reinstallare Vosk già funzionante e non cancellare `%LOCALAPPDATA%\\Jarvis`.
+4. Selezionare **Ascolto continuo** manualmente e verificare lo stato microfono attivo. Aprire Blocco note, cliccare sulla pagina bianca, pronunciare «Ehi Jarvis, attiva dettatura», poi una frase. Verificare che **appaia effettivamente** nel documento, non solo nel registro di Jarvis. Pronunciare «Ehi Jarvis, disattiva dettatura» e verificare che ulteriori frasi non vengano scritte.
+5. Se continua a fallire, fotografare il messaggio nuovo con eventuale **codice Windows** nel registro e non indovinare nuovi fix. Testare su un campo browser solo dopo Blocco note.
+6. Prima di affermare «funziona sul Pavilion», attendere la conferma reale dell'utente. I test automatici da soli non bastano.
+
+**Continuità preservata.** Non introdurre API a consumo, non eliminare la vecchia build, non effettuare merge automatici.
