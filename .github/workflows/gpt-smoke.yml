@@ -1,0 +1,41 @@
+name: GPT official SDK Windows smoke test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/gpt-smoke.yml'
+      - 'installa_gpt.ps1'
+      - 'gpt_bridge.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sdk-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+      - name: Install pinned official SDK (no sign-in)
+        shell: powershell
+        run: .\installa_gpt.ps1
+      - name: Load SDK module without credentials
+        shell: powershell
+        run: |
+          $sdk = Join-Path $env:LOCALAPPDATA 'Jarvis\runtime\siwc\packages\local\dist\index.js'
+          if (-not (Test-Path -LiteralPath $sdk)) { throw 'SDK entry missing' }
+          $env:SIWC_MODULE = 'file:///' + ($sdk -replace '\\','/')
+          node --input-type=module -e "import(process.env.SIWC_MODULE).then(m => { if (typeof m.createChatGPT !== 'function') process.exit(2); console.log('SDK import OK'); })"
+          if ($LASTEXITCODE -ne 0) { throw 'SDK import check failed' }
+      - name: Verify bridge starts and reports disconnected without credentials
+        shell: powershell
+        run: |
+          '{"id":1,"action":"status"}' | node gpt_bridge.mjs | Set-Content -Path "$env:TEMP\jarvis-gpt-smoke.log"
+          $text = Get-Content -LiteralPath "$env:TEMP\jarvis-gpt-smoke.log" -Raw
+          if ($text -notmatch '"event":"ready"') { throw 'Bridge did not initialize' }
+          if ($text -notmatch '"status":"disconnected"') { throw 'Bridge did not report disconnected state' }
+          Write-Host 'GPT bridge startup: OK (not authenticated)'
