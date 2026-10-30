@@ -15,7 +15,8 @@ class ConversationRouterTests(unittest.TestCase):
     def test_prompt_preserves_spoken_text_as_data(self):
         prompt = build_conversation_prompt("Mi apri blocco note, per favore?")
         self.assertIn('{"kind":"chat"', prompt)
-        self.assertIn("open_notepad", prompt)
+        self.assertIn("notepad.open", prompt)
+        self.assertIn("explorer.drive_c", prompt)
         self.assertIn("Mi apri blocco note", prompt)
         self.assertNotIn("powershell.exe", prompt)
 
@@ -44,6 +45,41 @@ class ConversationRouterTests(unittest.TestCase):
         self.assertEqual(intent.kind, "tool")
         self.assertEqual(len(intent.plan.steps), 1)
         self.assertEqual(intent.plan.steps[0].command, "apri blocco note")
+
+    def test_gpt_catalog_maps_natural_phrasing_to_notepad_close(self):
+        # GPT returns a canonical ID; the executor checks the active session.
+        payload = encode({"kind": "capability",
+                          "action_id": "notepad.close", "arguments": {}})
+        with self.assertRaises(ConversationRejected):
+            parse_conversation_intent(payload, has_document=False)
+        intent = parse_conversation_intent(payload, has_document=True)
+        self.assertEqual(intent.kind, "capability")
+        self.assertEqual(intent.capability.handler, "document_close")
+        self.assertIsNone(intent.capability.plan)
+
+    def test_catalog_maps_open_drive_c_through_allowlisted_local_plan(self):
+        payload = encode({"kind": "capability",
+                          "action_id": "explorer.drive_c", "arguments": {}})
+        intent = parse_conversation_intent(payload)
+        self.assertEqual(intent.capability.plan.steps[0].command,
+                         "apri disco locale c")
+        for arguments in ({"path": "C:\\\\Windows"}, {"shell": True}):
+            with self.subTest(arguments=arguments):
+                with self.assertRaises(ConversationRejected):
+                    parse_conversation_intent(encode({
+                        "kind": "capability", "action_id": "explorer.drive_c",
+                        "arguments": arguments}))
+
+    def test_catalog_document_composition_is_not_a_shell_command(self):
+        request = encode({
+            "kind": "capability", "action_id": "notepad.write",
+            "arguments": {"target": "new_notepad",
+                          "content": "Testo creato da GPT.",
+                          "close_after": True}})
+        intent = parse_conversation_intent(request)
+        self.assertEqual(intent.capability.handler, "document_write")
+        self.assertTrue(intent.capability.close_after)
+        self.assertIsNone(intent.capability.plan)
 
     def test_web_search_requires_safe_query(self):
         intent = parse_conversation_intent(
