@@ -32,6 +32,25 @@ class VoiceCorrectionTests(unittest.TestCase):
         self.assertEqual((route, speech_to_local_command(text)),
                          ("command", "apri blocco note"))
 
+    def test_correct_full_phrase_learns_only_misheard_application_name(self):
+        source, target = self.words.learn_phrase(
+            "apri blocco moto", "apri blocco note", user_confirmed=True)
+        self.assertEqual((source, target), ("blocco moto", "blocco note"))
+        self.assertEqual(self.words.correct("ehi jarvis apri blocco moto"),
+                         "ehi jarvis apri blocco note")
+        self.assertEqual(self.words.correct("ho una moto"), "ho una moto")
+
+    def test_full_phrase_cannot_change_negations_or_verbs(self):
+        examples = (
+            ("chiudi senza salvare", "chiudi salvare"),
+            ("apri blocco moto", "chiudi blocco note"),
+            ("ehi jarvis apri il browser", "ehi lia apri il browser"),
+        )
+        for heard, intended in examples:
+            with self.subTest(heard=heard, intended=intended):
+                with self.assertRaises(SpeechCorrectionError):
+                    self.words.learn_phrase(heard, intended, user_confirmed=True)
+
     def test_existing_recognized_words_not_damaged(self):
         self.words.add("blocco moto", "blocco note", user_confirmed=True)
         self.assertEqual(
