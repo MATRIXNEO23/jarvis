@@ -249,7 +249,8 @@ def main() -> None:
         nonlocal closing
         closing = True
         root.destroy()
-        threading.Thread(target=service.stop, daemon=True).start()
+        # Non-daemon: ensure the Node child is terminated before Python exits.
+        threading.Thread(target=service.stop, daemon=False, name="jarvis-gpt-shutdown").start()
 
     ttk.Button(frame, text="Esci", command=close).pack(anchor="e", pady=(9, 0))
     root.protocol("WM_DELETE_WINDOW", close)
