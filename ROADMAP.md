@@ -1,6 +1,6 @@
 # Roadmap Jarvis — architettura GPT-first, controllo locale e funzionamento offline
 
-> Stato: **progettazione**. Questa roadmap descrive le funzionalità da realizzare; le caselle non completate **non** rappresentano funzioni disponibili. Aggiornamento: 30 ottobre 2026.
+> Stato: **sviluppo alpha locale** (Fase 1 iniziata; connessione GPT ancora assente). Questa roadmap descrive le funzionalità da realizzare; le caselle non completate **non** rappresentano funzioni disponibili. Aggiornamento: 30 ottobre 2026.
 
 ## Obiettivo
 
@@ -72,12 +72,12 @@ Voce (Vosk offline) / chat testuale / tasti
 **Gate:** installer o pacchetto portabile avviabile su Windows 10 x64; microfono spento all'avvio e nessuna chiamata in rete inattesa.
 
 ### Fase 1 — Esecutore affidabile, senza GPT
-- [ ] Definire strumenti espliciti e tipizzati: apri applicazione, elenca/cerca file, leggi file selezionato, controlla processi, backup di cartelle, apri URL verificato.
-- [ ] Motore task: coda, progressi, annullamento, timeout, esito verificabile, errori leggibili e log locali.
+- [x] **Primo sottoinsieme implementato:** apri alcune applicazioni predefinite, elenca/cerca file in Download, stato sistema, aiuto. Rimangono da realizzare lettura file selezionati, controllo processi, backup e URL verificati.
+- [ ] Motore task completo: coda, progressi, annullamento e timeout. **Parziale già implementato:** risultato strutturato, errori, registro SQLite e thread UI per non bloccare la finestra.
 - [ ] Livelli di permesso: lettura; scrittura reversibile; cancellazione/esecuzione rischiosa con **conferma esplicita**.
 - [ ] Allowlist di directory e comandi, protezione delle credenziali, blocco esecuzione di shell arbitraria proposta da GPT.
 - [ ] Backup prima delle modifiche e registro per rollback quando tecnicamente possibile.
-- [ ] Test locali con filesystem temporaneo, errori simulati, riavvii e operazioni negate.
+- [ ] Test end-to-end, riavvii e operazioni negate su Windows 10. **Parziale già scritto:** unit test con directory temporanea, comandi vietati e symlink; esecuzione CI da verificare.
 
 **Gate:** una richiesta testuale multi-passaggio viene eseguita e verificata **senza GPT**, nessuna operazione pericolosa parte senza approvazione.
 
