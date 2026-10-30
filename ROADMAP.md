@@ -131,6 +131,17 @@ Voce (Vosk offline) / chat testuale / tasti
 
 **Gate:** workflow end-to-end provato su Windows 10 x64, nessun addebito, nessuna perdita dei dati, processi chiudibili completamente.
 
+### Fase 7 — App Android telecomando per Jarvis sul Pavilion
+- [ ] **App Android leggera push-to-talk:** pulsante per parlare solo mentre premuto, conversazione testuale e risposta vocale sul telefono. Nessun modello IA pesante sul cellulare.
+- [ ] **Bridge sul PC:** riceve la richiesta autenticata dal telefono, la consegna al motore Jarvis (locale o GPT quando autorizzato) e restituisce testo, esito e audio/risposta da pronunciare.
+- [ ] **Uso in casa sulla LAN/Wi-Fi:** primo collegamento con associazione esplicita del telefono, autenticazione a dispositivo e trasporto cifrato quando possibile; nessuna apertura di porte pubbliche.
+- [ ] **Accesso fuori casa opzionale:** soltanto attraverso una VPN privata/canale cifrato configurato e autorizzato dall'utente; nessun server o hosting a pagamento obbligatorio.
+- [ ] **Controlli sicurezza:** conferme per azioni rischiose, stesso registro permessi del PC, revoca dispositivo, limite richieste, disconnessione e nessuna esposizione di credenziali ChatGPT al telefono.
+- [ ] **Privacy e risorse:** microfono del telefono solo su azione volontaria; microfono del Pavilion sempre spento all'avvio; comunicazione locale senza servizi a consumo, gestione PC spento/non raggiungibile e disconnessioni.
+- [ ] **Test reali:** invio richiesta Android → Pavilion, esecuzione autorizzata, risposta Android anche parlata, blocco di dispositivi non associati e recupero da rete assente.
+
+**Gate:** da Android si preme per parlare, Jarvis sul Pavilion elabora la richiesta e risponde sul telefono, con autenticazione e senza esporre direttamente il PC a Internet. **Stato: solo pianificato; non implementato.**
+
 ## Primo caso d'uso di riferimento
 
 > «Jarvis, apri il progetto Minecraft, controlla gli errori dell'ultima compilazione e dimmi come correggerli».
