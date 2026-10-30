@@ -82,14 +82,14 @@ Voce (Vosk offline) / chat testuale / tasti
 **Gate:** una richiesta testuale multi-passaggio viene eseguita e verificata **senza GPT**, nessuna operazione pericolosa parte senza approvazione.
 
 ### Fase 2 — Collegamento GPT ufficiale con costo zero
-- [ ] Integrare il [Sign in with ChatGPT DevKit](https://github.com/openai/sign-in-with-chatgpt-devkit) (`@siwc/local`), evitando soluzioni non ufficiali che automatizzano la UI di ChatGPT.
-- [ ] Usare runtime Node >=22.12 solo per il gateway GPT, con dipendenze e licenze verificate; valutare impatto RAM/CPU sull'HP.
-- [ ] Login browser con PKCE, callback localhost, validazione OIDC/scopes, token cifrati a riposo per utente Windows, refresh/riconnessione/logout e nessuna credenziale nei log o su GitHub.
-- [ ] Interruttore GPT ON/OFF effettivo; **ON iniziale = permesso a usare il gateway, non accesso già autenticato**. OFF interrompe richieste e chiude la connessione/servizio.
-- [ ] Se l'utente lascia GPT abilitato, mantenere il gateway disponibile senza timeout automatico; evitare richieste ripetitive e attività AI in background.
-- [ ] Modelli: usare solo quelli disponibili all'account/sessione; distinguere `non installato / da autenticare / connesso / quota o permessi insufficienti / errore / disattivato`.
+- [x] Implementato **adapter sperimentale** per il [Sign in with ChatGPT DevKit](https://github.com/openai/sign-in-with-chatgpt-devkit) (`@siwc/local`), senza browser automation non ufficiale. Richiede collaudo con account reale.
+- [ ] Node >=22.12: installer su richiesta, commit SDK fissato e processo figlio isolato **implementati**; misurazione RAM/CPU sul Pavilion e verifica completa delle dipendenze ancora da effettuare.
+- [ ] Login browser/PKCE/OIDC delegati al SDK ufficiale, adapter DPAPI CurrentUser e comandi connessione/sconnessione **implementati**; test credenziali, refresh, revoca e permessi su Windows 10 ancora mancanti.
+- [x] Interruttore ON/OFF collegato al processo figlio e preferenza persistente; ON iniziale = **permesso di tentare il gateway**, non accesso già autenticato. Da testare con richiesta attiva durante la disattivazione.
+- [x] Gateway avviato quando GPT è abilitato (e installato), senza timeout automatico; nessuna richiesta AI in background. Test CPU/RAM ancora da effettuare.
+- [ ] Modelli da catalogo SDK, selezione prima voce disponibile e indicatori stato **implementati in alpha**; affinare errori quota e aggiungere scelta modello, quindi verificare su account reale.
 - [ ] Test reale (consenso + lista modelli + risposta completata + logout + riavvio). Vietato dichiarare «GPT funzionante» in assenza di test.
-- [ ] **Nessun fallback automatico a chiavi API standard o crediti a consumo**, anche in caso di quote esaurite.
+- [x] **Nessun fallback automatico a chiavi API standard o crediti a consumo** previsto nel codice; le richieste passano esclusivamente per SDK ufficiale dopo consenso.
 
 **Gate:** richiesta innocua completata tramite Sign in with ChatGPT su Windows 10 x64, consumo aggiuntivo assente, errori/quota comunicati con chiarezza, comando offline sempre disponibile.
 
