@@ -37,6 +37,7 @@ def main() -> None:
     busy_local = False
     busy_gpt = False
     local_execution_lock = threading.Lock()
+    planner_abort_event = threading.Event()
     closing = False
     active_gpt = False
 
@@ -50,6 +51,8 @@ def main() -> None:
         nonlocal active_gpt
         connected = state.get("status") == "connected" and state.get("sharing") is True
         active_gpt = connected
+        if not connected:
+            planner_abort_event.set()
         if not gpt_enabled.get():
             gpt_status.set("GPT: disattivato manualmente")
         elif connected:
@@ -108,6 +111,7 @@ def main() -> None:
             gpt_status.set("GPT: attivo nelle impostazioni; controllo collegamento...")
             run_gpt("status")
         else:
+            planner_abort_event.set()
             active_gpt = False
             gpt_status.set("GPT: disattivato manualmente")
             threading.Thread(target=service.stop, daemon=True).start()
@@ -158,7 +162,7 @@ def main() -> None:
         open_planner(
             root, service, engine,
             lambda: bool(gpt_enabled.get() and active_gpt and not busy_gpt and not closing),
-            local_execution_lock,
+            local_execution_lock, planner_abort_event,
         )
 
     def submit_local(event=None) -> None:
@@ -246,10 +250,12 @@ def main() -> None:
                     else:
                         write_line("URL di autenticazione inatteso: apertura bloccata.")
                 elif event.get("event") == "fatal":
+                    planner_abort_event.set()
                     if gpt_enabled.get():
                         gpt_status.set("GPT: modulo non pronto.")
                         write_line("GPT: " + str(event.get("error", "errore")))
                 elif event.get("event") == "stopped" and gpt_enabled.get() and not busy_gpt:
+                    planner_abort_event.set()
                     active_gpt = False
                     gpt_status.set("GPT: servizio arrestato.")
                 refresh_buttons()
@@ -265,6 +271,7 @@ def main() -> None:
     def close() -> None:
         nonlocal closing
         closing = True
+        planner_abort_event.set()
         root.destroy()
         # Non-daemon: ensure the Node child is terminated before Python exits.
         threading.Thread(target=service.stop, daemon=False, name="jarvis-gpt-shutdown").start()
