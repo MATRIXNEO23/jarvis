@@ -8,13 +8,16 @@ import json
 import subprocess
 import sys
 import threading
+import time
 import unittest
 
 from gpt_client import GPTClient, GPTUnavailable
 
 
 FAKE_CHILD = r"""
-import json, sys
+import json, sys, time
+time.sleep(0.1)
+print(json.dumps({'event': 'ready', 'session': {'status': 'disconnected', 'sharing': False}}), flush=True)
 for line in sys.stdin:
     item = json.loads(line)
     action = item.get('action')
@@ -58,7 +61,10 @@ class GPTClientTests(unittest.TestCase):
 
     def test_events_are_separated_from_responses(self):
         self.client.call("send_event", timeout=5)
-        event = self.client.events.get(timeout=5)
+        for _ in range(3):
+            event = self.client.events.get(timeout=5)
+            if event.get("event") == "open_browser":
+                break
         self.assertEqual(event["event"], "open_browser")
         self.assertTrue(event["url"].startswith("https://auth.openai.com/"))
 
