@@ -229,3 +229,5 @@ Implementazioni:
 - Test `tests/test_adaptive_voice.py` per persistenza, differenza tra frasi, sicurezza, compatibilità Windows/Ubuntu, limite dizionario, non riattivazione dei comandi per effetto di dati pregressi.
 
 **Stato e limiti:** il riconoscitore acustico Vosk resta invariato, non c'è ancora VAD/denoise avanzato, Whisper o training continuo. Questo è un **adattatore testuale controllato**. Prima di dire che «il microfono impara», chiarire sempre che viene migliorato il testo riconosciuto grazie alle correzioni esplicite dell'utente. È necessario un test fisico sul Pavilion per misurare il vantaggio e il costo CPU. La build non è automaticamente approvata all'adozione. Guida [docs/VOCE_ADATTIVA.md](https://github.com/MATRIXNEO23/jarvis/blob/feature/adaptive-offline-voice/docs/VOCE_ADATTIVA.md).
+
+**CI finale confermata:** [run 41145317021](https://github.com/MATRIXNEO23/jarvis/actions/runs/41145317021), tutte e quattro le combinazioni Python 3.11/3.12 × Windows/Ubuntu SUCCESS sul commit `5297bc836bd617af0dbc3c4c48ba769512928117`. La versione Windows fisica del Pavilion non è ancora collaudata.
