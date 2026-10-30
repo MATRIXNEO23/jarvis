@@ -16,6 +16,18 @@ class SpeechRoutingTests(unittest.TestCase):
         self.assertEqual(speech_to_local_command("controlla la RAM"),
                          "stato sistema")
 
+    def test_browser_commands(self):
+        self.assertEqual(speech_to_local_command("Jarvis, apri il browser"), "apri browser")
+        self.assertEqual(speech_to_local_command("apri browser"), "apri browser")
+        self.assertEqual(
+            speech_to_local_command("Jarvis cerca nel browser monumenti di Roma"),
+            "cerca nel browser monumenti di roma")
+        self.assertEqual(
+            speech_to_local_command("cerca su internet python tkinter"),
+            "cerca nel browser python tkinter")
+        self.assertIsNone(speech_to_local_command("cerca nel browser"))
+        self.assertIsNone(speech_to_local_command("cerca nel browser " + "x" * 161))
+
     def test_untrusted_speech_never_executes(self):
         for phrase in ("cancella tutti i file", "esegui powershell",
                        "modifica config.json", "apri cmd.exe",
