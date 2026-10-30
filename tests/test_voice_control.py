@@ -16,6 +16,8 @@ class SpeechRoutingTests(unittest.TestCase):
                          "apri calcolatrice")
         self.assertEqual(speech_to_local_command("controlla la RAM"),
                          "stato sistema")
+        self.assertEqual(speech_to_local_command("Ehi Jarvis apri disco locale C"),
+                         "apri disco locale c")
 
     def test_browser_commands(self):
         self.assertEqual(speech_to_local_command("Jarvis, apri il browser"), "apri browser")
