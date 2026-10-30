@@ -8,6 +8,7 @@ original wake, confirmation and negation words are never changed.
 from __future__ import annotations
 
 import re
+from contextlib import contextmanager
 import sqlite3
 import unicodedata
 from pathlib import Path
@@ -62,8 +63,14 @@ class SpeechCorrections:
         self._initialize()
         self.reload()
 
-    def _db(self) -> sqlite3.Connection:
-        return sqlite3.connect(str(self.path), timeout=5)
+    @contextmanager
+    def _db(self):
+        db = sqlite3.connect(str(self.path), timeout=5)
+        try:
+            with db:
+                yield db
+        finally:
+            db.close()
 
     def _initialize(self) -> None:
         with self._db() as db:
