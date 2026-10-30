@@ -29,13 +29,21 @@ l'approvazione del piano, come le altre azioni pianificate.
    solo, neanche quando apri Minecraft.
 3. Apri Blocco note, Word o un campo di testo nel browser, e **clicca nel campo
    in cui vuoi scrivere**.
-4. Pronuncia **"Jarvis, attiva dettatura"**. Puoi anche premere il pulsante
-   **Attiva dettatura** in Jarvis, poi cliccare nel campo dell'altra finestra.
+4. Senza tornare a cliccare su Jarvis, pronuncia **"Ehi Jarvis, attiva dettatura"**.
+   Si può anche dire **"Ehi Jarvis"** e, entro 10 secondi, **"attiva dettatura"**.
+   Se preferisci, premi **Attiva dettatura** nell'interfaccia, poi torna nel
+   campo di testo dell'altra finestra.
 5. Parla normalmente. Jarvis prova a digitare il testo riconosciuto in quel
    campo tramite gli eventi Unicode di Windows. Di' **"a capo"** per andare
    alla riga successiva.
-6. Pronuncia **"Jarvis, disattiva dettatura"** oppure premi il pulsante
-   **Disattiva dettatura**.
+6. Per terminare, pronuncia **"Ehi Jarvis, disattiva dettatura"** oppure
+   **"Ehi Jarvis, interrompi dettatura"**. Funzionano anche mentre sei
+   nel campo di testo: non vengono scritte nella pagina. Il pulsante
+   **Disattiva dettatura** resta disponibile come alternativa.
+
+I comandi di attivazione e disattivazione sono **vocali** e richiedono
+**Ehi Jarvis** in ascolto continuo, come tutti i comandi. La dettatura,
+una volta attivata, scrive il parlato normale senza dover ripetere il nome.
 
 La dettatura e l'ascolto sono due impostazioni diverse. Spegnere la dettatura
 **non** mette il microfono in standby. Per spegnere il microfono scegli
@@ -59,6 +67,14 @@ il focus dalla finestra in cui vuoi scrivere.
 - Jarvis non invia testo dettato a GPT e non registra l'audio; tuttavia il
   programma in cui detti (ad es. un documento cloud) può sincronizzare i dati
   secondo le proprie regole.
+- Sul Pavilion il primo collaudo ha rilevato un errore di inserimento:
+  Vosk riconosceva le parole ma Windows rifiutava i tasti per una struttura
+  `SendInput` di dimensione errata (32 byte invece di 40 su Windows x64).
+  La correzione usa ora la struttura completa e mostra il codice di errore
+  Win32 in caso di nuovo rifiuto. **Correzione da confermare sul Pavilion**.
+- Il messaggio «Testo inviato a Windows» significa che Windows ha accettato
+  gli eventi di tastiera, **non garantisce** che l'applicazione li abbia
+  effettivamente visualizzati.
 - La versione corrente non dispone ancora di punteggiatura avanzata,
   correzione testo o selezione intelligente dei campi. Prima di usarla
   in documenti importanti verifica sempre il testo.
