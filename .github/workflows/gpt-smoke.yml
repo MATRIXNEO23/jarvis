@@ -35,7 +35,12 @@ jobs:
         shell: powershell
         run: |
           '{"id":1,"action":"status"}' | node gpt_bridge.mjs | Set-Content -Path "$env:TEMP\jarvis-gpt-smoke.log"
+          if ($LASTEXITCODE -ne 0) { throw "Bridge process failed with exit code $LASTEXITCODE" }
           $text = Get-Content -LiteralPath "$env:TEMP\jarvis-gpt-smoke.log" -Raw
-          if ($text -notmatch '"event":"ready"') { throw 'Bridge did not initialize' }
-          if ($text -notmatch '"status":"disconnected"') { throw 'Bridge did not report disconnected state' }
-          Write-Host 'GPT bridge startup: OK (not authenticated)'
+          $packets = @($text.Trim() -split "\n" | ForEach-Object { $_ | ConvertFrom-Json })
+          $ready = @($packets | Where-Object { $_.event -eq 'ready' })
+          $response = @($packets | Where-Object { $_.id -eq 1 -and $_.ok -eq $true })
+          if ($ready.Count -ne 1) { throw 'Bridge did not emit a ready event' }
+          if ($response.Count -ne 1) { throw 'Bridge did not respond to the status request' }
+          if ($response[0].result.status -ne 'disconnected') { throw 'Expected unauthenticated state' }
+          Write-Host 'GPT bridge initialized, answered status and exited successfully (no login)'
