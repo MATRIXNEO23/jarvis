@@ -1,6 +1,6 @@
 # Jarvis: conversazione GPT continua e gestione vocale dei documenti
 
-**Stato:** progettazione vincolante, prima implementazione incrementale. La versione installata sul Pavilion **non** include ancora questa modalità. Non dichiararla funzionante finché l'integrazione GUI/GPT/Windows e i test hardware non sono completati.
+**Stato attuale:** prima implementazione end-to-end nel ramo sperimentale, destinata a Blocco note classico Windows 10 e a nuovi documenti di testo. **Non collaudata sul Pavilion: non confondere i test CI con il funzionamento su Windows reale.** Le versioni già funzionanti rimangono separate.
 
 ## Obiettivo espresso dall'utente
 
@@ -78,3 +78,26 @@ Nella PR draft sono stati aggiunti:
 **NON IMPLEMENTATO/DA NON DICHIARARE OPERATIVO:** scrittura automatica dentro Blocco note o in un file esistente, scelta automatica della destinazione, backup e salvataggio su disco, chiusura della finestra selezionata, risposte vocali effettive al dialogo di salvataggio. In questa fase, una richiesta di testo viene generata e mostrata come **bozza non inserita**, e una richiesta di chiusura viene rifiutata senza toccare alcuna finestra. Non pubblicare come prodotto finito o sostituire la versione precedente con questa PR.
 
 **Test fisici da effettuare prima di dire che funziona:** Windows 10 su Pavilion, riconoscimento di normali domande, risposta parlata, blocco eco e prestazioni durante programmi pesanti; solo in seguito implementare e collaudare documenti e salvataggio.
+
+
+## Implementazione attuale — prototipo Blocco note, ottobre 2026
+
+I passaggi pratici sono implementati nel ramo `feature/gpt-conversazione-documenti`:
+
+1. Seleziona **Conversazione continua GPT**. L'avvio del programma lascia comunque il microfono sempre in **Standby**. Le frasi di questa modalità vengono trascritte offline da Vosk e inviate come testo al collegamento ChatGPT già configurato.
+2. Pronuncia **«Apri Blocco note e scrivi una poesia su Venezia, poi chiudilo»**. Il router GPT valida l'intenzione e fornisce il testo. Jarvis apre un **nuovo processo di Blocco note classico**, verifica PID, classe/handle e titolo, poi scrive il testo nel controllo Edit e ne rilegge il contenuto per verificare l'inserimento.
+3. Puoi dire **«Aggiungi nel documento un altro paragrafo»**: il testo nuovo viene **aggiunto**, senza sostituire il contenuto e senza attivare la dettatura manuale.
+4. Se hai richiesto «poi chiudilo» o dici **«Chiudi Blocco note»**, Jarvis domanda **«salva e chiudi», «chiudi senza salvare» o «annulla»**. La richiesta pendente viene gestita **localmente**, senza chiedere a GPT di decidere al tuo posto.
+5. Con **«salva e chiudi»** su un documento nuovo, chiede la destinazione. Esempio: **«sul desktop come poesia di Venezia»**, **«in documenti chiamalo il mio racconto»**, oppure usa il pulsante **Scegli dove salvare**. Salva un nuovo **.txt UTF-8** solo se il nome non esiste ancora; non sovrascrive mai file dell'utente.
+6. Con **«chiudi senza salvare»** domanda una seconda conferma specifica **«confermo uscita senza salvare»** prima di chiudere la sola finestra posseduta da Jarvis. Puoi sempre dire **«annulla»**. Sono previsti anche i pulsanti di salvataggio, annullamento e conferma come alternativa alla voce.
+7. Se il file viene salvato ma la finestra non si chiude, Jarvis lo riferisce separatamente e lascia aperta la finestra. Se il titolo del documento, PID, HWND o controllo Edit non coincidono più, blocca le azioni.
+
+**Limiti reali e non ancora completati:** per questa prima prova gestisce **solo documenti nuovi** aperti da Jarvis tramite Blocco note classico Windows 10; non si appropria di Blocco note aperti manualmente, non modifica automaticamente file .md/.json esistenti in repository, non sovrascrive file e non controlla versioni moderne di Blocco note con struttura differente. Alcuni Windows 10 potrebbero aver ricevuto un'app Blocco note più recente: in quel caso Jarvis avvisa e non interviene. La compatibilità reale con il Pavilion e l'eventuale popup nativo di salvataggio devono essere verificati con file di prova e nessun dato importante.
+
+**Non viene usata nessuna API a consumo:** Vosk per riconoscimento offline, Windows SAPI per risposta offline e il DevKit ChatGPT già presente per la comprensione del linguaggio; l'account resta soggetto ai normali limiti del servizio ChatGPT.
+
+### Prova hardware prima dell'adozione
+
+Usare una cartella nuova per la ZIP sperimentale e conservare la versione già funzionante. Avvio sempre in Standby. Poi: conversazione normale e risposta parlata, «apri Blocco note», composizione e verifica visiva del testo, aggiunta dopo modifica manuale, chiudi+annulla, salva con nome sul Desktop, verifica file vero sul disco, chiudi senza salvare con doppia conferma, altri Blocco note invariati, riavvio senza azioni pendenti. Non usare documenti importanti.
+
+**Nessuna integrazione automatica in main** prima della prova reale, e nessuna cancellazione di `%LOCALAPPDATA%\\Jarvis`.
