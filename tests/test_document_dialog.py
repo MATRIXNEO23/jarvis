@@ -45,16 +45,17 @@ class DocumentDialogTests(unittest.TestCase):
         self.assertEqual(self.dialog.phase, "idle")
         self.assertEqual(self.dialog.reply("salva").kind, "ignored")
 
-    def test_discard_requires_two_distinct_voice_confirmations(self):
+    def test_one_step_discard_after_document_close_question(self):
         self.start()
         self.dialog.request_close()
-        response = self.dialog.reply("chiudi senza salvare")
-        self.assertEqual(response.kind, "ask_discard_confirmation")
-        self.assertEqual(self.dialog.reply("sì").kind, "invalid")
-        self.assertEqual(self.dialog.reply("salva e chiudi").kind, "invalid")
-        self.assertEqual(self.dialog.phase, "awaiting_discard_confirmation")
-        self.assertEqual(self.dialog.reply(
-            "confermo uscita senza salvare").kind, "discard_then_close")
+        result = self.dialog.reply("chiudi senza salvare")
+        self.assertEqual(result.kind, "discard_then_close")
+        self.assertEqual(self.dialog.phase, "executing")
+
+    def test_direct_discard_without_separate_consent(self):
+        self.start()
+        result = self.dialog.request_close_with_choice("esci senza salvare")
+        self.assertEqual(result.kind, "discard_then_close")
         self.assertEqual(self.dialog.phase, "executing")
 
     def test_optional_wake_prefix_on_save_or_cancel(self):
@@ -72,7 +73,6 @@ class DocumentDialogTests(unittest.TestCase):
     def test_cancel_never_discards_text(self):
         self.start()
         self.dialog.request_close()
-        self.dialog.reply("non salvare")
         result = self.dialog.reply("annulla")
         self.assertEqual(result.kind, "cancel")
         self.assertEqual(self.dialog.phase, "editing")
