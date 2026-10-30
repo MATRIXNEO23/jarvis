@@ -10,11 +10,13 @@ import threading
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, ttk
 from typing import Callable
+from threading import Lock
 
 from action_planner import ApprovedPlan, PlanRejected, build_planning_prompt, parse_plan
 
 
-def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool]) -> None:
+def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool],
+                 execution_lock: Lock) -> None:
     previous = getattr(parent, "_jarvis_planner_window", None)
     if previous is not None and previous.winfo_exists():
         previous.lift()
@@ -106,7 +108,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
                 response = service.call("ask", timeout=180, prompt=prompt)
                 plan = parse_plan(response.get("text", ""))
                 events.put(("planned", plan))
-            except (PlanRejected, Exception) as exc:
+            except Exception as exc:
                 # Never show stack traces or any sensitive protocol detail.
                 events.put(("error", str(exc)[:300]))
 
@@ -146,11 +148,15 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         def worker() -> None:
             count = len(accepted.steps)
             for index, step in enumerate(accepted.steps, start=1):
-                if cancel_event.is_set() or not is_available():
+                if cancel_event.is_set():
                     events.put(("finished", "interrotto prima del passo successivo"))
                     return
                 try:
-                    result = engine.execute(step.command)
+                    with execution_lock:
+                        if cancel_event.is_set():
+                            events.put(("finished", "annullato prima del passo successivo"))
+                            return
+                        result = engine.execute(step.command)
                 except Exception:
                     events.put(("finished", "errore locale interno; arresto prudenziale"))
                     return
@@ -195,6 +201,15 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         nonlocal busy, pending, phase, cancel_requested
         if closed:
             return
+        # Query Tk state on the UI thread only, never from worker threads.
+        if not is_available():
+            if pending is not None:
+                pending = None
+                status.set("Piano scartato perché GPT è stato disattivato.")
+            if busy and phase == "running":
+                cancel_event.set()
+            if busy and phase == "planning":
+                cancel_requested = True
         try:
             while True:
                 event, *values = events.get_nowait()
