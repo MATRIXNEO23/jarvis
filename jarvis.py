@@ -14,6 +14,7 @@ import webbrowser
 
 from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
+from planner_ui import open_planner
 from settings import load_settings, save_settings
 
 
@@ -35,6 +36,7 @@ def main() -> None:
     gpt_status = tk.StringVar(value="GPT: inizializzazione" if gpt_enabled.get() else "GPT: disattivato")
     busy_local = False
     busy_gpt = False
+    local_execution_lock = threading.Lock()
     closing = False
     active_gpt = False
 
@@ -64,6 +66,7 @@ def main() -> None:
         connect.configure(state="normal" if can_gpt else "disabled")
         disconnect.configure(state="normal" if can_gpt and active_gpt else "disabled")
         ask_button.configure(state="normal" if can_gpt and active_gpt else "disabled")
+        plan_button.configure(state="normal" if can_gpt and active_gpt else "disabled")
         local_button.configure(state="disabled" if busy_local or closing else "normal")
 
     def run_gpt(action: str, **params) -> None:
@@ -134,7 +137,9 @@ def main() -> None:
     local_button = ttk.Button(input_row, text="Esegui locale")
     local_button.pack(side="left", padx=(0, 5))
     ask_button = ttk.Button(input_row, text="Chiedi a GPT")
-    ask_button.pack(side="left")
+    ask_button.pack(side="left", padx=(0, 5))
+    plan_button = ttk.Button(input_row, text="Pianifica attività")
+    plan_button.pack(side="left")
 
     output = scrolledtext.ScrolledText(frame, height=15, wrap="word", state="disabled", font=("Consolas", 10))
     output.pack(fill="both", expand=True, pady=(12, 0))
@@ -146,6 +151,15 @@ def main() -> None:
         messagebox.showerror("Motore locale non disponibile", str(exc), parent=root)
         root.destroy()
         return
+
+    def submit_plan() -> None:
+        if not gpt_enabled.get() or not active_gpt or busy_gpt or closing:
+            return
+        open_planner(
+            root, service, engine,
+            lambda: bool(gpt_enabled.get() and active_gpt and not busy_gpt and not closing),
+            local_execution_lock,
+        )
 
     def submit_local(event=None) -> None:
         nonlocal busy_local
@@ -161,7 +175,9 @@ def main() -> None:
 
         def worker() -> None:
             try:
-                output_queue.put(("local", engine.execute(message)))
+                with local_execution_lock:
+                    result = engine.execute(message)
+                output_queue.put(("local", result))
             except Exception:
                 output_queue.put(("local", TaskResult("-", "internal", "failed",
                     "Errore interno: controlla i dati di Jarvis.")))
@@ -243,6 +259,7 @@ def main() -> None:
 
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
+    plan_button.configure(command=submit_plan)
     input_box.bind("<Return>", submit_local)
 
     def close() -> None:
