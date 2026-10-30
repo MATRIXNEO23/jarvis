@@ -72,8 +72,10 @@ def installed_voices() -> list[str]:
 class OfflineSpeaker:
     """Bounded, background TTS. Optional and independent of listening mode."""
 
-    def __init__(self, runner: Callable[..., str] = _invoke):
+    def __init__(self, runner: Callable[..., str] = _invoke,
+                 notify_error: Callable[[str], None] | None = None):
         self._runner = runner
+        self._notify_error = notify_error
         self._messages: queue.Queue[tuple[str, str] | None] = queue.Queue(maxsize=3)
         self._busy = threading.Event()
         self._closed = threading.Event()
@@ -116,7 +118,8 @@ class OfflineSpeaker:
                 self._runner({"mode": "speak", "text": text, "voice": voice},
                              timeout=90)
             except (OSError, ValueError, subprocess.TimeoutExpired):
-                pass  # Spoken output is optional; never break the local command.
+                if self._notify_error:
+                    self._notify_error("Impossibile riprodurre la voce selezionata.")
             finally:
                 self._cooldown_until = time.monotonic() + 1.0
                 self._busy.clear()
