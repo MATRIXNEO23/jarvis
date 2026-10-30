@@ -130,8 +130,6 @@ def main() -> None:
     last_user_for_document = ""
     memory_enabled = tk.BooleanVar(value=settings["memory_enabled"])
     memory_status = tk.StringVar(value="Second Brain: inizializzazione.")
-    memory_toggle = ttk.Checkbutton(frame, text="Second Brain locale (ricorda chat e attività)")
-    memory_clear_button = ttk.Button(frame, text="Cancella memoria salvata")
     durable_brain: SecondBrain | None = None
     if memory_enabled.get():
         try:
@@ -289,6 +287,48 @@ def main() -> None:
             threading.Thread(target=service.stop, daemon=True).start()
             refresh_buttons()
 
+    def toggle_memory() -> None:
+        nonlocal durable_brain
+        desired = bool(memory_enabled.get())
+        previous = bool(settings["memory_enabled"])
+        candidate = durable_brain
+        if desired and candidate is None:
+            try:
+                candidate = SecondBrain()
+            except (OSError, sqlite3.Error, ValueError) as exc:
+                memory_enabled.set(previous)
+                memory_status_refresh("Impossibile attivare: " + str(exc)[:90])
+                return
+        settings["memory_enabled"] = desired
+        try:
+            save_settings(settings)
+        except (OSError, ValueError) as exc:
+            settings["memory_enabled"] = previous
+            memory_enabled.set(previous)
+            memory_status_refresh("Impossibile salvare l'opzione: " + str(exc)[:90])
+            return
+        durable_brain = candidate if desired else None
+        memory_status_refresh(
+            "La memoria già salvata resta sul PC fino a cancellazione esplicita."
+            if not desired else "Memoria attiva anche dopo il prossimo riavvio.")
+
+    def clear_saved_memory() -> None:
+        if not messagebox.askyesno(
+            "Cancella il Second Brain",
+            "Eliminare gli scambi e le operazioni archiviate localmente da Lia? "
+            "Questa operazione non può essere annullata. "
+            "La cronologia delle attività del motore locale resta separata.",
+            parent=root,
+        ):
+            return
+        try:
+            target = durable_brain if durable_brain is not None else SecondBrain()
+            target.clear_all()
+            conversation_memory.clear()
+            memory_status_refresh("Memoria salvata cancellata su richiesta.")
+        except (OSError, sqlite3.Error, ValueError) as exc:
+            memory_status.set("Cancellazione memoria non riuscita: " + str(exc)[:100])
+
     ttk.Checkbutton(
         frame, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
         variable=gpt_enabled, command=toggle_gpt
@@ -305,9 +345,13 @@ def main() -> None:
 
     brain_controls = ttk.Frame(frame)
     brain_controls.pack(fill="x", pady=(5, 3))
-    memory_toggle.configure(variable=memory_enabled)
-    memory_toggle.pack(in_=brain_controls, side="left", padx=(0, 10))
-    memory_clear_button.pack(in_=brain_controls, side="right")
+    memory_toggle = ttk.Checkbutton(
+        brain_controls, text="Second Brain locale (ricorda conversazioni e attività)",
+        variable=memory_enabled, command=toggle_memory)
+    memory_toggle.pack(side="left", padx=(0, 10))
+    memory_clear_button = ttk.Button(
+        brain_controls, text="Cancella memoria salvata", command=clear_saved_memory)
+    memory_clear_button.pack(side="right")
     ttk.Label(frame, textvariable=memory_status, wraplength=710).pack(
         anchor="w", pady=(0, 4))
 
