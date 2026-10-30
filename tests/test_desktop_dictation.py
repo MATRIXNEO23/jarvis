@@ -1,7 +1,11 @@
 """Offline dictation policy tests; never access a real microphone or keyboard."""
+import ctypes
 import unittest
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
-from desktop_dictation import DesktopDictation, FocusedWindow, dictation_voice_action
+import desktop_dictation
+from desktop_dictation import DesktopDictation, FocusedWindow, dictation_voice_action, send_unicode_text
 
 
 class DictationCommandTests(unittest.TestCase):
@@ -33,7 +37,7 @@ class DictationSafetyTests(unittest.TestCase):
         self.assertEqual(written, [])
         subject.enable()
         self.assertEqual(subject.target, editor)
-        self.assertEqual(subject.insert("ciao"), "Dettatura inserita nel campo selezionato.")
+        self.assertIn("Testo inviato a Windows", subject.insert("ciao"))
         self.assertEqual(written, ["ciao "])
         subject.disable()
         subject.insert("altro")
@@ -47,7 +51,7 @@ class DictationSafetyTests(unittest.TestCase):
         self.assertIsNone(subject.target)
         self.assertIn("non inserito", subject.insert("non ancora"))
         focus[0] = editor
-        self.assertIn("inserita", subject.insert("il mio testo"))
+        self.assertIn("Testo inviato a Windows", subject.insert("il mio testo"))
         self.assertEqual(written, ["il mio testo "])
         self.assertEqual(subject.target, editor)
 
@@ -60,7 +64,7 @@ class DictationSafetyTests(unittest.TestCase):
         self.assertEqual(written, [])
         subject.disable()
         subject.enable()
-        self.assertIn("inserita", subject.insert("nuovo testo"))
+        self.assertIn("Testo inviato a Windows", subject.insert("nuovo testo"))
         self.assertEqual(written, ["nuovo testo "])
 
     def test_focus_change_within_same_window_drops_input(self):
@@ -90,12 +94,56 @@ class DictationSafetyTests(unittest.TestCase):
         self.assertIn("troppo lungo", subject.insert("x" * 301))
         self.assertEqual(len(written), 1)
 
+    def test_sender_failure_shows_windows_error_not_success(self):
+        editor = FocusedWindow(21, 22, 200)
+        subject, _, written = self.prepare(editor)
+        subject.sender = lambda text: (_ for _ in ()).throw(
+            OSError("SendInput rifiutato (codice Windows 87)."))
+        subject.enable()
+        result = subject.insert("ciao")
+        self.assertIn("codice Windows 87", result)
+        self.assertNotIn("Testo inviato", result)
+        self.assertFalse(written)
+
     def test_non_windows_no_input(self):
         subject, focus, written = self.prepare(FocusedWindow(21, 22, 200))
         subject.windows = False
         self.assertIn("Windows", subject.enable())
         self.assertFalse(subject.enabled)
         self.assertFalse(written)
+
+
+class WindowsInputAbiTests(unittest.TestCase):
+    def test_input_union_includes_mouse_layout(self):
+        # The old keyboard-only union was 32 bytes on Win64, while the native
+        # Windows SendInput API requires 40. This is the Pavilion regression.
+        expected = 40 if ctypes.sizeof(ctypes.c_void_p) == 8 else 28
+        self.assertEqual(ctypes.sizeof(desktop_dictation._Input), expected)
+        self.assertEqual(desktop_dictation._Input.union.offset,
+                         8 if ctypes.sizeof(ctypes.c_void_p) == 8 else 4)
+
+    def test_unicode_input_uses_native_size_and_keystrokes(self):
+        fake_send = Mock(side_effect=lambda count, inputs, size: count)
+        user32 = SimpleNamespace(SendInput=fake_send)
+        with patch.object(desktop_dictation.os, "name", "nt"), \
+             patch.object(desktop_dictation.ctypes, "WinDLL",
+                          return_value=user32, create=True):
+            send_unicode_text("Aé\n")
+        self.assertEqual(fake_send.call_count, 3)
+        expected = 40 if ctypes.sizeof(ctypes.c_void_p) == 8 else 28
+        for call in fake_send.call_args_list:
+            self.assertEqual(call.args[0], 2)
+            self.assertEqual(call.args[2], expected)
+
+    def test_sendinput_rejection_reports_error_code(self):
+        user32 = SimpleNamespace(SendInput=Mock(return_value=0))
+        with patch.object(desktop_dictation.os, "name", "nt"), \
+             patch.object(desktop_dictation.ctypes, "WinDLL",
+                          return_value=user32, create=True), \
+             patch.object(desktop_dictation.ctypes, "get_last_error",
+                          return_value=87, create=True):
+            with self.assertRaisesRegex(OSError, "87"):
+                send_unicode_text("ciao")
 
 
 if __name__ == "__main__":
