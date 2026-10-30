@@ -86,8 +86,15 @@ class _KeybdInput(ctypes.Structure):
                 ("dwExtraInfo", ctypes.c_size_t)]
 
 
+class _MouseInput(ctypes.Structure):
+    """Full native MOUSEINPUT layout: INPUT's union must fit its largest arm."""
+    _fields_ = [("dx", ctypes.c_int32), ("dy", ctypes.c_int32),
+                ("mouseData", ctypes.c_uint32), ("dwFlags", ctypes.c_uint32),
+                ("time", ctypes.c_uint32), ("dwExtraInfo", ctypes.c_size_t)]
+
+
 class _InputUnion(ctypes.Union):
-    _fields_ = [("ki", _KeybdInput)]
+    _fields_ = [("ki", _KeybdInput), ("mi", _MouseInput)]
 
 
 class _Input(ctypes.Structure):
@@ -99,14 +106,20 @@ def send_unicode_text(text: str) -> None:
     """Send user-dictated Unicode keystrokes; never use shell or clipboard."""
     if os.name != "nt":
         raise OSError("Dettatura disponibile solo su Windows.")
-    user32 = ctypes.windll.user32
+    # Win64 INPUT is 40 bytes and Win32 INPUT is 28 bytes. A union containing
+    # KEYBDINPUT alone is too small; Windows rejects SendInput with error 87.
+    expected_size = 40 if ctypes.sizeof(ctypes.c_void_p) == 8 else 28
+    if ctypes.sizeof(_Input) != expected_size:
+        raise OSError("Dimensione non valida della struttura INPUT di Windows.")
+    user32 = ctypes.WinDLL("user32", use_last_error=True)
     user32.SendInput.argtypes = [ctypes.c_uint32, ctypes.POINTER(_Input), ctypes.c_int]
     user32.SendInput.restype = ctypes.c_uint32
     # For newlines use real Return; other characters via KEYEVENTF_UNICODE.
     for char in text:
+        utf16 = char.encode("utf-16-le")
         units = [0] if char == "\n" else [
-            int.from_bytes(char.encode("utf-16-le")[i:i + 2], "little")
-            for i in range(0, len(char.encode("utf-16-le")), 2)
+            int.from_bytes(utf16[i:i + 2], "little")
+            for i in range(0, len(utf16), 2)
         ]
         keys: list[_Input] = []
         for unit in units:
@@ -119,7 +132,10 @@ def send_unicode_text(text: str) -> None:
         arr = (_Input * len(keys))(*keys)
         sent = user32.SendInput(len(keys), arr, ctypes.sizeof(_Input))
         if sent != len(keys):
-            raise OSError("Windows non ha accettato l'inserimento del testo.")
+            code = ctypes.get_last_error()
+            if code:
+                raise OSError(f"SendInput rifiutato (codice Windows {code}).")
+            raise OSError("SendInput rifiutato: finestra protetta o input bloccato.")
 
 
 class DesktopDictation:
@@ -179,6 +195,6 @@ class DesktopDictation:
             return "Il campo di testo ha perso il focus: nulla è stato scritto."
         try:
             self.sender(rendered)
-        except (OSError, ValueError):
-            return "Windows non ha inserito il testo; controlla la finestra selezionata."
-        return "Dettatura inserita nel campo selezionato."
+        except (OSError, ValueError) as exc:
+            return ("Windows non ha inserito il testo: " + str(exc)[:140])
+        return "Testo inviato a Windows; verifica che compaia nel campo selezionato."
