@@ -154,12 +154,16 @@ async function execute(req) {
   throw new Error("Azione GPT non consentita.");
 }
 
-const input = createInterface({ input: process.stdin, crlfDelay: Infinity });
 const awaiting = new Set();
 
 try {
   const session = await initialize();
   emit({ event: "ready", session });
+  // IMPORTANT: install readline only after asynchronous SDK initialization.
+  // If created earlier, piped stdin can close while OAuth storage is loading;
+  // its lines are discarded before for-await begins and Node exits with code 13
+  // for an unsettled top-level await. This also affects Windows smoke tests.
+  const input = createInterface({ input: process.stdin, crlfDelay: Infinity });
   for await (const line of input) {
     let req;
     try {
@@ -181,6 +185,9 @@ try {
       emit({ id: req?.id || 0, ok: false, error: safeError(error) });
     }
   }
+  // When piped input reaches EOF, finish all accepted requests before exit.
+  // Otherwise a successful 'ready' event may conceal a missing response.
+  await Promise.allSettled([...awaiting]);
 } catch (error) {
   emit({ event: "fatal", error: safeError(error) });
   process.exitCode = 1;
