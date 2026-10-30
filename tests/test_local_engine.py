@@ -57,3 +57,33 @@ class LocalEngineTests(TestCase):
             result = self.engine.execute("apri blocco note")
         self.assertEqual(result.status, "completed")
         popen.assert_called_once_with(["notepad.exe"], close_fds=True, shell=False)
+
+    def test_open_default_browser_no_shell(self):
+        self.engine.windows = True
+        with patch("local_engine.webbrowser.open", return_value=True) as browser:
+            result = self.engine.execute("apri il browser")
+        self.assertEqual(result.status, "completed")
+        browser.assert_called_once_with("https://www.google.com/", new=2)
+
+    def test_browser_search_encodes_query_as_data(self):
+        from urllib.parse import parse_qs, urlsplit
+        self.engine.windows = True
+        with patch("local_engine.webbrowser.open", return_value=True) as browser:
+            result = self.engine.execute("cerca nel browser Minecraft & mod #1")
+        self.assertEqual(result.status, "completed")
+        url = browser.call_args.args[0]
+        parsed = urlsplit(url)
+        self.assertEqual(parsed.hostname, "www.google.com")
+        self.assertEqual(parsed.path, "/search")
+        self.assertEqual(parse_qs(parsed.query)["q"], ["minecraft & mod #1"])
+
+    def test_browser_search_rejects_invalid_query(self):
+        self.engine.windows = True
+        with patch("local_engine.webbrowser.open") as browser:
+            self.assertEqual(self.engine.execute("cerca nel browser " + "x" * 161).status, "failed")
+            self.assertEqual(self.engine.execute("cerca nel browser").status, "rejected")
+        browser.assert_not_called()
+
+    def test_browser_requires_windows(self):
+        self.assertEqual(self.engine.execute("apri browser").status, "failed")
+        self.assertEqual(self.engine.execute("cerca nel browser prova").status, "failed")

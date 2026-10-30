@@ -7,6 +7,7 @@ GPT requires the official SDK and an explicit sign-in.
 from __future__ import annotations
 
 import queue
+from desktop_dictation import DesktopDictation, dictation_voice_action
 import threading
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, ttk
@@ -14,9 +15,10 @@ import webbrowser
 
 from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
+from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
 from settings import load_settings, save_settings
-from voice_control import (VoiceController, STANDBY, PUSH_TO_TALK, CONTINUOUS,
+from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            speech_to_local_command)
 
 
@@ -24,7 +26,7 @@ def main() -> None:
     settings = load_settings()
     root = tk.Tk()
     root.title("Jarvis — alpha")
-    root.geometry("790x720")
+    root.geometry("840x740")
     root.minsize(630, 560)
 
     frame = ttk.Frame(root, padding=15)
@@ -46,6 +48,37 @@ def main() -> None:
         mode_buttons.append(button)
     ptt_button = ttk.Button(audio_controls, text="Tieni premuto per parlare", state="disabled")
     ptt_button.pack(anchor="w", pady=(5, 0))
+    dictation_row = ttk.Frame(audio_controls)
+    dictation_row.pack(fill="x", pady=(6, 0))
+    dictation_button = ttk.Button(dictation_row, text="Attiva dettatura", state="disabled")
+    dictation_button.pack(side="left", padx=(0, 9))
+    dictation_status = tk.StringVar(value="Dettatura: disattivata.")
+    ttk.Label(dictation_row, textvariable=dictation_status, wraplength=500).pack(
+        side="left", fill="x", expand=True)
+
+
+    # Built-in Windows voices are optional: no network and no new model.
+    spoken_enabled = tk.BooleanVar(value=settings["tts_enabled"])
+    DEFAULT_VOICE_LABEL = "Predefinita di Windows"
+    spoken_voice = tk.StringVar(value=settings["tts_voice"] or DEFAULT_VOICE_LABEL)
+    speech_controls = ttk.LabelFrame(frame, text="Risposte vocali offline — voci di Windows", padding=8)
+    speech_controls.pack(fill="x", pady=(0, 8))
+    spoken_switch = ttk.Checkbutton(
+        speech_controls, text="Jarvis risponde a voce", variable=spoken_enabled)
+    spoken_switch.pack(anchor="w")
+    speech_row = ttk.Frame(speech_controls)
+    speech_row.pack(fill="x", pady=(4, 0))
+    ttk.Label(speech_row, text="Voce:").pack(side="left", padx=(0, 6))
+    spoken_picker = ttk.Combobox(
+        speech_row, textvariable=spoken_voice, state="readonly",
+        values=[DEFAULT_VOICE_LABEL], width=36)
+    spoken_picker.pack(side="left", padx=(0, 6))
+    refresh_voices_button = ttk.Button(speech_row, text="Aggiorna voci")
+    refresh_voices_button.pack(side="left", padx=(0, 6))
+    test_voice_button = ttk.Button(speech_row, text="Prova voce")
+    test_voice_button.pack(side="left")
+    spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
+    ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
 
     service = GPTClient()
     output_queue: queue.Queue[tuple] = queue.Queue()
@@ -162,7 +195,7 @@ def main() -> None:
     plan_button = ttk.Button(input_row, text="Pianifica attività")
     plan_button.pack(side="left")
 
-    output = scrolledtext.ScrolledText(frame, height=15, wrap="word", state="disabled", font=("Consolas", 10))
+    output = scrolledtext.ScrolledText(frame, height=10, wrap="word", state="disabled", font=("Consolas", 10))
     output.pack(fill="both", expand=True, pady=(12, 0))
     write_line("Jarvis locale pronto. Scrivi 'aiuto' per vedere i comandi disponibili.")
 
@@ -173,11 +206,68 @@ def main() -> None:
         root.destroy()
         return
 
-    voice = VoiceController(output_queue.put)
+    speaker = OfflineSpeaker(notify_error=lambda reason: output_queue.put(("tts_error", reason)))
+    voice = VoiceController(output_queue.put, ignore_audio=speaker.is_audible)
+    wake_gate = WakeWordGate()
+    dictation = DesktopDictation()
+
+    def selected_voice() -> str:
+        choice = spoken_voice.get()
+        return "" if choice == DEFAULT_VOICE_LABEL else choice
+
+    def save_speech_preferences() -> None:
+        settings["tts_enabled"] = bool(spoken_enabled.get())
+        settings["tts_voice"] = selected_voice()
+        try:
+            save_settings(settings)
+            spoken_status.set("Risposte vocali salvate; nessun servizio a pagamento.")
+        except (OSError, ValueError) as exc:
+            spoken_status.set("Impossibile salvare le preferenze vocali: " + str(exc)[:130])
+
+    def refresh_voices() -> None:
+        spoken_status.set("Rilevamento delle voci già installate in Windows...")
+        refresh_voices_button.configure(state="disabled")
+
+        def worker() -> None:
+            try:
+                output_queue.put(("tts_voices", installed_voices()))
+            except (OSError, ValueError, TimeoutError) as exc:
+                output_queue.put(("tts_error", str(exc)[:140]))
+
+        threading.Thread(target=worker, daemon=True, name="jarvis-voices-list").start()
+
+    def test_speech() -> None:
+        if not speaker.speak("Pronto. Questa è la voce di Jarvis.", selected_voice()):
+            spoken_status.set("Sintesi vocale occupata: riprova.")
+
+    def speak_result(message: str) -> None:
+        if spoken_enabled.get() and message:
+            speaker.speak(message, selected_voice())
+
+    def sync_dictation_ui(message: str) -> None:
+        dictation_status.set(message)
+        dictation_button.configure(text="Disattiva dettatura" if dictation.enabled
+                                  else "Attiva dettatura")
+        if not closing:
+            write_line(message)
+
+    def toggle_dictation() -> None:
+        if dictation.enabled:
+            sync_dictation_ui(dictation.disable())
+        elif voice_mode.get() == CONTINUOUS:
+            sync_dictation_ui(dictation.enable())
+        else:
+            sync_dictation_ui("Seleziona prima Ascolto continuo per dettare.")
+
+
 
     def change_voice_mode() -> None:
         selected = voice_mode.get()
+        wake_gate.reset()
         voice.set_mode(selected)
+        if selected != CONTINUOUS and dictation.enabled:
+            sync_dictation_ui(dictation.disable())
+        dictation_button.configure(state="normal" if selected == CONTINUOUS else "disabled")
         ptt_button.configure(state="normal" if selected == PUSH_TO_TALK else "disabled")
         if selected == STANDBY:
             mic_status.set("Microfono: SPENTO (standby)")
@@ -248,30 +338,61 @@ def main() -> None:
                 if kind == "voice_status":
                     if voice_mode.get() != STANDBY:
                         mic_status.set(data[0])
+                    if (dictation.enabled and
+                            (str(data[0]).startswith("Microfono spento") or
+                             str(data[0]).startswith("Voce non disponibile"))):
+                        sync_dictation_ui(dictation.disable())
                 elif kind == "voice_text":
                     spoken = str(data[0]).strip()
-                    if voice_mode.get() != STANDBY and spoken:
-                        write_line("VOCE (offline) > " + spoken)
-                        command = speech_to_local_command(spoken)
-                        if command and not busy_local:
-                            submit_local(message_override=command)
-                        elif command:
-                            write_line("Motore occupato; comando non eseguito.")
-                        elif not request.get().strip():
-                            request.set(spoken)
-                            write_line("Testo inserito: controllalo prima di eseguirlo.")
+                    if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
+                        route_type = "command"  # Push-to-talk already requires a manual press.
+                        if voice_mode.get() == CONTINUOUS:
+                            route_type, spoken = wake_gate.route(
+                                spoken, dictation_active=dictation.enabled)
+                            if route_type == "wake":
+                                mic_status.set("Ehi Jarvis riconosciuto: ascolto il prossimo comando.")
+                            if route_type not in ("command", "dictation"):
+                                continue
+                        if route_type == "dictation":
+                            # Only manual dictation may insert free speech.
+                            sync_dictation_ui(dictation.insert(spoken))
+                            continue
+                        dictation_action = dictation_voice_action(spoken)
+                        if dictation_action == "stop":
+                            sync_dictation_ui(dictation.disable())
+                        elif dictation_action == "start":
+                            if voice_mode.get() == CONTINUOUS:
+                                sync_dictation_ui(dictation.enable())
+                            else:
+                                sync_dictation_ui(
+                                    "Per dettare in altre finestre seleziona Ascolto continuo.")
                         else:
-                            write_line("Testo non eseguito: il campo contiene già una richiesta.")
+                            write_line("VOCE (offline) > " + spoken)
+                            command = speech_to_local_command(spoken)
+                            if command and not busy_local:
+                                submit_local(message_override=command)
+                            elif command:
+                                write_line("Motore occupato; comando non eseguito.")
+                            elif not dictation.enabled and not request.get().strip():
+                                request.set(spoken)
+                                write_line("Testo inserito: controllalo prima di eseguirlo.")
+                            elif not dictation.enabled:
+                                write_line("Testo non eseguito: il campo contiene già una richiesta.")
+                            else:
+                                write_line("Comando non riconosciuto; dettatura invariata.")
                 elif kind == "local":
                     result = data[0]
                     busy_local = False
                     write_line(f"[{result.status}] {result.message}")
+                    if result.status == "completed":
+                        speak_result(result.message)
                 elif kind == "gpt_ok":
                     action, result = data
                     busy_gpt = False
                     if gpt_enabled.get():
                         if action == "ask":
                             write_line("GPT > " + result.get("text", "(nessuna risposta)"))
+                            speak_result(result.get("text", ""))
                             gpt_status.set("GPT: connesso")
                             active_gpt = True
                         elif action == "disconnect":
@@ -281,6 +402,17 @@ def main() -> None:
                             display_status(result)
                     else:
                         active_gpt = False
+                elif kind == "tts_voices":
+                    names = data[0]
+                    spoken_picker.configure(values=[DEFAULT_VOICE_LABEL, *names])
+                    if selected_voice() not in names:
+                        spoken_voice.set(DEFAULT_VOICE_LABEL)
+                        save_speech_preferences()
+                    spoken_status.set(f"Voci offline disponibili: {len(names)}.")
+                    refresh_voices_button.configure(state="normal")
+                elif kind == "tts_error":
+                    spoken_status.set("Voci Windows non disponibili: " + str(data[0]))
+                    refresh_voices_button.configure(state="normal")
                 elif kind == "gpt_error":
                     action, reason = data
                     busy_gpt = False
@@ -321,6 +453,11 @@ def main() -> None:
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
     plan_button.configure(command=submit_plan)
+    dictation_button.configure(command=toggle_dictation)
+    spoken_switch.configure(command=save_speech_preferences)
+    spoken_picker.bind("<<ComboboxSelected>>", lambda event: save_speech_preferences())
+    refresh_voices_button.configure(command=refresh_voices)
+    test_voice_button.configure(command=test_speech)
     for button in mode_buttons:
         button.configure(command=change_voice_mode)
     ptt_button.bind("<ButtonPress-1>", ptt_press)
@@ -333,7 +470,10 @@ def main() -> None:
         nonlocal closing
         closing = True
         planner_abort_event.set()
+        dictation.disable()
+        wake_gate.reset()
         voice.close()
+        speaker.close()
         root.destroy()
         # Non-daemon: ensure the Node child is terminated before Python exits.
         threading.Thread(target=service.stop, daemon=False, name="jarvis-gpt-shutdown").start()
@@ -343,6 +483,7 @@ def main() -> None:
     refresh_buttons()
     input_box.focus_set()
     root.after(120, poll)
+    root.after(400, refresh_voices)
     if gpt_enabled.get():
         root.after(200, lambda: run_gpt("status"))
     root.mainloop()

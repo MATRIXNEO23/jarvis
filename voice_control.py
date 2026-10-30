@@ -7,7 +7,9 @@ Only the trusted local command registry can execute speech automatically.
 from __future__ import annotations
 
 import json
+import re
 import threading
+import time
 from pathlib import Path
 from collections.abc import Callable
 
@@ -29,16 +31,22 @@ def speech_to_local_command(text: str) -> str | None:
     if not isinstance(text, str):
         return None
     words = " ".join(text.casefold().strip(" .!?").split())
-    for prefix in ("ehi jarvis ", "ok jarvis ", "jarvis "):
+    words = re.sub(r"^(?:(?:ehi|ok)\s+)?jarvis[,\s:]+", "", words)
+    for prefix in ("cerca nel browser ", "cerca su internet "):
         if words.startswith(prefix):
-            words = words[len(prefix):]
-            break
+            query = " ".join(words[len(prefix):].split())
+            if 1 <= len(query) <= 160 and not any(ord(ch) < 32 for ch in query):
+                return "cerca nel browser " + query
+            return None
     exact = {
         "apri calcolatrice": "apri calcolatrice",
         "apri la calcolatrice": "apri calcolatrice",
         "apri blocco note": "apri blocco note",
         "apri il blocco note": "apri blocco note",
         "apri esplora file": "apri esplora file",
+        "apri browser": "apri browser",
+        "apri il browser": "apri browser",
+        "apri browser predefinito": "apri browser",
         "apri esplora risorse": "apri esplora file",
         "apri download": "apri download",
         "apri la cartella download": "apri download",
@@ -53,6 +61,43 @@ def speech_to_local_command(text: str) -> str | None:
     return exact.get(words)
 
 
+class WakeWordGate:
+    """Explicit wake name for continuous listening, never a microphone mode.
+
+    A standalone 'Ehi Jarvis' arms exactly one subsequent utterance, for up to
+    10 seconds. Speech without a wake name is ignored as a command. During
+    manual dictation it is text, except recognized wake commands.
+    """
+
+    def __init__(self, *, timeout: float = 10.0,
+                 clock: Callable[[], float] = time.monotonic):
+        self.timeout = timeout
+        self.clock = clock
+        self.armed_until = 0.0
+
+    def reset(self) -> None:
+        self.armed_until = 0.0
+
+    def route(self, speech: str, *, dictation_active: bool = False) -> tuple[str, str]:
+        if not isinstance(speech, str) or not speech.strip():
+            return "ignored", ""
+        spoken = " ".join(speech.casefold().replace(",", " ").replace(":", " ").strip(" .!?").split())
+        for name in ("ehi jarvis", "hey jarvis", "jarvis"):
+            if spoken == name:
+                self.armed_until = self.clock() + self.timeout
+                return "wake", ""
+            if spoken.startswith(name + " "):
+                self.reset()
+                return "command", spoken[len(name):].strip()
+        if self.clock() < self.armed_until:
+            self.reset()
+            return "command", spoken
+        self.reset()
+        if dictation_active:
+            return "dictation", speech
+        return "ignored", ""
+
+
 class VoiceController:
     """Three user-selected modes, serialized audio worker and revocable audio.
 
@@ -61,8 +106,10 @@ class VoiceController:
     """
 
     def __init__(self, notify: Callable[[tuple], None],
-                 model_dir: Path | None = None):
+                 model_dir: Path | None = None,
+                 ignore_audio: Callable[[], bool] | None = None):
         self.notify = notify
+        self.ignore_audio = ignore_audio
         self.model_dir = Path(model_dir) if model_dir else model_directory()
         self.mode = STANDBY
         self._lock = threading.RLock()
@@ -166,8 +213,19 @@ class VoiceController:
             with sd.RawInputStream(samplerate=16000, blocksize=4000,
                                    channels=1, dtype="int16") as stream:
                 fragments: list[str] = []
+                suppressed = False
                 while not stop.is_set() and self._is_current(generation):
                     data, overflow = stream.read(4000)
+                    # Keep the microphone open; ignore self-generated speaker audio.
+                    if self.ignore_audio and self.ignore_audio():
+                        if not suppressed:
+                            recognizer = KaldiRecognizer(model, 16000)
+                            fragments.clear()
+                            suppressed = True
+                        continue
+                    if suppressed:
+                        recognizer = KaldiRecognizer(model, 16000)
+                        suppressed = False
                     if overflow:
                         self._report("voice_status", "Audio in ritardo: parla più lentamente.", generation)
                     if recognizer.AcceptWaveform(bytes(data)):
