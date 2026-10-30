@@ -4,6 +4,10 @@ Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo *
 
 ## Download diretto per Windows
 
+**[NUOVA PROVA — JARVIS CON DETTATURA, APERTURA BROWSER E RICERCA WEB](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/voice-browser-dictation.zip)**
+
+Questa versione aggiunge dettatura vocale in un campo esterno, `apri il browser` e `cerca nel browser ...`. **Attenzione: test CI ancora in corso e collaudo reale sul Pavilion ancora da eseguire. Non sostituisce per ora la versione vocale già funzionante.** [Istruzioni e limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/voice-browser-dictation/docs/DETTATURA_BROWSER.md).
+
 **[SCARICA JARVIS — ZIP COMPLETO AGGIORNATO CON VOCE OFFLINE (PROVA)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/offline-voice-pavilion.zip)**
 
 Questa e' la **versione di prova con voce italiana offline**. Il codice e' nel branch `feature/offline-voice-pavilion`, separato dal ramo stabile `main`. I test automatici Windows/Linux sono superati; **il microfono reale sul Pavilion non e' ancora stato collaudato**. Scarica lo ZIP, estrailo in **una cartella nuova**, avvia **`installa_voce.bat`** (installazione facoltativa dei moduli vocali e del modello italiano), poi **`avvia_jarvis.bat`**. **All'avvio il microfono e' spento** e le modalita' si selezionano solo manualmente.
