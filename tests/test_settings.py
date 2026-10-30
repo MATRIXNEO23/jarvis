@@ -10,7 +10,7 @@ class SettingsTests(unittest.TestCase):
     def test_default_chatgpt_enabled(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
-            self.assertEqual(load_settings(path), {"gpt_enabled": True})
+            self.assertEqual(load_settings(path), {"gpt_enabled": True, "tts_enabled": False, "tts_voice": ""})
 
     def test_disable_then_reenable_persists(self):
         with TemporaryDirectory() as folder:
@@ -25,6 +25,22 @@ class SettingsTests(unittest.TestCase):
             path = Path(folder) / "settings.json"
             path.write_text('{"gpt_enabled": "no"}', encoding="utf-8")
             self.assertTrue(load_settings(path)["gpt_enabled"])
+
+    def test_tts_preferences_persist_without_losing_gpt(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "settings.json"
+            save_settings({"gpt_enabled": False, "tts_enabled": True,
+                           "tts_voice": "Voce italiana"}, path)
+            self.assertEqual(load_settings(path),
+                             {"gpt_enabled": False, "tts_enabled": True,
+                              "tts_voice": "Voce italiana"})
+
+    def test_existing_settings_are_migrated(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "settings.json"
+            path.write_text('{"gpt_enabled": false}', encoding="utf-8")
+            self.assertEqual(load_settings(path)["gpt_enabled"], False)
+            self.assertEqual(load_settings(path)["tts_enabled"], False)
 
     def test_reject_non_bool(self):
         with TemporaryDirectory() as folder:
