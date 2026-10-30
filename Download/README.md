@@ -1,5 +1,11 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NOVITÀ — CATALOGO DEI COMANDI PER APPLICAZIONE
+
+La versione **Conversazione GPT e documenti** include ora `jarvis_commands.json`, un catalogo delle azioni che Jarvis sa realmente eseguire. GPT può collegare frasi diverse alla stessa azione, per esempio **«Chiudimi Blocco note»** → `notepad.close`, senza imporre parole identiche. Aggiunta anche l'apertura del **disco locale C**. Sono supportate soltanto le funzioni con un esecutore verificato; non viene dato a GPT accesso libero ai programmi, ai file o alla shell. [Leggi il catalogo e i limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/gpt-conversazione-documenti/docs/CATALOGO_COMANDI.md).
+
+Per provare l'aggiornamento, scarica **nuovamente il primo ZIP** e tieni separata la versione che già funziona. Il catalogo richiede ancora la prova reale sul Pavilion; il microfono parte sempre spento.
+
 ## NUOVA PROVA ISOLATA — CONVERSAZIONE GPT E DOCUMENTI
 
 **[SCARICA LO ZIP SPERIMENTALE CON GPT CONVERSAZIONALE E BLOCCO NOTE](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/gpt-conversazione-documenti.zip)**
