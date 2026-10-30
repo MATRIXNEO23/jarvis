@@ -26,7 +26,7 @@ def main() -> None:
     settings = load_settings()
     root = tk.Tk()
     root.title("Jarvis — alpha")
-    root.geometry("800x760")
+    root.geometry("840x740")
     root.minsize(630, 560)
 
     frame = ttk.Frame(root, padding=15)
@@ -195,7 +195,7 @@ def main() -> None:
     plan_button = ttk.Button(input_row, text="Pianifica attività")
     plan_button.pack(side="left")
 
-    output = scrolledtext.ScrolledText(frame, height=15, wrap="word", state="disabled", font=("Consolas", 10))
+    output = scrolledtext.ScrolledText(frame, height=10, wrap="word", state="disabled", font=("Consolas", 10))
     output.pack(fill="both", expand=True, pady=(12, 0))
     write_line("Jarvis locale pronto. Scrivi 'aiuto' per vedere i comandi disponibili.")
 
@@ -206,7 +206,7 @@ def main() -> None:
         root.destroy()
         return
 
-    speaker = OfflineSpeaker()
+    speaker = OfflineSpeaker(notify_error=lambda reason: output_queue.put(("tts_error", reason)))
     voice = VoiceController(output_queue.put, ignore_audio=speaker.is_audible)
     wake_gate = WakeWordGate()
     dictation = DesktopDictation()
