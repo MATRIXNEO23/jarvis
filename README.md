@@ -1,14 +1,14 @@
 # Jarvis — Windows 10 (64 bit)
 
-**Continuità del progetto:** [stato verificato, branch, test e punto di ripresa (30/10/2026)](docs/CONTINUITA_JARVIS.md). Il CI della nuova prova browser/dettatura è **fallito**; non dichiararla ancora testata. La versione voce precedente rimane disponibile.
+**Continuità del progetto:** [stato, branch e punto di ripresa (30/10/2026)](docs/CONTINUITA_JARVIS.md). Il problema del test di ricerca web è stato corretto. I test automatici della nuova versione con browser, dettatura, «Ehi Jarvis» e risposte vocali hanno superato [Windows e Linux](https://github.com/MATRIXNEO23/jarvis/actions/runs/41126671637). **Le nuove funzioni non sono ancora state provate sul Pavilion**; la versione vocale precedente resta disponibile.
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
 ## Download diretto per Windows
 
-**[NUOVA PROVA — JARVIS CON DETTATURA, APERTURA BROWSER E RICERCA WEB](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/voice-browser-dictation.zip)**
+**[NUOVA PROVA — JARVIS CON DETTATURA, BROWSER, «EHI JARVIS» E RISPOSTE VOCALI OFFLINE](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/voice-browser-dictation.zip)**
 
-Questa versione aggiunge dettatura vocale in un campo esterno, `apri il browser` e `cerca nel browser ...`. **Attenzione: test CI ancora in corso e collaudo reale sul Pavilion ancora da eseguire. Non sostituisce per ora la versione vocale già funzionante.** [Istruzioni e limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/voice-browser-dictation/docs/DETTATURA_BROWSER.md).
+Il ramo sperimentale aggiunge dettatura nelle altre finestre, apertura e ricerca nel browser, chiamata «Ehi Jarvis» per i comandi in ascolto continuo e **voci Windows selezionabili per risposte parlate gratuite/offline**. **Test automatici verdi; collaudo fisico ancora da fare. Non sostituisce per ora la versione già verificata.** [Dare una voce a Jarvis](https://github.com/MATRIXNEO23/jarvis/blob/feature/voice-browser-dictation/docs/VOCE_RISPOSTE.md) · [Dettatura e browser](https://github.com/MATRIXNEO23/jarvis/blob/feature/voice-browser-dictation/docs/DETTATURA_BROWSER.md).
 
 **[SCARICA JARVIS — ZIP COMPLETO AGGIORNATO CON VOCE OFFLINE (PROVA)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/offline-voice-pavilion.zip)**
 
