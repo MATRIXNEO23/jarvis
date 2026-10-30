@@ -4,6 +4,14 @@
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
+## Nuovo ramo di prova: memoria Second Brain di Lia
+
+**[ZIP Jarvis con Second Brain locale e conversazione GPT](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/conversation-short-memory.zip)**.
+
+Lia ora può utilizzare gli ultimi scambi per interpretare i messaggi successivi e, dopo **attivazione manuale del Second Brain**, archiviare conversazioni brevi e risultati di azioni locali realmente concluse in un database SQLite del PC, consultabile anche dopo il riavvio. Il nuovo ramo include il catalogo dei comandi e la gestione di Blocco note, ma resta isolato dalla versione funzionante. [Documentazione dettagliata](https://github.com/MATRIXNEO23/jarvis/blob/feature/conversation-short-memory/docs/SECOND_BRAIN.md) · [PR sperimentale #4](https://github.com/MATRIXNEO23/jarvis/pull/4).
+
+**Non include ancora lettura/invio email**: prepara soltanto la registrazione futura di ricevute verificabili. Memoria persistente disattivata per impostazione predefinita, cancellabile manualmente; niente nuovi costi/API e microfono sempre spento all'avvio. Non sostituire la vecchia versione prima dei test sul Pavilion.
+
 ## Ultimo sviluppo sperimentale: interpretazione dei comandi
 
 **[Scarica Jarvis con conversazione GPT e catalogo dei comandi](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/gpt-conversazione-documenti.zip)**.
