@@ -17,7 +17,7 @@ Branch sperimentale `feature/gpt-conversazione-documenti`, PR draft #3, nessun m
 - `action_planner.py`, `local_engine.py`, `voice_control.py`: aggiunta la capacità fissa `explorer.drive_c` per aprire C in Esplora file senza shell e senza consentire percorsi arbitrari; disponibile anche come comando vocale offline preciso.
 - Test `tests/test_capability_registry.py` e ampliamenti ai test per GPT, planner, motore locale e Vosk.
 
-**Ultima CI del ramo con documentazione:** [Windows/Linux SUCCESS, run 41137740455](https://github.com/MATRIXNEO23/jarvis/actions/runs/41137740455). Prima di ulteriori modifiche verificare nuovamente HEAD e CI.
+**Ultima CI del ramo con documentazione:** [Windows/Linux SUCCESS, run 41137979952](https://github.com/MATRIXNEO23/jarvis/actions/runs/41137979952). Prima di ulteriori modifiche verificare nuovamente HEAD e CI.
 
 ## Condizioni di collaudo
 
@@ -26,3 +26,6 @@ L'utente ha già provato sul Pavilion che la versione precedente può creare doc
 Non dichiarare che Jarvis conosce tutti i comandi di Windows: l'elenco è estendibile ma ogni nuova applicazione richiede un adattatore sicuro, test e decisione di adozione. Il JSON **non è un file di comandi eseguibili**.
 
 Requisiti invariati: microfono sempre spento ad ogni avvio, scelta manuale delle modalità, nessun timeout che cambia la modalità, nessuna nuova API a pagamento, DevKit GPT già configurato, versione già funzionante da conservare in cartella separata, nessun merge automatico.
+
+
+**Ottimizzazione successiva:** il catalogo inviato a GPT è compatto, mentre il file JSON locale conserva tutte le descrizioni. Il test verifica che anche con una frase vocale lunga il prompt resti entro il limite di 5.000 caratteri del DevKit già installato. Commit verificato: `98bd7a2c18d4afdb6deacbd7dd1daa1922a775eb`.
