@@ -25,6 +25,12 @@ class ConversationRouterTests(unittest.TestCase):
                 with self.assertRaises(ConversationRejected):
                     build_conversation_prompt(utterance)
 
+    def test_exact_json_fence_is_supported_without_embedded_commands(self):
+        raw = '```json\\n{"kind":"chat","reply":"Ciao."}\\n```'
+        self.assertEqual(parse_conversation_intent(raw).reply, "Ciao.")
+        with self.assertRaises(ConversationRejected):
+            parse_conversation_intent(raw + "\\nUn altro comando")
+
     def test_chat_is_only_a_spoken_answer(self):
         intent = parse_conversation_intent(
             encode({"kind": "chat", "reply": "Sto funzionando normalmente."}))
