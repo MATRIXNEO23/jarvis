@@ -110,11 +110,10 @@ def capability_prompt(*, has_document: bool = False) -> str:
             "id": aid,
             "app": item["application"],
             "does": item["description"],
-            "examples": item["examples"],
-            "risk": item["risk"],
+            "example": item["examples"][0],
         })
     rendered = json.dumps(actions, ensure_ascii=False, separators=(",", ":"))
-    if len(rendered) > 9000:
+    if len(rendered) > 3500:
         raise CapabilityRejected("Catalogo troppo lungo per GPT.")
     return rendered
 
