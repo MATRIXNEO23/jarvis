@@ -213,7 +213,7 @@ class LocalEngine:
         url = "https://www.google.com/search?" + urlencode({"q": query})
         if not webbrowser.open(url, new=2):
             raise OSError("Impossibile aprire il browser predefinito.")
-        return "Ricerca aperta nel browser: " + query
+        return "Ricerca aperta nel browser."
 
     def _history(self) -> str:
         with self._connection() as db:
