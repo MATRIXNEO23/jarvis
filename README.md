@@ -26,7 +26,7 @@ La progettazione **GPT-first + esecutore locale controllato + funzioni offline**
 
 - [x] **Codice di integrazione GPT presente:** adapter Node `gpt_bridge.mjs` basato sul [DevKit ufficiale](https://github.com/openai/sign-in-with-chatgpt-devkit), client Python via pipe, cifratura DPAPI per utente Windows e installer su richiesta con SDK fissato a commit specifico.
 - [x] **Interfaccia GPT:** Connetti ChatGPT, Scollega account, Chiedi a GPT, interruttore ON/OFF manuale; il tasto ON **non** equivale a una sessione OAuth connessa.
-- [x] **Verifiche statiche e protocollo:** test Windows/Linux Python, sintassi Node e PowerShell su GitHub Actions.
+- [x] **Verifiche statiche e protocollo:** test Windows/Linux Python, sintassi Node e PowerShell; [smoke test Windows del kit GPT e del dialogo con il processo superato](https://github.com/MATRIXNEO23/jarvis/actions/runs/41087321055). Questo **non** verifica un login reale al piano ChatGPT.
 - [ ] **Login OAuth e inferenza reale testati sul Pavilion:** serve eseguire `installa_gpt.bat`, autorizzare il proprio account dal browser e ottenere una vera risposta. Le capacità del piano non vengono presunte.
 - [ ] **Pianificatore GPT -> strumenti locali:** ancora assente. Le risposte testuali GPT non avviano azioni sul computer.
 - [ ] Comandi vocali, apprendimento procedure, TTS, tray, ricerca web, automazioni e packaging Windows.
