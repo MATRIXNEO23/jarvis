@@ -6,6 +6,7 @@ executor, which accepts only registered actions with validated arguments.
 from __future__ import annotations
 
 import ctypes
+from contextlib import contextmanager
 import os
 from pathlib import Path
 import re
@@ -35,7 +36,7 @@ class LocalEngine:
         self.db_path = Path(db_path) if db_path else default_path().with_name("tasks.db")
         self.windows = os.name == "nt" if windows is None else windows
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(self.db_path) as db:
+        with self._connection() as db:
             db.execute("""CREATE TABLE IF NOT EXISTS tasks(
                 id TEXT PRIMARY KEY,
                 time_utc TEXT NOT NULL,
@@ -43,6 +44,20 @@ class LocalEngine:
                 status TEXT NOT NULL,
                 message TEXT NOT NULL
             )""")
+
+    @contextmanager
+    def _connection(self):
+        # sqlite3.Connection.__exit__ does not close the file handle.
+        # Explicit close matters on Windows, especially during tests/backups.
+        db = sqlite3.connect(self.db_path)
+        try:
+            yield db
+            db.commit()
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
 
     @staticmethod
     def available_commands() -> str:
@@ -60,7 +75,7 @@ class LocalEngine:
         )
 
     def _record(self, result: TaskResult) -> TaskResult:
-        with sqlite3.connect(self.db_path) as db:
+        with self._connection() as db:
             db.execute("INSERT INTO tasks VALUES (?, ?, ?, ?, ?)", (
                 result.task_id, datetime.now(timezone.utc).isoformat(),
                 result.action, result.status, result.message[:4000]))
@@ -172,6 +187,6 @@ class LocalEngine:
         return self._open_app(["explorer.exe", str(self.download_dir)], "Cartella Download")
 
     def _history(self) -> str:
-        with sqlite3.connect(self.db_path) as db:
+        with self._connection() as db:
             rows = db.execute("SELECT action, status FROM tasks ORDER BY rowid DESC LIMIT 10").fetchall()
         return "Ultime attività:\n" + ("\n".join(f"{action}: {status}" for action, status in rows) if rows else "Nessuna")
