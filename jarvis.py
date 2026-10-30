@@ -136,7 +136,7 @@ def main() -> None:
         refresh_buttons()
         if action == "sign_in":
             gpt_status.set("GPT: in attesa del login nel browser...")
-        elif action == "ask":
+        elif action in ("ask", "conversation"):
             gpt_status.set("GPT: elaborazione richiesta...")
         elif action == "disconnect":
             gpt_status.set("GPT: scollegamento...")
@@ -144,18 +144,19 @@ def main() -> None:
             gpt_status.set("GPT: verifica connessione...")
 
         def worker() -> None:
+            epoch = params.get("epoch") if action == "conversation" else None
             try:
                 timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
                 sdk_action = "ask" if action == "conversation" else action
-                epoch = params.pop("epoch", None) if action == "conversation" else None
-                result = service.call(sdk_action, timeout=timeout, **params)
+                sdk_params = {key: value for key, value in params.items() if key != "epoch"}
+                result = service.call(sdk_action, timeout=timeout, **sdk_params)
                 if action == "conversation":
                     output_queue.put(("conversation_ok", epoch, result))
                 else:
                     output_queue.put(("gpt_ok", action, result))
             except Exception as exc:
                 if action == "conversation":
-                    output_queue.put(("conversation_error", params.get("epoch"), str(exc)[:220]))
+                    output_queue.put(("conversation_error", epoch, str(exc)[:220]))
                 else:
                     output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
