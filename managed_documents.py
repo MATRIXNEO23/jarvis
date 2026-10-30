@@ -25,6 +25,17 @@ class ManagedDocuments:
         self.bridge = bridge or ClassicNotepadBridge()
         self.current: NotepadSession | None = None
 
+    def open_blank(self) -> DocumentOperation:
+        if self.current is not None:
+            raise NotepadUnavailable(
+                "C'è già un Blocco note gestito da Jarvis. "
+                "Chiudilo prima di aprirne uno nuovo.")
+        note = self.bridge.open_blank()
+        self.current = note
+        return DocumentOperation(
+            "opened", "Ho aperto un nuovo Blocco note gestito da Jarvis.",
+            note.ident)
+
     def compose(self, text: str, target: str) -> DocumentOperation:
         if not isinstance(text, str) or not text.strip() or len(text) > 4500:
             raise ValueError("Testo troppo lungo o vuoto.")
@@ -33,9 +44,9 @@ class ManagedDocuments:
                 raise NotepadUnavailable(
                     "Un documento di Jarvis è già aperto. Chiedi di aggiungere "
                     "il testo a quel documento oppure chiudilo prima.")
-            note = self.bridge.open_blank()
+            self.open_blank()
+            note = self._note()
             self.bridge.write(note, text)
-            self.current = note
             return DocumentOperation(
                 "created", "Ho scritto il testo in un nuovo Blocco note. "
                 "Il documento non è ancora salvato.", note.ident)
