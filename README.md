@@ -1,5 +1,7 @@
 # Jarvis — Windows 10 (64 bit)
 
+**Continuità del progetto:** [stato verificato, branch, test e punto di ripresa (30/10/2026)](docs/CONTINUITA_JARVIS.md). Il CI della nuova prova browser/dettatura è **fallito**; non dichiararla ancora testata. La versione voce precedente rimane disponibile.
+
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
 ## Download diretto per Windows
