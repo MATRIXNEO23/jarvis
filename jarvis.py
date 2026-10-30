@@ -303,6 +303,14 @@ def main() -> None:
     disconnect.pack(side="left")
     ttk.Label(frame, text="Il login usa il browser ufficiale; nessuna chiave API e nessuna fatturazione a consumo.").pack(anchor="w")
 
+    brain_controls = ttk.Frame(frame)
+    brain_controls.pack(fill="x", pady=(5, 3))
+    memory_toggle.configure(variable=memory_enabled)
+    memory_toggle.pack(in_=brain_controls, side="left", padx=(0, 10))
+    memory_clear_button.pack(in_=brain_controls, side="right")
+    ttk.Label(frame, textvariable=memory_status, wraplength=710).pack(
+        anchor="w", pady=(0, 4))
+
     ttk.Separator(frame, orient="horizontal").pack(fill="x", pady=(13, 8))
     ttk.Label(frame, text="Digita un comando locale oppure una domanda per GPT").pack(anchor="w", pady=(0, 6))
     input_row = ttk.Frame(frame)
