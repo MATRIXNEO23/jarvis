@@ -27,6 +27,8 @@ class GPTClient:
         self._next_id = 0
         self._pending: dict[int, queue.Queue[dict]] = {}
         self._process: subprocess.Popen | None = None
+        self._ready_signal = threading.Event()
+        self._startup_error: str | None = None
 
     @staticmethod
     def installed_sdk() -> Path:
@@ -38,30 +40,43 @@ class GPTClient:
     def start(self) -> None:
         with self._lock:
             if self._process and self._process.poll() is None:
-                return
-            if os.name != "nt":
-                raise GPTUnavailable("Il collegamento GPT richiede Windows 10/11.")
-            if not self.installed_sdk().is_file():
-                raise GPTUnavailable("SDK GPT non installato. Esegui installa_gpt.ps1.")
-            node = shutil.which("node")
-            if not node:
-                raise GPTUnavailable("Node.js 22 o successivo non trovato nel PATH.")
-            script = self.app_dir / "gpt_bridge.mjs"
-            if not script.is_file():
-                raise GPTUnavailable("Manca il modulo gpt_bridge.mjs.")
-            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-            try:
-                self._process = subprocess.Popen(
-                    [node, str(script)], cwd=str(self.app_dir),
-                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL, text=True, encoding="utf-8",
-                    errors="replace", bufsize=1, creationflags=flags,
-                )
-            except OSError as exc:
-                raise GPTUnavailable(f"Impossibile avviare GPT: {exc}") from exc
-            proc = self._process
-            threading.Thread(target=self._read_loop, args=(proc,), daemon=True,
-                             name="jarvis-gpt-pipe").start()
+                signal = self._ready_signal
+            else:
+                if os.name != "nt":
+                    raise GPTUnavailable("Il collegamento GPT richiede Windows 10/11.")
+                if not self.installed_sdk().is_file():
+                    raise GPTUnavailable("SDK GPT non installato. Esegui installa_gpt.ps1.")
+                node = shutil.which("node")
+                if not node:
+                    raise GPTUnavailable("Node.js 22 o successivo non trovato nel PATH.")
+                script = self.app_dir / "gpt_bridge.mjs"
+                if not script.is_file():
+                    raise GPTUnavailable("Manca il modulo gpt_bridge.mjs.")
+                flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                self._startup_error = None
+                self._ready_signal = threading.Event()
+                signal = self._ready_signal
+                try:
+                    self._process = subprocess.Popen(
+                        [node, str(script)], cwd=str(self.app_dir),
+                        stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                        stderr=subprocess.DEVNULL, text=True, encoding="utf-8",
+                        errors="replace", bufsize=1, creationflags=flags,
+                    )
+                except OSError as exc:
+                    raise GPTUnavailable(f"Impossibile avviare GPT: {exc}") from exc
+                proc = self._process
+                threading.Thread(target=self._read_loop, args=(proc,), daemon=True,
+                                 name="jarvis-gpt-pipe").start()
+        # The JS bridge builds the SDK asynchronously. No request may be sent
+        # before its explicit 'ready' packet, otherwise piped input is lost.
+        if not signal.wait(timeout=45):
+            raise GPTUnavailable("Timeout durante l'avvio del modulo GPT.")
+        with self._lock:
+            if self._startup_error:
+                raise GPTUnavailable(self._startup_error)
+            if not self._process or self._process.poll() is not None:
+                raise GPTUnavailable("Il modulo GPT è terminato prima di essere pronto.")
 
     def _read_loop(self, proc: subprocess.Popen) -> None:
         try:
@@ -80,6 +95,14 @@ class GPTClient:
                         if target:
                             target.put(packet)
                     elif packet.get("event") in ("ready", "open_browser", "fatal"):
+                        if packet.get("event") == "ready":
+                            self._ready_signal.set()
+                        elif packet.get("event") == "fatal":
+                            with self._lock:
+                                self._startup_error = str(
+                                    packet.get("error", "Avvio GPT fallito.")
+                                )[:300]
+                            self._ready_signal.set()
                         self.events.put(packet)
         finally:
             # An unexpected exit releases blocked callers rather than hanging.
@@ -89,6 +112,10 @@ class GPTClient:
                 pending = list(self._pending.values())
             for target in pending:
                 target.put({"ok": False, "error": "Servizio GPT interrotto."})
+            if not self._ready_signal.is_set():
+                with self._lock:
+                    self._startup_error = "Modulo GPT terminato durante l'avvio."
+                self._ready_signal.set()
             self.events.put({"event": "stopped"})
 
     def call(self, action: str, *, timeout: float = 40, **arguments) -> dict:
