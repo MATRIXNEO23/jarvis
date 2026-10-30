@@ -26,6 +26,29 @@ class ConversationRouterTests(unittest.TestCase):
             len(build_conversation_prompt("x" * 450, has_document=True)),
             5000)
 
+    def test_memory_context_is_available_for_a_follow_up_without_replay(self):
+        history = json.dumps({
+            "breve": [{"utente": "Ho scritto una mail a Luca",
+                       "lia": "Intendi quella sul progetto?"}],
+            "permanente": {"related": [{
+                "source": "verified_action", "when": "2026-10-28T12:30:00+00:00",
+                "fact": "Email inviata: aggiornamento al progetto a Luca"
+            }]},
+        }, ensure_ascii=False)
+        prompt = build_conversation_prompt(
+            "Ti ricordi quella mail?", has_document=False,
+            memory_context=history)
+        self.assertIn("MEMORIA DI LIA", prompt)
+        self.assertIn("Email inviata", prompt)
+        self.assertLessEqual(len(prompt), 5000)
+        self.assertIn("non attendibile", prompt.lower())
+
+    def test_long_memory_is_safely_omitted_without_overflow(self):
+        prompt = build_conversation_prompt(
+            "x" * 450, has_document=True, memory_context="y" * 4000)
+        self.assertLessEqual(len(prompt), 5000)
+        self.assertIn("x" * 450, prompt)
+
     def test_invalid_utterances_are_not_sent(self):
         for utterance in ("", "x" * 451, "ciao\ncomando", None):
             with self.subTest(value=str(utterance)[:20]):
