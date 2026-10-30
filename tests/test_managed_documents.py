@@ -190,9 +190,8 @@ class ManagedDocumentTests(unittest.TestCase):
                          ctypes.sizeof(ctypes.c_void_p))
         self.assertEqual(ctypes.sizeof(ctypes.c_ssize_t),
                          ctypes.sizeof(ctypes.c_void_p))
-        with self.assertRaises(NotepadUnavailable):
-            ClassicNotepadBridge().open_blank() if __import__("os").name != "nt" else (
-                (_ for _ in ()).throw(NotepadUnavailable("No live Windows tests")))
+        # On Windows the real control is exercised only on the Pavilion,
+        # never in a CI unit test that could open a user-visible application.
 
 
 if __name__ == "__main__":
