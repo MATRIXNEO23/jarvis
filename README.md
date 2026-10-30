@@ -4,6 +4,14 @@
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
+## Ultimo sviluppo sperimentale: interpretazione dei comandi
+
+**[Scarica Jarvis con conversazione GPT e catalogo dei comandi](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/gpt-conversazione-documenti.zip)**.
+
+Nel ramo di prova è disponibile un catalogo dichiarativo `jarvis_commands.json`: GPT consulta la lista delle azioni realmente implementate per identificare il comando anche quando la frase è diversa, ad esempio «mi chiudi Blocco note?» → `notepad.close`, oppure «aprimi il disco C» → `explorer.drive_c`. Le operazioni vengono eseguite da adapter Python verificati, **non** da comandi creati liberamente dal modello. [Documentazione del catalogo](https://github.com/MATRIXNEO23/jarvis/blob/feature/gpt-conversazione-documenti/docs/CATALOGO_COMANDI.md).
+
+Questa è una **versione sperimentale**: conservare la vecchia installazione, usare un'altra cartella per la prova sul Pavilion. Il microfono parte spento e la modalità Conversazione continua GPT richiede selezione manuale e collegamento ChatGPT già disponibile. Nessuna nuova API a pagamento. Il catalogo non implica che ogni applicazione Windows sia automaticamente supportata.
+
 ## Download diretto per Windows
 
 **[NUOVA PROVA — JARVIS CON DETTATURA, BROWSER, «EHI JARVIS» E RISPOSTE VOCALI OFFLINE](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/voice-browser-dictation.zip)**
