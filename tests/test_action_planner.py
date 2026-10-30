@@ -52,7 +52,7 @@ class PlannerPolicyTests(unittest.TestCase):
         self.assertIn("rete", planned.preview())
 
     def test_web_search_rejects_invalid_queries(self):
-        for query in ("", "x" * 161, "a\\nb", None):
+        for query in ("", "x" * 161, "a\nb", None):
             with self.subTest(query=query):
                 with self.assertRaises(PlanRejected):
                     parse_plan(make_plan(step("web_search", query=query)))
