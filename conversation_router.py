@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import re
 
 from action_planner import ApprovedPlan, PlanRejected, parse_plan
 
@@ -97,6 +98,11 @@ def parse_conversation_intent(raw: str) -> ConversationIntent:
     """Reject all extra fields and any tool not permitted by the local planner."""
     if not isinstance(raw, str) or not raw.strip() or len(raw) > MAX_GPT_JSON:
         raise ConversationRejected("Risposta GPT non valida o troppo lunga.")
+    raw = raw.strip()
+    fenced = re.fullmatch(r"```(?:json)?\\s*\\n(.*?)\\n```", raw,
+                          re.I | re.S)
+    if fenced:
+        raw = fenced.group(1).strip()
     try:
         obj = json.loads(raw, object_pairs_hook=_unique_keys)
     except (ValueError, TypeError) as exc:
