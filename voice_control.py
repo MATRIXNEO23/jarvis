@@ -81,7 +81,7 @@ class WakeWordGate:
     def route(self, speech: str, *, dictation_active: bool = False) -> tuple[str, str]:
         if not isinstance(speech, str) or not speech.strip():
             return "ignored", ""
-        spoken = " ".join(speech.casefold().strip(" ,.!?").split())
+        spoken = " ".join(speech.casefold().replace(",", " ").replace(":", " ").strip(" .!?").split())
         for name in ("ehi jarvis", "hey jarvis", "jarvis"):
             if spoken == name:
                 self.armed_until = self.clock() + self.timeout
