@@ -1,6 +1,6 @@
 # Roadmap Jarvis — architettura GPT-first, controllo locale e funzionamento offline
 
-> Stato: **sviluppo alpha locale** (Fase 1 iniziata; connessione GPT ancora assente). Questa roadmap descrive le funzionalità da realizzare; le caselle non completate **non** rappresentano funzioni disponibili. Aggiornamento: 30 ottobre 2026.
+> Stato: **sviluppo alpha locale** (comandi locali e prima connessione GPT funzionanti; pianificatore con approvazione in prova). Questa roadmap descrive le funzionalità da realizzare; le caselle non completate **non** rappresentano funzioni disponibili. Aggiornamento: 30 ottobre 2026.
 
 ## Obiettivo
 
@@ -84,22 +84,24 @@ Voce (Vosk offline) / chat testuale / tasti
 ### Fase 2 — Collegamento GPT ufficiale con costo zero
 - [x] Implementato **adapter sperimentale** per il [Sign in with ChatGPT DevKit](https://github.com/openai/sign-in-with-chatgpt-devkit) (`@siwc/local`), senza browser automation non ufficiale. Richiede collaudo con account reale.
 - [ ] Node >=22.12: installer su richiesta, commit SDK fissato e processo figlio isolato **implementati**; misurazione RAM/CPU sul Pavilion e verifica completa delle dipendenze ancora da effettuare.
-- [ ] Login browser/PKCE/OIDC delegati al SDK ufficiale, adapter DPAPI CurrentUser e comandi connessione/sconnessione **implementati**; test credenziali, refresh, revoca e permessi su Windows 10 ancora mancanti.
+- [ ] Login browser/PKCE/OIDC delegati all'SDK ufficiale e protezione DPAPI **implementati**, con primo collegamento reale riuscito sul Pavilion il 30/10/2026. Restano da verificare refresh, disconnessione, revoca e comportamento dopo riavvio.
 - [x] Interruttore ON/OFF collegato al processo figlio e preferenza persistente; ON iniziale = **permesso di tentare il gateway**, non accesso già autenticato. Da testare con richiesta attiva durante la disattivazione.
 - [x] Gateway avviato quando GPT è abilitato (e installato), senza timeout automatico; nessuna richiesta AI in background. Test CPU/RAM ancora da effettuare.
 - [ ] Modelli da catalogo SDK, selezione prima voce disponibile e indicatori stato **implementati in alpha**; affinare errori quota e aggiungere scelta modello, quindi verificare su account reale.
-- [ ] Test reale (consenso + lista modelli + risposta completata + logout + riavvio). Vietato dichiarare «GPT funzionante» in assenza di test.
+- [ ] **Test reale parzialmente riuscito il 30/10/2026 sul Pavilion**: installazione SDK, stato connesso e prima risposta testuale confermati dall'utente. Restano test lista modelli, logout, riavvio, quote e prestazioni.
 - [x] **Nessun fallback automatico a chiavi API standard o crediti a consumo** previsto nel codice; le richieste passano esclusivamente per SDK ufficiale dopo consenso.
 
 **Gate:** richiesta innocua completata tramite Sign in with ChatGPT su Windows 10 x64, consumo aggiuntivo assente, errori/quota comunicati con chiarezza, comando offline sempre disponibile.
 
 ### Fase 3 — Pianificazione assistita da GPT
+> **Stato 30/10/2026:** prima UI con pulsante «Pianifica attività», anteprima, approvazione e annullamento fra passi implementata e testata in CI Windows/Linux. Non ancora collaudata sul Pavilion; il pulsante «Chiedi a GPT» non esegue comandi.
+
 - [ ] Parser intenzioni: comandi deterministici offline prima; GPT per compiti ambigui/complessi quando disponibile.
-- [ ] Schema di piano `intent / steps / tool_id / arguments / expected_result / risk` con validazione rigorosa locale.
+- [x] **Prima versione del piano a passi**: `intent / steps / tool_id / arguments` generati da GPT, convertiti localmente in azioni fisse con `description / risk / expected_result` e validazione rigorosa. Test automatici verdi, collaudo sul Pavilion da fare.
 - [ ] Ciclo di verifica: GPT propone -> policy valida -> Jarvis esegue -> raccoglie esito -> GPT può ripianificare entro limiti.
-- [ ] Limiti su numero passi, durata, directory, operazioni, rete; consenso quando la richiesta va oltre i permessi.
+- [ ] **Parziale:** massimo 5 passi, allowlist dei comandi locali già implementati, richieste GPT con timeout, sola consultazione Download e conferma esplicita prima di eseguire. Mancano ancora limiti temporali e permessi granulari per attività future.
 - [ ] Isolamento dei contenuti web/documenti da istruzioni operative (difesa da prompt injection).
-- [ ] Test su casi pratici: «controlla la build Minecraft», «individua ZIP duplicati», «prepara backup progetto»; niente modifiche non autorizzate.
+- [ ] Test di regressione del nuovo pianificatore esistenti (validazione, comandi vietati, file Download, apertura programmi); prove end-to-end reali e casi Minecraft/backup ancora da implementare.
 
 **Gate:** task con almeno 3 passi, esito verificato e log riproducibile; fallimento sicuro quando GPT non è disponibile.
 
