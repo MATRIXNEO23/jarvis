@@ -279,5 +279,12 @@ class SecondBrain:
         with self._db() as db:
             db.execute("DELETE FROM conversations")
             db.execute("DELETE FROM action_receipts")
+            # The adaptive vocabulary belongs to the same opt-in
+            # Second Brain. Erasing memory also erases learned corrections.
+            known = db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' "
+                "AND name='speech_corrections'").fetchone()
+            if known:
+                db.execute("DELETE FROM speech_corrections")
         with self._db() as db:
             db.execute("VACUUM")
