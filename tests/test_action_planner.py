@@ -24,7 +24,6 @@ def step(tool: str, **args) -> dict:
 class PlannerPolicyTests(unittest.TestCase):
     def test_prompt_restricts_tools_and_treats_text_as_data(self):
         prompt = build_planning_prompt('Apri "calcolatrice"')
-        self.assertIn('"open_calculator"', json.dumps("open_calculator")) if False else None
         self.assertIn("open_calculator", prompt)
         self.assertIn('Apri \\"calcolatrice\\"', prompt)
         self.assertIn('"steps"', prompt)
