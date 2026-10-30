@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 from desktop_dictation import DesktopDictation, FocusedWindow, dictation_voice_action
 from voice_control import (
-    CONTINUOUS, PUSH_TO_TALK, STANDBY, VoiceController,
+    CONTINUOUS, PUSH_TO_TALK, STANDBY, GPT_CONVERSATION, VoiceController,
     speech_to_local_command, WakeWordGate,
 )
 
@@ -129,6 +129,23 @@ class MicrophoneSafetyTests(unittest.TestCase):
             control.release()
             self.assertEqual(control.mode, PUSH_TO_TALK)
             control.set_mode(STANDBY)
+            self.assertEqual(control.mode, STANDBY)
+
+    def test_gpt_conversation_mode_requires_manual_selection(self):
+        with TemporaryDirectory() as folder:
+            events = []
+            control = VoiceController(events.append, Path(folder) / "no-model")
+            self.assertEqual(control.mode, STANDBY)
+            self.assertFalse(control.press())
+            control.set_mode(GPT_CONVERSATION)
+            self.assertEqual(control.mode, GPT_CONVERSATION)
+            # Missing model may stop the audio stream, never flip the chosen
+            # mode to standby and never start an unrequested paid service.
+            worker = control._worker
+            if worker is not None:
+                worker.join(timeout=3)
+            self.assertEqual(control.mode, GPT_CONVERSATION)
+            control.close()
             self.assertEqual(control.mode, STANDBY)
 
     def test_reject_unknown_mode(self):
