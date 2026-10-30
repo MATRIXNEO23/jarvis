@@ -247,19 +247,22 @@ def main() -> None:
         def worker() -> None:
             epoch = params.get("epoch") if action == "conversation" else None
             doc_snapshot = params.get("document_id") if action == "conversation" else None
+            user_utterance = params.get("utterance", "") if action == "conversation" else ""
             try:
                 timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
                 sdk_action = "ask" if action == "conversation" else action
                 sdk_params = {key: value for key, value in params.items()
-                              if key not in ("epoch", "document_id")}
+                              if key not in ("epoch", "document_id", "utterance")}
                 result = service.call(sdk_action, timeout=timeout, **sdk_params)
                 if action == "conversation":
-                    output_queue.put(("conversation_ok", epoch, doc_snapshot, result))
+                    output_queue.put(("conversation_ok", epoch, doc_snapshot,
+                                      user_utterance, result))
                 else:
                     output_queue.put(("gpt_ok", action, result))
             except Exception as exc:
                 if action == "conversation":
-                    output_queue.put(("conversation_error", epoch, str(exc)[:220]))
+                    output_queue.put(("conversation_error", epoch, user_utterance,
+                                      str(exc)[:220]))
                 else:
                     output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
@@ -690,14 +693,15 @@ def main() -> None:
                                             if documents.current else None)
                                 try:
                                     prompt = build_conversation_prompt(
-                                        spoken, has_document=snapshot is not None)
+                                        spoken, has_document=snapshot is not None,
+                                        memory_context=recent_memory_for_gpt(spoken))
                                 except ConversationRejected as exc:
                                     write_line("Conversazione: " + str(exc))
                                 else:
                                     write_line("CONVERSAZIONE GPT > " + spoken)
                                     run_gpt("conversation", prompt=prompt,
                                             epoch=conversation_epoch,
-                                            document_id=snapshot)
+                                            document_id=snapshot, utterance=spoken)
                             elif not active_gpt or not gpt_enabled.get():
                                 speak_result("GPT non è connesso. Puoi ancora usare i comandi locali.")
                                 write_line("GPT non connesso: frase non inviata.")
@@ -793,7 +797,7 @@ def main() -> None:
                     announce_document("Operazione non riuscita; nessun documento chiuso: " + reason)
                 elif kind == "conversation_ok":
                     busy_gpt = False
-                    epoch, doc_snapshot, result = data
+                    epoch, doc_snapshot, original_phrase, result = data
                     if (epoch == conversation_epoch and
                             voice_mode.get() == GPT_CONVERSATION and
                             gpt_enabled.get() and active_gpt):
@@ -804,10 +808,15 @@ def main() -> None:
                         except ConversationRejected as exc:
                             write_line("GPT: impossibile interpretare la risposta: " + str(exc))
                             speak_result("Non ho capito con sicurezza. Puoi ripetere?")
+                            remember_exchange(
+                                original_phrase, "Non ho capito con sicurezza. Puoi ripetere?",
+                                "clarify")
                         else:
                             if intent.kind in ("chat", "clarify"):
                                 write_line("JARVIS > " + intent.reply)
                                 speak_result(intent.reply)
+                                remember_exchange(original_phrase, intent.reply,
+                                                  intent.kind)
                             elif intent.kind == "capability":
                                 cap = intent.capability
                                 current_id = (documents.current.ident
@@ -885,10 +894,12 @@ def main() -> None:
                                         "Non ho un documento identificato da chiudere.")
                 elif kind == "conversation_error":
                     busy_gpt = False
-                    epoch, reason = data
+                    epoch, original_phrase, reason = data
                     if epoch == conversation_epoch and voice_mode.get() == GPT_CONVERSATION:
                         write_line("Conversazione GPT: " + reason)
                         speak_result("GPT non è disponibile. Puoi riprovare.")
+                        remember_exchange(original_phrase, "GPT non disponibile, riprova.",
+                                          "error")
                 elif kind == "gpt_ok":
                     action, result = data
                     busy_gpt = False
