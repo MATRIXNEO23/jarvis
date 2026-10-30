@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import json
 import sqlite3
+from contextlib import closing
 import unittest
 
 from conversation_memory import ConversationMemory
@@ -70,7 +71,7 @@ class DurableMemoryTests(unittest.TestCase):
         self.assertIn("Appuntamento", hits[0].summary)
         self.assertIn("test@example.com", hits[0].summary)
         self.assertEqual(hits[0].reference, "mail-123")
-        with sqlite3.connect(self.path) as db:
+        with closing(sqlite3.connect(self.path)) as db:
             payload = db.execute("SELECT metadata_json FROM action_receipts").fetchone()[0]
         self.assertNotIn("body", payload)
 
