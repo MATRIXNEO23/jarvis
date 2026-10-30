@@ -777,7 +777,16 @@ def main() -> None:
                              str(data[0]).startswith("Voce non disponibile"))):
                         sync_dictation_ui(dictation.disable())
                 elif kind == "voice_text":
-                    spoken = str(data[0]).strip()
+                    raw_spoken = str(data[0]).strip()
+                    spoken = raw_spoken
+                    if raw_spoken and voice_mode.get() != STANDBY:
+                        # No new acoustic model or background training:
+                        # correct approved app names in a single cached pass.
+                        last_voice_sample.set(raw_spoken)
+                        if speech_lexicon is not None and memory_enabled.get():
+                            spoken = speech_lexicon.correct(raw_spoken)
+                            if spoken != raw_spoken:
+                                write_line("VOCABOLARIO LIA > " + spoken)
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
                             # Pending document decisions never go through GPT:
