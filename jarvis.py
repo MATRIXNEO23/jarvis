@@ -669,7 +669,9 @@ def main() -> None:
                             voice_mode.get() == GPT_CONVERSATION and
                             gpt_enabled.get() and active_gpt):
                         try:
-                            intent = parse_conversation_intent(result.get("text", ""))
+                            intent = parse_conversation_intent(
+                                result.get("text", ""),
+                                has_document=doc_snapshot is not None)
                         except ConversationRejected as exc:
                             write_line("GPT: impossibile interpretare la risposta: " + str(exc))
                             speak_result("Non ho capito con sicurezza. Puoi ripetere?")
@@ -677,6 +679,49 @@ def main() -> None:
                             if intent.kind in ("chat", "clarify"):
                                 write_line("JARVIS > " + intent.reply)
                                 speak_result(intent.reply)
+                            elif intent.kind == "capability":
+                                cap = intent.capability
+                                current_id = (documents.current.ident
+                                              if documents.current else None)
+                                if cap is None:
+                                    announce_document("Azione non disponibile.")
+                                elif cap.handler == "local" and cap.plan is not None:
+                                    if not busy_local:
+                                        submit_local(
+                                            message_override=cap.plan.steps[0].command)
+                                    else:
+                                        speak_result("Operazione in corso, riprova.")
+                                elif cap.handler == "document_open":
+                                    if current_id is None:
+                                        document_operation("open")
+                                    else:
+                                        announce_document(
+                                            "C'è già un Blocco note gestito da Jarvis. "
+                                            "Dimmi cosa vuoi scriverci.")
+                                elif cap.handler == "document_close":
+                                    if (doc_snapshot is not None
+                                            and current_id == doc_snapshot):
+                                        ask_to_close_document()
+                                    else:
+                                        announce_document(
+                                            "Il documento è cambiato; non chiudo nulla.")
+                                elif cap.handler == "document_write":
+                                    if cap.target == "selected_document" and (
+                                            doc_snapshot is None
+                                            or current_id != doc_snapshot):
+                                        announce_document(
+                                            "La finestra è cambiata: nessun testo inserito.")
+                                    elif cap.target == "new_notepad" and current_id:
+                                        announce_document(
+                                            "C'è già un documento aperto. "
+                                            "Vuoi aggiungere il testo a quello?")
+                                    else:
+                                        document_operation(
+                                            "compose", content=cap.content,
+                                            target=cap.target,
+                                            close_after=cap.close_after)
+                                else:
+                                    announce_document("Azione del catalogo non attiva.")
                             elif intent.kind == "tool":
                                 if intent.plan is None or busy_local:
                                     speak_result("Sono occupato, riprova.")
