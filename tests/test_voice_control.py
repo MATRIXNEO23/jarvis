@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from desktop_dictation import DesktopDictation, FocusedWindow, dictation_voice_action
 from voice_control import (
     CONTINUOUS, PUSH_TO_TALK, STANDBY, VoiceController,
     speech_to_local_command, WakeWordGate,
@@ -55,6 +56,36 @@ class WakeWordTests(unittest.TestCase):
         self.assertEqual(gate.route("Apri il browser"),
                          ("command", "apri il browser"))
         self.assertEqual(gate.route("apri il browser"), ("ignored", ""))
+
+    def test_dictation_toggle_is_voice_command_with_wake_name(self):
+        gate = WakeWordGate(clock=lambda: 42.0)
+        window = FocusedWindow(21, 22, 200)
+        writes = []
+        editor = DesktopDictation(
+            app_pid=100, windows=True,
+            focus_provider=lambda: window, sender=writes.append,
+        )
+        # The listener does not execute free-standing requests in continuous.
+        self.assertEqual(gate.route("attiva dettatura"), ("ignored", ""))
+        # An explicit wake phrase can activate dictation without clicking Jarvis.
+        kind, phrase = gate.route("Ehi Jarvis, attiva dettatura")
+        self.assertEqual((kind, dictation_voice_action(phrase)), ("command", "start"))
+        editor.enable()
+        kind, phrase = gate.route("questa frase va scritta",
+                                  dictation_active=editor.enabled)
+        self.assertEqual(kind, "dictation")
+        editor.insert(phrase)
+        self.assertEqual(writes, ["questa frase va scritta "])
+        # While dictation is active the stop phrase must NOT become text.
+        kind, phrase = gate.route("Ehi Jarvis disattiva dettatura",
+                                  dictation_active=editor.enabled)
+        self.assertEqual((kind, dictation_voice_action(phrase)), ("command", "stop"))
+        editor.disable()
+        self.assertEqual(writes, ["questa frase va scritta "])
+        # The wake word can also be spoken as a separate utterance.
+        self.assertEqual(gate.route("Ehi Jarvis"), ("wake", ""))
+        kind, phrase = gate.route("attiva dettatura")
+        self.assertEqual((kind, dictation_voice_action(phrase)), ("command", "start"))
 
     def test_wake_expires_without_switching_microphone_mode(self):
         now = [100.0]
