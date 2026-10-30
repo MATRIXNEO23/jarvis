@@ -474,7 +474,7 @@ def main() -> None:
         run_gpt("ask", prompt=message)
 
     def poll() -> None:
-        nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch
+        nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         if closing:
             return
         try:
@@ -576,6 +576,47 @@ def main() -> None:
                     write_line(f"[{result.status}] {result.message}")
                     if result.status == "completed":
                         speak_result(result.message)
+                elif kind == "document_ok":
+                    document_busy = False
+                    operation, result, close_after = data
+                    if result.kind in ("opened", "created"):
+                        if doc_dialog.phase == "idle":
+                            doc_dialog.begin(
+                                result.document_id, "Nuovo Blocco note",
+                                dirty=True, saved_path=None)
+                    elif result.kind == "appended":
+                        if doc_dialog.phase == "editing":
+                            doc_dialog.mark_dirty()
+                    elif result.kind in ("saved_and_closed", "closed_without_saving",
+                                         "closed"):
+                        if doc_dialog.phase == "executing":
+                            doc_dialog.operation_completed(
+                                result.document_id, succeeded=True)
+                        choose_save_button.configure(state="disabled")
+                    elif result.kind == "saved_but_open":
+                        if doc_dialog.phase == "executing":
+                            doc_dialog.operation_completed(
+                                result.document_id, succeeded=False)
+                        if result.saved_path is not None:
+                            doc_dialog.saved_path = str(result.saved_path)
+                        choose_save_button.configure(state="disabled")
+                    announce_document(result.message)
+                    if close_after and result.kind in ("created", "appended"):
+                        ask_to_close_document()
+                elif kind == "document_error":
+                    document_busy = False
+                    operation, reason = data
+                    if doc_dialog.phase == "executing" and doc_dialog.document_id:
+                        doc_dialog.operation_completed(
+                            doc_dialog.document_id, succeeded=False)
+                    if operation in ("open", "compose") and (
+                            doc_dialog.phase == "idle" and documents.current is not None):
+                        # The window may have opened before insertion failed.
+                        # Keep control of it; never lose the ability to close it.
+                        doc_dialog.begin(documents.current.ident,
+                                         "Nuovo Blocco note", dirty=True)
+                    choose_save_button.configure(state="disabled")
+                    announce_document("Operazione non riuscita; nessun documento chiuso: " + reason)
                 elif kind == "conversation_ok":
                     busy_gpt = False
                     epoch, doc_snapshot, result = data
@@ -716,6 +757,7 @@ def main() -> None:
         nonlocal closing
         closing = True
         planner_abort_event.set()
+        doc_dialog.revoke_pending()
         dictation.disable()
         wake_gate.reset()
         voice.close()
