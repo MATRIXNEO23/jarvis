@@ -161,7 +161,7 @@ def main() -> None:
             memory_status.set("Second Brain: errore di lettura: " + str(exc)[:85])
 
     def remember_exchange(user: str, reply: str, kind: str = "chat") -> None:
-        if re.search(r"\\b(password|passphrase|token|pin|codice otp)\\b",
+        if re.search(r"\b(password|passphrase|token|pin|codice otp)\b",
                      user + " " + reply, re.I):
             return
         conversation_memory.remember(user, reply, kind)
