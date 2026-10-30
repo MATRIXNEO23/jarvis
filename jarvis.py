@@ -8,18 +8,26 @@ from __future__ import annotations
 
 import queue
 from desktop_dictation import DesktopDictation, dictation_voice_action
+from conversation_router import (
+    ConversationRejected, build_conversation_prompt, parse_conversation_intent,
+)
 import threading
+from pathlib import Path
 import tkinter as tk
-from tkinter import messagebox, scrolledtext, ttk
+from tkinter import filedialog, messagebox, scrolledtext, ttk
 import webbrowser
 
+from document_dialog import DocumentDialog
+from document_language import classify_document_choice
+from document_store import destination_from_voice
+from managed_documents import ManagedDocuments
 from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
 from settings import load_settings, save_settings
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
-                           speech_to_local_command)
+                           GPT_CONVERSATION, speech_to_local_command)
 
 
 def main() -> None:
@@ -42,7 +50,8 @@ def main() -> None:
     mode_row.pack(fill="x")
     for label, mode in (("Standby (spento)", STANDBY),
                         ("Premi per parlare", PUSH_TO_TALK),
-                        ("Ascolto continuo", CONTINUOUS)):
+                        ("Ascolto continuo (Ehi Jarvis)", CONTINUOUS),
+                        ("Conversazione continua GPT", GPT_CONVERSATION)):
         button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
         button.pack(side="left", padx=(0, 12))
         mode_buttons.append(button)
@@ -80,6 +89,23 @@ def main() -> None:
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
 
+    document_controls = ttk.Frame(frame)
+    document_controls.pack(fill="x", pady=(0, 6))
+    document_status = tk.StringVar(value="Documenti: nessuno aperto da Jarvis.")
+    ttk.Label(document_controls, textvariable=document_status, wraplength=530).pack(
+        side="left", fill="x", expand=True)
+    choose_save_button = ttk.Button(document_controls, text="Scegli dove salvare",
+                                    state="disabled")
+    choose_save_button.pack(side="right", padx=(6, 0))
+    doc_choices = ttk.Frame(frame)
+    doc_choices.pack(fill="x", pady=(0, 5))
+    doc_save_button = ttk.Button(doc_choices, text="Salva e chiudi", state="disabled")
+    doc_save_button.pack(side="left", padx=(0, 6))
+    doc_discard_button = ttk.Button(doc_choices, text="Esci senza salvare", state="disabled")
+    doc_discard_button.pack(side="left", padx=(0, 6))
+    doc_cancel_button = ttk.Button(doc_choices, text="Annulla chiusura", state="disabled")
+    doc_cancel_button.pack(side="left")
+
     service = GPTClient()
     output_queue: queue.Queue[tuple] = queue.Queue()
     gpt_enabled = tk.BooleanVar(value=settings["gpt_enabled"])
@@ -90,6 +116,10 @@ def main() -> None:
     planner_abort_event = threading.Event()
     closing = False
     active_gpt = False
+    conversation_epoch = 0
+    document_busy = False
+    documents = ManagedDocuments()
+    doc_dialog = DocumentDialog()
 
     def write_line(text: str) -> None:
         output.configure(state="normal")
@@ -98,10 +128,12 @@ def main() -> None:
         output.configure(state="disabled")
 
     def display_status(state: dict) -> None:
-        nonlocal active_gpt
+        nonlocal active_gpt, conversation_epoch
         connected = state.get("status") == "connected" and state.get("sharing") is True
         active_gpt = connected
         if not connected:
+            conversation_epoch += 1
+            doc_dialog.revoke_pending()
             planner_abort_event.set()
         if not gpt_enabled.get():
             gpt_status.set("GPT: disattivato manualmente")
@@ -130,7 +162,7 @@ def main() -> None:
         refresh_buttons()
         if action == "sign_in":
             gpt_status.set("GPT: in attesa del login nel browser...")
-        elif action == "ask":
+        elif action in ("ask", "conversation"):
             gpt_status.set("GPT: elaborazione richiesta...")
         elif action == "disconnect":
             gpt_status.set("GPT: scollegamento...")
@@ -138,16 +170,27 @@ def main() -> None:
             gpt_status.set("GPT: verifica connessione...")
 
         def worker() -> None:
+            epoch = params.get("epoch") if action == "conversation" else None
+            doc_snapshot = params.get("document_id") if action == "conversation" else None
             try:
-                timeout = 600 if action == "sign_in" else 180 if action == "ask" else 40
-                result = service.call(action, timeout=timeout, **params)
-                output_queue.put(("gpt_ok", action, result))
+                timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
+                sdk_action = "ask" if action == "conversation" else action
+                sdk_params = {key: value for key, value in params.items()
+                              if key not in ("epoch", "document_id")}
+                result = service.call(sdk_action, timeout=timeout, **sdk_params)
+                if action == "conversation":
+                    output_queue.put(("conversation_ok", epoch, doc_snapshot, result))
+                else:
+                    output_queue.put(("gpt_ok", action, result))
             except Exception as exc:
-                output_queue.put(("gpt_error", action, str(exc)[:400]))
+                if action == "conversation":
+                    output_queue.put(("conversation_error", epoch, str(exc)[:220]))
+                else:
+                    output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
 
     def toggle_gpt() -> None:
-        nonlocal active_gpt
+        nonlocal active_gpt, conversation_epoch
         previous = settings["gpt_enabled"]
         try:
             settings["gpt_enabled"] = bool(gpt_enabled.get())
@@ -161,6 +204,8 @@ def main() -> None:
             gpt_status.set("GPT: attivo nelle impostazioni; controllo collegamento...")
             run_gpt("status")
         else:
+            conversation_epoch += 1
+            doc_dialog.revoke_pending()
             planner_abort_event.set()
             active_gpt = False
             gpt_status.set("GPT: disattivato manualmente")
@@ -244,6 +289,125 @@ def main() -> None:
         if spoken_enabled.get() and message:
             speaker.speak(message, selected_voice())
 
+    def update_document_buttons() -> None:
+        pending = doc_dialog.phase.startswith("awaiting_") and not document_busy
+        can_choose = doc_dialog.phase == "awaiting_close_choice" and not document_busy
+        doc_save_button.configure(state="normal" if can_choose else "disabled")
+        doc_discard_button.configure(
+            state="normal" if can_choose else "disabled")
+        doc_cancel_button.configure(state="normal" if pending else "disabled")
+        choose_save_button.configure(
+            state="normal" if doc_dialog.phase == "awaiting_save_destination"
+            and not document_busy else "disabled")
+
+    def announce_document(message: str) -> None:
+        update_document_buttons()
+        document_status.set(message)
+        write_line("DOCUMENTO > " + message)
+        speak_result(message)
+
+    def document_operation(operation: str, *, content: str = "",
+                           target: str = "", document_id: str = "",
+                           path: Path | None = None,
+                           close_after: bool = False) -> None:
+        nonlocal document_busy
+        if document_busy or closing:
+            announce_document("Sto già lavorando sul documento: attendi.")
+            return
+        document_busy = True
+        update_document_buttons()
+        document_status.set("Operazione in corso su Blocco note...")
+
+        def worker() -> None:
+            try:
+                if operation == "open" or (
+                        operation == "compose" and target == "new_notepad"):
+                    documents.forget_if_closed()
+                if operation == "open":
+                    result = documents.open_blank()
+                elif operation == "compose":
+                    result = documents.compose(content, target)
+                elif operation == "save" and path is not None:
+                    result = documents.save_and_close(document_id, path)
+                elif operation == "discard":
+                    result = documents.discard_and_close(document_id)
+                else:
+                    raise ValueError("Operazione documento non consentita.")
+                output_queue.put(("document_ok", operation, result, close_after))
+            except (OSError, ValueError) as exc:
+                output_queue.put(("document_error", operation, str(exc)[:250]))
+
+        # A started save must finish even when the Jarvis UI closes.
+        threading.Thread(target=worker, daemon=False, name="jarvis-document-worker").start()
+
+    def ask_to_close_document() -> None:
+        if document_busy:
+            announce_document("Attendi la fine della scrittura prima di chiudere.")
+            return
+        if doc_dialog.phase != "editing" or doc_dialog.document_id is None:
+            announce_document("Non ho un documento Blocco note gestito da Jarvis da chiudere.")
+            return
+        decision = doc_dialog.request_close()
+        if decision.kind == "close_clean":
+            # The user could have manually edited the text in the meantime.
+            # Never discard an apparently clean document without asking.
+            doc_dialog.phase = "awaiting_close_choice"
+            doc_dialog.dirty = True
+            announce_document(
+                "Vuoi salvare e chiudere, chiudere senza salvare oppure annullare?")
+        else:
+            announce_document(decision.message)
+
+    def execute_document_choice(decision, *, path: Path | None = None) -> None:
+        if decision.kind in ("save_then_close", "save_as_then_close"):
+            destination = path if path is not None else (
+                Path(doc_dialog.saved_path) if doc_dialog.saved_path else None)
+            if destination is None:
+                doc_dialog.phase = "awaiting_save_destination"
+                announce_document("Dove vuoi salvare? Per esempio: "
+                                  "sul desktop come storia di Venezia.")
+                choose_save_button.configure(state="normal")
+                return
+            choose_save_button.configure(state="disabled")
+            document_operation("save", document_id=decision.document_id,
+                               path=destination)
+        elif decision.kind == "discard_then_close":
+            choose_save_button.configure(state="disabled")
+            document_operation("discard", document_id=decision.document_id)
+        else:
+            announce_document(decision.message)
+            choose_save_button.configure(
+                state="normal" if doc_dialog.phase == "awaiting_save_destination"
+                else "disabled")
+
+    def handle_document_confirmation(spoken: str) -> None:
+        if document_busy:
+            announce_document("Operazione documento in corso; attendi.")
+            return
+        if doc_dialog.phase == "awaiting_save_destination":
+            path = destination_from_voice(spoken)
+            if path is not None:
+                decision = doc_dialog.provide_destination(str(path))
+                execute_document_choice(decision, path=path)
+                return
+        execute_document_choice(doc_dialog.reply(spoken))
+
+    def press_discard_button() -> None:
+        if doc_dialog.phase == "awaiting_close_choice":
+            # The named button itself is an explicit decision after Jarvis
+            # requested a choice; no extra spoken magic phrase.
+            handle_document_confirmation("chiudi senza salvare")
+
+    def choose_save_destination() -> None:
+        if doc_dialog.phase != "awaiting_save_destination" or document_busy:
+            return
+        selected = filedialog.asksaveasfilename(
+            parent=root, title="Dove vuoi salvare il nuovo file?",
+            defaultextension=".txt", filetypes=[("File di testo", "*.txt")])
+        if selected:
+            decision = doc_dialog.provide_destination(selected)
+            execute_document_choice(decision, path=Path(selected))
+
     def sync_dictation_ui(message: str) -> None:
         dictation_status.set(message)
         dictation_button.configure(text="Disattiva dettatura" if dictation.enabled
@@ -262,7 +426,11 @@ def main() -> None:
 
 
     def change_voice_mode() -> None:
+        nonlocal conversation_epoch
         selected = voice_mode.get()
+        conversation_epoch += 1
+        doc_dialog.revoke_pending()
+        choose_save_button.configure(state="disabled")
         wake_gate.reset()
         voice.set_mode(selected)
         if selected != CONTINUOUS and dictation.enabled:
@@ -273,8 +441,16 @@ def main() -> None:
             mic_status.set("Microfono: SPENTO (standby)")
         elif selected == PUSH_TO_TALK:
             mic_status.set("Premi per parlare: microfono spento finché non tieni premuto.")
+        elif selected == GPT_CONVERSATION:
+            mic_status.set("Conversazione GPT selezionata: frasi trascritte e inviate a GPT. "
+                           "Parla senza dire Ehi Jarvis.")
+            if not spoken_enabled.get():
+                spoken_enabled.set(True)
+                save_speech_preferences()
+            if not gpt_enabled.get() or not active_gpt:
+                write_line("Conversazione GPT: per le richieste non locali collega ChatGPT.")
         else:
-            mic_status.set("Ascolto continuo selezionato: avvio del microfono richiesto.")
+            mic_status.set("Ascolto continuo con Ehi Jarvis selezionato.")
 
     def ptt_press(event=None) -> None:
         if voice.press():
@@ -329,7 +505,7 @@ def main() -> None:
         run_gpt("ask", prompt=message)
 
     def poll() -> None:
-        nonlocal busy_local, busy_gpt, active_gpt
+        nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         if closing:
             return
         try:
@@ -345,6 +521,60 @@ def main() -> None:
                 elif kind == "voice_text":
                     spoken = str(data[0]).strip()
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
+                        if voice_mode.get() == GPT_CONVERSATION:
+                            # Pending document decisions never go through GPT:
+                            # only the owner of this selected document may close.
+                            if doc_dialog.phase.startswith("awaiting_"):
+                                handle_document_confirmation(spoken)
+                                continue
+                            if doc_dialog.phase == "executing" or document_busy:
+                                write_line("Blocco note: operazione in corso, attendi.")
+                                continue
+                            # An explicit natural phrase to discard changes
+                            # is a single authorization: do not ask twice.
+                            direct_choice = classify_document_choice(
+                                spoken, pending=False)
+                            if (doc_dialog.phase == "editing" and
+                                    direct_choice in ("save", "discard")):
+                                decision = doc_dialog.request_close_with_choice(spoken)
+                                execute_document_choice(decision)
+                                continue
+                            normalized = " ".join(spoken.casefold().strip(" ,.!?").split())
+                            if normalized in (
+                                "chiudi blocco note", "chiudi il blocco note",
+                                "chiudi il documento", "chiudi documento",
+                                "chiudi il file", "chiudi file", "chiudilo",
+                            ):
+                                ask_to_close_document()
+                                continue
+                            # Fixed local actions do not require an online model.
+                            command = speech_to_local_command(spoken)
+                            if command == "apri blocco note":
+                                document_operation("open")
+                            elif command:
+                                if not busy_local:
+                                    submit_local(message_override=command)
+                                else:
+                                    write_line("Motore locale occupato: riprova.")
+                            elif gpt_enabled.get() and active_gpt and not busy_gpt:
+                                snapshot = (documents.current.ident
+                                            if documents.current else None)
+                                try:
+                                    prompt = build_conversation_prompt(
+                                        spoken, has_document=snapshot is not None)
+                                except ConversationRejected as exc:
+                                    write_line("Conversazione: " + str(exc))
+                                else:
+                                    write_line("CONVERSAZIONE GPT > " + spoken)
+                                    run_gpt("conversation", prompt=prompt,
+                                            epoch=conversation_epoch,
+                                            document_id=snapshot)
+                            elif not active_gpt or not gpt_enabled.get():
+                                speak_result("GPT non è connesso. Puoi ancora usare i comandi locali.")
+                                write_line("GPT non connesso: frase non inviata.")
+                            else:
+                                write_line("GPT sta rispondendo: attendi prima di parlare.")
+                            continue
                         route_type = "command"  # Push-to-talk already requires a manual press.
                         if voice_mode.get() == CONTINUOUS:
                             route_type, spoken = wake_gate.route(
@@ -386,6 +616,150 @@ def main() -> None:
                     write_line(f"[{result.status}] {result.message}")
                     if result.status == "completed":
                         speak_result(result.message)
+                elif kind == "document_ok":
+                    document_busy = False
+                    operation, result, close_after = data
+                    if result.kind in ("opened", "created"):
+                        if doc_dialog.document_id not in (None, result.document_id):
+                            # Earlier controlled window was closed manually.
+                            doc_dialog.reset()
+                        if doc_dialog.phase == "idle":
+                            doc_dialog.begin(
+                                result.document_id, "Nuovo Blocco note",
+                                dirty=True, saved_path=None)
+                    elif result.kind == "appended":
+                        if doc_dialog.phase == "editing":
+                            doc_dialog.mark_dirty()
+                    elif result.kind in ("saved_and_closed", "closed_without_saving",
+                                         "closed"):
+                        if doc_dialog.phase == "executing":
+                            doc_dialog.operation_completed(
+                                result.document_id, succeeded=True)
+                        choose_save_button.configure(state="disabled")
+                    elif result.kind == "saved_but_open":
+                        if doc_dialog.phase == "executing":
+                            doc_dialog.operation_completed(
+                                result.document_id, succeeded=False)
+                        if result.saved_path is not None:
+                            doc_dialog.saved_path = str(result.saved_path)
+                        choose_save_button.configure(state="disabled")
+                    announce_document(result.message)
+                    if close_after and result.kind in ("created", "appended"):
+                        ask_to_close_document()
+                elif kind == "document_error":
+                    document_busy = False
+                    operation, reason = data
+                    if doc_dialog.phase == "executing" and doc_dialog.document_id:
+                        doc_dialog.operation_completed(
+                            doc_dialog.document_id, succeeded=False)
+                    if documents.current is None and doc_dialog.phase == "editing":
+                        doc_dialog.reset()
+                    if operation in ("open", "compose") and (
+                            doc_dialog.phase == "idle" and documents.current is not None):
+                        # The window may have opened before insertion failed.
+                        # Keep control of it; never lose the ability to close it.
+                        doc_dialog.begin(documents.current.ident,
+                                         "Nuovo Blocco note", dirty=True)
+                    choose_save_button.configure(state="disabled")
+                    announce_document("Operazione non riuscita; nessun documento chiuso: " + reason)
+                elif kind == "conversation_ok":
+                    busy_gpt = False
+                    epoch, doc_snapshot, result = data
+                    if (epoch == conversation_epoch and
+                            voice_mode.get() == GPT_CONVERSATION and
+                            gpt_enabled.get() and active_gpt):
+                        try:
+                            intent = parse_conversation_intent(
+                                result.get("text", ""),
+                                has_document=doc_snapshot is not None)
+                        except ConversationRejected as exc:
+                            write_line("GPT: impossibile interpretare la risposta: " + str(exc))
+                            speak_result("Non ho capito con sicurezza. Puoi ripetere?")
+                        else:
+                            if intent.kind in ("chat", "clarify"):
+                                write_line("JARVIS > " + intent.reply)
+                                speak_result(intent.reply)
+                            elif intent.kind == "capability":
+                                cap = intent.capability
+                                current_id = (documents.current.ident
+                                              if documents.current else None)
+                                if cap is None:
+                                    announce_document("Azione non disponibile.")
+                                elif cap.handler == "local" and cap.plan is not None:
+                                    if not busy_local:
+                                        submit_local(
+                                            message_override=cap.plan.steps[0].command)
+                                    else:
+                                        speak_result("Operazione in corso, riprova.")
+                                elif cap.handler == "document_open":
+                                    if current_id is None:
+                                        document_operation("open")
+                                    else:
+                                        announce_document(
+                                            "C'è già un Blocco note gestito da Jarvis. "
+                                            "Dimmi cosa vuoi scriverci.")
+                                elif cap.handler == "document_close":
+                                    if (doc_snapshot is not None
+                                            and current_id == doc_snapshot):
+                                        ask_to_close_document()
+                                    else:
+                                        announce_document(
+                                            "Il documento è cambiato; non chiudo nulla.")
+                                elif cap.handler == "document_write":
+                                    if cap.target == "selected_document" and (
+                                            doc_snapshot is None
+                                            or current_id != doc_snapshot):
+                                        announce_document(
+                                            "La finestra è cambiata: nessun testo inserito.")
+                                    elif cap.target == "new_notepad" and current_id:
+                                        announce_document(
+                                            "C'è già un documento aperto. "
+                                            "Vuoi aggiungere il testo a quello?")
+                                    else:
+                                        document_operation(
+                                            "compose", content=cap.content,
+                                            target=cap.target,
+                                            close_after=cap.close_after)
+                                else:
+                                    announce_document("Azione del catalogo non attiva.")
+                            elif intent.kind == "tool":
+                                if intent.plan is None or busy_local:
+                                    speak_result("Sono occupato, riprova.")
+                                elif intent.plan.steps[0].command == "apri blocco note":
+                                    document_operation("open")
+                                else:
+                                    submit_local(message_override=intent.plan.steps[0].command)
+                            elif intent.kind == "compose_document":
+                                current_id = (documents.current.ident
+                                              if documents.current else None)
+                                if intent.target == "selected_document" and (
+                                        current_id is None or current_id != doc_snapshot):
+                                    announce_document(
+                                        "Il documento selezionato è cambiato o non è gestito "
+                                        "da Jarvis. Non ho inserito il testo.")
+                                elif current_id is not None and intent.target == "new_notepad":
+                                    announce_document(
+                                        "C'è già un documento aperto da Jarvis. "
+                                        "Per aggiungere testo a quello, chiedimi di scriverci.")
+                                else:
+                                    document_operation(
+                                        "compose", content=intent.content,
+                                        target=intent.target,
+                                        close_after=intent.close_after)
+                            elif intent.kind == "close_document":
+                                current_id = (documents.current.ident
+                                              if documents.current else None)
+                                if doc_snapshot is not None and current_id == doc_snapshot:
+                                    ask_to_close_document()
+                                else:
+                                    announce_document(
+                                        "Non ho un documento identificato da chiudere.")
+                elif kind == "conversation_error":
+                    busy_gpt = False
+                    epoch, reason = data
+                    if epoch == conversation_epoch and voice_mode.get() == GPT_CONVERSATION:
+                        write_line("Conversazione GPT: " + reason)
+                        speak_result("GPT non è disponibile. Puoi riprovare.")
                 elif kind == "gpt_ok":
                     action, result = data
                     busy_gpt = False
@@ -437,11 +811,13 @@ def main() -> None:
                     else:
                         write_line("URL di autenticazione inatteso: apertura bloccata.")
                 elif event.get("event") == "fatal":
+                    conversation_epoch += 1
                     planner_abort_event.set()
                     if gpt_enabled.get():
                         gpt_status.set("GPT: modulo non pronto.")
                         write_line("GPT: " + str(event.get("error", "errore")))
                 elif event.get("event") == "stopped" and gpt_enabled.get() and not busy_gpt:
+                    conversation_epoch += 1
                     planner_abort_event.set()
                     active_gpt = False
                     gpt_status.set("GPT: servizio arrestato.")
@@ -454,6 +830,12 @@ def main() -> None:
     ask_button.configure(command=submit_gpt)
     plan_button.configure(command=submit_plan)
     dictation_button.configure(command=toggle_dictation)
+    choose_save_button.configure(command=choose_save_destination)
+    doc_save_button.configure(
+        command=lambda: handle_document_confirmation("salva e chiudi"))
+    doc_discard_button.configure(command=press_discard_button)
+    doc_cancel_button.configure(
+        command=lambda: handle_document_confirmation("annulla"))
     spoken_switch.configure(command=save_speech_preferences)
     spoken_picker.bind("<<ComboboxSelected>>", lambda event: save_speech_preferences())
     refresh_voices_button.configure(command=refresh_voices)
@@ -470,6 +852,7 @@ def main() -> None:
         nonlocal closing
         closing = True
         planner_abort_event.set()
+        doc_dialog.revoke_pending()
         dictation.disable()
         wake_gate.reset()
         voice.close()

@@ -43,6 +43,12 @@ class PlannerPolicyTests(unittest.TestCase):
         self.assertIn("PIANO DA APPROVARE", parsed.preview())
         self.assertIn("apertura programma", parsed.preview())
 
+    def test_drive_c_is_an_explicit_fixed_tool(self):
+        planned = parse_plan(make_plan(step("open_drive_c")))
+        self.assertEqual(planned.steps[0].command, "apri disco locale c")
+        with self.assertRaises(PlanRejected):
+            parse_plan(make_plan(step("open_drive_c", path="D:\\\\")))
+
     def test_approved_browser_and_web_search(self):
         planned = parse_plan(make_plan(step("open_browser"),
                                        step("web_search", query="Minecraft mod italiane")))

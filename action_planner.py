@@ -57,6 +57,7 @@ _OPEN_APPS = {
     "open_notepad": ("apri blocco note", "Apri Blocco note", "Richiede l'avvio di Blocco note"),
     "open_calculator": ("apri calcolatrice", "Apri Calcolatrice", "Richiede l'avvio della Calcolatrice"),
     "open_explorer": ("apri esplora file", "Apri Esplora file", "Richiede l'avvio di Esplora file"),
+    "open_drive_c": ("apri disco locale c", "Apri disco locale C", "Apre l'unità C in Esplora file"),
     "open_downloads": ("apri download", "Apri la cartella Download", "Richiede l'apertura della cartella Download"),
     "open_browser": ("apri browser", "Apri il browser predefinito", "Richiede una finestra del browser"),
 }
@@ -85,7 +86,7 @@ def build_planning_prompt(request: str) -> str:
         'Per web_search usa arguments={"query":"testo da cercare sul web"}; '
         "per tutti gli altri tools arguments={}. Massimo 5 passi, sequenziali. "
         "Puoi solo consultare informazioni locali consentite, cercare nomi nei Download "
-        "o avviare Blocco note, Calcolatrice, Esplora file, Download e il browser. "
+        "o avviare Blocco note, Calcolatrice, Esplora file, disco C, Download e il browser. "
         "La ricerca web apre Google soltanto se richiesta dall'utente. "
         "Non inventare azioni di modifica, cancellazione, installazione, terminale, "
         "lettura contenuti file, URL arbitrari o automazioni di rete. "

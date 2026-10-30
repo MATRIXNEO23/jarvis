@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "description": "Catalogo dichiarativo delle capacità effettivamente implementate. La presenza di un'azione qui NON autorizza l'esecuzione di comandi arbitrari: il dispatcher Python usa una lista separata e fissa.",
+  "actions": [
+    {
+      "id": "notepad.open",
+      "application": "Blocco note",
+      "description": "Apri un nuovo documento vuoto gestito da Jarvis.",
+      "examples": [
+        "aprimi Blocco note",
+        "crea un nuovo documento in Blocco note"
+      ],
+      "risk": "apertura programma"
+    },
+    {
+      "id": "notepad.close",
+      "application": "Blocco note",
+      "description": "Chiudi il documento Blocco note gestito da Jarvis, chiedendo all'utente se salvare o scartare eventuali modifiche.",
+      "examples": [
+        "chiudimi Blocco note",
+        "non mi serve più quel Blocco note"
+      ],
+      "risk": "scelta salvataggio richiesta"
+    },
+    {
+      "id": "notepad.write",
+      "application": "Blocco note",
+      "description": "Scrivi un testo inventato o richiesto in un nuovo Blocco note oppure aggiungilo al documento gestito, senza cancellare il testo esistente.",
+      "examples": [
+        "scrivimi una poesia su Venezia",
+        "aggiungi un paragrafo al documento"
+      ],
+      "risk": "modifica documento"
+    },
+    {
+      "id": "explorer.open",
+      "application": "Esplora file",
+      "description": "Apri Esplora file di Windows.",
+      "examples": [
+        "apri Esplora file",
+        "mostrami le cartelle del computer"
+      ],
+      "risk": "apertura programma"
+    },
+    {
+      "id": "explorer.downloads",
+      "application": "Esplora file",
+      "description": "Apri la cartella Download.",
+      "examples": [
+        "fammi vedere i Download",
+        "apri la cartella dei download"
+      ],
+      "risk": "apertura cartella"
+    },
+    {
+      "id": "explorer.drive_c",
+      "application": "Esplora file",
+      "description": "Apri il disco locale C nella finestra di Esplora file.",
+      "examples": [
+        "apri disco locale C",
+        "fammi vedere l'unità C"
+      ],
+      "risk": "apertura cartella"
+    },
+    {
+      "id": "calculator.open",
+      "application": "Calcolatrice",
+      "description": "Apri Calcolatrice di Windows.",
+      "examples": [
+        "apri la calcolatrice",
+        "lancia la calcolatrice"
+      ],
+      "risk": "apertura programma"
+    },
+    {
+      "id": "browser.open",
+      "application": "Browser",
+      "description": "Apri il browser web predefinito.",
+      "examples": [
+        "apri il browser",
+        "lancia il browser"
+      ],
+      "risk": "apertura browser"
+    },
+    {
+      "id": "browser.search",
+      "application": "Browser",
+      "description": "Esegui una ricerca sul web per il testo indicato.",
+      "examples": [
+        "cerca sul web informazioni sul Colosseo"
+      ],
+      "risk": "ricerca web"
+    },
+    {
+      "id": "system.status",
+      "application": "Sistema",
+      "description": "Mostra CPU e RAM disponibili sul computer.",
+      "examples": [
+        "quanta RAM ho libera",
+        "dimmi lo stato del computer"
+      ],
+      "risk": "sola lettura"
+    },
+    {
+      "id": "downloads.list",
+      "application": "Download",
+      "description": "Mostra i nomi degli elementi nella cartella Download.",
+      "examples": [
+        "mostra i file scaricati"
+      ],
+      "risk": "sola lettura"
+    },
+    {
+      "id": "downloads.find",
+      "application": "Download",
+      "description": "Cerca per nome un file nella cartella Download.",
+      "examples": [
+        "trova il file Jarvis nei download"
+      ],
+      "risk": "sola lettura"
+    },
+    {
+      "id": "history.list",
+      "application": "Jarvis",
+      "description": "Mostra le ultime operazioni registrate da Jarvis.",
+      "examples": [
+        "quali comandi hai eseguito di recente"
+      ],
+      "risk": "sola lettura"
+    }
+  ]
+}

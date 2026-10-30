@@ -18,7 +18,8 @@ from settings import default_path
 STANDBY = "standby"
 PUSH_TO_TALK = "premi_per_parlare"
 CONTINUOUS = "ascolto_continuo"
-MODES = (STANDBY, PUSH_TO_TALK, CONTINUOUS)
+GPT_CONVERSATION = "conversazione_gpt"
+MODES = (STANDBY, PUSH_TO_TALK, CONTINUOUS, GPT_CONVERSATION)
 MODEL_NAME = "vosk-model-small-it-0.22"
 
 
@@ -44,6 +45,9 @@ def speech_to_local_command(text: str) -> str | None:
         "apri blocco note": "apri blocco note",
         "apri il blocco note": "apri blocco note",
         "apri esplora file": "apri esplora file",
+        "apri disco locale c": "apri disco locale c",
+        "apri unità c": "apri disco locale c",
+        "apri unita c": "apri disco locale c",
         "apri browser": "apri browser",
         "apri il browser": "apri browser",
         "apri browser predefinito": "apri browser",
@@ -131,7 +135,7 @@ class VoiceController:
                 self._stop.set()
             if mode == STANDBY:
                 self._model = None
-        if mode == CONTINUOUS:
+        if mode in (CONTINUOUS, GPT_CONVERSATION):
             self._start_continuous()
 
     def _begin_locked(self) -> None:
@@ -146,7 +150,7 @@ class VoiceController:
 
     def _start_continuous(self) -> None:
         with self._lock:
-            if self._closed or self.mode != CONTINUOUS:
+            if self._closed or self.mode not in (CONTINUOUS, GPT_CONVERSATION):
                 return
             if self._worker is None or not self._worker.is_alive():
                 self._begin_locked()
@@ -249,7 +253,7 @@ class VoiceController:
                 if self._worker is threading.current_thread():
                     self._worker = None
                 restart = (not failed and not self._closed
-                           and self.mode == CONTINUOUS
+                           and self.mode in (CONTINUOUS, GPT_CONVERSATION)
                            and self._generation != generation)
             if restart:
                 self._start_continuous()
