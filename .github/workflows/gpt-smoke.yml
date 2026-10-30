@@ -31,16 +31,8 @@ jobs:
           $env:SIWC_MODULE = 'file:///' + ($sdk -replace '\\','/')
           node --input-type=module -e "import(process.env.SIWC_MODULE).then(m => { if (typeof m.createChatGPT !== 'function') process.exit(2); console.log('SDK import OK'); })"
           if ($LASTEXITCODE -ne 0) { throw 'SDK import check failed' }
-      - name: Verify bridge starts and reports disconnected without credentials
+      - name: Verify real bridge IPC (no credentials)
         shell: powershell
         run: |
-          '{"id":1,"action":"status"}' | node gpt_bridge.mjs | Set-Content -Path "$env:TEMP\jarvis-gpt-smoke.log"
-          if ($LASTEXITCODE -ne 0) { throw "Bridge process failed with exit code $LASTEXITCODE" }
-          $text = Get-Content -LiteralPath "$env:TEMP\jarvis-gpt-smoke.log" -Raw
-          $packets = @($text.Trim() -split "\n" | ForEach-Object { $_ | ConvertFrom-Json })
-          $ready = @($packets | Where-Object { $_.event -eq 'ready' })
-          $response = @($packets | Where-Object { $_.id -eq 1 -and $_.ok -eq $true })
-          if ($ready.Count -ne 1) { throw 'Bridge did not emit a ready event' }
-          if ($response.Count -ne 1) { throw 'Bridge did not respond to the status request' }
-          if ($response[0].result.status -ne 'disconnected') { throw 'Expected unauthenticated state' }
-          Write-Host 'GPT bridge initialized, answered status and exited successfully (no login)'
+          node tests/smoke_gpt_bridge.mjs
+          if ($LASTEXITCODE -ne 0) { throw "Bridge transport test failed ($LASTEXITCODE)" }
