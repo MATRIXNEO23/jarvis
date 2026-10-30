@@ -6,15 +6,22 @@ Il motore vocale non e' incluso automaticamente per non appesantire il Pavilion.
 
 ## Prima installazione (solo su richiesta)
 
-1. Sul Pavilion, con Jarvis chiuso, avvia `installa_voce.bat`.
-   Installa Vosk e SoundDevice per il Python 3 già presente.
-2. Scarica il modello italiano leggero ufficiale (circa 48 MB):
+1. Sul Pavilion, con Jarvis chiuso, avvia **`installa_voce.bat`** nella
+   cartella della versione di prova. Non servono i diritti amministratore.
+2. Lo script installa Vosk/SoundDevice per il Python disponibile e scarica
+   il modello italiano piccolo (circa 48 MB) dalla fonte ufficiale:
    https://alphacephei.com/vosk/models/vosk-model-small-it-0.22.zip
-3. Estrai la cartella `vosk-model-small-it-0.22` in:
-   `%LOCALAPPDATA%\Jarvis\models\`
-   Il file `am/final.mdl` deve quindi trovarsi dentro
-   `%LOCALAPPDATA%\Jarvis\models\vosk-model-small-it-0.22\am\`.
-4. Riavvia Jarvis con `avvia_jarvis.bat`. Il microfono e' ancora spento.
+   Il download avviene **solo** dopo l'avvio manuale dello script.
+3. Il modello va automaticamente in
+   `%LOCALAPPDATA%\Jarvis\models\vosk-model-small-it-0.22\`.
+   L'installazione valida i percorsi nell'archivio ed evita di sovrascrivere
+   un modello già presente. Connessione richiesta **solo per l'installazione**.
+4. Avvia `avvia_jarvis.bat`. Il microfono resta spento fino alla scelta manuale.
+
+Se il download non va a buon fine, puoi estrarre manualmente il file ZIP
+ufficiale nella cartella `%LOCALAPPDATA%\Jarvis\models\`, verificando
+che esista `vosk-model-small-it-0.22\am\final.mdl`.
+Non eliminare la tua vecchia cartella Jarvis: prova la voce in una cartella separata.
 
 ## Modalità
 
