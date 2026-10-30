@@ -96,6 +96,14 @@ def main() -> None:
     choose_save_button = ttk.Button(document_controls, text="Scegli dove salvare",
                                     state="disabled")
     choose_save_button.pack(side="right", padx=(6, 0))
+    doc_choices = ttk.Frame(frame)
+    doc_choices.pack(fill="x", pady=(0, 5))
+    doc_save_button = ttk.Button(doc_choices, text="Salva e chiudi", state="disabled")
+    doc_save_button.pack(side="left", padx=(0, 6))
+    doc_discard_button = ttk.Button(doc_choices, text="Esci senza salvare", state="disabled")
+    doc_discard_button.pack(side="left", padx=(0, 6))
+    doc_cancel_button = ttk.Button(doc_choices, text="Annulla chiusura", state="disabled")
+    doc_cancel_button.pack(side="left")
 
     service = GPTClient()
     output_queue: queue.Queue[tuple] = queue.Queue()
@@ -280,7 +288,21 @@ def main() -> None:
         if spoken_enabled.get() and message:
             speaker.speak(message, selected_voice())
 
+    def update_document_buttons() -> None:
+        pending = doc_dialog.phase.startswith("awaiting_") and not document_busy
+        can_choose = doc_dialog.phase == "awaiting_close_choice" and not document_busy
+        doc_save_button.configure(state="normal" if can_choose else "disabled")
+        doc_discard_button.configure(
+            state="normal" if (can_choose or
+                doc_dialog.phase == "awaiting_discard_confirmation") and
+                not document_busy else "disabled")
+        doc_cancel_button.configure(state="normal" if pending else "disabled")
+        choose_save_button.configure(
+            state="normal" if doc_dialog.phase == "awaiting_save_destination"
+            and not document_busy else "disabled")
+
     def announce_document(message: str) -> None:
+        update_document_buttons()
         document_status.set(message)
         write_line("DOCUMENTO > " + message)
         speak_result(message)
@@ -294,6 +316,7 @@ def main() -> None:
             announce_document("Sto già lavorando sul documento: attendi.")
             return
         document_busy = True
+        update_document_buttons()
         document_status.set("Operazione in corso su Blocco note...")
 
         def worker() -> None:
@@ -366,6 +389,16 @@ def main() -> None:
                 execute_document_choice(decision, path=path)
                 return
         execute_document_choice(doc_dialog.reply(spoken))
+
+    def press_discard_button() -> None:
+        if doc_dialog.phase == "awaiting_discard_confirmation":
+            if messagebox.askyesno(
+                "Conferma perdita modifiche",
+                "Vuoi davvero chiudere il documento senza salvare le modifiche?",
+                parent=root):
+                handle_document_confirmation("confermo uscita senza salvare")
+        elif doc_dialog.phase == "awaiting_close_choice":
+            handle_document_confirmation("chiudi senza salvare")
 
     def choose_save_destination() -> None:
         if doc_dialog.phase != "awaiting_save_destination" or document_busy:
@@ -741,6 +774,11 @@ def main() -> None:
     plan_button.configure(command=submit_plan)
     dictation_button.configure(command=toggle_dictation)
     choose_save_button.configure(command=choose_save_destination)
+    doc_save_button.configure(
+        command=lambda: handle_document_confirmation("salva e chiudi"))
+    doc_discard_button.configure(command=press_discard_button)
+    doc_cancel_button.configure(
+        command=lambda: handle_document_confirmation("annulla"))
     spoken_switch.configure(command=save_speech_preferences)
     spoken_picker.bind("<<ComboboxSelected>>", lambda event: save_speech_preferences())
     refresh_voices_button.configure(command=refresh_voices)
