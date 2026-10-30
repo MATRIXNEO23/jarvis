@@ -34,10 +34,13 @@ try {
     $Uri = 'https://github.com/openai/sign-in-with-chatgpt-devkit/archive/' + $SdkCommit + '.zip'
     Invoke-WebRequest -Uri $Uri -OutFile $Zip -UseBasicParsing
     Expand-Archive -LiteralPath $Zip -DestinationPath $Extract
-    $SourceDir = Join-Path $Extract ('sign-in-with-chatgpt-devkit-' + $SdkCommit)
-    if (-not (Test-Path -LiteralPath (Join-Path $SourceDir 'packages\local\package.json'))) {
+    $SourceDir = Get-ChildItem -LiteralPath $Extract -Directory | Where-Object {
+        Test-Path -LiteralPath (Join-Path $_.FullName 'packages\local\package.json')
+    } | Select-Object -First 1
+    if ($null -eq $SourceDir) {
         throw 'Archivio SDK inatteso o incompleto.'
     }
+    $SourceDir = $SourceDir.FullName
     if (Test-Path -LiteralPath $Target) {
         throw 'Esiste gia una cartella runtime incompleta: cancellala manualmente solo dopo un backup.'
     }
