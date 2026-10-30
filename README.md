@@ -6,7 +6,7 @@ Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo *
 
 **[SCARICA JARVIS — ZIP COMPLETO (versione aggiornata)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/main.zip)**
 
-[Cartella Download con istruzioni semplici](Download/README.md). Non serve cercare gli artifact di GitHub Actions: lo ZIP contiene tutta la repository e i file `installa_gpt.bat` e `avvia_jarvis.bat`. Versione **alpha**; il login GPT va ancora verificato sul PC.
+[Cartella Download con istruzioni semplici](Download/README.md). Non serve cercare gli artifact di GitHub Actions: lo ZIP contiene tutta la repository e i file `installa_gpt.bat` e `avvia_jarvis.bat`. Versione **alpha**; il primo login e una risposta GPT sono stati provati sul Pavilion il 30/10/2026. Le altre funzioni richiedono collaudi specifici.
 
 ## Architettura e roadmap
 
@@ -28,18 +28,26 @@ La progettazione **GPT-first + esecutore locale controllato + funzioni offline**
 - [x] Microfono impostato su standby ad ogni lancio.
 - [x] Motore locale a comandi consentiti, con registro attività SQLite (`local_engine.py`). Comandi supportati: `aiuto`, `stato sistema`, `mostra download`, `cerca file NOME` (ricerca limitata a Download), `apri blocco note`, `apri calcolatrice`, `apri esplora file`, `apri download`, `ultimi comandi`. Nessun comando shell arbitrario.
 - [x] Campo comandi testuale integrato nella finestra, con lavoro su thread separato per non bloccare la GUI.
-- [x] Test unitari e sintassi **superati sui runner GitHub Actions Windows e Linux** ([esecuzione riuscita](https://github.com/MATRIXNEO23/jarvis/actions/runs/41084817158)). **Prova sul tuo Windows 10/i3-2100 ancora da effettuare**.
+- [x] Test unitari e sintassi **superati sui runner GitHub Actions Windows e Linux** ([esecuzione riuscita](https://github.com/MATRIXNEO23/jarvis/actions/runs/41084817158)). **Primo avvio e prima risposta GPT confermati dall'utente sul Pavilion il 30/10/2026; collaudo delle altre funzioni ancora necessario**.
 
 - [x] **Codice di integrazione GPT presente:** adapter Node `gpt_bridge.mjs` basato sul [DevKit ufficiale](https://github.com/openai/sign-in-with-chatgpt-devkit), client Python via pipe, cifratura DPAPI per utente Windows e installer su richiesta con SDK fissato a commit specifico.
 - [x] **Interfaccia GPT:** Connetti ChatGPT, Scollega account, Chiedi a GPT, interruttore ON/OFF manuale; il tasto ON **non** equivale a una sessione OAuth connessa.
 - [x] **Verifiche statiche e protocollo:** test Windows/Linux Python, sintassi Node e PowerShell; [smoke test Windows del kit GPT e del dialogo con il processo superato](https://github.com/MATRIXNEO23/jarvis/actions/runs/41087321055). Questo **non** verifica un login reale al piano ChatGPT.
-- [ ] **Login OAuth e inferenza reale testati sul Pavilion:** serve eseguire `installa_gpt.bat`, autorizzare il proprio account dal browser e ottenere una vera risposta. Le capacità del piano non vengono presunte.
-- [ ] **Pianificatore GPT -> strumenti locali:** ancora assente. Le risposte testuali GPT non avviano azioni sul computer.
+- [x] **Primo login e risposta GPT sul Pavilion (30/10/2026):** l'utente ha confermato SDK installato, stato «connesso» e risposta pertinente ricevuta. Restano da testare riavvio, riconnessione, quote e consumi.
+- [x] **Prima versione pianificatore GPT -> strumenti locali:** pulsante «Pianifica attività», proposta di massimo 5 passi con rigida lista di strumenti consentiti, anteprima, approvazione esplicita, annullamento fra passi e test CI. **Non ancora provato sul Pavilion**. Le risposte al pulsante «Chiedi a GPT» continuano a essere solo testo.
 - [ ] Comandi vocali, apprendimento procedure, TTS, tray, ricerca web, automazioni e packaging Windows.
+
+## Primo test del pianificatore (dopo l'aggiornamento dello ZIP)
+
+1. Chiudi Jarvis se è aperto. Scarica nuovamente lo ZIP dal link in cima alla pagina, poi estrailo **in una cartella nuova** (non sovrascrivere o eliminare i dati in `%LOCALAPPDATA%\\Jarvis`).
+2. Apri la nuova cartella `jarvis-main` e avvia `avvia_jarvis.bat`. L'SDK già installato nella cartella runtime utente non va reinstallato, a meno che non compaia un errore.
+3. Verifica che GPT sia connesso. Premi **Pianifica attività**, quindi scrivi, per esempio: `Apri la calcolatrice e controlla quanta RAM ho disponibile`.
+4. Esamina l'anteprima. Premi **Approva ed esegui** solo se i passi corrispondono a ciò che desideri. Puoi usare **Annulla** per scartare il piano prima dell'esecuzione.
+5. Il programma non elimina, scrive o modifica file e non esegue comandi shell attraverso questo pianificatore. Sono supportati solo i comandi già implementati dall'esecutore locale.
 
 ## Uso della versione alpha
 
-Con Python 3.11 e Tkinter: doppio clic su `avvia_jarvis.bat` oppure `py -3 jarvis.py`. Per testare: `py -3 -m unittest discover -s tests -v`.
+Con Python 3.12 (presente sul Pavilion) e Tkinter: doppio clic su `avvia_jarvis.bat` oppure `py -3 jarvis.py`. Per testare: `py -3 -m unittest discover -s tests -v`.
 - I comandi locali **non richiedono Node**.
 - Per abilitare davvero il collegamento GPT: segui [docs/GPT_SETUP.md](docs/GPT_SETUP.md), installa Node 22.12+, lancia `installa_gpt.bat`, poi **Connetti ChatGPT** nella finestra.
 - GPT resta **abilitato per scelta predefinita** ma richiede autenticazione. Non avviene alcuna richiesta AI senza comando esplicito.
@@ -49,4 +57,4 @@ Le impostazioni si salvano in `%LOCALAPPDATA%\\Jarvis\\settings.json`, non nella
 
 ## Verifica richiesta prima di dichiarare GPT operativo
 
-Il modulo implementa l'interfaccia del DevKit, ma **non è ancora stato verificato con un consenso reale e una risposta completata sull'account dell'utente**. Il test automatico controlla codice e protocollo, non l'autenticazione reale. Nessun fallback alle API a consumo. La disponibilità del piano e i limiti sono gestiti dal servizio OpenAI, non garantiti dall'interruttore. Per sicurezza le risposte GPT non vengono mai interpretate come comandi di Windows in questa fase.
+Il **primo login e la prima risposta GPT sono stati confermati dall'utente sul Pavilion il 30/10/2026**. Il test automatico controlla codice e protocollo, mentre prove approfondite di rinnovo sessione, logout e quote restano da completare. Nessun fallback alle API a consumo. La disponibilità del piano e i limiti sono gestiti dal servizio OpenAI, non garantiti dall'interruttore. Per sicurezza le risposte GPT non vengono mai interpretate come comandi di Windows in questa fase.
