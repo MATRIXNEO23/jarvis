@@ -13,10 +13,11 @@ from typing import Callable
 from threading import Lock
 
 from action_planner import ApprovedPlan, PlanRejected, build_planning_prompt, parse_plan
+from plan_runner import run_approved_plan
 
 
 def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool],
-                 execution_lock: Lock) -> None:
+                 execution_lock: Lock, abort_event: threading.Event) -> None:
     previous = getattr(parent, "_jarvis_planner_window", None)
     if previous is not None and previous.winfo_exists():
         previous.lift()
@@ -71,7 +72,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         enabled = is_available()
         create_button.configure(state="normal" if not busy and enabled else "disabled")
         approve_button.configure(
-            state="normal" if not busy and pending is not None and enabled else "disabled"
+            state="normal" if not busy and pending is not None and enabled and not abort_event.is_set() else "disabled"
         )
         cancel_button.configure(
             state="normal" if pending is not None or (busy and not cancel_requested)
@@ -89,6 +90,8 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
                 parent=window,
             )
             return
+        # Only a new request can clear an earlier revocation.
+        abort_event.clear()
         try:
             text = request.get().strip()
             prompt = build_planning_prompt(text)
@@ -118,6 +121,11 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         nonlocal pending, busy, phase, cancel_requested
         if busy or pending is None:
             return
+        if abort_event.is_set():
+            pending = None
+            status.set("Piano scartato: autorizzazione revocata.")
+            buttons()
+            return
         if not is_available():
             pending = None
             status.set("Piano scartato: GPT disattivato o scollegato.")
@@ -146,26 +154,9 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         buttons()
 
         def worker() -> None:
-            count = len(accepted.steps)
-            for index, step in enumerate(accepted.steps, start=1):
-                if cancel_event.is_set():
-                    events.put(("finished", "interrotto prima del passo successivo"))
-                    return
-                try:
-                    with execution_lock:
-                        if cancel_event.is_set():
-                            events.put(("finished", "annullato prima del passo successivo"))
-                            return
-                        result = engine.execute(step.command)
-                except Exception:
-                    events.put(("finished", "errore locale interno; arresto prudenziale"))
-                    return
-                events.put(("step", index, count, step.description,
-                            result.status, result.message))
-                if result.status != "completed":
-                    events.put(("finished", "fermato: un passo non è riuscito"))
-                    return
-            events.put(("finished", "completato"))
+            run_approved_plan(
+                accepted, engine, execution_lock, cancel_event, abort_event, events.put
+            )
 
         threading.Thread(target=worker, name="jarvis-local-planned-task",
                          daemon=True).start()
@@ -202,7 +193,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         if closed:
             return
         # Query Tk state on the UI thread only, never from worker threads.
-        if not is_available():
+        if abort_event.is_set() or not is_available():
             if pending is not None:
                 pending = None
                 status.set("Piano scartato perché GPT è stato disattivato.")
@@ -250,6 +241,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         nonlocal closed, pending
         closed = True
         pending = None
+        abort_event.set()
         cancel_event.set()
         window.destroy()
 
