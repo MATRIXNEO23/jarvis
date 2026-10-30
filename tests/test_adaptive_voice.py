@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -94,7 +95,7 @@ class VoiceCorrectionTests(unittest.TestCase):
         another = SpeechCorrections(self.db)
         self.assertEqual(another.count(), 0)
         self.assertEqual(another.correct("blocco moto"), "blocco moto")
-        with sqlite3.connect(self.db) as db:
+        with closing(sqlite3.connect(self.db)) as db:
             rows = db.execute("SELECT COUNT(*) FROM speech_corrections").fetchone()[0]
         self.assertEqual(rows, 0)
 
