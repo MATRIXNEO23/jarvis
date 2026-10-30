@@ -47,6 +47,8 @@ class WakeWordTests(unittest.TestCase):
         self.assertEqual(gate.route("apri blocco note"), ("ignored", ""))
         self.assertEqual(gate.route("Ehi Jarvis apri blocco note"),
                          ("command", "apri blocco note"))
+        self.assertEqual(gate.route("Ehi Jarvis, apri il browser"),
+                         ("command", "apri il browser"))
         self.assertEqual(gate.route("apri la calcolatrice"), ("ignored", ""))
         self.assertEqual(gate.route("Ehi Jarvis"), ("wake", ""))
         now[0] += 4
