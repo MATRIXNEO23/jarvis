@@ -2,6 +2,12 @@
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
+## Download diretto per Windows
+
+**[SCARICA JARVIS — ZIP COMPLETO (versione aggiornata)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/main.zip)**
+
+[Cartella Download con istruzioni semplici](Download/README.md). Non serve cercare gli artifact di GitHub Actions: lo ZIP contiene tutta la repository e i file `installa_gpt.bat` e `avvia_jarvis.bat`. Versione **alpha**; il login GPT va ancora verificato sul PC.
+
 ## Architettura e roadmap
 
 La progettazione **GPT-first + esecutore locale controllato + funzioni offline** è descritta in [ROADMAP.md](ROADMAP.md). Include fasi, criteri di verifica, sicurezza, memoria e prestazioni per i3-2100.
