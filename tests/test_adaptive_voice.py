@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from adaptive_voice import SpeechCorrections, SpeechCorrectionError
+from second_brain import SecondBrain
 from voice_control import speech_to_local_command, WakeWordGate
 
 
@@ -98,6 +99,16 @@ class VoiceCorrectionTests(unittest.TestCase):
         with closing(sqlite3.connect(self.db)) as db:
             rows = db.execute("SELECT COUNT(*) FROM speech_corrections").fetchone()[0]
         self.assertEqual(rows, 0)
+
+    def test_second_brain_full_erase_includes_voice_corrections(self):
+        brain = SecondBrain(self.db)
+        self.words.add("blocco moto", "blocco note", user_confirmed=True)
+        brain.remember_turn("Parlavo di Venezia", "Ti ascolto.")
+        self.assertEqual(self.words.count(), 1)
+        brain.clear_all()
+        self.words.reload()
+        self.assertEqual(self.words.count(), 0)
+        self.assertEqual(brain.stats(), (0, 0))
 
     def test_bounded_personal_dictionary(self):
         for i in range(80):
