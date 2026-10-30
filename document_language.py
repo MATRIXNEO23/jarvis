@@ -46,7 +46,14 @@ def classify_document_choice(utterance: str, *, pending: bool) -> str | None:
     'salva' or 'non salvare' from ordinary conversation.
     """
     phrase = clean_speech(utterance)
-    if not phrase or _META_START.search(phrase):
+    if (not phrase or _META_START.search(phrase) or
+            not re.match(
+                r"^(?:chiud|esc|usc|salv|non|senza|scart|butt|annull|"
+                r"lasci|tieni|puoi|potresti|per favore|per cortesia|"
+                r"si |sì |ok |va bene|allora|guarda|vai|invece|"
+                r"voglio|mi raccomando|no |aspetta|fermati)", phrase)):
+        return None
+    if False:
         return None
     if _CANCEL.search(phrase):
         return "cancel" if pending else None
