@@ -94,7 +94,7 @@ Voce (Vosk offline) / chat testuale / tasti
 **Gate:** richiesta innocua completata tramite Sign in with ChatGPT su Windows 10 x64, consumo aggiuntivo assente, errori/quota comunicati con chiarezza, comando offline sempre disponibile.
 
 ### Fase 3 — Pianificazione assistita da GPT
-> **Stato 30/10/2026:** prima UI con pulsante «Pianifica attività», anteprima, approvazione e annullamento fra passi implementata e testata in CI Windows/Linux. Non ancora collaudata sul Pavilion; il pulsante «Chiedi a GPT» non esegue comandi.
+> **Stato 30/10/2026:** prima UI con pulsante «Pianifica attività», anteprima, approvazione e annullamento fra passi implementata e testata in CI Windows/Linux. Aggiunta protezione dei passi successivi se Jarvis viene chiuso o GPT viene disattivato/scollegato, con test di regressione verdi. Un comando locale già iniziato non può essere annullato forzatamente. Non ancora collaudata sul Pavilion; il pulsante «Chiedi a GPT» non esegue comandi.
 
 - [ ] Parser intenzioni: comandi deterministici offline prima; GPT per compiti ambigui/complessi quando disponibile.
 - [x] **Prima versione del piano a passi**: `intent / steps / tool_id / arguments` generati da GPT, convertiti localmente in azioni fisse con `description / risk / expected_result` e validazione rigorosa. Test automatici verdi, collaudo sul Pavilion da fare.
