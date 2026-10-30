@@ -30,7 +30,7 @@ def speech_to_local_command(text: str) -> str | None:
     if not isinstance(text, str):
         return None
     words = " ".join(text.casefold().strip(" .!?").split())
-    words = re.sub(r"^(?:(?:ehi|ok)\\s+)?jarvis[,\\s:]+", "", words)
+    words = re.sub(r"^(?:(?:ehi|ok)\s+)?jarvis[,\s:]+", "", words)
     for prefix in ("cerca nel browser ", "cerca su internet "):
         if words.startswith(prefix):
             query = " ".join(words[len(prefix):].split())
