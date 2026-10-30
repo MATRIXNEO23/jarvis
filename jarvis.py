@@ -441,12 +441,14 @@ def main() -> None:
     def document_operation(operation: str, *, content: str = "",
                            target: str = "", document_id: str = "",
                            path: Path | None = None,
-                           close_after: bool = False) -> None:
-        nonlocal document_busy
+                           close_after: bool = False,
+                           source_utterance: str = "") -> None:
+        nonlocal document_busy, last_user_for_document
         if document_busy or closing:
             announce_document("Sto già lavorando sul documento: attendi.")
             return
         document_busy = True
+        last_user_for_document = source_utterance or last_user_for_document or operation
         update_document_buttons()
         document_status.set("Operazione in corso su Blocco note...")
 
@@ -472,7 +474,7 @@ def main() -> None:
         # A started save must finish even when the Jarvis UI closes.
         threading.Thread(target=worker, daemon=False, name="jarvis-document-worker").start()
 
-    def ask_to_close_document() -> None:
+    def ask_to_close_document(source_utterance: str = "") -> None:
         if document_busy:
             announce_document("Attendi la fine della scrittura prima di chiudere.")
             return
@@ -485,10 +487,14 @@ def main() -> None:
             # Never discard an apparently clean document without asking.
             doc_dialog.phase = "awaiting_close_choice"
             doc_dialog.dirty = True
-            announce_document(
-                "Vuoi salvare e chiudere, chiudere senza salvare oppure annullare?")
+            question = "Vuoi salvare e chiudere, chiudere senza salvare oppure annullare?"
+            announce_document(question)
+            if source_utterance:
+                remember_exchange(source_utterance, question, "clarify")
         else:
             announce_document(decision.message)
+            if source_utterance:
+                remember_exchange(source_utterance, decision.message, "clarify")
 
     def execute_document_choice(decision, *, path: Path | None = None) -> None:
         if decision.kind in ("save_then_close", "save_as_then_close"):
@@ -513,6 +519,8 @@ def main() -> None:
                 else "disabled")
 
     def handle_document_confirmation(spoken: str) -> None:
+        nonlocal last_user_for_document
+        last_user_for_document = spoken
         if document_busy:
             announce_document("Operazione documento in corso; attendi.")
             return
@@ -672,6 +680,7 @@ def main() -> None:
                             if (doc_dialog.phase == "editing" and
                                     direct_choice in ("save", "discard")):
                                 decision = doc_dialog.request_close_with_choice(spoken)
+                                last_user_for_document = spoken
                                 execute_document_choice(decision)
                                 continue
                             normalized = " ".join(spoken.casefold().strip(" ,.!?").split())
@@ -680,12 +689,12 @@ def main() -> None:
                                 "chiudi il documento", "chiudi documento",
                                 "chiudi il file", "chiudi file", "chiudilo",
                             ):
-                                ask_to_close_document()
+                                ask_to_close_document(spoken)
                                 continue
                             # Fixed local actions do not require an online model.
                             command = speech_to_local_command(spoken)
                             if command == "apri blocco note":
-                                document_operation("open")
+                                document_operation("open", source_utterance=spoken)
                             elif command:
                                 if not busy_local:
                                     submit_local(message_override=command,
@@ -845,7 +854,8 @@ def main() -> None:
                                         speak_result("Operazione in corso, riprova.")
                                 elif cap.handler == "document_open":
                                     if current_id is None:
-                                        document_operation("open")
+                                        document_operation(
+                                            "open", source_utterance=original_phrase)
                                     else:
                                         announce_document(
                                             "C'è già un Blocco note gestito da Jarvis. "
@@ -853,7 +863,7 @@ def main() -> None:
                                 elif cap.handler == "document_close":
                                     if (doc_snapshot is not None
                                             and current_id == doc_snapshot):
-                                        ask_to_close_document()
+                                        ask_to_close_document(original_phrase)
                                     else:
                                         announce_document(
                                             "Il documento è cambiato; non chiudo nulla.")
@@ -871,14 +881,16 @@ def main() -> None:
                                         document_operation(
                                             "compose", content=cap.content,
                                             target=cap.target,
-                                            close_after=cap.close_after)
+                                            close_after=cap.close_after,
+                                            source_utterance=original_phrase)
                                 else:
                                     announce_document("Azione del catalogo non attiva.")
                             elif intent.kind == "tool":
                                 if intent.plan is None or busy_local:
                                     speak_result("Sono occupato, riprova.")
                                 elif intent.plan.steps[0].command == "apri blocco note":
-                                    document_operation("open")
+                                    document_operation(
+                                        "open", source_utterance=original_phrase)
                                 else:
                                     submit_local(message_override=intent.plan.steps[0].command,
                                                  source_utterance=original_phrase)
@@ -898,12 +910,13 @@ def main() -> None:
                                     document_operation(
                                         "compose", content=intent.content,
                                         target=intent.target,
-                                        close_after=intent.close_after)
+                                        close_after=intent.close_after,
+                                        source_utterance=original_phrase)
                             elif intent.kind == "close_document":
                                 current_id = (documents.current.ident
                                               if documents.current else None)
                                 if doc_snapshot is not None and current_id == doc_snapshot:
-                                    ask_to_close_document()
+                                    ask_to_close_document(original_phrase)
                                 else:
                                     announce_document(
                                         "Non ho un documento identificato da chiudere.")
