@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
+from document_language import classify_document_choice
+
 
 @dataclass(frozen=True)
 class DialogResponse:
@@ -79,66 +81,69 @@ class DocumentDialog:
             self.document_id,
         )
 
+    def request_close_with_choice(self, phrase: str) -> DialogResponse:
+        """Direct explicit instruction: 'chiudi senza salvare' is one consent.
+
+        No GPT inference or additional password-like sentence is required.
+        A standalone 'chiudi' still requests a choice.
+        """
+        choice = classify_document_choice(phrase, pending=False)
+        if choice not in ("save", "discard"):
+            return DialogResponse(
+                "invalid", "Non è chiaro se vuoi salvare. "
+                "Chiedimi di chiudere, poi dimmi come preferisci procedere.",
+                self.document_id)
+        preliminary = self.request_close()
+        if preliminary.kind == "ask_choice":
+            return self.reply(phrase)
+        return preliminary
+
     def reply(self, phrase: str) -> DialogResponse:
-        text = self._normalise(phrase)
+        choice = classify_document_choice(phrase, pending=True)
         doc = self.document_id
         if self.phase == "awaiting_close_choice":
-            if text in ("annulla", "non chiudere", "lascia aperto",
-                        "lascia aperta", "torna indietro"):
+            if choice == "cancel":
                 self.phase = "editing"
-                return DialogResponse("cancel", "Chiusura annullata. Il documento resta aperto.", doc)
-            if text in ("salva e chiudi", "salva ed esci", "salva e esci",
-                        "salva", "salva e chiudilo", "salva e chiudila"):
+                return DialogResponse(
+                    "cancel", "Chiusura annullata. Il documento resta aperto.", doc)
+            if choice == "save":
                 if self.saved_path is None:
                     self.phase = "awaiting_save_destination"
                     return DialogResponse(
                         "ask_destination",
                         "Il documento non ha ancora un nome o una posizione di salvataggio. "
-                        "Scegli il file prima di salvare e chiudere.",
+                        "Dimmi dove salvarlo, per esempio: sul desktop come appunti.",
                         doc,
                     )
                 self.phase = "executing"
-                return DialogResponse("save_then_close",
-                                      "Salvataggio e chiusura richiesti al gestore locale.",
-                                      doc)
-            if text in ("chiudi senza salvare", "esci senza salvare",
-                        "non salvare", "scarta modifiche",
-                        "chiudi e non salvare"):
-                self.phase = "awaiting_discard_confirmation"
                 return DialogResponse(
-                    "ask_discard_confirmation",
-                    f"Le modifiche a {self.document_name} andranno perse. "
-                    "Vuoi davvero uscire senza salvare? "
-                    "Di' «confermo uscita senza salvare» oppure «annulla».",
+                    "save_then_close", "Salvataggio e chiusura richiesti al gestore locale.",
+                    doc)
+            if choice == "discard":
+                # Explicit 'chiudi senza salvare' is already the user's choice.
+                # Never demand an arbitrary second spoken formula.
+                self.phase = "executing"
+                return DialogResponse(
+                    "discard_then_close",
+                    "Chiusura senza salvataggio richiesta esplicitamente dall'utente.",
                     doc,
                 )
-            return DialogResponse("invalid", "Rispondi: salva e chiudi, "
-                                  "chiudi senza salvare oppure annulla.", doc)
-
-        if self.phase == "awaiting_discard_confirmation":
-            if text in ("annulla", "non chiudere", "no"):
-                self.phase = "editing"
-                return DialogResponse("cancel", "Chiusura annullata; modifiche conservate.", doc)
-            if text == "confermo uscita senza salvare":
-                self.phase = "executing"
-                return DialogResponse("discard_then_close",
-                                      "Scarto modifiche e chiusura richiesti al gestore locale.",
-                                      doc)
             return DialogResponse(
                 "invalid",
-                "Per non salvare devi dire «confermo uscita senza salvare», "
-                "oppure «annulla».",
+                "Non ho capito se vuoi salvare o no: vuoi salvare e chiudere, "
+                "uscire senza salvare oppure lasciare aperto?",
                 doc,
             )
 
         if self.phase == "awaiting_save_destination":
-            if text in ("annulla", "non chiudere", "no"):
+            if choice == "cancel":
                 self.phase = "editing"
-                return DialogResponse("cancel", "Nessun file salvato; documento ancora aperto.", doc)
+                return DialogResponse(
+                    "cancel", "Salvataggio annullato, documento ancora aperto.", doc)
             return DialogResponse(
                 "ask_destination",
-                "Usa la selezione del file nell'interfaccia per indicare dove salvare. "
-                "Non scelgo automaticamente un percorso.",
+                "Dimmi dove salvare, per esempio 'sul desktop come appunti', "
+                "oppure scegli la cartella dall'interfaccia.",
                 doc,
             )
 
