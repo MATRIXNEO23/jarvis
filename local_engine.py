@@ -12,6 +12,8 @@ from pathlib import Path
 import re
 import sqlite3
 import subprocess
+import webbrowser
+from urllib.parse import urlencode
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -71,6 +73,8 @@ class LocalEngine:
             "• apri calcolatrice\n"
             "• apri esplora file\n"
             "• apri download\n"
+            "• apri browser\n"
+            "• cerca nel browser TESTO\n"
             "• ultimi comandi"
         )
 
@@ -107,6 +111,11 @@ class LocalEngine:
                 action, message = "open_explorer", self._open_app(["explorer.exe"], "Esplora file")
             elif cmd in ("apri download", "apri cartella download"):
                 action, message = "open_downloads", self._open_downloads()
+            elif cmd in ("apri browser", "apri il browser", "apri browser predefinito"):
+                action, message = "open_browser", self._open_browser()
+            elif cmd.startswith("cerca nel browser ") or cmd.startswith("cerca su internet "):
+                prefix = "cerca nel browser " if cmd.startswith("cerca nel browser ") else "cerca su internet "
+                action, message = "web_search", self._browser_search(cmd[len(prefix):])
             elif cmd in ("ultimi comandi", "cronologia"):
                 action, message = "history", self._history()
             else:
@@ -185,6 +194,26 @@ class LocalEngine:
         if not self.download_dir.is_dir():
             raise FileNotFoundError("Cartella Download non trovata.")
         return self._open_app(["explorer.exe", str(self.download_dir)], "Cartella Download")
+
+    def _open_browser(self) -> str:
+        if not self.windows:
+            raise OSError("Apertura browser disponibile solo su Windows.")
+        # Open a fixed homepage using the user's registered default browser.
+        if not webbrowser.open("https://www.google.com/", new=2):
+            raise OSError("Impossibile aprire il browser predefinito.")
+        return "Browser predefinito aperto."
+
+    def _browser_search(self, query: str) -> str:
+        if not self.windows:
+            raise OSError("Ricerca nel browser disponibile solo su Windows.")
+        # A search query is always data, never a URL or a shell command.
+        query = " ".join(query.split())
+        if not query or len(query) > 160 or any(ord(c) < 32 for c in query):
+            raise ValueError("Termine di ricerca non valido (max 160 caratteri).")
+        url = "https://www.google.com/search?" + urlencode({"q": query})
+        if not webbrowser.open(url, new=2):
+            raise OSError("Impossibile aprire il browser predefinito.")
+        return "Ricerca aperta nel browser: " + query
 
     def _history(self) -> str:
         with self._connection() as db:
