@@ -29,6 +29,7 @@ class ConversationIntent:
     plan: ApprovedPlan | None = None
     content: str = ""
     target: str = ""
+    close_after: bool = False
 
 
 def build_conversation_prompt(utterance: str) -> str:
@@ -53,10 +54,12 @@ def build_conversation_prompt(utterance: str) -> str:
         "find_download, web_search, history. "
         "Per ricerca download o web passa query di testo; altri tool non hanno argomenti. "
         "Per creare o inserire un testo: "
-        '{"kind":"compose_document","target":"new_notepad","content":"testo"} '
+        '{"kind":"compose_document","target":"new_notepad","content":"testo","close_after":false} '
         "oppure target selected_document, MA selected_document soltanto quando "
         "l'utente indica chiaramente il documento già selezionato. "
         "Scrivi il contenuto richiesto in italiano, massimo 4500 caratteri. "
+        "Se l'utente chiede di scrivere E POI CHIUDERE, usa close_after:true "
+        "per chiedere la conferma dopo la scrittura; MAI chiudere da solo. "
         "Se serve un percorso/file che non conosci, usa clarify e chiedi il nome. "
         "Per chiudere un documento già identificato: "
         '{"kind":"close_document"}. '
@@ -118,14 +121,18 @@ def parse_conversation_intent(raw: str) -> ConversationIntent:
         return ConversationIntent(kind="tool", plan=plan)
 
     if kind == "compose_document":
-        if set(obj) != {"kind", "target", "content"}:
+        if set(obj) not in ({"kind", "target", "content"},
+                            {"kind", "target", "content", "close_after"}):
             raise ConversationRejected("Campi non consentiti per documento.")
+        close_after = obj.get("close_after", False)
+        if type(close_after) is not bool:
+            raise ConversationRejected("La richiesta di chiusura deve essere booleana.")
         target = obj["target"]
         if not isinstance(target, str) or target not in DOCUMENT_TARGETS:
             raise ConversationRejected("Destinazione documento non autorizzata.")
         content = _plain_text(obj["content"], MAX_DOCUMENT_TEXT, allow_newlines=True)
         return ConversationIntent(kind="compose_document", target=target,
-                                  content=content)
+                                  content=content, close_after=close_after)
 
     if kind == "close_document":
         if set(obj) != {"kind"}:
