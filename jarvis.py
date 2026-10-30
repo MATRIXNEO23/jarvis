@@ -12,10 +12,14 @@ from conversation_router import (
     ConversationRejected, build_conversation_prompt, parse_conversation_intent,
 )
 import threading
+from pathlib import Path
 import tkinter as tk
-from tkinter import messagebox, scrolledtext, ttk
+from tkinter import filedialog, messagebox, scrolledtext, ttk
 import webbrowser
 
+from document_dialog import DocumentDialog
+from document_store import destination_from_voice
+from managed_documents import ManagedDocuments
 from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
@@ -84,6 +88,15 @@ def main() -> None:
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
 
+    document_controls = ttk.Frame(frame)
+    document_controls.pack(fill="x", pady=(0, 6))
+    document_status = tk.StringVar(value="Documenti: nessuno aperto da Jarvis.")
+    ttk.Label(document_controls, textvariable=document_status, wraplength=530).pack(
+        side="left", fill="x", expand=True)
+    choose_save_button = ttk.Button(document_controls, text="Scegli dove salvare",
+                                    state="disabled")
+    choose_save_button.pack(side="right", padx=(6, 0))
+
     service = GPTClient()
     output_queue: queue.Queue[tuple] = queue.Queue()
     gpt_enabled = tk.BooleanVar(value=settings["gpt_enabled"])
@@ -95,6 +108,9 @@ def main() -> None:
     closing = False
     active_gpt = False
     conversation_epoch = 0
+    document_busy = False
+    documents = ManagedDocuments()
+    doc_dialog = DocumentDialog()
 
     def write_line(text: str) -> None:
         output.configure(state="normal")
@@ -108,6 +124,7 @@ def main() -> None:
         active_gpt = connected
         if not connected:
             conversation_epoch += 1
+            doc_dialog.revoke_pending()
             planner_abort_event.set()
         if not gpt_enabled.get():
             gpt_status.set("GPT: disattivato manualmente")
@@ -145,13 +162,15 @@ def main() -> None:
 
         def worker() -> None:
             epoch = params.get("epoch") if action == "conversation" else None
+            doc_snapshot = params.get("document_id") if action == "conversation" else None
             try:
                 timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
                 sdk_action = "ask" if action == "conversation" else action
-                sdk_params = {key: value for key, value in params.items() if key != "epoch"}
+                sdk_params = {key: value for key, value in params.items()
+                              if key not in ("epoch", "document_id")}
                 result = service.call(sdk_action, timeout=timeout, **sdk_params)
                 if action == "conversation":
-                    output_queue.put(("conversation_ok", epoch, result))
+                    output_queue.put(("conversation_ok", epoch, doc_snapshot, result))
                 else:
                     output_queue.put(("gpt_ok", action, result))
             except Exception as exc:
@@ -177,6 +196,7 @@ def main() -> None:
             run_gpt("status")
         else:
             conversation_epoch += 1
+            doc_dialog.revoke_pending()
             planner_abort_event.set()
             active_gpt = False
             gpt_status.set("GPT: disattivato manualmente")
@@ -260,6 +280,103 @@ def main() -> None:
         if spoken_enabled.get() and message:
             speaker.speak(message, selected_voice())
 
+    def announce_document(message: str) -> None:
+        document_status.set(message)
+        write_line("DOCUMENTO > " + message)
+        speak_result(message)
+
+    def document_operation(operation: str, *, content: str = "",
+                           target: str = "", document_id: str = "",
+                           path: Path | None = None,
+                           close_after: bool = False) -> None:
+        nonlocal document_busy
+        if document_busy or closing:
+            announce_document("Sto già lavorando sul documento: attendi.")
+            return
+        document_busy = True
+        document_status.set("Operazione in corso su Blocco note...")
+
+        def worker() -> None:
+            try:
+                if operation == "open":
+                    result = documents.open_blank()
+                elif operation == "compose":
+                    result = documents.compose(content, target)
+                elif operation == "save" and path is not None:
+                    result = documents.save_and_close(document_id, path)
+                elif operation == "discard":
+                    result = documents.discard_and_close(document_id)
+                else:
+                    raise ValueError("Operazione documento non consentita.")
+                output_queue.put(("document_ok", operation, result, close_after))
+            except (OSError, ValueError) as exc:
+                output_queue.put(("document_error", operation, str(exc)[:250]))
+
+        # A started save must finish even when the Jarvis UI closes.
+        threading.Thread(target=worker, daemon=False, name="jarvis-document-worker").start()
+
+    def ask_to_close_document() -> None:
+        if document_busy:
+            announce_document("Attendi la fine della scrittura prima di chiudere.")
+            return
+        if doc_dialog.phase != "editing" or doc_dialog.document_id is None:
+            announce_document("Non ho un documento Blocco note gestito da Jarvis da chiudere.")
+            return
+        decision = doc_dialog.request_close()
+        if decision.kind == "close_clean":
+            # The user could have manually edited the text in the meantime.
+            # Never discard an apparently clean document without asking.
+            doc_dialog.phase = "awaiting_close_choice"
+            doc_dialog.dirty = True
+            announce_document(
+                "Vuoi salvare e chiudere, chiudere senza salvare oppure annullare?")
+        else:
+            announce_document(decision.message)
+
+    def execute_document_choice(decision, *, path: Path | None = None) -> None:
+        if decision.kind in ("save_then_close", "save_as_then_close"):
+            destination = path if path is not None else (
+                Path(doc_dialog.saved_path) if doc_dialog.saved_path else None)
+            if destination is None:
+                doc_dialog.phase = "awaiting_save_destination"
+                announce_document("Dove vuoi salvare? Per esempio: "
+                                  "sul desktop come storia di Venezia.")
+                choose_save_button.configure(state="normal")
+                return
+            choose_save_button.configure(state="disabled")
+            document_operation("save", document_id=decision.document_id,
+                               path=destination)
+        elif decision.kind == "discard_then_close":
+            choose_save_button.configure(state="disabled")
+            document_operation("discard", document_id=decision.document_id)
+        else:
+            announce_document(decision.message)
+            choose_save_button.configure(
+                state="normal" if doc_dialog.phase == "awaiting_save_destination"
+                else "disabled")
+
+    def handle_document_confirmation(spoken: str) -> None:
+        if document_busy:
+            announce_document("Operazione documento in corso; attendi.")
+            return
+        if doc_dialog.phase == "awaiting_save_destination":
+            path = destination_from_voice(spoken)
+            if path is not None:
+                decision = doc_dialog.provide_destination(str(path))
+                execute_document_choice(decision, path=path)
+                return
+        execute_document_choice(doc_dialog.reply(spoken))
+
+    def choose_save_destination() -> None:
+        if doc_dialog.phase != "awaiting_save_destination" or document_busy:
+            return
+        selected = filedialog.asksaveasfilename(
+            parent=root, title="Dove vuoi salvare il nuovo file?",
+            defaultextension=".txt", filetypes=[("File di testo", "*.txt")])
+        if selected:
+            decision = doc_dialog.provide_destination(selected)
+            execute_document_choice(decision, path=Path(selected))
+
     def sync_dictation_ui(message: str) -> None:
         dictation_status.set(message)
         dictation_button.configure(text="Disattiva dettatura" if dictation.enabled
@@ -281,6 +398,8 @@ def main() -> None:
         nonlocal conversation_epoch
         selected = voice_mode.get()
         conversation_epoch += 1
+        doc_dialog.revoke_pending()
+        choose_save_button.configure(state="disabled")
         wake_gate.reset()
         voice.set_mode(selected)
         if selected != CONTINUOUS and dictation.enabled:
@@ -544,6 +663,7 @@ def main() -> None:
     ask_button.configure(command=submit_gpt)
     plan_button.configure(command=submit_plan)
     dictation_button.configure(command=toggle_dictation)
+    choose_save_button.configure(command=choose_save_destination)
     spoken_switch.configure(command=save_speech_preferences)
     spoken_picker.bind("<<ComboboxSelected>>", lambda event: save_speech_preferences())
     refresh_voices_button.configure(command=refresh_voices)
