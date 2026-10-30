@@ -21,6 +21,19 @@ La progettazione **GPT-first + esecutore locale controllato + funzioni offline**
 - Processi e moduli opzionali vanno caricati solo quando necessari; niente demoni separati in avvio automatico.
 - Niente API a consumo, crediti aggiuntivi, rinnovi automatici o chiavi inserite nel codice.
 
+## Voce offline — prova separata in corso
+
+La prima versione con riconoscimento vocale offline e' sul branch
+[`feature/offline-voice-pavilion`](https://github.com/MATRIXNEO23/jarvis/tree/feature/offline-voice-pavilion)
+e nella [pull request](https://github.com/MATRIXNEO23/jarvis/pull/1).
+La versione `main` rimane invariata fino al collaudo.
+
+Per provarla, scarica lo
+[ZIP della versione voce](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/offline-voice-pavilion.zip),
+estrailo **in una cartella nuova**, esegui una volta `installa_voce.bat`,
+poi `avvia_jarvis.bat`. Guida: [voce offline](docs/VOCE_OFFLINE.md).
+Il microfono e' spento a ogni avvio. Test reali del microfono sul Pavilion da fare.
+
 ## Stato di questa prima base
 
 - [x] Interfaccia minimale delle impostazioni e salvataggio locale.
