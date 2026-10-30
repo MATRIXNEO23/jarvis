@@ -95,34 +95,11 @@ def main() -> None:
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
 
-    # Lightweight corrections of Vosk text, explicitly approved by the user.
-    # This does not train the Vosk acoustic model or keep another model in RAM.
-    adaptation_controls = ttk.LabelFrame(
-        frame, text="Correzioni vocali di Lia — offline", padding=6)
-    adaptation_controls.pack(fill="x", pady=(0, 5))
-    last_voice_sample = tk.StringVar(value="Ultimo riconoscimento: nessuno")
-    ttk.Label(adaptation_controls, textvariable=last_voice_sample,
-              wraplength=680).pack(anchor="w")
-    correction_row = ttk.Frame(adaptation_controls)
-    correction_row.pack(fill="x")
-    correction_heard = tk.StringVar()
-    correction_intended = tk.StringVar()
-    ttk.Label(correction_row, text="Vosk scrive:").pack(side="left")
-    ttk.Entry(correction_row, textvariable=correction_heard, width=18).pack(
-        side="left", padx=(4, 10))
-    ttk.Label(correction_row, text="Intendevo:").pack(side="left")
-    ttk.Entry(correction_row, textvariable=correction_intended, width=18).pack(
-        side="left", padx=(4, 10))
-    learn_voice_button = ttk.Button(
-        correction_row, text="Impara", state="disabled")
-    learn_voice_button.pack(side="left")
-    erase_voice_button = ttk.Button(
-        correction_row, text="Azzera dizionario", state="disabled")
-    erase_voice_button.pack(side="left", padx=(8, 0))
-    voice_correction_status = tk.StringVar(
-        value="Correzioni: attiva prima Second Brain.")
-    ttk.Label(adaptation_controls, textvariable=voice_correction_status,
-              wraplength=680).pack(anchor="w")
+    # A compact popup keeps the existing Pavilion main window usable.
+    last_voice_sample = tk.StringVar(value="Nessuna frase ancora riconosciuta.")
+    voice_correction_button = ttk.Button(
+        dictation_row, text="Correggi voce...")
+    voice_correction_button.pack(side="right", padx=(6, 0))
 
     document_controls = ttk.Frame(frame)
     document_controls.pack(fill="x", pady=(0, 6))
