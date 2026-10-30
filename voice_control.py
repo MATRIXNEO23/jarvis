@@ -7,6 +7,7 @@ Only the trusted local command registry can execute speech automatically.
 from __future__ import annotations
 
 import json
+import re
 import threading
 from pathlib import Path
 from collections.abc import Callable
@@ -29,16 +30,22 @@ def speech_to_local_command(text: str) -> str | None:
     if not isinstance(text, str):
         return None
     words = " ".join(text.casefold().strip(" .!?").split())
-    for prefix in ("ehi jarvis ", "ok jarvis ", "jarvis "):
+    words = re.sub(r"^(?:(?:ehi|ok)\\s+)?jarvis[,\\s:]+", "", words)
+    for prefix in ("cerca nel browser ", "cerca su internet "):
         if words.startswith(prefix):
-            words = words[len(prefix):]
-            break
+            query = " ".join(words[len(prefix):].split())
+            if 1 <= len(query) <= 160 and not any(ord(ch) < 32 for ch in query):
+                return "cerca nel browser " + query
+            return None
     exact = {
         "apri calcolatrice": "apri calcolatrice",
         "apri la calcolatrice": "apri calcolatrice",
         "apri blocco note": "apri blocco note",
         "apri il blocco note": "apri blocco note",
         "apri esplora file": "apri esplora file",
+        "apri browser": "apri browser",
+        "apri il browser": "apri browser",
+        "apri browser predefinito": "apri browser",
         "apri esplora risorse": "apri esplora file",
         "apri download": "apri download",
         "apri la cartella download": "apri download",
