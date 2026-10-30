@@ -51,7 +51,7 @@ def simple_filename(title: str) -> str:
     name = " ".join(title.strip().split())
     if name.casefold().endswith(".txt"):
         name = name[:-4].strip()
-    if (not name or len(name) > 70 or name.casefold() in _DEFAULT_NAMES
+    if (not name or len(name) > 70 or "." in name or name.casefold() in _DEFAULT_NAMES
             or re.fullmatch(r"(?i:com[1-9]|lpt[1-9])", name)
             or any(ch in name for ch in '<>:"/\\|?*')
             or any(ord(c) < 32 for c in name)
