@@ -1,27 +1,31 @@
-# Download di Jarvis per Windows 10
+# Scarica Jarvis per Windows 10 — HP Pavilion
 
-## [SCARICA JARVIS — ZIP COMPLETO AGGIORNATO](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/main.zip)
+## SCARICA JARVIS — ZIP COMPLETO AGGIORNATO CON VOCE OFFLINE (VERSIONE DI PROVA)
 
-Il collegamento qui sopra scarica **tutti i file attuali del ramo principale** della repository, direttamente da GitHub. Non occorre aprire **Actions**, cercare un **artifact**, avere un account GitHub o scaricare i file uno alla volta.
+**[PREMI QUI PER SCARICARE JARVIS CON LA VOCE](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/offline-voice-pavilion.zip)**
 
-> **Versione alpha per prove.** Il collegamento ChatGPT tramite account non è ancora stato collaudato sul Pavilion; la voce non è ancora implementata. Non è un programma Windows autonomo pronto da installare con un unico setup.
+Questo link scarica lo ZIP del branch `feature/offline-voice-pavilion` con il comando vocale offline italiano e i file di installazione. **Non scaricare lo ZIP `main` se vuoi provare la voce.**
 
-### Sul PC
+Il microfono **rimane spento a ogni avvio**. Puoi scegliere manualmente Standby, Premi per parlare e Ascolto continuo. Nessun passaggio automatico a standby per Minecraft o altri programmi.
 
-1. Termina l'installazione di **Node.js 22.12 o successivo** e assicurati che **Python 3.12** sia disponibile.
-2. Premi il link **SCARICA JARVIS** qui sopra. Il browser salva uno ZIP, in genere nella cartella **Download** di Windows.
-3. Fai clic destro sullo ZIP scaricato e scegli **Estrai tutto**. Apri la cartella estratta `jarvis-main`.
-4. **Prima installazione GPT:** fai doppio clic su `installa_gpt.bat` (occorre Internet). Lo script scarica e compila il DevKit locale OpenAI, senza API a consumo.
-5. Avvia Jarvis con `avvia_jarvis.bat` dalla **stessa** cartella estratta.
-6. Nella finestra Jarvis usa i comandi locali oppure **Connetti ChatGPT**, che apre il browser ufficiale per effettuare l'accesso con il tuo consenso.
+### Installazione della versione con voce sul Pavilion
 
-### Cosa serve scaricare separatamente
+1. **Chiudi Jarvis** se e' aperto. Scarica lo ZIP dal pulsante qui sopra.
+2. In Download di Windows, clic destro sullo ZIP e scegli **Estrai tutto** in **una cartella nuova**. Non cancellare o sovrascrivere la precedente cartella Jarvis.
+3. Apri la cartella estratta `jarvis-feature-offline-voice-pavilion` (il nome puo' variare).
+4. Fai doppio clic su **`installa_voce.bat`**: installa i moduli Vosk e SoundDevice e scarica il piccolo modello italiano ufficiale. Serve Internet soltanto per questa installazione; segui il testo nella finestra fino al completamento.
+5. Fai doppio clic su **`avvia_jarvis.bat`**. Il microfono parte **spento**. Per la prima prova seleziona **Premi per parlare**, tieni premuto il pulsante e pronuncia «Jarvis, apri la calcolatrice».
 
-- [Python per Windows](https://www.python.org/downloads/windows/) — già presente sul Pavilion secondo la verifica effettuata con Python 3.12.
-- [Node.js, sito ufficiale](https://nodejs.org/) — serve a GPT; lascia installati npm e Add to PATH. Gli strumenti di compilazione facoltativi non sono richiesti.
-- Il kit **Sign in with ChatGPT** viene scaricato dal file `installa_gpt.bat`: **non va cercato negli artifact**.
-- Moduli vocali Vosk/TTS: **non installarli ancora**; la funzione voce non è pronta.
+Non devi reinstallare il collegamento GPT gia' installato nella cartella dei dati utente. Se l'installazione voce fallisce, il normale input testuale di Jarvis rimane utilizzabile. **Non cancellare i dati in `%LOCALAPPDATA%\Jarvis`.**
 
-**Aggiornamenti:** torna su questo stesso link per scaricare il ZIP aggiornato. Estrai le nuove versioni in una cartella separata; non cancellare i dati salvati in `%LOCALAPPDATA%\Jarvis`.
+**Stato di verifica:** i test automatici Python/Node per Windows e Linux sono superati ([CI](https://github.com/MATRIXNEO23/jarvis/actions/runs/41099757267)). Il microfono fisico e le prestazioni sul tuo Pavilion non sono ancora collaudati; questa non e' una versione definitiva.
 
-[Documentazione dettagliata GPT](../docs/GPT_SETUP.md) · [Pagina principale del progetto](../README.md)
+[Guida completa alla voce offline](https://github.com/MATRIXNEO23/jarvis/blob/feature/offline-voice-pavilion/docs/VOCE_OFFLINE.md) · [Codice e avanzamento della voce](https://github.com/MATRIXNEO23/jarvis/pull/1)
+
+## Versione precedente senza voce
+
+**[SCARICA JARVIS — ZIP PRINCIPALE (MAIN, SENZA VOCE)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/main.zip)**
+
+Questa e' la versione gia' utilizzata per il pianificatore e i comandi testuali sul Pavilion. Mantienila finche' la prova del microfono non e' completata.
+
+[Pagina principale del progetto](../README.md)
