@@ -11,6 +11,7 @@ import json
 import re
 import sqlite3
 from conversation_memory import ConversationMemory
+from adaptive_voice import SpeechCorrections, SpeechCorrectionError
 from second_brain import SecondBrain, BrainError
 from desktop_dictation import DesktopDictation, dictation_voice_action
 from conversation_router import (
@@ -94,6 +95,35 @@ def main() -> None:
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
 
+    # Lightweight corrections of Vosk text, explicitly approved by the user.
+    # This does not train the Vosk acoustic model or keep another model in RAM.
+    adaptation_controls = ttk.LabelFrame(
+        frame, text="Correzioni vocali di Lia — offline", padding=6)
+    adaptation_controls.pack(fill="x", pady=(0, 5))
+    last_voice_sample = tk.StringVar(value="Ultimo riconoscimento: nessuno")
+    ttk.Label(adaptation_controls, textvariable=last_voice_sample,
+              wraplength=680).pack(anchor="w")
+    correction_row = ttk.Frame(adaptation_controls)
+    correction_row.pack(fill="x")
+    correction_heard = tk.StringVar()
+    correction_intended = tk.StringVar()
+    ttk.Label(correction_row, text="Vosk scrive:").pack(side="left")
+    ttk.Entry(correction_row, textvariable=correction_heard, width=18).pack(
+        side="left", padx=(4, 10))
+    ttk.Label(correction_row, text="Intendevo:").pack(side="left")
+    ttk.Entry(correction_row, textvariable=correction_intended, width=18).pack(
+        side="left", padx=(4, 10))
+    learn_voice_button = ttk.Button(
+        correction_row, text="Impara", state="disabled")
+    learn_voice_button.pack(side="left")
+    erase_voice_button = ttk.Button(
+        correction_row, text="Azzera dizionario", state="disabled")
+    erase_voice_button.pack(side="left", padx=(8, 0))
+    voice_correction_status = tk.StringVar(
+        value="Correzioni: attiva prima Second Brain.")
+    ttk.Label(adaptation_controls, textvariable=voice_correction_status,
+              wraplength=680).pack(anchor="w")
+
     document_controls = ttk.Frame(frame)
     document_controls.pack(fill="x", pady=(0, 6))
     document_status = tk.StringVar(value="Documenti: nessuno aperto da Jarvis.")
@@ -131,11 +161,15 @@ def main() -> None:
     memory_enabled = tk.BooleanVar(value=settings["memory_enabled"])
     memory_status = tk.StringVar(value="Second Brain: inizializzazione.")
     durable_brain: SecondBrain | None = None
+    speech_lexicon: SpeechCorrections | None = None
     if memory_enabled.get():
         try:
             durable_brain = SecondBrain()
+            speech_lexicon = SpeechCorrections(durable_brain.path)
             memory_status.set("Second Brain: attivo (memoria locale sul PC).")
-        except (OSError, ValueError) as exc:
+        except (OSError, sqlite3.Error, SpeechCorrectionError, ValueError) as exc:
+            durable_brain = None
+            speech_lexicon = None
             memory_enabled.set(False)
             memory_status.set("Second Brain non disponibile: " + str(exc)[:90])
     else:
