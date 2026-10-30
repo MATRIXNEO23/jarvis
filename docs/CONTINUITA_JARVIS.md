@@ -173,3 +173,25 @@ Nel ramo `feature/gpt-conversazione-documenti` sono stati aggiunti:
 **ATTENZIONE:** quando GPT riceve una richiesta di scrittura, il programma in questo prototipo **mostra soltanto una BOZZA e dichiara che non l'ha inserita**; quando GPT riceve una richiesta di chiudere, risponde che il controllo documenti non è pronto e **non chiude nulla**. I dialoghi di salvataggio non sono ancora cablati alla GUI o a Blocco note. Non far scaricare questa branch come se la funzione completa fosse disponibile; mancano controller Windows, salvataggi verificati, backup e test Pavilion. Tenere la PR #3 in draft e il ramo vocale precedente intatto.
 
 Prossima fase: implementare controller documenti e gestione del focus/Notepad senza `taskkill`, collegare conferme vocali con salvataggio atomico e backup, prove hardware reali, solo poi decidere distribuzione.
+
+
+## 10. Implementazione di prova end-to-end dei documenti — 30/10/2026
+
+**Fonte canonica di codice per la nuova modalità:** `feature/gpt-conversazione-documenti`. PR [#3 draft](https://github.com/MATRIXNEO23/jarvis/pull/3). **Non integrata in main o nella build già funzionante sul Pavilion.** La nuova ZIP è raggiungibile dalla [pagina Download nella repository](https://github.com/MATRIXNEO23/jarvis/tree/main/Download), perché l'utente parla da telefono ma lavora al PC.
+
+**Richiesta utente:** parlare in modo naturale con GPT senza wake word nella modalità scelta volontariamente; «Apri Blocco note e scrivimi un testo su X, poi chiudi» → GPT genera il testo; Jarvis scrive nella finestra; domanda «salva e chiudi», «chiudi senza salvare» o «annulla»; riceve la conferma a voce; se non ancora salvato chiede nome e cartella. Spegnimento/ripristino della dettatura non necessario in modalità GPT. Nessun costo API.
+
+**Codice implementato nel ramo isolato**:
+- `conversation_router.py`: classificazione GPT a JSON validato con tipi conversazione, tool locale, testo, chiusura, chiarimento; campo `close_after` chiede la conferma **dopo** l'inserimento. Selezione del documento vincolata all'ID del documento aperto quando l'utente ha parlato.
+- `jarvis.py`: scelta manuale Conversazione continua GPT, inoltro trascrizioni al DevKit GPT, dialoghi vocali con sintesi Windows, instradamento delle scelte «salva/annulla/non salvare» senza consultare GPT. Pulsanti aggiuntivi di conferma e selezione percorso come fallback. Risposte stale GPT scartate dopo cambio modalità o disconnessione.
+- `notepad_controller.py`: lancia un nuovo Blocco note classico e conserva PID/HWND/control Edit/titolo originali; scrive tramite `WM_SETTEXT` Windows, rilegge e verifica il testo; legge anche modifiche manuali prima di salvare, chiude **solo quella finestra** dopo salvataggio verificato o doppia conferma di scarto; niente `taskkill`, shell, clipboard o tasti globali. App Notepad moderne non riconosciute vengono lasciate intatte.
+- `managed_documents.py`: sessione unica, apertura, composizione, aggiunta di testo senza sovrascrivere il preesistente, salvataggio e chiusura con gestione di esiti parziali, recupero se l'utente chiude manualmente.
+- `document_store.py`: interpreta la destinazione parlata soltanto per **Desktop, Documenti o Download** e nomi `.txt` semplici, rispetta percorsi Windows reindirizzati, salva file **nuovi** con `O_EXCL` e `fsync`, rifiuta file già esistenti. La modifica di file .md/.json preesistenti e delle repository **non è ancora implementata**, non nasconderlo.
+- `document_dialog.py`: macchina a stati richiesta scelta, domanda nome/percorso, doppia conferma perdita modifiche, annullamento, revoca dopo disconnessione; non è consentito a GPT decidere di scartare.
+- Test unitari con Notepad simulato; CI [run 41134478291](https://github.com/MATRIXNEO23/jarvis/actions/runs/41134478291) SUCCESS per l'ultima revisione con nuovi test. Quando nuovi commit vengono aggiunti, verificare sempre il CI aggiornato.
+
+**STATO REALE:** il codice e la logica sono implementati nel ramo di prova, ma la *reale* automazione Win32 Notepad e le voci di conferma **non sono ancora state collaudate dal Pavilion**. Non dichiarare il collaudo riuscito prima della verifica utente.
+
+**Prova richiesta all'utente (solo file nuovi/non importanti):** salvare l'installazione corrente, estrarre nuova ZIP in una cartella diversa, avviare in standby, selezionare Conversazione continua GPT, chiedere «Apri Blocco note e scrivi una poesia su Venezia, poi chiudilo»; controllare che il testo compaia davvero in Blocco note, rispondere «annulla»; chiedere di chiudere di nuovo, dire «salva e chiudi», poi «sul desktop come poesia di Venezia»; verificare file creato e *solo* quel Blocco note chiuso. Testare inoltre «chiudi senza salvare» con seconda conferma, presenza di altro Blocco note aperto e ripetizione dello stesso nome (nessuna sovrascrittura).
+
+**Blocco temporaneo all'adozione:** nessun merge automatico, non cancellare la vecchia build e non sovrascrivere `%LOCALAPPDATA%\\Jarvis`. Se il controllo finestra fallisce, lasciare il documento aperto e leggere il messaggio. In particolare, su alcuni Windows 10 la versione Notepad può avere un layout diverso da quello classico.
