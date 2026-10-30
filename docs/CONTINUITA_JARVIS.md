@@ -195,3 +195,21 @@ Prossima fase: implementare controller documenti e gestione del focus/Notepad se
 **Prova richiesta all'utente (solo file nuovi/non importanti):** salvare l'installazione corrente, estrarre nuova ZIP in una cartella diversa, avviare in standby, selezionare Conversazione continua GPT, chiedere «Apri Blocco note e scrivi una poesia su Venezia, poi chiudilo»; controllare che il testo compaia davvero in Blocco note, rispondere «annulla»; chiedere di chiudere di nuovo, dire «salva e chiudi», poi «sul desktop come poesia di Venezia»; verificare file creato e *solo* quel Blocco note chiuso. Testare inoltre «chiudi senza salvare» con seconda conferma, presenza di altro Blocco note aperto e ripetizione dello stesso nome (nessuna sovrascrittura).
 
 **Blocco temporaneo all'adozione:** nessun merge automatico, non cancellare la vecchia build e non sovrascrivere `%LOCALAPPDATA%\\Jarvis`. Se il controllo finestra fallisce, lasciare il documento aperto e leggere il messaggio. In particolare, su alcuni Windows 10 la versione Notepad può avere un layout diverso da quello classico.
+
+
+## 12. Lia Second Brain — continuità breve e permanente
+
+Nuova richiesta esplicita dell'utente durante il collaudo: Lia non deve perdere il contesto alla frase successiva, e negli anni dovrà ricordare le attività **realmente compiute**. Esempio prospettico: «ti ricordi quella mail che hai inviato due giorni fa?» deve recuperare una ricevuta di invio con destinatario, oggetto, data e riferimento, ma **solo dopo l'effettiva conferma del servizio email**. Non confondere il desiderio futuro con un modulo posta già disponibile.
+
+Sviluppo separato nel branch `feature/conversation-short-memory`, PR [#4 draft](https://github.com/MATRIXNEO23/jarvis/pull/4), basato sul ramo di GPT conversazionale e catalogo. File principali:
+- `conversation_memory.py`: memoria RAM limitata agli scambi recenti, gestione di domande di chiarimento e follow-up;
+- `second_brain.py`: SQLite persistente nel profilo locale Windows, dialoghi brevi e ricevute verificate, ricerca datata e recupero dopo riavvio; `record_email_sent` è **solo hook per un futuro adattatore email**, non un esecutore mail;
+- `conversation_router.py` e `jarvis.py`: gli estratti recenti e pertinenti entrano come contesto GPT senza essere autorizzazioni; registrazione conversazione e azioni confermate del motore locale/Blocco note; anche il campo «Chiedi a GPT» recupera memoria;
+- `settings.py`: opzione `memory_enabled` manuale, inizialmente **falsa**, e interfaccia per attivare/disattivare e cancellare la memoria;
+- `tests/test_second_brain.py` e aggiornamenti ad altri test: riavvio, idempotenza, privacy, ricevuta mail simulata, no replay, limite prompt DevKit 5000.
+
+Documentazione della feature: [docs/SECOND_BRAIN.md](https://github.com/MATRIXNEO23/jarvis/blob/feature/conversation-short-memory/docs/SECOND_BRAIN.md). ZIP da provare nel PC, **senza sovrascrivere le versioni precedenti**: [Download su GitHub](https://github.com/MATRIXNEO23/jarvis/tree/main/Download). Nessun merge nella versione funzionante senza prova e adozione esplicita.
+
+**Privacy:** salvataggio persistente solo dopo opt-in; SQLite locale non cifrato, nel profilo Windows; brevi estratti saranno comunque trasmessi a ChatGPT per la comprensione in modalità GPT. Vietata l'archiviazione automatica dei corpi email e di segreti. Il pulsante cancella il Second Brain, non il vecchio `tasks.db` del motore locale. Disattivare non elimina i dati già salvati. Non cancellare `%LOCALAPPDATA%\\Jarvis` durante i test.
+
+**Test fisico ancora da fare**: memoria a breve su due frasi, chiusura/riapertura e recupero di informazioni precedenti, azioni effettivamente eseguite, azzeramento dopo cancellazione, nessun riavvio di azioni vecchie. Nessuna email reale in questo test.
