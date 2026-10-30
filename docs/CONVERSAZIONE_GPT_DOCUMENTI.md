@@ -65,3 +65,16 @@ Interpretare «salva», «non salvare» o «annulla» **solo quando il dialogo c
 **Prove obbligatorie**: chiacchiera libera → solo voce; «scrivimi un testo» → documento, mai necessario attivare dettatura; «chiudi» → domanda vocale; «annulla» → finestra e modifiche restano; «salva e chiudi» → contenuto salvo e una sola finestra chiusa; «chiudi senza salvare» → conferma esplicita, niente perdite accidentali; altri Blocco note aperti intatti; errori GPT/Windows non portano a chiusure accidentali; dopo riavvio niente azioni pendenti; test di performance col vecchio HDD; costo aggiuntivo zero.
 
 **Vincoli non negoziabili:** nessuna nuova API a consumo, microfono OFF all'avvio, ChatGPT soltanto con SDK già configurato e entro limiti dell'account, Vosk/SAPI offline, salvaguardia versioni/backup e della cartella utente `%LOCALAPPDATA%\\Jarvis`.
+
+## Stato implementazione al 30/10/2026 — primo stadio verificabile
+
+Nella PR draft sono stati aggiunti:
+- `conversation_router.py`: costruzione del prompt per distinguere conversazione, azione locale, composizione testo e richiesta di chiusura; verifica JSON strettamente, riutilizza `action_planner.parse_plan` per impedire strumenti o argomenti fuori whitelist; nessuna esecuzione di codice generato.
+- `voice_control.py`: modalità esplicita `GPT_CONVERSATION` **selezionata manualmente** con microfono off all'avvio e senza «Ehi Jarvis». Lo stato del microfono non viene mutato dal classificatore.
+- `jarvis.py`: selezione della modalità GPT, invio delle frasi trascritte al collegamento ChatGPT già presente e risposta tramite sintesi vocale Windows; comandi semplici possono restare offline. Le risposte GPT vecchie vengono invalidate dopo cambio modalità o disconnessione.
+- `document_dialog.py`: kernel senza effetti collaterali per le scelte di chiusura, con conferme contro perdita dati.
+- Test `tests/test_conversation_router.py`, `tests/test_document_dialog.py` e test della modalità voce.
+
+**NON IMPLEMENTATO/DA NON DICHIARARE OPERATIVO:** scrittura automatica dentro Blocco note o in un file esistente, scelta automatica della destinazione, backup e salvataggio su disco, chiusura della finestra selezionata, risposte vocali effettive al dialogo di salvataggio. In questa fase, una richiesta di testo viene generata e mostrata come **bozza non inserita**, e una richiesta di chiusura viene rifiutata senza toccare alcuna finestra. Non pubblicare come prodotto finito o sostituire la versione precedente con questa PR.
+
+**Test fisici da effettuare prima di dire che funziona:** Windows 10 su Pavilion, riconoscimento di normali domande, risposta parlata, blocco eco e prestazioni durante programmi pesanti; solo in seguito implementare e collaudare documenti e salvataggio.
