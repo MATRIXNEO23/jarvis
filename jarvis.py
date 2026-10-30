@@ -491,23 +491,44 @@ def main() -> None:
                     spoken = str(data[0]).strip()
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
-                            # Explicit opt-in conversation: each recognized phrase
-                            # may go to GPT; safe known local tools remain offline.
+                            # Pending document decisions never go through GPT:
+                            # only the owner of this selected document may close.
+                            if doc_dialog.phase.startswith("awaiting_"):
+                                handle_document_confirmation(spoken)
+                                continue
+                            if doc_dialog.phase == "executing" or document_busy:
+                                write_line("Blocco note: operazione in corso, attendi.")
+                                continue
+                            normalized = " ".join(spoken.casefold().strip(" ,.!?").split())
+                            if normalized in (
+                                "chiudi blocco note", "chiudi il blocco note",
+                                "chiudi il documento", "chiudi documento",
+                                "chiudi il file", "chiudi file", "chiudilo",
+                            ):
+                                ask_to_close_document()
+                                continue
+                            # Fixed local actions do not require an online model.
                             command = speech_to_local_command(spoken)
-                            if command:
+                            if command == "apri blocco note":
+                                document_operation("open")
+                            elif command:
                                 if not busy_local:
                                     submit_local(message_override=command)
                                 else:
                                     write_line("Motore locale occupato: riprova.")
                             elif gpt_enabled.get() and active_gpt and not busy_gpt:
+                                snapshot = (documents.current.ident
+                                            if documents.current else None)
                                 try:
-                                    prompt = build_conversation_prompt(spoken)
+                                    prompt = build_conversation_prompt(
+                                        spoken, has_document=snapshot is not None)
                                 except ConversationRejected as exc:
                                     write_line("Conversazione: " + str(exc))
                                 else:
                                     write_line("CONVERSAZIONE GPT > " + spoken)
                                     run_gpt("conversation", prompt=prompt,
-                                            epoch=conversation_epoch)
+                                            epoch=conversation_epoch,
+                                            document_id=snapshot)
                             elif not active_gpt or not gpt_enabled.get():
                                 speak_result("GPT non è connesso. Puoi ancora usare i comandi locali.")
                                 write_line("GPT non connesso: frase non inviata.")
@@ -557,7 +578,7 @@ def main() -> None:
                         speak_result(result.message)
                 elif kind == "conversation_ok":
                     busy_gpt = False
-                    epoch, result = data
+                    epoch, doc_snapshot, result = data
                     if (epoch == conversation_epoch and
                             voice_mode.get() == GPT_CONVERSATION and
                             gpt_enabled.get() and active_gpt):
@@ -571,22 +592,37 @@ def main() -> None:
                                 write_line("JARVIS > " + intent.reply)
                                 speak_result(intent.reply)
                             elif intent.kind == "tool":
-                                if intent.plan is not None and not busy_local:
-                                    command = intent.plan.steps[0].command
-                                    submit_local(message_override=command)
-                                else:
+                                if intent.plan is None or busy_local:
                                     speak_result("Sono occupato, riprova.")
+                                elif intent.plan.steps[0].command == "apri blocco note":
+                                    document_operation("open")
+                                else:
+                                    submit_local(message_override=intent.plan.steps[0].command)
                             elif intent.kind == "compose_document":
-                                # The safe document writer is not integrated yet.
-                                # Never pretend that text has been written.
-                                write_line("BOZZA GPT (non salvata né inserita) > " + intent.content)
-                                speak_result(
-                                    "Ho preparato il testo. La scrittura automatica nei documenti "
-                                    "non è ancora attiva in questa versione sperimentale.")
+                                current_id = (documents.current.ident
+                                              if documents.current else None)
+                                if intent.target == "selected_document" and (
+                                        current_id is None or current_id != doc_snapshot):
+                                    announce_document(
+                                        "Il documento selezionato è cambiato o non è gestito "
+                                        "da Jarvis. Non ho inserito il testo.")
+                                elif current_id is not None and intent.target == "new_notepad":
+                                    announce_document(
+                                        "C'è già un documento aperto da Jarvis. "
+                                        "Per aggiungere testo a quello, chiedimi di scriverci.")
+                                else:
+                                    document_operation(
+                                        "compose", content=intent.content,
+                                        target=intent.target,
+                                        close_after=intent.close_after)
                             elif intent.kind == "close_document":
-                                speak_result(
-                                    "Non posso ancora chiudere il documento e gestire "
-                                    "il salvataggio automaticamente. Non lo chiuderò.")
+                                current_id = (documents.current.ident
+                                              if documents.current else None)
+                                if doc_snapshot is not None and current_id == doc_snapshot:
+                                    ask_to_close_document()
+                                else:
+                                    announce_document(
+                                        "Non ho un documento identificato da chiudere.")
                 elif kind == "conversation_error":
                     busy_gpt = False
                     epoch, reason = data
