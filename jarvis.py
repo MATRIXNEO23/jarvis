@@ -600,8 +600,9 @@ def main() -> None:
             local_execution_lock, planner_abort_event,
         )
 
-    def submit_local(event=None, message_override: str | None = None) -> None:
-        nonlocal busy_local
+    def submit_local(event=None, message_override: str | None = None,
+                     source_utterance: str = "") -> None:
+        nonlocal busy_local, last_user_for_action
         if busy_local or closing:
             return
         message = (message_override if message_override is not None else request.get()).strip()
@@ -610,6 +611,7 @@ def main() -> None:
         if message_override is None:
             request.set("")
         write_line("COMANDO LOCALE > " + message)
+        last_user_for_action = source_utterance or message
         busy_local = True
         refresh_buttons()
 
@@ -638,6 +640,7 @@ def main() -> None:
 
     def poll() -> None:
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
+        nonlocal last_user_for_action, last_user_for_document
         if closing:
             return
         try:
@@ -685,7 +688,8 @@ def main() -> None:
                                 document_operation("open")
                             elif command:
                                 if not busy_local:
-                                    submit_local(message_override=command)
+                                    submit_local(message_override=command,
+                                                 source_utterance=spoken)
                                 else:
                                     write_line("Motore locale occupato: riprova.")
                             elif gpt_enabled.get() and active_gpt and not busy_gpt:
@@ -733,7 +737,8 @@ def main() -> None:
                             write_line("VOCE (offline) > " + spoken)
                             command = speech_to_local_command(spoken)
                             if command and not busy_local:
-                                submit_local(message_override=command)
+                                submit_local(message_override=command,
+                                             source_utterance=spoken)
                             elif command:
                                 write_line("Motore occupato; comando non eseguito.")
                             elif not dictation.enabled and not request.get().strip():
@@ -747,7 +752,15 @@ def main() -> None:
                     result = data[0]
                     busy_local = False
                     write_line(f"[{result.status}] {result.message}")
+                    source = last_user_for_action or result.action
+                    last_user_for_action = ""
+                    remember_exchange(
+                        source, result.message,
+                        "action" if result.status == "completed" else "error")
                     if result.status == "completed":
+                        remember_completed_action(
+                            result.action, result.action.split("_")[0],
+                            result.message, result.task_id)
                         speak_result(result.message)
                 elif kind == "document_ok":
                     document_busy = False
@@ -826,7 +839,8 @@ def main() -> None:
                                 elif cap.handler == "local" and cap.plan is not None:
                                     if not busy_local:
                                         submit_local(
-                                            message_override=cap.plan.steps[0].command)
+                                            message_override=cap.plan.steps[0].command,
+                                            source_utterance=original_phrase)
                                     else:
                                         speak_result("Operazione in corso, riprova.")
                                 elif cap.handler == "document_open":
@@ -866,7 +880,8 @@ def main() -> None:
                                 elif intent.plan.steps[0].command == "apri blocco note":
                                     document_operation("open")
                                 else:
-                                    submit_local(message_override=intent.plan.steps[0].command)
+                                    submit_local(message_override=intent.plan.steps[0].command,
+                                                 source_utterance=original_phrase)
                             elif intent.kind == "compose_document":
                                 current_id = (documents.current.ident
                                               if documents.current else None)
