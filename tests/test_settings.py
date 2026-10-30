@@ -10,7 +10,8 @@ class SettingsTests(unittest.TestCase):
     def test_default_chatgpt_enabled(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
-            self.assertEqual(load_settings(path), {"gpt_enabled": True, "tts_enabled": False, "tts_voice": ""})
+            self.assertEqual(load_settings(path), {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "",
+                                                         "memory_enabled": False})
 
     def test_disable_then_reenable_persists(self):
         with TemporaryDirectory() as folder:
@@ -33,7 +34,19 @@ class SettingsTests(unittest.TestCase):
                            "tts_voice": "Voce italiana"}, path)
             self.assertEqual(load_settings(path),
                              {"gpt_enabled": False, "tts_enabled": True,
-                              "tts_voice": "Voce italiana"})
+                              "tts_voice": "Voce italiana", "memory_enabled": False})
+
+    def test_memory_opt_in_is_persistent_and_independent(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "settings.json"
+            self.assertFalse(load_settings(path)["memory_enabled"])
+            save_settings({"gpt_enabled": True, "memory_enabled": True}, path)
+            self.assertTrue(load_settings(path)["memory_enabled"])
+            save_settings({"gpt_enabled": False, "memory_enabled": False}, path)
+            self.assertFalse(load_settings(path)["memory_enabled"])
+            with self.assertRaises(ValueError):
+                save_settings({"gpt_enabled": True,
+                               "memory_enabled": "enabled"}, path)
 
     def test_existing_settings_are_migrated(self):
         with TemporaryDirectory() as folder:
