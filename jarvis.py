@@ -11,6 +11,7 @@ import json
 import re
 import sqlite3
 from conversation_memory import ConversationMemory
+from adaptive_voice import SpeechCorrections, SpeechCorrectionError
 from second_brain import SecondBrain, BrainError
 from desktop_dictation import DesktopDictation, dictation_voice_action
 from conversation_router import (
@@ -94,6 +95,12 @@ def main() -> None:
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
 
+    # A compact popup keeps the existing Pavilion main window usable.
+    last_voice_sample = tk.StringVar(value="Nessuna frase ancora riconosciuta.")
+    voice_correction_button = ttk.Button(
+        dictation_row, text="Correggi voce...")
+    voice_correction_button.pack(side="right", padx=(6, 0))
+
     document_controls = ttk.Frame(frame)
     document_controls.pack(fill="x", pady=(0, 6))
     document_status = tk.StringVar(value="Documenti: nessuno aperto da Jarvis.")
@@ -131,11 +138,15 @@ def main() -> None:
     memory_enabled = tk.BooleanVar(value=settings["memory_enabled"])
     memory_status = tk.StringVar(value="Second Brain: inizializzazione.")
     durable_brain: SecondBrain | None = None
+    speech_lexicon: SpeechCorrections | None = None
     if memory_enabled.get():
         try:
             durable_brain = SecondBrain()
+            speech_lexicon = SpeechCorrections(durable_brain.path)
             memory_status.set("Second Brain: attivo (memoria locale sul PC).")
-        except (OSError, ValueError) as exc:
+        except (OSError, sqlite3.Error, SpeechCorrectionError, ValueError) as exc:
+            durable_brain = None
+            speech_lexicon = None
             memory_enabled.set(False)
             memory_status.set("Second Brain non disponibile: " + str(exc)[:90])
     else:
@@ -292,14 +303,18 @@ def main() -> None:
             refresh_buttons()
 
     def toggle_memory() -> None:
-        nonlocal durable_brain
+        nonlocal durable_brain, speech_lexicon
         desired = bool(memory_enabled.get())
         previous = bool(settings["memory_enabled"])
         candidate = durable_brain
-        if desired and candidate is None:
+        candidate_lexicon = speech_lexicon
+        if desired:
             try:
-                candidate = SecondBrain()
-            except (OSError, sqlite3.Error, ValueError) as exc:
+                if candidate is None:
+                    candidate = SecondBrain()
+                if candidate_lexicon is None:
+                    candidate_lexicon = SpeechCorrections(candidate.path)
+            except (OSError, sqlite3.Error, ValueError, SpeechCorrectionError) as exc:
                 memory_enabled.set(previous)
                 memory_status_refresh("Impossibile attivare: " + str(exc)[:90])
                 return
@@ -312,6 +327,7 @@ def main() -> None:
             memory_status_refresh("Impossibile salvare l'opzione: " + str(exc)[:90])
             return
         durable_brain = candidate if desired else None
+        speech_lexicon = candidate_lexicon if desired else None
         memory_status_refresh(
             "La memoria già salvata resta sul PC fino a cancellazione esplicita."
             if not desired else "Memoria attiva anche dopo il prossimo riavvio.")
@@ -319,7 +335,7 @@ def main() -> None:
     def clear_saved_memory() -> None:
         if not messagebox.askyesno(
             "Cancella il Second Brain",
-            "Eliminare gli scambi e le operazioni archiviate localmente da Lia? "
+            "Eliminare scambi, operazioni e correzioni vocali archiviate da Lia? "
             "Questa operazione non può essere annullata. "
             "La cronologia delle attività del motore locale resta separata.",
             parent=root,
@@ -329,9 +345,89 @@ def main() -> None:
             target = durable_brain if durable_brain is not None else SecondBrain()
             target.clear_all()
             conversation_memory.clear()
-            memory_status_refresh("Memoria salvata cancellata su richiesta.")
+            if speech_lexicon is not None:
+                speech_lexicon.reload()
+            memory_status_refresh("Memoria e correzioni vocali eliminate su richiesta.")
         except (OSError, sqlite3.Error, ValueError) as exc:
             memory_status.set("Cancellazione memoria non riuscita: " + str(exc)[:100])
+
+    def show_voice_corrections() -> None:
+        """User must explicitly review both sentences before saving a rule."""
+        if speech_lexicon is None or not memory_enabled.get():
+            messagebox.showinfo(
+                "Vocabolario vocale di Lia",
+                "Attiva prima Second Brain locale per conservare "
+                "le correzioni vocali tra un avvio e l'altro.",
+                parent=root)
+            return
+        popup = tk.Toplevel(root)
+        popup.title("Correggi il riconoscimento di Lia")
+        popup.geometry("630x270")
+        popup.minsize(550, 240)
+        popup.transient(root)
+        body = ttk.Frame(popup, padding=12)
+        body.pack(fill="both", expand=True)
+        ttk.Label(
+            body, text="Quando Vosk sbaglia una frase, correggila qui. "
+                       "Lia impara soltanto le parole cambiate, "
+                       "non i comandi e le conferme.",
+            wraplength=595).pack(anchor="w", pady=(0, 6))
+        heard = tk.StringVar(value=last_voice_sample.get())
+        intended = tk.StringVar()
+        ttk.Label(body, text="Frase riconosciuta da Vosk:").pack(anchor="w")
+        ttk.Entry(body, textvariable=heard, width=80).pack(
+            fill="x", pady=(0, 6))
+        ttk.Label(body, text="Frase che avevi pronunciato:").pack(anchor="w")
+        entry = ttk.Entry(body, textvariable=intended, width=80)
+        entry.pack(fill="x", pady=(0, 6))
+        result = tk.StringVar(
+            value=f"Correzioni personali: {speech_lexicon.count()} / 80. "
+                  "Esempio: 'apri blocco moto' → 'apri blocco note'.")
+        ttk.Label(body, textvariable=result, wraplength=600).pack(
+            anchor="w", pady=(0, 7))
+        actions = ttk.Frame(body)
+        actions.pack(fill="x")
+
+        def learn() -> None:
+            if speech_lexicon is None or not memory_enabled.get():
+                result.set("Second Brain è disattivato: non salvo correzioni.")
+                return
+            try:
+                before, after = speech_lexicon.learn_phrase(
+                    heard.get(), intended.get(), user_confirmed=True)
+            except (SpeechCorrectionError, OSError, sqlite3.Error) as exc:
+                result.set("Correzione non salvata: " + str(exc)[:160])
+                return
+            result.set(
+                f"Imparato: {before} → {after}. "
+                "Sarà applicato alle prossime frasi riconosciute.")
+            write_line(f"CORREZIONE VOCE > {before} → {after}")
+            heard.set("")
+            intended.set("")
+
+        def reset_personal_words() -> None:
+            if speech_lexicon is None or not memory_enabled.get():
+                result.set("Second Brain disattivato.")
+                return
+            if not messagebox.askyesno(
+                    "Azzera correzioni vocali",
+                    "Cancellare soltanto le correzioni del riconoscimento "
+                    "vocale, lasciando intatti gli altri ricordi di Lia?",
+                    parent=popup):
+                return
+            try:
+                speech_lexicon.clear()
+                result.set("Dizionario di correzioni vocali azzerato.")
+            except (OSError, sqlite3.Error) as exc:
+                result.set("Cancellazione non riuscita: " + str(exc)[:120])
+
+        ttk.Button(actions, text="Conferma correzione", command=learn).pack(
+            side="left")
+        ttk.Button(actions, text="Azzera correzioni",
+                   command=reset_personal_words).pack(side="left", padx=(8, 0))
+        ttk.Button(actions, text="Chiudi", command=popup.destroy).pack(
+            side="right")
+        entry.focus_set()
 
     ttk.Checkbutton(
         frame, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
@@ -681,7 +777,16 @@ def main() -> None:
                              str(data[0]).startswith("Voce non disponibile"))):
                         sync_dictation_ui(dictation.disable())
                 elif kind == "voice_text":
-                    spoken = str(data[0]).strip()
+                    raw_spoken = str(data[0]).strip()
+                    spoken = raw_spoken
+                    if raw_spoken and voice_mode.get() != STANDBY:
+                        # No new acoustic model or background training:
+                        # correct approved app names in a single cached pass.
+                        last_voice_sample.set(raw_spoken)
+                        if speech_lexicon is not None and memory_enabled.get():
+                            spoken = speech_lexicon.correct(raw_spoken)
+                            if spoken != raw_spoken:
+                                write_line("VOCABOLARIO LIA > " + spoken)
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
                             # Pending document decisions never go through GPT:
@@ -1044,6 +1149,7 @@ def main() -> None:
     ask_button.configure(command=submit_gpt)
     plan_button.configure(command=submit_plan)
     dictation_button.configure(command=toggle_dictation)
+    voice_correction_button.configure(command=show_voice_corrections)
     choose_save_button.configure(command=choose_save_destination)
     doc_save_button.configure(
         command=lambda: handle_document_confirmation("salva e chiudi"))
