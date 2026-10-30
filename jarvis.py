@@ -321,6 +321,9 @@ def main() -> None:
 
         def worker() -> None:
             try:
+                if operation == "open" or (
+                        operation == "compose" and target == "new_notepad"):
+                    documents.forget_if_closed()
                 if operation == "open":
                     result = documents.open_blank()
                 elif operation == "compose":
@@ -613,6 +616,9 @@ def main() -> None:
                     document_busy = False
                     operation, result, close_after = data
                     if result.kind in ("opened", "created"):
+                        if doc_dialog.document_id not in (None, result.document_id):
+                            # Earlier controlled window was closed manually.
+                            doc_dialog.reset()
                         if doc_dialog.phase == "idle":
                             doc_dialog.begin(
                                 result.document_id, "Nuovo Blocco note",
@@ -642,6 +648,8 @@ def main() -> None:
                     if doc_dialog.phase == "executing" and doc_dialog.document_id:
                         doc_dialog.operation_completed(
                             doc_dialog.document_id, succeeded=False)
+                    if documents.current is None and doc_dialog.phase == "editing":
+                        doc_dialog.reset()
                     if operation in ("open", "compose") and (
                             doc_dialog.phase == "idle" and documents.current is not None):
                         # The window may have opened before insertion failed.
