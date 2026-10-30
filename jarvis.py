@@ -7,6 +7,7 @@ GPT requires the official SDK and an explicit sign-in.
 from __future__ import annotations
 
 import queue
+from desktop_dictation import DesktopDictation, dictation_voice_action
 import threading
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, ttk
@@ -24,7 +25,7 @@ def main() -> None:
     settings = load_settings()
     root = tk.Tk()
     root.title("Jarvis — alpha")
-    root.geometry("790x720")
+    root.geometry("800x760")
     root.minsize(630, 560)
 
     frame = ttk.Frame(root, padding=15)
@@ -46,6 +47,14 @@ def main() -> None:
         mode_buttons.append(button)
     ptt_button = ttk.Button(audio_controls, text="Tieni premuto per parlare", state="disabled")
     ptt_button.pack(anchor="w", pady=(5, 0))
+    dictation_row = ttk.Frame(audio_controls)
+    dictation_row.pack(fill="x", pady=(6, 0))
+    dictation_button = ttk.Button(dictation_row, text="Attiva dettatura", state="disabled")
+    dictation_button.pack(side="left", padx=(0, 9))
+    dictation_status = tk.StringVar(value="Dettatura: disattivata.")
+    ttk.Label(dictation_row, textvariable=dictation_status, wraplength=500).pack(
+        side="left", fill="x", expand=True)
+
 
     service = GPTClient()
     output_queue: queue.Queue[tuple] = queue.Queue()
@@ -174,10 +183,31 @@ def main() -> None:
         return
 
     voice = VoiceController(output_queue.put)
+    dictation = DesktopDictation()
+
+    def sync_dictation_ui(message: str) -> None:
+        dictation_status.set(message)
+        dictation_button.configure(text="Disattiva dettatura" if dictation.enabled
+                                  else "Attiva dettatura")
+        if not closing:
+            write_line(message)
+
+    def toggle_dictation() -> None:
+        if dictation.enabled:
+            sync_dictation_ui(dictation.disable())
+        elif voice_mode.get() == CONTINUOUS:
+            sync_dictation_ui(dictation.enable())
+        else:
+            sync_dictation_ui("Seleziona prima Ascolto continuo per dettare.")
+
+
 
     def change_voice_mode() -> None:
         selected = voice_mode.get()
         voice.set_mode(selected)
+        if selected != CONTINUOUS and dictation.enabled:
+            sync_dictation_ui(dictation.disable())
+        dictation_button.configure(state="normal" if selected == CONTINUOUS else "disabled")
         ptt_button.configure(state="normal" if selected == PUSH_TO_TALK else "disabled")
         if selected == STANDBY:
             mic_status.set("Microfono: SPENTO (standby)")
@@ -248,20 +278,37 @@ def main() -> None:
                 if kind == "voice_status":
                     if voice_mode.get() != STANDBY:
                         mic_status.set(data[0])
+                    if (dictation.enabled and
+                            (str(data[0]).startswith("Microfono spento") or
+                             str(data[0]).startswith("Voce non disponibile"))):
+                        sync_dictation_ui(dictation.disable())
                 elif kind == "voice_text":
                     spoken = str(data[0]).strip()
                     if voice_mode.get() != STANDBY and spoken:
-                        write_line("VOCE (offline) > " + spoken)
-                        command = speech_to_local_command(spoken)
-                        if command and not busy_local:
-                            submit_local(message_override=command)
-                        elif command:
-                            write_line("Motore occupato; comando non eseguito.")
-                        elif not request.get().strip():
-                            request.set(spoken)
-                            write_line("Testo inserito: controllalo prima di eseguirlo.")
+                        dictation_action = dictation_voice_action(spoken)
+                        if dictation_action == "stop":
+                            sync_dictation_ui(dictation.disable())
+                        elif dictation_action == "start":
+                            if voice_mode.get() == CONTINUOUS:
+                                sync_dictation_ui(dictation.enable())
+                            else:
+                                sync_dictation_ui(
+                                    "Per dettare in altre finestre seleziona Ascolto continuo.")
+                        elif dictation.enabled:
+                            # Do not write dictated private text into Jarvis's history.
+                            sync_dictation_ui(dictation.insert(spoken))
                         else:
-                            write_line("Testo non eseguito: il campo contiene già una richiesta.")
+                            write_line("VOCE (offline) > " + spoken)
+                            command = speech_to_local_command(spoken)
+                            if command and not busy_local:
+                                submit_local(message_override=command)
+                            elif command:
+                                write_line("Motore occupato; comando non eseguito.")
+                            elif not request.get().strip():
+                                request.set(spoken)
+                                write_line("Testo inserito: controllalo prima di eseguirlo.")
+                            else:
+                                write_line("Testo non eseguito: il campo contiene già una richiesta.")
                 elif kind == "local":
                     result = data[0]
                     busy_local = False
@@ -321,6 +368,7 @@ def main() -> None:
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
     plan_button.configure(command=submit_plan)
+    dictation_button.configure(command=toggle_dictation)
     for button in mode_buttons:
         button.configure(command=change_voice_mode)
     ptt_button.bind("<ButtonPress-1>", ptt_press)
@@ -333,6 +381,7 @@ def main() -> None:
         nonlocal closing
         closing = True
         planner_abort_event.set()
+        dictation.disable()
         voice.close()
         root.destroy()
         # Non-daemon: ensure the Node child is terminated before Python exits.
