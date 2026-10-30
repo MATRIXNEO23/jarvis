@@ -120,6 +120,49 @@ class SpeechCorrections:
             )
         self.reload()
 
+    def learn_phrase(self, heard: str, intended: str, *,
+                     user_confirmed: bool = False) -> tuple[str, str]:
+        """Learn a *small changed span* from two full spoken sentences.
+
+        For example: 'apri blocco moto' -> 'apri blocco note'
+        becomes 'blocco moto' -> 'blocco note'. Unchanged wake words
+        and action verbs stay outside the learned rule.
+        """
+        if (not isinstance(heard, str) or not isinstance(intended, str)
+                or len(heard) > 240 or len(intended) > 240
+                or any(ch in "\r\n\x00" for ch in heard + intended)):
+            raise SpeechCorrectionError("Frasi da correggere non valide.")
+        old = " ".join(heard.casefold().split()).split(" ")
+        new = " ".join(intended.casefold().split()).split(" ")
+        if old == new:
+            raise SpeechCorrectionError("La frase è già corretta.")
+        common_start = 0
+        while (common_start < len(old) and common_start < len(new)
+               and old[common_start] == new[common_start]):
+            common_start += 1
+        common_end = 0
+        while (common_end < len(old) - common_start
+               and common_end < len(new) - common_start
+               and old[-1-common_end] == new[-1-common_end]):
+            common_end += 1
+        src = old[common_start:len(old)-common_end]
+        dst = new[common_start:len(new)-common_end]
+        if not src or not dst:
+            raise SpeechCorrectionError(
+                "La correzione deve sostituire parole, non inserire comandi.")
+        # Include the nearest non-control contextual word, if possible:
+        # never make 'moto' -> 'note' when 'blocco moto' is available.
+        if (common_start > 0 and len(src) < MAX_WORDS
+                and len(dst) < MAX_WORDS):
+            preceding = old[common_start-1]
+            if preceding not in _CONTROL_WORDS:
+                src.insert(0, preceding)
+                dst.insert(0, preceding)
+        source = " ".join(src)
+        target = " ".join(dst)
+        self.add(source, target, user_confirmed=user_confirmed)
+        return source, target
+
     def correct(self, recognized: str) -> str:
         """One pass, not iterative; never lets a rule cascade into another."""
         if not isinstance(recognized, str) or not recognized:
