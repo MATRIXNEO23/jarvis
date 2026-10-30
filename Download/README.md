@@ -1,12 +1,24 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## ULTIMA VERSIONE SPERIMENTALE — LIA IMPARA LE CORREZIONI VOCALI
+
+**[SCARICA JARVIS CON VOCE ADATTIVA E SECOND BRAIN (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/adaptive-offline-voice.zip)**
+
+Questa versione mantiene **Vosk italiano offline, Conversazione continua GPT, Second Brain e i comandi precedenti**, aggiungendo il pulsante **«Correggi voce...»**. Quando Vosk sbaglia il nome di un'applicazione, puoi correggere la frase: Lia ne memorizza la correzione e la applica alle successive trascrizioni. Non si scarica nessun nuovo modello e non si usa una nuova API a pagamento.
+
+**Prova sul Pavilion:** chiudi Jarvis; scarica lo ZIP ed estrailo in una **cartella nuova**; esegui `avvia_jarvis.bat`. Attiva manualmente **Second Brain locale** per consentire il salvataggio delle correzioni. Seleziona una modalità microfono, pronuncia una frase semplice, premi **«Correggi voce...»**, modifica la frase come l'avevi pronunciata e seleziona **«Conferma correzione»**. Ripeti la frase e verifica che venga riconosciuta correttamente. Le parole «chiudi», «salva», «non» e «Jarvis» non possono essere cambiate da questo dizionario.
+
+**Non reinstallare Vosk né eliminare `%LOCALAPPDATA%\\Jarvis`.** Il microfono parte sempre in Standby. L'apprendimento riguarda il testo trascritto, non un riaddestramento automatico di Vosk. La versione va collaudata sul PC prima di integrarla nella versione stabile.
+
+[Funzioni e limiti dell'adattamento vocale](https://github.com/MATRIXNEO23/jarvis/blob/feature/adaptive-offline-voice/docs/VOCE_ADATTIVA.md) · [PR sperimentale #5](https://github.com/MATRIXNEO23/jarvis/pull/5).
+
 ## NUOVA PROVA SEPARATA — SECOND BRAIN DI LIA
 
 **[SCARICA JARVIS CON SECOND BRAIN (ZIP SPERIMENTALE)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/conversation-short-memory.zip)**
 
 Questa variante aggiunge **memoria conversazionale breve** (capisce meglio i riferimenti alle frasi precedenti) e un **archivio persistente SQLite locale** per scambi e azioni realmente confermate, consultabile anche dopo aver riavviato Windows. Funziona sia nella conversazione vocale GPT sia nel campo «Chiedi a GPT». Mantiene catalogo comandi, dettatura e Blocco note della versione sperimentale precedente.
 
-**Attivazione:** scarica il primo ZIP, estrailo in una **nuova cartella** e avvia `avvia_jarvis.bat`. Nell'interfaccia seleziona **«Second Brain locale»** per consentire il salvataggio permanente (inizialmente disattivato). Puoi successivamente disattivarlo e cancellare i ricordi archiviati tramite pulsante dedicato. Il microfono resta sempre **spento all'avvio**. Non cancellare la tua vecchia cartella né `%LOCALAPPDATA%\\Jarvis`.
+**Attivazione:** scarica lo ZIP di questa sezione, estrailo in una **nuova cartella** e avvia `avvia_jarvis.bat`. Nell'interfaccia seleziona **«Second Brain locale»** per consentire il salvataggio permanente (inizialmente disattivato). Puoi successivamente disattivarlo e cancellare i ricordi archiviati tramite pulsante dedicato. Il microfono resta sempre **spento all'avvio**. Non cancellare la tua vecchia cartella né `%LOCALAPPDATA%\\Jarvis`.
 
 **Privacy:** gli scambi selezionati e le ricevute delle attività restano nel database del profilo Windows, non crittografato; brevi estratti pertinenti vengono comunque inviati al modello ChatGPT quando chiedi di utilizzarli per la conversazione. Non salvare password o dati riservati. **Lettura e invio reali delle email non sono ancora funzioni di questa versione:** il Second Brain è soltanto predisposto a registrarne in futuro le ricevute quando un modulo email avrà confermato l'invio.
 
@@ -16,7 +28,7 @@ Questa variante aggiunge **memoria conversazionale breve** (capisce meglio i rif
 
 La versione **Conversazione GPT e documenti** include ora `jarvis_commands.json`, un catalogo delle azioni che Jarvis sa realmente eseguire. GPT può collegare frasi diverse alla stessa azione, per esempio **«Chiudimi Blocco note»** → `notepad.close`, senza imporre parole identiche. Aggiunta anche l'apertura del **disco locale C**. Sono supportate soltanto le funzioni con un esecutore verificato; non viene dato a GPT accesso libero ai programmi, ai file o alla shell. [Leggi il catalogo e i limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/gpt-conversazione-documenti/docs/CATALOGO_COMANDI.md).
 
-Per provare l'aggiornamento, scarica **nuovamente il primo ZIP** e tieni separata la versione che già funziona. Il catalogo richiede ancora la prova reale sul Pavilion; il microfono parte sempre spento.
+Per provare l'aggiornamento, scarica la ZIP desiderata qui sopra e tieni separata la versione che già funziona. Il catalogo richiede ancora la prova reale sul Pavilion; il microfono parte sempre spento.
 
 ## NUOVA PROVA ISOLATA — CONVERSAZIONE GPT E DOCUMENTI
 
