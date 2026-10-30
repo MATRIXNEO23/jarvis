@@ -22,14 +22,14 @@ La progettazione **GPT-first + esecutore locale controllato + funzioni offline**
 - [x] Microfono impostato su standby ad ogni lancio.
 - [x] Motore locale a comandi consentiti, con registro attività SQLite (`local_engine.py`). Comandi supportati: `aiuto`, `stato sistema`, `mostra download`, `cerca file NOME` (ricerca limitata a Download), `apri blocco note`, `apri calcolatrice`, `apri esplora file`, `apri download`, `ultimi comandi`. Nessun comando shell arbitrario.
 - [x] Campo comandi testuale integrato nella finestra, con lavoro su thread separato per non bloccare la GUI.
-- [x] Test unitari di base e workflow CI Windows/Linux inseriti; **esito della CI e prova su Windows 10 fisico ancora da verificare**.
+- [x] Test unitari e sintassi **superati sui runner GitHub Actions Windows e Linux** ([esecuzione riuscita](https://github.com/MATRIXNEO23/jarvis/actions/runs/41084817158)). **Prova sul tuo Windows 10/i3-2100 ancora da effettuare**.
 
 - [ ] **Connessione Sign in with ChatGPT realmente funzionante e collaudata su Windows**. Abilitare GPT non equivale ad autenticarsi. Il componente OAuth va collegato al [DevKit ufficiale](https://github.com/openai/sign-in-with-chatgpt-devkit), con storage cifrato e test reale, prima di mostrare «Connesso».
 - [ ] Comandi vocali, apprendimento procedure, TTS, tray, ricerca web, automazioni e packaging Windows.
 
 ## Esecuzione della sola interfaccia iniziale
 
-Con Python 3.11 e Tkinter: `py -3 jarvis.py`. Per testare: `py -3 -m unittest discover -s tests -v`. Non è richiesta una installazione Node.js per usare i comandi locali della finestra: Node sarà necessario **solo** per il futuro collegamento Sign in with ChatGPT. Il collegamento GPT non è ancora pronto; l'interruttore salva soltanto la preferenza. Il microfono non è ancora implementato. La GUI non apre processi AI in background.
+Con Python 3.11 e Tkinter: doppio clic su `avvia_jarvis.bat` oppure `py -3 jarvis.py`. Per testare: `py -3 -m unittest discover -s tests -v`. Non è richiesta una installazione Node.js per usare i comandi locali della finestra: Node sarà necessario **solo** per il futuro collegamento Sign in with ChatGPT. Il collegamento GPT non è ancora pronto; l'interruttore salva soltanto la preferenza. Il microfono non è ancora implementato. La GUI non apre processi AI in background.
 
 Le impostazioni si salvano in `%LOCALAPPDATA%\\Jarvis\\settings.json`, non nella repository. Non committare credenziali, token o dati personali.
 
