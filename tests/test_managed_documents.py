@@ -5,6 +5,7 @@ from tempfile import TemporaryDirectory
 import ctypes
 import unittest
 
+from document_dialog import DocumentDialog
 from document_store import (
     DocumentSaveError, destination_from_voice, save_new_text, simple_filename
 )
@@ -117,6 +118,13 @@ class ManagedDocumentTests(unittest.TestCase):
         with self.assertRaises(NotepadUnavailable):
             self.docs.compose("Secondo file", "new_notepad")
 
+    def test_open_notepad_before_composing_in_the_same_document(self):
+        opened = self.docs.open_blank()
+        self.assertEqual(opened.kind, "opened")
+        self.assertEqual(self.docs.compose(
+            "Ciao da GPT", "selected_document").kind, "appended")
+        self.assertEqual(self.backend.read(self.docs.current), "Ciao da GPT")
+
     def test_append_preserves_manually_typed_text(self):
         self.docs.compose("Testo scritto da Jarvis.", "new_notepad")
         self.backend.notes[self.docs.current.ident] += "\nModifica manuale!"
@@ -183,6 +191,46 @@ class ManagedDocumentTests(unittest.TestCase):
         self.docs.compose("testo nuovo", "new_notepad")
         with self.assertRaises(NotepadUnavailable):
             self.docs.save_and_close(old, Path.home() / "Documents" / "x.txt")
+
+    def test_full_save_cancel_and_discard_voice_workflows(self):
+        with TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            (folder / "Desktop").mkdir()
+            initial = self.docs.compose("Una poesia originale.", "new_notepad")
+            dialog = DocumentDialog()
+            dialog.begin(initial.document_id, "Nuovo Blocco note", dirty=True)
+            self.assertEqual(dialog.request_close().kind, "ask_choice")
+            self.assertEqual(dialog.reply("annulla").kind, "cancel")
+            self.assertIsNotNone(self.docs.current)
+            self.assertEqual(dialog.request_close().kind, "ask_choice")
+            self.assertEqual(dialog.reply("salva e chiudi").kind, "ask_destination")
+            spoken = "sul desktop come poesia originale"
+            destination = destination_from_voice(spoken, home=folder)
+            self.assertEqual(
+                dialog.provide_destination(str(destination)).kind,
+                "save_as_then_close")
+            outcome = self.docs.save_and_close(initial.document_id, destination)
+            self.assertEqual(outcome.kind, "saved_and_closed")
+            self.assertEqual(
+                dialog.operation_completed(initial.document_id, succeeded=True).kind,
+                "closed")
+            self.assertEqual(destination.read_text(encoding="utf-8"),
+                             "Una poesia originale.")
+
+            second = self.docs.compose("Documento da scartare.", "new_notepad")
+            dialog.begin(second.document_id, "Nuovo Blocco note", dirty=True)
+            self.assertEqual(dialog.request_close().kind, "ask_choice")
+            self.assertEqual(dialog.reply("non salvare").kind,
+                             "ask_discard_confirmation")
+            self.assertEqual(dialog.reply("si").kind, "invalid")
+            self.assertIsNotNone(self.docs.current)
+            self.assertEqual(dialog.reply(
+                "confermo uscita senza salvare").kind, "discard_then_close")
+            outcome = self.docs.discard_and_close(second.document_id)
+            self.assertEqual(outcome.kind, "closed_without_saving")
+            dialog.operation_completed(second.document_id, succeeded=True)
+            self.assertIsNone(self.docs.current)
+            self.assertEqual(list(folder.glob("*.txt")), [])
 
     def test_classic_win32_signatures_use_pointer_sized_values(self):
         # A regression guard for LPARAM holding pointers to UTF-16 buffers:
