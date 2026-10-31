@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from managed_documents import ManagedDocuments
+from document_store import DocumentSaveError
 from project_documents import (
     parse_simple_save,project_save_destination,suggested_filename,
 )
@@ -101,7 +102,7 @@ class ProjectDocumentTests(unittest.TestCase):
         self.assertEqual(
             suggested_filename("","Minecraft",explicit_name="mia nota"),
             "mia nota.txt")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(DocumentSaveError):
             suggested_filename("","Minecraft",explicit_name="../privato")
 
     def test_save_then_save_new_version_without_overwriting(self):
