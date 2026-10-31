@@ -30,3 +30,29 @@
 - Installazione: https://github.com/MATRIXNEO23/jarvis/actions/runs/41232507968
 - Run fallite: https://github.com/MATRIXNEO23/jarvis/actions/runs/41230414187 e https://github.com/MATRIXNEO23/jarvis/actions/runs/41230403859
 - Archify ufficiale: https://github.com/tt-a1i/archify
+
+
+## Fase 1 completata: correzione CI verificata
+- Main iniziale: 2e10d52cb576dcbf7f000b4ada00e9ef08b0a1d1. La radice main contiene sorgenti storici (31 test locali PASS); sorgenti evoluti nel ramo feature/timer-settings-ui-20261031 e ZIP. PR #32 aperta verso feature/hud-reference-ui-20261031, nessun merge.
+- Letti tutti gli 8 log delle run 41230403859 e 41230414187: unico errore test_second_brain.py:26, AssertionError 16 <= 8 falso. Il commit 8d439df ha ampliato memoria a 16/2400 senza aggiornare il test; 1f7310f eredita il problema.
+- Richiesta successiva dell'utente autorizza il fix CI: commit faba67363e07ea478241fbe549c45474aab5144a sul ramo esistente, solo test. Verificati ordine, espulsione primi quattro dopo 20 inserimenti, 16 scambi, budget 2400/1050, ultimo scambio e clear. Nessun test disabilitato.
+- Nuova run https://github.com/MATRIXNEO23/jarvis/actions/runs/41232983494 completed SUCCESS: Ubuntu Python 3.11.17 job 124630832484 e 3.12.15 job 124630832587: 373 test OK skipped=5 ciascuno; Windows Python 3.11.9 job 124630832597 e 3.12.10 job 124630832656: 373 test OK ciascuno. Sintassi Python/Node e PowerShell Windows PASS. Vecchie run restano fallite, superate dalla nuova verifica.
+- Locale Python 3.12.14, Node 24.22.1: 373 test OK skipped=5; compileall, node --check, git diff --check PASS. Nessuno ZIP pubblicato; GPT/Pavilion non collaudati.
+
+## Fase 2 completata con limite browser: Archify
+- Mappa del commit evoluto 1f7310f67887dcc756646513151c90b3d12ac703: docs/architecture-20261031/jarvis.html. Non è la mappa dei sorgenti storici alla radice main.
+- Commit HTML fa90dc640ff74b6d50cebfeffe4917ae78d92a05; candidato e6604fab75a332b88e9d79b81a19b971bfdc1663; ricevuta 189f2bd3022b9d39399aa3116f09ed823e074385.
+- Archify validate/deliver/check PASS comprese fonti; browser-check SKIPPED per assenza Chrome/Chromium, finalize codice 2: non completamente PASS, nessuna ispezione visiva. Viewer fallback inglese, contenuto italiano. Archify solo sviluppo, nessuna dipendenza runtime.
+
+## Fase 3: diagnosi e proposta, runtime in attesa di approvazione
+- Rapporto docs/DIAGNOSI-ARCHIFY-DIALOGO-20261031.md, commit 231fc9dd1f96c95d6197417b7d55eeb59475ad28.
+- Dimostrati: riduzione RAM a 860 e successivo limite <=850; permanente.recent SQLite ignorato dalla compattazione finale; cataloghi prima della memoria; troncamento prefissi; chiarimenti brevi dipendenti dalla domanda RAM. Sovrapposizione recenti progetto/RAM può duplicare il contesto.
+- Riproduzione locale: 5 turni medi diventano 2, prompt 4896 caratteri; marcatore permanente.recent non passa al prompt. Nessuna richiesta a modelli esterni. Non dimostrata la causa di tutti gli episodi osservati sul PC.
+- Bridge senza ID conversazione esplicito; comportamento interno SDK non verificato. ID Python correla richieste IPC, non conversazioni.
+- Incongruenza preesistente: auto_listen=True e jarvis.py:3620–3622 possono attivare GPT_CONVERSATION all'avvio, in conflitto con standby richiesto. Non modificata dal fix test; da risolvere/verificare prima di distribuire.
+- Piano minimo da approvare: un'unica selezione contesto entro 5000 caratteri, riserva memoria prima cataloghi opzionali, recupero permanente.recent a RAM vuota, dedup/isolamento e domanda pendente preservata. Test payload finale 6–10 turni, riferimenti, riavvio, cambio argomento/progetto, cataloghi pieni, limiti e nessun replay comandi. Poi CI completa, smoke IPC e collaudo GPT/microfono Windows 10 prima del pacchetto.
+- La correzione autorizzata dei workflow è completata. Nessuna modifica del nucleo conversazionale prima dell'approvazione del piano.
+
+## Nuova regola persistente richiesta dall'utente
+- Registrare decisioni, motivazioni tecniche, prove ed esiti; promuovere solo soluzioni verificate. Escludere approcci falliti dalle soluzioni consigliate, conservando causa e lezione per evitare ricadute. Non cancellare prove diagnostiche, salvataggi o cronologia.
+- Applicazione nelle istruzioni AGENTS.md e nel registro docs/DECISIONI-E-LEZIONI.md.
