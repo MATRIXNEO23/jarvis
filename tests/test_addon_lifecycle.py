@@ -99,6 +99,29 @@ class AddonLifecycleTests(unittest.TestCase):
         self.assertFalse(record.exists())
         self.assertEqual(self.hub.available_addons(),())
 
+    def test_copying_or_tampering_enabled_manifest_cannot_auto_enable(self):
+        manifest=pkg()
+        target=self.root/"managed"/"monitor.json"
+        import hashlib
+        encoded=json.dumps(manifest,sort_keys=True,separators=(",",":"),
+                           ensure_ascii=False).encode("utf-8")
+        target.write_text(json.dumps({
+            "manifest":manifest,"enabled":True,
+            "digest":hashlib.sha256(encoded).hexdigest()}),encoding="utf8")
+        self.manager.refresh()
+        self.assertEqual(self.manager.list_installed()[0]["enabled"],False)
+        self.assertFalse(self.manager.active_actions())
+        self.assertTrue(self.manager.warnings())
+        with self.assertRaises(CapabilityRejected):
+            self.manager.resolve(self.action,{})
+        self.manager.set_enabled("monitor",True)
+        self.assertTrue(self.manager.is_active(self.action))
+        # Deleting the separate permission ledger revokes runtime authority
+        # even when the package file still has enabled=true.
+        (self.root/"managed-approvals.json").unlink()
+        self.manager.refresh()
+        self.assertFalse(self.manager.is_active(self.action))
+
     def test_upgrade_always_cancels_prior_permission(self):
         self._install()
         self.manager.set_enabled("monitor",True)
