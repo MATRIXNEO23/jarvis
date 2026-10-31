@@ -82,8 +82,8 @@ class StaleBridgeReaderTests(unittest.TestCase):
     def test_stale_reader_cannot_wake_or_poison_new_bridge(self):
         client=GPTClient()
         old=SimpleNamespace(stdout=io.StringIO(
-            '{"event":"fatal","error":"old process failed"}\\n'
-            '{"event":"ready"}\\n'))
+            '{"event":"fatal","error":"old process failed"}\n'
+            '{"event":"ready"}\n'))
         current=SimpleNamespace()
         client._process=current
         client._read_loop(old)
