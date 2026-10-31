@@ -24,6 +24,8 @@ class SelfReviewTests(unittest.TestCase):
             "Jarvis, analizza te stesso",
             "Jarvis, controlla i tuoi file e suggerisci miglioramenti",
             "Jarvis, prepara un rapporto di autodiagnosi",
+            "Jarvis, autoanalizzati",
+            "Jarvis, consigliami come potresti migliorarti",
         )
         for phrase in cases:
             with self.subTest(phrase=phrase):
