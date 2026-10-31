@@ -2608,9 +2608,16 @@ def main() -> None:
         # A malformed or unexpected event must not permanently kill the
         # event pump and strand an in-progress diagnostic forever.
         root.after(120, poll)
-        reconcile_document_session()
         try:
-            while True:
+            reconcile_document_session()
+        except (OSError,ValueError,TypeError,RuntimeError) as exc:
+            runtime_events.record("document_failure")
+            write_line("DOCUMENTI > Controllo sessione non riuscito: "+
+                       type(exc).__name__)
+        try:
+            # Never starve Tk on a burst of voice, GPT or diagnostic events.
+            # Remaining events are processed during the next 120 ms tick.
+            for _ in range(80):
                 kind, *data = output_queue.get_nowait()
                 if kind == "self_audit_progress":
                     run_id,phase,completed,total=data
@@ -3238,7 +3245,7 @@ def main() -> None:
             pass
 
         try:
-            while True:
+            for _ in range(30):
                 event = service.events.get_nowait()
                 if event.get("event") == "open_browser":
                     url = event.get("url", "")
