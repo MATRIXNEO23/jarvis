@@ -94,8 +94,10 @@ class HighFidelityRasterTests(unittest.TestCase):
             time.sleep(.03)
             result = worker.get("reactor",100)
         self.assertIsNotNone(result)
-        self.assertEqual(len(result),3)
-        self.assertTrue(all(png_size(x)==(100,100) for x in result))
+        # Only the stable cyan outer texture is generated. Dynamic orange
+        # and green states now live strictly inside the vector nucleus.
+        self.assertEqual(len(result),1)
+        self.assertEqual(png_size(result[0]),(100,100))
         worker.clear()
 
 
