@@ -14,12 +14,17 @@ from workspace_memory import WorkspaceError
 
 
 class ProjectManagerWindow:
-    def __init__(self,parent,memory,on_open,on_general,on_change):
+    def __init__(self,parent,memory,on_open,on_general,on_change,
+                 can_modify=None,on_renamed=None,on_trashed=None):
         self.parent=parent
         self.memory=memory
         self.on_open=on_open
         self.on_general=on_general
         self.on_change=on_change
+        self.can_modify=can_modify or (lambda:True)
+        self.on_renamed=on_renamed or (lambda _ident,_name:None)
+        self.on_trashed=on_trashed or (lambda _ident:None)
+        self.show_trash=False
         self.window=None
         self._rows=[]
 
@@ -31,7 +36,7 @@ class ProjectManagerWindow:
         w=tk.Toplevel(self.parent)
         self.window=w
         w.title("JARVIS // Memoria e progetti")
-        w.geometry("750x570")
+        w.geometry("820x620")
         w.minsize(570,450)
         w.configure(bg="#020b14")
         area=ttk.Frame(w,padding=12)
@@ -60,6 +65,15 @@ class ProjectManagerWindow:
                 ("Apri CONTINUITA.md",self._open_file)):
             ttk.Button(actions,text=title,command=action).pack(
                 side="left",padx=(0,6))
+        manage=ttk.Frame(area)
+        manage.pack(fill="x",pady=(6,4))
+        for title,action in (
+                ("Rinomina",self._rename),
+                ("Elimina (cestino)",self._trash),
+                ("Mostra cestino / progetti",self._toggle_trash_view),
+                ("Ripristina selezionato",self._restore)):
+            ttk.Button(manage,text=title,command=action).pack(
+                side="left",padx=(0,6))
         ttk.Label(area,text="Stato consolidato del progetto (modificabile):").pack(
             anchor="w",pady=(14,5))
         self.editor=tk.Text(
@@ -73,10 +87,11 @@ class ProjectManagerWindow:
     def refresh(self):
         if not self.window or not self.window.winfo_exists():
             return
-        self._rows=list(self.memory.projects())
+        self._rows=list(self.memory.trashed_projects() if self.show_trash
+                        else self.memory.projects())
         self.listbox.delete(0,"end")
         for p in self._rows:
-            icon="●" if p["active"] else "○"
+            icon="♻" if self.show_trash else "●" if p["active"] else "○"
             self.listbox.insert("end",f"{icon}  {p['name']}")
         self.on_change()
 
@@ -96,6 +111,11 @@ class ProjectManagerWindow:
                 self.editor.insert("1.0",details["summary"])
 
     def _create(self):
+        if not self.can_modify():
+            messagebox.showwarning("Progetti",
+                "Concludi prima l'attività o chiudi Blocco note.",
+                parent=self.window)
+            return
         name=simpledialog.askstring(
             "Nuovo progetto","Nome del progetto:",
             parent=self.window)
@@ -111,7 +131,7 @@ class ProjectManagerWindow:
 
     def _open(self):
         project=self._selected()
-        if project:
+        if project and not self.show_trash:
             self.on_open(project["id"])
 
     def _general(self):
@@ -119,7 +139,7 @@ class ProjectManagerWindow:
 
     def _toggle(self):
         project=self._selected()
-        if not project:
+        if not project or self.show_trash or not self.can_modify():
             return
         try:
             self.memory.set_active(project["id"],not project["active"])
@@ -127,9 +147,74 @@ class ProjectManagerWindow:
             messagebox.showerror("Progetto",str(exc),parent=self.window)
         self.refresh()
 
+    def _toggle_trash_view(self):
+        self.show_trash=not self.show_trash
+        self.refresh()
+
+    def _rename(self):
+        project=self._selected()
+        if not project or self.show_trash:
+            messagebox.showinfo("Progetti","Seleziona un progetto attivo.",parent=self.window)
+            return
+        if not self.can_modify():
+            messagebox.showwarning("Progetti","Concludi prima l'attività o chiudi Blocco note.",
+                                   parent=self.window)
+            return
+        name=simpledialog.askstring("Rinomina progetto",
+             "Nuovo nome per "+project["name"]+":",
+             parent=self.window,initialvalue=project["name"])
+        if name is None:
+            return
+        try:
+            self.memory.rename_project(project["id"],name)
+            self.on_renamed(project["id"],self.memory.project(project["id"])["name"])
+        except (WorkspaceError,OSError,ValueError) as exc:
+            messagebox.showerror("Rinomina",str(exc),parent=self.window)
+            return
+        self.refresh()
+
+    def _trash(self):
+        project=self._selected()
+        if not project or self.show_trash:
+            messagebox.showinfo("Progetti","Seleziona un progetto attivo.",parent=self.window)
+            return
+        if not self.can_modify():
+            messagebox.showwarning("Progetti","Concludi prima l'attività o chiudi Blocco note.",
+                                   parent=self.window)
+            return
+        if not messagebox.askyesno(
+                "Elimina progetto",
+                "Spostare '"+project["name"]+"' nel cestino di Jarvis?\n"
+                "Memoria, documenti e cartella NON saranno cancellati.",
+                parent=self.window):
+            return
+        try:
+            self.memory.trash_project(project["id"])
+            self.on_trashed(project["id"])
+        except (WorkspaceError,OSError) as exc:
+            messagebox.showerror("Progetti",str(exc),parent=self.window)
+            return
+        self.refresh()
+
+    def _restore(self):
+        project=self._selected()
+        if not project or not self.show_trash:
+            messagebox.showinfo("Progetti","Apri il cestino e seleziona un progetto.",
+                                parent=self.window)
+            return
+        if not self.can_modify():
+            messagebox.showwarning("Progetti","Concludi prima l'attività.",parent=self.window)
+            return
+        try:
+            self.memory.restore_project(project["id"])
+        except (WorkspaceError,OSError) as exc:
+            messagebox.showerror("Ripristino",str(exc),parent=self.window)
+            return
+        self.refresh()
+
     def _save_summary(self):
         project=self._selected()
-        if not project:
+        if not project or self.show_trash:
             return
         try:
             self.memory.set_summary(

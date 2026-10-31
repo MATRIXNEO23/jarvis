@@ -76,6 +76,8 @@ class WorkspaceMemory:
                 active INTEGER NOT NULL CHECK(active IN(0,1)),
                 summary TEXT NOT NULL DEFAULT '',
                 created_utc TEXT NOT NULL, updated_utc TEXT NOT NULL)""")
+            if "trashed" not in {r[1] for r in db.execute("PRAGMA table_info(projects)")}: 
+                db.execute("ALTER TABLE projects ADD COLUMN trashed INTEGER NOT NULL DEFAULT 0")
             db.execute("""CREATE TABLE IF NOT EXISTS messages(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 scope TEXT NOT NULL CHECK(scope IN('general','project','telegram')),
@@ -156,16 +158,18 @@ class WorkspaceMemory:
         if not _project_id(ident):
             return None
         with self._db() as db:
-            row=db.execute("SELECT id,name,active,summary,updated_utc"
+            row=db.execute("SELECT id,name,active,summary,updated_utc,trashed"
                            " FROM projects WHERE id=?",(ident,)).fetchone()
         return ({"id":row[0],"name":row[1],"active":bool(row[2]),
-                 "summary":row[3],"updated_utc":row[4]}
+                 "summary":row[3],"updated_utc":row[4],
+                 "trashed":bool(row[5])}
                 if row else None)
 
     def select_project(self, ident=None):
         """Persist the current focus; None means general chat."""
-        if ident is not None and not self.project(ident):
-            raise WorkspaceError("Progetto da aprire inesistente.")
+        if ident is not None and (
+                not self.project(ident) or self.project(ident)["trashed"]):
+            raise WorkspaceError("Progetto da aprire inesistente o nel cestino.")
         with self._db() as db:
             db.execute(
                 "INSERT OR REPLACE INTO workspace_session(key,value) "
@@ -177,28 +181,96 @@ class WorkspaceMemory:
             row=db.execute("SELECT value FROM workspace_session "
                            "WHERE key='current_project'").fetchone()
         ident=row[0] if row and row[0] else None
-        return ident if ident and self.project(ident) else None
+        return (ident if ident and self.project(ident)
+                and not self.project(ident)["trashed"] else None)
 
     def projects(self,active_only=False,limit=60):
         with self._db() as db:
             query=("SELECT id,name,active,updated_utc FROM projects "
-                   + ("WHERE active=1 " if active_only else "")
+                   "WHERE trashed=0 "
+                   + ("AND active=1 " if active_only else "")
                    + "ORDER BY updated_utc DESC,id ASC LIMIT ?")
             rows=db.execute(query,(min(200,max(1,int(limit))),)).fetchall()
         return tuple({"id":r[0],"name":r[1],"active":bool(r[2]),
                       "updated_utc":r[3]} for r in rows)
 
+    def trashed_projects(self,limit=60):
+        """Projects are hidden but recoverable; no file/database deletion."""
+        with self._db() as db:
+            rows=db.execute(
+                "SELECT id,name,active,updated_utc FROM projects WHERE trashed=1 "
+                "ORDER BY updated_utc DESC,id ASC LIMIT ?",
+                (min(200,max(1,int(limit))),)).fetchall()
+        return tuple({"id":r[0],"name":r[1],"active":bool(r[2]),
+                      "updated_utc":r[3]} for r in rows)
+
+    def rename_project(self,ident,new_name):
+        """Rename the same UUID; keep messages, documents and steps intact."""
+        from project_voice import safe_project_name
+        try:
+            new_name=safe_project_name(new_name)
+        except ValueError as exc:
+            raise WorkspaceError(str(exc)) from exc
+        project=self.project(ident)
+        if not project or project["trashed"]:
+            raise WorkspaceError("Progetto inesistente o nel cestino.")
+        if any(p["name"].casefold()==new_name.casefold() and p["id"]!=ident
+               for p in self.projects(limit=200)):
+            raise WorkspaceError("Un altro progetto possiede già questo nome.")
+        if project["name"]==new_name:
+            return False
+        now=_now()
+        with self._db() as db:
+            db.execute("UPDATE projects SET name=?,updated_utc=? "
+                       "WHERE id=? AND trashed=0",(new_name,now,ident))
+        folder=self.continuities/ident
+        self._atomic_file(folder/"PROGETTO.txt",
+            "Progetto: "+new_name+"\nID: "+ident+"\n"
+            "Cartella documenti: files\n"
+            "La memoria è in CONTINUITA.md, STATO.json e PASSI.md.\n")
+        self._save_snapshot(ident)
+        return True
+
+    def trash_project(self,ident):
+        """Reversible logical deletion. NEVER erase the project folder."""
+        project=self.project(ident)
+        if not project or project["trashed"]:
+            raise WorkspaceError("Progetto non trovato o già nel cestino.")
+        now=_now()
+        with self._db() as db:
+            db.execute("UPDATE projects SET trashed=1,active=0,updated_utc=? "
+                       "WHERE id=?",(now,ident))
+            db.execute("UPDATE workspace_session SET value='' "
+                       "WHERE key='current_project' AND value=?",(ident,))
+        self._save_snapshot(ident)
+
+    def restore_project(self,ident):
+        """Restore from Jarvis's logical trash with the same stable ID."""
+        project=self.project(ident)
+        if not project or not project["trashed"]:
+            raise WorkspaceError("Progetto non trovato nel cestino.")
+        if any(p["name"].casefold()==project["name"].casefold()
+               for p in self.projects(limit=200)):
+            raise WorkspaceError(
+                "Esiste già un progetto con lo stesso nome. "
+                "Rinominalo prima di ripristinare.")
+        with self._db() as db:
+            db.execute("UPDATE projects SET trashed=0,active=1,updated_utc=? "
+                       "WHERE id=?",(_now(),ident))
+        self._save_snapshot(ident)
+
     def set_active(self,ident:str,active:bool):
-        if type(active) is not bool or not self.project(ident):
-            raise WorkspaceError("Progetto inesistente o stato non valido.")
+        if (type(active) is not bool or not self.project(ident)
+                or self.project(ident)["trashed"]):
+            raise WorkspaceError("Progetto inesistente, eliminato o stato non valido.")
         with self._db() as db:
             db.execute("UPDATE projects SET active=?, updated_utc=? WHERE id=?",
                        (int(active),_now(),ident))
         self._save_snapshot(ident)
 
     def set_summary(self,ident:str,summary:str):
-        if not self.project(ident):
-            raise WorkspaceError("Progetto inesistente.")
+        if not self.project(ident) or self.project(ident)["trashed"]:
+            raise WorkspaceError("Progetto inesistente o nel cestino.")
         if not isinstance(summary,str) or len(summary)>MAX_SUMMARY or _SECRET.search(summary):
             raise WorkspaceError("Continuità troppo lunga o contenente credenziali.")
         with self._db() as db:
@@ -210,7 +282,8 @@ class WorkspaceMemory:
         if scope not in ("general","project","telegram") or kind not in (
                 "chat","action","clarify","error"):
             raise WorkspaceError("Tipo di memoria non valido.")
-        if (scope=="project" and not self.project(scope_id)) or (
+        if (scope=="project" and (not self.project(scope_id)
+                                   or self.project(scope_id)["trashed"])) or (
                 scope=="general" and scope_id!="general") or (
                 scope=="telegram" and (not scope_id.isdecimal() or int(scope_id)<=0)):
             raise WorkspaceError("Contesto di memoria non valido.")
@@ -429,19 +502,21 @@ class WorkspaceMemory:
                     (ident,ticket,title,"Interrotto al riavvio: risultato non verificato.",now))
             ids={ident for _,ident,_ in rows}
             # Regenerate projections absent after migration or a crash.
-            existing=db.execute("""SELECT p.id, p.active, p.summary,
+            existing=db.execute("""SELECT p.id, p.name, p.active, p.trashed, p.summary,
                 COALESCE((SELECT MAX(id) FROM project_events
                           WHERE project_id=p.id),0),
                 COALESCE((SELECT MAX(id) FROM messages
                           WHERE scope='project' AND scope_id=p.id),0)
                 FROM projects p""").fetchall()
-        for ident,active,summary,last_event,last_message in existing:
+        for ident,name,active,trashed,summary,last_event,last_message in existing:
             folder=self.continuities/ident
             state_file=folder/"STATO.json"
             try:
                 with state_file.open("r",encoding="utf-8") as handle:
                     state=json.load(handle)
-                if (state.get("last_event_id")!=last_event
+                if (state.get("name")!=name
+                        or state.get("trashed")!=bool(trashed)
+                        or state.get("last_event_id")!=last_event
                         or state.get("last_message_id")!=last_message
                         or state.get("summary_from_user")!=summary
                         or state.get("active")!=bool(active)
@@ -500,7 +575,8 @@ class WorkspaceMemory:
                 "# Continuità — "+project["name"],
                 "",
                 "ID progetto: "+ident,
-                "Stato: "+("attivo" if project["active"] else "archiviato"),
+                "Stato: "+("nel cestino" if project["trashed"]
+                          else "attivo" if project["active"] else "archiviato"),
                 "Aggiornato (UTC): "+project["updated_utc"],
                 "",
                 "## Stato consolidato dall'utente",
@@ -523,8 +599,11 @@ class WorkspaceMemory:
                               "  - JARVIS: "+item["jarvis"][:260]])
             folder=self.continuities/ident
             self.project_files_directory(ident)
-            if not (folder/"PROGETTO.txt").is_file():
-                self._atomic_file(folder/"PROGETTO.txt",
+            identity=folder/"PROGETTO.txt"
+            if (not identity.is_file() or
+                    not identity.read_text(encoding="utf-8").startswith(
+                        "Progetto: "+project["name"]+"\n")):
+                self._atomic_file(identity,
                     "Progetto: "+project["name"]+"\n"
                     "ID: "+ident+"\n"
                     "Cartella documenti: files\n"
@@ -535,7 +614,8 @@ class WorkspaceMemory:
                 "schema_version":1, "project_id":ident,"name":project["name"],
                 "last_event_id":events[0][0] if events else 0,
                 "last_message_id":message_seq,
-                "active":project["active"],"updated_utc":project["updated_utc"],
+                "active":project["active"],"trashed":project["trashed"],
+                "updated_utc":project["updated_utc"],
                 "summary_from_user":project["summary"],
                 "counts":counts,
                 "unfinished":[{"id":x["id"],"title":x["title"],"status":x["status"]}
