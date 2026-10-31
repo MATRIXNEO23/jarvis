@@ -221,6 +221,9 @@ class TelegramBridge:
                     return
                 incoming_text=await asyncio.to_thread(
                     transcribe_incoming_voice,Path(target))
+                if incoming_text:
+                    self.workspace.telegram_transcript(
+                        self.peer_id,message.id,incoming_text)
         if not incoming_text or not self._enabled.is_set():
             return
         # Anti-spam: at most one reply per 8s. Other incoming events remain
