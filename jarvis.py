@@ -34,6 +34,7 @@ from diagnostic_handoff import (build_external_review_prompt,
 from settings import default_path
 from telegram_commands import explicit_telegram_note
 from telegram_directory import (list_telegram_contacts, send_telegram_voice)
+from telegram_ui import TelegramContactsWindow, show_telegram_manual_send
 from telegram_outbound_flow import (
     VoiceSendDialog, parse_telegram_send_intent, resolve_selected_recipient,
 )
@@ -68,7 +69,7 @@ from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
-from settings import load_settings, save_settings
+from settings import load_settings, save_settings, normalize_telegram_contacts
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
@@ -1247,6 +1248,144 @@ def main() -> None:
         if parsed is None:
             return False
         queue_telegram_note(parsed)
+        return True
+
+    def selected_telegram_contacts() -> list[dict]:
+        return [c for c in settings.get("telegram_contacts", [])
+                if c.get("enabled") is True]
+
+    def load_telegram_contacts_for_ui() -> None:
+        """Read real Telegram private users on a worker, never on Tk."""
+        if not credentials_present():
+            output_queue.put(("telegram_contacts_error",
+                              "Prima configura l'account Telegram."))
+            return
+        def worker() -> None:
+            try:
+                rows=list_telegram_contacts()
+                output_queue.put(("telegram_contacts_loaded",rows))
+            except Exception as exc:
+                output_queue.put(("telegram_contacts_error",type(exc).__name__))
+        threading.Thread(target=worker,daemon=True,
+                         name="jarvis-telegram-contact-list").start()
+
+    def save_telegram_contact_selection(rows:list[dict]) -> bool:
+        """Explicit checklist save; disable old auto listener before switching."""
+        nonlocal telegram_bridge
+        if normalize_telegram_contacts(rows) != rows:
+            messagebox.showwarning("Telegram","Selezione non valida.",parent=root)
+            return False
+        previous=settings.copy()
+        chosen=[c for c in rows if c["enabled"]]
+        settings["telegram_contacts"]=rows
+        settings["telegram_peer_id"]=(chosen[0]["id"] if len(chosen)==1 else 0)
+        settings["telegram_contact_name"]=(chosen[0]["name"] if len(chosen)==1 else "")
+        settings["telegram_enabled"]=False
+        try:
+            save_settings(settings)
+        except (OSError,ValueError) as exc:
+            settings.update(previous)
+            messagebox.showerror("Telegram","Non posso salvare la selezione: "
+                                 +str(exc)[:120],parent=root)
+            return False
+        if telegram_bridge:
+            telegram_bridge.stop()
+            telegram_bridge=None
+        telegram_auto.set(False)
+        telegram_voice_dialog.reset()
+        telegram_status.set(
+            f"Telegram: {len(chosen)} contatti autorizzati. "
+            "Risposte automatiche spente; riattivale se vuoi.")
+        write_line("TELEGRAM > Selezione contatti aggiornata; "
+                   "risposte automatiche disattivate per sicurezza.")
+        return True
+
+    def open_telegram_contact_list() -> None:
+        nonlocal telegram_contacts_dialog
+        if (telegram_contacts_dialog is not None
+                and telegram_contacts_dialog.exists()):
+            telegram_contacts_dialog.focus()
+            return
+        telegram_contacts_dialog=TelegramContactsWindow(
+            root,settings.get("telegram_contacts",[]),
+            load_telegram_contacts_for_ui,save_telegram_contact_selection)
+
+    def send_owner_telegram_voice(peer_id:int,name:str,message:str) -> bool:
+        """Explicit owner-initiated, one-shot OGG/Opus send; no GPT needed."""
+        nonlocal telegram_owner_busy
+        if closing or telegram_owner_busy:
+            write_line("TELEGRAM > Invio già in corso oppure Jarvis in chiusura.")
+            speak_result("Invio Telegram già in corso.")
+            return False
+        contact=next((c for c in selected_telegram_contacts()
+                      if c["id"]==peer_id),None)
+        if contact is None or not credentials_present():
+            write_line("TELEGRAM > Contatto non selezionato o account non configurato.")
+            speak_result("Questo contatto non è autorizzato o Telegram non è collegato.")
+            return False
+        if not isinstance(message,str) or not 1<=len(message.strip())<=480:
+            write_line("TELEGRAM > Messaggio non valido: massimo 480 caratteri.")
+            return False
+        missing=missing_voice_dependencies()
+        if missing:
+            write_line("TELEGRAM > Mancano "+", ".join(missing)+". Nessun invio.")
+            return False
+        telegram_owner_busy=True
+        voice_snapshot=selected_voice()
+        written=message.strip()
+        def worker() -> None:
+            try:
+                msg_id=send_telegram_voice(peer_id,written,voice_snapshot)
+                output_queue.put(("telegram_owner_sent",peer_id,name,msg_id,written))
+            except Exception as exc:
+                # Never auto-retry: a network timeout may follow acceptance.
+                output_queue.put(("telegram_owner_error",type(exc).__name__,
+                                  str(exc)[:160]))
+        threading.Thread(target=worker,daemon=True,
+                         name="jarvis-telegram-owner-send").start()
+        write_line("TELEGRAM > Invio vocale richiesto per "+name+
+                   "; attendo la ricevuta effettiva.")
+        return True
+
+    def open_telegram_manual_send() -> None:
+        show_telegram_manual_send(root,selected_telegram_contacts(),
+                                  send_owner_telegram_voice)
+
+    def try_telegram_voice_send(spoken:str) -> bool:
+        """Owner-only, local two-turn command; Telegram incoming never reaches here."""
+        requested=parse_telegram_send_intent(spoken)
+        if telegram_voice_dialog.pending:
+            action=telegram_voice_dialog.receive(
+                spoken,settings.get("telegram_contacts",[]))
+        elif requested is not None:
+            status,contact=resolve_selected_recipient(
+                requested,settings.get("telegram_contacts",[]))
+            if status!="ok":
+                message=("Trovo più contatti con questo nome. "
+                         "Usa il nome completo nelle impostazioni."
+                         if status=="ambiguous" else
+                         "Non trovo un contatto Telegram selezionato con quel nome.")
+                write_line("TELEGRAM > "+message)
+                speak_result(message)
+                return True
+            action=telegram_voice_dialog.begin(contact)
+        else:
+            return False
+        if action.kind=="ask_message":
+            message="Che messaggio vuoi mandare a "+action.name+"?"
+            write_line("JARVIS > "+message)
+            speak_result(message)
+        elif action.kind=="ask_confirm":
+            write_line("TELEGRAM > Bozza per "+action.name+": "+action.message)
+            speak_result("Ho preparato il messaggio per "+action.name+
+                         ". Vuoi inviarlo come vocale? Di' confermo o annulla.")
+        elif action.kind=="send":
+            send_owner_telegram_voice(action.peer_id,action.name,action.message)
+        elif action.kind in ("cancelled","expired","revoked"):
+            write_line("TELEGRAM > Invio annullato: "+action.kind+".")
+            speak_result("Messaggio Telegram non inviato.")
+        elif action.kind=="invalid_message":
+            speak_result("Il messaggio deve avere da uno a 480 caratteri. Riprova.")
         return True
 
     def ask_telegram_gpt(prompt:str) -> str:
