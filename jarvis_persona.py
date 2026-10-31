@@ -87,6 +87,7 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
         related = (permanent.get("related", []) if isinstance(permanent, dict)
                    else [])
         progress = data.get("progress", [])
+        preferences = data.get("preferences", [])
         if not isinstance(progress, list):
             progress = []
         if not isinstance(recents, list):
@@ -96,6 +97,8 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
     else:
         return "{}"
 
+    if not isinstance(preferences, list) if isinstance(data, dict) else True:
+        preferences = []
     packed: dict = {"recent": [], "evidence": []}
 
     def fits(value: dict) -> bool:
@@ -120,6 +123,23 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
             if fits(candidate):
                 packed=candidate
 
+    # Explicitly confirmed user preferences are DATA, not instructions.
+    safe_preferences=[]
+    for item in preferences[:4]:
+        if not isinstance(item,dict):
+            continue
+        key,value,source=item.get("key"),item.get("value"),item.get("source")
+        allowed={"response_length":("brief","balanced","detailed"),
+                 "interaction":("voice","text","both"),
+                 "language":("it","en","es")}
+        if key in allowed and value in allowed[key] and source=="user_confirmed":
+            safe_preferences.append({"key":key,"value":value,"source":source})
+    if safe_preferences:
+        candidate=dict(packed)
+        candidate["preferences"]=safe_preferences
+        if fits(candidate):
+            packed=candidate
+
     # Preserve one or two *actual* operational states before optional chatter.
     # An unverified or planned step is never presented as completed.
     for step in progress[:2]:
@@ -133,6 +153,7 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
         verified = step.get("verified", False) is True
         record = {
             "source": ("verified_action" if state=="completed" and verified
+                       else "reported_action" if state=="completed"
                        else "conversation"),
             "when": "",
             "fact": ("Passo "+title[:85]+"; stato "+state+
@@ -168,7 +189,7 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
             continue
         if not isinstance(when, str):
             when = ""
-        if kind not in ("verified_action", "conversation"):
+        if kind not in ("verified_action", "reported_action", "conversation"):
             continue
         item = {"source": kind, "when": when[:24], "fact": fact[:125]}
         candidate = dict(packed)

@@ -31,6 +31,9 @@ from jarvis_persona import build_chat_prompt
 from startup_greeting import startup_greeting
 from adaptive_voice import SpeechCorrections, SpeechCorrectionError
 from second_brain import SecondBrain, BrainError
+from memory_boundaries import (PreferenceStore, OperationJournal, MemoryBoundaryError,
+                               observed_local_result, observed_saved_file)
+from preference_voice import parse_preference_intent
 from animated_hud import JarvisHUD, BG, PANEL, CYAN, MUTED, WHITE, GREEN, AMBER
 from desktop_dictation import DesktopDictation, dictation_voice_action
 from conversation_router import (
@@ -261,6 +264,11 @@ def main() -> None:
     diagnostic_busy = False
     save_only_waiting = False
     conversation_memory = ConversationMemory()
+    pending_preference = None
+    local_operation_id = None
+    document_operation_id = None
+    preference_store = None
+    operation_ledger = None
     # Up to three follow-ups may arrive while the model is still responding.
     # Never silently discard an earlier phrase or replay after mode changes.
     pending_conversation = deque()
@@ -272,6 +280,12 @@ def main() -> None:
     memory_status = tk.StringVar(value="Second Brain: inizializzazione.")
     durable_brain: SecondBrain | None = None
     speech_lexicon: SpeechCorrections | None = None
+    # Preferences and operation history never share project/chat partitions.
+    try:
+        preference_store = PreferenceStore()
+        operation_ledger = OperationJournal()
+    except (OSError, sqlite3.Error, MemoryBoundaryError) as exc:
+        memory_status.set("Archivio memoria separata non disponibile: "+str(exc)[:85])
     if memory_enabled.get():
         try:
             durable_brain = SecondBrain()
@@ -368,8 +382,10 @@ def main() -> None:
 
     def remember_completed_action(action_id: str, application: str,
                                   summary: str, receipt_id: str,
-                                  *, filename: str = "", folder: str = "") -> None:
-        if durable_brain is None or not memory_enabled.get():
+                                  *, filename: str = "", folder: str = "",
+                                  observed: bool = False) -> None:
+        if (observed is not True or durable_brain is None or not memory_enabled.get()
+                or active_project_id is not None):
             return
         metadata = {}
         if filename:
@@ -379,7 +395,8 @@ def main() -> None:
         try:
             durable_brain.record_completed_action(
                 action_id, application, summary,
-                receipt_id=receipt_id, metadata=metadata, verified=True)
+                receipt_id=receipt_id, metadata=metadata, verified=True,
+                proof_kind="local_observation")
             memory_status_refresh()
         except (OSError, sqlite3.Error, BrainError) as exc:
             memory_status.set("Ricevuta non registrata: " + str(exc)[:90])
@@ -402,12 +419,13 @@ def main() -> None:
             return False
 
     def finish_project_work(ticket, status: str, detail: str,
-                            *, receipt: str = "") -> bool:
+                            *, receipt: str = "", observed: bool = False) -> bool:
         if not ticket or ticket is False or workspace is None:
             return False
         try:
             return bool(workspace.finish_step(
-                ticket[0],ticket[1],status,detail,receipt=receipt))
+                ticket[0],ticket[1],status,detail,
+                receipt=receipt,verified=observed))
         except (OSError,sqlite3.Error,WorkspaceError) as exc:
             # Planner callbacks may execute off the Tk thread.
             output_queue.put(("project_journal_error",str(exc)[:100]))
@@ -431,6 +449,11 @@ def main() -> None:
                 return raw
             if hint:
                 parsed["focus"]=hint
+            if preference_store is not None:
+                try:
+                    parsed["preferences"]=list(preference_store.context())
+                except (OSError,sqlite3.Error,MemoryBoundaryError):
+                    pass
             return json.dumps(parsed,ensure_ascii=False)
 
         if active_project_id is not None:
@@ -452,7 +475,7 @@ def main() -> None:
                 progress=[{"title":step["title"][:95],
                            "status":step["status"],
                            "detail":step["detail"][:110],
-                           "verified":bool(step["receipt"])}
+                           "verified":bool(step["verified"])}
                           for step in workspace.project_steps(active_project_id,limit=4)]
                 return attach(json.dumps({
                     "breve":earlier+json.loads(short),
@@ -516,7 +539,7 @@ def main() -> None:
         root.after(2600,refresh_orbit_nodes)
 
     def switch_context(project_id=None) -> bool:
-        nonlocal active_project_id,conversation_epoch
+        nonlocal active_project_id,conversation_epoch,pending_preference
         if busy_gpt or busy_local or document_busy:
             write_line("JARVIS > Finisco questa operazione prima di cambiare progetto.")
             return False
@@ -543,6 +566,7 @@ def main() -> None:
         conversation_memory.clear()
         pending_conversation.clear()
         pending_project_reference.reset()
+        pending_preference=None
         write_line(
             "JARVIS > "+("Progetto aperto: "+project["name"]+"."
                         if project_id else "Conversazione generale ripristinata."))
@@ -841,6 +865,60 @@ def main() -> None:
         write_line("JARVIS > "+message)
         speak_result(message)
         remember_exchange(spoken,message,"clarify")
+        return True
+
+    def preference_command(spoken: str) -> bool:
+        """Only an explicitly confirmed request can change preference records."""
+        nonlocal pending_preference
+        if pending_preference is not None:
+            answer=normalized_utterance(spoken).casefold()
+            intent=pending_preference
+            pending_preference=None
+            if answer=="confermo":
+                if preference_store is None:
+                    message="Preferenze non disponibili; nessuna modifica."
+                else:
+                    try:
+                        if intent.kind=="remove":
+                            preference_store.remove(intent.key,user_confirmed=True)
+                            message="Preferenza rimossa."
+                        else:
+                            preference_store.set(intent.key,intent.value,
+                                                 user_confirmed=True)
+                            message="Preferenza confermata e salvata."
+                    except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+                        message="Preferenza non salvata: "+str(exc)[:90]
+                write_line("JARVIS > "+message)
+                speak_result(message)
+                return True
+            if answer in ("annulla","no","lascia stare","non salvare"):
+                write_line("JARVIS > Preferenza non salvata.")
+                speak_result("Preferenza non salvata.")
+                return True
+            # A new topic cancels stale pending consent.
+        intent=parse_preference_intent(spoken)
+        if intent is None:
+            return False
+        if preference_store is None:
+            message="Archivio preferenze non disponibile."
+        elif intent.kind=="list":
+            try:
+                rows=preference_store.all()
+                message=("Preferenze confermate: "+
+                         ", ".join(p["key"]+"="+p["value"] for p in rows)
+                         if rows else "Nessuna preferenza confermata.")
+            except (OSError,sqlite3.Error):
+                message="Impossibile leggere le preferenze."
+        elif intent.kind=="unsupported":
+            message="Posso ricordare solo preferenze su risposte, lingua o interazione."
+        else:
+            pending_preference=intent
+            message=("Vuoi "+("rimuovere" if intent.kind=="remove" else "salvare")+
+                     " la preferenza "+intent.key+
+                     ("="+intent.value if intent.value else "")+
+                     "? Di' confermo oppure annulla.")
+        write_line("JARVIS > "+message)
+        speak_result(message)
         return True
 
     def try_self_diagnostic(spoken: str) -> bool:
@@ -1518,7 +1596,7 @@ def main() -> None:
                            close_after: bool = False,
                            source_utterance: str = "") -> None:
         nonlocal document_busy, last_user_for_document, project_document_ticket
-        nonlocal document_topic,document_owner_project_id
+        nonlocal document_topic,document_owner_project_id,document_operation_id
         if document_busy or closing:
             announce_document("Sto già lavorando sul documento: attendi.")
             return
@@ -1526,6 +1604,23 @@ def main() -> None:
             source_utterance or operation,source="document")
         if project_document_ticket is False:
             announce_document("Checkpoint progetto non disponibile: azione non eseguita.")
+            return
+        if operation_ledger is None:
+            finish_project_work(project_document_ticket,"interrupted",
+                                "Registro operativo non disponibile.")
+            project_document_ticket=None
+            announce_document("Registro operativo non disponibile: operazione bloccata.")
+            return
+        try:
+            document_operation_id=operation_ledger.begin(
+                "notepad."+operation,origin="document",
+                project_id=document_owner_project_id or active_project_id or "")
+            operation_ledger.running(document_operation_id)
+        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+            finish_project_work(project_document_ticket,"interrupted",
+                                "Registro operativo non disponibile.")
+            project_document_ticket=None
+            announce_document("Impossibile registrare l'azione: "+str(exc)[:95])
             return
         document_busy = True
         if operation == "open" or (operation=="compose" and target=="new_notepad"):
@@ -1843,6 +1938,7 @@ def main() -> None:
     def submit_local(event=None, message_override: str | None = None,
                      source_utterance: str = "") -> None:
         nonlocal busy_local, last_user_for_action, project_local_ticket
+        nonlocal local_operation_id
         if busy_local or closing:
             return
         message = (message_override if message_override is not None else request.get()).strip()
@@ -1855,6 +1951,22 @@ def main() -> None:
         project_local_ticket = begin_project_work(last_user_for_action,"local")
         if project_local_ticket is False:
             write_line("JARVIS > Impossibile salvare il checkpoint: comando non eseguito.")
+            return
+        if operation_ledger is None:
+            finish_project_work(project_local_ticket,"interrupted",
+                                "Registro operativo non disponibile.")
+            project_local_ticket=None
+            write_line("JARVIS > Registro operativo non disponibile: non eseguo.")
+            return
+        try:
+            local_operation_id=operation_ledger.begin(
+                "local_request",origin="local",project_id=active_project_id or "")
+            operation_ledger.running(local_operation_id)
+        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+            finish_project_work(project_local_ticket,"interrupted",
+                                "Impossibile registrare l'operazione.")
+            project_local_ticket=None
+            write_line("JARVIS > Operazione bloccata: "+str(exc)[:95])
             return
         busy_local = True
         refresh_buttons()
@@ -1876,6 +1988,9 @@ def main() -> None:
         if not message:
             return
         if project_voice_command(message):
+            request.set("")
+            return
+        if preference_command(message):
             request.set("")
             return
         if handle_project_reference(message):
@@ -1900,6 +2015,7 @@ def main() -> None:
 
     def poll() -> None:
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
+        nonlocal local_operation_id, document_operation_id
         nonlocal diagnostic_busy
         nonlocal last_user_for_action, last_user_for_document
         nonlocal project_local_ticket, project_document_ticket
@@ -1999,6 +2115,8 @@ def main() -> None:
                                 continue
                             if project_voice_command(spoken):
                                 continue
+                            if preference_command(spoken):
+                                continue
                             if handle_project_reference(spoken):
                                 continue
                             if handle_unanchored_short_reply(spoken):
@@ -2065,6 +2183,8 @@ def main() -> None:
                             receive_save_only_destination(spoken)
                         elif project_voice_command(spoken):
                             pass
+                        elif preference_command(spoken):
+                            pass
                         elif handle_project_reference(spoken):
                             pass
                         elif handle_unanchored_short_reply(spoken):
@@ -2093,9 +2213,25 @@ def main() -> None:
                     write_line(f"[{result.status}] {result.message}")
                     source = last_user_for_action or result.action
                     last_user_for_action = ""
+                    # A successful subprocess launch is only reported, not
+                    # proof that the requested window became usable.
+                    observed=observed_local_result(result)
+                    if operation_ledger is not None and local_operation_id:
+                        try:
+                            operation_ledger.finish(
+                                local_operation_id,
+                                ("verified" if observed else "reported"
+                                 if result.status=="completed" else "failed"),
+                                receipt=result.task_id if observed else "",
+                                observed=observed,action=result.action
+                                if result.action!="internal" else "local_error")
+                        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+                            write_line("JARVIS > Registro operazioni: "+str(exc)[:90])
+                    local_operation_id=None
                     finish_project_work(project_local_ticket,
                         "completed" if result.status=="completed" else "failed",
-                        result.message,receipt=result.task_id if result.status=="completed" else "")
+                        result.message,receipt=result.task_id if result.status=="completed" else "",
+                        observed=observed)
                     project_local_ticket = None
                     remember_exchange(
                         source, result.message,
@@ -2103,7 +2239,7 @@ def main() -> None:
                     if result.status == "completed":
                         remember_completed_action(
                             result.action, result.action.split("_")[0],
-                            result.message, result.task_id)
+                            result.message, result.task_id,observed=observed)
                         speak_result(result.message)
                 elif kind == "document_ok":
                     document_busy = False
@@ -2139,8 +2275,24 @@ def main() -> None:
                     announce_document(result.message)
                     source = last_user_for_document or operation
                     last_user_for_document = ""
+                    # File presente sul disco: prova di salvataggio. Una finestra
+                    # lanciata o modificata non è invece osservata indipendentemente.
+                    saved_file=getattr(result,"saved_path",None)
+                    observed_file=observed_saved_file(result)
+                    if operation_ledger is not None and document_operation_id:
+                        try:
+                            operation_ledger.finish(
+                                document_operation_id,
+                                "verified" if observed_file else "reported",
+                                receipt="file:"+str(result.document_id)[:65]
+                                if observed_file else "",observed=observed_file,
+                                action="notepad."+operation)
+                        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+                            write_line("JARVIS > Registro documento: "+str(exc)[:90])
+                    document_operation_id=None
                     finish_project_work(project_document_ticket,"completed",result.message,
-                                        receipt=str(result.document_id)+":"+result.kind)
+                                        receipt=str(result.document_id)+":"+result.kind,
+                                        observed=observed_file)
                     if (project_document_ticket and workspace is not None
                             and getattr(result,"saved_path",None) is not None):
                         try:
@@ -2165,7 +2317,7 @@ def main() -> None:
                         remember_completed_action(
                             action_name, "Blocco note", result.message,
                             "jarvis:" + uuid4().hex,
-                            filename=filename, folder=folder)
+                            filename=filename, folder=folder,observed=observed_file)
                     if close_after and result.kind in ("created", "appended"):
                         ask_to_close_document(source)
                 elif kind == "document_error":
@@ -2185,6 +2337,13 @@ def main() -> None:
                     choose_save_button.configure(state="disabled")
                     error_message = "Operazione non riuscita; nessun documento chiuso: " + reason
                     announce_document(error_message)
+                    if operation_ledger is not None and document_operation_id:
+                        try:
+                            operation_ledger.finish(document_operation_id,"failed",
+                                                    action="notepad."+operation)
+                        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+                            write_line("JARVIS > Registro documento: "+str(exc)[:90])
+                    document_operation_id=None
                     finish_project_work(project_document_ticket,"failed",error_message)
                     project_document_ticket = None
                     remember_exchange(last_user_for_document or operation,
@@ -2425,6 +2584,9 @@ def main() -> None:
                 execute_document_choice(decision)
                 return
         if project_voice_command(message):
+            request.set("")
+            return
+        if preference_command(message):
             request.set("")
             return
         if handle_project_reference(message):

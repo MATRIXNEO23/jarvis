@@ -113,6 +113,9 @@ class SecondBrain:
                 metadata_json TEXT NOT NULL,
                 verified INTEGER NOT NULL CHECK(verified=1)
             )""")
+            if "proof_kind" not in {r[1] for r in db.execute("PRAGMA table_info(action_receipts)")}:
+                db.execute("ALTER TABLE action_receipts ADD COLUMN "
+                           "proof_kind TEXT NOT NULL DEFAULT 'legacy_unassessed'")
             db.execute("CREATE INDEX IF NOT EXISTS receipts_time ON action_receipts(time_utc)")
             db.execute("CREATE INDEX IF NOT EXISTS conversations_time ON conversations(time_utc)")
 
@@ -135,14 +138,16 @@ class SecondBrain:
                                 summary: str, *, receipt_id: str,
                                 external_ref: str = "",
                                 metadata: dict | None = None,
-                                verified: bool = False) -> bool:
+                                verified: bool = False,
+                                proof_kind: str = "external_receipt") -> bool:
         """An actual executor/connector must pass verified=True after success.
 
         A GPT intention or a pending operation is not evidence of completion.
         Receipt identifiers make event recording retry-safe.
         """
-        if verified is not True:
-            raise BrainError("Impossibile ricordare come eseguita un'azione non verificata.")
+        if verified is not True or proof_kind not in (
+                "local_observation","provider_receipt","external_receipt"):
+            raise BrainError("Non posso registrare come verificata un'azione senza prova.")
         action = _clean(action_id, 80)
         app = _clean(application, 60)
         label = _clean(summary, MAX_LABEL)
@@ -172,9 +177,9 @@ class SecondBrain:
             cur = db.execute(
                 """INSERT OR IGNORE INTO action_receipts(
                      receipt_id,time_utc,action_id,application,summary,
-                     external_ref,metadata_json,verified)
-                   VALUES(?,?,?,?,?,?,?,1)""",
-                (rid, _now(), action, app, label, external, payload),
+                     external_ref,metadata_json,verified,proof_kind)
+                   VALUES(?,?,?,?,?,?,?,1,?)""",
+                (rid, _now(), action, app, label, external, payload, proof_kind),
             )
             return bool(cur.rowcount)
 
@@ -192,7 +197,7 @@ class SecondBrain:
             receipt_id="mail:" + provider_message_id,
             external_ref=provider_message_id,
             metadata={"recipient": recipient, "subject": subject},
-            verified=verified,
+            verified=verified,proof_kind="provider_receipt",
         )
 
     def recent_turns(self, count: int = 4) -> tuple[dict, ...]:
@@ -216,13 +221,13 @@ class SecondBrain:
         with self._db() as db:
             rows = db.execute(
                 "SELECT time_utc,application,action_id,summary,external_ref,"
-                "metadata_json FROM action_receipts ORDER BY id DESC LIMIT 3000"
+                "metadata_json,proof_kind FROM action_receipts ORDER BY id DESC LIMIT 3000"
             ).fetchall()
             dialogue = db.execute(
                 "SELECT time_utc,user_text,reply,kind FROM conversations "
                 "ORDER BY id DESC LIMIT 1500"
             ).fetchall()
-        for when, app, aid, label, ref, details in rows:
+        for when, app, aid, label, ref, details, proof in rows:
             meta = json.loads(details)
             searchable = " ".join(
                 [app, aid.replace(".", " "), label, *meta.values()])
@@ -232,8 +237,11 @@ class SecondBrain:
                 description = label
                 if aid == "mail.send":
                     description += " a " + meta.get("recipient", "destinatario non noto")
-                hits.append((overlap * 10 + 4, Evidence(when, "verified_action",
-                                                        description, ref)))
+                source=("verified_action" if proof in
+                        ("local_observation","provider_receipt","external_receipt")
+                        else "reported_action")
+                hits.append((overlap * 10 + (4 if source=="verified_action" else 1),
+                             Evidence(when,source,description,ref)))
         for when, user, reply, kind in dialogue:
             overlap = len(terms & _tokens(user + " " + reply))
             if overlap:
@@ -271,7 +279,9 @@ class SecondBrain:
     def stats(self) -> tuple[int, int]:
         with self._db() as db:
             turns = db.execute("SELECT COUNT(*) FROM conversations").fetchone()[0]
-            actions = db.execute("SELECT COUNT(*) FROM action_receipts").fetchone()[0]
+            actions = db.execute(
+                "SELECT COUNT(*) FROM action_receipts WHERE proof_kind!='legacy_unassessed'"
+            ).fetchone()[0]
         return turns, actions
 
     def clear_all(self) -> None:
