@@ -154,7 +154,8 @@ def parse_conversation_intent(
     if kind in ("chat", "clarify"):
         if set(obj) != {"kind", "reply"}:
             raise ConversationRejected("Campi non consentiti per risposta testuale.")
-        reply=_plain_text(obj["reply"], MAX_REPLY)
+        reply=_plain_text(obj["reply"], MAX_REPLY,
+                          allow_newlines=(kind=="chat"))
         if kind=="clarify":
             reply=single_question(reply)
         return ConversationIntent(kind=kind, reply=reply)
