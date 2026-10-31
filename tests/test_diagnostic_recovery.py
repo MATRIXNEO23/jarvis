@@ -132,6 +132,15 @@ class LocalAuditProgressTests(unittest.TestCase):
         self.assertIn('diagnostic_status = tk.StringVar',src)
         self.assertIn('diagnostic_percent = tk.IntVar',src)
         self.assertIn("diagnostic_session.check()",src)
+        heartbeat=src.split("    def diagnostic_heartbeat() -> None:",1)[1]
+        heartbeat=heartbeat.split("    def poll() -> None:",1)[0]
+        self.assertLess(heartbeat.index("root.after(800,diagnostic_heartbeat)"),
+                        heartbeat.index("diagnostic_session.check()"))
+        self.assertIn("root.after(800, diagnostic_heartbeat)",src)
+        poll=src.split("    def poll() -> None:",1)[1]
+        poll=poll.split("    def toggle_hud_microphone() -> None:",1)[0]
+        self.assertLess(poll.index("root.after(120, poll)"),
+                        poll.index("output_queue.get_nowait()"))
         self.assertIn('elif kind == "self_audit_error":',src)
         self.assertIn("except Exception as exc:",src)
         self.assertIn('run_id,phase,completed,total=data',src)
