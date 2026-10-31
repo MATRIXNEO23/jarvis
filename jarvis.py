@@ -33,6 +33,10 @@ from diagnostic_handoff import (build_external_review_prompt,
                                 summarize_operation_outcomes)
 from settings import default_path
 from telegram_commands import explicit_telegram_note
+from telegram_directory import (list_telegram_contacts, send_telegram_voice)
+from telegram_outbound_flow import (
+    VoiceSendDialog, parse_telegram_send_intent, resolve_selected_recipient,
+)
 from telegram_bridge import TelegramBridge
 from telegram_security import credentials_present
 from telegram_voice import missing_voice_dependencies
@@ -152,6 +156,13 @@ def main() -> None:
     telegram_bridge=None
     telegram_gpt_ready=threading.Event()
     telegram_auto=tk.BooleanVar(value=settings["telegram_enabled"])
+    telegram_contacts_dialog=None
+    telegram_contacts_frame=None
+    telegram_contacts_status=None
+    telegram_contact_vars={}
+    telegram_available_contacts=[]
+    telegram_voice_dialog=VoiceSendDialog()
+    telegram_owner_busy=False
     orbit_nodes_cache=()
 
     frame = ttk.Frame(settings_inner, padding=15)
@@ -1613,7 +1624,7 @@ def main() -> None:
               wraplength=420).pack(side="left",fill="x",expand=True)
 
     telegram_panel=ttk.LabelFrame(
-        frame,text="Telegram — un solo contatto e risposte vocali",padding=8)
+        frame,text="Telegram — contatti selezionati e messaggi vocali",padding=8)
     telegram_panel.pack(fill="x",pady=(3,10))
     telegram_toggle=ttk.Checkbutton(
         telegram_panel,text="Risposte vocali automatiche ON / OFF",
@@ -1625,20 +1636,28 @@ def main() -> None:
         telegram_row,text="Configura Telegram (accesso sicuro)")
     telegram_configure_button.pack(side="left",padx=(0,8))
     telegram_reload_button=ttk.Button(
-        telegram_row,text="Rileggi contatto autorizzato")
+        telegram_row,text="Rileggi configurazione Telegram")
     telegram_reload_button.pack(side="left",padx=(0,8))
     telegram_note_button=ttk.Button(
-        telegram_row,text="Lascia un messaggio per il contatto")
+        telegram_row,text="Messaggio da riferire (legacy)")
     telegram_note_button.pack(side="left")
+    telegram_actions=ttk.Frame(telegram_panel)
+    telegram_actions.pack(fill="x",pady=(4,3))
+    telegram_contacts_button=ttk.Button(
+        telegram_actions,text="Gestisci contatti Telegram (spunta)")
+    telegram_contacts_button.pack(side="left",padx=(0,8))
+    telegram_send_button=ttk.Button(
+        telegram_actions,text="Invia messaggio vocale")
+    telegram_send_button.pack(side="left")
     ttk.Label(
         telegram_panel,textvariable=telegram_status,wraplength=690
     ).pack(anchor="w",pady=(3,0))
     ttk.Label(
         telegram_panel,
-        text="Solo la chat privata autorizzata; le risposte sono note vocali "
-             "SAPI/OGG e JARVIS si presenta come assistente. "
-             "Occorrono Telethon gratuito e FFmpeg locale. Nessun invio "
-             "di test o risposta finché non attivi questa opzione.",
+        text="I contatti si scelgono dall'elenco Telegram con una spunta. "
+             "Le risposte automatiche si attivano separatamente dall'invio "
+             "manuale, che richiede conferma. I vocali usano Windows SAPI "
+             "e OGG/Opus, senza GPT per trasformare il testo in audio.",
         wraplength=690).pack(anchor="w",pady=(3,0))
 
     # Conversation is always visible at the left of the animated HUD.
