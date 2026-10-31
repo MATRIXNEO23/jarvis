@@ -25,7 +25,7 @@ INSTALLAZIONE SENZA SOVRASCRIVERE JARVIS
    Da %LOCALAPPDATA%\Jarvis legge le impostazioni originali, copia le
    credenziali Telegram ancora cifrate e crea una copia SQLite consistente
    della memoria di lavoro. NON modifica il database originale.
-5. Al primo avvio le risposte Telegram automatiche e il microfono sono OFF.
+5. Al primo avvio le risposte Telegram automatiche sono OFF e il microfono e' ON.
    Accendi Telegram solo quando vuoi verificare le risposte con un contatto
    che sa di dialogare con un assistente.
 6. Puoi verificare la conversazione dalle impostazioni, senza inviare niente.
