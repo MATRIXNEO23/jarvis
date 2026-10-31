@@ -4,6 +4,14 @@
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
+## Ultimo concept JARVIS HUD — versione sperimentale
+
+**[ZIP con reattore JARVIS e Terra animata più vicini al preview](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-reference-redesign.zip)**.
+
+Dopo il confronto fra la foto della prima interfaccia avviata e il concept originale, è stato implementato il nuovo design: console chat con schede realmente selezionabili, cerchio centrale con più dettagli e scritta **JARVIS** costante, Terra più ricca di continenti e luci, indicatori CPU/RAM/disco/GPT basati su dati reali. Il nucleo resta **ciano in inattività, lampeggia arancione quando Vosk sta ascoltando e verde durante la risposta vocale SAPI**. Il microfono resta in standby fino alla selezione manuale; le impostazioni si aprono tramite ⚙. Nessuna nuova dipendenza grafica o API a pagamento.
+
+**Non sostituisce la versione già in uso**: scaricare ed estrarre in una cartella differente. Test automatici Windows/Linux superati, collaudo grafico e carico CPU sul Pavilion ancora necessario. [Specifiche aggiornate](https://github.com/MATRIXNEO23/jarvis/blob/feature/hud-reference-redesign/docs/HUD_REFERENCE_V2.md), [PR #7](https://github.com/MATRIXNEO23/jarvis/pull/7).
+
 ## Nuovo ramo di prova: memoria Second Brain di Lia
 
 **[ZIP Jarvis con Second Brain locale e conversazione GPT](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/conversation-short-memory.zip)**.
