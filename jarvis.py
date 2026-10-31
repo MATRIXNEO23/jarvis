@@ -1408,11 +1408,11 @@ def main() -> None:
             settings["telegram_enabled"]=False
             telegram_status.set("Telegram: risposte automatiche disattivate.")
         else:
-            peer_id=settings.get("telegram_peer_id",0)
-            if not peer_id or not credentials_present() or workspace is None:
+            chosen=selected_telegram_contacts()
+            if not chosen or not credentials_present() or workspace is None:
                 telegram_auto.set(False)
                 telegram_status.set(
-                    "Telegram: configura prima l'account e un solo contatto.")
+                    "Telegram: configura l'account e spunta almeno un contatto.")
                 return
             missing=missing_voice_dependencies()
             if missing:
@@ -1425,13 +1425,13 @@ def main() -> None:
             if telegram_bridge:
                 telegram_bridge.stop()
             telegram_bridge=TelegramBridge(
-                workspace,peer_id,
-                settings["telegram_contact_name"],ask_telegram_gpt,
-                output_queue.put,voice_name=selected_voice())
+                workspace,chosen[0]["id"],chosen[0]["name"],ask_telegram_gpt,
+                output_queue.put,voice_name=selected_voice(),
+                allowed_contacts=chosen)
             if telegram_bridge.start():
                 settings["telegram_enabled"]=True
-                telegram_status.set("Telegram: collegamento in corso, SOLO "
-                                    +settings["telegram_contact_name"]+".")
+                telegram_status.set("Telegram: collegamento in corso per "+
+                                    str(len(chosen))+" contatti autorizzati.")
         try:
             save_settings(settings)
         except (OSError,ValueError) as exc:
