@@ -14,6 +14,7 @@ import time
 import tkinter as tk
 
 from network_telemetry import NetworkTelemetry, friendly_rate
+from hud_orbits import OrbitMarkers
 from hud_reference import (
     AMBER, BG as REF_BG, CYAN as REF_CYAN, GREEN as REF_GREEN,
     LAND, ReactorArt, GlobeArt, projected_earth_point,
@@ -213,6 +214,7 @@ class JarvisHUD:
         self._drawn_size=None
         self.core_art=ReactorArt()
         self.earth_art=GlobeArt()
+        self._orbit_click=lambda _marker:None
         self._tab="CONSOLE"
         self._console=None
         self._tabs={}
@@ -326,6 +328,8 @@ class JarvisHUD:
         self.earth_canvas.grid(row=0,column=1,sticky="nsew")
         self.core_canvas.bind("<Configure>",self._resize)
         self.earth_canvas.bind("<Configure>",self._resize)
+        self.orbit_markers=OrbitMarkers(
+            self.core_canvas,lambda ident:self._orbit_click(ident))
 
         self.visual_status=tk.StringVar(value="JARVIS  //  STANDBY")
         tk.Label(self.visual,textvariable=self.visual_status,
@@ -384,6 +388,10 @@ class JarvisHUD:
 
     def set_state_provider(self,callback):
         self.state_provider=callback
+
+    def set_orbit_open_handler(self,callback):
+        """Open a known project or Telegram activity by its trusted ID."""
+        self._orbit_click=callback
 
     def set_close_handler(self,callback):
         self.exit_button.configure(command=callback)
@@ -479,11 +487,15 @@ class JarvisHUD:
         if size!=self._drawn_size:
             self.core_art.build(self.core_canvas)
             self.earth_art.build(self.earth_canvas)
+            self.orbit_markers.reset()
             self._drawn_size=size
         self.phase+=elapsed
         self.core_art.tick(self.phase,mode,connected=connected,
                            memory=memory,listening=mic_enabled)
         self.earth_art.tick(self.phase)
+        cx,cy,r=self.core_art.geometry
+        self.orbit_markers.update(
+            state.get("orbit_nodes",()),cx,cy,r,self.phase)
 
     def close(self):
         self.closed=True
