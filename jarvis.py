@@ -388,6 +388,28 @@ def main() -> None:
                     output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
 
+    def start_conversation_gpt(spoken: str) -> None:
+        """Send one speech turn with the latest completed dialogue attached.
+
+        Called on the UI thread. The previous response is committed to short
+        memory before the next queued turn is sent to GPT.
+        """
+        if (busy_gpt or closing or voice_mode.get() != GPT_CONVERSATION
+                or not gpt_enabled.get() or not active_gpt):
+            return
+        snapshot = documents.current.ident if documents.current else None
+        try:
+            prompt = build_conversation_prompt(
+                spoken, has_document=snapshot is not None,
+                memory_context=recent_memory_for_gpt(spoken))
+        except ConversationRejected as exc:
+            write_line("JARVIS > " + str(exc))
+            return
+        write_line("JARVIS > Elaboro la tua richiesta...")
+        run_gpt("conversation", prompt=prompt,
+                epoch=conversation_epoch,
+                document_id=snapshot, utterance=spoken)
+
     def toggle_gpt() -> None:
         nonlocal active_gpt, conversation_epoch
         previous = settings["gpt_enabled"]
@@ -954,20 +976,20 @@ def main() -> None:
                                                  source_utterance=spoken)
                                 else:
                                     write_line("Motore locale occupato: riprova.")
-                            elif gpt_enabled.get() and active_gpt and not busy_gpt:
-                                snapshot = (documents.current.ident
-                                            if documents.current else None)
-                                try:
-                                    prompt = build_conversation_prompt(
-                                        spoken, has_document=snapshot is not None,
-                                        memory_context=recent_memory_for_gpt(spoken))
-                                except ConversationRejected as exc:
-                                    write_line("Conversazione: " + str(exc))
+                            elif gpt_enabled.get() and active_gpt:
+                                if busy_gpt:
+                                    if len(pending_conversation) < 3:
+                                        pending_conversation.append(
+                                            (conversation_epoch, spoken))
+                                        write_line(
+                                            "JARVIS > Ho ricevuto la frase. "
+                                            "La considero appena termino la risposta.")
+                                    else:
+                                        write_line(
+                                            "JARVIS > Ho già tre frasi in attesa. "
+                                            "Ripeti quest'ultima tra poco.")
                                 else:
-                                    write_line("JARVIS > Elaboro la tua richiesta con GPT...")
-                                    run_gpt("conversation", prompt=prompt,
-                                            epoch=conversation_epoch,
-                                            document_id=snapshot, utterance=spoken)
+                                    start_conversation_gpt(spoken)
                             elif not active_gpt or not gpt_enabled.get():
                                 speak_result("GPT non è connesso. Puoi ancora usare i comandi locali.")
                                 write_line("GPT non connesso: frase non inviata.")
@@ -1274,6 +1296,19 @@ def main() -> None:
                 refresh_buttons()
         except queue.Empty:
             pass
+        # A small bounded speech queue avoids dropping the next sentence
+        # while GPT is processing. Do not forward it after mode/logout changes,
+        # and never process it during a pending document-save decision.
+        if (voice_mode.get() != GPT_CONVERSATION or not active_gpt
+                or not gpt_enabled.get()):
+            pending_conversation.clear()
+        elif (pending_conversation and not busy_gpt and not busy_local
+              and not document_busy
+              and not doc_dialog.phase.startswith("awaiting_")
+              and doc_dialog.phase != "executing"):
+            epoch, follow_up = pending_conversation.popleft()
+            if epoch == conversation_epoch:
+                start_conversation_gpt(follow_up)
         root.after(120, poll)
 
     local_button.configure(command=submit_local)
