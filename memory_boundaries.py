@@ -85,6 +85,12 @@ class PreferenceStore:
                 updated_utc=excluded.updated_utc""", (key, value, _now()))
         return True
 
+    def remove(self, key: str, *, user_confirmed: bool = False) -> bool:
+        if user_confirmed is not True or key not in _PREFERENCE_VALUES:
+            raise MemoryBoundaryError("Rimozione non autorizzata.")
+        with _connect(self.path) as db:
+            return db.execute("DELETE FROM preferences WHERE key=?", (key,)).rowcount == 1
+
     def all(self) -> tuple[dict, ...]:
         with _connect(self.path) as db:
             rows = db.execute(
