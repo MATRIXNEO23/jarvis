@@ -358,16 +358,41 @@ def main() -> None:
             memory_status.set("Ricevuta non registrata: " + str(exc)[:90])
 
     def recent_memory_for_gpt(spoken: str) -> str:
-        short = conversation_memory.context(max_chars=860)
-        if durable_brain is None or not memory_enabled.get():
+        short=conversation_memory.context(max_chars=860)
+        if not memory_enabled.get():
+            return short
+        if active_project_id is not None:
+            if workspace is None:
+                return short
+            try:
+                p=workspace.project(active_project_id)
+                saved=json.loads(workspace.prompt_context(
+                    "project",active_project_id,spoken,budget=620))
+                evidence=saved.get("evidence",[])
+                if p and p["summary"]:
+                    evidence.insert(0,{"source":"conversation",
+                        "when":p["updated_utc"],
+                        "fact":"Stato progetto fornito dall'utente: "
+                                +p["summary"][:260]})
+                history=workspace.recent("project",active_project_id,3)
+                earlier=[{"utente":r["utente"],"lia":r["jarvis"],
+                          "tipo":r["tipo"]} for r in history]
+                return json.dumps({"breve":earlier+json.loads(short),
+                                   "permanente":{"related":evidence}},
+                                  ensure_ascii=False)
+            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                workspace_status.set("Ricerca progetto: "+str(exc)[:90])
+                return short
+        if durable_brain is None:
             return short
         try:
-            long = durable_brain.prompt_context(spoken, budget=530)
-        except (OSError, sqlite3.Error, BrainError) as exc:
-            memory_status.set("Ricerca memoria non disponibile: " + str(exc)[:80])
+            long=durable_brain.prompt_context(spoken,budget=530)
+        except (OSError,sqlite3.Error,BrainError) as exc:
+            memory_status.set("Ricerca memoria: "+str(exc)[:90])
             return short
-        return json.dumps({"breve": json.loads(short),
-                           "permanente": json.loads(long)}, ensure_ascii=False)
+        return json.dumps({"breve":json.loads(short),
+                           "permanente":json.loads(long)},
+                          ensure_ascii=False)
 
     def display_status(state: dict) -> None:
         nonlocal active_gpt, conversation_epoch
