@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA PROVA — AUTODIAGNOSI CON EVIDENZE RUNTIME E GPT ESTERNO (31/10/2026)
+
+**[Scarica il ramo sperimentale Jarvis-Diagnostica-Runtime-GPT (ZIP da GitHub)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/diagnostic-runtime-evidence-external-gpt.zip)**
+
+Questa è una versione di prova isolata, basata sulla diagnostica visibile precedente; il codice **non** è integrato automaticamente in `main`. [Modifiche e PR draft #25](https://github.com/MATRIXNEO23/jarvis/pull/25). [CI Windows/Linux 4/4 SUCCESS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41192534100) sui sorgenti `d6578989459326bed6ddba590f0c21d1d0e75702`.
+
+**Architettura reale:** nessun modello locale, GPT esterno tramite Sign in with ChatGPT. Il piccolo motore Windows analizza i sorgenti e raccoglie stati passivi verificabili: bridge/SDK GPT, stream microfono, motore locale, archivio progetti, conteggi anonimi degli errori osservati nell'istanza. Mostra il rapporto anche offline. Solo con consenso trasmette al modello esterno un riepilogo ristretto e categoriale, per consigli tecnici; nessuna patch né comando eseguito automaticamente. Presenza di un componente NON significa collaudo funzionale.
+
+**Collaudo sul Pavilion ancora da svolgere.** Conservare la vecchia installazione, fare backup di `%LOCALAPPDATA%\\Jarvis` e provare la ZIP in una cartella distinta, con una sola istanza aperta. Premere `⋯ → Autodiagnosi Jarvis`, controllare la sezione `Stato locale osservato`; poi chiedere «Jarvis, valuta la diagnosi con GPT» e verificare il consenso prima dell'invio. [Guida dettagliata sul ramo](https://github.com/MATRIXNEO23/jarvis/blob/feature/diagnostic-runtime-evidence-external-gpt/docs/DIAGNOSTICA_RUNTIME_SIGN_IN_GPT.md).
+
+**Avviso antivirus invariato:** precedente segnalazione Defender `Trojan:Script/Wacatac.B!ml` non risolta; CI verde non certifica sicurezza della ZIP. Se Defender blocca, interrompere e non creare esclusioni, non disattivare la protezione.
+
+---
+
 ## NUOVA BUILD DI TEST — DIAGNOSTICA VISIBILE, RECUPERO E VOCE (31/10/2026)
 
 **[SCARICA Jarvis-Fix-Diagnostica-Visibile.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Fix-Diagnostica-Visibile.zip)**
