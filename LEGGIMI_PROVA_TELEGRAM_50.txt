@@ -1,3 +1,14 @@
+JARVIS — TIMER VOCALE + HUD CORRETTO — PROVA COMPLETA 31/10/2026
+
+NUOVE FUNZIONI: "timer dieci minuti" apre un popup digitale separato
+e avvia il conto alla rovescia; "timer" lo apre per la durata manuale.
+Start, Pausa, Stop, Reset. Quattro suonerie locali selezionabili
+dall'ingranaggio nelle IMPOSTAZIONI ESISTENTI con Prova suono,
+Ferma prova, volume e ripetizione dell'allarme. Tutte le vecchie
+impostazioni rimangono presenti, con navigazione interna riordinata.
+Timer offline: nessuna API, login o abbonamento aggiuntivo.
+L'UNICO launcher resta avvia_jarvis.bat.
+
 JARVIS — AUDIT COMPLETO + TELEGRAM 50 (WINDOWS 10)
 =================================================
 Questa ZIP e' un test isolato, NON una release stabile.
