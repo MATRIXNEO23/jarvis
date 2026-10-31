@@ -1295,16 +1295,80 @@ def main() -> None:
             if source_utterance:
                 remember_exchange(source_utterance, decision.message, "clarify")
 
+    def automatic_document_destination(*, explicit_name: str = "") -> Path | None:
+        """Use this document's original project, never a newly selected one."""
+        if workspace is None or document_owner_project_id is None:
+            return None
+        return project_save_destination(
+            workspace,document_owner_project_id,document_topic,
+            explicit_name=explicit_name)
+
+    def save_document_now(spoken: str, *, explicit_name: str = "") -> None:
+        nonlocal save_only_waiting
+        if document_busy or doc_dialog.phase!="editing" or documents.current is None:
+            announce_document("Non ho un documento pronto da salvare.")
+            return
+        # Explicit user-chosen desktop/documents/downloads takes priority.
+        explicit_path=destination_from_voice(spoken)
+        if explicit_path is not None:
+            path=explicit_path
+        else:
+            try:
+                path=automatic_document_destination(explicit_name=explicit_name)
+            except (OSError,ValueError,WorkspaceError) as exc:
+                announce_document("Nome o cartella del documento non validi: "+str(exc)[:100])
+                return
+        if path is None:
+            save_only_waiting=True
+            announce_document("Dove vuoi salvare? Per esempio: sul desktop come appunti.")
+            return
+        save_only_waiting=False
+        document_operation("save_only",document_id=doc_dialog.document_id,
+                           path=path,source_utterance=spoken)
+
+    def receive_save_only_destination(spoken: str) -> None:
+        nonlocal save_only_waiting
+        if spoken.casefold().strip(" ,.!?") in ("annulla","lascia stare"):
+            save_only_waiting=False
+            announce_document("Salvataggio annullato. Documento aperto.")
+            return
+        path=destination_from_voice(spoken)
+        if path is None:
+            announce_document("Indicami una cartella e un nome, per esempio "
+                              "sul desktop come appunti, oppure scegli la cartella.")
+            return
+        save_only_waiting=False
+        document_operation("save_only",document_id=doc_dialog.document_id,
+                           path=path,source_utterance=spoken)
+
     def execute_document_choice(decision, *, path: Path | None = None) -> None:
+        if decision.kind == "ask_destination":
+            try:
+                path=automatic_document_destination()
+            except (OSError,ValueError,WorkspaceError) as exc:
+                announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
+                return
+            if path is not None:
+                selected=doc_dialog.provide_destination(str(path))
+                execute_document_choice(selected,path=path)
+                return
         if decision.kind in ("save_then_close", "save_as_then_close"):
             destination = path if path is not None else (
                 Path(doc_dialog.saved_path) if doc_dialog.saved_path else None)
             if destination is None:
-                doc_dialog.phase = "awaiting_save_destination"
-                announce_document("Dove vuoi salvare? Per esempio: "
-                                  "sul desktop come storia di Venezia.")
-                choose_save_button.configure(state="normal")
-                return
+                try:
+                    destination=automatic_document_destination()
+                except (OSError,ValueError,WorkspaceError) as exc:
+                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
+                    return
+                if destination is None:
+                    doc_dialog.phase = "awaiting_save_destination"
+                    announce_document("Dove vuoi salvare? Per esempio: "
+                                      "sul desktop come storia di Venezia.")
+                    choose_save_button.configure(state="normal")
+                    return
+                if doc_dialog.phase=="awaiting_save_destination":
+                    doc_dialog.provide_destination(str(destination))
             choose_save_button.configure(state="disabled")
             document_operation("save", document_id=decision.document_id,
                                path=destination)
@@ -1338,14 +1402,21 @@ def main() -> None:
             handle_document_confirmation("chiudi senza salvare")
 
     def choose_save_destination() -> None:
-        if doc_dialog.phase != "awaiting_save_destination" or document_busy:
+        nonlocal save_only_waiting
+        if ((doc_dialog.phase!="awaiting_save_destination" and not save_only_waiting)
+                or document_busy):
             return
         selected = filedialog.asksaveasfilename(
             parent=root, title="Dove vuoi salvare il nuovo file?",
             defaultextension=".txt", filetypes=[("File di testo", "*.txt")])
         if selected:
-            decision = doc_dialog.provide_destination(selected)
-            execute_document_choice(decision, path=Path(selected))
+            if save_only_waiting:
+                save_only_waiting=False
+                document_operation("save_only",document_id=doc_dialog.document_id,
+                                   path=Path(selected),source_utterance="salva documento")
+            else:
+                decision = doc_dialog.provide_destination(selected)
+                execute_document_choice(decision, path=Path(selected))
 
     def sync_dictation_ui(message: str) -> None:
         dictation_status.set(message)
