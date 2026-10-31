@@ -32,7 +32,7 @@ _MIN_LARGE_MODULE = 850
 def _is_silent_exception(handler: ast.ExceptHandler) -> bool:
     """Catch-and-ignore is a review signal, not proof of faulty behavior."""
     if handler.type is None:
-        return any(isinstance(node, ast.Pass) for node in handler.body)
+        return len(handler.body) == 1 and isinstance(handler.body[0], ast.Pass)
     if isinstance(handler.type, ast.Name) and handler.type.id in (
             "Exception", "BaseException"):
         return len(handler.body) == 1 and isinstance(handler.body[0], ast.Pass)
@@ -155,7 +155,18 @@ def review_sources(source_root: Path, files: list[Path], *,
     dedup: dict[tuple[str, int, str], Improvement] = {}
     for item in candidates:
         dedup[(item.file, item.line, item.observation)] = item
-    return tuple(sorted(dedup.values(), key=_priority)[:_MAX_RECOMMENDATIONS])
+    result=[]
+    count_by_file={}
+    # Favor several independent actionable areas, not eight observations
+    # from one very long function in jarvis.py.
+    for item in sorted(dedup.values(), key=_priority):
+        if count_by_file.get(item.file,0)>=2:
+            continue
+        result.append(item)
+        count_by_file[item.file]=count_by_file.get(item.file,0)+1
+        if len(result)==_MAX_RECOMMENDATIONS:
+            break
+    return tuple(result)
 
 
 def format_improvements(items: tuple[Improvement, ...]) -> str:
