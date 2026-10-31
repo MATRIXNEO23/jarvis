@@ -1400,10 +1400,17 @@ def main() -> None:
                 allowed[peer_id]+"?\n\n"
                 "Non verranno cancellati contatto, autorizzazioni, "
                 "messaggi in attesa né lo stato della presentazione. "
+                "Le risposte automatiche saranno disattivate prima della pulizia, "
+                "se attive. Un invio già partito potrebbe ancora arrivare. "
                 "I messaggi eliminati non potranno essere recuperati "
                 "dall'archivio attivo.",
                 parent=root,default="no"):
             return
+        # Never delete a peer's active events while the listener is still
+        # handling that contact. User explicitly approved disabling Telegram.
+        if telegram_bridge and telegram_bridge.is_enabled():
+            telegram_auto.set(False)
+            toggle_telegram_automatic()
         try:
             workspace.telegram_clear_history(peer_id)
         except (OSError,sqlite3.Error,WorkspaceError) as exc:
