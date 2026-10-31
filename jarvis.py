@@ -31,6 +31,8 @@ from jarvis_persona import build_chat_prompt
 from startup_greeting import startup_greeting
 from adaptive_voice import SpeechCorrections, SpeechCorrectionError
 from second_brain import SecondBrain, BrainError
+from memory_boundaries import (PreferenceStore, OperationJournal, MemoryBoundaryError)
+from preference_voice import parse_preference_intent
 from animated_hud import JarvisHUD, BG, PANEL, CYAN, MUTED, WHITE, GREEN, AMBER
 from desktop_dictation import DesktopDictation, dictation_voice_action
 from conversation_router import (
@@ -261,6 +263,11 @@ def main() -> None:
     diagnostic_busy = False
     save_only_waiting = False
     conversation_memory = ConversationMemory()
+    pending_preference = None
+    local_operation_id = None
+    document_operation_id = None
+    preference_store = None
+    operation_ledger = None
     # Up to three follow-ups may arrive while the model is still responding.
     # Never silently discard an earlier phrase or replay after mode changes.
     pending_conversation = deque()
@@ -272,6 +279,12 @@ def main() -> None:
     memory_status = tk.StringVar(value="Second Brain: inizializzazione.")
     durable_brain: SecondBrain | None = None
     speech_lexicon: SpeechCorrections | None = None
+    # Preferences and operation history never share project/chat partitions.
+    try:
+        preference_store = PreferenceStore()
+        operation_ledger = OperationJournal()
+    except (OSError, sqlite3.Error, MemoryBoundaryError) as exc:
+        memory_status.set("Archivio memoria separata non disponibile: "+str(exc)[:85])
     if memory_enabled.get():
         try:
             durable_brain = SecondBrain()
@@ -368,8 +381,9 @@ def main() -> None:
 
     def remember_completed_action(action_id: str, application: str,
                                   summary: str, receipt_id: str,
-                                  *, filename: str = "", folder: str = "") -> None:
-        if durable_brain is None or not memory_enabled.get():
+                                  *, filename: str = "", folder: str = "",
+                                  observed: bool = False) -> None:
+        if observed is not True or durable_brain is None or not memory_enabled.get():
             return
         metadata = {}
         if filename:
@@ -379,7 +393,8 @@ def main() -> None:
         try:
             durable_brain.record_completed_action(
                 action_id, application, summary,
-                receipt_id=receipt_id, metadata=metadata, verified=True)
+                receipt_id=receipt_id, metadata=metadata, verified=True,
+                proof_kind="local_observation")
             memory_status_refresh()
         except (OSError, sqlite3.Error, BrainError) as exc:
             memory_status.set("Ricevuta non registrata: " + str(exc)[:90])
@@ -402,12 +417,13 @@ def main() -> None:
             return False
 
     def finish_project_work(ticket, status: str, detail: str,
-                            *, receipt: str = "") -> bool:
+                            *, receipt: str = "", observed: bool = False) -> bool:
         if not ticket or ticket is False or workspace is None:
             return False
         try:
             return bool(workspace.finish_step(
-                ticket[0],ticket[1],status,detail,receipt=receipt))
+                ticket[0],ticket[1],status,detail,
+                receipt=receipt,verified=observed))
         except (OSError,sqlite3.Error,WorkspaceError) as exc:
             # Planner callbacks may execute off the Tk thread.
             output_queue.put(("project_journal_error",str(exc)[:100]))
@@ -452,7 +468,7 @@ def main() -> None:
                 progress=[{"title":step["title"][:95],
                            "status":step["status"],
                            "detail":step["detail"][:110],
-                           "verified":bool(step["receipt"])}
+                           "verified":bool(step["verified"])}
                           for step in workspace.project_steps(active_project_id,limit=4)]
                 return attach(json.dumps({
                     "breve":earlier+json.loads(short),
