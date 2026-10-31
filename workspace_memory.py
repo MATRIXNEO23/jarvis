@@ -440,8 +440,8 @@ class WorkspaceMemory:
                 temp.unlink()
 
     def _save_snapshot(self, ident, *, steps_changed=True):
+        """SQLite is canonical; projections can be rebuilt at any restart."""
         with self._projection_lock:
-            """SQLite is canonical; projections can be rebuilt at any restart."""
             project=self.project(ident)
             if not project:
                 raise WorkspaceError("Progetto inesistente.")
