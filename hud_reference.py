@@ -275,9 +275,11 @@ class ReactorArt:
             item=_ellipse(c,cx,cy,r*scale,fill=base)
             self.core_fill.append((item,base,tint))
         self.rim=_ellipse(c,cx,cy,r*.36,outline=CYAN,width=3)
+        # Mode-dependent color is confined to the central nucleus.
+        # Larger arcs and decorative rings keep the reference cyan palette.
         self.pulse_items=[
-            _ellipse(c,cx,cy,r*.43,outline="#165f83",width=2),
-            _ellipse(c,cx,cy,r*.54,outline="#165f83",width=2)]
+            _ellipse(c,cx,cy,r*.31,outline="#165f83",width=2),
+            _ellipse(c,cx,cy,r*.35,outline="#165f83",width=2)]
         self.core_name=c.create_text(cx,cy-1,
                                      text="JARVIS",
                                      fill="#d9f8ff",
@@ -302,17 +304,17 @@ class ReactorArt:
             images=ASSETS.get("reactor",self._glow_size)
             if images:
                 try:
+                    # The outer light texture is deliberately static.
+                    # Only the central Canvas nucleus reacts to voice states.
                     self._glow_photos={
-                        name: photoimage_from_png(
-                            __import__("tkinter"), png)
-                        for name,png in zip(("idle","listening","speaking"),
-                                            images)
+                        "idle":photoimage_from_png(
+                            __import__("tkinter"),images[0])
                     }
                 except Exception:
                     self._glow_photos={}
-        if mode in self._glow_photos:
+        if "idle" in self._glow_photos:
             c.itemconfigure(self._glow_photo_item,
-                            image=self._glow_photos[mode])
+                            image=self._glow_photos["idle"])
         hue,strength=core_light(mode,phase)
         # Small oscillation while listening or talking; cyan steady when idle.
         amount=strength if mode!="idle" else .23
@@ -326,15 +328,12 @@ class ReactorArt:
                         outline=lerp_color("#0e72a3",hue,amount),
                         width=2.8+1.2*amount)
         for n,item in enumerate(self.pulse_items):
-            rr=r*(.43+n*.11)
-            ring_strength=amount*(.56 if n==0 else .31)
+            ring_strength=amount*(.57 if n==0 else .37)
             c.itemconfigure(item,outline=lerp_color("#0b3854",hue,ring_strength))
         for item,start,speed,bright in self.arc_items:
+            # Rotate cyan artwork without recoloring any outer ring.
             a=(start+phase*speed)%360
             c.itemconfigure(item,start=a)
-            if bright:
-                c.itemconfigure(item,outline=lerp_color(
-                    "#1296d1",hue,amount*.92))
         c.itemconfigure(self.core_name,fill=lerp_color(
             "#e3f8ff",hue,amount*(.35 if mode!="idle" else .04)))
         for item,enabled in zip(self.system_lamps,
