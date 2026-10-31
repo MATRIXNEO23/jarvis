@@ -233,11 +233,23 @@ class TelegramBridge:
                          "Telegram: messaggio ricevuto, nessuna risposta per limite frequenza."))
             return
         notes=self.workspace.pending_for_contact(self.peer_id)
-        context=self.workspace.prompt_context(
-            "telegram",str(self.peer_id),incoming_text,budget=820)
-        prompt=telegram_assistant_prompt(incoming_text,context,notes)
-        reply=clean_generated_reply(
-            await asyncio.to_thread(self.ask_gpt,prompt))
+        # Authorized owner messages must be relayed verbatim. Never rely on
+        # GPT to decide whether to include or paraphrase an approved note.
+        delivering=notes[:1]
+        if delivering:
+            relay="Sono JARVIS, l'assistente di Alberto. "
+            relay+="Mi ha incaricato di riferirti questo: "
+            relay+=delivering[0]["message"]
+            if len(relay)>500:
+                raise TelegramBridgeError(
+                    "Messaggio da riferire troppo lungo per un solo vocale.")
+            reply=relay
+        else:
+            context=self.workspace.prompt_context(
+                "telegram",str(self.peer_id),incoming_text,budget=820)
+            prompt=telegram_assistant_prompt(incoming_text,context)
+            reply=clean_generated_reply(
+                await asyncio.to_thread(self.ask_gpt,prompt))
         if not reply or not self._enabled.is_set():
             return
         with tempfile.TemporaryDirectory(prefix="jarvis-tg-out-") as folder:
@@ -245,7 +257,7 @@ class TelegramBridge:
                 make_telegram_voice,reply,Path(folder),self.voice_name)
             if not self._enabled.is_set():
                 return
-            note_ids=[n["id"] for n in notes]
+            note_ids=[n["id"] for n in delivering]
             if note_ids:
                 self.workspace.reserve_notes(self.peer_id,note_ids)
             try:
