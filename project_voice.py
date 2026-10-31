@@ -43,10 +43,10 @@ _FOLDER = re.compile(
     r"(?:la\s+)?cartella\s+(?:del\s+|di\s+)?"
     r"(?:progetto|progetto\s+attivo|progetto\s+corrente)$", re.I)
 _RENAME_NAMED = re.compile(
-    r"^(?:rinomina(?:mi)?|cambia(?:mi)?\s+il\s+nome\s+(?:del|al))\s+"
+    r"^(?:rinomina(?:mi)?|(?:cambia|modifica)(?:mi)?\s+(?:il\s+)?nome\s+(?:del|al))\s+"
     r"(?:il\s+)?progetto\s+(.+?)\s+(?:in|come|a)\s+(.+)$",re.I)
 _RENAME_CURRENT = re.compile(
-    r"^(?:rinomina(?:mi)?|cambia(?:mi)?\s+il\s+nome\s+(?:del|al)|"
+    r"^(?:rinomina(?:mi)?|(?:cambia|modifica)(?:mi)?\s+(?:il\s+)?nome\s+(?:del|al)|"
     r"correggi\s+il\s+nome\s+(?:del|al))\s+"
     r"(?:il\s+)?progetto(?:\s+(?:corrente|attivo|questo))?"
     r"(?:\s+(?:in|come|a)\s+(.+))?$",re.I)
@@ -66,7 +66,8 @@ _EXTRA_LIST = re.compile(
     r"^(?:che|quali)\s+progetti\s+(?:ho|hai)(?:\s+salvati)?"
     r"|^(?:ho|ci\s+sono)\s+(?:dei\s+)?progetti\s+salvati"
     r"|^(?:elenca(?:mi)?|mostra(?:mi)?)\s+(?:i\s+)?progetti\s+salvati"
-    r"|^lista\s+(?:dei\s+)?progetti$",re.I)
+    r"|^lista\s+(?:dei\s+)?progetti"
+    r"|^(?:quali\s+sono\s+)?(?:i\s+)?progetti\s+salvati$",re.I)
 _NAME_PREFIX = re.compile(r"^(?:che\s+si\s+chiama|dal\s+nome|chiamato)\s+",re.I)
 _UNSAFE = re.compile(r"\b(?:password|passphrase|api\s*hash|codice\s*otp|token)\b",re.I)
 
@@ -92,6 +93,10 @@ def parse_project_voice(utterance: str) -> ProjectVoiceCommand | None:
         return None
     text=unicodedata.normalize("NFKC",utterance).strip()
     text=_PREFIX.sub("",text).strip(" ,.!?;:")
+    # Honor clear polite imperatives, but not hypothetical or quoted text.
+    text=re.sub(r"^(?:(?:per favore)\s+|(?:mi\s+)?(?:puoi|potresti)\s+)"
+                r"(?=(?:rinomina|cambia|modifica|elimina|cancella|ripristina|"
+                r"recupera|elenca|mostra|crea|apri)\b)","",text,flags=re.I)
     if not text:
         return None
     if _TRASH_LIST.fullmatch(text):
