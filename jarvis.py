@@ -1586,7 +1586,7 @@ def main() -> None:
         refresh_buttons()
         if action == "sign_in":
             gpt_status.set("GPT: in attesa del login nel browser...")
-        elif action in ("ask", "conversation"):
+        elif action in ("ask", "conversation","typed_conversation"):
             gpt_status.set("GPT: elaborazione richiesta...")
         elif action == "disconnect":
             gpt_status.set("GPT: scollegamento...")
@@ -1594,25 +1594,26 @@ def main() -> None:
             gpt_status.set("GPT: verifica connessione...")
 
         def worker() -> None:
-            epoch = params.get("epoch") if action == "conversation" else None
-            doc_snapshot = params.get("document_id") if action == "conversation" else None
-            user_utterance = params.get("utterance", "") if action == "conversation" else ""
+            structured = action in ("conversation","typed_conversation")
+            epoch = params.get("epoch") if structured else None
+            doc_snapshot = params.get("document_id") if structured else None
+            user_utterance = params.get("utterance", "") if structured else ""
             typed_question = params.get("source", "") if action == "ask" else ""
             try:
                 timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
-                sdk_action = "ask" if action == "conversation" else action
+                sdk_action = "ask" if structured else action
                 sdk_params = {key: value for key, value in params.items()
                               if key not in ("epoch", "document_id", "utterance", "source")}
                 result = service.call(sdk_action, timeout=timeout, **sdk_params)
-                if action == "conversation":
+                if structured:
                     output_queue.put(("conversation_ok", epoch, doc_snapshot,
-                                      user_utterance, result))
+                                      user_utterance, result, action))
                 else:
                     output_queue.put(("gpt_ok", action, result, typed_question))
             except Exception as exc:
-                if action == "conversation":
+                if structured:
                     output_queue.put(("conversation_error", epoch, user_utterance,
-                                      str(exc)[:220]))
+                                      str(exc)[:220], action))
                 else:
                     output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
@@ -2996,9 +2997,11 @@ def main() -> None:
                     last_user_for_document = ""
                 elif kind == "conversation_ok":
                     busy_gpt = False
-                    epoch, doc_snapshot, original_phrase, result = data
+                    epoch, doc_snapshot, original_phrase, result, *channels = data
+                    channel=channels[0] if channels else "conversation"
                     if (epoch == conversation_epoch and
-                            voice_mode.get() == GPT_CONVERSATION and
+                            (channel=="typed_conversation" or
+                             voice_mode.get() == GPT_CONVERSATION) and
                             gpt_enabled.get() and active_gpt):
                         try:
                             latest=current_capability_snapshot(documents.current is not None)
@@ -3128,8 +3131,11 @@ def main() -> None:
                 elif kind == "conversation_error":
                     runtime_events.record("gpt_failure")
                     busy_gpt = False
-                    epoch, original_phrase, reason = data
-                    if epoch == conversation_epoch and voice_mode.get() == GPT_CONVERSATION:
+                    epoch, original_phrase, reason, *channels = data
+                    channel=channels[0] if channels else "conversation"
+                    if (epoch == conversation_epoch and (
+                            channel=="typed_conversation" or
+                            voice_mode.get() == GPT_CONVERSATION)):
                         write_line("Conversazione GPT: " + reason)
                         speak_result("GPT non è disponibile. Puoi riprovare.")
                         remember_exchange(original_phrase, "GPT non disponibile, riprova.",
