@@ -1,5 +1,22 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## ULTIMO PROTOTIPO — PROGETTI, PALLINI ORBITANTI E TELEGRAM VOCALE
+
+**[SCARICA JARVIS CON MEMORIA PER PROGETTO E TELEGRAM — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/project-memory-orbits-telegram.zip)**
+
+Questa prova include la precedente grafica high fidelity con sfondo cinematico e aggiunge le funzioni approvate:
+
+- **Un contesto per ogni progetto**: cronologia separata, ricerca indicizzata SQLite FTS5, file `CONTINUITA.md` per ogni progetto, stato modificabile esplicitamente, archivio dei progetti inattivi. Attiva **Second Brain locale** da ⚙ per salvare anche le conversazioni.
+- **Pallini che orbitano attorno al reattore**: ciano per progetti attivi con nome al passaggio del mouse e apertura al clic, viola per Telegram (ricevuti/risposte), ambra per comunicazioni da riferire.
+- **Telegram personale (MTProto)**: configurazione facoltativa per **un solo contatto privato**, risposte **vocali** automatiche con voce Windows SAPI in OGG/Opus, registro degli esiti ricevuto/risposto, istruzioni esplicite del tipo «Jarvis, riferisci alla mia amica che ...». Interruttore **OFF di default**, quindi nessun messaggio automatico durante i test. Sessione salvata cifrata DPAPI sul PC.
+- **JARVIS più sintetico e ironico**: 1–3 frasi normalmente, approfondimenti quando li chiedi.
+
+**Prima prova sul Pavilion:** estrai lo ZIP in **una cartella nuova**, avvia `avvia_jarvis.bat`, prova i pallini, la memoria e i file di continuità. Nessuna configurazione Telegram è obbligatoria per le funzioni locali. Per Telegram sono necessari, solo se decidi di attivarlo, il pacchetto gratuito Telethon (`installa_telegram.bat`), FFmpeg gratuito nel PATH e il tuo `api_id`/`api_hash` gratuiti da Telegram. Segui `configura_telegram.bat` per scegliere l'unico contatto, poi torna in ⚙ e attiva le risposte. **Nessun messaggio Telegram reale è stato inviato nei test automatici.**
+
+**Attenzione:** l'integrazione Telegram richiede un collaudo controllato e consenso/informazione del contatto. Con l'opzione OFF l'app non legge né invia nuovi messaggi Telegram; la memoria di Telegram è distinta da quella privata dei progetti. Il computer deve rimanere acceso con JARVIS in esecuzione perché risponda.
+
+[Guida completa](https://github.com/MATRIXNEO23/jarvis/blob/feature/project-memory-orbits-telegram/docs/PROJECT_MEMORY_TELEGRAM.md) · [PR sperimentale #12](https://github.com/MATRIXNEO23/jarvis/pull/12). **La versione precedente rimane disponibile. Nessun merge automatico.**
+
 ## ULTIMA PROVA — SFONDO NERO CINEMATICO COME NEL CONCEPT
 
 **[SCARICA JARVIS CON SFONDO SCURO E CIRCUITI LUMINOSI — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/high-fidelity-cinematic-background.zip)**
