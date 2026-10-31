@@ -14,6 +14,7 @@ import unicodedata
 class ProjectVoiceCommand:
     action: str
     name: str = ""
+    target: str = ""
 
 
 _PREFIX = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]*", re.I)
@@ -41,6 +42,31 @@ _FOLDER = re.compile(
     r"^(?:apri(?:mi)?|mostra(?:mi)?|fammi\s+vedere)\s+"
     r"(?:la\s+)?cartella\s+(?:del\s+|di\s+)?"
     r"(?:progetto|progetto\s+attivo|progetto\s+corrente)$", re.I)
+_RENAME_NAMED = re.compile(
+    r"^(?:rinomina(?:mi)?|cambia(?:mi)?\s+il\s+nome\s+(?:del|al))\s+"
+    r"(?:il\s+)?progetto\s+(.+?)\s+(?:in|come|a)\s+(.+)$",re.I)
+_RENAME_CURRENT = re.compile(
+    r"^(?:rinomina(?:mi)?|cambia(?:mi)?\s+il\s+nome\s+(?:del|al)|"
+    r"correggi\s+il\s+nome\s+(?:del|al))\s+"
+    r"(?:il\s+)?progetto(?:\s+(?:corrente|attivo|questo))?"
+    r"(?:\s+(?:in|come|a)\s+(.+))?$",re.I)
+_TRASH = re.compile(
+    r"^(?:elimina|cancella|rimuovi|metti\s+nel\s+cestino|"
+    r"sposta\s+nel\s+cestino)\s+"
+    r"(?:(?:il|questo)\s+)?progetto(?:\s+(.*))?$",re.I)
+_RESTORE = re.compile(
+    r"^(?:ripristina|recupera)\s+(?:(?:il|un)\s+)?"
+    r"progetto\s+(.+)$",re.I)
+_TRASH_LIST = re.compile(
+    r"^(?:cestino\s+(?:dei\s+)?progetti|"
+    r"(?:elenca(?:mi)?|mostra(?:mi)?|dimmi|quali\s+sono)\s+"
+    r"(?:(?:i|gli|miei)\s+)?progetti\s+"
+    r"(?:eliminati|cancellati|nel\s+cestino))$",re.I)
+_EXTRA_LIST = re.compile(
+    r"^(?:che|quali)\s+progetti\s+(?:ho|hai)(?:\s+salvati)?"
+    r"|^(?:ho|ci\s+sono)\s+(?:dei\s+)?progetti\s+salvati"
+    r"|^(?:elenca(?:mi)?|mostra(?:mi)?)\s+(?:i\s+)?progetti\s+salvati"
+    r"|^lista\s+(?:dei\s+)?progetti$",re.I)
 _NAME_PREFIX = re.compile(r"^(?:che\s+si\s+chiama|dal\s+nome|chiamato|nome)\s+",re.I)
 _UNSAFE = re.compile(r"\b(?:password|passphrase|api\s*hash|codice\s*otp|token)\b",re.I)
 
@@ -68,8 +94,30 @@ def parse_project_voice(utterance: str) -> ProjectVoiceCommand | None:
     text=_PREFIX.sub("",text).strip(" ,.!?;:")
     if not text:
         return None
-    if _LIST.fullmatch(text):
+    if _TRASH_LIST.fullmatch(text):
+        return ProjectVoiceCommand("list_trash")
+    if _LIST.fullmatch(text) or _EXTRA_LIST.fullmatch(text):
         return ProjectVoiceCommand("list")
+    match=_RENAME_NAMED.fullmatch(text)
+    if match and match.group(1).casefold() not in (
+            "corrente","questo","attivo"):
+        return ProjectVoiceCommand("rename",safe_project_name(match.group(2)),
+                                   safe_project_name(match.group(1)))
+    match=_RENAME_CURRENT.fullmatch(text)
+    if match:
+        proposed=match.group(1)
+        return ProjectVoiceCommand("rename",
+                                   safe_project_name(proposed) if proposed else "")
+    match=_TRASH.fullmatch(text)
+    if match:
+        target=(match.group(1) or "").strip()
+        if target.casefold() in ("corrente","attivo","questo"):
+            target=""
+        return ProjectVoiceCommand("trash",
+                                   safe_project_name(target) if target else "")
+    match=_RESTORE.fullmatch(text)
+    if match:
+        return ProjectVoiceCommand("restore",safe_project_name(match.group(1)))
     if _GENERAL.fullmatch(text):
         return ProjectVoiceCommand("general")
     if _FOLDER.fullmatch(text):
@@ -95,3 +143,23 @@ def find_existing_project(projects, name: str):
     if len(matches)>1:
         raise ValueError("Esistono più progetti con questo nome. Usa il gestore progetti.")
     return matches[0] if matches else None
+
+
+_CONFIRM_DELETE = re.compile(
+    r"^(?:confermo(?:\s+(?:l[’']?eliminazione|di\s+eliminare))?|"
+    r"s[ìi]\s+(?:elimina|cancella)|elimina\s+definitivamente\s+dal\s+catalogo)$",re.I)
+_CANCEL_DELETE = re.compile(
+    r"^(?:annulla|no|non\s+eliminare|lascia\s+stare|fermati)$",re.I)
+
+
+def project_delete_response(utterance: str) -> str | None:
+    """Require a deliberate confirmation following one named deletion prompt."""
+    if not isinstance(utterance,str) or len(utterance)>100:
+        return None
+    value=unicodedata.normalize("NFKC",utterance).strip(" ,.!?;:")
+    value=_PREFIX.sub("",value).strip(" ,.!?;:")
+    if _CONFIRM_DELETE.fullmatch(value):
+        return "confirm"
+    if _CANCEL_DELETE.fullmatch(value):
+        return "cancel"
+    return None
