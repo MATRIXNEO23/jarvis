@@ -4,6 +4,14 @@
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
+## Nuova prova: JARVIS ascolta già all'apertura e saluta
+
+**[Scarica la ZIP con microfono continuo, saluto vocale e nucleo reattivo](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-speech-activity-auto-start.zip)**.
+
+Aggiornamento sperimentale successivo al dialogo continuo: **microfono attivo quando apri JARVIS**, in modalità Conversazione continua GPT senza parola di attivazione, con saluto di apertura basato sull'orario locale. Il cerchio centrale è **ciano con microfono aperto ma in silenzio**, **arancione pulsante solo quando rileva la voce** e **verde pulsante mentre JARVIS risponde**. Se vuoi tornare allo standby iniziale, disattiva l'impostazione di avvio automatico in ⚙; la scelta rimane salvata per le successive aperture dell'app. Non aggiunge JARVIS all'avvio automatico di Windows.
+
+[Guida, privacy e limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/hud-speech-activity-auto-start/docs/HUD_VOICE_ACTIVITY.md) · [CI Windows/Linux SUCCESS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41151683977) · [PR #9 draft](https://github.com/MATRIXNEO23/jarvis/pull/9). **Da collaudare fisicamente sul Pavilion prima di qualunque merge.** Non sostituire la versione precedente: estrai il nuovo ZIP in una cartella separata.
+
 ## Ultima prova sperimentale: JARVIS con dialogo continuo e personalità
 
 **[Scarica la ZIP con JARVIS conversazionale e HUD rinnovato](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/dialogue-continuity-personality.zip)**.
