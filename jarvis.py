@@ -410,7 +410,14 @@ def main() -> None:
                 history=workspace.recent("project",active_project_id,3)
                 earlier=[{"utente":r["utente"],"lia":r["jarvis"],
                           "tipo":r["tipo"]} for r in history]
+                # Actual step receipts outrank conversation summaries.
+                progress=[{"title":step["title"][:95],
+                           "status":step["status"],
+                           "detail":step["detail"][:110],
+                           "verified":bool(step["receipt"])}
+                          for step in workspace.project_steps(active_project_id,limit=4)]
                 return json.dumps({"breve":earlier+json.loads(short),
+                                   "progress":progress,
                                    "permanente":{"related":evidence}},
                                   ensure_ascii=False)
             except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
