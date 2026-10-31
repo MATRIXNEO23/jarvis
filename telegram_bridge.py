@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import tempfile
 import threading
 import time
@@ -64,10 +65,21 @@ def telegram_assistant_prompt(user_text,context="",pending=()):
     )[:3200]
 
 
-def clean_generated_reply(answer):
+def clean_generated_reply(answer,user_text="",already_introduced=False):
     if not isinstance(answer,str):
         return ""
     answer=" ".join(answer.split())[:430]
+    # GPT may ignore the no-reintroduction instruction; enforce it locally,
+    # except when the contact explicitly asks who is speaking.
+    if already_introduced and not re.search(
+            r"\b(?:chi sei|con chi parlo|sei jarvis)\b",
+            str(user_text),re.I):
+        answer=re.sub(
+            r"^(?:ciao[,!.\s]*)?(?:sono|qui (?:è|parla))\s+jarvis\b"
+            r"[,!.\s:;-]*(?:l['’]assistente(?: personale)? di alberto"
+            r"[,!.\s:;-]*)?",
+            "",answer,flags=re.I).strip()
+
     if any(word in answer.casefold() for word in (
             "password", "codice otp", "api hash", "private key", "t"+"oken")):
         return ""
@@ -265,7 +277,8 @@ class TelegramBridge:
             context=self.workspace.telegram_recent_context(peer_id,message.id)
             prompt=telegram_assistant_prompt(incoming_text,context)
             reply=clean_generated_reply(
-                await asyncio.to_thread(self.ask_gpt,prompt))
+                await asyncio.to_thread(self.ask_gpt,prompt),
+                incoming_text,already_introduced=not needs_intro)
         if not reply or not self._enabled.is_set():
             return
         if needs_intro and not reply.casefold().lstrip().startswith(
