@@ -222,11 +222,16 @@ class WorkspaceMemory:
         if type(current_incoming_id) is not int or current_incoming_id<=0:
             raise WorkspaceError("ID messaggio Telegram non valido.")
         with self._db() as db:
+            current=db.execute(
+                "SELECT rowid FROM telegram_events WHERE peer_id=? "
+                "AND direction='incoming' AND message_id=?",
+                (peer_id,current_incoming_id)).fetchone()
+            if not current:
+                raise WorkspaceError("Messaggio Telegram corrente non registrato.")
             rows=db.execute("""SELECT direction,kind,text FROM telegram_events
-                WHERE peer_id=?
-                  AND NOT (direction='incoming' AND message_id=?)
+                WHERE peer_id=? AND rowid<?
                 ORDER BY rowid DESC LIMIT ?""",
-                (peer_id,current_incoming_id,self.TELEGRAM_CONTEXT_LIMIT)).fetchall()
+                (peer_id,current[0],self.TELEGRAM_CONTEXT_LIMIT)).fetchall()
         items=[{"da":"contatto" if direction=="incoming" else "jarvis",
                 "testo":(text[:155] if text else
                          "[vocale senza trascrizione]" if kind=="voice"
