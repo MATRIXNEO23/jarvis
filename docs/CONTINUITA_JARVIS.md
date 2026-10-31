@@ -242,3 +242,6 @@ L'utente ha approvato un concept futuristico blu/ciano e ha chiesto di implement
 **Fonte/istruzioni:** [docs/HUD_ANIMATO.md](https://github.com/MATRIXNEO23/jarvis/blob/feature/animated-hud-interface/docs/HUD_ANIMATO.md); ZIP sperimentale dalla [cartella Download](https://github.com/MATRIXNEO23/jarvis/tree/main/Download) e direttamente `https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/animated-hud-interface.zip`.
 
 **Non dichiarare collaudata l'animazione sul Pavilion:** GitHub CI testa sintassi e matematica, non mostra la grafica live né misura la CPU reale del vecchio i3. Necessaria prova fisica con TTS attivo, audio che cambia il centro, globo rotante, console, pannello impostazioni e salvataggio file, prima di approvare l'adozione. Il ramo stabile/vecchie ZIP restano intatti; nessun merge automatico.
+
+
+**Verifica automatica conclusiva HUD:** [CI run 41148255002](https://github.com/MATRIXNEO23/jarvis/actions/runs/41148255002), **SUCCESS** su quattro job Python 3.11/3.12 Windows e Ubuntu, HEAD del ramo `83815ce94067aac212f8b5ddf7df7881325a6fbd`. Test GUI/resa 3D/consumo effettivo **non** svolti sul Pavilion; la ZIP sperimentale rimane separata e pronto per il collaudo utente.
