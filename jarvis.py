@@ -529,7 +529,9 @@ def main() -> None:
                 speak_result("Creazione del progetto annullata.")
                 return True
             try:
-                name=safe_project_name(spoken)
+                name=safe_project_name(re.sub(
+                    r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
+                    spoken.strip(),flags=re.I))
                 command_action="create"
             except ValueError:
                 speak_result("Nome non valido. Chiedimi di creare un progetto con un nome preciso.")
@@ -1355,6 +1357,15 @@ def main() -> None:
         if decision.kind in ("save_then_close", "save_as_then_close"):
             destination = path if path is not None else (
                 Path(doc_dialog.saved_path) if doc_dialog.saved_path else None)
+            if (path is None and doc_dialog.saved_path and
+                    document_owner_project_id is not None):
+                # Fresh version if the editor changed since the last save.
+                # ManagedDocuments will reuse the old file if unchanged.
+                try:
+                    destination=automatic_document_destination()
+                except (OSError,ValueError,WorkspaceError) as exc:
+                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
+                    return
             if destination is None:
                 try:
                     destination=automatic_document_destination()
@@ -1383,6 +1394,9 @@ def main() -> None:
 
     def handle_document_confirmation(spoken: str) -> None:
         nonlocal last_user_for_document
+        if save_only_waiting:
+            receive_save_only_destination(spoken)
+            return
         last_user_for_document = spoken
         if document_busy:
             announce_document("Operazione documento in corso; attendi.")
@@ -1736,10 +1750,10 @@ def main() -> None:
                             else:
                                 sync_dictation_ui(
                                     "Per dettare in altre finestre seleziona Ascolto continuo.")
-                        elif project_voice_command(spoken):
-                            pass
                         elif save_only_waiting:
                             receive_save_only_destination(spoken)
+                        elif project_voice_command(spoken):
+                            pass
                         elif doc_dialog.phase=="editing" and parse_simple_save(spoken) is not None:
                             save_document_now(spoken,explicit_name=parse_simple_save(spoken))
                         else:
