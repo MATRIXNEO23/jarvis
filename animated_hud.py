@@ -226,8 +226,9 @@ class JarvisHUD:
         header=tk.Frame(self.frame,bg=BG,height=54)
         header.pack(fill="x",padx=13,pady=(9,0))
         header_chrome=tk.Canvas(header,bg=BG,highlightthickness=0,bd=0)
+        # Created before controls, so header text/buttons paint on top.
+        # Canvas.lower() would lower an *item* and fails on Windows Tk.
         header_chrome.place(x=0,y=0,relwidth=1,relheight=1)
-        header_chrome.lower()
 
         def draw_header(event):
             header_chrome.delete("all")
