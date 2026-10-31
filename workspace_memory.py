@@ -54,6 +54,7 @@ class WorkspaceMemory:
         self.continuities=self.path.parent/"projects"
         self._projection_lock=threading.RLock()
         self._initialize()
+        self._prepare_telegram_retention()
         self._recover_unfinished()
 
     @contextmanager
@@ -102,6 +103,9 @@ class WorkspaceMemory:
                 receipt_id INTEGER, created_utc TEXT NOT NULL)""")
             db.execute("""CREATE INDEX IF NOT EXISTS tg_outbox_ready
                 ON telegram_outbox(peer_id,state,created_utc)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS telegram_peer_state(
+                peer_id INTEGER PRIMARY KEY,
+                introduced INTEGER NOT NULL DEFAULT 0 CHECK(introduced IN(0,1)))""")
             db.execute("""CREATE TABLE IF NOT EXISTS workspace_session(
                 key TEXT PRIMARY KEY, value TEXT NOT NULL)""")
             db.execute("""CREATE TABLE IF NOT EXISTS project_steps(
@@ -143,6 +147,152 @@ class WorkspaceMemory:
                     VALUES('delete',old.id,old.user_text,old.reply); END""")
             except sqlite3.OperationalError:
                 self.fts_available=False
+
+    TELEGRAM_HISTORY_LIMIT = 50
+    TELEGRAM_CONTEXT_LIMIT = 4
+
+    def _prepare_telegram_retention(self):
+        """One-time bounded migration. Preserve a fixed pre-migration backup."""
+        with self._db() as db:
+            marker=db.execute("SELECT value FROM workspace_session "
+                              "WHERE key='telegram_retention_50_v1'").fetchone()
+            if marker:
+                return
+            has_history=bool(db.execute(
+                "SELECT (SELECT COUNT(*) FROM telegram_events) + "
+                "(SELECT COUNT(*) FROM messages WHERE scope='telegram')"
+            ).fetchone()[0])
+        if has_history:
+            backup=self.path.with_name(
+                self.path.stem+".pre-telegram-50.sqlite3")
+            if not backup.exists():
+                source=sqlite3.connect(str(self.path),timeout=6)
+                try:
+                    target=sqlite3.connect(str(backup),timeout=6)
+                    try:
+                        source.backup(target)
+                    finally:
+                        target.close()
+                finally:
+                    source.close()
+        # All changes and the version marker are committed together.
+        with self._db() as db:
+            db.execute("""INSERT OR IGNORE INTO telegram_peer_state(peer_id,introduced)
+                SELECT DISTINCT peer_id,1 FROM telegram_events
+                WHERE direction='outgoing'
+                  AND (lower(text) LIKE '%jarvis%'
+                       OR lower(text) LIKE '%assistente di alberto%')""")
+            peer_ids=[row[0] for row in db.execute(
+                "SELECT DISTINCT peer_id FROM telegram_events").fetchall()]
+            for peer_id in peer_ids:
+                db.execute("""DELETE FROM telegram_events
+                    WHERE peer_id=? AND rowid NOT IN
+                    (SELECT rowid FROM telegram_events WHERE peer_id=?
+                     ORDER BY rowid DESC LIMIT ?)""",
+                    (peer_id,peer_id,self.TELEGRAM_HISTORY_LIMIT))
+            # Old paired turns are superseded by the canonical event log.
+            # This also prevents a second unbounded hidden chat history.
+            db.execute("DELETE FROM messages WHERE scope='telegram'")
+            db.execute("""INSERT OR REPLACE INTO workspace_session(key,value)
+                VALUES('telegram_retention_50_v1','1')""")
+
+    @staticmethod
+    def _check_peer(peer_id):
+        if type(peer_id) is not int or peer_id<=0:
+            raise WorkspaceError("Contatto Telegram non valido.")
+
+    def telegram_needs_introduction(self,peer_id:int) -> bool:
+        self._check_peer(peer_id)
+        with self._db() as db:
+            row=db.execute("SELECT introduced FROM telegram_peer_state "
+                           "WHERE peer_id=?",(peer_id,)).fetchone()
+        return not bool(row and row[0])
+
+    def telegram_mark_introduced(self,peer_id:int):
+        """Call only after Telegram confirms an introductory reply."""
+        self._check_peer(peer_id)
+        with self._db() as db:
+            db.execute("""INSERT INTO telegram_peer_state(peer_id,introduced)
+                VALUES(?,1) ON CONFLICT(peer_id)
+                DO UPDATE SET introduced=1""",(peer_id,))
+
+    def telegram_recent_context(self,peer_id:int,current_incoming_id:int) -> str:
+        """Exactly the previous four events, no FTS or whole-chat retrieval."""
+        self._check_peer(peer_id)
+        if type(current_incoming_id) is not int or current_incoming_id<=0:
+            raise WorkspaceError("ID messaggio Telegram non valido.")
+        with self._db() as db:
+            current=db.execute(
+                "SELECT rowid FROM telegram_events WHERE peer_id=? "
+                "AND direction='incoming' AND message_id=?",
+                (peer_id,current_incoming_id)).fetchone()
+            if not current:
+                raise WorkspaceError("Messaggio Telegram corrente non registrato.")
+            rows=db.execute("""SELECT direction,kind,text FROM telegram_events
+                WHERE peer_id=? AND rowid<?
+                ORDER BY rowid DESC LIMIT ?""",
+                (peer_id,current[0],self.TELEGRAM_CONTEXT_LIMIT)).fetchall()
+        items=[{"da":"contatto" if direction=="incoming" else "jarvis",
+                "testo":(text[:155] if text else
+                         "[vocale senza trascrizione]" if kind=="voice"
+                         else "[messaggio senza testo]")}
+               for direction,kind,text in reversed(rows)]
+        return json.dumps({"ultimi_messaggi":items},
+                          ensure_ascii=False,separators=(",",":"))
+
+    def telegram_export_path(self,peer_id:int) -> Path:
+        self._check_peer(peer_id)
+        return self.path.parent/"telegram_conversations"/("contatto_"+str(peer_id)+".txt")
+
+    def telegram_export_history(self,peer_id:int,contact_name:str) -> Path:
+        """On-demand TXT snapshot: no extra live archive or unbounded copies."""
+        self._check_peer(peer_id)
+        title=_trim(contact_name,90).replace("\n"," ").replace("\r"," ")
+        rows=list(reversed(self.telegram_activity(
+            peer_id,limit=self.TELEGRAM_HISTORY_LIMIT)))
+        output=["Conversazione Telegram: "+(title or str(peer_id)),
+                "Ultimi "+str(len(rows))+" messaggi conservati da Jarvis.",
+                "Il file non comprende messaggi Telegram non registrati.",""]
+        for entry in rows:
+            who="CONTATTO" if entry["direction"]=="incoming" else "JARVIS"
+            output.extend([entry["when"]+"  "+who+" ["+entry["kind"]+"]",
+                           entry["text"] or "(nessuna trascrizione disponibile)",""])
+        destination=self.telegram_export_path(peer_id)
+        destination.parent.mkdir(parents=True,exist_ok=True)
+        temporary=destination.with_name(destination.name+"."+uuid4().hex+".tmp")
+        try:
+            temporary.write_text("\n".join(output)+"\n",encoding="utf-8")
+            os.replace(temporary,destination)
+        finally:
+            if temporary.exists():
+                temporary.unlink()
+        return destination
+
+    def telegram_clear_history(self,peer_id:int) -> None:
+        """Delete this contact's events only. Keep permissions, outbox and intro."""
+        self._check_peer(peer_id)
+        # Abort if a previously exported TXT cannot be removed (e.g. open file).
+        exported=self.telegram_export_path(peer_id)
+        if exported.exists():
+            exported.unlink()
+        # The one-time migration snapshot may contain old messages for this peer.
+        # Scrub this peer there too, without touching other contacts/projects.
+        backup=self.path.with_name(self.path.stem+".pre-telegram-50.sqlite3")
+        if backup.exists():
+            archived=sqlite3.connect(str(backup),timeout=6)
+            try:
+                with archived:
+                    archived.execute("DELETE FROM telegram_events WHERE peer_id=?",
+                                     (peer_id,))
+                    archived.execute(
+                        "DELETE FROM messages WHERE scope='telegram' AND scope_id=?",
+                        (str(peer_id),))
+            finally:
+                archived.close()
+        with self._db() as db:
+            db.execute("DELETE FROM telegram_events WHERE peer_id=?",(peer_id,))
+            db.execute("DELETE FROM messages WHERE scope='telegram' AND scope_id=?",
+                       (str(peer_id),))
 
     def create_project(self,name:str) -> str:
         name=_trim(name,65)
@@ -284,6 +434,10 @@ class WorkspaceMemory:
         if scope not in ("general","project","telegram") or kind not in (
                 "chat","action","clarify","error"):
             raise WorkspaceError("Tipo di memoria non valido.")
+        if scope=="telegram":
+            # Telegram is recorded once in telegram_events (50 per contact).
+            # Never create a second, unbounded copy in messages.
+            return False
         if (scope=="project" and (not self.project(scope_id)
                                    or self.project(scope_id)["trashed"])) or (
                 scope=="general" and scope_id!="general") or (
@@ -714,7 +868,13 @@ class WorkspaceMemory:
                    peer_id,direction,message_id,kind,text,time_utc)
                    VALUES(?,?,?,?,?,?)""",
                 (peer_id,direction,message_id,_trim(kind,28),
-                 _trim(text,550),_now()))
+                 _trim(text,4096),_now()))
+            if r.rowcount:
+                db.execute("""DELETE FROM telegram_events
+                    WHERE peer_id=? AND rowid NOT IN
+                    (SELECT rowid FROM telegram_events WHERE peer_id=?
+                     ORDER BY rowid DESC LIMIT ?)""",
+                    (peer_id,peer_id,self.TELEGRAM_HISTORY_LIMIT))
         return bool(r.rowcount)
 
     def telegram_transcript(self,peer_id:int,message_id:int,text:str):
@@ -725,7 +885,7 @@ class WorkspaceMemory:
             cur=db.execute(
                 "UPDATE telegram_events SET text=? WHERE peer_id=? "
                 "AND direction='incoming' AND message_id=? AND kind='voice'",
-                (_trim(text,550),peer_id,message_id))
+                (_trim(text,4096),peer_id,message_id))
         return bool(cur.rowcount)
 
     def telegram_counts(self,peer_id:int):
@@ -747,7 +907,7 @@ class WorkspaceMemory:
         with self._db() as db:
             rows=db.execute(
                 "SELECT direction,kind,text,time_utc FROM telegram_events "
-                "WHERE peer_id=? ORDER BY time_utc DESC,message_id DESC LIMIT ?",
-                (peer_id,min(100,max(1,int(limit))))).fetchall()
+                "WHERE peer_id=? ORDER BY rowid DESC LIMIT ?",
+                (peer_id,min(self.TELEGRAM_HISTORY_LIMIT,max(1,int(limit))))).fetchall()
         return tuple({"direction":d,"kind":k,"text":text,"when":when}
                      for d,k,text,when in rows)

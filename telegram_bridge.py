@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import tempfile
 import threading
 import time
@@ -42,8 +43,10 @@ def telegram_assistant_prompt(user_text,context="",pending=()):
     return (
         "Sei JARVIS, assistente personale di Alberto che risponde su Telegram "
         "dal suo account, con autorizzazione. Non sei Alberto e non fingere "
-        "di essere lui. Informa chiaramente il contatto che parla il suo "
-        "assistente, in modo naturale. Rispondi SEMPRE in italiano, "
+        "di essere lui. Il sistema gestisce la presentazione iniziale: "
+        "NON ripetere spontaneamente 'Sono Jarvis' o 'l'assistente di Alberto' "
+        "nelle risposte successive, a meno che il contatto chieda chi sei. "
+        "Rispondi SEMPRE in italiano, "
         "brevemente (massimo 2-3 frasi, 300 caratteri), con tono rispettoso, "
         "discreto, eventualmente ironia lieve, mai flirt o impersonificazione. "
         "Non promettere appuntamenti, non condividere password, dati privati, "
@@ -62,10 +65,21 @@ def telegram_assistant_prompt(user_text,context="",pending=()):
     )[:3200]
 
 
-def clean_generated_reply(answer):
+def clean_generated_reply(answer,user_text="",already_introduced=False):
     if not isinstance(answer,str):
         return ""
     answer=" ".join(answer.split())[:430]
+    # GPT may ignore the no-reintroduction instruction; enforce it locally,
+    # except when the contact explicitly asks who is speaking.
+    if already_introduced and not re.search(
+            r"\b(?:chi sei|con chi parlo|sei jarvis)\b",
+            str(user_text),re.I):
+        answer=re.sub(
+            r"^(?:ciao[,!.\s]*)?(?:sono|qui (?:è|parla))\s+jarvis\b"
+            r"[,!.\s:;-]*(?:l['’]assistente(?: personale)? di alberto"
+            r"[,!.\s:;-]*)?",
+            "",answer,flags=re.I).strip()
+
     if any(word in answer.casefold() for word in (
             "password", "codice otp", "api hash", "private key", "t"+"oken")):
         return ""
@@ -248,25 +262,30 @@ class TelegramBridge:
                          "Telegram: messaggio ricevuto, nessuna risposta per limite frequenza."))
             return
         notes=self.workspace.pending_for_contact(peer_id)
+        needs_intro=self.workspace.telegram_needs_introduction(peer_id)
         # Authorized owner messages must be relayed verbatim. Never rely on
         # GPT to decide whether to include or paraphrase an approved note.
         delivering=notes[:1]
         if delivering:
-            relay="Sono JARVIS, l'assistente di Alberto. "
-            relay+="Mi ha incaricato di riferirti questo: "
+            relay="Mi ha incaricato di riferirti questo: "
             relay+=delivering[0]["message"]
             if len(relay)>500:
                 raise TelegramBridgeError(
                     "Messaggio da riferire troppo lungo per un solo vocale.")
             reply=relay
         else:
-            context=self.workspace.prompt_context(
-                "telegram",str(peer_id),incoming_text,budget=820)
+            context=self.workspace.telegram_recent_context(peer_id,message.id)
             prompt=telegram_assistant_prompt(incoming_text,context)
             reply=clean_generated_reply(
-                await asyncio.to_thread(self.ask_gpt,prompt))
+                await asyncio.to_thread(self.ask_gpt,prompt),
+                incoming_text,already_introduced=not needs_intro)
         if not reply or not self._enabled.is_set():
             return
+        if needs_intro and not reply.casefold().lstrip().startswith(
+                ("sono jarvis","ciao, sono jarvis","ciao sono jarvis")):
+            reply="Ciao, sono Jarvis, l'assistente di Alberto. "+reply
+        if len(reply)>500:
+            raise TelegramBridgeError("Risposta Telegram oltre il limite.")
         with tempfile.TemporaryDirectory(prefix="jarvis-tg-out-") as folder:
             audio_path=await asyncio.to_thread(
                 make_telegram_voice,reply,Path(folder),self.voice_name)
@@ -290,8 +309,8 @@ class TelegramBridge:
             self._last_sent[peer_id]=time.monotonic()
             self.workspace.telegram_event(
                 peer_id,"outgoing",sent.id,"voice",reply)
-            self.workspace.add_turn(
-                "telegram",str(peer_id),incoming_text,reply)
+            if needs_intro:
+                self.workspace.telegram_mark_introduced(peer_id)
             if note_ids:
                 self.workspace.finish_notes(peer_id,note_ids,sent.id)
             self.notify(("telegram_sent",peer_name))

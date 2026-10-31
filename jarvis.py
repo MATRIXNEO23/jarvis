@@ -1207,13 +1207,13 @@ def main() -> None:
                     padx=12,pady=8)
         log.pack(fill="both",expand=True)
         try:
-            records=workspace.telegram_activity(peer_id,limit=60)
+            records=workspace.telegram_activity(peer_id,limit=50)
             for item in reversed(records):
                 direction=("RICEVUTO" if item["direction"]=="incoming"
                            else "JARVIS HA RISPOSTO")
                 log.insert("end",item["when"]+"  "+direction
                            +" ["+item["kind"]+"]\n"
-                           +item["text"][:260]+"\n\n")
+                           +item["text"]+"\n\n")
             workspace.mark_telegram_read(peer_id)
         except (OSError,sqlite3.Error,WorkspaceError) as exc:
             log.insert("end","Archivio Telegram non leggibile: "+str(exc)[:100])
@@ -1371,6 +1371,49 @@ def main() -> None:
                    "risposte automatiche disattivate per sicurezza.")
         return True
 
+    def open_telegram_history(peer_id:int) -> None:
+        allowed={c["id"]:c["name"] for c in selected_telegram_contacts()}
+        if workspace is None or peer_id not in allowed:
+            messagebox.showwarning("Telegram","Contatto non autorizzato.",
+                                   parent=root)
+            return
+        try:
+            path=workspace.telegram_export_history(peer_id,allowed[peer_id])
+            if os.name=="nt":
+                os.startfile(str(path))
+            else:
+                webbrowser.open(path.as_uri())
+        except (OSError,sqlite3.Error,WorkspaceError) as exc:
+            messagebox.showerror("Telegram",
+                "Non posso aprire la conversazione: "+str(exc)[:150],parent=root)
+
+    def clear_telegram_history(peer_id:int) -> None:
+        allowed={c["id"]:c["name"] for c in selected_telegram_contacts()}
+        if workspace is None or peer_id not in allowed:
+            messagebox.showwarning("Telegram","Contatto non autorizzato.",
+                                   parent=root)
+            return
+        if not messagebox.askyesno(
+                "Telegram — cancella cronologia",
+                "Cancellare i messaggi Telegram salvati di "+
+                allowed[peer_id]+"?\n\n"
+                "Non verranno cancellati contatto, autorizzazioni, "
+                "messaggi in attesa né lo stato della presentazione. "
+                "I messaggi eliminati non potranno essere recuperati "
+                "dall'archivio attivo.",
+                parent=root,default="no"):
+            return
+        try:
+            workspace.telegram_clear_history(peer_id)
+        except (OSError,sqlite3.Error,WorkspaceError) as exc:
+            messagebox.showerror("Telegram",
+                "Non posso cancellare la cronologia: "+str(exc)[:150],
+                parent=root)
+            return
+        messagebox.showinfo("Telegram",
+                            "Cronologia locale cancellata per "+
+                            allowed[peer_id]+".",parent=root)
+
     def open_telegram_contact_list() -> None:
         nonlocal telegram_contacts_dialog
         if (telegram_contacts_dialog is not None
@@ -1379,7 +1422,9 @@ def main() -> None:
             return
         telegram_contacts_dialog=TelegramContactsWindow(
             root,settings.get("telegram_contacts",[]),
-            load_telegram_contacts_for_ui,save_telegram_contact_selection)
+            load_telegram_contacts_for_ui,save_telegram_contact_selection,
+            on_open_history=open_telegram_history,
+            on_clear_history=clear_telegram_history)
 
     def send_owner_telegram_voice(peer_id:int,name:str,message:str) -> bool:
         """Explicit owner-initiated, one-shot OGG/Opus send; no GPT needed."""

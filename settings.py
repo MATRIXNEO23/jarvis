@@ -34,6 +34,11 @@ def normalize_telegram_contacts(value) -> list[dict]:
 
 
 def default_path() -> Path:
+    # Trial launcher redirects Jarvis's own settings, workspace, preferences,
+    # Telegram auth and add-ons without replacing the user's live installation.
+    trial_home=os.environ.get("JARVIS_TRIAL_HOME")
+    if trial_home:
+        return Path(trial_home)/"settings.json"
     base = os.environ.get("LOCALAPPDATA")
     if not base:
         base = str(Path.home() / ".local" / "share")
