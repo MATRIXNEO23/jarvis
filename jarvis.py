@@ -119,8 +119,14 @@ def main() -> None:
     workspace=None
     try:
         workspace=WorkspaceMemory()
+        recovered=workspace.current_project()
+        if recovered is not None:
+            restored=workspace.project(recovered)
+            active_project_id=recovered
+            active_context_label.set("Contesto: "+restored["name"][:35])
         workspace_status.set(
-            "Memoria progetti: "+str(len(workspace.projects()))+" progetti locali.")
+            "Memoria progetti: "+str(len(workspace.projects()))+" progetti locali."
+            + (" Ripreso: "+restored["name"][:40] if recovered else ""))
     except (OSError,sqlite3.Error,WorkspaceError) as exc:
         workspace_status.set("Memoria progetti non disponibile: "+str(exc)[:120])
     telegram_bridge=None
@@ -488,6 +494,12 @@ def main() -> None:
             active_context_label.set("Contesto: "+project["name"][:35])
         else:
             active_context_label.set("Contesto: GENERALE")
+        if workspace is not None:
+            try:
+                workspace.select_project(project_id)
+            except (OSError,sqlite3.Error,WorkspaceError) as exc:
+                workspace_status.set("Contesto non salvato: "+str(exc)[:100])
+                return
         active_project_id=project_id
         conversation_epoch+=1
         conversation_memory.clear()
