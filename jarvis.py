@@ -1205,9 +1205,11 @@ def main() -> None:
     def start_conversation_gpt(spoken: str) -> None:
         """Send one speech turn with the latest completed dialogue attached.
 
-        Called on the UI thread. The previous response is committed to short
-        memory before the next queued turn is sent to GPT.
+        Local self-diagnostics ALWAYS take precedence over conversational
+        model guesses about access to Jarvis's own files.
         """
+        if not closing and try_self_diagnostic(spoken):
+            return
         if (busy_gpt or closing or voice_mode.get() != GPT_CONVERSATION
                 or not gpt_enabled.get() or not active_gpt):
             return
@@ -1496,7 +1498,9 @@ def main() -> None:
     ask_button = ttk.Button(buttons_row, text="Chiedi a GPT")
     ask_button.pack(side="left", padx=(0, 4))
     plan_button = ttk.Button(buttons_row, text="Pianifica attività")
-    plan_button.pack(side="left")
+    plan_button.pack(side="left", padx=(0, 4))
+    diagnostic_button = ttk.Button(buttons_row, text="Autodiagnosi Jarvis")
+    diagnostic_button.pack(side="left")
 
     # Native Tk text with a dark ttk scrollbar matches the concept's
     # streamlined chat panel without third-party UI or web technologies.
@@ -2022,12 +2026,19 @@ def main() -> None:
         threading.Thread(target=worker, daemon=True).start()
 
     def submit_gpt() -> None:
-        if not gpt_enabled.get() or not active_gpt or busy_gpt or closing:
+        if closing:
             return
-        reconcile_document_session(force=True)
         message = request.get().strip()
         if not message:
             return
+        # The "Chiedi a GPT" control must not bypass local diagnostics.
+        # This stays usable offline and avoids a misleading GPT refusal.
+        if try_self_diagnostic(message):
+            request.set("")
+            return
+        if not gpt_enabled.get() or not active_gpt or busy_gpt:
+            return
+        reconcile_document_session(force=True)
         if project_voice_command(message):
             request.set("")
             return
@@ -2683,6 +2694,8 @@ def main() -> None:
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
     plan_button.configure(command=submit_plan)
+    diagnostic_button.configure(
+        command=lambda: try_self_diagnostic("Jarvis, fai un'autodiagnosi"))
     dictation_button.configure(command=toggle_dictation)
     voice_correction_button.configure(command=show_voice_corrections)
     choose_save_button.configure(command=choose_save_destination)
