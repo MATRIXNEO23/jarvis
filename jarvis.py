@@ -555,22 +555,23 @@ def main() -> None:
                     items.append({"id":"projects:more","kind":"project",
                                   "name":"Altri progetti: "
                                          +str(len(projects)-33)})
-                peer_id=settings.get("telegram_peer_id",0)
-                if peer_id:
+                for contact in selected_telegram_contacts()[:12]:
+                    peer_id=contact["id"]
                     counts=workspace.telegram_counts(peer_id)
                     if counts["received"] or counts["replied"]:
                         items.append({
                             "id":"telegram:"+str(peer_id),
                             "kind":"telegram",
-                            "name":settings.get("telegram_contact_name","Contatto")
-                                   +" · ricevuti "+str(counts["received"])
-                                   +" / risposti "+str(counts["replied"])
-                                   +" / nuovi "+str(counts["unread"])})
+                            "name":contact["name"]+
+                                   " · ricevuti "+str(counts["received"])+
+                                   " / risposti "+str(counts["replied"])+
+                                   " / nuovi "+str(counts["unread"])})
                     notes=workspace.pending_for_contact(peer_id)
                     if notes:
-                        items.append({"id":"telegram:pending",
+                        items.append({"id":"telegram:pending:"+str(peer_id),
                                       "kind":"pending",
-                                      "name":"Da riferire: "+str(len(notes))})
+                                      "name":contact["name"]+
+                                      " · da riferire: "+str(len(notes))})
                 orbit_nodes_cache=tuple(items[:36])
                 workspace_status.set(
                     "Progetti: "+str(len(projects))+" attivi. "
@@ -1183,12 +1184,12 @@ def main() -> None:
                 on_renamed=renamed_project,on_trashed=trashed_project)
         project_dialog.show()
 
-    def telegram_activity_window() -> None:
-        peer_id=settings.get("telegram_peer_id",0)
-        if workspace is None or not peer_id:
+    def telegram_activity_window(peer_id:int=0) -> None:
+        allowed={c["id"]:c["name"] for c in selected_telegram_contacts()}
+        if workspace is None or peer_id not in allowed:
             return
         win=tk.Toplevel(root)
-        win.title("JARVIS // Telegram — cronologia del contatto")
+        win.title("JARVIS // Telegram — "+allowed[peer_id])
         win.geometry("640x420")
         log=tk.Text(win,wrap="word",bg="#031522",fg="#d7f6ff",
                     padx=12,pady=8)
@@ -1208,9 +1209,14 @@ def main() -> None:
 
     def orbit_open(identifier:str) -> None:
         if identifier.startswith("telegram:"):
-            if identifier=="telegram:pending":
-                write_line("JARVIS > Messaggi da riferire in attesa del contatto.")
-            telegram_activity_window()
+            parts=identifier.split(":")
+            if len(parts)==3 and parts[1]=="pending":
+                write_line("TELEGRAM > Messaggi da riferire ancora in attesa.")
+            try:
+                peer_id=int(parts[-1])
+            except ValueError:
+                return
+            telegram_activity_window(peer_id)
         elif identifier=="projects:more":
             open_project_manager()
         else:
