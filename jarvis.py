@@ -18,6 +18,8 @@ from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
 from project_voice import (parse_project_voice, safe_project_name,
                            find_existing_project, project_delete_response)
+from dialogue_focus import (focus_hint, PendingProjectReference,
+                            normalized_utterance,is_ambiguous_short_reply)
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
 from settings import default_path
@@ -255,6 +257,7 @@ def main() -> None:
     pending_project_name = False
     pending_project_rename_id = None
     pending_project_trash_id = None
+    pending_project_reference = PendingProjectReference()
     diagnostic_busy = False
     save_only_waiting = False
     conversation_memory = ConversationMemory()
@@ -411,46 +414,65 @@ def main() -> None:
             return False
 
     def recent_memory_for_gpt(spoken: str) -> str:
+        """Bounded recall with the *real* active project and latest question."""
         short=conversation_memory.context(max_chars=860)
+        question=conversation_memory.last_question()
+
+        def attach(raw,*,project_name=""):
+            hint=focus_hint(spoken,active_project_name=project_name,
+                            last_question=question)
+            try:
+                parsed=json.loads(raw)
+            except (ValueError,TypeError):
+                return raw
+            if isinstance(parsed,list):
+                parsed={"breve":parsed}
+            if not isinstance(parsed,dict):
+                return raw
+            if hint:
+                parsed["focus"]=hint
+            return json.dumps(parsed,ensure_ascii=False)
+
         if active_project_id is not None:
             if workspace is None:
-                return short
+                return attach(short)
             try:
-                p=workspace.project(active_project_id)
+                project=workspace.project(active_project_id)
                 saved=json.loads(workspace.prompt_context(
                     "project",active_project_id,spoken,budget=620))
                 evidence=saved.get("evidence",[])
-                if p and p["summary"]:
+                if project and project["summary"]:
                     evidence.insert(0,{"source":"conversation",
-                        "when":p["updated_utc"],
+                        "when":project["updated_utc"],
                         "fact":"Stato progetto fornito dall'utente: "
-                                +p["summary"][:260]})
+                                +project["summary"][:260]})
                 history=workspace.recent("project",active_project_id,3)
-                earlier=[{"utente":r["utente"],"lia":r["jarvis"],
-                          "tipo":r["tipo"]} for r in history]
-                # Actual step receipts outrank conversation summaries.
+                earlier=[{"utente":item["utente"],"lia":item["jarvis"],
+                          "tipo":item["tipo"]} for item in history]
                 progress=[{"title":step["title"][:95],
                            "status":step["status"],
                            "detail":step["detail"][:110],
                            "verified":bool(step["receipt"])}
                           for step in workspace.project_steps(active_project_id,limit=4)]
-                return json.dumps({"breve":earlier+json.loads(short),
-                                   "progress":progress,
-                                   "permanente":{"related":evidence}},
-                                  ensure_ascii=False)
+                return attach(json.dumps({
+                    "breve":earlier+json.loads(short),
+                    "progress":progress,
+                    "permanente":{"related":evidence},
+                },ensure_ascii=False),
+                project_name=project["name"] if project else "")
             except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
                 workspace_status.set("Ricerca progetto: "+str(exc)[:90])
-                return short
+                return attach(short)
         if not memory_enabled.get() or durable_brain is None:
-            return short
+            return attach(short)
         try:
             long=durable_brain.prompt_context(spoken,budget=530)
         except (OSError,sqlite3.Error,BrainError) as exc:
             memory_status.set("Ricerca memoria: "+str(exc)[:90])
-            return short
-        return json.dumps({"breve":json.loads(short),
-                           "permanente":json.loads(long)},
-                          ensure_ascii=False)
+            return attach(short)
+        return attach(json.dumps({
+            "breve":json.loads(short),
+            "permanente":json.loads(long)},ensure_ascii=False))
 
     project_dialog=None
 
@@ -520,6 +542,7 @@ def main() -> None:
         conversation_epoch+=1
         conversation_memory.clear()
         pending_conversation.clear()
+        pending_project_reference.reset()
         write_line(
             "JARVIS > "+("Progetto aperto: "+project["name"]+"."
                         if project_id else "Conversazione generale ripristinata."))
@@ -583,7 +606,8 @@ def main() -> None:
                 command_action="rename"
                 target_ident=ident
             except ValueError:
-                return acknowledge("Il nuovo nome non è valido. Dimmi di rinominare il progetto.")
+                pending_project_rename_id=ident
+                return acknowledge("Quale nome preciso vuoi dare a questo progetto?")
         elif pending_project_name:
             pending_project_name = False
             if spoken.casefold().strip(" ,.!?") in ("annulla","lascia stare","niente"):
@@ -595,7 +619,8 @@ def main() -> None:
                 command_action="create"
                 target_ident=None
             except ValueError:
-                return acknowledge("Nome non valido. Chiedimi di creare un progetto con un nome preciso.")
+                pending_project_name=True
+                return acknowledge("Quale nome preciso vuoi dare al nuovo progetto?")
         else:
             try:
                 command=parse_project_voice(spoken)
@@ -603,6 +628,7 @@ def main() -> None:
                 return acknowledge(str(exc))
             if command is None:
                 return False
+            pending_project_reference.reset()
             command_action=command.action
             name=command.name
             target_ident=None
@@ -734,6 +760,88 @@ def main() -> None:
         else:
             return False
         return acknowledge(message)
+
+    def handle_project_reference(spoken: str) -> bool:
+        """Resolve 'questo progetto' only from selected scope or one answer."""
+        if workspace is None:
+            return False
+        waiting=pending_project_reference.question
+        if waiting:
+            cleaned=normalized_utterance(spoken)
+            if cleaned.casefold() in ("annulla","niente","lascia stare","no"):
+                pending_project_reference.reset()
+                write_line("JARVIS > Chiarimento annullato.")
+                speak_result("Chiarimento annullato.")
+                return True
+            # A fresh full command supersedes the old question; never replay it.
+            try:
+                if parse_project_voice(spoken) is not None:
+                    pending_project_reference.reset()
+                    return False
+            except ValueError:
+                pending_project_reference.reset()
+                return False
+            name=pending_project_reference.parse_answer(spoken)
+            if name is None:
+                pending_project_reference.reset()
+                return False
+            try:
+                name=re.sub(r"^(?:il\s+)?progetto\s+","",name,flags=re.I)
+                match=find_existing_project(workspace.projects(limit=200),name)
+                if match is None:
+                    message=("Non trovo un progetto salvato con quel nome. "
+                             "Quale progetto esistente intendi?")
+                    write_line("JARVIS > "+message)
+                    speak_result(message)
+                    return True
+                # The answer explicitly chooses the target requested by Jarvis.
+                original=waiting
+                if not switch_context(match["id"]):
+                    pending_project_reference.reset()
+                    return True
+                write_line("JARVIS > Riferimento risolto: progetto "+match["name"]+".")
+                if gpt_enabled.get() and active_gpt and not busy_gpt:
+                    # Resume the previous READ-ONLY question in *chat* mode,
+                    # never via the executor or an old capability intent.
+                    try:
+                        prompt=build_chat_prompt(
+                            original,memory_context=recent_memory_for_gpt(original))
+                        run_gpt("ask",prompt=prompt,source=original)
+                        return True
+                    except ValueError:
+                        pass
+                steps=workspace.project_steps(match["id"],limit=1)
+                last=(" Ultima attività: "+steps[0]["title"]+
+                      ", stato "+steps[0]["status"]+".") if steps else (
+                      " Nessuna attività ancora registrata.")
+                message="Progetto "+match["name"]+" selezionato."+last
+                write_line("JARVIS > "+message)
+                speak_result(message)
+                return True
+            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                pending_project_reference.reset()
+                message="Non riesco a consultare il progetto: "+str(exc)[:100]
+                write_line("JARVIS > "+message)
+                speak_result(message)
+                return True
+        if pending_project_reference.start_if_needed(
+                spoken,selected=active_project_id is not None):
+            message="Quale progetto salvato vuoi aprire per risponderti?"
+            write_line("JARVIS > "+message)
+            speak_result(message)
+            return True
+        return False
+
+    def handle_unanchored_short_reply(spoken: str) -> bool:
+        """Never pretend an isolated yes/no confirms a stale action."""
+        if (not is_ambiguous_short_reply(spoken)
+                or conversation_memory.last_question()):
+            return False
+        message="A quale domanda ti riferisci?"
+        write_line("JARVIS > "+message)
+        speak_result(message)
+        remember_exchange(spoken,message,"clarify")
+        return True
 
     def try_self_diagnostic(spoken: str) -> bool:
         """Read-only, local, bounded source analysis; no edits or network."""
@@ -1767,6 +1875,15 @@ def main() -> None:
         message = request.get().strip()
         if not message:
             return
+        if project_voice_command(message):
+            request.set("")
+            return
+        if handle_project_reference(message):
+            request.set("")
+            return
+        if handle_unanchored_short_reply(message):
+            request.set("")
+            return
         if len(message) > 5000:
             messagebox.showwarning("Testo troppo lungo", "Massimo 5000 caratteri.", parent=root)
             return
@@ -1882,6 +1999,10 @@ def main() -> None:
                                 continue
                             if project_voice_command(spoken):
                                 continue
+                            if handle_project_reference(spoken):
+                                continue
+                            if handle_unanchored_short_reply(spoken):
+                                continue
                             if try_self_diagnostic(spoken):
                                 continue
                             if maybe_queue_telegram_note(spoken):
@@ -1943,6 +2064,10 @@ def main() -> None:
                         elif save_only_waiting:
                             receive_save_only_destination(spoken)
                         elif project_voice_command(spoken):
+                            pass
+                        elif handle_project_reference(spoken):
+                            pass
+                        elif handle_unanchored_short_reply(spoken):
                             pass
                         elif try_self_diagnostic(spoken):
                             pass
@@ -2082,6 +2207,14 @@ def main() -> None:
                                 original_phrase, "Non ho capito con sicurezza. Puoi ripetere?",
                                 "clarify")
                         else:
+                            if (is_ambiguous_short_reply(original_phrase)
+                                    and intent.kind not in ("chat","clarify")):
+                                message=("Per eseguire un'azione, dimmi "
+                                         "esplicitamente cosa vuoi fare.")
+                                write_line("JARVIS > "+message)
+                                speak_result(message)
+                                remember_exchange(original_phrase,message,"clarify")
+                                continue
                             if intent.kind in ("chat", "clarify"):
                                 write_line("JARVIS > " + intent.reply)
                                 speak_result(intent.reply)
@@ -2184,8 +2317,11 @@ def main() -> None:
                             write_line("GPT > " + result.get("text", "(nessuna risposta)"))
                             speak_result(result.get("text", ""))
                             if rest and rest[0]:
-                                remember_exchange(rest[0],
-                                                  result.get("text", ""), "chat")
+                                answer=result.get("text", "")
+                                kind=("clarify" if isinstance(answer,str)
+                                      and answer.strip().endswith("?")
+                                      and answer.count("?")==1 else "chat")
+                                remember_exchange(rest[0],answer,kind)
                             gpt_status.set("GPT: connesso")
                             active_gpt = True
                         elif action == "disconnect":
@@ -2289,6 +2425,12 @@ def main() -> None:
                 execute_document_choice(decision)
                 return
         if project_voice_command(message):
+            request.set("")
+            return
+        if handle_project_reference(message):
+            request.set("")
+            return
+        if handle_unanchored_short_reply(message):
             request.set("")
             return
         if try_self_diagnostic(message):

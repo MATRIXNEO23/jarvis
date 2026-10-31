@@ -86,4 +86,7 @@ class ConversationMemory:
         if not self._turns:
             return ""
         turn = self._turns[-1]
-        return turn.jarvis if turn.kind == "clarify" else ""
+        answer = turn.jarvis.strip()
+        if turn.kind not in ("clarify", "chat") or answer.count("?") != 1:
+            return ""
+        return answer[-180:] if answer.endswith("?") else ""
