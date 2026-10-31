@@ -94,9 +94,18 @@ def parse_project_voice(utterance: str) -> ProjectVoiceCommand | None:
     text=unicodedata.normalize("NFKC",utterance).strip()
     text=_PREFIX.sub("",text).strip(" ,.!?;:")
     # Honor clear polite imperatives, but not hypothetical or quoted text.
-    text=re.sub(r"^(?:(?:per favore)\s+|(?:mi\s+)?(?:puoi|potresti)\s+)"
-                r"(?=(?:rinomina|cambia|modifica|elimina|cancella|ripristina|"
-                r"recupera|elenca|mostra|crea|apri)\b)","",text,flags=re.I)
+    text=re.sub(r"^(?:(?:per favore|vorrei)\s+|(?:mi\s+)?(?:puoi|potresti)\s+)"
+                r"(?=(?:rinomina|rinominare|cambia|cambiare|modifica|modificare|"
+                r"elimina|eliminare|cancella|cancellare|ripristina|ripristinare|"
+                r"recupera|recuperare|elenca|mostra|crea|apri)\b)","",text,flags=re.I)
+    replacements={"rinominare":"rinomina","cambiare":"cambia",
+                  "modificare":"modifica","eliminare":"elimina",
+                  "cancellare":"cancella","ripristinare":"ripristina",
+                  "recuperare":"recupera"}
+    for old_verb,new_verb in replacements.items():
+        if re.match(r"^"+old_verb+r"\b",text,re.I):
+            text=re.sub(r"^"+old_verb+r"\b",new_verb,text,flags=re.I)
+            break
     if not text:
         return None
     if _TRASH_LIST.fullmatch(text):
