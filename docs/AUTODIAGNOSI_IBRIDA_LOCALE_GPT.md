@@ -22,9 +22,13 @@ al modello, dopo una decisione esplicita dell'utente.
    conferma per l'invio al modello esterno. Rifiutando, niente è inviato.
 3. Con consenso, diagnostic_handoff.py prepara un JSON ridotto:
    massimo sei segnali AST, file relativo, riga, priorità, osservazione
-   e verifica. Gli indicatori di disponibilità non dimostrano il buon
-   funzionamento. Non contiene codice sorgente integrale, credenziali,
-   percorsi personali, file progetti, database, Telegram o log runtime.
+   e verifica. Include anche solamente i conteggi anonimi degli esiti
+   delle ultime 20 operazioni (verificate/riferite/fallite/interrotte),
+   letti dal registro locale: nessun nome, testo, percorso o identificativo
+   dell'operazione viene trasmesso. Gli indicatori di disponibilità e i
+   conteggi non dimostrano il corretto funzionamento. Non contiene
+   codice sorgente integrale, credenziali, percorsi personali, file
+   progetti, database, messaggi Telegram o log runtime.
 4. Il testo passa solo al metodo GPTClient.call("ask", prompt=...).
    Il bridge esistente richiede la connessione già autorizzata.
    La risposta GPT è un consiglio, non una verifica.
