@@ -11,7 +11,8 @@ class SettingsTests(unittest.TestCase):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
             self.assertEqual(load_settings(path), {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "",
-                                                         "memory_enabled": False})
+                                                         "memory_enabled": False,
+                                                         "auto_listen": True})
 
     def test_disable_then_reenable_persists(self):
         with TemporaryDirectory() as folder:
@@ -34,7 +35,8 @@ class SettingsTests(unittest.TestCase):
                            "tts_voice": "Voce italiana"}, path)
             self.assertEqual(load_settings(path),
                              {"gpt_enabled": False, "tts_enabled": True,
-                              "tts_voice": "Voce italiana", "memory_enabled": False})
+                              "tts_voice": "Voce italiana", "memory_enabled": False,
+                              "auto_listen": True})
 
     def test_memory_opt_in_is_persistent_and_independent(self):
         with TemporaryDirectory() as folder:
@@ -47,6 +49,17 @@ class SettingsTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 save_settings({"gpt_enabled": True,
                                "memory_enabled": "enabled"}, path)
+
+    def test_auto_listening_default_and_explicit_opt_out(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "settings.json"
+            self.assertTrue(load_settings(path)["auto_listen"])
+            save_settings({"gpt_enabled": True, "auto_listen": False}, path)
+            self.assertFalse(load_settings(path)["auto_listen"])
+            save_settings({"gpt_enabled": True, "auto_listen": True}, path)
+            self.assertTrue(load_settings(path)["auto_listen"])
+            with self.assertRaises(ValueError):
+                save_settings({"gpt_enabled": True, "auto_listen": "no"}, path)
 
     def test_existing_settings_are_migrated(self):
         with TemporaryDirectory() as folder:
