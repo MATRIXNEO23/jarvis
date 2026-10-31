@@ -92,7 +92,7 @@ class ManagedDocuments:
         saved_path=save_new_text(dest,text)
         note.saved_path=saved_path
         return DocumentOperation(
-            "saved_open","Documento salvato in "+str(saved_path)
+            "saved_open","Copia del testo salvata in "+str(saved_path)
             +". Blocco note rimane aperto.",note.ident,saved_path)
 
     def save_and_close(self, ident: str, path: Path) -> DocumentOperation:
