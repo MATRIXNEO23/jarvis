@@ -1,0 +1,78 @@
+name: Publish Jarvis hybrid local-GPT diagnostics ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-hybrid-self-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Download repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout pinned reviewed source
+        uses: actions/checkout@v4
+        with:
+          ref: 0a8d9769e6858f7f571d480d0261aba16924b4a4
+          path: source
+          persist-credentials: false
+      - name: Package source and validate manifest
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import hashlib,json
+          src=Path("source")
+          out=Path("catalog/Download/Jarvis-Autodiagnosi-Ibrida-GPT.zip")
+          out.parent.mkdir(parents=True,exist_ok=True)
+          prefix="Jarvis-Autodiagnosi-Ibrida/"
+          entries=[]
+          with ZipFile(out,"w",ZIP_DEFLATED,compresslevel=6) as z:
+              for f in sorted(src.rglob("*")):
+                  if not f.is_file():continue
+                  parts=f.relative_to(src).parts
+                  if parts[0] in ("Download",".github") or any(
+                       p in (".git",".venv","venv","__pycache__") for p in parts):
+                      continue
+                  arc=prefix+"/".join(parts)
+                  z.write(f,arc)
+                  entries.append({
+                      "path":arc,
+                      "sha256":hashlib.sha256(f.read_bytes()).hexdigest(),
+                  })
+              z.writestr(prefix+"SOURCE-COMMIT.txt","0a8d9769e6858f7f571d480d0261aba16924b4a4\n")
+              z.writestr(prefix+"SOURCE-MANIFEST.json",json.dumps(entries,indent=2))
+          with ZipFile(out) as z:
+              assert z.testzip() is None
+              names=set(z.namelist())
+              for item in ("avvia_jarvis.bat","jarvis.py","gpt_client.py",
+                           "gpt_bridge.mjs","self_diagnostics.py",
+                           "diagnostic_handoff.py","source_review.py",
+                           "memory_boundaries.py",
+                           "tests/test_diagnostic_handoff.py",
+                           "docs/AUTODIAGNOSI_IBRIDA_LOCALE_GPT.md"):
+                  assert prefix+item in names,item
+              text=z.read(prefix+"jarvis.py").decode("utf-8")
+              assert "offer_external_diagnostic_review" in text
+              assert "messagebox.askyesno(" in text
+              assert "build_external_review_prompt(" in text
+          print("VERIFIED",out,out.stat().st_size,"bytes")
+          PY
+      - name: Publish ZIP without removing prior versions
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Autodiagnosi-Ibrida-GPT.zip
+          git -C catalog commit -m "download: publish Jarvis hybrid diagnostic GPT handoff"
+          git -C catalog push origin HEAD:main
