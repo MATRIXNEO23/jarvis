@@ -85,7 +85,7 @@ class HistoryTests(unittest.TestCase):
                     peer_id,direction,message_id,kind,text,time_utc)
                     VALUES(?,?,?,?,?,?)""",
                     (123,"outgoing" if n==1 else "incoming",
-                     n,"voice",f"old {n}","2026-10-31T12:00:00+00:00"))
+                     n,"voice",("Sono Jarvis, l'assistente di Alberto" if n==1 else f"old {n}"),"2026-10-31T12:00:00+00:00"))
             conn.execute("""INSERT INTO messages(
                 scope,scope_id,user_text,reply,kind,time_utc)
                 VALUES('telegram','123','old','duplicate','chat','2026-10-31')""")
@@ -103,6 +103,21 @@ class HistoryTests(unittest.TestCase):
                                           "WHERE peer_id=123").fetchone()[0],64)
         WorkspaceMemory(self.path)
         self.assertEqual(len(migrated.telegram_activity(123,limit=100)),50)
+
+    def test_manual_owner_voice_does_not_count_as_introduction(self):
+        self.db.telegram_event(234,"outgoing",9,"voice","Messaggio dettato da Alberto")
+        self.assertTrue(self.db.telegram_needs_introduction(234))
+        with sqlite3.connect(self.path) as conn:
+            conn.execute("DELETE FROM workspace_session WHERE key='telegram_retention_50_v1'")
+        self.assertTrue(WorkspaceMemory(self.path).telegram_needs_introduction(234))
+
+    def test_full_telegram_text_retained_but_context_is_short(self):
+        content="X"*1200
+        self.db.telegram_event(123,"incoming",1,"text",content)
+        self.db.telegram_event(123,"incoming",2,"text","nuovo")
+        self.assertEqual(len(self.db.telegram_activity(123)[-1]["text"]),1200)
+        context=self.db.telegram_recent_context(123,2)
+        self.assertLess(len(context),250)
 
     def test_other_scopes_unaffected(self):
         project=self.db.create_project("Mio progetto")
