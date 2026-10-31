@@ -86,6 +86,10 @@ class OfflineSpeaker:
         """Guard recognition against the computer's own spoken output."""
         return self._busy.is_set() or time.monotonic() < self._cooldown_until
 
+    def is_speaking(self) -> bool:
+        """True only while SAPI is actually synthesizing speech, not cooldown."""
+        return self._busy.is_set()
+
     def speak(self, text: str, voice: str = "") -> bool:
         if self._closed.is_set() or not isinstance(text, str) or not text.strip():
             return False
