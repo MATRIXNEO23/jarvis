@@ -13,6 +13,7 @@ import sqlite3
 from conversation_memory import ConversationMemory
 from adaptive_voice import SpeechCorrections, SpeechCorrectionError
 from second_brain import SecondBrain, BrainError
+from animated_hud import JarvisHUD, BG, PANEL, CYAN, MUTED, WHITE, GREEN, AMBER
 from desktop_dictation import DesktopDictation, dictation_voice_action
 from conversation_router import (
     ConversationRejected, build_conversation_prompt, parse_conversation_intent,
@@ -39,13 +40,47 @@ from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK,
 def main() -> None:
     settings = load_settings()
     root = tk.Tk()
-    root.title("Jarvis — alpha")
-    root.geometry("840x740")
-    root.minsize(630, 560)
+    root.title("JARVIS // Interfaccia")
+    root.geometry("1260x730")
+    root.minsize(940, 580)
+    root.configure(bg=BG)
 
-    frame = ttk.Frame(root, padding=15)
+    # Every existing setting remains available without crowding the main HUD.
+    # The settings window is created once, hidden until the user presses ⚙.
+    settings_window = tk.Toplevel(root)
+    settings_window.title("JARVIS // Impostazioni")
+    settings_window.geometry("850x740")
+    settings_window.minsize(650, 480)
+    settings_window.withdraw()
+    settings_window.protocol("WM_DELETE_WINDOW", settings_window.withdraw)
+    settings_canvas = tk.Canvas(settings_window, bg=BG, highlightthickness=0)
+    settings_scrollbar = ttk.Scrollbar(
+        settings_window, orient="vertical", command=settings_canvas.yview)
+    settings_scrollbar.pack(side="right", fill="y")
+    settings_canvas.pack(side="left", fill="both", expand=True)
+    settings_canvas.configure(yscrollcommand=settings_scrollbar.set)
+    settings_inner = ttk.Frame(settings_canvas)
+    settings_item = settings_canvas.create_window(
+        (0, 0), window=settings_inner, anchor="nw")
+    settings_inner.bind(
+        "<Configure>",
+        lambda event: settings_canvas.configure(
+            scrollregion=settings_canvas.bbox("all")))
+    settings_canvas.bind(
+        "<Configure>",
+        lambda event: settings_canvas.itemconfigure(
+            settings_item, width=event.width))
+
+    def show_settings() -> None:
+        settings_window.deiconify()
+        settings_window.lift()
+        settings_window.focus_set()
+
+    hud = JarvisHUD(root, show_settings)
+    frame = ttk.Frame(settings_inner, padding=15)
     frame.pack(fill="both", expand=True)
-    ttk.Label(frame, text="Jarvis", font=("Segoe UI", 17, "bold")).pack(anchor="w")
+    ttk.Label(frame, text="Impostazioni JARVIS",
+              font=("Segoe UI", 17, "bold")).pack(anchor="w")
     mic_status = tk.StringVar(value="Microfono: SPENTO all'avvio")
     ttk.Label(frame, textvariable=mic_status, wraplength=710).pack(anchor="w", pady=(2, 6))
     voice_mode = tk.StringVar(value=STANDBY)
@@ -109,8 +144,11 @@ def main() -> None:
     choose_save_button = ttk.Button(document_controls, text="Scegli dove salvare",
                                     state="disabled")
     choose_save_button.pack(side="right", padx=(6, 0))
-    doc_choices = ttk.Frame(frame)
+    # Saving a document is an action, not a setting: show its choices beside
+    # the conversation. Hidden when no confirmation is pending.
+    doc_choices = ttk.Frame(hud.command_host)
     doc_choices.pack(fill="x", pady=(0, 5))
+    doc_choices.pack_forget()
     doc_save_button = ttk.Button(doc_choices, text="Salva e chiudi", state="disabled")
     doc_save_button.pack(side="left", padx=(0, 6))
     doc_discard_button = ttk.Button(doc_choices, text="Esci senza salvare", state="disabled")
@@ -153,8 +191,22 @@ def main() -> None:
         memory_status.set("Second Brain: disattivato, conversazione breve solo in RAM.")
 
     def write_line(text: str) -> None:
+        # One chronological console for speech, answers, confirmed actions,
+        # status changes and error messages. The UI log is not a command queue.
+        label = text.strip()
+        low = label.casefold()
+        role = ("utente" if low.startswith((
+                    "utente >", "tu >", "domanda a gpt >", "comando locale >"))
+                else "azione" if low.startswith((
+                    "documento >", "[completed]", "correzione voce >"))
+                else "jarvis" if low.startswith((
+                    "jarvis >", "gpt >", "lia >"))
+                else "errore" if (
+                    "[failed]" in low or "[rejected]" in low
+                    or low.startswith(("errore", "gpt: impossibile")))
+                else "sistema")
         output.configure(state="normal")
-        output.insert("end", text + "\n\n")
+        output.insert("end", label + "\n\n", role)
         output.see("end")
         output.configure(state="disabled")
 
@@ -462,22 +514,32 @@ def main() -> None:
         wraplength=710
     ).pack(anchor="w", pady=(0, 4))
 
-    ttk.Separator(frame, orient="horizontal").pack(fill="x", pady=(13, 8))
-    ttk.Label(frame, text="Digita un comando locale oppure una domanda per GPT").pack(anchor="w", pady=(0, 6))
-    input_row = ttk.Frame(frame)
+    # Conversation is always visible at the left of the animated HUD.
+    input_row = ttk.Frame(hud.command_host)
     input_row.pack(fill="x")
     request = tk.StringVar()
     input_box = ttk.Entry(input_row, textvariable=request)
     input_box.pack(side="left", fill="x", expand=True, padx=(0, 6))
-    local_button = ttk.Button(input_row, text="Esegui locale")
-    local_button.pack(side="left", padx=(0, 5))
-    ask_button = ttk.Button(input_row, text="Chiedi a GPT")
-    ask_button.pack(side="left", padx=(0, 5))
-    plan_button = ttk.Button(input_row, text="Pianifica attività")
+    buttons_row = ttk.Frame(hud.command_host)
+    buttons_row.pack(fill="x", pady=(6, 0))
+    local_button = ttk.Button(buttons_row, text="Esegui locale")
+    local_button.pack(side="left", padx=(0, 4))
+    ask_button = ttk.Button(buttons_row, text="Chiedi a GPT")
+    ask_button.pack(side="left", padx=(0, 4))
+    plan_button = ttk.Button(buttons_row, text="Pianifica attività")
     plan_button.pack(side="left")
 
-    output = scrolledtext.ScrolledText(frame, height=10, wrap="word", state="disabled", font=("Consolas", 10))
-    output.pack(fill="both", expand=True, pady=(12, 0))
+    output = scrolledtext.ScrolledText(
+        hud.console_host, height=12, wrap="word", state="disabled",
+        font=("Consolas", 10), bg=PANEL, fg=WHITE, insertbackground=CYAN,
+        relief="flat", borderwidth=0, padx=9, pady=6,
+        selectbackground="#136488", selectforeground=WHITE)
+    output.tag_configure("utente", foreground="#b1d9f5", spacing3=6)
+    output.tag_configure("jarvis", foreground=CYAN, spacing3=6)
+    output.tag_configure("azione", foreground=GREEN, spacing3=6)
+    output.tag_configure("errore", foreground=AMBER, spacing3=6)
+    output.tag_configure("sistema", foreground=MUTED, spacing3=6)
+    output.pack(fill="both", expand=True)
     write_line("Jarvis locale pronto. Scrivi 'aiuto' per vedere i comandi disponibili.")
 
     try:
