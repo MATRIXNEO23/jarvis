@@ -1,3 +1,17 @@
+# Ultima build Jarvis — timer vocale e impostazioni (31/10/2026)
+
+**[SCARICA JARVIS COMPLETO — TIMER VOCALE + HUD](./Jarvis-Timer-Vocale-20261031.zip)**
+
+**File esatto:** `Jarvis-Timer-Vocale-20261031.zip`. Versione completa di prova Windows 10 in ZIP di sorgenti Python (non .exe); un solo `avvia_jarvis.bat`. Contiene il Jarvis HUD corretto, GPT esterno, voce, documenti, memoria, progetti, Telegram, add-on e tutti i controlli precedenti.
+
+**Nuovo:** timer locale apribile dicendo «timer» e avviabile con «timer dieci minuti». Popup digitale separato con Start, Pausa, Stop, Reset e regolazione manuale ore/minuti/secondi. Quattro suonerie offline con prova, volume e ripetizione **dentro le impostazioni esistenti**, ora più navigabili senza rimuovere alcuna funzione.
+
+Estrarre in **cartella nuova** e avviare `avvia_jarvis.bat`. Profilo dati sperimentale separato, account GPT e Telegram reali quando connessi. Test automatici Windows e Ubuntu 4/4 PASS; collaudo di microfono e suoni sul Pavilion ancora necessario. Codice su PR #33 separata dal ramo main.
+
+[Documentazione timer](https://github.com/MATRIXNEO23/jarvis/blob/feature/timer-popup-settings-20261031/docs/TIMER_POPUP_E_SUONERIE.md)
+
+---
+
 # Download — ultima build completa di Jarvis (31/10/2026)
 
 ## Jarvis HUD Riferimento — interfaccia corretta
