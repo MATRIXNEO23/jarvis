@@ -145,6 +145,7 @@ class TimerPopup:
         self.remaining = 600.0
         self.deadline = 0.0
         self.running = False
+        self.paused = False
         self._last_label = ""
         self._timer_id: str | None = None
         self._alarm_stop = threading.Event()
@@ -277,6 +278,9 @@ class TimerPopup:
 
     def start(self, seconds: int | None = None) -> bool:
         self.show()
+        if seconds is None and self.paused and self.remaining > 0:
+            self.resume()
+            return True
         duration = seconds if seconds is not None else self._read_inputs()
         if duration is None or not 1 <= duration <= 359999:
             self.status.set("Indica un tempo valido.")
@@ -287,6 +291,7 @@ class TimerPopup:
         self.remaining = float(duration)
         self.deadline = time.monotonic() + duration
         self.running = True
+        self.paused = False
         self._sync_inputs()
         self.status.set("Conto alla rovescia")
         self._draw(force=True)
@@ -301,6 +306,7 @@ class TimerPopup:
         self._draw()
         if self.remaining <= 0:
             self.running = False
+            self.paused = False
             self.status.set("ALLARME")
             self._silence()
             self._alarm_stop = threading.Event()
@@ -317,6 +323,7 @@ class TimerPopup:
         if self.running:
             self.remaining = max(0, self.deadline - time.monotonic())
             self.running = False
+            self.paused = True
             self._cancel_tick()
             self.status.set("In pausa")
             self._draw()
@@ -330,11 +337,13 @@ class TimerPopup:
         self._silence()
         self.deadline = time.monotonic() + self.remaining
         self.running = True
+        self.paused = False
         self.status.set("Conto alla rovescia")
         self._tick()
 
     def stop(self) -> None:
         self.running = False
+        self.paused = False
         self._cancel_tick()
         self._silence()
         if self._alive():
