@@ -2205,9 +2205,24 @@ def main() -> None:
         try:
             while True:
                 kind, *data = output_queue.get_nowait()
-                if kind == "self_audit":
+                if kind == "self_audit_progress":
+                    run_id,phase,completed,total=data
+                    if diagnostic_session.progress(
+                            run_id,phase,completed,total):
+                        update_diagnostic_ui()
+                        if completed==0 or phase=="inventario":
+                            write_line("DIAGNOSTICA > "+phase+
+                                       ": "+str(completed)+"/"+str(total)+
+                                       " file.")
+                elif kind == "self_audit":
+                    run_id,audit=data
+                    if not diagnostic_session.finish(run_id,succeeded=True):
+                        # Late result of a timed-out run: NEVER replace
+                        # a newer diagnosis or send it to GPT.
+                        continue
                     diagnostic_busy=False
-                    audit=data[0]
+                    update_diagnostic_ui()
+                    write_line("DIAGNOSTICA > Verifica locale terminata.")
                     last_diagnostic_audit=audit
                     write_line("DIAGNOSTICA > "+format_audit(audit))
                     write_line("DIAGNOSTICA > Se vuoi un parere del modello "
@@ -2231,10 +2246,17 @@ def main() -> None:
                         pending_external_review=False
                         offer_external_diagnostic_review()
                 elif kind == "self_audit_error":
+                    run_id,error_type=data
+                    if not diagnostic_session.finish(run_id,succeeded=False):
+                        continue
                     diagnostic_busy=False
                     pending_external_review=False
-                    write_line("DIAGNOSTICA > Errore di lettura: "+str(data[0])[:180])
-                    speak_result("Non sono riuscito a completare la diagnosi dei sorgenti.")
+                    update_diagnostic_ui()
+                    write_line("DIAGNOSTICA > Analisi non completata. "
+                               "Errore locale: "+str(error_type)[:90]+
+                               ". Puoi riprovare con il pulsante.")
+                    speak_result("La diagnosi non è riuscita. "
+                                 "Ho scritto il tipo di errore nella console.")
                 elif kind == "project_journal_error":
                     workspace_status.set("Esito progetto non registrato: "+str(data[0])[:100])
                 elif kind == "telegram_status":
@@ -2712,6 +2734,26 @@ def main() -> None:
                 refresh_buttons()
         except queue.Empty:
             pass
+
+        # A worker can hang or crash before delivering a queue result.
+        # The time limit makes the UI recover without falsely claiming
+        # the underlying background thread was terminated.
+        check=diagnostic_session.check()
+        if check=="timeout":
+            diagnostic_busy=False
+            pending_external_review=False
+            update_diagnostic_ui()
+            write_line("DIAGNOSTICA > Tempo massimo superato (120 s). "
+                       "Ho sbloccato l'interfaccia; il vecchio controllo "
+                       "potrebbe ancora essere attivo. Risultati tardivi ignorati.")
+            speak_result("La diagnosi non risponde. "
+                         "Ho sbloccato i comandi, senza modificare file.")
+        elif check=="stalled":
+            update_diagnostic_ui()
+            write_line("DIAGNOSTICA > Nessun avanzamento da 12 secondi. "
+                       "Il controllo è ancora attivo; scadrà dopo 120 secondi.")
+        elif diagnostic_session.active:
+            update_diagnostic_ui()
 
         try:
             while True:
