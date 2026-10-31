@@ -32,6 +32,7 @@ class AddonBinding:
     availability: Callable[[], bool]
     handler: Callable[..., object]
     requires_approval: bool = True
+    available_for_gpt: bool = False
 
 
 class LiveCapabilityRegistry:
@@ -53,7 +54,8 @@ class LiveCapabilityRegistry:
                 or any(ord(c) < 32 for c in binding.description)
                 or not callable(binding.availability)
                 or not callable(binding.handler)
-                or type(binding.requires_approval) is not bool):
+                or type(binding.requires_approval) is not bool
+                or type(binding.available_for_gpt) is not bool):
             raise ValueError("Registrazione add-on non valida o senza handler.")
         with self._lock:
             if binding.action_id not in self._addon and len(self._addon) >= _MAX_ADAPTERS:
@@ -80,7 +82,9 @@ class LiveCapabilityRegistry:
                 # An add-on is visible but cannot issue GPT tool commands
                 # without a separately reviewed local dispatcher binding.
                 "status": "installed" if verified else "disabled",
-                "mode": "informativo_non_azione_GPT",
+                "mode": ("gateway_locale_verificato" if
+                         binding.available_for_gpt else
+                         "informativo_non_azione_GPT"),
             })
         return tuple(reports)
 
@@ -160,7 +164,10 @@ def capability_status_prompt(snapshot: dict, max_chars: int = 850) -> str:
         "whatsapp": "non_implementato",
         "addon": [
             {"id":a["id"],"stato":a["status"],
-             "funzione":a["does"][:52],"esecuzione_GPT":"non_abilitata"}
+             "funzione":a["does"][:52],
+             "esecuzione_GPT":("tramite_gateway_locale" if
+                 a.get("mode")=="gateway_locale_verificato" and
+                 a.get("status")=="installed" else "non_abilitata")}
             for a in snapshot.get("addons", ())[:5]
         ],
     }
