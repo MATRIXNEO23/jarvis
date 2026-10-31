@@ -4,6 +4,16 @@
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
+## Ultima interfaccia di prova: JARVIS high fidelity
+
+**[Scarica JARVIS HUD più fedele al concept originale (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/high-fidelity-reference-hud.zip)**.
+
+L'interfaccia sperimentale è stata rielaborata con **illuminazione rasterizzata, nuovi bagliori nel reattore**, un globo terrestre con continenti e luci più ricchi, cornici hi-tech più marcate, una console chat a piena altezza e strumenti **CPU / RAM / DISCO C / RETE** con valori reali o --. Il pulsante microfono e la freccia di invio sono visibili nel campo principale; le funzioni aggiuntive restano dietro **⋯**.
+
+Il codice genera gli elementi PNG pesanti **una sola volta in un worker**, e anima quelli precalcolati per non sovraccaricare continuamente l'i3-2100. Non aggiunge API, librerie grafiche o costi. Rimangono l'ascolto automatico all'apertura dell'app, il saluto vocale, il dialogo GPT, il Second Brain e il cerchio **ciano nel silenzio / arancione quando parli / verde quando parla Jarvis**.
+
+**Branch isolato:** questa non è una sostituzione della versione funzionante. Estrarre in una cartella nuova, confrontare realmente sul Pavilion con l'immagine di riferimento e approvare separatamente l'eventuale integrazione. [Guida](https://github.com/MATRIXNEO23/jarvis/blob/feature/high-fidelity-reference-hud/docs/HUD_HIGH_FIDELITY.md) · [PR #10](https://github.com/MATRIXNEO23/jarvis/pull/10).
+
 ## Nuova prova: JARVIS ascolta già all'apertura e saluta
 
 **[Scarica la ZIP con microfono continuo, saluto vocale e nucleo reattivo](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-speech-activity-auto-start.zip)**.
