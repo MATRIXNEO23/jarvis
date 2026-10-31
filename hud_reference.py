@@ -123,6 +123,45 @@ def coast_samples():
 LAND = coast_samples()
 
 
+def _inside_land(lon,lat,poly):
+    """Point-in-polygon for decorative ocean/land shading samples."""
+    inside=False
+    previous=poly[-1]
+    for current in poly:
+        x1,y1=previous
+        x2,y2=current
+        if ((y1>lat)!=(y2>lat)):
+            crossing=x1+(lat-y1)*(x2-x1)/(y2-y1)
+            if lon<crossing:
+                inside=not inside
+        previous=current
+    return inside
+
+
+def land_texture():
+    rng=random.Random(47)
+    points=[]
+    for polygon in COASTS:
+        low_lon=min(p[0] for p in polygon)
+        high_lon=max(p[0] for p in polygon)
+        low_lat=min(p[1] for p in polygon)
+        high_lat=max(p[1] for p in polygon)
+        lon=int(low_lon)
+        while lon<=int(high_lon):
+            lat=int(low_lat)
+            while lat<=int(high_lat):
+                jitter_lon=lon+rng.uniform(-2,2)
+                jitter_lat=lat+rng.uniform(-2,2)
+                if _inside_land(jitter_lon,jitter_lat,polygon):
+                    points.append((jitter_lat,jitter_lon))
+                lat+=5
+            lon+=5
+    rng.shuffle(points)
+    return tuple(points[:170])
+
+LAND_TEXTURE = land_texture()
+
+
 def _ellipse(c,cx,cy,r,*,outline="",fill="",width=1):
     return c.create_oval(cx-r,cy-r,cx+r,cy+r,outline=outline,fill=fill,width=width)
 
@@ -318,6 +357,7 @@ class GlobeArt:
         self.canvas=None
         self.earth_coast=[]
         self.earth_lights=[]
+        self.land_texture_items=[]
         self.meridians=[]
         self.latitudes=[]
         self.orbits=[]
@@ -362,8 +402,15 @@ class GlobeArt:
                              outline="#3f9dcc",width=1,
                              smooth=False) for _ in COASTS
         ]
+        # Sparse terrain texture creates visible continental depth while
+        # remaining far cheaper than redrawing a raster globe on the old i3.
+        tones=("#257497","#3f8baa","#70b3bf","#5585a3")
+        self.land_texture_items=[
+            _ellipse(c,-8,-8,.7,fill=tones[i%len(tones)])
+            for i in range(len(LAND_TEXTURE))
+        ]
         self.earth_lights=[_ellipse(c,-8,-8,1.3,
-                                    fill="#c2d2bc") for _ in LIGHTS]
+                                    fill="#ead6a2") for _ in LIGHTS]
         # Front transparent-looking equator and orbiting cyan paths.
         self.orbits=[
             c.create_arc(cx-r*1.14,cy-r*.36,cx+r*1.14,cy+r*.36,
@@ -402,7 +449,7 @@ class GlobeArt:
         c=self.canvas
         cx,cy,r=self.geometry
         # One full rotation takes several minutes; never block voice commands.
-        turn=phase*.09
+        turn=phase*.045
         for item,poly in zip(self.earth_coast,COASTS):
             visible=clip_coast(poly,turn,r)
             if visible:
@@ -411,6 +458,14 @@ class GlobeArt:
                 c.itemconfigure(item,state="normal")
             else:
                 c.itemconfigure(item,state="hidden")
+        for item,(lat,lon) in zip(self.land_texture_items,LAND_TEXTURE):
+            p=projected_earth_point(lat,lon,turn,r)
+            if p is None:
+                c.itemconfigure(item,state="hidden")
+            else:
+                x,y=cx+p[0],cy+p[1]
+                c.coords(item,x-.7,y-.7,x+.7,y+.7)
+                c.itemconfigure(item,state="normal")
         for item,(lat,lon) in zip(self.earth_lights,LIGHTS):
             pos=projected_earth_point(lat,lon,turn,r)
             if pos is None:
