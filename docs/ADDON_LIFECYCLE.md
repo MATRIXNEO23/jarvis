@@ -6,7 +6,7 @@
 1. Aprire **Impostazioni → Add-on → Gestisci add-on**.
 2. Premere **Installa / aggiorna...** e scegliere un file `.jaddon`. Un pacchetto dimostrativo facoltativo si trova in `examples/addons/DiagnosticaSistema.jaddon`. Nessun file di esempio si installa da solo.
 3. Il pacchetto viene controllato e salvato in `%LOCALAPPDATA%\\Jarvis\\addons`; per sicurezza nasce **SPENTO**. Anche un aggiornamento a una versione maggiore spegne il vecchio add-on e revoca l'autorizzazione, finché l'utente non lo riattiva.
-4. Selezionare l'add-on nella lista e premere **Attiva / Disattiva**; confermare la sua attivazione. Le modifiche hanno effetto alla prossima richiesta a GPT, senza riconnettere l'account Sign in with ChatGPT e senza reinstallare un modello locale.
+4. Selezionare l'add-on nella lista e premere **Attiva / Disattiva**; confermare la sua attivazione. Jarvis conserva anche un registro di autorizzazioni separato in `%LOCALAPPDATA%\\Jarvis\\addons-approvals.json`: copiare un file nell'archivio degli add-on non lo rende attivo, nemmeno alterando il flag `enabled`. Le modifiche hanno effetto alla prossima richiesta a GPT, senza riconnettere l'account Sign in with ChatGPT e senza reinstallare un modello locale.
 5. **Rimuovi** elimina la registrazione dell'add-on scelto, dopo conferma. **Ricarica** verifica lo stato dei file. La disattivazione non cancella il pacchetto.
 6. In modalità conversazione GPT, oppure in console testuale con richieste brevi, Jarvis comunica le capacità attive al GPT. Il modello può suggerire l'ID approvato; soltanto il dispatcher locale lo traduce nel comando realmente autorizzato.
 
@@ -23,7 +23,7 @@ L'ID azione deve essere `addon.<id>.<azione>`. Il manifesto non può dichiarare 
 - **Disattiva / rimuovi:** l'azione non può essere proposta da nuove richieste, né eseguita dopo la revoca.
 - **Aggiorna:** versione incrementata, autorizzazione revocata, registrazione aggiornata e nuovo consenso per riattivare.
 - **Riavvia Jarvis:** lo stato autorizzato è ricostruito dai file JSON locali; mai da memoria GPT o messaggi di chat.
-- **Modifica manuale / file corrotto:** il file viene ignorato se la sua integrità interna non coincide con quella registrata; non si esegue codice proveniente da esso. Se l'archivio non è leggibile, l'elenco eseguibile va considerato non disponibile.
+- **Modifica manuale / file corrotto:** il file viene ignorato se la sua integrità interna non coincide con quella registrata, oppure se il registro separato di autorizzazioni non conferma lo stesso hash; non si esegue codice proveniente da esso. Se l'archivio non è leggibile, l'elenco eseguibile va considerato non disponibile.
 - **GPT restituisce una vecchia capacità:** il parser, il dispatcher e il worker la controllano nuovamente. Una proposta obsoleta viene respinta senza esecuzione.
 
 ## Confini di fiducia e componenti
