@@ -2408,10 +2408,15 @@ def main() -> None:
         )
 
     def submit_local(event=None, message_override: str | None = None,
-                     source_utterance: str = "") -> None:
+                     source_utterance: str = "",
+                     addon_action_id: str = "") -> None:
         nonlocal busy_local, last_user_for_action, project_local_ticket
         nonlocal local_operation_id
         if busy_local or closing:
+            return
+        if addon_action_id and (addon_manager is None or not
+                                addon_manager.is_active(addon_action_id)):
+            write_line("ADD-ON > Comando rifiutato: add-on non più autorizzato.")
             return
         message = (message_override if message_override is not None else request.get()).strip()
         if not message:
@@ -2446,7 +2451,13 @@ def main() -> None:
         def worker() -> None:
             try:
                 with local_execution_lock:
-                    result = engine.execute(message)
+                    if addon_action_id and (
+                            addon_manager is None or not
+                            addon_manager.is_active(addon_action_id)):
+                        result=TaskResult("-","addon","rejected",
+                                          "Add-on disattivato prima dell'esecuzione.")
+                    else:
+                        result = engine.execute(message)
                 output_queue.put(("local", result))
             except Exception:
                 output_queue.put(("local", TaskResult("-", "internal", "failed",
@@ -3024,7 +3035,10 @@ def main() -> None:
                                     elif not busy_local:
                                         submit_local(
                                             message_override=cap.plan.steps[0].command,
-                                            source_utterance=original_phrase)
+                                            source_utterance=original_phrase,
+                                            addon_action_id=(cap.action_id if
+                                                cap.action_id.startswith("addon.")
+                                                else ""))
                                     else:
                                         speak_result("Operazione in corso, riprova.")
                                 elif cap.handler == "telegram_voice_dialog":
