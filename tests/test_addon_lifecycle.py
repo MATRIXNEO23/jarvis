@@ -187,6 +187,20 @@ class AddonLifecycleTests(unittest.TestCase):
                 self.root,pkg(version="2.0.0",core="explorer.drive_c")))
         self.assertTrue(self.manager.is_active(self.action))
 
+    def test_typed_console_uses_same_approved_intent_bridge(self):
+        source=(Path(__file__).resolve().parents[1]/"jarvis.py").read_text(
+            encoding="utf-8")
+        start=source.index("    def submit_gpt() -> None:")
+        stop=source.index("    def diagnostic_heartbeat() -> None:",start)
+        typed=source[start:stop]
+        self.assertIn('run_gpt("typed_conversation"',typed)
+        self.assertIn("addon_actions=active_addon_actions()",typed)
+        self.assertIn("build_conversation_prompt(",typed)
+        self.assertIn("build_chat_prompt(",typed)  # long text remains chat only
+        self.assertIn('action in ("conversation","typed_conversation")',source)
+        self.assertIn('addon_resolver=(addon_manager.resolve',source)
+        self.assertIn("addon_manager.is_active(addon_action_id)",source)
+
     def test_longest_voice_request_never_truncated_by_addons(self):
         self._install()
         self.manager.set_enabled("monitor",True)
