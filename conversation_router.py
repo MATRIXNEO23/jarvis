@@ -11,6 +11,7 @@ import json
 import re
 
 from action_planner import ApprovedPlan, PlanRejected, parse_plan
+from dialogue_focus import single_question
 from jarvis_persona import PERSONA, CONTEXT_RULE, compact_memory
 from capability_registry import (
     CapabilityRejected, ResolvedCapability, capability_prompt,
@@ -56,6 +57,10 @@ def build_conversation_prompt(
         PERSONA
         + "Modalità conversazione e interpretazione per Jarvis Windows. "
         "Rispondi SOLTANTO con UN oggetto JSON, niente markdown. "
+        "Se la frase è breve, usala come risposta all'ultima domanda "
+        "esplicita presente nel campo focus; senza domanda non supporre il significato. "
+        "Per 'questo progetto' usa esclusivamente il progetto selezionato nel focus. "
+        "Se serve una precisazione, chiedi UNA domanda concreta, non un elenco. "
         "Se si tratta di una domanda o di una replica a una domanda "
         "precedente, usa "
         '{"kind":"chat","reply":"risposta breve in italiano"}. '
@@ -144,7 +149,10 @@ def parse_conversation_intent(
     if kind in ("chat", "clarify"):
         if set(obj) != {"kind", "reply"}:
             raise ConversationRejected("Campi non consentiti per risposta testuale.")
-        return ConversationIntent(kind=kind, reply=_plain_text(obj["reply"], MAX_REPLY))
+        reply=_plain_text(obj["reply"], MAX_REPLY)
+        if kind=="clarify":
+            reply=single_question(reply)
+        return ConversationIntent(kind=kind, reply=reply)
 
     if kind == "capability":
         if set(obj) != {"kind", "action_id", "arguments"}:
