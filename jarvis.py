@@ -761,6 +761,77 @@ def main() -> None:
             return False
         return acknowledge(message)
 
+    def handle_project_reference(spoken: str) -> bool:
+        """Resolve 'questo progetto' only from selected scope or one answer."""
+        if workspace is None:
+            return False
+        waiting=pending_project_reference.question
+        if waiting:
+            cleaned=normalized_utterance(spoken)
+            if cleaned.casefold() in ("annulla","niente","lascia stare","no"):
+                pending_project_reference.reset()
+                write_line("JARVIS > Chiarimento annullato.")
+                speak_result("Chiarimento annullato.")
+                return True
+            # A fresh full command supersedes the old question; never replay it.
+            try:
+                if parse_project_voice(spoken) is not None:
+                    pending_project_reference.reset()
+                    return False
+            except ValueError:
+                pending_project_reference.reset()
+                return False
+            name=pending_project_reference.parse_answer(spoken)
+            if name is None:
+                pending_project_reference.reset()
+                return False
+            try:
+                name=re.sub(r"^(?:il\s+)?progetto\s+","",name,flags=re.I)
+                match=find_existing_project(workspace.projects(limit=200),name)
+                if match is None:
+                    message=("Non trovo un progetto salvato con quel nome. "
+                             "Quale progetto esistente intendi?")
+                    write_line("JARVIS > "+message)
+                    speak_result(message)
+                    return True
+                # The answer explicitly chooses the target requested by Jarvis.
+                original=waiting
+                if not switch_context(match["id"]):
+                    pending_project_reference.reset()
+                    return True
+                write_line("JARVIS > Riferimento risolto: progetto "+match["name"]+".")
+                if gpt_enabled.get() and active_gpt and not busy_gpt:
+                    # Resume the previous READ-ONLY question in *chat* mode,
+                    # never via the executor or an old capability intent.
+                    try:
+                        prompt=build_chat_prompt(
+                            original,memory_context=recent_memory_for_gpt(original))
+                        run_gpt("ask",prompt=prompt,source=original)
+                        return True
+                    except ValueError:
+                        pass
+                steps=workspace.project_steps(match["id"],limit=1)
+                last=(" Ultima attività: "+steps[0]["title"]+
+                      ", stato "+steps[0]["status"]+".") if steps else (
+                      " Nessuna attività ancora registrata.")
+                message="Progetto "+match["name"]+" selezionato."+last
+                write_line("JARVIS > "+message)
+                speak_result(message)
+                return True
+            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                pending_project_reference.reset()
+                message="Non riesco a consultare il progetto: "+str(exc)[:100]
+                write_line("JARVIS > "+message)
+                speak_result(message)
+                return True
+        if pending_project_reference.start_if_needed(
+                spoken,selected=active_project_id is not None):
+            message="Quale progetto salvato vuoi aprire per risponderti?"
+            write_line("JARVIS > "+message)
+            speak_result(message)
+            return True
+        return False
+
     def try_self_diagnostic(spoken: str) -> bool:
         """Read-only, local, bounded source analysis; no edits or network."""
         nonlocal diagnostic_busy
@@ -1793,6 +1864,9 @@ def main() -> None:
         message = request.get().strip()
         if not message:
             return
+        if handle_project_reference(message):
+            request.set("")
+            return
         if len(message) > 5000:
             messagebox.showwarning("Testo troppo lungo", "Massimo 5000 caratteri.", parent=root)
             return
@@ -1908,6 +1982,8 @@ def main() -> None:
                                 continue
                             if project_voice_command(spoken):
                                 continue
+                            if handle_project_reference(spoken):
+                                continue
                             if try_self_diagnostic(spoken):
                                 continue
                             if maybe_queue_telegram_note(spoken):
@@ -1969,6 +2045,8 @@ def main() -> None:
                         elif save_only_waiting:
                             receive_save_only_destination(spoken)
                         elif project_voice_command(spoken):
+                            pass
+                        elif handle_project_reference(spoken):
                             pass
                         elif try_self_diagnostic(spoken):
                             pass
@@ -2210,8 +2288,11 @@ def main() -> None:
                             write_line("GPT > " + result.get("text", "(nessuna risposta)"))
                             speak_result(result.get("text", ""))
                             if rest and rest[0]:
-                                remember_exchange(rest[0],
-                                                  result.get("text", ""), "chat")
+                                answer=result.get("text", "")
+                                kind=("clarify" if isinstance(answer,str)
+                                      and answer.strip().endswith("?")
+                                      and answer.count("?")==1 else "chat")
+                                remember_exchange(rest[0],answer,kind)
                             gpt_status.set("GPT: connesso")
                             active_gpt = True
                         elif action == "disconnect":
@@ -2315,6 +2396,9 @@ def main() -> None:
                 execute_document_choice(decision)
                 return
         if project_voice_command(message):
+            request.set("")
+            return
+        if handle_project_reference(message):
             request.set("")
             return
         if try_self_diagnostic(message):
