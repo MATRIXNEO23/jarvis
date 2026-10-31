@@ -113,11 +113,11 @@ def _outline_box(canvas, w, h, color="#124a6e", inset=4, cut=14):
 
 
 class MetricTile:
-    def __init__(self,parent,label):
-        self.canvas=tk.Canvas(parent,height=82,bg="#020c17",
-                              highlightthickness=1,
-                              highlightbackground="#104968",bd=0)
-        self.canvas.pack(side="left",fill="both",expand=True,padx=4)
+    """Identical-size telemetry cells: parent controls the four-column grid."""
+    def __init__(self,parent,label,column):
+        self.canvas=tk.Canvas(parent,width=130,height=92,bg="#020b15",
+                              highlightthickness=0,bd=0)
+        self.canvas.grid(row=0,column=column,sticky="nsew",padx=4)
         self.label=label
         self.value=None
         self.caption="--"
@@ -316,8 +316,10 @@ class JarvisHUD:
         self.main_visuals=tk.Frame(self.visual,bg=BG)
         self.main_visuals.pack(fill="both",expand=True)
         self.main_visuals.grid_rowconfigure(0,weight=1)
-        self.main_visuals.grid_columnconfigure(0,weight=11)
-        self.main_visuals.grid_columnconfigure(1,weight=9)
+        # The reference keeps the reactor dominant but leaves room for a
+        # recognizable, fully framed Earth (no clip or flattened disk).
+        self.main_visuals.grid_columnconfigure(0,weight=11,minsize=250)
+        self.main_visuals.grid_columnconfigure(1,weight=9,minsize=220)
         self.core_canvas=tk.Canvas(
             self.main_visuals,bg=BG,bd=0,
             highlightthickness=0,width=440,height=490)
@@ -336,12 +338,18 @@ class JarvisHUD:
                  bg=BG,fg="#60abc5",
                  font=("Consolas",9),pady=3).pack(fill="x")
 
-        footer=tk.Frame(self.visual,bg=BG,height=108)
-        footer.pack(fill="x",pady=(7,3))
-        self.cpu_tile=MetricTile(footer,"CPU")
-        self.ram_tile=MetricTile(footer,"RAM")
-        self.disk_tile=MetricTile(footer,"DISCO C")
-        self.network_tile=MetricTile(footer,"RETE")
+        footer=tk.Frame(self.visual,bg=BG,height=102)
+        footer.pack(fill="x",pady=(8,4))
+        # Tk pack gave each Canvas a different requested natural width:
+        # at narrower sizes DISCO C became visibly smaller than CPU/RAM.
+        # A uniform weighted grid guarantees equal panel proportions.
+        for column in range(4):
+            footer.grid_columnconfigure(column,weight=1,uniform="telemetry")
+        footer.grid_rowconfigure(0,weight=1)
+        self.cpu_tile=MetricTile(footer,"CPU",0)
+        self.ram_tile=MetricTile(footer,"RAM",1)
+        self.disk_tile=MetricTile(footer,"DISCO C",2)
+        self.network_tile=MetricTile(footer,"RETE",3)
         # Connectivity remains visible in the header and nucleus status card;
         # the fourth telemetry tile shows only real measured traffic.
         # Compatibility with previous public HUD state API.
