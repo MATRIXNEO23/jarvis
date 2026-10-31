@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import queue
+import shutil
 from collections import deque
 import json
 import re
@@ -24,6 +25,9 @@ from dialogue_focus import (focus_hint, PendingProjectReference,
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
 from diagnostic_session import DiagnosticSession
+from runtime_diagnostics import (RuntimeEventCounters,
+                                 collect_runtime_evidence,
+                                 format_runtime_evidence)
 from diagnostic_handoff import (build_external_review_prompt,
                                 is_external_review_request, wants_external_advice,
                                 summarize_operation_outcomes)
@@ -283,6 +287,8 @@ def main() -> None:
     diagnostic_session = DiagnosticSession()
     diagnostic_threads = []
     last_diagnostic_audit = None
+    last_runtime_evidence = None
+    runtime_events = RuntimeEventCounters()
     pending_external_review = False
     save_only_waiting = False
     conversation_memory = ConversationMemory()
@@ -944,6 +950,34 @@ def main() -> None:
         speak_result(message)
         return True
 
+    def snapshot_runtime_evidence():
+        """Sample actual local objects without making a GPT call or opening a mic.
+
+        Runs only on Tk main thread after the source audit has completed.
+        Source inspection stays on its existing isolated worker.
+        """
+        return collect_runtime_evidence(
+            gpt_enabled=bool(gpt_enabled.get()),
+            gpt_connected=bool(active_gpt),
+            sdk_installed=service.installed_sdk().is_file(),
+            node_available=bool(shutil.which("node")),
+            bridge_file_present=(Path(__file__).resolve().parent
+                                 / "gpt_bridge.mjs").is_file(),
+            bridge_running=service.bridge_running(),
+            voice_present=voice is not None,
+            voice_mode=voice_mode.get(),
+            voice_listening=voice.is_listening() if voice is not None else False,
+            voice_model_present=(voice.model_dir.is_dir()
+                                 if voice is not None else False),
+            local_engine_present=engine is not None,
+            local_store_present=(engine.db_path.is_file()
+                                 if engine is not None else False),
+            workspace_present=workspace is not None,
+            workspace_store_present=(workspace.path.is_file()
+                                     if workspace is not None else False),
+            counters=runtime_events,
+        )
+
     def offer_external_diagnostic_review() -> bool:
         """Explicitly confirm sending *redacted findings*, not local files."""
         if last_diagnostic_audit is None:
@@ -964,9 +998,10 @@ def main() -> None:
             "Vuoi inviare al GPT collegato soltanto un rapporto tecnico "
             "ridotto dell'autodiagnosi?\n\n"
             "Contiene: file sorgenti RELATIVI, righe, segnali statici, "
-            "indicatori generali e CONTEGGI ANONIMI delle operazioni.\n"
+            "stati osservati dei componenti e CONTEGGI ANONIMI delle operazioni.\n"
             "NON contiene codice completo, credenziali, documenti, "
-            "log di sistema, percorsi personali né dati dei progetti.\n\n"
+            "log di sistema, percorsi personali né dati dei progetti.\n"\
+            "Gli errori contati riguardano solo questa istanza.\n\n"
             "È un'analisi di possibili miglioramenti, NON una verifica "
             "del corretto funzionamento e non autorizza modifiche.",
             parent=root)
@@ -988,7 +1023,7 @@ def main() -> None:
             except (OSError,sqlite3.Error,MemoryBoundaryError):
                 outcomes=summarize_operation_outcomes(())
             prompt=build_external_review_prompt(
-                last_diagnostic_audit,snapshot,outcomes)
+                last_diagnostic_audit,snapshot,outcomes,last_runtime_evidence)
         except (ValueError,TypeError) as exc:
             write_line("DIAGNOSTICA > Non posso preparare il rapporto: "
                        +str(exc)[:140])
@@ -1015,12 +1050,13 @@ def main() -> None:
 
     def cancel_diagnostic() -> None:
         """Stop waiting, revoke external consent and reject late results."""
-        nonlocal diagnostic_busy,pending_external_review
+        nonlocal diagnostic_busy,pending_external_review,last_runtime_evidence
         old_run=diagnostic_session.cancel()
         if old_run is None:
             return
         diagnostic_busy=False
         pending_external_review=False
+        last_runtime_evidence=None
         update_diagnostic_ui()
         write_line("DIAGNOSTICA > Richiesta #"+str(old_run)+
                    " annullata nell'interfaccia. Il worker potrebbe "
@@ -1030,7 +1066,7 @@ def main() -> None:
 
     def try_self_diagnostic(spoken: str) -> bool:
         """Local bounded audit, visible progress and recoverable worker errors."""
-        nonlocal diagnostic_busy,pending_external_review,last_diagnostic_audit
+        nonlocal diagnostic_busy,pending_external_review,last_diagnostic_audit,last_runtime_evidence
         if is_external_review_request(spoken):
             return offer_external_diagnostic_review()
         request_kind=diagnostic_request(spoken)
@@ -1072,6 +1108,7 @@ def main() -> None:
         # A new attempt invalidates the previous report; GPT must never
         # review outdated findings as though they belonged to this run.
         last_diagnostic_audit=None
+        last_runtime_evidence=None
         diagnostic_busy=True
         pending_external_review=(mode=="review" and wants_external_advice(spoken))
         write_line("DIAGNOSTICA > Avvio controllo locale #"+str(run_id)+
@@ -2217,7 +2254,7 @@ def main() -> None:
 
     def diagnostic_heartbeat() -> None:
         """Independent watchdog: runs even if another event handler fails."""
-        nonlocal diagnostic_busy,pending_external_review
+        nonlocal diagnostic_busy,pending_external_review,last_runtime_evidence
         if closing:
             return
         root.after(800,diagnostic_heartbeat)
@@ -2225,6 +2262,8 @@ def main() -> None:
         if check=="timeout":
             diagnostic_busy=False
             pending_external_review=False
+            last_runtime_evidence=None
+            runtime_events.record("diagnostic_failure")
             update_diagnostic_ui()
             write_line("DIAGNOSTICA > Tempo massimo superato (120 s). "
                        "Ho sbloccato l'interfaccia; il vecchio controllo "
@@ -2242,7 +2281,7 @@ def main() -> None:
         """Always schedule another UI tick before consuming potentially bad events."""
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         nonlocal local_operation_id, document_operation_id
-        nonlocal diagnostic_busy,last_diagnostic_audit,pending_external_review
+        nonlocal diagnostic_busy,last_diagnostic_audit,last_runtime_evidence,pending_external_review
         nonlocal last_user_for_action, last_user_for_document
         nonlocal project_local_ticket, project_document_ticket
         nonlocal document_topic,document_owner_project_id,save_only_waiting
@@ -2274,6 +2313,16 @@ def main() -> None:
                     update_diagnostic_ui()
                     write_line("DIAGNOSTICA > Verifica locale terminata.")
                     last_diagnostic_audit=audit
+                    # Real, read-only component observations from this instance.
+                    # Never claim these are end-to-end tests or Windows logs.
+                    try:
+                        last_runtime_evidence=snapshot_runtime_evidence()
+                        write_line("DIAGNOSTICA > "+
+                                   format_runtime_evidence(last_runtime_evidence))
+                    except (OSError,ValueError,TypeError,AttributeError):
+                        last_runtime_evidence=None
+                        write_line("DIAGNOSTICA > Stato runtime non rilevabile; "
+                                   "rimane disponibile la sola verifica statica.")
                     write_line("DIAGNOSTICA > "+format_audit(audit))
                     write_line("DIAGNOSTICA > Se vuoi un parere del modello "
                                "esterno, puoi chiedere: "
@@ -2301,6 +2350,8 @@ def main() -> None:
                         continue
                     diagnostic_busy=False
                     pending_external_review=False
+                    last_runtime_evidence=None
+                    runtime_events.record("diagnostic_failure")
                     update_diagnostic_ui()
                     write_line("DIAGNOSTICA > Analisi non completata. "
                                "Errore locale: "+str(error_type)[:90]+
@@ -2308,6 +2359,7 @@ def main() -> None:
                     speak_result("La diagnosi non è riuscita. "
                                  "Ho scritto il tipo di errore nella console.")
                 elif kind == "project_journal_error":
+                    runtime_events.record("project_journal_failure")
                     workspace_status.set("Esito progetto non registrato: "+str(data[0])[:100])
                 elif kind == "telegram_status":
                     telegram_status.set(str(data[0])[:220])
@@ -2323,6 +2375,7 @@ def main() -> None:
                     if telegram_bridge and data and data[0] != id(telegram_bridge):
                         continue
                     if telegram_auto.get():
+                        runtime_events.record("telegram_disconnected")
                         telegram_auto.set(False)
                         settings["telegram_enabled"]=False
                         try:
@@ -2331,6 +2384,8 @@ def main() -> None:
                             pass
                         telegram_status.set("Telegram: collegamento terminato.")
                 elif kind == "voice_status":
+                    if str(data[0]).startswith(("Microfono spento", "Voce non disponibile")):
+                        runtime_events.record("voice_unavailable")
                     if voice_mode.get() != STANDBY:
                         mic_status.set(data[0])
                     if (dictation.enabled and
@@ -2488,6 +2543,8 @@ def main() -> None:
                                 write_line("Comando non riconosciuto; dettatura invariata.")
                 elif kind == "local":
                     result = data[0]
+                    if result.status in ("failed", "rejected"):
+                        runtime_events.record("local_failure")
                     busy_local = False
                     write_line(f"[{result.status}] {result.message}")
                     source = last_user_for_action or result.action
@@ -2600,6 +2657,7 @@ def main() -> None:
                     if close_after and result.kind in ("created", "appended"):
                         ask_to_close_document(source)
                 elif kind == "document_error":
+                    runtime_events.record("document_failure")
                     document_busy = False
                     operation, reason = data
                     if doc_dialog.phase == "executing" and doc_dialog.document_id:
@@ -2740,6 +2798,7 @@ def main() -> None:
                                     announce_document(
                                         "Non ho un documento identificato da chiudere.")
                 elif kind == "conversation_error":
+                    runtime_events.record("gpt_failure")
                     busy_gpt = False
                     epoch, original_phrase, reason = data
                     if epoch == conversation_epoch and voice_mode.get() == GPT_CONVERSATION:
@@ -2781,6 +2840,7 @@ def main() -> None:
                     spoken_status.set("Voci Windows non disponibili: " + str(data[0]))
                     refresh_voices_button.configure(state="normal")
                 elif kind == "gpt_error":
+                    runtime_events.record("gpt_failure")
                     action, reason = data
                     busy_gpt = False
                     active_gpt = False if action != "ask" else active_gpt
@@ -2804,6 +2864,7 @@ def main() -> None:
                     else:
                         write_line("URL di autenticazione inatteso: apertura bloccata.")
                 elif event.get("event") == "fatal":
+                    runtime_events.record("gpt_failure")
                     conversation_epoch += 1
                     planner_abort_event.set()
                     if gpt_enabled.get():
