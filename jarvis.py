@@ -19,6 +19,8 @@ from workspace_gui import ProjectManagerWindow
 from project_voice import (parse_project_voice, safe_project_name,
                            find_existing_project, project_delete_response)
 from project_documents import parse_simple_save, project_save_destination
+from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
+from settings import default_path
 from telegram_commands import explicit_telegram_note
 from telegram_bridge import TelegramBridge
 from telegram_security import credentials_present
@@ -253,6 +255,7 @@ def main() -> None:
     pending_project_name = False
     pending_project_rename_id = None
     pending_project_trash_id = None
+    diagnostic_busy = False
     save_only_waiting = False
     conversation_memory = ConversationMemory()
     # Up to three follow-ups may arrive while the model is still responding.
@@ -731,6 +734,44 @@ def main() -> None:
         else:
             return False
         return acknowledge(message)
+
+    def try_self_diagnostic(spoken: str) -> bool:
+        """Read-only, local, bounded source analysis; no edits or network."""
+        nonlocal diagnostic_busy
+        request_kind=diagnostic_request(spoken)
+        if request_kind is None:
+            return False
+        if diagnostic_busy:
+            speak_result("Sto già verificando i file del programma.")
+            return True
+        mode,module=request_kind
+        if mode=="paths":
+            from pathlib import Path
+            source=Path(__file__).resolve().parent
+            data=(workspace.path.parent if workspace is not None
+                  else default_path().parent)
+            message=("Programma: "+str(source)+
+                     ". Archivio dei dati: "+str(data)+
+                     ". I file personali e le credenziali non vengono analizzati.")
+            write_line("DIAGNOSTICA > "+message)
+            speak_result("Conosco le cartelle del mio programma e dei dati. Le ho mostrate nel registro.")
+            return True
+        diagnostic_busy=True
+        write_line("DIAGNOSTICA > Analisi statica locale avviata, senza modificare file.")
+
+        def worker():
+            try:
+                data=(workspace.path.parent if workspace is not None
+                      else default_path().parent)
+                audit=inspect_jarvis(
+                    source_root=Path(__file__).resolve().parent,
+                    data_root=data,module=module if mode=="module" else "")
+                output_queue.put(("self_audit",audit))
+            except (OSError,ValueError,UnicodeError) as exc:
+                output_queue.put(("self_audit_error",str(exc)[:180]))
+        threading.Thread(target=worker,daemon=True,
+                         name="jarvis-static-self-inspection").start()
+        return True
 
     def open_project_manager():
         nonlocal project_dialog
@@ -1742,6 +1783,7 @@ def main() -> None:
 
     def poll() -> None:
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
+        nonlocal diagnostic_busy
         nonlocal last_user_for_action, last_user_for_document
         nonlocal project_local_ticket, project_document_ticket
         nonlocal document_topic,document_owner_project_id,save_only_waiting
@@ -1750,7 +1792,16 @@ def main() -> None:
         try:
             while True:
                 kind, *data = output_queue.get_nowait()
-                if kind == "project_journal_error":
+                if kind == "self_audit":
+                    diagnostic_busy=False
+                    audit=data[0]
+                    write_line("DIAGNOSTICA > "+format_audit(audit))
+                    speak_result(audit.summary+" I risultati completi sono nel registro.")
+                elif kind == "self_audit_error":
+                    diagnostic_busy=False
+                    write_line("DIAGNOSTICA > Errore di lettura: "+str(data[0])[:180])
+                    speak_result("Non sono riuscito a completare la diagnosi dei sorgenti.")
+                elif kind == "project_journal_error":
                     workspace_status.set("Esito progetto non registrato: "+str(data[0])[:100])
                 elif kind == "telegram_status":
                     telegram_status.set(str(data[0])[:220])
@@ -1831,6 +1882,8 @@ def main() -> None:
                                 continue
                             if project_voice_command(spoken):
                                 continue
+                            if try_self_diagnostic(spoken):
+                                continue
                             if maybe_queue_telegram_note(spoken):
                                 continue
                             # Fixed local actions do not require an online model.
@@ -1890,6 +1943,8 @@ def main() -> None:
                         elif save_only_waiting:
                             receive_save_only_destination(spoken)
                         elif project_voice_command(spoken):
+                            pass
+                        elif try_self_diagnostic(spoken):
                             pass
                         elif doc_dialog.phase=="editing" and parse_simple_save(spoken) is not None:
                             save_document_now(spoken,explicit_name=parse_simple_save(spoken))
@@ -2234,6 +2289,9 @@ def main() -> None:
                 execute_document_choice(decision)
                 return
         if project_voice_command(message):
+            request.set("")
+            return
+        if try_self_diagnostic(message):
             request.set("")
             return
         if maybe_queue_telegram_note(message):
