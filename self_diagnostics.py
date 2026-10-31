@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
+from source_review import Improvement, format_improvements, review_sources
+
 _SOURCE_SUFFIXES = frozenset({".py",".bat",".ps1",".mjs"})
 _IGNORE = frozenset({".git",".venv","venv","__pycache__","node_modules",
                      "runtime","projects","reports","downloads"})
@@ -22,6 +24,7 @@ class SourceAudit:
     summary: str
     detail: str
     findings: tuple[str,...]
+    recommendations: tuple[Improvement,...] = ()
 
 def _source_list(root: Path) -> list[Path]:
     """Only installed source files, and one level of tests; never AppData."""
@@ -50,6 +53,20 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
             r"(?:dove|in\s+quale\s+cartella)\s+(?:si\s+trova|è)\s+jarvis|"
             r"apri\s+la\s+cartella\s+(?:del\s+)?programma)",phrase):
         return ("paths","")
+    if re.fullmatch(
+            r"(?:fai(?:mi)?\s+(?:un[ao]?\s+|un['’])?autodiagnosi|"
+            r"(?:fai|prepara|esegui)\s+(?:un[ao]?\s+|un['’])?"
+            r"(?:rapporto\s+di\s+)?autodiagnosi|"
+            r"(?:analizza|esamina|studia)\s+(?:te\s+stesso|te\s+stessa)|"
+            r"(?:come\s+(?:potresti|puoi|pensi\s+di)\s+migliorarti)|"
+            r"(?:quali\s+(?:parti|aspetti)\s+(?:del\s+tuo\s+codice\s+)?"
+            r"(?:puoi|potresti)\s+migliorare)|"
+            r"(?:suggerisci|proponi|consiglia(?:mi)?)\s+"
+            r"(?:(?:dei|delle|possibili)\s+)?migliorament[io]"
+            r"(?:\s+(?:al\s+tuo\s+codice|per\s+te\s+stesso))?|"
+            r"(?:controlla|analizza|esamina)\s+(?:i\s+)?tuoi\s+file"
+            r"\s+e\s+(?:proponi|suggerisci)\s+miglioramenti)",phrase):
+        return ("review","")
     if re.fullmatch(
             r"(?:analizza|esamina|controlla|verifica|studia)\s+"
             r"(?:(?:il|i)\s+)?(?:tuo\s+)?(?:codice|programma|file|sorgenti)"
@@ -120,11 +137,14 @@ def inspect_jarvis(*,source_root: Path | None=None,
         return SourceAudit("Nessun sorgente del programma trovato.",
                "Controlla la cartella di installazione. Nessun file modificato.",
                ("I file del programma non sono disponibili qui.",))
+    recommendations=review_sources(root,files,module=module,
+                                    max_bytes=_MAX_BYTES)
     if module:
         _,names,lines=modules[0] if modules else (module,(),0)
         summary=("Modulo "+module+": "+str(lines)+" righe, "+
                  str(len(names))+" definizioni principali. "+
-                 str(len(findings))+" segnalazioni statiche.")
+                 str(len(findings))+" problemi di lettura o sintassi, "+
+                 str(len(recommendations))+" miglioramenti da valutare.")
         detail=("Cartella del programma: "+str(root)+"\n"
                 "Definizioni: "+(", ".join(names[:18]) if names else
                     "(nessuna definizione leggibile)")
@@ -133,7 +153,8 @@ def inspect_jarvis(*,source_root: Path | None=None,
         summary=(str(len(files))+" file sorgente individuati: "+
                  ", ".join(ext+" "+str(kinds[ext]) for ext in sorted(kinds))+
                  ". Python verificati staticamente: "+str(len(modules))+
-                 ". Segnalazioni: "+str(len(findings))+".")
+                 ". Segnalazioni statiche: "+str(len(findings))+
+                 ". Miglioramenti da valutare: "+str(len(recommendations))+".")
         important=("jarvis.py","workspace_memory.py","project_voice.py",
                    "managed_documents.py","telegram_bridge.py","gpt_client.py",
                    "voice_control.py")
@@ -150,8 +171,9 @@ def inspect_jarvis(*,source_root: Path | None=None,
          ("Nessun errore di sintassi individuato dai controlli statici.",
           "Questo controllo non verifica funzioni in esecuzione, malware o bug logici.",
           "Per proporre patch servono test di riproduzione e revisione del codice qui in chat."))
-    return SourceAudit(summary,detail,suggestions)
+    return SourceAudit(summary,detail,suggestions,recommendations)
 
 def format_audit(audit: SourceAudit) -> str:
     return (audit.summary+"\n"+audit.detail+
-            "\nOsservazioni:\n- "+"\n- ".join(audit.findings))[:3600]
+            "\nOsservazioni:\n- "+"\n- ".join(audit.findings)+
+            "\n\n"+format_improvements(audit.recommendations))[:6200]
