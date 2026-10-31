@@ -1,3 +1,7 @@
+> **QUESTO RAMO È LA PROVA TELEGRAM 50, NON LA VERSIONE STABILE.**  
+> [Scarica la ZIP completa del ramo Telegram 50](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/telegram-bounded-history-50.zip).  
+> Dopo aver estratto la ZIP, leggi **LEGGIMI_PROVA_TELEGRAM_50.txt** e avvia **AVVIA_TEST_TELEGRAM50.bat** (profilo dati di prova separato). Non usare il collegamento a main.zip qui sotto per questa prova.
+
 # Jarvis — Windows 10 (64 bit)
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
