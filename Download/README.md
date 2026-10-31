@@ -1,5 +1,15 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## FIX TELEGRAM — INCOLLA API HASH NELLA FINESTRA PROTETTA
+
+**[SCARICA JARVIS CON CORREZIONE API HASH TELEGRAM — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/fix/telegram-secret-paste-dialog.zip)**
+
+Questa versione corregge la difficoltà segnalata sul Pavilion: dopo avere inserito `API ID` in `configura_telegram.bat`, il precedente `getpass` in console non permetteva di incollare facilmente `API hash`. Ora compare una **finestra grafica con campo mascherato (asterischi)**, pulsante **Incolla**, **Cancella** e **Conferma**, con supporto a Ctrl+V. La stessa finestra viene usata per il codice di accesso e l'eventuale password in due passaggi.
+
+**Procedura:** chiudi la configurazione precedente, estrai la nuova ZIP in una cartella diversa, lancia `configura_telegram.bat`, inserisci l'API ID nella console e premi Invio; nella nuova finestra incolla l'API hash da `my.telegram.org`, controlla che siano comparsi gli asterischi e premi Conferma. **Non condividere la credenziale in chat.** Le risposte automatiche restano **OFF** dopo la configurazione e non viene inviato nessun messaggio di prova.
+
+Questa ZIP contiene anche l'ultima versione sperimentale con memoria per progetti, pallini orbitanti e Telegram vocale; nessun merge nella versione stabile. [Correzione isolata PR #13](https://github.com/MATRIXNEO23/jarvis/pull/13).
+
 ## ULTIMO PROTOTIPO — PROGETTI, PALLINI ORBITANTI E TELEGRAM VOCALE
 
 **[SCARICA JARVIS CON MEMORIA PER PROGETTO E TELEGRAM — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/project-memory-orbits-telegram.zip)**
