@@ -882,7 +882,7 @@ def main() -> None:
         variable=memory_enabled, command=toggle_memory)
     memory_toggle.pack(side="left", padx=(0, 10))
     memory_clear_button = ttk.Button(
-        brain_controls, text="Cancella memoria salvata", command=clear_saved_memory)
+        brain_controls, text="Cancella memoria generale (non progetti)", command=clear_saved_memory)
     memory_clear_button.pack(side="right")
     ttk.Label(frame, textvariable=memory_status, wraplength=710).pack(
         anchor="w", pady=(0, 2))
