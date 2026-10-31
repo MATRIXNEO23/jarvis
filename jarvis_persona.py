@@ -204,11 +204,20 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
     return json.dumps(packed, ensure_ascii=False, separators=(",", ":"))
 
 
-def build_chat_prompt(message: str, memory_context: str = "") -> str:
+def build_chat_prompt(message: str, memory_context: str = "",
+                      runtime_info: str = "") -> str:
     """Apply the same per-turn style as voice, preserving the current question."""
     if not isinstance(message, str) or not message.strip():
         raise ValueError("Richiesta vuota.")
     # Style affects wording only. Neither history nor style authorizes actions.
+    if not isinstance(runtime_info,str) or len(runtime_info)>850:
+        raise ValueError("Stato runtime non valido.")
+    status = (
+        " Stato verificato delle capacità Jarvis: " + runtime_info +
+        ". Le capacità sono descrittive: non puoi usare direttamente il "
+        "PC o Telegram, ma puoi indicare il comando locale disponibile. "
+        "Non dichiarare funzioni non presenti o azioni già eseguite. "
+        if runtime_info else "")
     tone = style_instruction(message)
     instruction = (
         "Se manca un dato necessario, fai una sola domanda specifica. "
@@ -218,13 +227,13 @@ def build_chat_prompt(message: str, memory_context: str = "") -> str:
         + tone + " Richiesta corrente: "
         + json.dumps(message, ensure_ascii=False)
     )
-    primary = PERSONA + instruction
+    primary = PERSONA + status + instruction
     if len(primary) > MAX_GPT_PROMPT:
         raise ValueError("Domanda troppo lunga per mantenere il contesto GPT.")
     room = MAX_GPT_PROMPT - len(primary) - len(CONTEXT_RULE) - 28
     if room >= 100:
         context = compact_memory(memory_context, min(room, 850))
-        candidate = PERSONA + CONTEXT_RULE + "Contesto (JSON): " + context + ". " + instruction
+        candidate = PERSONA + status + CONTEXT_RULE + "Contesto (JSON): " + context + ". " + instruction
         if len(candidate) <= MAX_GPT_PROMPT:
             return candidate
     return primary
