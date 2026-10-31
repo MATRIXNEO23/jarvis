@@ -75,6 +75,7 @@ from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
 from settings import load_settings, save_settings, normalize_telegram_contacts
+from jarvis_timer import TimerPopup, SOUNDS, parse_timer_command, preview_sound
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
@@ -118,23 +119,31 @@ def main() -> None:
     settings_window.minsize(650, 480)
     settings_window.withdraw()
     settings_window.protocol("WM_DELETE_WINDOW", settings_window.withdraw)
-    settings_canvas = tk.Canvas(settings_window, bg=BG, highlightthickness=0)
-    settings_scrollbar = ttk.Scrollbar(
-        settings_window, orient="vertical", command=settings_canvas.yview)
-    settings_scrollbar.pack(side="right", fill="y")
-    settings_canvas.pack(side="left", fill="both", expand=True)
-    settings_canvas.configure(yscrollcommand=settings_scrollbar.set)
-    settings_inner = ttk.Frame(settings_canvas)
-    settings_item = settings_canvas.create_window(
-        (0, 0), window=settings_inner, anchor="nw")
-    settings_inner.bind(
-        "<Configure>",
-        lambda event: settings_canvas.configure(
-            scrollregion=settings_canvas.bbox("all")))
-    settings_canvas.bind(
-        "<Configure>",
-        lambda event: settings_canvas.itemconfigure(
-            settings_item, width=event.width))
+    # Reorganize only the existing gear-opened window: no control is removed.
+    # Each existing section has its own independently scrollable category.
+    settings_tabs = ttk.Notebook(settings_window)
+    settings_tabs.pack(fill="both", expand=True, padx=8, pady=8)
+
+    def settings_page(title: str) -> ttk.Frame:
+        host = ttk.Frame(settings_tabs)
+        settings_tabs.add(host, text=title)
+        canvas = tk.Canvas(host, bg=BG, highlightthickness=0)
+        scroll = ttk.Scrollbar(host, orient="vertical", command=canvas.yview)
+        scroll.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        canvas.configure(yscrollcommand=scroll.set)
+        inner = ttk.Frame(canvas, padding=15)
+        item = canvas.create_window((0, 0), window=inner, anchor="nw")
+        inner.bind("<Configure>", lambda event: canvas.configure(
+            scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>", lambda event: canvas.itemconfigure(
+            item, width=event.width))
+        return inner
+
+    frame = settings_page("Voce")
+    assistant_settings_frame = settings_page("GPT e memoria")
+    integrations_settings_frame = settings_page("Progetti e servizi")
+    timer_settings_frame = settings_page("Timer e allarmi")
 
     def show_settings() -> None:
         settings_window.deiconify()
@@ -142,6 +151,7 @@ def main() -> None:
         settings_window.focus_set()
 
     hud = JarvisHUD(root, show_settings)
+    timer = TimerPopup(root, lambda: settings)
     workspace_status=tk.StringVar(value="Progetti: inizializzazione.")
     telegram_status=tk.StringVar(value="Telegram: disattivato.")
     active_context_label=tk.StringVar(value="Contesto: GENERALE")
@@ -179,9 +189,7 @@ def main() -> None:
     telegram_owner_busy=False
     orbit_nodes_cache=()
 
-    frame = ttk.Frame(settings_inner, padding=15)
-    frame.pack(fill="both", expand=True)
-    ttk.Label(frame, text="Impostazioni JARVIS",
+    ttk.Label(frame, text="Voce e ascolto",
               font=("Segoe UI", 17, "bold")).pack(anchor="w")
     mic_status = tk.StringVar(value=(
         "Microfono: avvio dell'ascolto continuo in preparazione..."
@@ -194,12 +202,15 @@ def main() -> None:
     mode_buttons = []
     mode_row = ttk.Frame(audio_controls)
     mode_row.pack(fill="x")
-    for label, mode in (("Standby (spento)", STANDBY),
-                        ("Premi per parlare", PUSH_TO_TALK),
-                        ("Ascolto continuo (Ehi Jarvis)", CONTINUOUS),
-                        ("Conversazione continua GPT", GPT_CONVERSATION)):
+    mode_row.columnconfigure(0, weight=1)
+    mode_row.columnconfigure(1, weight=1)
+    for index, (label, mode) in enumerate((
+            ("Standby (spento)", STANDBY),
+            ("Premi per parlare", PUSH_TO_TALK),
+            ("Ascolto continuo (Ehi Jarvis)", CONTINUOUS),
+            ("Conversazione continua GPT", GPT_CONVERSATION))):
         button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
-        button.pack(side="left", padx=(0, 12))
+        button.grid(row=index // 2, column=index % 2, sticky="w", padx=(0, 12), pady=3)
         mode_buttons.append(button)
     auto_listen_enabled = tk.BooleanVar(value=settings["auto_listen"])
     auto_listen_switch = ttk.Checkbutton(
@@ -252,6 +263,72 @@ def main() -> None:
     voice_correction_button = ttk.Button(
         dictation_row, text="Correggi voce...")
     voice_correction_button.pack(side="right", padx=(6, 0))
+
+    # Timer tone selection is part of the ORIGINAL gear settings dialog.
+    ttk.Label(timer_settings_frame, text="Timer e allarmi",
+              font=("Segoe UI", 17, "bold")).pack(anchor="w", pady=(0, 10))
+    timer_box = ttk.LabelFrame(timer_settings_frame,
+                               text="Suoneria alla scadenza", padding=12)
+    timer_box.pack(fill="x", pady=(0, 10))
+    timer_sound_label = tk.StringVar(
+        value=SOUNDS.get(settings.get("timer_sound", "digital"), SOUNDS["digital"]))
+    timer_volume = tk.DoubleVar(value=float(settings.get("timer_volume", 80)))
+    timer_volume_label = tk.StringVar(value=str(settings.get("timer_volume", 80)) + "%")
+    timer_repeat = tk.BooleanVar(value=settings.get("timer_repeat", True))
+    sound_row = ttk.Frame(timer_box)
+    sound_row.pack(fill="x", pady=5)
+    ttk.Label(sound_row, text="Suono:").pack(side="left", padx=(0, 8))
+    timer_picker = ttk.Combobox(sound_row, state="readonly",
+                                textvariable=timer_sound_label,
+                                values=list(SOUNDS.values()), width=25)
+    timer_picker.pack(side="left", padx=(0, 9))
+
+    def save_timer_preferences() -> None:
+        old = {key: settings[key] for key in
+               ("timer_sound", "timer_volume", "timer_repeat")}
+        selected = next((key for key, name in SOUNDS.items()
+                         if name == timer_sound_label.get()), "digital")
+        settings.update(timer_sound=selected,
+                        timer_volume=int(round(timer_volume.get())),
+                        timer_repeat=bool(timer_repeat.get()))
+        try:
+            save_settings(settings)
+        except (OSError, ValueError) as exc:
+            settings.update(old)
+            timer_sound_label.set(SOUNDS[old["timer_sound"]])
+            timer_volume.set(old["timer_volume"])
+            timer_repeat.set(old["timer_repeat"])
+            messagebox.showerror("Impostazioni timer", str(exc), parent=settings_window)
+
+    timer_picker.bind("<<ComboboxSelected>>",
+                      lambda event: save_timer_preferences())
+    ttk.Button(sound_row, text="▶ Prova", command=lambda: preview_sound(
+        next((key for key, name in SOUNDS.items()
+              if name == timer_sound_label.get()), "digital"),
+        int(round(timer_volume.get())))).pack(side="left")
+    volume_row = ttk.Frame(timer_box)
+    volume_row.pack(fill="x", pady=(12, 5))
+    ttk.Label(volume_row, text="Volume").pack(side="left", padx=(0, 8))
+    timer_volume_slider = ttk.Scale(volume_row, from_=0, to=100,
+                                     variable=timer_volume,
+                                     command=lambda value:
+                                     timer_volume_label.set(str(int(round(float(value)))) + "%"))
+    timer_volume_slider.pack(side="left", fill="x", expand=True)
+    ttk.Label(volume_row, textvariable=timer_volume_label, width=5).pack(side="left")
+    timer_volume_slider.bind("<ButtonRelease-1>",
+                             lambda event: save_timer_preferences())
+    timer_volume_slider.bind("<KeyRelease>",
+                             lambda event: save_timer_preferences())
+    ttk.Checkbutton(timer_box, text="Ripeti l'allarme finché non lo fermo",
+                    variable=timer_repeat, command=save_timer_preferences).pack(
+                        anchor="w", pady=(8, 2))
+    ttk.Label(timer_settings_frame,
+              text="Il timer si apre in una finestra indipendente. "
+                   "Puoi impostarlo a voce con 'timer 10 minuti', "
+                   "oppure modificare ore, minuti e secondi manualmente.",
+              wraplength=630).pack(anchor="w", pady=(3, 10))
+    ttk.Button(timer_settings_frame, text="Apri timer",
+               command=timer.show).pack(anchor="w", pady=(0, 10))
 
     document_controls = ttk.Frame(frame)
     document_controls.pack(fill="x", pady=(0, 6))
@@ -1872,21 +1949,24 @@ def main() -> None:
             side="right")
         entry.focus_set()
 
+    gpt_panel = ttk.LabelFrame(assistant_settings_frame,
+                                text="Connessione ChatGPT", padding=12)
+    gpt_panel.pack(fill="x", pady=(0, 10))
     ttk.Checkbutton(
-        frame, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
+        gpt_panel, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
         variable=gpt_enabled, command=toggle_gpt
     ).pack(anchor="w")
-    ttk.Label(frame, textvariable=gpt_status, wraplength=710).pack(anchor="w", pady=(5, 6))
+    ttk.Label(gpt_panel, textvariable=gpt_status, wraplength=630).pack(anchor="w", pady=(5, 6))
 
-    gpt_buttons = ttk.Frame(frame)
+    gpt_buttons = ttk.Frame(gpt_panel)
     gpt_buttons.pack(fill="x", pady=(0, 7))
     connect = ttk.Button(gpt_buttons, text="Connetti ChatGPT", command=lambda: run_gpt("sign_in"))
     connect.pack(side="left", padx=(0, 8))
     disconnect = ttk.Button(gpt_buttons, text="Scollega account", command=lambda: run_gpt("disconnect"))
     disconnect.pack(side="left")
-    ttk.Label(frame, text="Il login usa il browser ufficiale; nessuna chiave API e nessuna fatturazione a consumo.").pack(anchor="w")
+    ttk.Label(gpt_panel, text="Il login usa il browser ufficiale; nessuna chiave API e nessuna fatturazione a consumo.", wraplength=630).pack(anchor="w")
 
-    brain_controls = ttk.Frame(frame)
+    brain_controls = ttk.LabelFrame(assistant_settings_frame, text="Memoria generale", padding=12)
     brain_controls.pack(fill="x", pady=(5, 3))
     memory_toggle = ttk.Checkbutton(
         brain_controls, text="Second Brain locale (ricorda conversazioni e attività)",
@@ -1895,10 +1975,10 @@ def main() -> None:
     memory_clear_button = ttk.Button(
         brain_controls, text="Cancella memoria generale (non progetti)", command=clear_saved_memory)
     memory_clear_button.pack(side="right")
-    ttk.Label(frame, textvariable=memory_status, wraplength=710).pack(
+    ttk.Label(assistant_settings_frame, textvariable=memory_status, wraplength=630).pack(
         anchor="w", pady=(0, 2))
     ttk.Label(
-        frame,
+        assistant_settings_frame,
         text="I ricordi restano sul PC. Se usi ChatGPT, gli estratti pertinenti "
              "vengono inviati al modello per comprendere il contesto; "
              "non vengono salvati i corpi completi delle email.",
@@ -1906,9 +1986,9 @@ def main() -> None:
     ).pack(anchor="w", pady=(0, 4))
 
     workspace_panel=ttk.LabelFrame(
-        frame,text="Progetti — contesto indipendente e continuità",padding=8)
+        integrations_settings_frame,text="Progetti — contesto indipendente e continuità",padding=8)
     workspace_panel.pack(fill="x",pady=(6,8))
-    ttk.Label(frame,
+    ttk.Label(workspace_panel,
         text="Memoria progetti automatica: chat e risultati verificati vengono "
              "salvati nel progetto senza premere Salva. Il Second Brain ON/OFF "
              "controlla soltanto la memoria della conversazione generale.",
@@ -1920,7 +2000,7 @@ def main() -> None:
               wraplength=420).pack(side="left",fill="x",expand=True)
 
     telegram_panel=ttk.LabelFrame(
-        frame,text="Telegram — contatti selezionati e messaggi vocali",padding=8)
+        integrations_settings_frame,text="Telegram — contatti selezionati e messaggi vocali",padding=8)
     telegram_panel.pack(fill="x",pady=(3,10))
     telegram_toggle=ttk.Checkbutton(
         telegram_panel,text="Risposte vocali automatiche ON / OFF",
@@ -1957,7 +2037,7 @@ def main() -> None:
         wraplength=690).pack(anchor="w",pady=(3,0))
 
     addon_panel=ttk.LabelFrame(
-        frame,text="Add-on — installazione locale e permessi",padding=8)
+        integrations_settings_frame,text="Add-on — installazione locale e permessi",padding=8)
     addon_panel.pack(fill="x",pady=(3,9))
     addon_settings_button=ttk.Button(
         addon_panel,text="Gestisci add-on (installa, attiva, aggiorna, rimuovi)")
@@ -2482,12 +2562,49 @@ def main() -> None:
             on_finished=journal_plan_finished,
         )
 
+    def try_timer_command(spoken: str) -> bool:
+        parsed = parse_timer_command(spoken)
+        if parsed is None:
+            return False
+        action = parsed.action
+        if action == "start":
+            if timer.start(parsed.seconds):
+                write_line("TIMER > Avviato: " + timer.remaining_text())
+            else:
+                write_line("TIMER > Durata non valida.")
+        elif action == "open":
+            timer.show()
+            write_line("TIMER > Aperto: modifica ore, minuti e secondi.")
+        elif action == "pause":
+            timer.pause()
+            write_line("TIMER > In pausa.")
+        elif action == "resume":
+            timer.resume()
+            write_line("TIMER > Ripreso.")
+        elif action == "stop":
+            timer.stop()
+            write_line("TIMER > Fermato; allarme spento.")
+        elif action == "reset":
+            timer.reset()
+            write_line("TIMER > Ripristinato.")
+        elif action == "remaining":
+            write_line("TIMER > Tempo rimasto: " + timer.remaining_text())
+        return True
+
     def submit_local(event=None, message_override: str | None = None,
                      source_utterance: str = "",
                      addon_action_id: str = "") -> None:
         nonlocal busy_local, last_user_for_action, project_local_ticket
         nonlocal local_operation_id
-        if busy_local or closing:
+        if closing:
+            return
+        if not addon_action_id:
+            proposed = message_override if message_override is not None else request.get()
+            if try_timer_command(proposed):
+                if message_override is None:
+                    request.set("")
+                return
+        if busy_local:
             return
         if addon_action_id and (addon_manager is None or not
                                 addon_manager.is_active(addon_action_id)):
@@ -2544,6 +2661,10 @@ def main() -> None:
             return
         message = request.get().strip()
         if not message:
+            return
+        # Timer commands are local, independent of GPT connectivity.
+        if try_timer_command(message):
+            request.set("")
             return
         # The "Chiedi a GPT" control must not bypass local diagnostics.
         # This stays usable offline and avoids a misleading GPT refusal.
@@ -2793,6 +2914,8 @@ def main() -> None:
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
                             write_line("TU > " + spoken)
+                            if try_timer_command(spoken):
+                                continue
                             # Safe local diagnostics must not wait for a GPT
                             # response or a stale Notepad confirmation.
                             if try_self_diagnostic(spoken):
@@ -2896,6 +3019,8 @@ def main() -> None:
                         # Log commands that passed the wake/press gate.
                         # Do not record free dictation or phrases ignored by wake.
                         write_line("TU > " + spoken)
+                        if try_timer_command(spoken):
+                            continue
                         if try_self_diagnostic(spoken):
                             continue
                         if try_telegram_voice_send(spoken):
@@ -3433,6 +3558,7 @@ def main() -> None:
         telegram_gpt_ready.clear()
         speaker.close()
         hud.close()
+        timer.close()
         root.destroy()
         # Non-daemon: ensure the Node child is terminated before Python exits.
         threading.Thread(target=service.stop, daemon=False, name="jarvis-gpt-shutdown").start()
