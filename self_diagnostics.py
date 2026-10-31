@@ -54,11 +54,14 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
             r"apri\s+la\s+cartella\s+(?:del\s+)?programma)",phrase):
         return ("paths","")
     if re.fullmatch(
-            r"(?:fai(?:mi)?\s+(?:un[ao]?\s+|un['’])?autodiagnosi|"
+            r"(?:autoanalizzati|autovalutati|"
+            r"fai(?:mi)?\s+(?:un[ao]?\s+|un['’])?autodiagnosi|"
             r"(?:fai|prepara|esegui)\s+(?:un[ao]?\s+|un['’])?"
             r"(?:rapporto\s+di\s+)?autodiagnosi|"
             r"(?:analizza|esamina|studia)\s+(?:te\s+stesso|te\s+stessa)|"
             r"(?:come\s+(?:potresti|puoi|pensi\s+di)\s+migliorarti)|"
+            r"(?:(?:dimmi|suggerisci|consigliami)\s+come\s+"
+            r"(?:potresti|puoi)\s+migliorarti)|"
             r"(?:quali\s+(?:parti|aspetti)\s+(?:del\s+tuo\s+codice\s+)?"
             r"(?:puoi|potresti)\s+migliorare)|"
             r"(?:suggerisci|proponi|consiglia(?:mi)?)\s+"
