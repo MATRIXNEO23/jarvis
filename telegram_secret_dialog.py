@@ -29,8 +29,8 @@ def prompt_masked_secret(title: str, description: str, *,
     if (not isinstance(title, str) or not isinstance(description, str)
             or not title or len(title) > 100
             or not description or len(description) > 320
-            or not secret_length_ok("x" * min_length,
-                                    min_length, max_length)):
+            or type(min_length) is not int or type(max_length) is not int
+            or not 1 <= min_length <= max_length <= 512):
         raise ValueError("Parametri finestra segreta non validi.")
 
     win = tk.Tk()
