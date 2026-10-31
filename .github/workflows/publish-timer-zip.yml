@@ -1,0 +1,158 @@
+name: Publish full Jarvis voice timer ZIP into Download
+
+on:
+  push:
+    branches: [feature/timer-popup-settings-20261031]
+    paths:
+      - '.github/workflows/publish-timer-zip.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jarvis-timer-20261031-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact reviewed timer source
+        uses: actions/checkout@v4
+        with:
+          ref: feature/timer-popup-settings-20261031
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+
+      - name: Verify source and complete offline regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m compileall -q .
+          node --check gpt_bridge.mjs
+          python -m unittest discover -s tests -q
+
+      - name: Build and check full source ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import os
+          import subprocess
+          import zipfile
+
+          name="Jarvis-Timer-Vocale-20261031.zip"
+          archive=Path(os.environ["RUNNER_TEMP"])/name
+          root="Jarvis-Timer-Vocale-20261031/"
+          sources=[
+              Path(os.fsdecode(item))
+              for item in subprocess.check_output(["git","ls-files","-z"]).split(b"\0")
+              if item
+          ]
+          sources=[
+              path for path in sources
+              if not path.parts or path.parts[0]!="Download"
+          ]
+          expected={
+              "jarvis.py", "settings.py", "animated_hud.py",
+              "hud_reference.py", "voice_control.py",
+              "timer_core.py", "timer_popup.py", "timer_alarm.py",
+              "tests/test_timer_popup.py",
+              "gpt_client.py", "gpt_bridge.mjs", "workspace_memory.py",
+              "telegram_bridge.py", "managed_documents.py",
+              "docs/TIMER_POPUP_E_SUONERIE.md",
+              "avvia_jarvis.bat", "prepara_test_telegram50.py",
+              "LEGGIMI_PROVA_TELEGRAM_50.txt",
+          }
+          present={path.as_posix() for path in sources}
+          assert expected<=present, "Required Jarvis/timer source is missing"
+          assert "AVVIA_TEST_TELEGRAM50.bat" not in present, "Second launcher present"
+          assert len(sources)>115, "Suspiciously incomplete Jarvis package"
+          with zipfile.ZipFile(archive,"w",zipfile.ZIP_DEFLATED,
+                               compresslevel=9,allowZip64=True) as z:
+              for path in sources:
+                  assert path.is_file() and not path.is_symlink(), str(path)
+                  entry=zipfile.ZipInfo(root+path.as_posix(),(2026,10,31,0,0,0))
+                  entry.compress_type=zipfile.ZIP_DEFLATED
+                  entry.external_attr=0o100644 << 16
+                  z.writestr(entry,path.read_bytes(),
+                             compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+          with zipfile.ZipFile(archive) as z:
+              assert z.testzip() is None, "Invalid ZIP CRC"
+              assert {root+item for item in expected}<=set(z.namelist())
+          print("ZIP:",archive.name,"files:",len(sources))
+          print("SOURCE:",subprocess.check_output(["git","rev-parse","HEAD"],
+                                                 text=True).strip())
+          print("SHA256:",hashlib.sha256(archive.read_bytes()).hexdigest())
+          PY
+
+      - name: Checkout main distribution only
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: publish-main
+
+      - name: Publish ZIP and update only Download README
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "$RUNNER_TEMP/Jarvis-Timer-Vocale-20261031.zip" \
+             publish-main/Download/Jarvis-Timer-Vocale-20261031.zip
+          python - <<'PY'
+          from pathlib import Path
+          target=Path("publish-main/Download/README.md")
+          before=target.read_text(encoding="utf-8")
+          heading="# Ultima build Jarvis — timer vocale e impostazioni (31/10/2026)"
+          section=(
+              heading+"\n\n"
+              "**[SCARICA JARVIS COMPLETO — TIMER VOCALE + HUD]"
+              "(./Jarvis-Timer-Vocale-20261031.zip)**\n\n"
+              "**File esatto:** `Jarvis-Timer-Vocale-20261031.zip`. "
+              "Versione completa di prova Windows 10 in ZIP di sorgenti Python "
+              "(non .exe); un solo `avvia_jarvis.bat`. "
+              "Contiene il Jarvis HUD corretto, GPT esterno, voce, documenti, "
+              "memoria, progetti, Telegram, add-on e tutti i controlli precedenti.\n\n"
+              "**Nuovo:** timer locale apribile dicendo «timer» e avviabile con "
+              "«timer dieci minuti». Popup digitale separato con Start, Pausa, "
+              "Stop, Reset e regolazione manuale ore/minuti/secondi. "
+              "Quattro suonerie offline con prova, volume e ripetizione "
+              "**dentro le impostazioni esistenti**, ora più navigabili "
+              "senza rimuovere alcuna funzione.\n\n"
+              "Estrarre in **cartella nuova** e avviare `avvia_jarvis.bat`. "
+              "Profilo dati sperimentale separato, account GPT e Telegram reali "
+              "quando connessi. Test automatici Windows e Ubuntu 4/4 PASS; "
+              "collaudo di microfono e suoni sul Pavilion ancora necessario. "
+              "Codice su PR #33 separata dal ramo main.\n\n"
+              "[Documentazione timer](https://github.com/MATRIXNEO23/jarvis/blob/"
+              "feature/timer-popup-settings-20261031/docs/TIMER_POPUP_E_SUONERIE.md)"
+              "\n\n---\n\n"
+          )
+          if not before.startswith(heading):
+              target.write_text(section+before,encoding="utf-8")
+          PY
+          cd publish-main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- Download/Jarvis-Timer-Vocale-20261031.zip Download/README.md
+          git diff --cached --stat
+          git commit -m "Publish tested Jarvis voice timer ZIP and Download README"
+          git push origin HEAD:main
+
+      - name: Verify published files from main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C publish-main fetch origin main
+          git -C publish-main ls-tree -r --name-only origin/main -- Download | \
+            grep -Fx "Download/Jarvis-Timer-Vocale-20261031.zip"
+          grep -F "Jarvis-Timer-Vocale-20261031.zip" publish-main/Download/README.md
