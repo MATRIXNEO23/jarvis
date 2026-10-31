@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA BUILD DI TEST — AUTODIAGNOSI E CONSIGLI DI MIGLIORAMENTO (31/10/2026)
+
+**[SCARICA Jarvis-Autodiagnosi-e-Miglioramenti.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Autodiagnosi-e-Miglioramenti.zip)**
+
+Pacchetto realmente presente in `Download` (300368 byte), completo di sorgenti e manifest SHA-256; commit `aeb87d25dbad6559d903ac46754d51ddfcae9cd3` nel ramo `feature/self-diagnostic-improvement-advice`, [PR #21 sperimentale](https://github.com/MATRIXNEO23/jarvis/pull/21), senza merge del codice su `main`. [Test automatici Windows/Linux superati](https://github.com/MATRIXNEO23/jarvis/actions/runs/41185960295) sul codice della nuova autodiagnosi; [pubblicazione ZIP riuscita](https://github.com/MATRIXNEO23/jarvis/actions/runs/41186056668).
+
+**Novità:** «Jarvis, fai un'autodiagnosi», «Jarvis, come potresti migliorarti?», «Jarvis, suggerisci miglioramenti al tuo codice», «Jarvis, analizza self_diagnostics.py». La scansione di sorgenti Python in sola lettura, senza eseguirli, aggiunge fino a 8 proposte concrete con priorità, file, riga, osservazione e test da fare. Valuta funzioni molto lunghe o complicate, gestione eccezioni silenziosa, moduli estesi e uso di shell=True. Leggi e copia il rapporto dalla cronologia di Jarvis; la voce pronuncia il primo suggerimento. Le segnalazioni **non sono bug dimostrati**, e la diagnosi non garantisce che le funzioni lavorino correttamente. Nessuna automodifica o accesso a dati personali, account, credenziali o Internet.
+
+**Collaudo reale sul Pavilion ancora da effettuare**, come concordato. Prima fare backup completo di `%LOCALAPPDATA%\Jarvis`, estrarre in una cartella distinta e usare una sola versione per volta. Le ZIP precedenti e i dati del PC non sono stati toccati.
+
+**Avviso antivirus ancora aperto:** un precedente pacchetto è stato segnalato da Defender come `Trojan:Script/Wacatac.B!ml`. Il nuovo ZIP non ha una scansione antivirus indipendente; test e manifest non ne certificano l'innocuità. Se Defender lo blocca, non forzare l'esecuzione o disattivare la protezione.
+
+---
+
 ## NUOVA BUILD DI TEST — RECUPERO DOCUMENTI BLOCCO NOTE (31/10/2026)
 
 **[SCARICA Jarvis-Recupero-Documenti.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Recupero-Documenti.zip)**
