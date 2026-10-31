@@ -100,6 +100,8 @@ class WorkspaceMemory:
                 receipt_id INTEGER, created_utc TEXT NOT NULL)""")
             db.execute("""CREATE INDEX IF NOT EXISTS tg_outbox_ready
                 ON telegram_outbox(peer_id,state,created_utc)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS workspace_session(
+                key TEXT PRIMARY KEY, value TEXT NOT NULL)""")
             db.execute("""CREATE TABLE IF NOT EXISTS project_steps(
                 id TEXT PRIMARY KEY, project_id TEXT NOT NULL,
                 title TEXT NOT NULL, source TEXT NOT NULL,
@@ -159,6 +161,23 @@ class WorkspaceMemory:
         return ({"id":row[0],"name":row[1],"active":bool(row[2]),
                  "summary":row[3],"updated_utc":row[4]}
                 if row else None)
+
+    def select_project(self, ident=None):
+        """Persist the current focus; None means general chat."""
+        if ident is not None and not self.project(ident):
+            raise WorkspaceError("Progetto da aprire inesistente.")
+        with self._db() as db:
+            db.execute(
+                "INSERT OR REPLACE INTO workspace_session(key,value) "
+                "VALUES('current_project',?)",(ident or "",))
+
+    def current_project(self):
+        """Restore the last selected project only if it still exists."""
+        with self._db() as db:
+            row=db.execute("SELECT value FROM workspace_session "
+                           "WHERE key='current_project'").fetchone()
+        ident=row[0] if row and row[0] else None
+        return ident if ident and self.project(ident) else None
 
     def projects(self,active_only=False,limit=60):
         with self._db() as db:
