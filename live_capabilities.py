@@ -67,22 +67,22 @@ class LiveCapabilityRegistry:
     def available_addons(self) -> tuple[dict, ...]:
         with self._lock:
             bindings = tuple(self._addon.values())
-        available = []
+        reports = []
         for binding in sorted(bindings, key=lambda item: item.action_id):
             try:
                 verified = binding.availability() is True
             except Exception:
                 verified = False
-            if verified:
-                available.append({
-                    "id": binding.action_id,
-                    "does": binding.description,
-                    "approval": binding.requires_approval,
-                    # The common GPT dispatcher does not yet execute add-ons:
-                    # state this explicitly instead of claiming support.
-                    "mode": "local-addon-gateway",
-                })
-        return tuple(available)
+            reports.append({
+                "id": binding.action_id,
+                "does": binding.description,
+                "approval": binding.requires_approval,
+                # An add-on is visible but cannot issue GPT tool commands
+                # without a separately reviewed local dispatcher binding.
+                "status": "installed" if verified else "disabled",
+                "mode": "informativo_non_azione_GPT",
+            })
+        return tuple(reports)
 
     def local_binding(self, action_id: str) -> AddonBinding | None:
         """Only the privileged local addon gateway can call this method."""
@@ -119,12 +119,16 @@ def snapshot_capabilities(
         telegram_credentials and telegram_voice_dependencies
         and telethon_installed and chosen)
     auto_reply = telegram_ready and settings.get("telegram_enabled") is True
-    listed = tuple(entry["id"] for entry in load_catalog())
+    descriptors = load_catalog()
+    listed = tuple(entry["id"] for entry in descriptors)
     enabled_core = tuple(id for id in listed
                          if has_document or id != "notepad.close")
     # Deliberately do not expose names, IDs, messages or secret settings.
     result = {
         "core_actions": enabled_core,
+        "catalog_version": hashlib.sha256(json.dumps(
+            descriptors, ensure_ascii=False, sort_keys=True).encode(
+            "utf-8")).hexdigest()[:12],
         "document_open": bool(has_document),
         "telegram_voice_send": telegram_ready,
         "telegram_auto_reply": auto_reply,
@@ -154,14 +158,15 @@ def capability_status_prompt(snapshot: dict, max_chars: int = 850) -> str:
         "microfono": ("stream_aperto" if snapshot.get("mic_stream_open") is True
                       else "non_osservato_aperto"),
         "whatsapp": "non_implementato",
-        "addons_attivi": [
-            {"id":a["id"],"mode":a["mode"]}
-            for a in snapshot.get("addons", ())[:8]
+        "addon": [
+            {"id":a["id"],"stato":a["status"],
+             "funzione":a["does"][:52],"esecuzione_GPT":"non_abilitata"}
+            for a in snapshot.get("addons", ())[:5]
         ],
     }
     output=json.dumps(safe,ensure_ascii=False,separators=(",", ":"))
     if len(output)>max_chars:
-        safe["addons_attivi"]=[]
+        safe["addon"]=[]
         output=json.dumps(safe,ensure_ascii=False,separators=(",", ":"))
     if len(output)>max_chars:
         raise ValueError("Stato capacità eccede il limite del bridge.")
