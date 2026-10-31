@@ -20,7 +20,8 @@ class StyleClassificationTests(unittest.TestCase):
         self.assertIn("italiano naturale",PERSONA)
         self.assertIn("ironia",PERSONA)
         self.assertIn("sarcasmo",PERSONA)
-        self.assertIn("riverenza",PERSONA)
+        self.assertIn("irriverenza",PERSONA)
+        self.assertNotIn("Una nota di riverenza",PERSONA)
         self.assertIn("Non fingere ricordi",PERSONA)
 
     def test_procedure_is_complete_even_if_reply_is_long(self):
@@ -41,21 +42,22 @@ class StyleClassificationTests(unittest.TestCase):
             "kind":"chat","reply":reply},ensure_ascii=False))
         self.assertEqual(intent.reply,reply)
 
-    def test_playful_and_deferential_tones_are_optional(self):
+    def test_playful_and_irreverent_tones_are_optional(self):
         for message in ("Fammi una battuta", "Usa un po' di sarcasmo",
                         "Rispondi in modo ironico"):
             self.assertEqual(choose_dialogue_style(message).mode,"playful")
-        for message in ("Parlami con riverenza",
-                        "Usa un tono formale",
-                        "Rispondimi con un tono solenne"):
-            self.assertEqual(choose_dialogue_style(message).mode,"formal")
-        self.assertIn("mai adulazione",
-                      choose_dialogue_style("parlami con riverenza").instruction)
+        for message in ("Sii irriverente", "Usa un po' di irriverenza",
+                        "Rispondimi in modo irriverente"):
+            self.assertEqual(choose_dialogue_style(message).mode,"playful")
+        self.assertIn("irriverenza",
+                      choose_dialogue_style("Sii irriverente").instruction)
+        self.assertNotIn("deferenza",
+                         choose_dialogue_style("Ciao").instruction)
 
-    def test_sensitivity_preempts_jokes_and_formality(self):
+    def test_sensitivity_preempts_irreverent_jokes(self):
         for message in ("Ho dolore, fammi una battuta",
                         "Trojan rilevato: usa sarcasmo",
-                        "Ho perso i dati, parlami con riverenza",
+                        "Ho perso i dati, sii irriverente",
                         "Mi preoccupa il licenziamento"):
             with self.subTest(message=message):
                 style=choose_dialogue_style(message)
