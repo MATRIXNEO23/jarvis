@@ -266,15 +266,31 @@ def main() -> None:
     # Visible even when the secondary '...' toolbar is collapsed.
     diagnostic_status = tk.StringVar(value="Autodiagnosi: pronta")
     diagnostic_percent = tk.IntVar(value=0)
-    diagnostic_row = ttk.Frame(hud.command_host)
-    diagnostic_row.pack(fill="x", pady=(0, 4))
-    ttk.Label(diagnostic_row, textvariable=diagnostic_status,
-              anchor="w").pack(side="left", fill="x", expand=True)
-    ttk.Progressbar(diagnostic_row, mode="determinate", maximum=100,
-                    variable=diagnostic_percent, length=110).pack(side="right")
-    diagnostic_cancel_button = ttk.Button(
-        diagnostic_row, text="Annulla", state="disabled")
-    diagnostic_cancel_button.pack(side="right", padx=(0, 6))
+    # Completely hidden until an audit really starts. The old permanent
+    # white ttk progress bar and large "Annulla" button overwhelmed the chat.
+    diagnostic_row = tk.Frame(hud.command_host,bg="#03111d",height=21)
+    tk.Label(diagnostic_row,textvariable=diagnostic_status,
+             bg="#03111d",fg="#7baec6",anchor="w",
+             font=("Consolas",8)).pack(side="left",fill="x",expand=True)
+    diagnostic_cancel_button = tk.Button(
+        diagnostic_row,text="×",state="disabled",width=2,
+        bg="#03111d",fg="#8eb6c7",disabledforeground="#355466",
+        activebackground="#0b3049",activeforeground="#d9f5ff",
+        font=("Segoe UI",11),bd=0,relief="flat",cursor="hand2")
+    diagnostic_cancel_button.pack(side="right",padx=(3,0))
+    diagnostic_meter=tk.Canvas(
+        diagnostic_row,width=58,height=4,bg="#092438",bd=0,
+        highlightthickness=0)
+    diagnostic_meter.pack(side="right",padx=(6,3))
+    def draw_diagnostic_meter(_event=None):
+        diagnostic_meter.delete("progress")
+        w=max(1,diagnostic_meter.winfo_width())
+        h=max(1,diagnostic_meter.winfo_height())
+        progress=max(0,min(100,diagnostic_percent.get()))
+        diagnostic_meter.create_rectangle(
+            0,0,w*progress/100,h,fill="#17b8e5",outline="",
+            tags="progress")
+    diagnostic_meter.bind("<Configure>",draw_diagnostic_meter)
     doc_choices = ttk.Frame(hud.command_host)
     doc_choices.pack(fill="x", pady=(0, 5))
     doc_choices.pack_forget()
@@ -1060,17 +1076,22 @@ def main() -> None:
         return True
 
     def update_diagnostic_ui() -> None:
-        """Render the real local audit state, never infer it from GPT."""
+        """Only show understated progress while the actual audit is active."""
         snapshot=diagnostic_session.snapshot()
         diagnostic_percent.set(snapshot.progress_percent)
         if snapshot.active:
             amount=(f"{snapshot.completed}/{snapshot.total}"
                     if snapshot.total else "preparazione")
             diagnostic_status.set(
-                f"Autodiagnosi: {snapshot.phase} {amount} "
-                f"({snapshot.elapsed_seconds} s)")
+                f"DIAGNOSI · {snapshot.phase[:16]} {amount}")
+            if not diagnostic_row.winfo_manager():
+                # Always stay above the input, never cover chat or actions.
+                diagnostic_row.pack(fill="x",pady=(0,3),before=input_row)
         else:
             diagnostic_status.set("Autodiagnosi: "+snapshot.phase)
+            if diagnostic_row.winfo_manager():
+                diagnostic_row.pack_forget()
+        draw_diagnostic_meter()
         diagnostic_cancel_button.configure(
             state="normal" if snapshot.active else "disabled")
 

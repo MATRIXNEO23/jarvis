@@ -143,7 +143,11 @@ class LocalAuditProgressTests(unittest.TestCase):
         self.assertIn('text="Autodiagnosi Jarvis"',src)
         self.assertIn('diagnostic_status = tk.StringVar',src)
         self.assertIn('diagnostic_percent = tk.IntVar',src)
-        self.assertIn('text="Annulla"',src)
+        # Visual-only change: keep a working cancel button, but use a tiny
+        # glyph and show progress only while a diagnosis really runs.
+        self.assertIn('diagnostic_row,text="×"',src)
+        self.assertIn("diagnostic_row.pack_forget()",src)
+        self.assertNotIn("ttk.Progressbar(diagnostic_row",src)
         self.assertIn("diagnostic_cancel_button.configure(command=cancel_diagnostic)",src)
         self.assertIn("diagnostic_session.cancel()",src)
         self.assertIn("diagnostic_session.check()",src)

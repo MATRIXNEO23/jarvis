@@ -90,7 +90,9 @@ def reactor_glow_png(size: int, mode: str = "idle") -> bytes:
             if glow < .018:
                 continue
             power = min(1.0, glow)
-            alpha = min(202, int(142 * power + 16 * min(1.0, glow * 2)))
+            # Less neon bloom: preserve the detailed dark-blue vector rings
+            # instead of washing the HUD into a uniform bright disk.
+            alpha = min(148, int(104 * power + 12 * min(1.0, glow * 2)))
             # Pale center of the glow with a saturated colored halo.
             white = min(1.0, power * .32)
             r = round(cr * (1-white) + 218 * white)
@@ -233,7 +235,9 @@ class RasterArtWorker:
         def work():
             try:
                 if kind == "reactor":
-                    result = [reactor_glow_png(size,mode) for mode in COLORS]
+                    # The outer reactor texture remains cyan in all voice
+                    # states. Generate only one image: lower CPU/RAM on i3.
+                    result = [reactor_glow_png(size,"idle")]
                 else:
                     # A slight geographic turn under moving orbits is smoother
                     # than flickering a low-poly globe every Tk redraw.
