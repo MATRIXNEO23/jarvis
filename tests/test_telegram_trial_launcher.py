@@ -71,6 +71,21 @@ class TelegramTrialTests(unittest.TestCase):
                              "keep-trial")
         self.assertTrue(load_settings(self.trial/"settings.json")["telegram_enabled"])
 
+    def test_existing_trial_enables_microphone_once_and_then_respects_off(self):
+        prepare_trial(self.original,self.trial)
+        settings_path=self.trial/"settings.json"
+        current=load_settings(settings_path)
+        current["auto_listen"]=False
+        save_settings(current,settings_path)
+        (self.trial/".microphone-on-startup-v1").unlink()
+        prepare_trial(self.original,self.trial)
+        self.assertTrue(load_settings(settings_path)["auto_listen"])
+        current=load_settings(settings_path)
+        current["auto_listen"]=False
+        save_settings(current,settings_path)
+        prepare_trial(self.original,self.trial)
+        self.assertFalse(load_settings(settings_path)["auto_listen"])
+
     def test_default_path_redirects_only_when_explicitly_enabled(self):
         with patch.dict(os.environ,{"JARVIS_TRIAL_HOME":str(self.trial)}):
             self.assertEqual(default_path(),self.trial/"settings.json")
