@@ -25,7 +25,7 @@ class AutomaticContinuityTests(unittest.TestCase):
         self.assertEqual(state["project_id"], ident)
         self.assertFalse(state["unfinished"])
 
-    def test_each_step_is_recorded_and_verified_immediately(self):
+    def test_step_receipt_is_preserved_but_not_misrepresented_as_proof(self):
         ident = self.memory.create_project("Mod")
         ticket = self.memory.begin_step(ident, "Compilazione mod", source="local")
         state = json.loads((self.memory.continuity_file(ident).parent /
@@ -36,7 +36,8 @@ class AutomaticContinuityTests(unittest.TestCase):
         self.assertFalse(self.memory.finish_step(
             ident, ticket, "completed", "Duplicato", receipt="task:42"))
         continuity = self.memory.continuity_file(ident).read_text(encoding="utf-8")
-        self.assertIn("[COMPLETED] Compilazione mod", continuity)
+        self.assertIn("[RIFERITO, NON VERIFICATO] Compilazione mod", continuity)
+        self.assertFalse(self.memory.project_steps(ident)[0]["verified"])
         self.assertIn("Compilazione terminata", continuity)
         self.assertEqual(self.memory.project_steps(ident)[0]["receipt"], "task:42")
         events = (self.memory.continuity_file(ident).parent /
