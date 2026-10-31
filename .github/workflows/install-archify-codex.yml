@@ -1,0 +1,49 @@
+name: Install Archify skill for Codex (repository only)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-archify-codex.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check for unmanaged installation
+        shell: bash
+        run: |
+          if [ -e .agents/skills/archify ]; then
+            echo 'Archify destination already exists; refusing overwrite.'
+            exit 1
+          fi
+      - name: Discover official Archify skill
+        shell: bash
+        run: |
+          npx -y skills@latest add https://archify.si --list --full-depth | tee /tmp/archify-list.txt
+          grep -Eq 'archify' /tmp/archify-list.txt
+      - name: Install project-only skill for Codex
+        run: npx -y skills@latest add https://archify.si --skill archify --agent codex --copy --yes
+      - name: Verify installation
+        shell: bash
+        run: |
+          test -f .agents/skills/archify/SKILL.md
+          test -f .agents/skills/archify/bin/archify.mjs
+          node .agents/skills/archify/bin/archify.mjs doctor
+      - name: Commit skill only (not Jarvis runtime)
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .agents/skills/archify
+          git diff --cached --quiet || { git commit -m 'Install Archify skill for Codex project tooling'; git push origin HEAD:main; }
