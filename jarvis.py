@@ -2301,6 +2301,10 @@ def main() -> None:
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
                             write_line("TU > " + spoken)
+                            # Safe local diagnostics must not wait for a GPT
+                            # response or a stale Notepad confirmation.
+                            if try_self_diagnostic(spoken):
+                                continue
                             # Pending save/close decisions are handled locally.
                             if save_only_waiting:
                                 receive_save_only_destination(spoken)
@@ -2393,6 +2397,8 @@ def main() -> None:
                         # Log commands that passed the wake/press gate.
                         # Do not record free dictation or phrases ignored by wake.
                         write_line("TU > " + spoken)
+                        if try_self_diagnostic(spoken):
+                            continue
                         dictation_action = dictation_voice_action(spoken)
                         if dictation_action == "stop":
                             sync_dictation_ui(dictation.disable())
