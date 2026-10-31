@@ -46,7 +46,7 @@ class TelegramTrialTests(unittest.TestCase):
         self.assertEqual((self.trial/"telegram-auth.dpapi").read_bytes(),original_auth)
         copied=load_settings(self.trial/"settings.json")
         self.assertFalse(copied["telegram_enabled"])
-        self.assertFalse(copied["auto_listen"])
+        self.assertTrue(copied["auto_listen"])
         self.assertEqual(copied["telegram_contacts"][0]["id"],123)
         with closing(sqlite3.connect(self.trial/"jarvis_workspaces.sqlite3")) as db:
             self.assertEqual(db.execute("SELECT value FROM sample").fetchone()[0],
