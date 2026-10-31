@@ -23,6 +23,7 @@ from dialogue_focus import (focus_hint, PendingProjectReference,
                             normalized_utterance,is_ambiguous_short_reply)
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
+from diagnostic_session import DiagnosticSession
 from diagnostic_handoff import (build_external_review_prompt,
                                 is_external_review_request, wants_external_advice,
                                 summarize_operation_outcomes)
@@ -233,6 +234,15 @@ def main() -> None:
     choose_save_button.pack(side="right", padx=(6, 0))
     # Saving a document is an action, not a setting: show its choices beside
     # the conversation. Hidden when no confirmation is pending.
+    # Visible even when the secondary '...' toolbar is collapsed.
+    diagnostic_status = tk.StringVar(value="Autodiagnosi: pronta")
+    diagnostic_percent = tk.IntVar(value=0)
+    diagnostic_row = ttk.Frame(hud.command_host)
+    diagnostic_row.pack(fill="x", pady=(0, 4))
+    ttk.Label(diagnostic_row, textvariable=diagnostic_status,
+              anchor="w").pack(side="left", fill="x", expand=True)
+    ttk.Progressbar(diagnostic_row, mode="determinate", maximum=100,
+                    variable=diagnostic_percent, length=110).pack(side="right")
     doc_choices = ttk.Frame(hud.command_host)
     doc_choices.pack(fill="x", pady=(0, 5))
     doc_choices.pack_forget()
@@ -267,6 +277,8 @@ def main() -> None:
     pending_project_trash_id = None
     pending_project_reference = PendingProjectReference()
     diagnostic_busy = False
+    diagnostic_session = DiagnosticSession()
+    diagnostic_threads = []
     last_diagnostic_audit = None
     pending_external_review = False
     save_only_waiting = False
@@ -983,20 +995,29 @@ def main() -> None:
         run_gpt("ask",prompt=prompt,source="")
         return True
 
+    def update_diagnostic_ui() -> None:
+        """Render the real local audit state, never infer it from GPT."""
+        snapshot=diagnostic_session.snapshot()
+        diagnostic_percent.set(snapshot.progress_percent)
+        if snapshot.active:
+            amount=(f"{snapshot.completed}/{snapshot.total}"
+                    if snapshot.total else "preparazione")
+            diagnostic_status.set(
+                f"Autodiagnosi: {snapshot.phase} {amount} "
+                f"({snapshot.elapsed_seconds} s)")
+        else:
+            diagnostic_status.set("Autodiagnosi: "+snapshot.phase)
+
     def try_self_diagnostic(spoken: str) -> bool:
-        """Read-only source diagnosis; optional GPT is separately authorized."""
+        """Local bounded audit, visible progress and recoverable worker errors."""
         nonlocal diagnostic_busy,pending_external_review
         if is_external_review_request(spoken):
             return offer_external_diagnostic_review()
         request_kind=diagnostic_request(spoken)
         if request_kind is None:
             return False
-        if diagnostic_busy:
-            speak_result("Sto già verificando i file del programma.")
-            return True
         mode,module=request_kind
         if mode=="paths":
-            from pathlib import Path
             source=Path(__file__).resolve().parent
             data=(workspace.path.parent if workspace is not None
                   else default_path().parent)
@@ -1006,22 +1027,66 @@ def main() -> None:
             write_line("DIAGNOSTICA > "+message)
             speak_result("Conosco le cartelle del mio programma e dei dati. Le ho mostrate nel registro.")
             return True
+        if diagnostic_session.active:
+            snapshot=diagnostic_session.snapshot()
+            message=("La diagnosi locale è nella fase "+snapshot.phase+
+                     " ("+str(snapshot.completed)+"/"+str(snapshot.total)+
+                     " file, "+str(snapshot.elapsed_seconds)+
+                     " secondi). Lo stato è visibile sotto la console.")
+            write_line("DIAGNOSTICA > "+message)
+            speak_result(message)
+            return True
+        # A previous timed-out worker may still be alive; never spawn an
+        # unlimited number of workers against the same install directory.
+        diagnostic_threads[:]=[t for t in diagnostic_threads if t.is_alive()]
+        if len(diagnostic_threads)>=2:
+            message=("Due analisi precedenti non rispondono ancora. "
+                     "Non avvio altri controlli; chiudi e riapri Jarvis.")
+            diagnostic_status.set("Autodiagnosi: processi non responsivi")
+            write_line("DIAGNOSTICA > "+message)
+            speak_result(message)
+            return True
+        run_id=diagnostic_session.start()
+        if run_id is None:
+            return True
         diagnostic_busy=True
         pending_external_review=(mode=="review" and wants_external_advice(spoken))
-        write_line("DIAGNOSTICA > Analisi statica locale avviata, senza modificare file.")
+        write_line("DIAGNOSTICA > Avvio controllo locale #"+str(run_id)+
+                   ": inventario, verifica sintattica, consigli AST.")
+        update_diagnostic_ui()
 
-        def worker():
+        def worker() -> None:
+            def report(phase: str, completed: int, total: int) -> None:
+                output_queue.put(("self_audit_progress",
+                                  run_id,phase,completed,total))
             try:
                 data=(workspace.path.parent if workspace is not None
                       else default_path().parent)
                 audit=inspect_jarvis(
                     source_root=Path(__file__).resolve().parent,
-                    data_root=data,module=module if mode=="module" else "")
-                output_queue.put(("self_audit",audit))
-            except (OSError,ValueError,UnicodeError) as exc:
-                output_queue.put(("self_audit_error",str(exc)[:180]))
-        threading.Thread(target=worker,daemon=True,
-                         name="jarvis-static-self-inspection").start()
+                    data_root=data,module=module if mode=="module" else "",
+                    progress=report)
+            except Exception as exc:
+                # Unexpected TypeError/IndexError/PermissionError must also
+                # end the diagnostic rather than leave 'busy' stuck forever.
+                # Exception type is enough for debugging, no path/secret leak.
+                output_queue.put(("self_audit_error",run_id,
+                                  exc.__class__.__name__))
+            else:
+                output_queue.put(("self_audit",run_id,audit))
+        thread=threading.Thread(target=worker,daemon=True,
+                                name="jarvis-static-audit-"+str(run_id))
+        try:
+            thread.start()
+        except RuntimeError as exc:
+            diagnostic_session.finish(run_id,succeeded=False)
+            diagnostic_busy=False
+            pending_external_review=False
+            write_line("DIAGNOSTICA > Impossibile avviare il controllo: "
+                       +exc.__class__.__name__)
+            update_diagnostic_ui()
+            return True
+        diagnostic_threads.append(thread)
         return True
 
     def open_project_manager():
