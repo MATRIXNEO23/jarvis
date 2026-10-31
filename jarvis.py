@@ -1314,6 +1314,17 @@ def main() -> None:
                 "ADD-ON > Registro aggiornato. Le capacità attive saranno "
                 "comunicate al GPT alla prossima richiesta."))
 
+    def active_addon_actions() -> tuple[dict,...]:
+        if addon_manager is None:
+            return ()
+        try:
+            return addon_manager.active_actions()
+        except (AddonError,OSError,ValueError):
+            # Never let a broken or modified add-on directory break GPT chat.
+            for item in addon_capability_registry.available_addons():
+                addon_capability_registry.unregister(item["id"])
+            return ()
+
     def load_telegram_contacts_for_ui() -> None:
         """Read real Telegram private users on a worker, never on Tk."""
         if not credentials_present():
@@ -1626,8 +1637,7 @@ def main() -> None:
                 memory_context=recent_memory_for_gpt(spoken),
                 telegram_send_ready=live["telegram_voice_send"],
                 runtime_info=capability_status_prompt(live),
-                addon_actions=(addon_manager.active_actions()
-                               if addon_manager is not None else ()))
+                addon_actions=active_addon_actions())
         except ConversationRejected as exc:
             write_line("JARVIS > " + str(exc))
             return
