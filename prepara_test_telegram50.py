@@ -28,7 +28,7 @@ def prepare_trial(original_home: Path, trial_home: Path) -> list[str]:
         current["telegram_enabled"] = False
         current["auto_listen"] = True
         save_settings(current, trial_settings)
-        notes.append("Impostazioni copiate: Telegram automatico e microfono disattivati.")
+        notes.append("Impostazioni copiate: Telegram automatico disattivato; microfono attivo all'avvio.")
     else:
         notes.append("Impostazioni del test gia presenti: non sovrascritte.")
 
