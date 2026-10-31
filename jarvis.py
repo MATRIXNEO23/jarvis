@@ -218,9 +218,11 @@ def main() -> None:
         memory_status.set("Second Brain: disattivato, conversazione breve solo in RAM.")
 
     def write_line(text: str) -> None:
-        # One chronological console for speech, answers, confirmed actions,
-        # status changes and error messages. The UI log is not a command queue.
-        label = text.strip()
+        # The reference design uses a conversational timeline, not raw logs.
+        # All actions and errors remain visible, with timestamp and source.
+        label = str(text).strip()
+        if not label:
+            return
         low = label.casefold()
         role = ("utente" if low.startswith((
                     "utente >", "tu >", "domanda a gpt >", "comando locale >"))
@@ -232,10 +234,30 @@ def main() -> None:
                     "[failed]" in low or "[rejected]" in low
                     or low.startswith(("errore", "gpt: impossibile")))
                 else "sistema")
+        identity = {"utente":"●  TU",
+                    "jarvis":"◉  JARVIS",
+                    "azione":"✓  OPERAZIONE",
+                    "errore":"!  ERRORE",
+                    "sistema":"·  SISTEMA"}[role]
+        # Strip repeated provider prefixes without hiding the actual result.
+        prefixes = ("utente >", "tu >", "domanda a gpt >", "comando locale >",
+                    "jarvis >", "gpt >", "lia >", "documento >",
+                    "correzione voce >")
+        body = label
+        for prefix in prefixes:
+            if low.startswith(prefix):
+                body = label[len(prefix):].strip()
+                break
         output.configure(state="normal")
         output.insert(
-            "end", "[" + datetime.now().strftime("%H:%M:%S")
-            + "] " + label + "\n\n", role)
+            "end", identity + "         " +
+            datetime.now().strftime("%H:%M:%S") + "\n",
+            (role, "message_head"))
+        output.insert("end", body + "\n\n", role)
+        # Keep the UI responsive even during long voice conversations.
+        # Drop only old visible console messages, never task/memory records.
+        if int(output.index("end-1c").split(".")[0]) > 2200:
+            output.delete("1.0", "200.0")
         output.see("end")
         output.configure(state="disabled")
 
@@ -568,7 +590,11 @@ def main() -> None:
     output.tag_configure("azione", foreground=GREEN, spacing3=6)
     output.tag_configure("errore", foreground=AMBER, spacing3=6)
     output.tag_configure("sistema", foreground=MUTED, spacing3=6)
+    output.tag_configure("message_head",
+                         font=("Consolas", 10, "bold"),
+                         spacing1=7)
     output.pack(fill="both", expand=True)
+    hud.attach_console(output)
     write_line("Jarvis locale pronto. Scrivi 'aiuto' per vedere i comandi disponibili.")
 
     try:
@@ -1290,7 +1316,10 @@ def main() -> None:
     hud.set_close_handler(close)
     hud.set_state_provider(lambda: {
         "speaking": speaker.is_speaking(),
-        "listening": voice_mode.get() != STANDBY,
+        # Orange only if the real Vosk input stream has actually opened.
+        # Push-to-talk selected but not pressed must remain cyan.
+        "listening": voice.is_listening(),
+        "mic_enabled": voice_mode.get() != STANDBY,
         "thinking": busy_gpt or busy_local or document_busy,
         "connected": active_gpt,
         "memory": memory_enabled.get(),
