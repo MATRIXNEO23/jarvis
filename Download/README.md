@@ -1,5 +1,15 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NOVITÀ — JARVIS HUD ANIMATO (PROVA SEPARATA)
+
+**[SCARICA LA NUOVA INTERFACCIA JARVIS ANIMATA — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/animated-hud-interface.zip)**
+
+L'interfaccia approvata dall'utente è ora nel ramo di prova: **console dei comandi e risposte sulla sinistra**, **reattore JARVIS animato al centro**, **globo olografico che ruota a destra**. Il centro passa leggermente dal **blu al turchese mentre Jarvis sta parlando**, poi torna blu. In alto trovi l'**ingranaggio ⚙**: tutte le impostazioni già esistenti sono spostate lì e non riempiono più la schermata principale. I pulsanti per salvare/annullare un documento restano visibili accanto alla chat quando servono.
+
+**Per provare sul Pavilion:** chiudi la vecchia finestra di Jarvis, scarica lo ZIP e decomprimilo in una **cartella nuova**, poi apri `avvia_jarvis.bat`. Il microfono resta **in standby all'avvio**, da attivare solo manualmente tramite ⚙. Per vedere il bagliore del centro in azione, attiva la voce di Windows e chiedi a Jarvis di rispondere; il globo gira da solo. **Non reinstallare Vosk/GPT se già funzionanti; non cancellare la cartella vecchia né `%LOCALAPPDATA%\\Jarvis`.**
+
+È un'implementazione grafica leggera in Tkinter, senza video o componenti aggiuntivi; **l'effetto deve ancora essere verificato fisicamente sul Pavilion**. I test automatici non sostituiscono il collaudo della finestra reale. [Guida e limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/animated-hud-interface/docs/HUD_ANIMATO.md) · [Sviluppo isolato PR #6](https://github.com/MATRIXNEO23/jarvis/pull/6).
+
 ## ULTIMA VERSIONE SPERIMENTALE — LIA IMPARA LE CORREZIONI VOCALI
 
 **[SCARICA JARVIS CON VOCE ADATTIVA E SECOND BRAIN (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/adaptive-offline-voice.zip)**
