@@ -16,6 +16,8 @@ import sqlite3
 from conversation_memory import ConversationMemory
 from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
+from project_voice import parse_project_voice, safe_project_name, find_existing_project
+from project_documents import parse_simple_save, project_save_destination
 from telegram_commands import explicit_telegram_note
 from telegram_bridge import TelegramBridge
 from telegram_security import credentials_present
@@ -245,6 +247,10 @@ def main() -> None:
     document_busy = False
     documents = ManagedDocuments()
     doc_dialog = DocumentDialog()
+    document_topic = ""
+    document_owner_project_id = None
+    pending_project_name = False
+    save_only_waiting = False
     conversation_memory = ConversationMemory()
     # Up to three follow-ups may arrive while the model is still responding.
     # Never silently discard an earlier phrase or replay after mode changes.
@@ -481,22 +487,26 @@ def main() -> None:
                 workspace_status.set("Memoria progetti: "+str(exc)[:95])
         root.after(2600,refresh_orbit_nodes)
 
-    def switch_context(project_id=None) -> None:
+    def switch_context(project_id=None) -> bool:
         nonlocal active_project_id,conversation_epoch
-        if busy_gpt or busy_local:
+        if busy_gpt or busy_local or document_busy:
             write_line("JARVIS > Finisco questa operazione prima di cambiare progetto.")
-            return
+            return False
+        if documents.current is not None or doc_dialog.phase != "idle":
+            write_line("JARVIS > Chiudi il documento di Blocco note prima di cambiare progetto.")
+            speak_result("Chiudi prima il documento aperto, per non confondere i progetti.")
+            return False
         if project_id is not None:
             if workspace is None or not workspace.project(project_id):
                 write_line("JARVIS > Progetto non trovato.")
-                return
+                return False
             project=workspace.project(project_id)
         if workspace is not None:
             try:
                 workspace.select_project(project_id)
             except (OSError,sqlite3.Error,WorkspaceError) as exc:
                 workspace_status.set("Contesto non salvato: "+str(exc)[:100])
-                return
+                return False
         active_context_label.set(
             "Contesto: "+project["name"][:35] if project_id else "Contesto: GENERALE")
         active_project_id=project_id
@@ -506,6 +516,94 @@ def main() -> None:
         write_line(
             "JARVIS > "+("Progetto aperto: "+project["name"]+"."
                         if project_id else "Conversazione generale ripristinata."))
+        return True
+
+    def project_voice_command(spoken: str) -> bool:
+        """Both speech and typed chat share one local, validated executor."""
+        nonlocal pending_project_name
+        if workspace is None:
+            return False
+        if pending_project_name:
+            pending_project_name = False
+            if spoken.casefold().strip(" ,.!?") in ("annulla","lascia stare","niente"):
+                speak_result("Creazione del progetto annullata.")
+                return True
+            try:
+                name=safe_project_name(re.sub(
+                    r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
+                    spoken.strip(),flags=re.I))
+                command_action="create"
+            except ValueError:
+                speak_result("Nome non valido. Chiedimi di creare un progetto con un nome preciso.")
+                return True
+        else:
+            try:
+                command=parse_project_voice(spoken)
+            except ValueError as exc:
+                write_line("JARVIS > "+str(exc))
+                speak_result(str(exc))
+                return True
+            if command is None:
+                return False
+            command_action=command.action
+            name=command.name
+
+        if command_action=="list":
+            projects=workspace.projects(limit=100)
+            message=("I progetti sono: "+", ".join(x["name"] for x in projects[:12])
+                     if projects else "Non ci sono ancora progetti.")
+        elif command_action=="create":
+            if not name:
+                pending_project_name=True
+                message="Come vuoi chiamare il nuovo progetto?"
+            elif busy_gpt or busy_local or document_busy or documents.current is not None:
+                message="Finisci prima l'operazione o chiudi il documento aperto."
+            else:
+                try:
+                    existing=find_existing_project(workspace.projects(limit=200),name)
+                    if existing:
+                        message="Un progetto con questo nome esiste già. Dimmi di aprirlo."
+                    else:
+                        ident=workspace.create_project(name)
+                        if switch_context(ident):
+                            message="Creato e aperto il progetto "+name+". Memoria e cartella pronte."
+                        else:
+                            message="Il progetto è stato creato, ma non riesco ad aprirlo."
+                except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                    message="Impossibile creare il progetto: "+str(exc)[:110]
+        elif command_action=="open":
+            try:
+                selected=find_existing_project(workspace.projects(limit=200),name)
+                if selected and switch_context(selected["id"]):
+                    message="Ripreso il progetto "+selected["name"]+"."
+                elif selected:
+                    message="Non posso cambiare progetto durante un'operazione."
+                else:
+                    message="Non trovo il progetto "+name+"."
+            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                message="Impossibile aprire il progetto: "+str(exc)[:105]
+        elif command_action=="general":
+            message=("Sono tornato alla conversazione generale."
+                     if switch_context(None) else
+                     "Non posso cambiare contesto finché il documento è aperto.")
+        elif command_action=="folder":
+            if active_project_id is None:
+                message="Apri un progetto prima di chiedermi la sua cartella."
+            else:
+                try:
+                    folder=workspace.project_directory(active_project_id)
+                    if os.name=="nt":
+                        os.startfile(str(folder))
+                        message="Ho aperto la cartella del progetto."
+                    else:
+                        message="Cartella del progetto: "+str(folder)
+                except (OSError,WorkspaceError) as exc:
+                    message="Non riesco ad aprire la cartella: "+str(exc)[:100]
+        else:
+            return False
+        write_line("JARVIS > "+message)
+        speak_result(message)
+        return True
 
     def open_project_manager():
         nonlocal project_dialog
@@ -1104,14 +1202,15 @@ def main() -> None:
             speaker.speak(message, selected_voice())
 
     def update_document_buttons() -> None:
-        pending = doc_dialog.phase.startswith("awaiting_") and not document_busy
+        pending = (doc_dialog.phase.startswith("awaiting_") or save_only_waiting) and not document_busy
         can_choose = doc_dialog.phase == "awaiting_close_choice" and not document_busy
         doc_save_button.configure(state="normal" if can_choose else "disabled")
         doc_discard_button.configure(
             state="normal" if can_choose else "disabled")
         doc_cancel_button.configure(state="normal" if pending else "disabled")
         destination_ready = (
-            doc_dialog.phase == "awaiting_save_destination" and not document_busy)
+            (doc_dialog.phase == "awaiting_save_destination" or save_only_waiting)
+            and not document_busy)
         choose_save_button.configure(
             state="normal" if destination_ready else "disabled")
         hud_save_file_button.configure(
@@ -1133,6 +1232,7 @@ def main() -> None:
                            close_after: bool = False,
                            source_utterance: str = "") -> None:
         nonlocal document_busy, last_user_for_document, project_document_ticket
+        nonlocal document_topic,document_owner_project_id
         if document_busy or closing:
             announce_document("Sto già lavorando sul documento: attendi.")
             return
@@ -1142,6 +1242,11 @@ def main() -> None:
             announce_document("Checkpoint progetto non disponibile: azione non eseguita.")
             return
         document_busy = True
+        if operation == "open" or (operation=="compose" and target=="new_notepad"):
+            document_owner_project_id=active_project_id
+            document_topic=source_utterance if operation=="compose" else ""
+        elif operation=="compose" and source_utterance and not document_topic:
+            document_topic=source_utterance
         last_user_for_document = source_utterance or last_user_for_document or operation
         update_document_buttons()
         document_status.set("Operazione in corso su Blocco note...")
@@ -1157,6 +1262,8 @@ def main() -> None:
                     result = documents.compose(content, target)
                 elif operation == "save" and path is not None:
                     result = documents.save_and_close(document_id, path)
+                elif operation == "save_only" and path is not None:
+                    result = documents.save_only(document_id, path)
                 elif operation == "discard":
                     result = documents.discard_and_close(document_id)
                 else:
@@ -1190,16 +1297,89 @@ def main() -> None:
             if source_utterance:
                 remember_exchange(source_utterance, decision.message, "clarify")
 
+    def automatic_document_destination(*, explicit_name: str = "") -> Path | None:
+        """Use this document's original project, never a newly selected one."""
+        if workspace is None or document_owner_project_id is None:
+            return None
+        return project_save_destination(
+            workspace,document_owner_project_id,document_topic,
+            explicit_name=explicit_name)
+
+    def save_document_now(spoken: str, *, explicit_name: str = "") -> None:
+        nonlocal save_only_waiting
+        if document_busy or doc_dialog.phase!="editing" or documents.current is None:
+            announce_document("Non ho un documento pronto da salvare.")
+            return
+        # Explicit user-chosen desktop/documents/downloads takes priority.
+        explicit_path=destination_from_voice(spoken)
+        if explicit_path is not None:
+            path=explicit_path
+        else:
+            try:
+                path=automatic_document_destination(explicit_name=explicit_name)
+            except (OSError,ValueError,WorkspaceError) as exc:
+                announce_document("Nome o cartella del documento non validi: "+str(exc)[:100])
+                return
+        if path is None:
+            save_only_waiting=True
+            announce_document("Dove vuoi salvare? Per esempio: sul desktop come appunti.")
+            return
+        save_only_waiting=False
+        document_operation("save_only",document_id=doc_dialog.document_id,
+                           path=path,source_utterance=spoken)
+
+    def receive_save_only_destination(spoken: str) -> None:
+        nonlocal save_only_waiting
+        if spoken.casefold().strip(" ,.!?") in ("annulla","lascia stare"):
+            save_only_waiting=False
+            announce_document("Salvataggio annullato. Documento aperto.")
+            return
+        path=destination_from_voice(spoken)
+        if path is None:
+            announce_document("Indicami una cartella e un nome, per esempio "
+                              "sul desktop come appunti, oppure scegli la cartella.")
+            return
+        save_only_waiting=False
+        document_operation("save_only",document_id=doc_dialog.document_id,
+                           path=path,source_utterance=spoken)
+
     def execute_document_choice(decision, *, path: Path | None = None) -> None:
+        if decision.kind == "ask_destination":
+            try:
+                path=automatic_document_destination()
+            except (OSError,ValueError,WorkspaceError) as exc:
+                announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
+                return
+            if path is not None:
+                selected=doc_dialog.provide_destination(str(path))
+                execute_document_choice(selected,path=path)
+                return
         if decision.kind in ("save_then_close", "save_as_then_close"):
             destination = path if path is not None else (
                 Path(doc_dialog.saved_path) if doc_dialog.saved_path else None)
+            if (path is None and doc_dialog.saved_path and
+                    document_owner_project_id is not None):
+                # Fresh version if the editor changed since the last save.
+                # ManagedDocuments will reuse the old file if unchanged.
+                try:
+                    destination=automatic_document_destination()
+                except (OSError,ValueError,WorkspaceError) as exc:
+                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
+                    return
             if destination is None:
-                doc_dialog.phase = "awaiting_save_destination"
-                announce_document("Dove vuoi salvare? Per esempio: "
-                                  "sul desktop come storia di Venezia.")
-                choose_save_button.configure(state="normal")
-                return
+                try:
+                    destination=automatic_document_destination()
+                except (OSError,ValueError,WorkspaceError) as exc:
+                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
+                    return
+                if destination is None:
+                    doc_dialog.phase = "awaiting_save_destination"
+                    announce_document("Dove vuoi salvare? Per esempio: "
+                                      "sul desktop come storia di Venezia.")
+                    choose_save_button.configure(state="normal")
+                    return
+                if doc_dialog.phase=="awaiting_save_destination":
+                    doc_dialog.provide_destination(str(destination))
             choose_save_button.configure(state="disabled")
             document_operation("save", document_id=decision.document_id,
                                path=destination)
@@ -1214,6 +1394,9 @@ def main() -> None:
 
     def handle_document_confirmation(spoken: str) -> None:
         nonlocal last_user_for_document
+        if save_only_waiting:
+            receive_save_only_destination(spoken)
+            return
         last_user_for_document = spoken
         if document_busy:
             announce_document("Operazione documento in corso; attendi.")
@@ -1233,14 +1416,21 @@ def main() -> None:
             handle_document_confirmation("chiudi senza salvare")
 
     def choose_save_destination() -> None:
-        if doc_dialog.phase != "awaiting_save_destination" or document_busy:
+        nonlocal save_only_waiting
+        if ((doc_dialog.phase!="awaiting_save_destination" and not save_only_waiting)
+                or document_busy):
             return
         selected = filedialog.asksaveasfilename(
             parent=root, title="Dove vuoi salvare il nuovo file?",
             defaultextension=".txt", filetypes=[("File di testo", "*.txt")])
         if selected:
-            decision = doc_dialog.provide_destination(selected)
-            execute_document_choice(decision, path=Path(selected))
+            if save_only_waiting:
+                save_only_waiting=False
+                document_operation("save_only",document_id=doc_dialog.document_id,
+                                   path=Path(selected),source_utterance="salva documento")
+            else:
+                decision = doc_dialog.provide_destination(selected)
+                execute_document_choice(decision, path=Path(selected))
 
     def sync_dictation_ui(message: str) -> None:
         dictation_status.set(message)
@@ -1417,6 +1607,7 @@ def main() -> None:
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         nonlocal last_user_for_action, last_user_for_document
         nonlocal project_local_ticket, project_document_ticket
+        nonlocal document_topic,document_owner_project_id,save_only_waiting
         if closing:
             return
         try:
@@ -1466,13 +1657,22 @@ def main() -> None:
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
                             write_line("TU > " + spoken)
-                            # Pending document decisions never go through GPT:
-                            # only the owner of this selected document may close.
+                            # Pending save/close decisions are handled locally.
+                            if save_only_waiting:
+                                receive_save_only_destination(spoken)
+                                continue
                             if doc_dialog.phase.startswith("awaiting_"):
                                 handle_document_confirmation(spoken)
                                 continue
                             if doc_dialog.phase == "executing" or document_busy:
                                 write_line("Blocco note: operazione in corso, attendi.")
+                                continue
+                            # "Salva" writes a file but leaves Notepad open;
+                            # only "salva e chiudi" closes the owned document.
+                            explicit_name=parse_simple_save(spoken)
+                            if (doc_dialog.phase=="editing" and
+                                    explicit_name is not None):
+                                save_document_now(spoken,explicit_name=explicit_name)
                                 continue
                             # An explicit natural phrase to discard changes
                             # is a single authorization: do not ask twice.
@@ -1491,6 +1691,8 @@ def main() -> None:
                                 "chiudi il file", "chiudi file", "chiudilo",
                             ):
                                 ask_to_close_document(spoken)
+                                continue
+                            if project_voice_command(spoken):
                                 continue
                             if maybe_queue_telegram_note(spoken):
                                 continue
@@ -1548,6 +1750,12 @@ def main() -> None:
                             else:
                                 sync_dictation_ui(
                                     "Per dettare in altre finestre seleziona Ascolto continuo.")
+                        elif save_only_waiting:
+                            receive_save_only_destination(spoken)
+                        elif project_voice_command(spoken):
+                            pass
+                        elif doc_dialog.phase=="editing" and parse_simple_save(spoken) is not None:
+                            save_document_now(spoken,explicit_name=parse_simple_save(spoken))
                         else:
                             command = speech_to_local_command(spoken)
                             if command and not busy_local:
@@ -1600,13 +1808,17 @@ def main() -> None:
                             doc_dialog.operation_completed(
                                 result.document_id, succeeded=True)
                         choose_save_button.configure(state="disabled")
-                    elif result.kind == "saved_but_open":
+                    elif result.kind in ("saved_but_open","saved_open"):
                         if doc_dialog.phase == "executing":
                             doc_dialog.operation_completed(
                                 result.document_id, succeeded=False)
                         if result.saved_path is not None:
                             doc_dialog.saved_path = str(result.saved_path)
                         choose_save_button.configure(state="disabled")
+                    if result.kind in ("saved_and_closed","closed_without_saving","closed"):
+                        document_topic=""
+                        document_owner_project_id=None
+                        save_only_waiting=False
                     announce_document(result.message)
                     source = last_user_for_document or operation
                     last_user_for_document = ""
@@ -1622,12 +1834,12 @@ def main() -> None:
                     remember_exchange(source, result.message, "action")
                     if result.kind in ("opened", "created", "appended",
                                        "saved_and_closed", "closed_without_saving",
-                                       "saved_but_open", "closed"):
+                                       "saved_but_open", "saved_open", "closed"):
                         from uuid import uuid4
                         action_name = ("notepad.open" if result.kind == "opened"
                                        else "notepad.write" if result.kind in (
                                            "created", "appended")
-                                       else "notepad.save" if result.kind == "saved_but_open"
+                                       else "notepad.save" if result.kind in ("saved_but_open","saved_open")
                                        else "notepad.close")
                         filename = (result.saved_path.name
                                     if result.saved_path is not None else "")
@@ -1861,9 +2073,33 @@ def main() -> None:
         change_voice_mode()
 
     def send_console_input(event=None) -> None:
-        if not request.get().strip():
+        message=request.get().strip()
+        if not message:
             return
-        if maybe_queue_telegram_note(request.get()):
+        if save_only_waiting:
+            request.set("")
+            receive_save_only_destination(message)
+            return
+        if doc_dialog.phase.startswith("awaiting_"):
+            request.set("")
+            handle_document_confirmation(message)
+            return
+        requested_name=parse_simple_save(message)
+        if doc_dialog.phase=="editing" and requested_name is not None:
+            request.set("")
+            save_document_now(message,explicit_name=requested_name)
+            return
+        if doc_dialog.phase=="editing":
+            direct_choice=classify_document_choice(message,pending=False)
+            if direct_choice in ("save","discard"):
+                request.set("")
+                decision=doc_dialog.request_close_with_choice(message)
+                execute_document_choice(decision)
+                return
+        if project_voice_command(message):
+            request.set("")
+            return
+        if maybe_queue_telegram_note(message):
             request.set("")
             return
         if gpt_enabled.get() and active_gpt:

@@ -70,6 +70,31 @@ class ManagedDocuments:
             raise NotepadUnavailable("Nessun documento di Jarvis corrispondente.")
         return note
 
+    def save_only(self, ident: str, path: Path) -> DocumentOperation:
+        """Save without closing the owned Notepad window; never overwrite.
+
+        If the document changed after an earlier save, save a new version
+        using the supplied fresh path. Old files remain untouched.
+        """
+        note=self._note(ident)
+        text=self.bridge.read(note)
+        dest=Path(path)
+        if note.saved_path is not None and note.saved_path.is_file():
+            previous=note.saved_path.read_text(encoding="utf-8")
+            if previous==text:
+                return DocumentOperation(
+                    "saved_open","Documento già salvato in "+str(note.saved_path)
+                    +". Blocco note rimane aperto.",note.ident,note.saved_path)
+            if dest==note.saved_path:
+                raise NotepadUnavailable(
+                    "Il documento è stato modificato: serve un nuovo nome "
+                    "per non sovrascrivere la versione precedente.")
+        saved_path=save_new_text(dest,text)
+        note.saved_path=saved_path
+        return DocumentOperation(
+            "saved_open","Copia del testo salvata in "+str(saved_path)
+            +". Blocco note rimane aperto.",note.ident,saved_path)
+
     def save_and_close(self, ident: str, path: Path) -> DocumentOperation:
         note = self._note(ident)
         text = self.bridge.read(note)
@@ -79,16 +104,15 @@ class ManagedDocuments:
             saved_path = save_new_text(dest, text)
             note.saved_path = saved_path
         else:
-            if note.saved_path != dest:
-                raise NotepadUnavailable(
-                    "Il documento è stato salvato in una posizione diversa. "
-                    "Non effettuo un secondo salvataggio automatico.")
-            # Re-close without overwriting if an earlier save succeeded but
-            # the Windows close failed; manual edits after save are not lost.
-            if note.saved_path.read_text(encoding="utf-8") != text:
-                raise NotepadUnavailable(
-                    "Il documento è cambiato dopo il salvataggio precedente. "
-                    "Rimane aperto; occorre scegliere come salvare le nuove modifiche.")
+            # An earlier version is immutable. An edited document can be
+            # saved as a NEW file; an unchanged copy can simply be closed.
+            previous=note.saved_path.read_text(encoding="utf-8")
+            if previous != text:
+                if note.saved_path == dest:
+                    raise NotepadUnavailable(
+                        "Il documento è stato modificato. Scegli un nuovo nome "
+                        "per non sovrascrivere la versione precedente.")
+                note.saved_path = save_new_text(dest, text)
         try:
             self.bridge.close(note, discard_confirmed=True)
         except (OSError, ValueError) as exc:
