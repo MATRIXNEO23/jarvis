@@ -1030,7 +1030,7 @@ def main() -> None:
 
     def try_self_diagnostic(spoken: str) -> bool:
         """Local bounded audit, visible progress and recoverable worker errors."""
-        nonlocal diagnostic_busy,pending_external_review
+        nonlocal diagnostic_busy,pending_external_review,last_diagnostic_audit
         if is_external_review_request(spoken):
             return offer_external_diagnostic_review()
         request_kind=diagnostic_request(spoken)
@@ -1069,6 +1069,9 @@ def main() -> None:
         run_id=diagnostic_session.start()
         if run_id is None:
             return True
+        # A new attempt invalidates the previous report; GPT must never
+        # review outdated findings as though they belonged to this run.
+        last_diagnostic_audit=None
         diagnostic_busy=True
         pending_external_review=(mode=="review" and wants_external_advice(spoken))
         write_line("DIAGNOSTICA > Avvio controllo locale #"+str(run_id)+
