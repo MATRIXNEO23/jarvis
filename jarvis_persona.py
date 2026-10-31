@@ -68,12 +68,15 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
     except (ValueError, TypeError):
         return "{}"
     if isinstance(data, list):
-        recents, related = data, []
+        recents, related, progress = data, [], []
     elif isinstance(data, dict):
         recents = data.get("breve", data.get("recent", []))
         permanent = data.get("permanente", {})
         related = (permanent.get("related", []) if isinstance(permanent, dict)
                    else [])
+        progress = data.get("progress", [])
+        if not isinstance(progress, list):
+            progress = []
         if not isinstance(recents, list):
             recents = []
         if not isinstance(related, list):
@@ -86,6 +89,30 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
     def fits(value: dict) -> bool:
         return len(json.dumps(value, ensure_ascii=False,
                               separators=(",", ":"))) <= max_chars
+
+    # Preserve one or two *actual* operational states before optional chatter.
+    # An unverified or planned step is never presented as completed.
+    for step in progress[:2]:
+        if not isinstance(step, dict):
+            continue
+        title, state = step.get("title"), step.get("status")
+        if not isinstance(title, str) or state not in (
+                "planned","running","completed","failed","interrupted"):
+            continue
+        detail = step.get("detail", "")
+        verified = step.get("verified", False) is True
+        record = {
+            "source": ("verified_action" if state=="completed" and verified
+                       else "conversation"),
+            "when": "",
+            "fact": ("Passo "+title[:85]+"; stato "+state+
+                     ("; risultato "+detail[:95]
+                      if isinstance(detail,str) and detail else "")),
+        }
+        candidate={"recent":packed["recent"],
+                   "evidence":packed["evidence"]+[record]}
+        if fits(candidate):
+            packed=candidate
 
     for entry in reversed(recents[-6:]):
         for cap_user, cap_reply in ((135, 145), (95, 100),
