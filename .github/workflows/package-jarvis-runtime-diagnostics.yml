@@ -1,0 +1,87 @@
+name: Publish Jarvis runtime diagnostic GPT source ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-runtime-diagnostics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Download catalog
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout pinned reviewed source
+        uses: actions/checkout@v4
+        with:
+          ref: d6578989459326bed6ddba590f0c21d1d0e75702
+          path: source
+          persist-credentials: false
+      - name: Recheck runtime diagnostic tests before packaging
+        run: |
+          cd source
+          python -m unittest discover -s tests -p 'test_*.py'
+      - name: Package and verify source with per-file SHA-256 manifest
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import hashlib, json
+          source = Path("source")
+          target = Path("catalog/Download/Jarvis-Diagnostica-Runtime-GPT.zip")
+          prefix = "Jarvis-Diagnostica-Runtime-GPT/"
+          target.parent.mkdir(parents=True, exist_ok=True)
+          entries = []
+          with ZipFile(target, "w", ZIP_DEFLATED, compresslevel=6) as out:
+              for f in sorted(source.rglob("*")):
+                  if not f.is_file() or f.is_symlink():
+                      continue
+                  parts = f.relative_to(source).parts
+                  if parts[0] in ("Download", ".github") or any(
+                      p in (".git", ".venv", "venv", "__pycache__")
+                      for p in parts
+                  ):
+                      continue
+                  archive_path = prefix + "/".join(parts)
+                  out.write(f, archive_path)
+                  entries.append({
+                      "path": archive_path,
+                      "sha256": hashlib.sha256(f.read_bytes()).hexdigest(),
+                  })
+              out.writestr(prefix + "SOURCE-COMMIT.txt", "d6578989459326bed6ddba590f0c21d1d0e75702\n")
+              out.writestr(prefix + "SOURCE-MANIFEST.json", json.dumps(entries, indent=2))
+          with ZipFile(target, "r") as archive:
+              assert archive.testzip() is None
+              names = set(archive.namelist())
+              for required in (
+                  "avvia_jarvis.bat", "jarvis.py", "diagnostic_session.py",
+                  "self_diagnostics.py", "source_review.py",
+                  "diagnostic_handoff.py", "runtime_diagnostics.py",
+                  "gpt_client.py", "gpt_bridge.mjs",
+                  "tests/test_runtime_diagnostics.py",
+                  "docs/DIAGNOSTICA_RUNTIME_SIGN_IN_GPT.md",
+              ):
+                  assert prefix + required in names, required
+              for entry in entries:
+                  actual = hashlib.sha256(archive.read(entry["path"])).hexdigest()
+                  assert actual == entry["sha256"], entry["path"]
+          print("ZIP VERIFIED:", target, target.stat().st_size, "bytes")
+          PY
+      - name: Publish only the new ZIP, preserving existing downloads
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Diagnostica-Runtime-GPT.zip
+          git -C catalog commit -m "download: publish Sign in with ChatGPT runtime diagnostic source ZIP"
+          git -C catalog pull --rebase origin main
+          git -C catalog push origin HEAD:main
