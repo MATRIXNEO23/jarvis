@@ -1,3 +1,13 @@
+# Jarvis: Timer vocale e Impostazioni - 31/10/2026
+
+**[SCARICA JARVIS CON TIMER E IMPOSTAZIONI RIORDINATE](./Jarvis-Timer-Impostazioni-20261031.zip)**
+
+Versione completa per Windows 10 con un solo launcher `avvia_jarvis.bat`. Il timer e' una finestra indipendente con cifre digitali, START, PAUSA, STOP, RESET e durata modificabile. Comandi locali e vocali: 'timer 10 minuti', 'pausa timer', 'riprendi timer', 'stop timer' e 'quanto manca al timer'. Cinque suonerie offline con anteprima, volume e ripetizione nelle impostazioni gia' esistenti, ora organizzate per categorie. I comandi originali, Telegram, memoria, progetti, microfono, add-on e GPT esterno non sono stati rimossi.
+
+Estrai in una cartella nuova e avvia `avvia_jarvis.bat`. I dati del profilo di prova restano isolati. I test automatici Windows/Linux sono superati; il collaudo reale del timer e dei dispositivi audio sul Pavilion e' ancora necessario. Sorgente e modifiche nella PR #32.
+
+---
+
 # Ultima build Jarvis — timer vocale e impostazioni (31/10/2026)
 
 **[SCARICA JARVIS COMPLETO — TIMER VOCALE + HUD](./Jarvis-Timer-Vocale-20261031.zip)**
