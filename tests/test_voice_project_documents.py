@@ -13,7 +13,33 @@ from project_voice import (
     parse_project_voice,find_existing_project,safe_project_name,
 )
 from workspace_memory import WorkspaceMemory
-from tests.test_managed_documents import FakeNotepadBridge
+from notepad_controller import NotepadSession
+
+
+class FakeNotepadBridge:
+    def __init__(self):
+        self.notes={}
+        self.closed=[]
+        self.counter=0
+
+    def open_blank(self):
+        self.counter+=1
+        ident="jarvis-note-"+str(self.counter)
+        session=NotepadSession(ident,100+self.counter,200+self.counter,
+                              300+self.counter,object())
+        self.notes[ident]=""
+        return session
+
+    def read(self,note):
+        return self.notes[note.ident]
+
+    def write(self,note,text):
+        self.notes[note.ident]=text
+
+    def close(self,note,*,discard_confirmed):
+        assert discard_confirmed
+        self.closed.append(note.ident)
+        del self.notes[note.ident]
 
 
 class ProjectVoiceTests(unittest.TestCase):
