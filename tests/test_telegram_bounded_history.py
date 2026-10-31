@@ -102,9 +102,13 @@ class HistoryTests(unittest.TestCase):
         self.assertTrue(backup.exists())
         with closing(sqlite3.connect(backup)) as conn:
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM telegram_events "
-                                          "WHERE peer_id=123").fetchone()[0],64)
+                                          "WHERE peer_id=123").fetchone()[0],50)
         WorkspaceMemory(self.path)
         self.assertEqual(len(migrated.telegram_activity(123,limit=100)),50)
+        with closing(sqlite3.connect(backup)) as conn:
+            self.assertEqual(conn.execute(
+                "SELECT COUNT(*) FROM messages WHERE scope='telegram'"
+            ).fetchone()[0],0)
 
     def test_manual_owner_voice_does_not_count_as_introduction(self):
         self.db.telegram_event(234,"outgoing",9,"voice","Messaggio dettato da Alberto")
