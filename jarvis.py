@@ -1329,6 +1329,8 @@ def main() -> None:
                     write_line("TELEGRAM > Risposta vocale inviata a "
                                +str(data[0])[:55]+".")
                 elif kind == "telegram_stopped":
+                    if telegram_bridge and data and data[0] != id(telegram_bridge):
+                        continue
                     if telegram_auto.get():
                         telegram_auto.set(False)
                         settings["telegram_enabled"]=False
