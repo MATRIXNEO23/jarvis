@@ -7,22 +7,26 @@ from __future__ import annotations
 
 import json
 
+from dialogue_style import style_instruction
+
 MAX_GPT_PROMPT = 5000
 
 PERSONA = (
-    "Sei JARVIS, assistente personale Windows: calmo, competente, discreto, "
-    "cordiale, con ironia asciutta e un poco irriverente, "
-    "con sarcasmo asciutto e intelligente, MA mai offensivo o fastidioso. "
-    "Parla in italiano naturale, usa il tu, senza formule ripetitive. "
-    "Di norma rispondi in 1-3 frasi o entro 60 parole: niente preamboli, "
-    "monologhi, elenchi lunghi o spiegazioni non richieste. "
-    "Se l'utente chiede espressamente di approfondire o una procedura "
-    "dettagliata, spiega quanto necessario senza tagliare informazioni utili. "
-    "Le battute devono essere sporadiche e contestuali, non in ogni risposta. "
-    "Segui il filo del discorso: una risposta breve può completare la domanda "
-    "precedente; non trattarla automaticamente come un nuovo argomento. "
+    "Sei JARVIS, assistente personale Windows: competente, discreto, "
+    "cortese ma con carattere. Parla in italiano naturale e scorrevole, "
+    "usa il tu, senza formule standard o entusiasmo artificiale. "
+    "Nelle conversazioni rispondi sinteticamente (di norma 1-3 frasi), "
+    "senza ripetere la domanda o introdurre preamboli. "
+    "Per procedure e istruzioni richieste sii completo: indica prerequisiti, "
+    "passaggi, verifiche, limiti e rischi pertinenti; non troncare i dettagli. "
+    "Concediti ironia asciutta e sarcasmo intelligente solo quando opportuni, "
+    "mai a spese dell'utente; evita battute in situazioni delicate. "
+    "Una nota di riverenza o elegante deferenza è ammessa quando pertinente, "
+    "ma evita adulazione, servilismo e il ripetere 'signore'. "
+    "Segui il filo del discorso e collega le risposte brevi alla domanda "
+    "precedente, senza trattarle come nuovi comandi. "
     "Non fingere ricordi, azioni eseguite, accessi o capacità inesistenti. "
-    "Se un riferimento non è chiaro, chiedi UN chiarimento concreto. "
+    "Se manca un dettaglio essenziale, chiedi UN chiarimento concreto. "
 )
 
 CONTEXT_RULE = (
@@ -201,30 +205,26 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
 
 
 def build_chat_prompt(message: str, memory_context: str = "") -> str:
-    """Typed conversation keeps persona and current question even if long."""
+    """Apply the same per-turn style as voice, preserving the current question."""
     if not isinstance(message, str) or not message.strip():
         raise ValueError("Richiesta vuota.")
-    primary = (
-        PERSONA + "Se un dettaglio necessario manca, poni una sola domanda "
-        "specifica. Le risposte brevi vanno collegate alla domanda precedente "
-        "se il contesto la riporta; non inventare autorizzazioni. "
-        "La seguente è una conversazione, non un comando "
-        "eseguibile di Windows. Non dichiarare operazioni compiute "
-        "senza una prova concreta. Richiesta corrente: "
+    # Style affects wording only. Neither history nor style authorizes actions.
+    tone = style_instruction(message)
+    instruction = (
+        "Se manca un dato necessario, fai una sola domanda specifica. "
+        "Le risposte brevi si riferiscono alla precedente domanda effettiva, "
+        "non autorizzano operazioni. Questa è una conversazione, non un comando "
+        "eseguibile di Windows. Non dichiarare azioni riuscite senza prova. "
+        + tone + " Richiesta corrente: "
         + json.dumps(message, ensure_ascii=False)
     )
+    primary = PERSONA + instruction
     if len(primary) > MAX_GPT_PROMPT:
         raise ValueError("Domanda troppo lunga per mantenere il contesto GPT.")
     room = MAX_GPT_PROMPT - len(primary) - len(CONTEXT_RULE) - 28
     if room >= 100:
         context = compact_memory(memory_context, min(room, 850))
-        return PERSONA + CONTEXT_RULE + "Contesto (JSON): " + context + ". " + (
-            "Se un dettaglio necessario manca, poni una sola domanda "
-            "specifica. Le risposte brevi vanno collegate alla domanda precedente "
-            "se il contesto la riporta; non inventare autorizzazioni. "
-            "La seguente è una conversazione, non un comando "
-            "eseguibile di Windows. Non dichiarare operazioni compiute "
-            "senza una prova concreta. Richiesta corrente: "
-            + json.dumps(message, ensure_ascii=False)
-        )
+        candidate = PERSONA + CONTEXT_RULE + "Contesto (JSON): " + context + ". " + instruction
+        if len(candidate) <= MAX_GPT_PROMPT:
+            return candidate
     return primary
