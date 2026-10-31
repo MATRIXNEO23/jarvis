@@ -53,6 +53,15 @@ class AlarmTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 alarm_wav(kind, volume)
 
+    def test_start_resumes_when_paused_without_editing_duration(self):
+        t = TimerPopup(root=None, get_preferences=lambda: {})
+        t.duration = 600
+        t.remaining = 185.0
+        t.paused = True
+        with patch.object(t, "show"), patch.object(t, "resume") as resume:
+            self.assertTrue(t.start())
+            resume.assert_called_once()
+
     def test_remaining_and_pause_use_monotonic_time_without_tk(self):
         # Logic can be exercised on build agents without any desktop.
         t = TimerPopup(root=None, get_preferences=lambda: {})
