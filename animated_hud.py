@@ -137,17 +137,24 @@ class JarvisHUD:
         tk.Label(header, text="◈  J A R V I S   //   ASSISTENTE",
                  font=("Segoe UI", 16, "bold"), bg=BG,
                  fg=CYAN).pack(side="left", padx=(18, 8), pady=15)
-        self.state_text = tk.StringVar(value="MIC  SPENTO    •    GPT  NON CONNESSO")
-        tk.Label(header, textvariable=self.state_text,
-                 font=("Consolas", 10), bg=BG, fg=MUTED).pack(
-            side="right", padx=(10, 30))
+        self.exit_button = tk.Button(
+            header, text="×", command=lambda: None,
+            fg=MUTED, bg=BG, activebackground=PANEL,
+            activeforeground=WHITE, relief="flat",
+            font=("Segoe UI", 19), cursor="hand2", bd=0)
+        self.exit_button.pack(side="right", padx=(0, 8))
         self.gear = tk.Button(
             header, text="⚙", command=on_settings,
             fg=CYAN, bg=BG, activebackground=PANEL,
             activeforeground=TURQUOISE, relief="flat",
             font=("Segoe UI Symbol", 22), cursor="hand2", bd=0,
             highlightthickness=0)
-        self.gear.pack(side="right", padx=(0, 12))
+        self.gear.pack(side="right", padx=(0, 10))
+        self.state_text = tk.StringVar(
+            value="MIC  SPENTO    •    GPT  NON CONNESSO")
+        tk.Label(header, textvariable=self.state_text,
+                 font=("Consolas", 10), bg=BG, fg=MUTED).pack(
+            side="right", padx=(10, 25))
 
         area = tk.Frame(self.frame, bg=BG)
         area.pack(fill="both", expand=True, padx=13, pady=(5, 8))
@@ -204,6 +211,9 @@ class JarvisHUD:
 
     def set_state_provider(self, callback):
         self.state_provider = callback
+
+    def set_close_handler(self, callback):
+        self.exit_button.configure(command=callback)
 
     def _on_resize(self, _event=None):
         self._drawn_size = None
