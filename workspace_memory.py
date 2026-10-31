@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import threading
 from uuid import uuid4
 
 from settings import default_path
@@ -51,6 +52,7 @@ class WorkspaceMemory:
             "jarvis_workspaces.sqlite3")
         self.path.parent.mkdir(parents=True,exist_ok=True)
         self.continuities=self.path.parent/"projects"
+        self._projection_lock=threading.RLock()
         self._initialize()
         self._recover_unfinished()
 
@@ -394,10 +396,27 @@ class WorkspaceMemory:
                     (ident,ticket,title,"Interrotto al riavvio: risultato non verificato.",now))
             ids={ident for _,ident,_ in rows}
             # Regenerate projections absent after migration or a crash.
-            missing=db.execute("SELECT id FROM projects").fetchall()
-        for (ident,) in missing:
+            existing=db.execute("""SELECT p.id, p.active, p.summary,
+                COALESCE((SELECT MAX(id) FROM project_events
+                          WHERE project_id=p.id),0),
+                COALESCE((SELECT MAX(id) FROM messages
+                          WHERE scope='project' AND scope_id=p.id),0)
+                FROM projects p""").fetchall()
+        for ident,active,summary,last_event,last_message in existing:
             folder=self.continuities/ident
-            if not (folder/"STATO.json").is_file():
+            state_file=folder/"STATO.json"
+            try:
+                with state_file.open("r",encoding="utf-8") as handle:
+                    state=json.load(handle)
+                if (state.get("last_event_id")!=last_event
+                        or state.get("last_message_id")!=last_message
+                        or state.get("summary_from_user")!=summary
+                        or state.get("active")!=bool(active)
+                        or any(not (folder/name).is_file() for name in (
+                            "CONTINUITA.md","PASSI.md","ARTIFATTI.md",
+                            "EVENTI.jsonl"))):
+                    ids.add(ident)
+            except (OSError,ValueError,TypeError,AttributeError):
                 ids.add(ident)
         for ident in ids:
             self._save_snapshot(ident)
@@ -421,88 +440,94 @@ class WorkspaceMemory:
                 temp.unlink()
 
     def _save_snapshot(self, ident, *, steps_changed=True):
-        """SQLite is canonical; projections can be rebuilt at any restart."""
-        project=self.project(ident)
-        if not project:
-            raise WorkspaceError("Progetto inesistente.")
-        history=self.recent("project",ident,8)
-        steps=self.project_steps(ident,limit=80)
-        with self._db() as db:
-            files=db.execute(
-                "SELECT path,verified_utc FROM project_artifacts "
-                "WHERE project_id=? ORDER BY verified_utc DESC,path LIMIT 70",
-                (ident,)).fetchall()
-            events=db.execute(
-                "SELECT id,step_id,kind,title,status,detail,time_utc "
-                "FROM project_events WHERE project_id=? ORDER BY id DESC LIMIT 100",
-                (ident,)).fetchall()
-            counters=db.execute(
-                "SELECT status,COUNT(*) FROM project_steps "
-                "WHERE project_id=? GROUP BY status",(ident,)).fetchall()
-        counts=dict(counters)
-        lines=[
-            "# Continuità — "+project["name"],
-            "",
-            "ID progetto: "+ident,
-            "Stato: "+("attivo" if project["active"] else "archiviato"),
-            "Aggiornato (UTC): "+project["updated_utc"],
-            "",
-            "## Stato consolidato dall'utente",
-            project["summary"] or "(nessuno stato consolidato fornito)",
-            "",
-            "## Avanzamento operativo (registrato, non inventato da GPT)",
-        ]
-        if not steps:
-            lines.append("(nessun passo operativo ancora registrato)")
-        for item in steps[:18]:
-            lines.append("- ["+item["status"].upper()+"] "+item["title"]
-                         +(" — "+item["detail"][:180] if item["detail"] else ""))
-        lines.extend(["","## File verificati"])
-        lines.extend("- "+path for path,_ in files[:18])
-        if not files:
-            lines.append("(nessun file prodotto verificato)")
-        lines.extend(["","## Ultimi scambi (estratto automatico, non decisioni verificate)"])
-        for item in history:
-            lines.extend(["", "- ["+item["when"]+"] Utente: "+item["utente"][:240],
-                          "  - JARVIS: "+item["jarvis"][:260]])
-        folder=self.continuities/ident
-        (folder/"files").mkdir(parents=True,exist_ok=True)
-        self._atomic_file(folder/"CONTINUITA.md","\n".join(lines)+"\n",
-                          keep_previous=True)
-        state={
-            "schema_version":1, "project_id":ident,"name":project["name"],
-            "active":project["active"],"updated_utc":project["updated_utc"],
-            "summary_from_user":project["summary"],
-            "counts":counts,
-            "unfinished":[{"id":x["id"],"title":x["title"],"status":x["status"]}
-                          for x in steps if x["status"] in ("planned","running","interrupted")][:20],
-            "recent_completed":[{"id":x["id"],"title":x["title"],"detail":x["detail"],
-                                 "receipt":x["receipt"]}
-                                for x in steps if x["status"]=="completed"][:12],
-        }
-        self._atomic_file(folder/"STATO.json",
-                          json.dumps(state,ensure_ascii=False,indent=2)+"\n")
-        if not steps_changed:
-            return
-        tasks=["# Passi del progetto — "+project["name"],"",
-               "Fonte: ricevute locali e registro; i passi pianificati non sono completati.",""]
-        tasks.extend("- ["+x["status"]+"] "+x["title"]
-                     +(" — "+x["detail"] if x["detail"] else "")
-                     +(" (ricevuta "+x["receipt"]+")" if x["receipt"] else "")
-                     for x in steps)
-        self._atomic_file(folder/"PASSI.md","\n".join(tasks)+"\n")
-        artifact_lines=["# File verificati — "+project["name"],"",
-                        "Questo elenco registra riferimenti a file esistenti, "
-                        "non li copia né li sposta.",""]
-        artifact_lines.extend("- ["+when+"] "+p for p,when in files)
-        self._atomic_file(folder/"ARTIFATTI.md","\n".join(artifact_lines)+"\n")
-        # Capped read-friendly projection; complete append-only evidence is in SQLite.
-        audit=[]
-        for seq,ticket,kind,title,status,detail,when in reversed(events):
-            audit.append(json.dumps({"id":seq,"step_id":ticket,"kind":kind,
-                "title":title,"status":status,"detail":detail,"utc":when},
-                ensure_ascii=False,separators=(",",":")))
-        self._atomic_file(folder/"EVENTI.jsonl","\n".join(audit)+("\n" if audit else ""))
+        with self._projection_lock:
+            """SQLite is canonical; projections can be rebuilt at any restart."""
+            project=self.project(ident)
+            if not project:
+                raise WorkspaceError("Progetto inesistente.")
+            history=self.recent("project",ident,8)
+            steps=self.project_steps(ident,limit=80)
+            with self._db() as db:
+                files=db.execute(
+                    "SELECT path,verified_utc FROM project_artifacts "
+                    "WHERE project_id=? ORDER BY verified_utc DESC,path LIMIT 70",
+                    (ident,)).fetchall()
+                events=db.execute(
+                    "SELECT id,step_id,kind,title,status,detail,time_utc "
+                    "FROM project_events WHERE project_id=? ORDER BY id DESC LIMIT 100",
+                    (ident,)).fetchall()
+                counters=db.execute(
+                    "SELECT status,COUNT(*) FROM project_steps "
+                    "WHERE project_id=? GROUP BY status",(ident,)).fetchall()
+                message_seq=db.execute(
+                    "SELECT COALESCE(MAX(id),0) FROM messages "
+                    "WHERE scope='project' AND scope_id=?",(ident,)).fetchone()[0]
+            counts=dict(counters)
+            lines=[
+                "# Continuità — "+project["name"],
+                "",
+                "ID progetto: "+ident,
+                "Stato: "+("attivo" if project["active"] else "archiviato"),
+                "Aggiornato (UTC): "+project["updated_utc"],
+                "",
+                "## Stato consolidato dall'utente",
+                project["summary"] or "(nessuno stato consolidato fornito)",
+                "",
+                "## Avanzamento operativo (registrato, non inventato da GPT)",
+            ]
+            if not steps:
+                lines.append("(nessun passo operativo ancora registrato)")
+            for item in steps[:18]:
+                lines.append("- ["+item["status"].upper()+"] "+item["title"]
+                             +(" — "+item["detail"][:180] if item["detail"] else ""))
+            lines.extend(["","## File verificati"])
+            lines.extend("- "+path for path,_ in files[:18])
+            if not files:
+                lines.append("(nessun file prodotto verificato)")
+            lines.extend(["","## Ultimi scambi (estratto automatico, non decisioni verificate)"])
+            for item in history:
+                lines.extend(["", "- ["+item["when"]+"] Utente: "+item["utente"][:240],
+                              "  - JARVIS: "+item["jarvis"][:260]])
+            folder=self.continuities/ident
+            (folder/"files").mkdir(parents=True,exist_ok=True)
+            self._atomic_file(folder/"CONTINUITA.md","\n".join(lines)+"\n",
+                              keep_previous=True)
+            state={
+                "schema_version":1, "project_id":ident,"name":project["name"],
+                "last_event_id":events[0][0] if events else 0,
+                "last_message_id":message_seq,
+                "active":project["active"],"updated_utc":project["updated_utc"],
+                "summary_from_user":project["summary"],
+                "counts":counts,
+                "unfinished":[{"id":x["id"],"title":x["title"],"status":x["status"]}
+                              for x in steps if x["status"] in ("planned","running","interrupted")][:20],
+                "recent_completed":[{"id":x["id"],"title":x["title"],"detail":x["detail"],
+                                     "receipt":x["receipt"]}
+                                    for x in steps if x["status"]=="completed"][:12],
+            }
+            self._atomic_file(folder/"STATO.json",
+                              json.dumps(state,ensure_ascii=False,indent=2)+"\n")
+            if not steps_changed:
+                return
+            tasks=["# Passi del progetto — "+project["name"],"",
+                   "Fonte: ricevute locali e registro; i passi pianificati non sono completati.",""]
+            tasks.extend("- ["+x["status"]+"] "+x["title"]
+                         +(" — "+x["detail"] if x["detail"] else "")
+                         +(" (ricevuta "+x["receipt"]+")" if x["receipt"] else "")
+                         for x in steps)
+            self._atomic_file(folder/"PASSI.md","\n".join(tasks)+"\n")
+            artifact_lines=["# File verificati — "+project["name"],"",
+                            "Questo elenco registra riferimenti a file esistenti, "
+                            "non li copia né li sposta.",""]
+            artifact_lines.extend("- ["+when+"] "+p for p,when in files)
+            self._atomic_file(folder/"ARTIFATTI.md","\n".join(artifact_lines)+"\n")
+            # Capped read-friendly projection; complete append-only evidence is in SQLite.
+            audit=[]
+            for seq,ticket,kind,title,status,detail,when in reversed(events):
+                audit.append(json.dumps({"id":seq,"step_id":ticket,"kind":kind,
+                    "title":title,"status":status,"detail":detail,"utc":when},
+                    ensure_ascii=False,separators=(",",":")))
+            self._atomic_file(folder/"EVENTI.jsonl","\n".join(audit)+("\n" if audit else ""))
 
     def note_for_contact(self,peer_id:int,message:str) -> str:
         if type(peer_id) is not int or peer_id<=0:
