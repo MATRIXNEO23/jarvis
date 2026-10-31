@@ -42,8 +42,10 @@ def telegram_assistant_prompt(user_text,context="",pending=()):
     return (
         "Sei JARVIS, assistente personale di Alberto che risponde su Telegram "
         "dal suo account, con autorizzazione. Non sei Alberto e non fingere "
-        "di essere lui. Informa chiaramente il contatto che parla il suo "
-        "assistente, in modo naturale. Rispondi SEMPRE in italiano, "
+        "di essere lui. Il sistema gestisce la presentazione iniziale: "
+        "NON ripetere spontaneamente 'Sono Jarvis' o 'l'assistente di Alberto' "
+        "nelle risposte successive, a meno che il contatto chieda chi sei. "
+        "Rispondi SEMPRE in italiano, "
         "brevemente (massimo 2-3 frasi, 300 caratteri), con tono rispettoso, "
         "discreto, eventualmente ironia lieve, mai flirt o impersonificazione. "
         "Non promettere appuntamenti, non condividere password, dati privati, "
@@ -248,25 +250,29 @@ class TelegramBridge:
                          "Telegram: messaggio ricevuto, nessuna risposta per limite frequenza."))
             return
         notes=self.workspace.pending_for_contact(peer_id)
+        needs_intro=self.workspace.telegram_needs_introduction(peer_id)
         # Authorized owner messages must be relayed verbatim. Never rely on
         # GPT to decide whether to include or paraphrase an approved note.
         delivering=notes[:1]
         if delivering:
-            relay="Sono JARVIS, l'assistente di Alberto. "
-            relay+="Mi ha incaricato di riferirti questo: "
+            relay="Mi ha incaricato di riferirti questo: "
             relay+=delivering[0]["message"]
             if len(relay)>500:
                 raise TelegramBridgeError(
                     "Messaggio da riferire troppo lungo per un solo vocale.")
             reply=relay
         else:
-            context=self.workspace.prompt_context(
-                "telegram",str(peer_id),incoming_text,budget=820)
+            context=self.workspace.telegram_recent_context(peer_id,message.id)
             prompt=telegram_assistant_prompt(incoming_text,context)
             reply=clean_generated_reply(
                 await asyncio.to_thread(self.ask_gpt,prompt))
         if not reply or not self._enabled.is_set():
             return
+        if needs_intro and not reply.casefold().lstrip().startswith(
+                ("sono jarvis","ciao, sono jarvis","ciao sono jarvis")):
+            reply="Ciao, sono Jarvis, l'assistente di Alberto. "+reply
+        if len(reply)>500:
+            raise TelegramBridgeError("Risposta Telegram oltre il limite.")
         with tempfile.TemporaryDirectory(prefix="jarvis-tg-out-") as folder:
             audio_path=await asyncio.to_thread(
                 make_telegram_voice,reply,Path(folder),self.voice_name)
@@ -290,8 +296,8 @@ class TelegramBridge:
             self._last_sent[peer_id]=time.monotonic()
             self.workspace.telegram_event(
                 peer_id,"outgoing",sent.id,"voice",reply)
-            self.workspace.add_turn(
-                "telegram",str(peer_id),incoming_text,reply)
+            if needs_intro:
+                self.workspace.telegram_mark_introduced(peer_id)
             if note_ids:
                 self.workspace.finish_notes(peer_id,note_ids,sent.id)
             self.notify(("telegram_sent",peer_name))
