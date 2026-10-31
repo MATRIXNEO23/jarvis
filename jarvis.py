@@ -7,12 +7,17 @@ GPT requires the official SDK and an explicit account sign-in.
 """
 from __future__ import annotations
 
+import os
 import queue
 from collections import deque
 import json
 import re
 import sqlite3
 from conversation_memory import ConversationMemory
+from workspace_memory import WorkspaceMemory, WorkspaceError
+from telegram_bridge import TelegramBridge
+from telegram_security import credentials_present
+from telegram_voice import missing_voice_dependencies
 from jarvis_persona import build_chat_prompt
 from startup_greeting import startup_greeting
 from adaptive_voice import SpeechCorrections, SpeechCorrectionError
@@ -26,7 +31,7 @@ import threading
 from datetime import datetime
 from pathlib import Path
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, ttk, simpledialog
 import webbrowser
 
 from document_dialog import DocumentDialog
@@ -105,6 +110,22 @@ def main() -> None:
         settings_window.focus_set()
 
     hud = JarvisHUD(root, show_settings)
+    workspace_status=tk.StringVar(value="Progetti: inizializzazione.")
+    telegram_status=tk.StringVar(value="Telegram: disattivato.")
+    active_context_label=tk.StringVar(value="Contesto: GENERALE")
+    active_project_id=None
+    workspace=None
+    try:
+        workspace=WorkspaceMemory()
+        workspace_status.set(
+            "Memoria progetti: "+str(len(workspace.projects()))+" progetti locali.")
+    except (OSError,sqlite3.Error,WorkspaceError) as exc:
+        workspace_status.set("Memoria progetti non disponibile: "+str(exc)[:120])
+    telegram_bridge=None
+    telegram_gpt_ready=threading.Event()
+    telegram_auto=tk.BooleanVar(value=settings["telegram_enabled"])
+    orbit_nodes_cache=()
+
     frame = ttk.Frame(settings_inner, padding=15)
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="Impostazioni JARVIS",
