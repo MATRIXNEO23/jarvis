@@ -25,7 +25,7 @@ class WorkspaceError(ValueError):
 
 MAX_TURN = 900
 MAX_ANSWER = 1100
-MAX_NOTE = 700
+MAX_NOTE = 320
 MAX_SUMMARY = 1800
 _SECRET = re.compile(r"\b(?:password|passphrase|token|api[_\s-]?hash|codice\s+otp|pin)\b",re.I)
 _WORDS = re.compile(r"[\w]{3,}",re.UNICODE)
