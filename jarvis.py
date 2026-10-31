@@ -245,6 +245,8 @@ def main() -> None:
     pending_conversation = deque()
     last_user_for_action = ""
     last_user_for_document = ""
+    project_local_ticket = None
+    project_document_ticket = None
     memory_enabled = tk.BooleanVar(value=settings["memory_enabled"])
     memory_status = tk.StringVar(value="Second Brain: inizializzazione.")
     durable_brain: SecondBrain | None = None
@@ -324,8 +326,8 @@ def main() -> None:
                      user + " " + reply, re.I):
             return
         conversation_memory.remember(user, reply, kind)
-        if not memory_enabled.get():
-            return
+        # Explicitly created project memory advances independently from
+        # the general-chat Second Brain opt-in switch.
         if active_project_id is not None:
             if workspace is not None:
                 try:
@@ -333,6 +335,8 @@ def main() -> None:
                                        user,reply,kind)
                 except (OSError,sqlite3.Error,WorkspaceError) as exc:
                     workspace_status.set("Memoria progetto: "+str(exc)[:90])
+            return
+        if not memory_enabled.get():
             return
         if durable_brain is not None:
             try:
@@ -359,10 +363,36 @@ def main() -> None:
         except (OSError, sqlite3.Error, BrainError) as exc:
             memory_status.set("Ricevuta non registrata: " + str(exc)[:90])
 
+    def begin_project_work(title: str, source: str = "local",
+                           *, project_id: str | None = None,
+                           planned: bool = False):
+        """Persist a work ticket BEFORE executing a project operation."""
+        ident=project_id if project_id is not None else active_project_id
+        if ident is None:
+            return None
+        if workspace is None:
+            workspace_status.set("Memoria progetto non disponibile: azione bloccata.")
+            return False
+        try:
+            return (ident,workspace.begin_step(
+                ident,title[:240],source=source,planned=planned))
+        except (OSError,sqlite3.Error,WorkspaceError) as exc:
+            workspace_status.set("Checkpoint non scritto: "+str(exc)[:110])
+            return False
+
+    def finish_project_work(ticket, status: str, detail: str,
+                            *, receipt: str = "") -> bool:
+        if not ticket or ticket is False or workspace is None:
+            return False
+        try:
+            return bool(workspace.finish_step(
+                ticket[0],ticket[1],status,detail,receipt=receipt))
+        except (OSError,sqlite3.Error,WorkspaceError) as exc:
+            workspace_status.set("Esito progetto non registrato: "+str(exc)[:100])
+            return False
+
     def recent_memory_for_gpt(spoken: str) -> str:
         short=conversation_memory.context(max_chars=860)
-        if not memory_enabled.get():
-            return short
         if active_project_id is not None:
             if workspace is None:
                 return short
@@ -385,7 +415,7 @@ def main() -> None:
             except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
                 workspace_status.set("Ricerca progetto: "+str(exc)[:90])
                 return short
-        if durable_brain is None:
+        if not memory_enabled.get() or durable_brain is None:
             return short
         try:
             long=durable_brain.prompt_context(spoken,budget=530)
@@ -1268,7 +1298,7 @@ def main() -> None:
 
     def submit_local(event=None, message_override: str | None = None,
                      source_utterance: str = "") -> None:
-        nonlocal busy_local, last_user_for_action
+        nonlocal busy_local, last_user_for_action, project_local_ticket
         if busy_local or closing:
             return
         message = (message_override if message_override is not None else request.get()).strip()
@@ -1278,6 +1308,10 @@ def main() -> None:
             request.set("")
         write_line("COMANDO LOCALE > " + message)
         last_user_for_action = source_utterance or message
+        project_local_ticket = begin_project_work(last_user_for_action,"local")
+        if project_local_ticket is False:
+            write_line("JARVIS > Impossibile salvare il checkpoint: comando non eseguito.")
+            return
         busy_local = True
         refresh_buttons()
 
@@ -1314,6 +1348,7 @@ def main() -> None:
     def poll() -> None:
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         nonlocal last_user_for_action, last_user_for_document
+        nonlocal project_local_ticket, project_document_ticket
         if closing:
             return
         try:
@@ -1463,6 +1498,10 @@ def main() -> None:
                     write_line(f"[{result.status}] {result.message}")
                     source = last_user_for_action or result.action
                     last_user_for_action = ""
+                    finish_project_work(project_local_ticket,
+                        "completed" if result.status=="completed" else "failed",
+                        result.message,receipt=result.task_id if result.status=="completed" else "")
+                    project_local_ticket = None
                     remember_exchange(
                         source, result.message,
                         "action" if result.status == "completed" else "error")
