@@ -5,8 +5,9 @@ from threading import Event
 
 from animated_hud import (
     BG, BLUE, TURQUOISE, WHITE, LAND, TICK_MS,
-    interpolate_color, projected_earth_point, JarvisHUD,
+    interpolate_color, projected_earth_point, JarvisHUD, WindowsCPU,
 )
+from hud_reference import AMBER, GREEN, CYAN, core_light, core_mode, clip_coast, COASTS
 from offline_tts import OfflineSpeaker
 
 
@@ -36,7 +37,36 @@ class AnimatedHUDGeometryTests(unittest.TestCase):
         self.assertLess(len(LAND), 600)
         self.assertGreaterEqual(TICK_MS, 90)
         self.assertLessEqual(TICK_MS, 220)
-        self.assertEqual(BG, "#020b13")
+        self.assertEqual(BG, "#010711")
+
+    def test_three_audio_states_have_distinct_center_colors(self):
+        self.assertEqual(core_mode(speaking=False,listening=False),"idle")
+        self.assertEqual(core_mode(speaking=False,listening=True),"listening")
+        self.assertEqual(core_mode(speaking=True,listening=True),"speaking")
+        idle_color,idle_pulse=core_light("idle",0)
+        listen_color,_=core_light("listening",0)
+        speak_color,_=core_light("speaking",0)
+        self.assertEqual((idle_color,listen_color,speak_color),
+                         (CYAN,AMBER,GREEN))
+        self.assertNotEqual(idle_color,listen_color)
+        self.assertNotEqual(idle_color,speak_color)
+        self.assertGreater(core_light("listening",.2)[1],
+                           core_light("listening",0)[1])
+        self.assertNotEqual(core_light("speaking",0)[1],
+                            core_light("speaking",.2)[1])
+
+    def test_geographic_land_has_visible_front_clipping(self):
+        africa=COASTS[0]
+        visible=clip_coast(africa,0,100)
+        self.assertGreater(len(visible),6)
+        self.assertTrue(all(abs(x)<=101 and abs(y)<=101 for x,y in visible))
+        # After half turn Africa is not visible on the front hemisphere.
+        self.assertEqual(clip_coast(africa,math.pi,100),[])
+
+    def test_cpu_sample_safe_when_not_windows(self):
+        import os
+        if os.name!="nt":
+            self.assertIsNone(WindowsCPU().sample())
 
     def test_hud_has_safe_shutdown_api(self):
         # A fake HUD has no Tk widgets, but its stop mechanism should be
