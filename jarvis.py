@@ -657,7 +657,7 @@ def main() -> None:
     chat_panel.pack(fill="both", expand=True)
     output = tk.Text(
         chat_panel, height=12, wrap="word", state="disabled",
-        font=("Segoe UI", 10), bg="#041522", fg=WHITE,
+        font=("Segoe UI", 10), bg="#020d17", fg=WHITE,
         insertbackground=CYAN, relief="flat",
         borderwidth=0, padx=12, pady=9,
         selectbackground="#136488", selectforeground=WHITE)

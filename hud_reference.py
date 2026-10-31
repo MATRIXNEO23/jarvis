@@ -8,6 +8,8 @@ from __future__ import annotations
 import math
 import random
 
+from hud_backdrop import draw_cinematic_backdrop
+
 CYAN = "#16d8ff"
 AMBER = "#ff9d26"
 GREEN = "#39f3a7"
@@ -197,17 +199,10 @@ class ReactorArt:
         self._glow_size=min(480,max(128,round(r*2.16/48)*48))
         from hud_raster import ASSETS
         ASSETS.request("reactor",self._glow_size)
-        rng=random.Random(33)
-        # Fine blueprint lines and small connection nodes.
-        for x in range(16,int(w),36):
-            c.create_line(x,5,x,h-5,fill="#061a2a")
-        for y in range(18,int(h),36):
-            c.create_line(6,y,w-6,y,fill="#061827")
-        for i in range(32):
-            x=rng.randrange(12,max(13,int(w-12)))
-            y=rng.randrange(12,max(13,int(h-12)))
-            sz=1.1 if i%5 else 1.8
-            c.create_oval(x-sz,y-sz,x+sz,y+sz,fill="#135375",outline="")
+        # Reference-matched nearly black atmosphere: angular circuits,
+        # selective cyan junctions and NO full-screen blue square grid.
+        # Constructed only on resize, never in the 110-ms animation tick.
+        draw_cinematic_backdrop(c,int(w),int(h),"reactor")
         # High-fidelity emissive art underneath the moving vector gauges.
         # Worker generates PNGs once; until ready all vector art still works.
         self._glow_photo_item=c.create_image(cx,cy,anchor="center")
@@ -410,12 +405,9 @@ class GlobeArt:
         self._earth_raster_ready=False
         from hud_raster import ASSETS
         ASSETS.request("earth",self._earth_size)
-        rng=random.Random(20)
-        for i in range(28):
-            px=rng.randint(4,max(5,int(w-4)))
-            py=rng.randint(4,max(5,int(h-4)))
-            c.create_oval(px,py,px+1.3,py+1.3,
-                          outline="",fill="#174b69")
+        # Match the reference's deep-black circuitry around the planet.
+        # Static paint preserves CPU for continuous microphone recognition.
+        draw_cinematic_backdrop(c,int(w),int(h),"earth")
         c.create_text(13,16,text="TERMINALE  //  TERRA",
                       anchor="w",fill=CYAN,font=("Consolas",10,"bold"))
         c.create_line(12,31,w-12,31,fill="#124b6e")
