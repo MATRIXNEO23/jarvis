@@ -4,6 +4,14 @@
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
+## Nuovo ramo di prova: progetti indipendenti, orbite e Telegram vocale
+
+**[Scarica JARVIS — progetti e Telegram (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/project-memory-orbits-telegram.zip)**.
+
+Include l'HUD nero cinematico e il reattore colorato, più **pallini orbitanti interattivi** per i progetti attivi e le notifiche Telegram, un gestore di **memorie separate per progetto con ricerca SQLite FTS5 e CONTINUITA.md persistente**, e una personalità più sintetica e ironica. Telegram è un'integrazione facoltativa per **un solo contatto privato** con risposte come **note vocali SAPI/OGG**, tramite Telethon e FFmpeg gratuiti; interruttore inizialmente OFF, autenticazione e scelta del contatto esplicitamente autorizzate, sessione cifrata con DPAPI. Non accede ad altri contatti né condivide automaticamente i ricordi di altri progetti.
+
+**Non è una versione già collaudata sul Pavilion**: aprire in una nuova cartella. [Guida installazione, funzionamento, limiti e controlli](https://github.com/MATRIXNEO23/jarvis/blob/feature/project-memory-orbits-telegram/docs/PROJECT_MEMORY_TELEGRAM.md) · [PR draft #12](https://github.com/MATRIXNEO23/jarvis/pull/12).
+
 ## Ultimo aggiornamento visivo: sfondo cinematico più fedele al preview
 
 **[Scarica JARVIS HUD con sfondo nero e circuiti discreti — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/high-fidelity-cinematic-background.zip)**.
