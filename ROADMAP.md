@@ -1,5 +1,16 @@
 # Roadmap Jarvis — architettura GPT-first, controllo locale e funzionamento offline
 
+## Regola progettuale persistente — add-on (31/10/2026)
+
+**Per le prossime funzionalità**, adottare come criterio predefinito l'architettura modulare degli **add-on `.jaddon`**: timer, cronometro e altri strumenti devono essere progettati come moduli indipendenti, installabili/attivabili/disattivabili dal gestore add-on. Prima di implementarli, verificare che l'infrastruttura esistente li supporti realmente; se richiedono estensioni al nucleo, limitarle a gateway/interfacce generiche e sicure, evitando integrazioni specifiche di ogni strumento direttamente nel programma principale. Nessun add-on non verificato può eseguire codice arbitrario. **Zero costi aggiuntivi, nessuna API a consumo**.
+
+**Funzioni già esistenti:** non migrare automaticamente nulla. Prima di qualunque migrazione svolgere una valutazione esplicita di fattibilità, vantaggi, rischi, dipendenze, impatto su dati/impostazioni e regressioni. Valutare innanzitutto se sia preferibile **lasciare inalterate tutte le funzioni esistenti e applicare la regola solo alle successive**. Migrare soltanto dopo una decisione separata e un'approvazione esplicita dell'utente, con test e possibilità di ripristino.
+
+**Stato della decisione:** regola salvata; nessuna conversione o modifica funzionale autorizzata adesso. Il timer attualmente integrato rimane com'è per il momento.
+
+---
+
+
 > Stato: **sviluppo alpha locale** (comandi locali e prima connessione GPT funzionanti; pianificatore con approvazione in prova). Questa roadmap descrive le funzionalità da realizzare; le caselle non completate **non** rappresentano funzioni disponibili. Aggiornamento: 30 ottobre 2026.
 
 ## Obiettivo
