@@ -1,0 +1,74 @@
+name: Publish Jarvis self-diagnostic route fix ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-self-diagnostic-route-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout existing Download files
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout pinned source revision
+        uses: actions/checkout@v4
+        with:
+          ref: 4154746df5e160c9ad906864d23239463a1c1d64
+          path: source
+          persist-credentials: false
+      - name: Assemble reproducible source package and verify
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile,ZIP_DEFLATED
+          import hashlib,json
+          source=Path("source")
+          target=Path("catalog/Download/Jarvis-Fix-Autodiagnosi-Vocale.zip")
+          target.parent.mkdir(parents=True,exist_ok=True)
+          prefix="Jarvis-Fix-Autodiagnosi/"
+          hashes=[]
+          with ZipFile(target,"w",ZIP_DEFLATED,compresslevel=6) as z:
+              for f in sorted(source.rglob("*")):
+                  if not f.is_file(): continue
+                  parts=f.relative_to(source).parts
+                  if parts[0] in (".github","Download"): continue
+                  if any(p in (".git",".venv","venv","__pycache__") for p in parts):
+                      continue
+                  arc=prefix+"/".join(parts)
+                  z.write(f,arc)
+                  hashes.append({"path":arc,"sha256":hashlib.sha256(f.read_bytes()).hexdigest()})
+              z.writestr(prefix+"SOURCE-COMMIT.txt","4154746df5e160c9ad906864d23239463a1c1d64\n")
+              z.writestr(prefix+"SOURCE-MANIFEST.json",json.dumps(hashes,indent=2))
+          with ZipFile(target) as z:
+              assert z.testzip() is None
+              names=set(z.namelist())
+              for required in (
+                  "jarvis.py","avvia_jarvis.bat","self_diagnostics.py",
+                  "source_review.py","tests/test_self_review.py",
+                  "docs/CORREZIONE_INTENTO_AUTODIAGNOSI.md",
+                  "docs/AUTODIAGNOSI_E_CONSIGLI.md",
+                  "workspace_memory.py","notepad_controller.py"):
+                  assert prefix+required in names,required
+              content=z.read(prefix+"jarvis.py").decode("utf-8")
+              assert 'text="Autodiagnosi Jarvis"' in content
+              assert "try_self_diagnostic(message)" in content
+          print("VERIFIED:",target,target.stat().st_size,"bytes")
+          PY
+      - name: Publish without deleting older ZIPs
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Fix-Autodiagnosi-Vocale.zip
+          git -C catalog commit -m "download: fix Jarvis voice self-diagnostic routing"
+          git -C catalog push origin HEAD:main
