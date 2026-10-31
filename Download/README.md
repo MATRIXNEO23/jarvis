@@ -1,5 +1,24 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## ULTIMA PROVA — MICROFONO SEMPRE ATTIVO E CENTRO REATTIVO ALLA VOCE
+
+**[SCARICA JARVIS CON ASCOLTO AUTOMATICO E SALUTO VOCALE (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-speech-activity-auto-start.zip)**
+
+Questa nuova versione sperimentale contiene tutte le funzioni del ramo precedente (dialogo continuo, personalità, Second Brain, correzioni Vosk, HUD vicino al preview) e modifica tre comportamenti richiesti:
+
+- **Il centro resta CIANO** quando il microfono è acceso ma non stai parlando.
+- **Lampeggia ARANCIONE** quando rileva la tua voce nel microfono; poi torna ciano quando smetti.
+- **Lampeggia VERDE** mentre la voce Windows di JARVIS parla; il verde ha sempre la precedenza.
+- **Aprendo l'applicazione** il microfono parte automaticamente in **Conversazione continua GPT**, senza «Ehi Jarvis» e senza dover premere l'ascolto. **Non** abbiamo aggiunto JARVIS all'avvio automatico di Windows.
+- All'apertura, JARVIS saluta con la voce locale in base all'orario («Buongiorno», «Buonasera» o «Buonanotte, signore. Come posso esserle utile?»). Il saluto è anche visibile nella console.
+- Nelle impostazioni ⚙ puoi disattivare **«Avvia Jarvis già in Conversazione continua GPT»** per i prossimi avvii; durante l'uso puoi ancora selezionare manualmente Standby o altre modalità. Nessun cambio automatico verso Standby quando apri programmi pesanti.
+
+**Test Pavilion:** chiudi la precedente istanza di JARVIS, scarica lo ZIP, estrailo in **una cartella nuova** ed esegui `avvia_jarvis.bat`. Se Vosk e ChatGPT sono già installati e connessi, non devi aggiungere componenti. Controlla il saluto verde, il silenzio ciano, il parlato arancione e il ritorno al ciano. Poi verifica da ⚙ che Standby spenga davvero il microfono. Il rilevamento arancione usa un semplice segnale di attività: rumori forti possono occasionalmente attivarlo.
+
+**[Test automatici Windows/Linux PASS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41151683977)** · [Guida tecnica e privacy](https://github.com/MATRIXNEO23/jarvis/blob/feature/hud-speech-activity-auto-start/docs/HUD_VOICE_ACTIVITY.md) · [PR sperimentale #9](https://github.com/MATRIXNEO23/jarvis/pull/9).
+
+**Versione non ancora collaudata fisicamente sul Pavilion.** Non sovrascrivere la versione funzionante, il modello Vosk o `%LOCALAPPDATA%\\Jarvis`. Le versioni più vecchie sotto seguono le loro precedenti impostazioni di avvio.
+
 ## NUOVA PROVA — JARVIS CONVERSA E MANTIENE IL FILO DEL DISCORSO
 
 **[SCARICA JARVIS CON DIALOGO CONTINUO, PERSONALITÀ E HUD RINNOVATO (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/dialogue-continuity-personality.zip)**
