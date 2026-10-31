@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA BUILD DI TEST — ITALIANO NATURALE E IRRIVERENZA (31/10/2026)
+
+**[SCARICA Jarvis-Conversazione-Naturale.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Conversazione-Naturale.zip)**
+
+Pacchetto effettivamente presente in `Download`, sorgente `fa4b03472dc47107af8dd69d29a3693ccd5988d4`, codice testato nelle [CI Windows e Linux 4/4 SUCCESS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41183303442). [PR #19 sperimentale](https://github.com/MATRIXNEO23/jarvis/pull/19), non integrata in `main`. Sono conservate le ZIP precedenti.
+
+**Richiesta esatta:** italiano naturale, risposte sintetiche in conversazione, procedure complete quando richieste, ironia/sarcasmo intelligente e **IRRIVERENZA**, non deferenza/riverenza. Battute solo quando pertinenti, non su problemi delicati. Il tono non altera contenuti di documenti o autorizzazioni a eseguire azioni. Risposte GPT procedurali più lunghe e sintesi vocale a blocchi per non tagliarle dopo 600 caratteri. Documentazione nel ramo: `docs/QUALITA_CONVERSAZIONE_V1.md`.
+
+**Colllaudo reale sul Pavilion rimandato su richiesta dell'utente.** Fare prima backup completo di `%LOCALAPPDATA%\Jarvis`, estrarre in cartella nuova e non avviare contemporaneamente due versioni.
+
+**AVVERTENZA ANTIVIRUS:** il precedente rilevamento Defender `Trojan:Script/Wacatac.B!ml` non è stato risolto; il nuovo ZIP non ha certificazione antivirus. I test CI e il manifest SHA-256 verificano la riproducibilità, non la sicurezza malware. Se Defender lo blocca, non disabilitare la protezione né forzarne l'esecuzione.
+
+---
+
 ## NUOVA VERSIONE — MEMORIA AFFIDABILE E STORICO VERIFICABILE (31/10/2026)
 
 **[SCARICA Jarvis-Memoria-Affidabile.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Memoria-Affidabile.zip)**
