@@ -8,6 +8,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from pathlib import Path
+from collections.abc import Callable
 import re
 
 from source_review import Improvement, format_improvements, review_sources
@@ -70,6 +71,12 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
     phrase=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
                   text.strip(" ,.!?;:"),flags=re.I).casefold()
     phrase=" ".join(phrase.split())
+    # Vosk commonly separates auto/diagnosi or inserts an article.
+    # Normalize these precise forms, not arbitrary speech about diagnosis.
+    phrase=re.sub(r"\bauto[\s-]+diagnos[ie]\b","autodiagnosi",phrase)
+    phrase=re.sub(r"\bauto[\s-]+analisi\b","autoanalisi",phrase)
+    phrase=re.sub(r"\b(?:l['’]|una?\s+)autodiagnosi\b",
+                  "un'autodiagnosi",phrase)
     if re.fullmatch(
             r"(?:dove\s+(?:sono|tieni)\s+(?:i\s+)?tuoi\s+file|"
             r"mostra(?:mi)?\s+(?:i\s+)?tuoi\s+file|"
@@ -118,7 +125,9 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
 
 def inspect_jarvis(*,source_root: Path | None=None,
                    data_root: Path | None=None,
-                   module: str="") -> SourceAudit:
+                   module: str="",
+                   progress: Callable[[str,int,int],None] | None = None
+                   ) -> SourceAudit:
     root=(Path(source_root) if source_root is not None
           else Path(__file__).resolve().parent)
     # Pathlib resolve prevents accidentally reporting path traversal.
@@ -130,6 +139,8 @@ def inspect_jarvis(*,source_root: Path | None=None,
     if module and not _MODULE.fullmatch(module):
         raise ValueError("Il modulo deve essere un nome Python semplice.")
     files=_source_list(root)
+    if progress is not None:
+        progress("inventario",len(files),len(files))
     findings=[]
     modules=[]
     kinds={}
@@ -140,7 +151,9 @@ def inspect_jarvis(*,source_root: Path | None=None,
         if module and relative.casefold()!=module.casefold():
             continue
         targets.append((file,relative))
-    for file,relative in targets:
+    for index,(file,relative) in enumerate(targets,1):
+        if progress is not None:
+            progress("sintassi",index-1,len(targets))
         try:
             size=file.stat().st_size
             if size>_MAX_BYTES:
@@ -159,6 +172,8 @@ def inspect_jarvis(*,source_root: Path | None=None,
                 findings.append(relative+": sintassi non valida alla riga "+str(exc.lineno))
             else:
                 findings.append(relative+": lettura o codifica non disponibile")
+    if progress is not None:
+        progress("sintassi",len(targets),len(targets))
     if module and not targets:
         return SourceAudit("Modulo non trovato nel programma.",
               "Il modulo richiesto non è presente tra i file Python del programma.",
@@ -168,7 +183,9 @@ def inspect_jarvis(*,source_root: Path | None=None,
                "Controlla la cartella di installazione. Nessun file modificato.",
                ("I file del programma non sono disponibili qui.",))
     recommendations=review_sources(root,files,module=module,
-                                    max_bytes=_MAX_BYTES)
+                                    max_bytes=_MAX_BYTES,progress=progress)
+    if progress is not None:
+        progress("completamento",1,1)
     if module:
         _,names,lines=modules[0] if modules else (module,(),0)
         summary=("Modulo "+module+": "+str(lines)+" righe, "+

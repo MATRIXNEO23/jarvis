@@ -9,6 +9,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from pathlib import Path
+from collections.abc import Callable
 
 
 @dataclass(frozen=True)
@@ -51,7 +52,8 @@ def _priority(record: Improvement):
 
 
 def review_sources(source_root: Path, files: list[Path], *,
-                   module: str = "", max_bytes: int = 260_000
+                   module: str = "", max_bytes: int = 260_000,
+                   progress: Callable[[str,int,int],None] | None = None
                    ) -> tuple[Improvement, ...]:
     """Produce evidence-linked suggestions from bounded AST only.
 
@@ -65,7 +67,11 @@ def review_sources(source_root: Path, files: list[Path], *,
     inspected = 0
     tests_found = 0
 
-    for file in files[:140]:
+    scan=files[:140]
+    total=len(scan)
+    for index,file in enumerate(scan,1):
+        if progress is not None:
+            progress("consigli",index-1,total)
         if file.suffix.casefold() != ".py" or file.is_symlink():
             continue
         try:
@@ -144,6 +150,8 @@ def review_sources(source_root: Path, files: list[Path], *,
                     "Revisionare i parametri e provare input non attendibili "
                     "in un test isolato."))
 
+    if progress is not None:
+        progress("consigli",total,total)
     if inspected and not module and tests_found == 0:
         candidates.append(Improvement(
             "media", "tests/", 0,

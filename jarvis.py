@@ -23,6 +23,7 @@ from dialogue_focus import (focus_hint, PendingProjectReference,
                             normalized_utterance,is_ambiguous_short_reply)
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
+from diagnostic_session import DiagnosticSession
 from diagnostic_handoff import (build_external_review_prompt,
                                 is_external_review_request, wants_external_advice,
                                 summarize_operation_outcomes)
@@ -233,6 +234,18 @@ def main() -> None:
     choose_save_button.pack(side="right", padx=(6, 0))
     # Saving a document is an action, not a setting: show its choices beside
     # the conversation. Hidden when no confirmation is pending.
+    # Visible even when the secondary '...' toolbar is collapsed.
+    diagnostic_status = tk.StringVar(value="Autodiagnosi: pronta")
+    diagnostic_percent = tk.IntVar(value=0)
+    diagnostic_row = ttk.Frame(hud.command_host)
+    diagnostic_row.pack(fill="x", pady=(0, 4))
+    ttk.Label(diagnostic_row, textvariable=diagnostic_status,
+              anchor="w").pack(side="left", fill="x", expand=True)
+    ttk.Progressbar(diagnostic_row, mode="determinate", maximum=100,
+                    variable=diagnostic_percent, length=110).pack(side="right")
+    diagnostic_cancel_button = ttk.Button(
+        diagnostic_row, text="Annulla", state="disabled")
+    diagnostic_cancel_button.pack(side="right", padx=(0, 6))
     doc_choices = ttk.Frame(hud.command_host)
     doc_choices.pack(fill="x", pady=(0, 5))
     doc_choices.pack_forget()
@@ -267,6 +280,8 @@ def main() -> None:
     pending_project_trash_id = None
     pending_project_reference = PendingProjectReference()
     diagnostic_busy = False
+    diagnostic_session = DiagnosticSession()
+    diagnostic_threads = []
     last_diagnostic_audit = None
     pending_external_review = False
     save_only_waiting = False
@@ -983,20 +998,46 @@ def main() -> None:
         run_gpt("ask",prompt=prompt,source="")
         return True
 
-    def try_self_diagnostic(spoken: str) -> bool:
-        """Read-only source diagnosis; optional GPT is separately authorized."""
+    def update_diagnostic_ui() -> None:
+        """Render the real local audit state, never infer it from GPT."""
+        snapshot=diagnostic_session.snapshot()
+        diagnostic_percent.set(snapshot.progress_percent)
+        if snapshot.active:
+            amount=(f"{snapshot.completed}/{snapshot.total}"
+                    if snapshot.total else "preparazione")
+            diagnostic_status.set(
+                f"Autodiagnosi: {snapshot.phase} {amount} "
+                f"({snapshot.elapsed_seconds} s)")
+        else:
+            diagnostic_status.set("Autodiagnosi: "+snapshot.phase)
+        diagnostic_cancel_button.configure(
+            state="normal" if snapshot.active else "disabled")
+
+    def cancel_diagnostic() -> None:
+        """Stop waiting, revoke external consent and reject late results."""
         nonlocal diagnostic_busy,pending_external_review
+        old_run=diagnostic_session.cancel()
+        if old_run is None:
+            return
+        diagnostic_busy=False
+        pending_external_review=False
+        update_diagnostic_ui()
+        write_line("DIAGNOSTICA > Richiesta #"+str(old_run)+
+                   " annullata nell'interfaccia. Il worker potrebbe "
+                   "terminare dopo; i suoi risultati saranno ignorati.")
+        speak_result("Ho annullato l'attesa della diagnosi. "
+                     "Nessun file è stato modificato.")
+
+    def try_self_diagnostic(spoken: str) -> bool:
+        """Local bounded audit, visible progress and recoverable worker errors."""
+        nonlocal diagnostic_busy,pending_external_review,last_diagnostic_audit
         if is_external_review_request(spoken):
             return offer_external_diagnostic_review()
         request_kind=diagnostic_request(spoken)
         if request_kind is None:
             return False
-        if diagnostic_busy:
-            speak_result("Sto già verificando i file del programma.")
-            return True
         mode,module=request_kind
         if mode=="paths":
-            from pathlib import Path
             source=Path(__file__).resolve().parent
             data=(workspace.path.parent if workspace is not None
                   else default_path().parent)
@@ -1006,22 +1047,69 @@ def main() -> None:
             write_line("DIAGNOSTICA > "+message)
             speak_result("Conosco le cartelle del mio programma e dei dati. Le ho mostrate nel registro.")
             return True
+        if diagnostic_session.active:
+            snapshot=diagnostic_session.snapshot()
+            message=("La diagnosi locale è nella fase "+snapshot.phase+
+                     " ("+str(snapshot.completed)+"/"+str(snapshot.total)+
+                     " file, "+str(snapshot.elapsed_seconds)+
+                     " secondi). Lo stato è visibile sotto la console.")
+            write_line("DIAGNOSTICA > "+message)
+            speak_result(message)
+            return True
+        # A previous timed-out worker may still be alive; never spawn an
+        # unlimited number of workers against the same install directory.
+        diagnostic_threads[:]=[t for t in diagnostic_threads if t.is_alive()]
+        if len(diagnostic_threads)>=2:
+            message=("Due analisi precedenti non rispondono ancora. "
+                     "Non avvio altri controlli; chiudi e riapri Jarvis.")
+            diagnostic_status.set("Autodiagnosi: processi non responsivi")
+            write_line("DIAGNOSTICA > "+message)
+            speak_result(message)
+            return True
+        run_id=diagnostic_session.start()
+        if run_id is None:
+            return True
+        # A new attempt invalidates the previous report; GPT must never
+        # review outdated findings as though they belonged to this run.
+        last_diagnostic_audit=None
         diagnostic_busy=True
         pending_external_review=(mode=="review" and wants_external_advice(spoken))
-        write_line("DIAGNOSTICA > Analisi statica locale avviata, senza modificare file.")
+        write_line("DIAGNOSTICA > Avvio controllo locale #"+str(run_id)+
+                   ": inventario, verifica sintattica, consigli AST.")
+        update_diagnostic_ui()
 
-        def worker():
+        def worker() -> None:
+            def report(phase: str, completed: int, total: int) -> None:
+                output_queue.put(("self_audit_progress",
+                                  run_id,phase,completed,total))
             try:
                 data=(workspace.path.parent if workspace is not None
                       else default_path().parent)
                 audit=inspect_jarvis(
                     source_root=Path(__file__).resolve().parent,
-                    data_root=data,module=module if mode=="module" else "")
-                output_queue.put(("self_audit",audit))
-            except (OSError,ValueError,UnicodeError) as exc:
-                output_queue.put(("self_audit_error",str(exc)[:180]))
-        threading.Thread(target=worker,daemon=True,
-                         name="jarvis-static-self-inspection").start()
+                    data_root=data,module=module if mode=="module" else "",
+                    progress=report)
+            except Exception as exc:
+                # Unexpected TypeError/IndexError/PermissionError must also
+                # end the diagnostic rather than leave 'busy' stuck forever.
+                # Exception type is enough for debugging, no path/secret leak.
+                output_queue.put(("self_audit_error",run_id,
+                                  exc.__class__.__name__))
+            else:
+                output_queue.put(("self_audit",run_id,audit))
+        thread=threading.Thread(target=worker,daemon=True,
+                                name="jarvis-static-audit-"+str(run_id))
+        try:
+            thread.start()
+        except RuntimeError as exc:
+            diagnostic_session.finish(run_id,succeeded=False)
+            diagnostic_busy=False
+            pending_external_review=False
+            write_line("DIAGNOSTICA > Impossibile avviare il controllo: "
+                       +exc.__class__.__name__)
+            update_diagnostic_ui()
+            return True
+        diagnostic_threads.append(thread)
         return True
 
     def open_project_manager():
@@ -2127,7 +2215,31 @@ def main() -> None:
             return
         run_gpt("ask", prompt=prompt, source=message)
 
+    def diagnostic_heartbeat() -> None:
+        """Independent watchdog: runs even if another event handler fails."""
+        nonlocal diagnostic_busy,pending_external_review
+        if closing:
+            return
+        root.after(800,diagnostic_heartbeat)
+        check=diagnostic_session.check()
+        if check=="timeout":
+            diagnostic_busy=False
+            pending_external_review=False
+            update_diagnostic_ui()
+            write_line("DIAGNOSTICA > Tempo massimo superato (120 s). "
+                       "Ho sbloccato l'interfaccia; il vecchio controllo "
+                       "potrebbe ancora essere attivo. Risultati tardivi ignorati.")
+            speak_result("La diagnosi non risponde. "
+                         "Ho sbloccato i comandi, senza modificare file.")
+        elif check=="stalled":
+            update_diagnostic_ui()
+            write_line("DIAGNOSTICA > Nessun avanzamento da 12 secondi. "
+                       "Il controllo è ancora attivo; scadrà dopo 120 secondi.")
+        elif diagnostic_session.active:
+            update_diagnostic_ui()
+
     def poll() -> None:
+        """Always schedule another UI tick before consuming potentially bad events."""
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         nonlocal local_operation_id, document_operation_id
         nonlocal diagnostic_busy,last_diagnostic_audit,pending_external_review
@@ -2136,13 +2248,31 @@ def main() -> None:
         nonlocal document_topic,document_owner_project_id,save_only_waiting
         if closing:
             return
+        # A malformed or unexpected event must not permanently kill the
+        # event pump and strand an in-progress diagnostic forever.
+        root.after(120, poll)
         reconcile_document_session()
         try:
             while True:
                 kind, *data = output_queue.get_nowait()
-                if kind == "self_audit":
+                if kind == "self_audit_progress":
+                    run_id,phase,completed,total=data
+                    if diagnostic_session.progress(
+                            run_id,phase,completed,total):
+                        update_diagnostic_ui()
+                        if completed==0 or phase=="inventario":
+                            write_line("DIAGNOSTICA > "+phase+
+                                       ": "+str(completed)+"/"+str(total)+
+                                       " file.")
+                elif kind == "self_audit":
+                    run_id,audit=data
+                    if not diagnostic_session.finish(run_id,succeeded=True):
+                        # Late result of a timed-out run: NEVER replace
+                        # a newer diagnosis or send it to GPT.
+                        continue
                     diagnostic_busy=False
-                    audit=data[0]
+                    update_diagnostic_ui()
+                    write_line("DIAGNOSTICA > Verifica locale terminata.")
                     last_diagnostic_audit=audit
                     write_line("DIAGNOSTICA > "+format_audit(audit))
                     write_line("DIAGNOSTICA > Se vuoi un parere del modello "
@@ -2166,10 +2296,17 @@ def main() -> None:
                         pending_external_review=False
                         offer_external_diagnostic_review()
                 elif kind == "self_audit_error":
+                    run_id,error_type=data
+                    if not diagnostic_session.finish(run_id,succeeded=False):
+                        continue
                     diagnostic_busy=False
                     pending_external_review=False
-                    write_line("DIAGNOSTICA > Errore di lettura: "+str(data[0])[:180])
-                    speak_result("Non sono riuscito a completare la diagnosi dei sorgenti.")
+                    update_diagnostic_ui()
+                    write_line("DIAGNOSTICA > Analisi non completata. "
+                               "Errore locale: "+str(error_type)[:90]+
+                               ". Puoi riprovare con il pulsante.")
+                    speak_result("La diagnosi non è riuscita. "
+                                 "Ho scritto il tipo di errore nella console.")
                 elif kind == "project_journal_error":
                     workspace_status.set("Esito progetto non registrato: "+str(data[0])[:100])
                 elif kind == "telegram_status":
@@ -2214,6 +2351,10 @@ def main() -> None:
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
                             write_line("TU > " + spoken)
+                            # Safe local diagnostics must not wait for a GPT
+                            # response or a stale Notepad confirmation.
+                            if try_self_diagnostic(spoken):
+                                continue
                             # Pending save/close decisions are handled locally.
                             if save_only_waiting:
                                 receive_save_only_destination(spoken)
@@ -2306,6 +2447,8 @@ def main() -> None:
                         # Log commands that passed the wake/press gate.
                         # Do not record free dictation or phrases ignored by wake.
                         write_line("TU > " + spoken)
+                        if try_self_diagnostic(spoken):
+                            continue
                         dictation_action = dictation_voice_action(spoken)
                         if dictation_action == "stop":
                             sync_dictation_ui(dictation.disable())
@@ -2687,7 +2830,6 @@ def main() -> None:
             epoch, follow_up = pending_conversation.popleft()
             if epoch == conversation_epoch:
                 start_conversation_gpt(follow_up)
-        root.after(120, poll)
 
     def toggle_hud_microphone() -> None:
         # A real manual on/off action, not a decorative toggle.
@@ -2767,6 +2909,7 @@ def main() -> None:
     plan_button.configure(command=submit_plan)
     diagnostic_button.configure(
         command=lambda: try_self_diagnostic("Jarvis, fai un'autodiagnosi"))
+    diagnostic_cancel_button.configure(command=cancel_diagnostic)
     dictation_button.configure(command=toggle_dictation)
     voice_correction_button.configure(command=show_voice_corrections)
     choose_save_button.configure(command=choose_save_destination)
@@ -2840,6 +2983,7 @@ def main() -> None:
     refresh_buttons()
     input_box.focus_set()
     root.after(120, poll)
+    root.after(800, diagnostic_heartbeat)
     root.after(400, refresh_voices)
     root.after(650, initial_launch)
     root.after(1100, refresh_orbit_nodes)
