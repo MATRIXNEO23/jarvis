@@ -92,6 +92,14 @@ def parse_timer_intent(message: str) -> TimerIntent | None:
             return None
         total+=amount*scale
         seen.add(scale)
+    # Reject appended instructions, rather than executing a timer while
+    # silently ignoring an unrelated request or unsafe command.
+    unused=_DURATION.sub(" ",words)
+    allowed={"timer","conto","alla","rovescia","metti","imposta",
+             "avvia","crea","apri","fai","partire","un","uno",
+             "una","il","la","lo","di","da","per","e"}
+    if any(token not in allowed for token in unused.split()):
+        return None
     if not 1<=total<=MAX_TIMER_SECONDS:
         return None
     return TimerIntent("start",total)
