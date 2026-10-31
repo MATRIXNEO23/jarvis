@@ -147,6 +147,12 @@ class GPTClient:
             with self._lock:
                 self._pending.pop(request_id, None)
 
+    def bridge_running(self) -> bool:
+        """Side-effect-free observation; no session refresh or model request."""
+        with self._lock:
+            proc = self._process
+        return proc is not None and proc.poll() is None
+
     def stop(self) -> None:
         with self._lock:
             proc = self._process
