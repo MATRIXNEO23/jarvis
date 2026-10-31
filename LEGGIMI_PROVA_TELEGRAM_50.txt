@@ -1,4 +1,4 @@
-JARVIS — VERSIONE DI PROVA TELEGRAM 50 (WINDOWS 10)
+JARVIS — AUDIT COMPLETO + TELEGRAM 50 (WINDOWS 10)
 =================================================
 Questa ZIP e' un test isolato, NON una release stabile.
 Contiene il codice Python di Jarvis e gli script di avvio, NON un .exe.
@@ -24,7 +24,11 @@ INSTALLAZIONE SENZA SOVRASCRIVERE JARVIS
       %LOCALAPPDATA%\Jarvis-Telegram50-Trial
    Da %LOCALAPPDATA%\Jarvis legge le impostazioni originali, copia le
    credenziali Telegram ancora cifrate e crea una copia SQLite consistente
-   della memoria di lavoro. NON modifica il database originale.
+   della memoria di lavoro, e copia in modo separato i piccoli database di
+   preferenze/attivita e i manifest add-on, senza eseguire codice.
+   I documenti personali all'interno delle cartelle progetti NON vengono
+   duplicati automaticamente: potrebbero essere troppo grandi.
+   NON modifica il database originale.
 5. Al primo avvio le risposte Telegram automatiche sono OFF e il microfono e' ON.
    Accendi Telegram solo quando vuoi verificare le risposte con un contatto
    che sa di dialogare con un assistente.
@@ -35,6 +39,9 @@ INSTALLAZIONE SENZA SOVRASCRIVERE JARVIS
    prova. Non risincronizza né sovrascrive i dati gia' salvati durante il test.
 
 IMPORTANTE
+- Se il profilo di test esisteva gia, il nuovo requisito microfono ON
+  viene applicato una sola volta. Da allora la tua scelta manuale ON/OFF
+  nelle impostazioni resta persistente anche ai riavvii del test.
 - Si riusano l'installazione SDK GPT e l'account GPT gia' presenti, cosi' non
   devi installarli nuovamente; l'autenticazione GPT puo' comunque aggiornare
   lo stato del tuo account esistente. Telegram usa lo stesso account reale:
