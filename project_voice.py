@@ -67,7 +67,7 @@ _EXTRA_LIST = re.compile(
     r"|^(?:ho|ci\s+sono)\s+(?:dei\s+)?progetti\s+salvati"
     r"|^(?:elenca(?:mi)?|mostra(?:mi)?)\s+(?:i\s+)?progetti\s+salvati"
     r"|^lista\s+(?:dei\s+)?progetti$",re.I)
-_NAME_PREFIX = re.compile(r"^(?:che\s+si\s+chiama|dal\s+nome|chiamato|nome)\s+",re.I)
+_NAME_PREFIX = re.compile(r"^(?:che\s+si\s+chiama|dal\s+nome|chiamato)\s+",re.I)
 _UNSAFE = re.compile(r"\b(?:password|passphrase|api\s*hash|codice\s*otp|token)\b",re.I)
 
 
