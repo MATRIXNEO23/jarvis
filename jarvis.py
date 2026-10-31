@@ -7,12 +7,19 @@ GPT requires the official SDK and an explicit account sign-in.
 """
 from __future__ import annotations
 
+import os
 import queue
 from collections import deque
 import json
 import re
 import sqlite3
 from conversation_memory import ConversationMemory
+from workspace_memory import WorkspaceMemory, WorkspaceError
+from workspace_gui import ProjectManagerWindow
+from telegram_commands import explicit_telegram_note
+from telegram_bridge import TelegramBridge
+from telegram_security import credentials_present
+from telegram_voice import missing_voice_dependencies
 from jarvis_persona import build_chat_prompt
 from startup_greeting import startup_greeting
 from adaptive_voice import SpeechCorrections, SpeechCorrectionError
@@ -26,7 +33,7 @@ import threading
 from datetime import datetime
 from pathlib import Path
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, ttk, simpledialog
 import webbrowser
 
 from document_dialog import DocumentDialog
@@ -105,6 +112,22 @@ def main() -> None:
         settings_window.focus_set()
 
     hud = JarvisHUD(root, show_settings)
+    workspace_status=tk.StringVar(value="Progetti: inizializzazione.")
+    telegram_status=tk.StringVar(value="Telegram: disattivato.")
+    active_context_label=tk.StringVar(value="Contesto: GENERALE")
+    active_project_id=None
+    workspace=None
+    try:
+        workspace=WorkspaceMemory()
+        workspace_status.set(
+            "Memoria progetti: "+str(len(workspace.projects()))+" progetti locali.")
+    except (OSError,sqlite3.Error,WorkspaceError) as exc:
+        workspace_status.set("Memoria progetti non disponibile: "+str(exc)[:120])
+    telegram_bridge=None
+    telegram_gpt_ready=threading.Event()
+    telegram_auto=tk.BooleanVar(value=settings["telegram_enabled"])
+    orbit_nodes_cache=()
+
     frame = ttk.Frame(settings_inner, padding=15)
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="Impostazioni JARVIS",
@@ -301,7 +324,17 @@ def main() -> None:
                      user + " " + reply, re.I):
             return
         conversation_memory.remember(user, reply, kind)
-        if durable_brain is not None and memory_enabled.get():
+        if not memory_enabled.get():
+            return
+        if active_project_id is not None:
+            if workspace is not None:
+                try:
+                    workspace.add_turn("project",active_project_id,
+                                       user,reply,kind)
+                except (OSError,sqlite3.Error,WorkspaceError) as exc:
+                    workspace_status.set("Memoria progetto: "+str(exc)[:90])
+            return
+        if durable_brain is not None:
             try:
                 durable_brain.remember_turn(user, reply, kind)
                 memory_status_refresh()
@@ -327,21 +360,271 @@ def main() -> None:
             memory_status.set("Ricevuta non registrata: " + str(exc)[:90])
 
     def recent_memory_for_gpt(spoken: str) -> str:
-        short = conversation_memory.context(max_chars=860)
-        if durable_brain is None or not memory_enabled.get():
+        short=conversation_memory.context(max_chars=860)
+        if not memory_enabled.get():
+            return short
+        if active_project_id is not None:
+            if workspace is None:
+                return short
+            try:
+                p=workspace.project(active_project_id)
+                saved=json.loads(workspace.prompt_context(
+                    "project",active_project_id,spoken,budget=620))
+                evidence=saved.get("evidence",[])
+                if p and p["summary"]:
+                    evidence.insert(0,{"source":"conversation",
+                        "when":p["updated_utc"],
+                        "fact":"Stato progetto fornito dall'utente: "
+                                +p["summary"][:260]})
+                history=workspace.recent("project",active_project_id,3)
+                earlier=[{"utente":r["utente"],"lia":r["jarvis"],
+                          "tipo":r["tipo"]} for r in history]
+                return json.dumps({"breve":earlier+json.loads(short),
+                                   "permanente":{"related":evidence}},
+                                  ensure_ascii=False)
+            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                workspace_status.set("Ricerca progetto: "+str(exc)[:90])
+                return short
+        if durable_brain is None:
             return short
         try:
-            long = durable_brain.prompt_context(spoken, budget=530)
-        except (OSError, sqlite3.Error, BrainError) as exc:
-            memory_status.set("Ricerca memoria non disponibile: " + str(exc)[:80])
+            long=durable_brain.prompt_context(spoken,budget=530)
+        except (OSError,sqlite3.Error,BrainError) as exc:
+            memory_status.set("Ricerca memoria: "+str(exc)[:90])
             return short
-        return json.dumps({"breve": json.loads(short),
-                           "permanente": json.loads(long)}, ensure_ascii=False)
+        return json.dumps({"breve":json.loads(short),
+                           "permanente":json.loads(long)},
+                          ensure_ascii=False)
+
+    project_dialog=None
+
+    def refresh_orbit_nodes() -> None:
+        nonlocal orbit_nodes_cache
+        if closing:
+            return
+        items=[]
+        if workspace is not None:
+            try:
+                projects=list(workspace.projects(active_only=True,limit=60))
+                visible=projects[:33] if len(projects)>34 else projects
+                items.extend({"id":p["id"],"name":p["name"],
+                              "kind":"project"} for p in visible)
+                if len(projects)>34:
+                    items.append({"id":"projects:more","kind":"project",
+                                  "name":"Altri progetti: "
+                                         +str(len(projects)-33)})
+                peer_id=settings.get("telegram_peer_id",0)
+                if peer_id:
+                    counts=workspace.telegram_counts(peer_id)
+                    if counts["received"] or counts["replied"]:
+                        items.append({
+                            "id":"telegram:"+str(peer_id),
+                            "kind":"telegram",
+                            "name":settings.get("telegram_contact_name","Contatto")
+                                   +" · ricevuti "+str(counts["received"])
+                                   +" / risposti "+str(counts["replied"])
+                                   +" / nuovi "+str(counts["unread"])})
+                    notes=workspace.pending_for_contact(peer_id)
+                    if notes:
+                        items.append({"id":"telegram:pending",
+                                      "kind":"pending",
+                                      "name":"Da riferire: "+str(len(notes))})
+                orbit_nodes_cache=tuple(items[:36])
+                workspace_status.set(
+                    "Progetti: "+str(len(projects))+" attivi. "
+                    +"Archivi separati sul disco.")
+            except (OSError,sqlite3.Error,WorkspaceError) as exc:
+                workspace_status.set("Memoria progetti: "+str(exc)[:95])
+        root.after(2600,refresh_orbit_nodes)
+
+    def switch_context(project_id=None) -> None:
+        nonlocal active_project_id,conversation_epoch
+        if busy_gpt or busy_local:
+            write_line("JARVIS > Finisco questa operazione prima di cambiare progetto.")
+            return
+        if project_id is not None:
+            if workspace is None or not workspace.project(project_id):
+                write_line("JARVIS > Progetto non trovato.")
+                return
+            project=workspace.project(project_id)
+            active_context_label.set("Contesto: "+project["name"][:35])
+        else:
+            active_context_label.set("Contesto: GENERALE")
+        active_project_id=project_id
+        conversation_epoch+=1
+        conversation_memory.clear()
+        pending_conversation.clear()
+        write_line(
+            "JARVIS > "+("Progetto aperto: "+project["name"]+"."
+                        if project_id else "Conversazione generale ripristinata."))
+
+    def open_project_manager():
+        nonlocal project_dialog
+        if workspace is None:
+            messagebox.showwarning(
+                "Progetti","Memoria progetti non disponibile.",parent=root)
+            return
+        if project_dialog is None:
+            project_dialog=ProjectManagerWindow(
+                root,workspace,switch_context,
+                lambda:switch_context(None),lambda:None)
+        project_dialog.show()
+
+    def telegram_activity_window() -> None:
+        peer_id=settings.get("telegram_peer_id",0)
+        if workspace is None or not peer_id:
+            return
+        win=tk.Toplevel(root)
+        win.title("JARVIS // Telegram — cronologia del contatto")
+        win.geometry("640x420")
+        log=tk.Text(win,wrap="word",bg="#031522",fg="#d7f6ff",
+                    padx=12,pady=8)
+        log.pack(fill="both",expand=True)
+        try:
+            records=workspace.telegram_activity(peer_id,limit=60)
+            for item in reversed(records):
+                direction=("RICEVUTO" if item["direction"]=="incoming"
+                           else "JARVIS HA RISPOSTO")
+                log.insert("end",item["when"]+"  "+direction
+                           +" ["+item["kind"]+"]\n"
+                           +item["text"][:260]+"\n\n")
+            workspace.mark_telegram_read(peer_id)
+        except (OSError,sqlite3.Error,WorkspaceError) as exc:
+            log.insert("end","Archivio Telegram non leggibile: "+str(exc)[:100])
+        log.configure(state="disabled")
+
+    def orbit_open(identifier:str) -> None:
+        if identifier.startswith("telegram:"):
+            if identifier=="telegram:pending":
+                write_line("JARVIS > Messaggi da riferire in attesa del contatto.")
+            telegram_activity_window()
+        elif identifier=="projects:more":
+            open_project_manager()
+        else:
+            switch_context(identifier)
+
+    def queue_telegram_note(message:str) -> bool:
+        peer_id=settings.get("telegram_peer_id",0)
+        if not peer_id or workspace is None:
+            write_line("JARVIS > Devi prima autorizzare un contatto Telegram.")
+            return False
+        try:
+            workspace.note_for_contact(peer_id,message)
+        except (OSError,sqlite3.Error,WorkspaceError) as exc:
+            write_line("JARVIS > Non posso salvare il messaggio: "+str(exc)[:100])
+            return False
+        write_line("JARVIS > Messaggio memorizzato per "
+                   +settings["telegram_contact_name"]
+                   +". Lo riferirò al prossimo contatto, se Telegram è attivo.")
+        return True
+
+    def leave_telegram_note_dialog() -> None:
+        if not settings.get("telegram_peer_id"):
+            telegram_status.set("Configura prima il contatto autorizzato.")
+            return
+        message=simpledialog.askstring(
+            "JARVIS / Telegram",
+            "Che cosa devo riferire al contatto autorizzato?",
+            parent=root)
+        if message:
+            queue_telegram_note(message)
+
+    def maybe_queue_telegram_note(message:str) -> bool:
+        parsed=explicit_telegram_note(
+            message,settings.get("telegram_contact_name",""))
+        if parsed is None:
+            return False
+        queue_telegram_note(parsed)
+        return True
+
+    def ask_telegram_gpt(prompt:str) -> str:
+        # Runs in a worker: no Tk variable or widget is accessed here.
+        if not telegram_gpt_ready.is_set():
+            return ""
+        try:
+            result=service.call("ask",prompt=prompt,timeout=120)
+            return str(result.get("text",""))
+        except (GPTUnavailable,OSError,RuntimeError):
+            return ""
+
+    def toggle_telegram_automatic() -> None:
+        nonlocal telegram_bridge
+        enabled=telegram_auto.get()
+        if not enabled:
+            if telegram_bridge:
+                telegram_bridge.stop()
+                telegram_bridge=None
+            settings["telegram_enabled"]=False
+            telegram_status.set("Telegram: risposte automatiche disattivate.")
+        else:
+            peer_id=settings.get("telegram_peer_id",0)
+            if not peer_id or not credentials_present() or workspace is None:
+                telegram_auto.set(False)
+                telegram_status.set(
+                    "Telegram: configura prima l'account e un solo contatto.")
+                return
+            missing=missing_voice_dependencies()
+            if missing:
+                telegram_auto.set(False)
+                settings["telegram_enabled"]=False
+                telegram_status.set(
+                    "Telegram: manca "+", ".join(missing)
+                    +". Nessun invio verrà effettuato.")
+                return
+            if telegram_bridge:
+                telegram_bridge.stop()
+            telegram_bridge=TelegramBridge(
+                workspace,peer_id,
+                settings["telegram_contact_name"],ask_telegram_gpt,
+                output_queue.put,voice_name=selected_voice())
+            if telegram_bridge.start():
+                settings["telegram_enabled"]=True
+                telegram_status.set("Telegram: collegamento in corso, SOLO "
+                                    +settings["telegram_contact_name"]+".")
+        try:
+            save_settings(settings)
+        except (OSError,ValueError) as exc:
+            telegram_status.set("Impossibile salvare Telegram: "+str(exc)[:100])
+            if telegram_bridge:
+                telegram_bridge.stop()
+            telegram_auto.set(False)
+            settings["telegram_enabled"]=False
+
+    def telegram_reconfigure():
+        if telegram_bridge:
+            telegram_bridge.stop()
+        current=load_settings()
+        for key in ("telegram_peer_id","telegram_contact_name"):
+            settings[key]=current[key]
+        settings["telegram_enabled"]=False
+        telegram_auto.set(False)
+        telegram_status.set(
+            "Contatto autorizzato: "+(
+                settings["telegram_contact_name"] or "nessuno"
+            )+"; risposte spente.")
+        save_settings(settings)
+
+    def telegram_open_setup():
+        if os.name!="nt":
+            telegram_status.set("Configurazione disponibile solo su Windows.")
+            return
+        script=Path(__file__).resolve().parent/"configura_telegram.bat"
+        try:
+            os.startfile(str(script))
+            telegram_status.set(
+                "Completa la configurazione nella finestra aperta, "
+                "poi premi Rileggi contatto autorizzato.")
+        except OSError as exc:
+            telegram_status.set("Configurazione non avviata: "+str(exc)[:100])
 
     def display_status(state: dict) -> None:
         nonlocal active_gpt, conversation_epoch
         connected = state.get("status") == "connected" and state.get("sharing") is True
         active_gpt = connected
+        if connected and gpt_enabled.get():
+            telegram_gpt_ready.set()
+        else:
+            telegram_gpt_ready.clear()
         if not connected:
             conversation_epoch += 1
             pending_conversation.clear()
@@ -599,7 +882,7 @@ def main() -> None:
         variable=memory_enabled, command=toggle_memory)
     memory_toggle.pack(side="left", padx=(0, 10))
     memory_clear_button = ttk.Button(
-        brain_controls, text="Cancella memoria salvata", command=clear_saved_memory)
+        brain_controls, text="Cancella memoria generale (non progetti)", command=clear_saved_memory)
     memory_clear_button.pack(side="right")
     ttk.Label(frame, textvariable=memory_status, wraplength=710).pack(
         anchor="w", pady=(0, 2))
@@ -611,10 +894,54 @@ def main() -> None:
         wraplength=710
     ).pack(anchor="w", pady=(0, 4))
 
+    workspace_panel=ttk.LabelFrame(
+        frame,text="Progetti — contesto indipendente e continuità",padding=8)
+    workspace_panel.pack(fill="x",pady=(6,8))
+    workspace_button=ttk.Button(
+        workspace_panel,text="Gestisci progetti / apri continuità")
+    workspace_button.pack(side="left",padx=(0,12))
+    ttk.Label(workspace_panel,textvariable=workspace_status,
+              wraplength=420).pack(side="left",fill="x",expand=True)
+
+    telegram_panel=ttk.LabelFrame(
+        frame,text="Telegram — un solo contatto e risposte vocali",padding=8)
+    telegram_panel.pack(fill="x",pady=(3,10))
+    telegram_toggle=ttk.Checkbutton(
+        telegram_panel,text="Risposte vocali automatiche ON / OFF",
+        variable=telegram_auto)
+    telegram_toggle.pack(anchor="w")
+    telegram_row=ttk.Frame(telegram_panel)
+    telegram_row.pack(fill="x",pady=(4,3))
+    telegram_configure_button=ttk.Button(
+        telegram_row,text="Configura Telegram (accesso sicuro)")
+    telegram_configure_button.pack(side="left",padx=(0,8))
+    telegram_reload_button=ttk.Button(
+        telegram_row,text="Rileggi contatto autorizzato")
+    telegram_reload_button.pack(side="left",padx=(0,8))
+    telegram_note_button=ttk.Button(
+        telegram_row,text="Lascia un messaggio per il contatto")
+    telegram_note_button.pack(side="left")
+    ttk.Label(
+        telegram_panel,textvariable=telegram_status,wraplength=690
+    ).pack(anchor="w",pady=(3,0))
+    ttk.Label(
+        telegram_panel,
+        text="Solo la chat privata autorizzata; le risposte sono note vocali "
+             "SAPI/OGG e JARVIS si presenta come assistente. "
+             "Occorrono Telethon gratuito e FFmpeg locale. Nessun invio "
+             "di test o risposta finché non attivi questa opzione.",
+        wraplength=690).pack(anchor="w",pady=(3,0))
+
     # Conversation is always visible at the left of the animated HUD.
     # The console composer follows the supplied reference: a circular mic,
     # one conversation field and a send arrow. The previous explicit tools
     # remain available behind the small menu (never silently removed).
+    scope_row=ttk.Frame(hud.command_host)
+    scope_row.pack(fill="x",pady=(0,5))
+    ttk.Label(scope_row,textvariable=active_context_label,
+              font=("Consolas",8)).pack(side="left",fill="x",expand=True)
+    scope_button=ttk.Button(scope_row,text="Progetti")
+    scope_button.pack(side="right")
     input_row = tk.Frame(hud.command_host, bg=PANEL)
     input_row.pack(fill="x")
     request = tk.StringVar()
@@ -992,7 +1319,28 @@ def main() -> None:
         try:
             while True:
                 kind, *data = output_queue.get_nowait()
-                if kind == "voice_status":
+                if kind == "telegram_status":
+                    telegram_status.set(str(data[0])[:220])
+                    write_line("TELEGRAM > "+str(data[0])[:170])
+                elif kind == "telegram_received":
+                    who,format_type=data
+                    write_line("TELEGRAM > Ricevuto da "
+                               +str(who)[:55]+" ("+str(format_type)+").")
+                elif kind == "telegram_sent":
+                    write_line("TELEGRAM > Risposta vocale inviata a "
+                               +str(data[0])[:55]+".")
+                elif kind == "telegram_stopped":
+                    if telegram_bridge and data and data[0] != id(telegram_bridge):
+                        continue
+                    if telegram_auto.get():
+                        telegram_auto.set(False)
+                        settings["telegram_enabled"]=False
+                        try:
+                            save_settings(settings)
+                        except (OSError,ValueError):
+                            pass
+                        telegram_status.set("Telegram: collegamento terminato.")
+                elif kind == "voice_status":
                     if voice_mode.get() != STANDBY:
                         mic_status.set(data[0])
                     if (dictation.enabled and
@@ -1038,6 +1386,8 @@ def main() -> None:
                                 "chiudi il file", "chiudi file", "chiudilo",
                             ):
                                 ask_to_close_document(spoken)
+                                continue
+                            if maybe_queue_telegram_note(spoken):
                                 continue
                             # Fixed local actions do not require an online model.
                             command = speech_to_local_command(spoken)
@@ -1393,6 +1743,9 @@ def main() -> None:
     def send_console_input(event=None) -> None:
         if not request.get().strip():
             return
+        if maybe_queue_telegram_note(request.get()):
+            request.set("")
+            return
         if gpt_enabled.get() and active_gpt:
             if busy_gpt:
                 write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
@@ -1407,6 +1760,13 @@ def main() -> None:
         else:
             buttons_row.pack(fill="x", pady=(6, 0))
 
+    workspace_button.configure(command=open_project_manager)
+    scope_button.configure(command=open_project_manager)
+    telegram_toggle.configure(command=toggle_telegram_automatic)
+    telegram_configure_button.configure(command=telegram_open_setup)
+    telegram_reload_button.configure(command=telegram_reconfigure)
+    telegram_note_button.configure(command=leave_telegram_note_dialog)
+    hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
     hud_mic_button.configure(command=toggle_hud_microphone)
     tools_button.configure(command=toggle_console_tools)
@@ -1443,6 +1803,9 @@ def main() -> None:
         dictation.disable()
         wake_gate.reset()
         voice.close()
+        if telegram_bridge:
+            telegram_bridge.stop()
+        telegram_gpt_ready.clear()
         speaker.close()
         hud.close()
         root.destroy()
@@ -1462,6 +1825,7 @@ def main() -> None:
         "thinking": busy_gpt or busy_local or document_busy,
         "connected": active_gpt,
         "memory": memory_enabled.get(),
+        "orbit_nodes": orbit_nodes_cache,
     })
     def initial_launch() -> None:
         """App-only autostart: never adds Windows login/run-at-boot entries."""
@@ -1484,6 +1848,9 @@ def main() -> None:
     root.after(120, poll)
     root.after(400, refresh_voices)
     root.after(650, initial_launch)
+    root.after(1100, refresh_orbit_nodes)
+    if telegram_auto.get():
+        root.after(1400,toggle_telegram_automatic)
     if gpt_enabled.get():
         root.after(200, lambda: run_gpt("status"))
     root.mainloop()
