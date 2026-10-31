@@ -23,7 +23,7 @@ def prepare_trial(original_home: Path, trial_home: Path) -> list[str]:
     target.mkdir(parents=True, exist_ok=True)
     notes = []
     trial_settings = target / "settings.json"
-    microphone_migration = target / ".microphone-on-startup-v1"
+    microphone_migration = target / ".microphone-on-startup-v2"
     if not trial_settings.exists():
         current = load_settings(source / "settings.json")
         current["telegram_enabled"] = False
@@ -40,7 +40,7 @@ def prepare_trial(original_home: Path, trial_home: Path) -> list[str]:
     else:
         notes.append("Impostazioni del test gia presenti: non sovrascritte.")
     if not microphone_migration.exists():
-        microphone_migration.write_text("microphone-on-startup-v1\n",
+        microphone_migration.write_text("microphone-on-startup-v2\n",
                                         encoding="utf-8")
 
     source_auth = source / "telegram-auth.dpapi"
@@ -121,7 +121,7 @@ def main():
     appdata = os.environ.get("LOCALAPPDATA")
     test_dir = os.environ.get("JARVIS_TRIAL_HOME")
     if not appdata or not test_dir:
-        raise RuntimeError("Avvia tramite AVVIA_TEST_TELEGRAM50.bat su Windows.")
+        raise RuntimeError("Avvia tramite avvia_jarvis.bat della ZIP sperimentale.")
     original = Path(appdata) / "Jarvis"
     trial = Path(test_dir)
     print("JARVIS // PROVA TELEGRAM 50")
