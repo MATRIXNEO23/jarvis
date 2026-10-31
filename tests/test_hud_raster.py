@@ -67,6 +67,24 @@ class HighFidelityRasterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             earth_png(1000, 0)
 
+    def test_native_tk_png_decoder_when_windows_desktop_available(self):
+        import os
+        import tkinter as tk
+        if os.name != "nt":
+            self.skipTest("Native Tk smoke-test runs on Windows")
+        try:
+            root = tk.Tk()
+        except tk.TclError:
+            self.skipTest("No available Tk desktop")
+        try:
+            root.withdraw()
+            photo = photoimage_from_png(tk, reactor_glow_png(120, "idle"))
+            self.assertEqual((photo.width(), photo.height()), (120, 120))
+            earth = photoimage_from_png(tk, earth_png(120))
+            self.assertEqual((earth.width(), earth.height()), (120, 120))
+        finally:
+            root.destroy()
+
     def test_worker_does_not_call_tkinter_off_thread(self):
         worker = RasterArtWorker()
         worker.request("reactor", 100)
