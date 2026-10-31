@@ -69,7 +69,8 @@ def validate_manifest(value: object) -> dict:
                 or not _SUB.fullmatch(name[len("addon."+addon_id+"."):])
                 or name in seen):
             raise AddonError("ID azione duplicato o non appartenente all'add-on.")
-        if item["core_action"] not in _SAFE_TARGETS:
+        if (not isinstance(item["core_action"],str)
+                or item["core_action"] not in _SAFE_TARGETS):
             raise AddonError("Funzione add-on non approvata: nessun codice viene eseguito.")
         if not _safe_text(item["description"], 125) or not _safe_text(
                 item["example"], 85):
@@ -173,6 +174,10 @@ class AddonManager:
                 except (AddonError,OSError) as exc:
                     invalid.append(file.name+" ("+str(exc)[:80]+")")
             bindings={}
+            if sum(len(item["manifest"]["actions"]) for item in
+                   fresh.values()) > 32:
+                invalid.append("troppe azioni add-on: massimo 32")
+                fresh={}
             for addon_id,record in fresh.items():
                 for action in record["manifest"]["actions"]:
                     action_id=action["id"]
@@ -234,6 +239,11 @@ class AddonManager:
                 old_version=before["manifest"]["version"]
                 if _version_tuple(manifest["version"]) <= _version_tuple(old_version):
                     raise AddonError("L'aggiornamento deve avere una versione successiva.")
+            current_actions=sum(len(row["manifest"]["actions"]) for
+                                ident,row in self._records.items()
+                                if ident!=addon_id)
+            if current_actions+len(manifest["actions"])>32:
+                raise AddonError("Limite di 32 azioni add-on raggiunto.")
             record={"manifest":manifest,"enabled":False,
                     "digest":_manifest_digest(manifest)}
             self._save(addon_id,record)
