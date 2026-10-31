@@ -64,6 +64,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk, simpledialog
 import webbrowser
 
+from document_execution import run_document_worker
 from document_dialog import DocumentDialog
 from document_language import classify_document_choice
 from document_store import destination_from_voice
@@ -2161,28 +2162,18 @@ def main() -> None:
         document_status.set("Operazione in corso su Blocco note...")
 
         def worker() -> None:
-            try:
-                if operation == "open" or (
-                        operation == "compose" and target == "new_notepad"):
-                    documents.forget_if_closed()
-                if operation == "open":
-                    result = documents.open_blank()
-                elif operation == "compose":
-                    result = documents.compose(content, target)
-                elif operation == "save" and path is not None:
-                    result = documents.save_and_close(document_id, path)
-                elif operation == "save_only" and path is not None:
-                    result = documents.save_only(document_id, path)
-                elif operation == "discard":
-                    result = documents.discard_and_close(document_id)
-                else:
-                    raise ValueError("Operazione documento non consentita.")
-                output_queue.put(("document_ok", operation, result, close_after))
-            except (OSError, ValueError) as exc:
-                output_queue.put(("document_error", operation, str(exc)[:250]))
+            output_queue.put(run_document_worker(
+                documents, operation, content=content, target=target,
+                document_id=document_id, path=path, close_after=close_after))
 
         # A started save must finish even when the Jarvis UI closes.
-        threading.Thread(target=worker, daemon=False, name="jarvis-document-worker").start()
+        try:
+            threading.Thread(target=worker, daemon=False,
+                             name="jarvis-document-worker").start()
+        except RuntimeError as exc:
+            output_queue.put(("document_error",operation,
+                              "Impossibile avviare la scrittura: "+
+                              type(exc).__name__))
 
     def ask_to_close_document(source_utterance: str = "") -> None:
         if document_busy:
