@@ -104,16 +104,15 @@ class ManagedDocuments:
             saved_path = save_new_text(dest, text)
             note.saved_path = saved_path
         else:
-            if note.saved_path != dest:
-                raise NotepadUnavailable(
-                    "Il documento è stato salvato in una posizione diversa. "
-                    "Non effettuo un secondo salvataggio automatico.")
-            # Re-close without overwriting if an earlier save succeeded but
-            # the Windows close failed; manual edits after save are not lost.
-            if note.saved_path.read_text(encoding="utf-8") != text:
-                raise NotepadUnavailable(
-                    "Il documento è cambiato dopo il salvataggio precedente. "
-                    "Rimane aperto; occorre scegliere come salvare le nuove modifiche.")
+            # An earlier version is immutable. An edited document can be
+            # saved as a NEW file; an unchanged copy can simply be closed.
+            previous=note.saved_path.read_text(encoding="utf-8")
+            if previous != text:
+                if note.saved_path == dest:
+                    raise NotepadUnavailable(
+                        "Il documento è stato modificato. Scegli un nuovo nome "
+                        "per non sovrascrivere la versione precedente.")
+                note.saved_path = save_new_text(dest, text)
         try:
             self.bridge.close(note, discard_confirmed=True)
         except (OSError, ValueError) as exc:
