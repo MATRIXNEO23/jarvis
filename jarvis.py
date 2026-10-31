@@ -16,7 +16,8 @@ import sqlite3
 from conversation_memory import ConversationMemory
 from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
-from project_voice import parse_project_voice, safe_project_name, find_existing_project
+from project_voice import (parse_project_voice, safe_project_name,
+                           find_existing_project, project_delete_response)
 from project_documents import parse_simple_save, project_save_destination
 from telegram_commands import explicit_telegram_note
 from telegram_bridge import TelegramBridge
@@ -250,6 +251,8 @@ def main() -> None:
     document_topic = ""
     document_owner_project_id = None
     pending_project_name = False
+    pending_project_rename_id = None
+    pending_project_trash_id = None
     save_only_waiting = False
     conversation_memory = ConversationMemory()
     # Up to three follow-ups may arrive while the model is still responding.
@@ -519,58 +522,183 @@ def main() -> None:
         return True
 
     def project_voice_command(spoken: str) -> bool:
-        """Both speech and typed chat share one local, validated executor."""
-        nonlocal pending_project_name
+        """Voice and typed project actions, never routed through untrusted GPT."""
+        nonlocal pending_project_name, pending_project_rename_id
+        nonlocal pending_project_trash_id
         if workspace is None:
+            # Do not imply that an unavailable database contains zero projects.
+            try:
+                command = parse_project_voice(spoken)
+            except ValueError:
+                return False
+            if command is not None:
+                message = "Non riesco a leggere la memoria dei progetti. Non significa che siano spariti."
+                write_line("JARVIS > "+message)
+                speak_result(message)
+                return True
             return False
-        if pending_project_name:
+
+        def can_modify() -> bool:
+            return (not busy_gpt and not busy_local and not document_busy
+                    and documents.current is None and doc_dialog.phase=="idle")
+
+        def acknowledge(message: str) -> bool:
+            write_line("JARVIS > "+message)
+            speak_result(message)
+            return True
+
+        if pending_project_trash_id is not None:
+            decision=project_delete_response(spoken)
+            ident=pending_project_trash_id
+            pending_project_trash_id=None
+            if decision != "confirm":
+                return acknowledge("Eliminazione annullata. Il progetto è rimasto intatto.")
+            if not can_modify():
+                return acknowledge("C'è un'operazione aperta: non elimino il progetto.")
+            try:
+                name=workspace.project(ident)["name"]
+                workspace.trash_project(ident)
+                if active_project_id==ident:
+                    switch_context(None)
+                if project_dialog is not None:
+                    project_dialog.refresh()
+                return acknowledge("Progetto "+name+
+                    " spostato nel cestino interno. I suoi file e la memoria restano recuperabili.")
+            except (OSError,sqlite3.Error,WorkspaceError,TypeError) as exc:
+                return acknowledge("Non riesco a spostare il progetto nel cestino: "+str(exc)[:100])
+
+        if pending_project_rename_id is not None:
+            ident=pending_project_rename_id
+            pending_project_rename_id=None
+            if spoken.casefold().strip(" ,.!?") in ("annulla","lascia stare","niente"):
+                return acknowledge("Rinomina annullata.")
+            try:
+                name=safe_project_name(re.sub(
+                    r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
+                    spoken.strip(),flags=re.I))
+                command_action="rename"
+                target_ident=ident
+            except ValueError:
+                return acknowledge("Il nuovo nome non è valido. Dimmi di rinominare il progetto.")
+        elif pending_project_name:
             pending_project_name = False
             if spoken.casefold().strip(" ,.!?") in ("annulla","lascia stare","niente"):
-                speak_result("Creazione del progetto annullata.")
-                return True
+                return acknowledge("Creazione del progetto annullata.")
             try:
                 name=safe_project_name(re.sub(
                     r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
                     spoken.strip(),flags=re.I))
                 command_action="create"
+                target_ident=None
             except ValueError:
-                speak_result("Nome non valido. Chiedimi di creare un progetto con un nome preciso.")
-                return True
+                return acknowledge("Nome non valido. Chiedimi di creare un progetto con un nome preciso.")
         else:
             try:
                 command=parse_project_voice(spoken)
             except ValueError as exc:
-                write_line("JARVIS > "+str(exc))
-                speak_result(str(exc))
-                return True
+                return acknowledge(str(exc))
             if command is None:
                 return False
             command_action=command.action
             name=command.name
+            target_ident=None
 
         if command_action=="list":
-            projects=workspace.projects(limit=100)
-            message=("I progetti sono: "+", ".join(x["name"] for x in projects[:12])
-                     if projects else "Non ci sono ancora progetti.")
+            try:
+                projects=workspace.projects(limit=200)
+                if projects:
+                    names=", ".join(p["name"] for p in projects[:12])
+                    remaining=len(projects)-min(len(projects),12)
+                    message="Progetti salvati: "+names+(
+                        ". E altri "+str(remaining)+" nell'elenco." if remaining else ".")
+                else:
+                    message="Nel database attuale non risultano progetti. Controlla la cartella dati di Jarvis."
+            except (OSError,sqlite3.Error,WorkspaceError):
+                message="Non riesco a consultare l'archivio dei progetti; non vuol dire che siano cancellati."
+        elif command_action=="list_trash":
+            projects=workspace.trashed_projects(limit=200)
+            message=("Nel cestino ci sono: "+", ".join(x["name"] for x in projects[:12])
+                     if projects else "Il cestino dei progetti è vuoto.")
         elif command_action=="create":
             if not name:
                 pending_project_name=True
                 message="Come vuoi chiamare il nuovo progetto?"
-            elif busy_gpt or busy_local or document_busy or documents.current is not None:
+            elif not can_modify():
                 message="Finisci prima l'operazione o chiudi il documento aperto."
             else:
                 try:
                     existing=find_existing_project(workspace.projects(limit=200),name)
                     if existing:
-                        message="Un progetto con questo nome esiste già. Dimmi di aprirlo."
+                        message="Il progetto "+existing["name"]+" esiste già. Dimmi di aprirlo."
                     else:
                         ident=workspace.create_project(name)
                         if switch_context(ident):
                             message="Creato e aperto il progetto "+name+". Memoria e cartella pronte."
                         else:
-                            message="Il progetto è stato creato, ma non riesco ad aprirlo."
+                            message="Progetto creato; non riesco ad aprirlo ora."
                 except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
                     message="Impossibile creare il progetto: "+str(exc)[:110]
+        elif command_action=="rename":
+            if not can_modify():
+                message="Finisci prima l'operazione o chiudi il documento aperto."
+            else:
+                try:
+                    if target_ident is None:
+                        target_ident=active_project_id
+                        if command.target:
+                            target=find_existing_project(workspace.projects(limit=200),
+                                                         command.target)
+                            target_ident=target["id"] if target else None
+                    project=workspace.project(target_ident) if target_ident else None
+                    if project is None or project["trashed"]:
+                        message=("Non trovo quel progetto. Dimmi 'elenca i progetti' "
+                                 "o selezionalo dal gestore.")
+                    elif not name:
+                        pending_project_rename_id=project["id"]
+                        message="Qual è il nuovo nome del progetto "+project["name"]+"?"
+                    else:
+                        old_name=project["name"]
+                        workspace.rename_project(project["id"],name)
+                        if active_project_id==project["id"]:
+                            active_context_label.set("Contesto: "+name[:35])
+                        if project_dialog is not None:
+                            project_dialog.refresh()
+                        message=("Progetto rinominato da "+old_name+" a "+name+
+                                 ". Cartella e memoria sono rimaste le stesse.")
+                except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                    message="Rinomina non riuscita: "+str(exc)[:110]
+        elif command_action=="trash":
+            if not can_modify():
+                message="Finisci prima l'operazione o chiudi il documento aperto."
+            else:
+                try:
+                    selected=(find_existing_project(workspace.projects(limit=200),name)
+                              if name else workspace.project(active_project_id)
+                              if active_project_id else None)
+                    if selected is None or selected["trashed"]:
+                        message="Non trovo il progetto. Chiedimi di elencare quelli salvati."
+                    else:
+                        pending_project_trash_id=selected["id"]
+                        message=("Vuoi eliminare il progetto "+selected["name"]+
+                                 " dall'elenco? La memoria e i documenti resteranno "
+                                 "nel cestino recuperabile. Di' 'confermo' oppure 'annulla'.")
+                except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                    message="Non riesco a preparare l'eliminazione: "+str(exc)[:110]
+        elif command_action=="restore":
+            if not can_modify():
+                message="Finisci prima l'operazione o chiudi il documento aperto."
+            else:
+                try:
+                    selected=find_existing_project(workspace.trashed_projects(limit=200),name)
+                    if selected:
+                        workspace.restore_project(selected["id"])
+                        if project_dialog is not None:
+                            project_dialog.refresh()
+                        message="Ripristinato il progetto "+selected["name"]+". Memoria e file conservati."
+                    else:
+                        message="Non trovo il progetto "+name+" nel cestino."
+                except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                    message="Ripristino non riuscito: "+str(exc)[:110]
         elif command_action=="open":
             try:
                 selected=find_existing_project(workspace.projects(limit=200),name)
@@ -579,7 +707,7 @@ def main() -> None:
                 elif selected:
                     message="Non posso cambiare progetto durante un'operazione."
                 else:
-                    message="Non trovo il progetto "+name+"."
+                    message="Non trovo "+name+" tra i progetti salvati. Prova 'elenca i progetti'."
             except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
                 message="Impossibile aprire il progetto: "+str(exc)[:105]
         elif command_action=="general":
@@ -601,9 +729,7 @@ def main() -> None:
                     message="Non riesco ad aprire la cartella: "+str(exc)[:100]
         else:
             return False
-        write_line("JARVIS > "+message)
-        speak_result(message)
-        return True
+        return acknowledge(message)
 
     def open_project_manager():
         nonlocal project_dialog
