@@ -1593,6 +1593,7 @@ def main() -> None:
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         nonlocal last_user_for_action, last_user_for_document
         nonlocal project_local_ticket, project_document_ticket
+        nonlocal document_topic,document_owner_project_id,save_only_waiting
         if closing:
             return
         try:
@@ -1793,13 +1794,17 @@ def main() -> None:
                             doc_dialog.operation_completed(
                                 result.document_id, succeeded=True)
                         choose_save_button.configure(state="disabled")
-                    elif result.kind == "saved_but_open":
+                    elif result.kind in ("saved_but_open","saved_open"):
                         if doc_dialog.phase == "executing":
                             doc_dialog.operation_completed(
                                 result.document_id, succeeded=False)
                         if result.saved_path is not None:
                             doc_dialog.saved_path = str(result.saved_path)
                         choose_save_button.configure(state="disabled")
+                    if result.kind in ("saved_and_closed","closed_without_saving","closed"):
+                        document_topic=""
+                        document_owner_project_id=None
+                        save_only_waiting=False
                     announce_document(result.message)
                     source = last_user_for_document or operation
                     last_user_for_document = ""
@@ -1815,12 +1820,12 @@ def main() -> None:
                     remember_exchange(source, result.message, "action")
                     if result.kind in ("opened", "created", "appended",
                                        "saved_and_closed", "closed_without_saving",
-                                       "saved_but_open", "closed"):
+                                       "saved_but_open", "saved_open", "closed"):
                         from uuid import uuid4
                         action_name = ("notepad.open" if result.kind == "opened"
                                        else "notepad.write" if result.kind in (
                                            "created", "appended")
-                                       else "notepad.save" if result.kind == "saved_but_open"
+                                       else "notepad.save" if result.kind in ("saved_but_open","saved_open")
                                        else "notepad.close")
                         filename = (result.saved_path.name
                                     if result.saved_path is not None else "")
@@ -2070,6 +2075,13 @@ def main() -> None:
             request.set("")
             save_document_now(message,explicit_name=requested_name)
             return
+        if doc_dialog.phase=="editing":
+            direct_choice=classify_document_choice(message,pending=False)
+            if direct_choice in ("save","discard"):
+                request.set("")
+                decision=doc_dialog.request_close_with_choice(message)
+                execute_document_choice(decision)
+                return
         if project_voice_command(message):
             request.set("")
             return
