@@ -243,6 +243,9 @@ def main() -> None:
               anchor="w").pack(side="left", fill="x", expand=True)
     ttk.Progressbar(diagnostic_row, mode="determinate", maximum=100,
                     variable=diagnostic_percent, length=110).pack(side="right")
+    diagnostic_cancel_button = ttk.Button(
+        diagnostic_row, text="Annulla", state="disabled")
+    diagnostic_cancel_button.pack(side="right", padx=(0, 6))
     doc_choices = ttk.Frame(hud.command_host)
     doc_choices.pack(fill="x", pady=(0, 5))
     doc_choices.pack_forget()
@@ -1007,6 +1010,23 @@ def main() -> None:
                 f"({snapshot.elapsed_seconds} s)")
         else:
             diagnostic_status.set("Autodiagnosi: "+snapshot.phase)
+        diagnostic_cancel_button.configure(
+            state="normal" if snapshot.active else "disabled")
+
+    def cancel_diagnostic() -> None:
+        """Stop waiting, revoke external consent and reject late results."""
+        nonlocal diagnostic_busy,pending_external_review
+        old_run=diagnostic_session.cancel()
+        if old_run is None:
+            return
+        diagnostic_busy=False
+        pending_external_review=False
+        update_diagnostic_ui()
+        write_line("DIAGNOSTICA > Richiesta #"+str(old_run)+
+                   " annullata nell'interfaccia. Il worker potrebbe "
+                   "terminare dopo; i suoi risultati saranno ignorati.")
+        speak_result("Ho annullato l'attesa della diagnosi. "
+                     "Nessun file è stato modificato.")
 
     def try_self_diagnostic(spoken: str) -> bool:
         """Local bounded audit, visible progress and recoverable worker errors."""
@@ -2886,6 +2906,7 @@ def main() -> None:
     plan_button.configure(command=submit_plan)
     diagnostic_button.configure(
         command=lambda: try_self_diagnostic("Jarvis, fai un'autodiagnosi"))
+    diagnostic_cancel_button.configure(command=cancel_diagnostic)
     dictation_button.configure(command=toggle_dictation)
     voice_correction_button.configure(command=show_voice_corrections)
     choose_save_button.configure(command=choose_save_destination)
