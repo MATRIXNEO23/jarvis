@@ -1,0 +1,63 @@
+JARVIS — VERSIONE DI PROVA TELEGRAM 50 (WINDOWS 10)
+=================================================
+Questa ZIP e' un test isolato, NON una release stabile.
+Contiene il codice Python di Jarvis e gli script di avvio, NON un .exe.
+Non include WhatsApp e non richiede nuove API a pagamento.
+
+FUNZIONI DA PROVARE
+- Ultimi quattro messaggi Telegram come contesto del modello esterno.
+- Massimo cinquanta messaggi ricevuti/inviati per ogni contatto locale.
+- Presentazione "Sono Jarvis, l'assistente di Alberto" una volta per contatto.
+- Impostazioni > Telegram > Gestisci contatti: Apri conversazione
+  e Cancella cronologia, con conferma.
+- Nessun riassunto storico.
+
+INSTALLAZIONE SENZA SOVRASCRIVERE JARVIS
+1. Chiudi il Jarvis precedente. Non lasciare due Jarvis collegati a Telegram
+   contemporaneamente.
+2. Scarica la ZIP di questo ramo GitHub e usa "Estrai tutto" in una nuova
+   cartella, per esempio Desktop\Jarvis-Telegram50-Prova.
+3. All'interno della cartella estratta fai doppio clic su:
+      AVVIA_TEST_TELEGRAM50.bat
+   NON usare avvia_jarvis.bat per il primo test: quello usa i dati originali.
+4. Al primo avvio Jarvis crea (localmente) un profilo separato in:
+      %LOCALAPPDATA%\Jarvis-Telegram50-Trial
+   Da %LOCALAPPDATA%\Jarvis legge le impostazioni originali, copia le
+   credenziali Telegram ancora cifrate e crea una copia SQLite consistente
+   della memoria di lavoro. NON modifica il database originale.
+5. Al primo avvio le risposte Telegram automatiche e il microfono sono OFF.
+   Accendi Telegram solo quando vuoi verificare le risposte con un contatto
+   che sa di dialogare con un assistente.
+6. Puoi verificare la conversazione dalle impostazioni, senza inviare niente.
+   Per cancellare i dati DI PROVA, premi "Cancella cronologia" del contatto
+   scelto. Questo non cancella la cronologia nel Jarvis originale.
+7. Ogni avvio successivo con AVVIA_TEST_TELEGRAM50.bat riusa il profilo di
+   prova. Non risincronizza né sovrascrive i dati gia' salvati durante il test.
+
+IMPORTANTE
+- Si riusano l'installazione SDK GPT e l'account GPT gia' presenti, cosi' non
+  devi installarli nuovamente; l'autenticazione GPT puo' comunque aggiornare
+  lo stato del tuo account esistente. Telegram usa lo stesso account reale:
+  abilitando risposte o invii le azioni sono EFFETTIVE, non simulate.
+- Al primo avvio le credenziali Telegram cifrate vengono copiate localmente
+  nel profilo di prova per consentire l'accesso con lo stesso utente Windows.
+- Non cancellare la cartella %LOCALAPPDATA%\Jarvis: e' quella del Jarvis
+  originale. Non sovrascrivere la vecchia cartella programma.
+- I messaggi locali della copia si limitano a 50 per contatto. Anche i messaggi
+  prima della prova possono essere ridotti nella sola COPIA di test.
+- Per tornare alla versione vecchia, chiudi il test e apri Jarvis dalla sua
+  vecchia cartella; il database originale e' rimasto invariato.
+- Per eliminare TUTTI I DATI DI PROVA, chiudi Jarvis, poi elimina soltanto
+  %LOCALAPPDATA%\Jarvis-Telegram50-Trial. Non eliminare altre cartelle.
+- L'avvio tramite il normale avvia_jarvis.bat di questa versione NON usa
+  il profilo isolato: non farlo per il primo collaudo.
+- La funzionalita' di invio/ricezione Telegram reale NON e' stata ancora
+  collaudata su questo specifico Pavilion.
+
+REQUISITI
+Python 3.11/3.12 x64, le dipendenze che gia' usavi per Jarvis (Telethon,
+FFmpeg e modello voce, se attivi), accesso GPT gia' configurato per le
+risposte automatiche. Non e' necessario installare SDK o account nuovi.
+
+Se compare un errore, NON reinstallare o eliminare dati senza prima
+leggere il messaggio. Riporta l'errore e il passaggio in cui si verifica.
