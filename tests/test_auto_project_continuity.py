@@ -96,7 +96,7 @@ class AutomaticContinuityTests(unittest.TestCase):
         state_path.write_text('{"schema_version":0}', encoding="utf-8")
         recovered = WorkspaceMemory(self.dbpath)
         self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))[
-            "schema_version"], 1)
+            "schema_version"], 2)
         self.assertIn("report.txt", recovered.continuity_file(ident).read_text(
             encoding="utf-8"))
 
