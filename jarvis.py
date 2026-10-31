@@ -73,6 +73,9 @@ from document_recovery import release_closed_document
 from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
+from timer_core import parse_timer_intent
+from timer_popup import TimerPopup
+from timer_alarm import AlarmPlayer, ALARM_PATTERNS, DEFAULT_ALARM
 from planner_ui import open_planner
 from settings import load_settings, save_settings, normalize_telegram_contacts
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
@@ -183,6 +186,31 @@ def main() -> None:
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="Impostazioni JARVIS",
               font=("Segoe UI", 17, "bold")).pack(anchor="w")
+    ttk.Label(frame,text="Seleziona una sezione: tutte le opzioni esistenti rimangono disponibili.",
+              foreground="#7eafc8").pack(anchor="w",pady=(0,5))
+    settings_targets={}
+    def jump_settings(section):
+        target=settings_targets.get(section)
+        if target is None:
+            return
+        settings_window.update_idletasks()
+        total=max(1,settings_inner.winfo_height()-settings_canvas.winfo_height())
+        top=target.winfo_rooty()-settings_inner.winfo_rooty()
+        settings_canvas.yview_moveto(max(0,min(1,top/total)))
+    nav=tk.Frame(frame,bg=BG)
+    nav.pack(fill="x",pady=(0,11))
+    for idx,(label,key) in enumerate((
+            ("Voce","voice"),("Suonerie timer","timer"),
+            ("Documenti","docs"),("GPT","gpt"),
+            ("Memoria","memory"),("Progetti","projects"),
+            ("Telegram","telegram"),("Add-on","addons"))):
+        btn=tk.Button(nav,text=label,command=lambda section=key:jump_settings(section),
+                      bg="#072337",fg="#8cdaf2",activebackground="#10435f",
+                      activeforeground="#e2f9ff",bd=0,relief="flat",pady=6,
+                      font=("Segoe UI",9),cursor="hand2")
+        btn.grid(row=idx//4,column=idx%4,sticky="ew",padx=2,pady=2)
+        nav.grid_columnconfigure(idx%4,weight=1,uniform="navigation")
+    tk.Frame(frame,bg="#126281",height=1).pack(fill="x",pady=(0,10))
     mic_status = tk.StringVar(value=(
         "Microfono: avvio dell'ascolto continuo in preparazione..."
         if settings["auto_listen"] else "Microfono: SPENTO all'avvio"))
@@ -247,12 +275,76 @@ def main() -> None:
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
 
+    # An alarm belongs to this EXISTING settings window, not a new settings UI.
+    alarm_player=AlarmPlayer()
+    timer_sound=tk.StringVar(value=settings.get("timer_sound",DEFAULT_ALARM))
+    timer_volume=tk.IntVar(value=settings.get("timer_volume",65))
+    timer_repeat=tk.BooleanVar(value=settings.get("timer_repeat",False))
+    timer_settings=ttk.LabelFrame(
+        frame,text="Timer — suonerie e avvisi (offline)",padding=9)
+    timer_settings.pack(fill="x",pady=(4,9))
+    ttk.Label(timer_settings,
+              text="Il timer si apre in una finestra separata. Qui scegli e provi l'allarme.",
+              wraplength=680).pack(anchor="w",pady=(0,6))
+    alarm_row=ttk.Frame(timer_settings)
+    alarm_row.pack(fill="x",pady=(0,5))
+    ttk.Label(alarm_row,text="Suono:").pack(side="left",padx=(0,7))
+    timer_sound_picker=ttk.Combobox(
+        alarm_row,textvariable=timer_sound,values=tuple(ALARM_PATTERNS),
+        state="readonly",width=24)
+    timer_sound_picker.pack(side="left",padx=(0,9))
+    timer_preview=ttk.Button(alarm_row,text="Prova suono")
+    timer_preview.pack(side="left",padx=(0,6))
+    timer_preview_stop=ttk.Button(alarm_row,text="Ferma prova")
+    timer_preview_stop.pack(side="left")
+    alarm_volume_row=ttk.Frame(timer_settings)
+    alarm_volume_row.pack(fill="x")
+    ttk.Label(alarm_volume_row,text="Volume:").pack(side="left",padx=(0,8))
+    timer_volume_slider=tk.Scale(
+        alarm_volume_row,variable=timer_volume,from_=0,to=100,
+        orient="horizontal",length=192,showvalue=True,resolution=5,
+        bg=BG,fg=CYAN,troughcolor="#10334a",activebackground="#1a87a9",
+        highlightthickness=0,bd=0,relief="flat")
+    timer_volume_slider.pack(side="left",padx=(0,12))
+    timer_repeat_switch=ttk.Checkbutton(
+        alarm_volume_row,text="Ripeti allarme finché non lo fermo",
+        variable=timer_repeat)
+    timer_repeat_switch.pack(side="left")
+    def save_timer_settings():
+        previous=(settings.get("timer_sound",DEFAULT_ALARM),
+                  settings.get("timer_volume",65),
+                  settings.get("timer_repeat",False))
+        settings["timer_sound"]=timer_sound.get()
+        settings["timer_volume"]=int(timer_volume.get())
+        settings["timer_repeat"]=bool(timer_repeat.get())
+        try:
+            save_settings(settings)
+        except (OSError,ValueError) as exc:
+            (settings["timer_sound"],settings["timer_volume"],
+             settings["timer_repeat"])=previous
+            timer_sound.set(previous[0])
+            timer_volume.set(previous[1])
+            timer_repeat.set(previous[2])
+            messagebox.showerror("Timer",str(exc)[:160],parent=settings_window)
+    timer_sound_picker.bind("<<ComboboxSelected>>",lambda _e:save_timer_settings())
+    timer_volume_slider.bind("<ButtonRelease-1>",lambda _e:save_timer_settings())
+    timer_volume_slider.bind("<KeyRelease>",lambda _e:save_timer_settings())
+    timer_repeat_switch.configure(command=save_timer_settings)
+    timer_preview.configure(command=lambda:alarm_player.play(
+        timer_sound.get(),int(timer_volume.get()),repeat=False))
+    timer_preview_stop.configure(command=alarm_player.stop)
+    timer_popup=TimerPopup(root,alarm_player,lambda:(
+        timer_sound.get(),int(timer_volume.get()),bool(timer_repeat.get())))
+
     # A compact popup keeps the existing Pavilion main window usable.
     last_voice_sample = tk.StringVar(value="Nessuna frase ancora riconosciuta.")
     voice_correction_button = ttk.Button(
         dictation_row, text="Correggi voce...")
     voice_correction_button.pack(side="right", padx=(6, 0))
 
+    ttk.Label(frame,text="DOCUMENTI  /  OPERAZIONI IN SICUREZZA",
+              foreground="#2acdf3",font=("Consolas",10,"bold")).pack(
+                  anchor="w",pady=(8,4))
     document_controls = ttk.Frame(frame)
     document_controls.pack(fill="x", pady=(0, 6))
     document_status = tk.StringVar(value="Documenti: nessuno aperto da Jarvis.")
@@ -1872,6 +1964,9 @@ def main() -> None:
             side="right")
         entry.focus_set()
 
+    ttk.Separator(frame,orient="horizontal").pack(fill="x",pady=(11,7))
+    ttk.Label(frame,text="CHATGPT  /  COLLEGAMENTO",
+              foreground="#2acdf3",font=("Consolas",10,"bold")).pack(anchor="w")
     ttk.Checkbutton(
         frame, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
         variable=gpt_enabled, command=toggle_gpt
@@ -1886,6 +1981,9 @@ def main() -> None:
     disconnect.pack(side="left")
     ttk.Label(frame, text="Il login usa il browser ufficiale; nessuna chiave API e nessuna fatturazione a consumo.").pack(anchor="w")
 
+    ttk.Separator(frame,orient="horizontal").pack(fill="x",pady=(11,7))
+    ttk.Label(frame,text="MEMORIA  /  CONTINUITÀ",
+              foreground="#2acdf3",font=("Consolas",10,"bold")).pack(anchor="w")
     brain_controls = ttk.Frame(frame)
     brain_controls.pack(fill="x", pady=(5, 3))
     memory_toggle = ttk.Checkbutton(
@@ -1966,6 +2064,13 @@ def main() -> None:
               text="Solo pacchetti .jaddon descrittivi; nessun codice esterno "
                    "viene eseguito automaticamente.",
               wraplength=455).pack(side="left",fill="x",expand=True)
+
+    settings_targets.update({
+        "voice":audio_controls,"timer":timer_settings,
+        "docs":document_controls,"gpt":gpt_buttons,
+        "memory":brain_controls,"projects":workspace_panel,
+        "telegram":telegram_panel,"addons":addon_panel,
+    })
 
     # Conversation is always visible at the left of the animated HUD.
     # The console composer follows the supplied reference: a circular mic,
@@ -2482,6 +2587,26 @@ def main() -> None:
             on_finished=journal_plan_finished,
         )
 
+    def try_timer_command(message: str) -> bool:
+        """Route timer instructions locally before GPT or shell execution."""
+        intent=parse_timer_intent(message)
+        if intent is None:
+            return False
+        try:
+            if intent.action=="start":
+                timer_popup.open(intent.seconds,autostart=True)
+                write_line("TIMER > Avviato "+str(intent.seconds)+" secondi.")
+            else:
+                timer_popup.action(intent.action)
+                write_line("TIMER > "+{
+                    "open":"Aperto. Imposta durata e premi Start.",
+                    "pause":"In pausa.","resume":"Ripreso.",
+                    "stop":"Fermato.","reset":"Azzerato."
+                }.get(intent.action,intent.action))
+        except (tk.TclError,ValueError) as exc:
+            write_line("TIMER > Impossibile avviare: "+type(exc).__name__)
+        return True
+
     def submit_local(event=None, message_override: str | None = None,
                      source_utterance: str = "",
                      addon_action_id: str = "") -> None:
@@ -2495,6 +2620,10 @@ def main() -> None:
             return
         message = (message_override if message_override is not None else request.get()).strip()
         if not message:
+            return
+        if not addon_action_id and try_timer_command(message):
+            if message_override is None:
+                request.set("")
             return
         if message_override is None:
             request.set("")
@@ -2544,6 +2673,9 @@ def main() -> None:
             return
         message = request.get().strip()
         if not message:
+            return
+        if try_timer_command(message):
+            request.set("")
             return
         # The "Chiedi a GPT" control must not bypass local diagnostics.
         # This stays usable offline and avoids a misleading GPT refusal.
@@ -2793,6 +2925,8 @@ def main() -> None:
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
                             write_line("TU > " + spoken)
+                            if try_timer_command(spoken):
+                                continue
                             # Safe local diagnostics must not wait for a GPT
                             # response or a stale Notepad confirmation.
                             if try_self_diagnostic(spoken):
@@ -2896,6 +3030,8 @@ def main() -> None:
                         # Log commands that passed the wake/press gate.
                         # Do not record free dictation or phrases ignored by wake.
                         write_line("TU > " + spoken)
+                        if try_timer_command(spoken):
+                            continue
                         if try_self_diagnostic(spoken):
                             continue
                         if try_telegram_voice_send(spoken):
@@ -3323,6 +3459,9 @@ def main() -> None:
         message=request.get().strip()
         if not message:
             return
+        if try_timer_command(message):
+            request.set("")
+            return
         reconcile_document_session(force=True)
         if try_telegram_voice_send(message):
             request.set("")
@@ -3423,6 +3562,8 @@ def main() -> None:
     def close() -> None:
         nonlocal closing
         closing = True
+        timer_popup.close()
+        alarm_player.stop()
         planner_abort_event.set()
         doc_dialog.revoke_pending()
         dictation.disable()
