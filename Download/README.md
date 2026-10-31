@@ -1,5 +1,25 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA VERSIONE — MEMORIA AFFIDABILE E STORICO VERIFICABILE (31/10/2026)
+
+**[SCARICA Jarvis-Memoria-Affidabile.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Memoria-Affidabile.zip)**
+
+Il pacchetto ZIP è realmente disponibile in `Download`; include tutti i file di programma e test (sorgente Python con `avvia_jarvis.bat`, non EXE compilato), il commit sorgente e un manifest SHA-256 per ogni file incluso. Deriva dal commit testato `15658a1ad140c60247502052d634173f3ad184c5` nel ramo `feature/memory-provenance-and-separation`. [CI Windows e Linux: 4/4 SUCCESS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41182354475). [PR #18 in sola prova](https://github.com/MATRIXNEO23/jarvis/pull/18), senza merge in main.
+
+**Modifiche mirate alla memoria:**
+- Preferenze in `%LOCALAPPDATA%\Jarvis\jarvis_preferences.sqlite3`, SOLO dopo conferma esplicita; non dedotte dalle conversazioni. «Jarvis, ricorda che preferisco risposte brevi» richiede «confermo».
+- Progetti, file, continuità e passi nel loro database `jarvis_workspaces.sqlite3` e cartelle `projects\<UUID>`, intatti e separati.
+- Conversazione Second Brain nel precedente `second_brain.sqlite3`; i ricordi NON vengono eseguiti come comandi.
+- Nuova cronologia `jarvis_actions.sqlite3`: requested, running, reported, verified, failed, interrupted, uncertain. Successi riferiti da processi lanciati non equivalgono alla prova che una finestra funziona; TXT salvati verificati solo quando esistono sul disco. In caso di arresto le operazioni in sospeso diventano interrupted senza replay.
+- Vecchi record e receipt conservati; le azioni pregresse senza prova classificabile diventano **legacy_unassessed / reported_action**, non verified. Snapshot dei progetti aggiornati alla versione 2 in modo additivo, senza cancellazione dati.
+- Guida: [MEMORIA_AFFIDABILE_V1.md](https://github.com/MATRIXNEO23/jarvis/blob/feature/memory-provenance-and-separation/docs/MEMORIA_AFFIDABILE_V1.md).
+
+**Collaudo fisico rimandato su richiesta dell'utente.** Prima di avviare una versione nuova, fare backup COMPLETO di `%LOCALAPPDATA%\Jarvis`, chiudere ogni istanza precedente ed estrarre lo ZIP in una cartella diversa. La memoria del PC non è stata modificata dalla pubblicazione.
+
+**AVVERTENZA ANTIVIRUS ANCORA APERTA:** un pacchetto Jarvis precedente è stato segnalato da Defender come `Trojan:Script/Wacatac.B!ml`. Questa ZIP non è stata certificata da una scansione antivirus indipendente; test CI e manifest non provano l'assenza di malware. Non disattivare Defender né forzare l'esecuzione di un file segnalato. Se il download è bloccato, interrompere il collaudo. Le ZIP precedenti sono state conservate.
+
+---
+
 ## NUOVA VERSIONE DI TEST — COMPRENSIONE DEL CONTESTO (31/10/2026)
 
 **[SCARICA Jarvis-Contesto-e-Risposte-Brevi.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Contesto-e-Risposte-Brevi.zip)**
