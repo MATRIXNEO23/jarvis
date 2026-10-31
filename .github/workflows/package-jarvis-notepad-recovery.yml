@@ -1,0 +1,70 @@
+name: Publish Jarvis Notepad session recovery ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-notepad-recovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Download catalog
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout tested Notepad recovery revision
+        uses: actions/checkout@v4
+        with:
+          ref: 9fb43205c2c395e4fd6ed2fada089b13e523be12
+          path: source
+          persist-credentials: false
+      - name: Build immutable source ZIP and verify
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile,ZIP_DEFLATED
+          import json,hashlib
+          source=Path("source")
+          dest=Path("catalog/Download/Jarvis-Recupero-Documenti.zip")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          prefix="Jarvis-Recupero-Documenti/"
+          manifest=[]
+          with ZipFile(dest,"w",ZIP_DEFLATED,compresslevel=6) as zipfile:
+              for f in sorted(source.rglob("*")):
+                  if not f.is_file():
+                      continue
+                  parts=f.relative_to(source).parts
+                  if parts[0] in ("Download",".github") or any(
+                         p in (".git",".venv","venv","__pycache__") for p in parts):
+                      continue
+                  arc=prefix+"/".join(parts)
+                  zipfile.write(f,arc)
+                  manifest.append({"path":arc,"sha256":hashlib.sha256(f.read_bytes()).hexdigest()})
+              zipfile.writestr(prefix+"SOURCE-COMMIT.txt","9fb43205c2c395e4fd6ed2fada089b13e523be12\n")
+              zipfile.writestr(prefix+"SOURCE-MANIFEST.json",json.dumps(manifest,indent=2))
+          with ZipFile(dest) as z:
+              assert z.testzip() is None
+              names=set(z.namelist())
+              for file in ("avvia_jarvis.bat","jarvis.py","managed_documents.py",
+                           "notepad_controller.py","document_dialog.py",
+                           "document_recovery.py","tests/test_managed_documents.py",
+                           "docs/RECUPERO_BLOCCO_NOTE_CHIUSO.md"):
+                  assert prefix+file in names,file
+          print("ZIP VERIFIED",dest,dest.stat().st_size)
+          PY
+      - name: Commit ZIP in Download preserving older versions
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Recupero-Documenti.zip
+          git -C catalog commit -m "download: publish Jarvis recovered Notepad session ZIP"
+          git -C catalog push origin HEAD:main
