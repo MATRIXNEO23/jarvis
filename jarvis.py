@@ -2446,6 +2446,7 @@ def main() -> None:
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         nonlocal local_operation_id, document_operation_id
         nonlocal diagnostic_busy,last_diagnostic_audit,last_runtime_evidence,pending_external_review
+        nonlocal telegram_owner_busy
         nonlocal last_user_for_action, last_user_for_document
         nonlocal project_local_ticket, project_document_ticket
         nonlocal document_topic,document_owner_project_id,save_only_waiting
@@ -2525,6 +2526,40 @@ def main() -> None:
                 elif kind == "project_journal_error":
                     runtime_events.record("project_journal_failure")
                     workspace_status.set("Esito progetto non registrato: "+str(data[0])[:100])
+                elif kind == "telegram_contacts_loaded":
+                    if (telegram_contacts_dialog is not None
+                            and telegram_contacts_dialog.exists()):
+                        telegram_contacts_dialog.loaded(data[0])
+                    else:
+                        write_line("TELEGRAM > Elenco contatti caricato; "
+                                   "riapri Gestisci contatti.")
+                elif kind == "telegram_contacts_error":
+                    if (telegram_contacts_dialog is not None
+                            and telegram_contacts_dialog.exists()):
+                        telegram_contacts_dialog.failed(data[0])
+                    telegram_status.set("Telegram: impossibile caricare contatti "
+                                        +str(data[0])[:90])
+                elif kind == "telegram_owner_sent":
+                    telegram_owner_busy=False
+                    peer_id,display_name,msg_id,written=data
+                    # Telegram returned a message ID; record separately by peer.
+                    if workspace is not None:
+                        try:
+                            workspace.telegram_event(
+                                peer_id,"outgoing",msg_id,"voice",written)
+                        except (OSError,sqlite3.Error,WorkspaceError):
+                            write_line("TELEGRAM > Vocale inviato, "
+                                       "ma archivio locale non aggiornato.")
+                    write_line("TELEGRAM > Messaggio vocale inviato a "+
+                               str(display_name)[:90]+" (ricevuta Telegram).")
+                    speak_result("Messaggio vocale inviato a "+str(display_name)[:90]+".")
+                elif kind == "telegram_owner_error":
+                    telegram_owner_busy=False
+                    error_type,reason=data
+                    write_line("TELEGRAM > Invio non confermato ("+
+                               str(error_type)[:50]+"): "+str(reason)[:150])
+                    speak_result("Non posso confermare l'invio Telegram. "
+                                 "Controlla la chat prima di riprovare.")
                 elif kind == "telegram_status":
                     telegram_status.set(str(data[0])[:220])
                     write_line("TELEGRAM > "+str(data[0])[:170])
