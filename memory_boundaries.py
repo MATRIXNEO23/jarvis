@@ -160,7 +160,7 @@ class OperationJournal:
 
     def finish(self, ident: str, outcome: str, *,
                receipt: str = "", detail: str = "",
-               observed: bool = False) -> bool:
+               observed: bool = False, action: str = "") -> bool:
         """'verified' requires observed evidence plus a nonempty receipt.
 
         'reported' means the executor returned success without independent
@@ -176,16 +176,19 @@ class OperationJournal:
                                       not re.fullmatch(r"[a-zA-Z0-9._:-]{3,120}", receipt)):
             raise MemoryBoundaryError("Manca una prova verificabile.")
         if (not isinstance(detail,str) or len(detail)>450
-                or _SECRETS.search(detail)
+                or _SECRETS.search(detail) or
+                (action and (not isinstance(action,str) or
+                not re.fullmatch(r"[a-zA-Z0-9._:-]{1,100}",action)))
                 or not isinstance(receipt,str) or len(receipt)>120):
             raise MemoryBoundaryError("Dettagli dell'operazione non sicuri.")
         with _connect(self.path) as db:
             result = db.execute("""UPDATE action_attempts SET
-                state=?,verification=?,receipt=?,detail=?,updated_utc=?
+                state=?,verification=?,receipt=?,detail=?,updated_utc=?,
+                action=CASE WHEN ?!='' THEN ? ELSE action END
                 WHERE id=? AND state IN ('requested','running')""",
                 (outcome, "local_observation" if outcome=="verified" else "none",
                  receipt if outcome=="verified" else "",
-                 detail[:450], _now(), ident))
+                 detail[:450], _now(), action, action, ident))
         return result.rowcount == 1
 
     def recent(self, limit: int = 20, *, project_id: str | None = None) -> tuple[dict, ...]:
