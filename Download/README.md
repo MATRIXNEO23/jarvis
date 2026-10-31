@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## ULTIMA PROVA — SFONDO NERO CINEMATICO COME NEL CONCEPT
+
+**[SCARICA JARVIS CON SFONDO SCURO E CIRCUITI LUMINOSI — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/high-fidelity-cinematic-background.zip)**
+
+Dopo il test reale del precedente HUD High Fidelity sul Pavilion, l'utente ha mostrato una fotografia e chiesto anche lo **sfondo molto più simile al preview originale**. Questa nuova revisione sostituisce la **griglia quadrata blu diffusa** dietro al reattore e alla Terra con un fondo **quasi nero**, sottili piste elettroniche, dettagli angolari e piccoli nodi ciano. Anche i pannelli e la console sono leggermente più scuri.
+
+**Restano invariati:** reattore JARVIS e globo animati, nucleo ciano con microfono silenzioso, arancione mentre parli e verde durante la voce, ascolto automatico all'apertura dell'app con opt-out ⚙, saluto, dialogo GPT, Second Brain, file e comandi. I circuiti sono disegnati solo alla creazione/ridimensionamento della finestra, non a ogni fotogramma. **Nessuna nuova dipendenza o costo.**
+
+**COME PROVARE:** chiudi il vecchio Jarvis, estrai questa ZIP in **una cartella nuova** e avvia `avvia_jarvis.bat`. Non reinstallare nulla se Vosk/ChatGPT già funzionano, non cancellare `%LOCALAPPDATA%\\Jarvis` né la versione precedente. Confronta il colore dello sfondo e la ricchezza dei dettagli con il concept originario, poi verifica se ascolto e animazioni restano fluidi.
+
+[Guida e limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/high-fidelity-cinematic-background/docs/HUD_CINEMATIC_BACKGROUND.md) · [PR sperimentale #11](https://github.com/MATRIXNEO23/jarvis/pull/11).
+
+**Il design va ancora confrontato visivamente sul Pavilion; i test CI non garantiscono la somiglianza al pixel con il concept.**
+
 ## ULTIMA VERSIONE SPERIMENTALE — HUD HIGH FIDELITY
 
 **[SCARICA JARVIS CON INTERFACCIA PIÙ VICINA AL PREVIEW — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/high-fidelity-reference-hud.zip)**
