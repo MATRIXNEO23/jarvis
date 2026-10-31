@@ -1,5 +1,21 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA VERSIONE — AUTODIAGNOSI IBRIDA: MOTORE LOCALE + GPT ESTERNO (31/10/2026)
+
+**[SCARICA Jarvis-Autodiagnosi-Ibrida-GPT.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Autodiagnosi-Ibrida-GPT.zip)**
+
+Pacchetto realmente presente nella cartella `Download` (313324 byte), creato da sorgente pin `0a8d9769e6858f7f571d480d0261aba16924b4a4` sul ramo `feature/local-audit-external-gpt-review` e completo di manifest SHA-256. [CI Windows/Linux: 4/4 SUCCESS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41189465744); [pubblicazione ZIP SUCCESS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41189529881). [PR #23 sperimentale](https://github.com/MATRIXNEO23/jarvis/pull/23), codice non integrato nel ramo main. Versioni precedenti conservate.
+
+**Perché:** Jarvis ha un piccolo motore Python sul PC ma ragiona con un GPT esterno. Non è GPT a poter leggere il disco di Windows: è il motore locale che analizza il proprio codice in sola lettura e produce un rapporto. Una volta disponibile, l'utente può chiedere **«Jarvis, valuta la diagnosi con GPT»** oppure **«Jarvis, fai un'autodiagnosi del tuo funzionamento e proponi eventuali fix»**; dopo una domanda di consenso, Jarvis invia al collegamento GPT già autorizzato **solo** dati tecnici ridotti (massimo 6 segnali AST, file relativi, righe, verifiche da eseguire, e conteggi anonimi fino alle ultime 20 operazioni). GPT produce suggerimenti senza autorizzazioni operative. Rifiutando il consenso, niente viene inviato, il rapporto locale rimane.
+
+**Limiti:** non è un modello locale; non introduce API a consumo, modelli nuovi o servizi a pagamento. Non invia codice sorgente integrale, percorsi personali, log, credenziali, file privati, messaggi Telegram o contenuti dei progetti. Gli indicatori disponibili e i conteggi non attestano che le funzioni lavorino correttamente; GPT non può testare il PC e non è autorizzato a modificare file. I log di runtime NON sono ancora analizzati. Guida nel ramo: `docs/AUTODIAGNOSI_IBRIDA_LOCALE_GPT.md`.
+
+**Collaudo reale sul Pavilion ancora da svolgere.** Prima backup completo di `%LOCALAPPDATA%\Jarvis`; decomprimere in nuova cartella, chiudere la versione precedente e avviare una sola istanza.
+
+**Avviso antivirus irrisolto:** un precedente ZIP è stato segnalato da Microsoft Defender come `Trojan:Script/Wacatac.B!ml`. La nuova ZIP non ha verifica antivirus indipendente; CI e manifest non certificano assenza di malware. Se Defender la blocca, NON disattivare l'antivirus né autorizzarne l'esecuzione.
+
+---
+
 ## FIX AUTODIAGNOSI — RICHIESTE VOCALI E PULSANTE DEDICATO (31/10/2026)
 
 **[SCARICA Jarvis-Fix-Autodiagnosi-Vocale.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Fix-Autodiagnosi-Vocale.zip)**
