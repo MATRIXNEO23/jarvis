@@ -35,7 +35,8 @@ _LOCAL_BINDINGS = {
 _DOCUMENT_BINDINGS = frozenset({
     "notepad.open", "notepad.close", "notepad.write",
 })
-_ALLOWED_IDS = frozenset(_LOCAL_BINDINGS) | _DOCUMENT_BINDINGS
+_TELEGRAM_BINDINGS = frozenset({"telegram.voice.start"})
+_ALLOWED_IDS = frozenset(_LOCAL_BINDINGS) | _DOCUMENT_BINDINGS | _TELEGRAM_BINDINGS
 
 
 class CapabilityRejected(ValueError):
@@ -50,6 +51,7 @@ class ResolvedCapability:
     content: str = ""
     target: str = ""
     close_after: bool = False
+    recipient: str = ""
 
 
 def load_catalog(path: Path | None = None) -> tuple[dict, ...]:
@@ -99,7 +101,9 @@ def load_catalog(path: Path | None = None) -> tuple[dict, ...]:
 
 
 def capability_prompt(*, has_document: bool = False,
-                      compact: bool = False) -> str:
+                      compact: bool = False,
+                      telegram_send_ready: bool = False,
+                      brief: bool = False) -> str:
     """Compact description generated from the catalog, not hardcoded examples."""
     actions = []
     for item in load_catalog():
@@ -107,7 +111,14 @@ def capability_prompt(*, has_document: bool = False,
         # A missing session never authorizes Notepad close or append.
         if aid == "notepad.close" and not has_document:
             continue
-        if compact:
+        if aid == "telegram.voice.start" and not telegram_send_ready:
+            continue
+        if compact and brief:
+            actions.append({
+                "id": aid,
+                "example": item["examples"][0][:42],
+            })
+        elif compact:
             actions.append({
                 "id": aid,
                 "does": item["description"][:68],
@@ -127,7 +138,8 @@ def capability_prompt(*, has_document: bool = False,
 
 
 def resolve_capability(action_id: object, arguments: object,
-                       *, has_document: bool = False) -> ResolvedCapability:
+                       *, has_document: bool = False,
+                       telegram_send_ready: bool = False) -> ResolvedCapability:
     """Resolve only a compiled handler and validated arguments; never execute."""
     if (not isinstance(action_id, str) or action_id not in _ALLOWED_IDS
             or not isinstance(arguments, dict)):
@@ -135,6 +147,19 @@ def resolve_capability(action_id: object, arguments: object,
     # Enforce the shipped descriptor to catch an inconsistent installation.
     if action_id not in {item["id"] for item in load_catalog()}:
         raise CapabilityRejected("Capacità non presente nel catalogo ufficiale.")
+    if action_id == "telegram.voice.start":
+        if not telegram_send_ready:
+            raise CapabilityRejected("Invio vocale Telegram non disponibile.")
+        if set(arguments) != {"recipient"}:
+            raise CapabilityRejected("Indica soltanto il nome del destinatario.")
+        name = arguments["recipient"]
+        if (not isinstance(name, str) or not 2 <= len(name.strip()) <= 90
+                or any(ord(ch) < 32 for ch in name)):
+            raise CapabilityRejected("Destinatario Telegram non valido.")
+        # Name is not authority: the local UI performs exact/unique match and
+        # requires a separate confirmed message before any network send.
+        return ResolvedCapability(action_id, "telegram_voice_dialog",
+                                  recipient=name.strip())
     if action_id in _LOCAL_BINDINGS:
         tool = _LOCAL_BINDINGS[action_id]
         try:

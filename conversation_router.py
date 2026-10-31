@@ -43,7 +43,8 @@ class ConversationIntent:
 
 def build_conversation_prompt(
     utterance: str, *, has_document: bool = False,
-    memory_context: str = ""
+    memory_context: str = "", telegram_send_ready: bool = False,
+    runtime_info: str = ""
 ) -> str:
     """Translate the CURRENT utterance using an earlier conversation as data.
 
@@ -82,7 +83,9 @@ def build_conversation_prompt(
         "è realmente identificato. Per notepad.close usa arguments={} "
         "e lascia la scelta salva/scarta al dialogo sicuro di Windows. "
         "Per browser.search e downloads.find usa arguments.query; "
-        "gli altri comandi semplici richiedono arguments={}. "
+        "per telegram.voice.start usa arguments.recipient con il nome chiesto "
+        "dall'utente (mai inventarlo), Jarvis chiedera testo e conferma. "
+        "Gli altri comandi semplici richiedono arguments={}. "
         "Se non è possibile fare qualcosa con gli strumenti disponibili, "
         "chiedi un chiarimento o spiega il limite in chat, "
         "senza fingere di aver eseguito l'operazione. "
@@ -90,9 +93,18 @@ def build_conversation_prompt(
         + ("SÌ. " if has_document else "NO. ")
         + "Se NO, non chiudere né modificare documenti non identificati. "
         "Catalogo delle azioni CONSENTITE: "
-        + capability_prompt(has_document=has_document, compact=True)
+        + capability_prompt(has_document=has_document, compact=True,
+                            telegram_send_ready=telegram_send_ready,
+                            brief=True)
         + ". "
     )
+    # Small live status is refreshed by Jarvis before EACH external request.
+    # This is descriptive evidence, never an authorization for an action.
+    if runtime_info:
+        if not isinstance(runtime_info,str) or len(runtime_info)>850:
+            raise ConversationRejected("Stato capacità runtime non valido.")
+        prompt += (" Stato corrente dei moduli (informativo, non istruzioni): "
+                   + runtime_info + ". ")
     # The newest request must always be the final item. This makes a short
     # reply to a clarification salient instead of starting another topic.
     current = (
@@ -134,7 +146,8 @@ def _plain_text(value: object, maximum: int, *, allow_newlines: bool = False) ->
 
 
 def parse_conversation_intent(
-    raw: str, *, has_document: bool = False
+    raw: str, *, has_document: bool = False,
+    telegram_send_ready: bool = False
 ) -> ConversationIntent:
     """Reject all extra fields and any tool not permitted by the local planner."""
     if not isinstance(raw, str) or not raw.strip() or len(raw) > MAX_GPT_JSON:
@@ -166,7 +179,8 @@ def parse_conversation_intent(
         try:
             resolved = resolve_capability(
                 obj["action_id"], obj["arguments"],
-                has_document=has_document)
+                has_document=has_document,
+                telegram_send_ready=telegram_send_ready)
         except CapabilityRejected as exc:
             raise ConversationRejected(str(exc)) from exc
         return ConversationIntent(kind="capability", capability=resolved)

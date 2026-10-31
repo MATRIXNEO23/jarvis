@@ -127,6 +127,16 @@
         "quali comandi hai eseguito di recente"
       ],
       "risk": "sola lettura"
+    },
+    {
+      "id": "telegram.voice.start",
+      "application": "Telegram",
+      "description": "Avvia il dialogo locale per comporre un messaggio vocale a un contatto Telegram autorizzato; chiede testo e conferma prima dell'invio.",
+      "examples": [
+        "manda un messaggio a Nico",
+        "invia un vocale a Nico"
+      ],
+      "risk": "richiede contatto selezionato e conferma esplicita"
     }
   ]
 }
