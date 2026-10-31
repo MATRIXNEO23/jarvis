@@ -500,8 +500,9 @@ def main() -> None:
             speak_result("Chiudi prima il documento aperto, per non confondere i progetti.")
             return False
         if project_id is not None:
-            if workspace is None or not workspace.project(project_id):
-                write_line("JARVIS > Progetto non trovato.")
+            if (workspace is None or not workspace.project(project_id)
+                    or workspace.project(project_id)["trashed"]):
+                write_line("JARVIS > Progetto non trovato o nel cestino.")
                 return False
             project=workspace.project(project_id)
         if workspace is not None:
@@ -738,9 +739,19 @@ def main() -> None:
                 "Progetti","Memoria progetti non disponibile.",parent=root)
             return
         if project_dialog is None:
+            def renamed_project(ident,name):
+                if active_project_id==ident:
+                    active_context_label.set("Contesto: "+name[:35])
+            def trashed_project(ident):
+                if active_project_id==ident:
+                    switch_context(None)
             project_dialog=ProjectManagerWindow(
                 root,workspace,switch_context,
-                lambda:switch_context(None),lambda:None)
+                lambda:switch_context(None),lambda:None,
+                can_modify=lambda:(not busy_gpt and not busy_local and
+                                   not document_busy and documents.current is None
+                                   and doc_dialog.phase=="idle"),
+                on_renamed=renamed_project,on_trashed=trashed_project)
         project_dialog.show()
 
     def telegram_activity_window() -> None:
