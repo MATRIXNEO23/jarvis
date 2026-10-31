@@ -26,7 +26,7 @@ import threading
 from datetime import datetime
 from pathlib import Path
 import tkinter as tk
-from tkinter import filedialog, messagebox, scrolledtext, ttk
+from tkinter import filedialog, messagebox, ttk
 import webbrowser
 
 from document_dialog import DocumentDialog
@@ -651,20 +651,29 @@ def main() -> None:
     plan_button = ttk.Button(buttons_row, text="Pianifica attività")
     plan_button.pack(side="left")
 
-    output = scrolledtext.ScrolledText(
-        hud.console_host, height=12, wrap="word", state="disabled",
-        font=("Consolas", 10), bg=PANEL, fg=WHITE, insertbackground=CYAN,
-        relief="flat", borderwidth=0, padx=9, pady=6,
+    # Native Tk text with a dark ttk scrollbar matches the concept's
+    # streamlined chat panel without third-party UI or web technologies.
+    chat_panel = ttk.Frame(hud.console_host)
+    chat_panel.pack(fill="both", expand=True)
+    output = tk.Text(
+        chat_panel, height=12, wrap="word", state="disabled",
+        font=("Segoe UI", 10), bg="#041522", fg=WHITE,
+        insertbackground=CYAN, relief="flat",
+        borderwidth=0, padx=12, pady=9,
         selectbackground="#136488", selectforeground=WHITE)
-    output.tag_configure("utente", foreground="#b1d9f5", spacing3=6)
-    output.tag_configure("jarvis", foreground=CYAN, spacing3=6)
-    output.tag_configure("azione", foreground=GREEN, spacing3=6)
-    output.tag_configure("errore", foreground=AMBER, spacing3=6)
-    output.tag_configure("sistema", foreground=MUTED, spacing3=6)
+    chat_scroll = ttk.Scrollbar(
+        chat_panel, orient="vertical", command=output.yview)
+    output.configure(yscrollcommand=chat_scroll.set)
+    chat_scroll.pack(side="right", fill="y")
+    output.pack(side="left", fill="both", expand=True)
+    output.tag_configure("utente", foreground="#caeaff", spacing3=9)
+    output.tag_configure("jarvis", foreground="#46ccfa", spacing3=9)
+    output.tag_configure("azione", foreground=GREEN, spacing3=9)
+    output.tag_configure("errore", foreground=AMBER, spacing3=9)
+    output.tag_configure("sistema", foreground="#83a8ba", spacing3=9)
     output.tag_configure("message_head",
-                         font=("Consolas", 10, "bold"),
-                         spacing1=7)
-    output.pack(fill="both", expand=True)
+                         font=("Segoe UI", 10, "bold"),
+                         spacing1=9)
     hud.attach_console(output)
     write_line("Jarvis locale pronto. Scrivi 'aiuto' per vedere i comandi disponibili.")
 
