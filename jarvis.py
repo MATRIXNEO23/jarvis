@@ -2193,6 +2193,7 @@ def main() -> None:
         run_gpt("ask", prompt=prompt, source=message)
 
     def poll() -> None:
+        """Always schedule another UI tick before consuming potentially bad events."""
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         nonlocal local_operation_id, document_operation_id
         nonlocal diagnostic_busy,last_diagnostic_audit,pending_external_review
@@ -2201,6 +2202,9 @@ def main() -> None:
         nonlocal document_topic,document_owner_project_id,save_only_waiting
         if closing:
             return
+        # A malformed or unexpected event must not permanently kill the
+        # event pump and strand an in-progress diagnostic forever.
+        root.after(120, poll)
         reconcile_document_session()
         try:
             while True:
@@ -2800,7 +2804,6 @@ def main() -> None:
             epoch, follow_up = pending_conversation.popleft()
             if epoch == conversation_epoch:
                 start_conversation_gpt(follow_up)
-        root.after(120, poll)
 
     def toggle_hud_microphone() -> None:
         # A real manual on/off action, not a decorative toggle.
