@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## FIX AUTODIAGNOSI — RICHIESTE VOCALI E PULSANTE DEDICATO (31/10/2026)
+
+**[SCARICA Jarvis-Fix-Autodiagnosi-Vocale.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Fix-Autodiagnosi-Vocale.zip)**
+
+Pacchetto verificato nella cartella `Download` (304402 byte), revision `4154746df5e160c9ad906864d23239463a1c1d64` del ramo `fix/self-diagnostic-intent-route-and-button`. [PR #22](https://github.com/MATRIXNEO23/jarvis/pull/22) ancora isolata, senza merge su `main`. [Test CI Windows/Linux 4/4 SUCCESS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41186793779); [workflow di pubblicazione SUCCESS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41186849663).
+
+**Problema corretto dopo foto dell'utente:** chiedendo «Jarvis, fai un'autodiagnosi del tuo funzionamento e proponi eventuali fix» Jarvis rispondeva con testo generico del GPT che diceva di non poter accedere al codice o ai log. Invece la diagnosi deve avvenire localmente, prima di chiedere a GPT: ora vengono riconosciute le frasi composte e anche il pulsante «Chiedi a GPT» passa prima dal controllo diagnostico. In più è disponibile il pulsante **Autodiagnosi Jarvis** sotto il menu secondario `⋯`, per evitare ambiguità della voce. Il rapporto indica file, righe, priorità e prove da eseguire. I vecchi comandi, tra cui «analizza il tuo codice», sono preservati.
+
+**Limite reale:** il modulo legge i sorgenti Python installati e dà possibili consigli di manutenzione; non legge i log runtime, non esegue i sorgenti o test e non può garantire da solo il corretto funzionamento. Rimane in sola lettura e non modifica il programma. Il collaudo reale sul Pavilion resta da fare.
+
+**Avviso sicurezza ancora aperto:** un precedente ZIP è stato segnalato da Windows Defender come `Trojan:Script/Wacatac.B!ml`. Non è stata verificata con uno scanner indipendente l'assenza di malware nel nuovo pacchetto. Se Defender lo blocca, non disattivarlo né forzare l'esecuzione. Fare backup di `%LOCALAPPDATA%\Jarvis`, estrarre la nuova build in una cartella distinta e avviare una sola istanza alla volta.
+
+---
+
 ## NUOVA BUILD DI TEST — AUTODIAGNOSI E CONSIGLI DI MIGLIORAMENTO (31/10/2026)
 
 **[SCARICA Jarvis-Autodiagnosi-e-Miglioramenti.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Autodiagnosi-e-Miglioramenti.zip)**
