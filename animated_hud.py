@@ -182,14 +182,17 @@ class JarvisHUD:
         self.visual.pack(side="left", fill="both", expand=True)
         self.main_visuals = tk.Frame(self.visual, bg=BG)
         self.main_visuals.pack(fill="both", expand=True)
+        self.main_visuals.grid_rowconfigure(0, weight=1)
+        self.main_visuals.grid_columnconfigure(0, weight=3)
+        self.main_visuals.grid_columnconfigure(1, weight=2)
         self.core_canvas = tk.Canvas(
             self.main_visuals, bg=BG, highlightthickness=0,
             borderwidth=0, width=410, height=410)
-        self.core_canvas.pack(side="left", fill="both", expand=True)
+        self.core_canvas.grid(row=0, column=0, sticky="nsew")
         self.earth_canvas = tk.Canvas(
             self.main_visuals, bg=BG, highlightthickness=0,
             borderwidth=0, width=260, height=410)
-        self.earth_canvas.pack(side="left", fill="both", expand=True)
+        self.earth_canvas.grid(row=0, column=1, sticky="nsew")
         self.core_canvas.bind("<Configure>", self._on_resize)
         self.earth_canvas.bind("<Configure>", self._on_resize)
         self.visual_status = tk.StringVar(value="STANDBY  //  IN ATTESA")
@@ -207,6 +210,7 @@ class JarvisHUD:
                      highlightbackground=FRAME, highlightthickness=1).pack(
                          side="left", fill="x", expand=True, padx=3)
         self._update_metrics()
+        self.last_metrics = time.monotonic()
         self.parent.after(TICK_MS, self._tick)
 
     def set_state_provider(self, callback):
@@ -255,6 +259,16 @@ class JarvisHUD:
             x2, y2 = cx+math.sin(angle)*r2, cy+math.cos(angle)*r2
             c.create_line(x1, y1, x2, y2,
                           fill="#16536f" if i%4 else BLUE, width=1)
+        # Two filled, nested surfaces make the middle softly glow turquoise
+        # only when SAPI is actually speaking. The text remains readable.
+        self.core_inner = c.create_oval(
+            cx-radius*.39, cy-radius*.39,
+            cx+radius*.39, cy+radius*.39,
+            fill="#061c2e", outline="")
+        self.core_inner_highlight = c.create_oval(
+            cx-radius*.28, cy-radius*.28,
+            cx+radius*.28, cy+radius*.28,
+            fill="#082239", outline="")
         self.core_glow = c.create_oval(
             cx-radius*.39, cy-radius*.39,
             cx+radius*.39, cy+radius*.39,
@@ -343,20 +357,27 @@ class JarvisHUD:
         thinking = bool(state.get("thinking", False))
         connected = bool(state.get("connected", False))
         memory = bool(state.get("memory", False))
-        self.state_text.set(
+        state_text = (
             f"MIC  {'ATTIVO' if listening else 'SPENTO'}    •    "
             f"GPT  {'CONNESSO' if connected else 'OFFLINE'}    •    "
             f"MEMORIA  {'ON' if memory else 'OFF'}")
-        self.visual_status.set(
+        visual_text = (
             "JARVIS  //  PARLO" if speaking else
             "JARVIS  //  ELABORAZIONE" if thinking else
             "JARVIS  //  ASCOLTO" if listening else
             "JARVIS  //  STANDBY")
-        self.chat_info.set(
+        info_text = (
             "Riproduzione vocale in corso..." if speaking else
             "Sto elaborando la tua richiesta..." if thinking else
             "Microfono attivo" if listening else
             "Microfono spento  •  attivazione manuale")
+        # Redraw only changed labels; the Pavilion is CPU constrained.
+        if self.state_text.get() != state_text:
+            self.state_text.set(state_text)
+        if self.visual_status.get() != visual_text:
+            self.visual_status.set(visual_text)
+        if self.chat_info.get() != info_text:
+            self.chat_info.set(info_text)
         target = 1.0 if speaking else 0.0
         # Smooth easing: blue at rest, turquoise/teal in the center
         # while Jarvis *actually* speaks, then ease back toward blue.
@@ -377,6 +398,12 @@ class JarvisHUD:
         active_color = interpolate_color(
             BLUE, TURQUOISE,
             max(0.0, min(1.0, self.speech_color_amount*(.78+pulse))))
+        self.core_canvas.itemconfigure(
+            self.core_inner, fill=interpolate_color(
+                "#061c2e", "#0b4650", self.speech_color_amount*.8))
+        self.core_canvas.itemconfigure(
+            self.core_inner_highlight, fill=interpolate_color(
+                "#082239", "#0e6269", self.speech_color_amount*.7))
         self.core_canvas.itemconfigure(self.core_glow, outline=active_color,
                                        width=4 if speaking else 2)
         self.core_canvas.itemconfigure(
