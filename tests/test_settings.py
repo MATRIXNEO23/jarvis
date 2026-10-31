@@ -12,7 +12,7 @@ class SettingsTests(unittest.TestCase):
             path = Path(folder) / "settings.json"
             self.assertEqual(load_settings(path), {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "",
                                                          "memory_enabled": False,
-                                                         "auto_listen": True,"telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": ""})
+                                                         "auto_listen": True,"telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": []})
 
     def test_disable_then_reenable_persists(self):
         with TemporaryDirectory() as folder:
@@ -36,7 +36,7 @@ class SettingsTests(unittest.TestCase):
             self.assertEqual(load_settings(path),
                              {"gpt_enabled": False, "tts_enabled": True,
                               "tts_voice": "Voce italiana", "memory_enabled": False,
-                              "auto_listen": True,"telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": ""})
+                              "auto_listen": True,"telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": []})
 
     def test_memory_opt_in_is_persistent_and_independent(self):
         with TemporaryDirectory() as folder:
