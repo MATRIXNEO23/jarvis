@@ -42,7 +42,9 @@ Directory: %LOCALAPPDATA%\Jarvis\projects\<UUID> (UUID invariabile).
    dopo l'approvazione; il completamento dipende dai messaggi del motore e
    dalle ricevute dei singoli comandi. Alla terminazione anticipata i passi
    restanti sono interrupted, mai completed.
-6. Riavvio: ogni passo rimasto planned/running viene marcato interrupted;
+6. Progetto corrente: all’apertura di un progetto (o ritorno al generale)
+   viene salvato il contesto, ripristinato al prossimo avvio.
+7. Riavvio: ogni passo rimasto planned/running viene marcato interrupted;
    non viene rieseguito automaticamente. I file di proiezione assenti o non
    allineati vengono ricostruiti dalle righe persistite in SQLite.
 
