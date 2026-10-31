@@ -151,31 +151,77 @@ class WorkspaceMemory:
     TELEGRAM_HISTORY_LIMIT = 50
     TELEGRAM_CONTEXT_LIMIT = 4
 
+    def _prune_telegram_backup(self, backup: Path) -> None:
+        """Keep the rollback snapshot bounded too, including legacy chat turns.
+
+        A migration backup is valuable for project recovery, but must not
+        silently defeat the user's 50-message Telegram retention policy.
+        Runs only once per installed schema generation, not per message.
+        """
+        archived=sqlite3.connect(str(backup),timeout=10)
+        try:
+            with archived:
+                peers=[row[0] for row in archived.execute(
+                    "SELECT DISTINCT peer_id FROM telegram_events").fetchall()]
+                for peer_id in peers:
+                    archived.execute("""DELETE FROM telegram_events
+                        WHERE peer_id=? AND rowid NOT IN
+                        (SELECT rowid FROM telegram_events WHERE peer_id=?
+                         ORDER BY rowid DESC LIMIT ?)""",
+                        (peer_id,peer_id,self.TELEGRAM_HISTORY_LIMIT))
+                archived.execute("DELETE FROM messages WHERE scope='telegram'")
+            # After deleting old rows, reclaim space in this ONE-TIME backup.
+            archived.execute("VACUUM")
+        finally:
+            archived.close()
+
     def _prepare_telegram_retention(self):
-        """One-time bounded migration. Preserve a fixed pre-migration backup."""
+        """Migrate to 50 per contact; protect non-Telegram data with bounded backup."""
         with self._db() as db:
             marker=db.execute("SELECT value FROM workspace_session "
                               "WHERE key='telegram_retention_50_v1'").fetchone()
-            if marker:
-                return
+            scrubbed=db.execute("SELECT value FROM workspace_session "
+                                "WHERE key='telegram_backup_bounded_v2'").fetchone()
             has_history=bool(db.execute(
                 "SELECT (SELECT COUNT(*) FROM telegram_events) + "
                 "(SELECT COUNT(*) FROM messages WHERE scope='telegram')"
             ).fetchone()[0])
-        if has_history:
-            backup=self.path.with_name(
-                self.path.stem+".pre-telegram-50.sqlite3")
-            if not backup.exists():
-                source=sqlite3.connect(str(self.path),timeout=6)
+        backup=self.path.with_name(
+            self.path.stem+".pre-telegram-50.sqlite3")
+        if has_history and not marker and not backup.exists():
+            # SQLite's online backup API creates a consistent snapshot even
+            # when the source database has recently been written.
+            temporary=backup.with_name(backup.name+".initializing")
+            if temporary.exists():
+                raise WorkspaceError(
+                    "Backup Telegram incompleto già presente: dati originali intatti.")
+            try:
+                source=sqlite3.connect(str(self.path),timeout=10)
                 try:
-                    target=sqlite3.connect(str(backup),timeout=6)
+                    target=sqlite3.connect(str(temporary),timeout=10)
                     try:
                         source.backup(target)
                     finally:
                         target.close()
                 finally:
                     source.close()
-        # All changes and the version marker are committed together.
+                self._prune_telegram_backup(temporary)
+                os.replace(temporary,backup)
+                scrubbed=True
+            finally:
+                if temporary.exists():
+                    temporary.unlink()
+        # Also upgrade snapshots created by an earlier experimental build.
+        if backup.exists() and not scrubbed:
+            self._prune_telegram_backup(backup)
+            scrubbed=True
+        if scrubbed and backup.exists():
+            with self._db() as db:
+                db.execute("""INSERT OR REPLACE INTO workspace_session(key,value)
+                    VALUES('telegram_backup_bounded_v2','1')""")
+        if marker:
+            return
+        # All active-store changes and the version marker share one transaction.
         with self._db() as db:
             db.execute("""INSERT OR IGNORE INTO telegram_peer_state(peer_id,introduced)
                 SELECT DISTINCT peer_id,1 FROM telegram_events
@@ -190,8 +236,6 @@ class WorkspaceMemory:
                     (SELECT rowid FROM telegram_events WHERE peer_id=?
                      ORDER BY rowid DESC LIMIT ?)""",
                     (peer_id,peer_id,self.TELEGRAM_HISTORY_LIMIT))
-            # Old paired turns are superseded by the canonical event log.
-            # This also prevents a second unbounded hidden chat history.
             db.execute("DELETE FROM messages WHERE scope='telegram'")
             db.execute("""INSERT OR REPLACE INTO workspace_session(key,value)
                 VALUES('telegram_retention_50_v1','1')""")
