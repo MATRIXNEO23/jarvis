@@ -8,7 +8,29 @@ from pathlib import Path
 DEFAULTS = {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "",
             "memory_enabled": False, "auto_listen": True,
             "telegram_enabled": False, "telegram_peer_id": 0,
-            "telegram_contact_name": ""}
+            "telegram_contact_name": "", "telegram_contacts": []}
+
+
+def normalize_telegram_contacts(value) -> list[dict]:
+    """Preserve only explicitly selected verified numeric IDs; no tokens."""
+    if not isinstance(value, list):
+        return []
+    accepted = []
+    seen = set()
+    for item in value[:250]:
+        if not isinstance(item, dict):
+            continue
+        peer_id, name = item.get("id"), item.get("name")
+        if (type(peer_id) is not int or peer_id <= 0 or peer_id in seen
+                or not isinstance(name, str) or not name.strip()
+                or len(name) > 90 or type(item.get("enabled")) is not bool):
+            continue
+        seen.add(peer_id)
+        accepted.append({"id": peer_id, "name": name.strip(),
+                         "enabled": item["enabled"]})
+        if len(accepted) >= 80:
+            break
+    return accepted
 
 
 def default_path() -> Path:
@@ -41,6 +63,16 @@ def load_settings(path: Path | None = None) -> dict:
         name = data.get("telegram_contact_name")
         if isinstance(name, str) and len(name) <= 90:
             result["telegram_contact_name"] = name
+        contacts = data.get("telegram_contacts")
+        if isinstance(contacts, list):
+            result["telegram_contacts"] = normalize_telegram_contacts(contacts)
+        elif result["telegram_peer_id"] and result["telegram_contact_name"]:
+            # One-time, lossless compatibility with the original single-contact
+            # configuration; a later explicit [] is respected.
+            result["telegram_contacts"] = [{
+                "id": result["telegram_peer_id"],
+                "name": result["telegram_contact_name"], "enabled": True,
+            }]
         voice = data.get("tts_voice")
         if isinstance(voice, str) and len(voice) <= 180:
             result["tts_voice"] = voice
@@ -60,6 +92,9 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
     telegram_enabled = settings.get("telegram_enabled", False)
     peer = settings.get("telegram_peer_id", 0)
     peer_name = settings.get("telegram_contact_name", "")
+    contacts = settings.get("telegram_contacts", [])
+    if not isinstance(contacts, list) or normalize_telegram_contacts(contacts) != contacts:
+        raise ValueError("Invalid Telegram contact selection")
     if (type(enabled) is not bool or type(memory_enabled) is not bool
             or type(auto_listen) is not bool
             or type(telegram_enabled) is not bool
@@ -75,6 +110,7 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
                                "auto_listen": auto_listen,
                                "telegram_enabled": telegram_enabled,
                                "telegram_peer_id": peer,
-                               "telegram_contact_name": peer_name},
+                               "telegram_contact_name": peer_name,
+                               "telegram_contacts": contacts},
                               ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp, target)
