@@ -62,3 +62,13 @@
 - Registro docs/DECISIONI-E-LEZIONI.md presente su main (f5230f4550da0543a776c8450b37334a97efba8d) e sul ramo evoluto (d332c10aed102c671841f2e45fcee73939b15b83).
 - Registrati soluzione CI verificata, aumento dei soli limiti scartato come soluzione sufficiente e limite del controllo browser Archify. Soluzioni fallite escluse dalle raccomandazioni; cause conservate per evitare di ripeterle.
 - Questi ultimi commit modificano solo documentazione: nessuna nuova verifica runtime necessaria rispetto al fix test faba673 già verificato. Nessun pacchetto prodotto.
+
+## Fase 5 — piano approvato e nucleo corretto, CI in attesa
+- L'utente ha approvato esplicitamente con «Sì» dopo la conferma sul piano. Nessuna ulteriore autorizzazione necessaria per questa correzione.
+- Commit a86c2c932af988b23916e8d4495025de5ee0a730 nel ramo esistente feature/timer-settings-ui-20261031; confronto controllato con d332c10: solo 13 file previsti, nessun pacchetto e nessun merge su main.
+- Aggiunta raccolta locale conversation_context.py; rimossi tagli intermedi 860/850, recuperati recenti SQLite, selezione finale uniforme fino a 10 turni secondo budget, domanda finale preservata, dedup sovrapposizione, Unicode contato in unità UTF-16 come Node, cataloghi opzionali dopo riserva memoria.
+- Timeout testo breve allineato alla voce a 180 secondi. Memoria resta descrittiva, validatori azioni invariati; nessun servizio/API aggiuntivo.
+- Avvio in standby senza sovrascrivere modalità manuali; vecchia auto_listen conservata ma sospesa in UI; preparatore prova non forza più l'opzione a True. Nessuna migrazione schema o cancellazione dati.
+- Locale: 386 test OK skipped=5 (Windows); 13 nuove regressioni inclusi callback reali fino alla chiamata client. compileall/node --check/diff --check PASS. Smoke Windows attivato sulla PR senza login o richieste al modello.
+- Rapporto implementazione e lezioni sul ramo evoluto: docs/CORREZIONE-NUCLEO-DIALOGO-20261031.md e docs/DECISIONI-E-LEZIONI.md. Due difetti di prima implementazione trovati e corretti: conteggio Unicode e separatore domanda finale; conservarne i test.
+- Esiti remoti da registrare nella prossima fase. Non dichiarare collaudo GPT/Pavilion; nessuno ZIP distribuibile prima dei controlli previsti.
