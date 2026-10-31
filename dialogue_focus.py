@@ -55,8 +55,7 @@ def mentions_current_project(value: str) -> bool:
 def needs_project_clarification(value: str, *, project_selected: bool) -> bool:
     """Only chat questions about *this* project require a chosen project."""
     text=normalized_utterance(value)
-    return (not project_selected and mentions_current_project(text)
-            and bool(_PROJECT_QUERY.match(text)))
+    return not project_selected and mentions_current_project(text)
 
 
 def single_question(text: str) -> str:
