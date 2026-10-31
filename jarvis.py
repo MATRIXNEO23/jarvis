@@ -2071,7 +2071,19 @@ def main() -> None:
                     diagnostic_busy=False
                     audit=data[0]
                     write_line("DIAGNOSTICA > "+format_audit(audit))
-                    speak_result(audit.summary+" I risultati completi sono nel registro.")
+                    if audit.recommendations:
+                        first=audit.recommendations[0]
+                        message=(str(len(audit.recommendations))+
+                                 " possibili miglioramenti da verificare. "
+                                 "Il primo riguarda "+first.file+
+                                 ": "+first.suggestion+
+                                 " Ho scritto le motivazioni e i controlli nel registro.")
+                    else:
+                        message=("Non ho trovato problemi evidenti da questi "
+                                 "controlli statici. Non significa che tutte "
+                                 "le funzioni siano state provate. "
+                                 "Trovi il resoconto nel registro.")
+                    speak_result(message)
                 elif kind == "self_audit_error":
                     diagnostic_busy=False
                     write_line("DIAGNOSTICA > Errore di lettura: "+str(data[0])[:180])
