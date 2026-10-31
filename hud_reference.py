@@ -192,7 +192,9 @@ class ReactorArt:
         self.geometry=(cx,cy,r)
         self.system_lamps=[]
         self._glow_photos={}
-        self._glow_size=min(490,max(110,int(r*2.16)))
+        # Quantized texture sizes keep window resizing from starting a new
+        # expensive rendering thread for every single pixel.
+        self._glow_size=min(480,max(128,round(r*2.16/48)*48))
         from hud_raster import ASSETS
         ASSETS.request("reactor",self._glow_size)
         rng=random.Random(33)
@@ -403,7 +405,7 @@ class GlobeArt:
         cx,cy=w*.51,h*.48
         r=max(38,min(w*.46,h*.355,220))
         self.geometry=(cx,cy,r)
-        self._earth_size=min(455,max(110,int(r*2.12)))
+        self._earth_size=min(432,max(144,round(r*2.12/48)*48))
         self._earth_photos=[]
         self._earth_raster_ready=False
         from hud_raster import ASSETS
