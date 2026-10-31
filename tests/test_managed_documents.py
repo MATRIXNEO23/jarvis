@@ -77,6 +77,11 @@ class FakeNotepadBridge:
         self.counter = 0
         self.fail_close = False
 
+    def session_state(self, note):
+        if getattr(self, "inaccessible", False):
+            return "uncertain"
+        return "open" if note.ident in self.notes else "closed"
+
     def open_blank(self):
         self.counter += 1
         ident = f"jarvis-note-{self.counter}"
@@ -181,6 +186,44 @@ class ManagedDocumentTests(unittest.TestCase):
         self.assertEqual(
             self.docs.discard_and_close(ident).kind, "closed_without_saving")
         self.assertEqual(self.backend.closed, [ident])
+
+    def test_manual_closed_window_does_not_block_new_blank(self):
+        old = self.docs.open_blank()
+        del self.backend.notes[old.document_id]
+        result = self.docs.open_blank()
+        self.assertEqual(result.kind, "opened")
+        self.assertNotEqual(result.document_id, old.document_id)
+        self.assertEqual(self.docs.current.ident, result.document_id)
+        self.assertEqual(self.backend.closed, [])
+
+    def test_manual_closed_window_does_not_block_new_composition(self):
+        previous = self.docs.compose("vecchia nota", "new_notepad")
+        del self.backend.notes[previous.document_id]
+        created = self.docs.compose("nuovo testo", "new_notepad")
+        self.assertEqual(created.kind, "created")
+        self.assertEqual(self.backend.read(self.docs.current), "nuovo testo")
+        self.assertNotEqual(created.document_id, previous.document_id)
+
+    def test_live_but_temporarily_inaccessible_document_is_preserved(self):
+        original = self.docs.compose("Testo non ancora salvato", "new_notepad")
+        self.backend.inaccessible = True
+        self.assertFalse(self.docs.forget_if_closed())
+        with self.assertRaises(NotepadUnavailable):
+            self.docs.open_blank()
+        with self.assertRaises(NotepadUnavailable):
+            self.docs.compose("Nuovo", "new_notepad")
+        self.assertEqual(self.docs.current.ident, original.document_id)
+        self.assertEqual(self.backend.notes[original.document_id],
+                         "Testo non ancora salvato")
+        self.assertEqual(self.backend.closed, [])
+
+    def test_old_session_id_cannot_modify_new_document(self):
+        original = self.docs.open_blank()
+        del self.backend.notes[original.document_id]
+        updated = self.docs.open_blank()
+        with self.assertRaises(NotepadUnavailable):
+            self.docs.save_only(original.document_id, Path("ignored.txt"))
+        self.assertEqual(self.docs.current.ident, updated.document_id)
 
     def test_manual_close_does_not_act_on_new_session(self):
         self.docs.compose("testo", "new_notepad")
