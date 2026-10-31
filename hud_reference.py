@@ -213,7 +213,10 @@ class ReactorArt:
                                   start=a,extent=seg_extent,style="arc",
                                   outline=("#17b8f5" if i%4==0
                                            else "#125477"),width=width)
-                self.arc_items.append((item,a,speed, i%4==0))
+                # Most fine arcs remain static, while selected bright arcs
+                # rotate to give depth without thousands of Tk calls/sec.
+                if i%3 == 0:
+                    self.arc_items.append((item,a,speed, i%4==0))
         # Animated hub inner illumination is layered; no large video assets.
         self.core_fill=[]
         for scale,base,tint in (
@@ -255,7 +258,7 @@ class ReactorArt:
             target=hue if mode!="idle" else CYAN
             c.itemconfigure(item,fill=lerp_color(base,target,
                                                   amount*(.14 if mode=="idle"
-                                                          else .27)))
+                                                          else .44)))
         c.itemconfigure(self.rim,
                         outline=lerp_color("#0e72a3",hue,amount),
                         width=2.8+1.2*amount)
