@@ -1,16 +1,5 @@
 # Jarvis — Windows 10 (64 bit)
 
-## Ultima build completa — HUD corretto (31/10/2026)
-
-**[Scarica Jarvis aggiornato — ZIP completa dalla cartella Download](Download/Jarvis-HUD-Riferimento-20261031.zip)** · [Apri la cartella Download](Download/) · [Modifiche grafiche — PR #31](https://github.com/MATRIXNEO23/jarvis/pull/31).
-
-Contiene l'interfaccia blu/ciano ispirata al riferimento, autodiagnosi discreta visibile soltanto quando è in corso, riquadri CPU/RAM/Disco C/Rete uniformi ed effetti colore di ascolto/parlato limitati al nucleo centrale. **Un solo launcher**, `avvia_jarvis.bat`. Sono incluse anche le funzioni esistenti di GPT, voce, progetti, documenti, add-on e Telegram (massimo 50 messaggi locali per contatto, ultimi 4 come contesto, senza riassunti).
-
-**Installazione di prova:** estrarre in una cartella nuova, senza sovrascrivere Jarvis già installato, e avviare `avvia_jarvis.bat`. Il profilo dati rimane separato; microfono predisposto attivo all'avvio se modello vocale e dispositivo sono disponibili. Test automatici Windows/Ubuntu superati; collaudo sul Pavilion ancora necessario. La PR non è stata integrata in `main`: in `main` è stato pubblicato solo l'archivio nella cartella `Download`.
-
----
-
-
 **Continuità del progetto:** [stato, branch e punto di ripresa (30/10/2026)](docs/CONTINUITA_JARVIS.md). Il problema del test di ricerca web è stato corretto. I test automatici della nuova versione con browser, dettatura, «Ehi Jarvis» e risposte vocali hanno superato [Windows e Linux](https://github.com/MATRIXNEO23/jarvis/actions/runs/41126671637). **Le nuove funzioni non sono ancora state provate sul Pavilion**; la versione vocale precedente resta disponibile.
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
