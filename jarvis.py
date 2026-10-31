@@ -388,7 +388,8 @@ def main() -> None:
             return bool(workspace.finish_step(
                 ticket[0],ticket[1],status,detail,receipt=receipt))
         except (OSError,sqlite3.Error,WorkspaceError) as exc:
-            workspace_status.set("Esito progetto non registrato: "+str(exc)[:100])
+            # Planner callbacks may execute off the Tk thread.
+            output_queue.put(("project_journal_error",str(exc)[:100]))
             return False
 
     def recent_memory_for_gpt(spoken: str) -> str:
@@ -1398,7 +1399,9 @@ def main() -> None:
         try:
             while True:
                 kind, *data = output_queue.get_nowait()
-                if kind == "telegram_status":
+                if kind == "project_journal_error":
+                    workspace_status.set("Esito progetto non registrato: "+str(data[0])[:100])
+                elif kind == "telegram_status":
                     telegram_status.set(str(data[0])[:220])
                     write_line("TELEGRAM > "+str(data[0])[:170])
                 elif kind == "telegram_received":
