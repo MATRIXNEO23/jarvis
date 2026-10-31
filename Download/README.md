@@ -1,5 +1,17 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## ULTIMA PROVA — INTERFACCIA JARVIS COME NEL PREVIEW
+
+**[SCARICA JARVIS HUD CON GLOBO DETTAGLIATO E REATTORE CIANO/ARANCIONE/VERDE (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-reference-redesign.zip)**
+
+Questa è la **revisione del design richiesta dopo il confronto fotografico** tra la precedente build sul Pavilion e l'immagine concept. Il nuovo layout avvicina la schermata al preview: console/chat con schede **Console / Attività / Sistema** a sinistra, **cerchio JARVIS più ricco di anelli e luci** al centro, **Terra con continenti, luci e orbite rotanti** a destra e quattro strumenti di monitoraggio reali in basso.
+
+**Codice colore del centro:** ciano quando Jarvis è inattivo; **arancione lampeggiante** soltanto se il microfono Vosk è realmente aperto; **verde lampeggiante** quando la sintesi vocale Windows sta parlando, con precedenza sullo stato di ascolto. Il nome **JARVIS** non cambia; nessuna scritta «ASCOLTO» nel nucleo.
+
+**Installazione per il test:** chiudi la vecchia istanza, scarica questa ZIP, estraila in **un'altra cartella** e avvia `avvia_jarvis.bat`. Nessun nuovo modello o costo API. Il microfono rimane **in Standby all'avvio**: scegli la modalità manualmente da ⚙. Confronta i colori, la rotazione terrestre e la leggibilità sul Pavilion. **Non cancellare il Jarvis precedente, la cartella Vosk né `%LOCALAPPDATA%\\Jarvis`.**
+
+I test automatici Windows/Linux sono verdi; manca **il collaudo visivo e prestazionale direttamente sul Pavilion**. Le versioni precedenti rimangono negli altri collegamenti sotto. [Dettagli e test da fare](https://github.com/MATRIXNEO23/jarvis/blob/feature/hud-reference-redesign/docs/HUD_REFERENCE_V2.md) · [PR #7 di prova](https://github.com/MATRIXNEO23/jarvis/pull/7).
+
 ## NOVITÀ — JARVIS HUD ANIMATO (PROVA SEPARATA)
 
 **[SCARICA LA NUOVA INTERFACCIA JARVIS ANIMATA — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/animated-hud-interface.zip)**
