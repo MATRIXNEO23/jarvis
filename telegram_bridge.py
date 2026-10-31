@@ -165,6 +165,10 @@ class TelegramBridge:
                     "Contatto non trovato tra le chat private autorizzate.")
             self.notify(("telegram_status",
                          "Telegram: ascolto attivo solo per "+self.peer_name))
+            # Incoming callbacks may overlap: serialize reading, GPT and
+            # sending so that simultaneous messages cannot trigger duplicate
+            # notes or bypass the outgoing rate limit.
+            processing_lock=asyncio.Lock()
 
             @client.on(events.NewMessage(incoming=True))
             async def receive(event):
@@ -175,7 +179,9 @@ class TelegramBridge:
                         bool(event.out),self.peer_id):
                     return
                 try:
-                    await self._handle(client,peer,event)
+                    async with processing_lock:
+                        if self._enabled.is_set():
+                            await self._handle(client,peer,event)
                 except (TelegramBridgeError,TelegramVoiceError,
                         WorkspaceError,OSError,ValueError) as exc:
                     self.notify(("telegram_status",
