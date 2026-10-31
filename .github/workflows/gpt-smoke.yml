@@ -7,6 +7,18 @@ on:
       - '.github/workflows/gpt-smoke.yml'
       - 'installa_gpt.ps1'
       - 'gpt_bridge.mjs'
+  pull_request:
+    paths:
+      - '.github/workflows/gpt-smoke.yml'
+      - 'installa_gpt.ps1'
+      - 'gpt_bridge.mjs'
+      - 'gpt_client.py'
+      - 'jarvis.py'
+      - 'conversation_context.py'
+      - 'conversation_memory.py'
+      - 'conversation_router.py'
+      - 'jarvis_persona.py'
+      - 'tests/test_conversation_pipeline.py'
   workflow_dispatch:
 
 permissions:

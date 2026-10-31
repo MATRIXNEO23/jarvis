@@ -16,6 +16,7 @@ import re
 import sqlite3
 import time
 from conversation_memory import ConversationMemory
+from conversation_context import recall_context, context_question
 from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
 from project_voice import (parse_project_voice, safe_project_name,
@@ -197,9 +198,7 @@ def main() -> None:
 
     ttk.Label(frame, text="Voce e ascolto",
               font=("Segoe UI", 17, "bold")).pack(anchor="w")
-    mic_status = tk.StringVar(value=(
-        "Microfono: avvio dell'ascolto continuo in preparazione..."
-        if settings["auto_listen"] else "Microfono: SPENTO all'avvio"))
+    mic_status = tk.StringVar(value="Microfono: SPENTO all'avvio")
     ttk.Label(frame, textvariable=mic_status, wraplength=710).pack(anchor="w", pady=(2, 6))
     voice_mode = tk.StringVar(value=STANDBY)
     audio_controls = ttk.LabelFrame(
@@ -221,8 +220,8 @@ def main() -> None:
     auto_listen_enabled = tk.BooleanVar(value=settings["auto_listen"])
     auto_listen_switch = ttk.Checkbutton(
         audio_controls,
-        text="Avvia Jarvis già in Conversazione continua GPT (microfono attivo)",
-        variable=auto_listen_enabled)
+        text="Preferenza avvio automatico precedente (sospesa: avvio in standby)",
+        variable=auto_listen_enabled, state="disabled")
     auto_listen_switch.pack(anchor="w", pady=(5, 1))
     ttk.Label(
         audio_controls,
@@ -614,70 +613,22 @@ def main() -> None:
             return False
 
     def recent_memory_for_gpt(spoken: str) -> str:
-        """Bounded recall with the *real* active project and latest question."""
-        short=conversation_memory.context(max_chars=860)
-        question=conversation_memory.last_question()
-
-        def attach(raw,*,project_name=""):
-            hint=focus_hint(spoken,active_project_name=project_name,
-                            last_question=question)
+        """Raw bounded records; pack once when building the final prompt."""
+        preferences=()
+        if preference_store is not None:
             try:
-                parsed=json.loads(raw)
-            except (ValueError,TypeError):
-                return raw
-            if isinstance(parsed,list):
-                parsed={"breve":parsed}
-            if not isinstance(parsed,dict):
-                return raw
-            if hint:
-                parsed["focus"]=hint
-            if preference_store is not None:
-                try:
-                    parsed["preferences"]=list(preference_store.context())
-                except (OSError,sqlite3.Error,MemoryBoundaryError):
-                    pass
-            return json.dumps(parsed,ensure_ascii=False)
-
-        if active_project_id is not None:
-            if workspace is None:
-                return attach(short)
-            try:
-                project=workspace.project(active_project_id)
-                saved=json.loads(workspace.prompt_context(
-                    "project",active_project_id,spoken,budget=620))
-                evidence=saved.get("evidence",[])
-                if project and project["summary"]:
-                    evidence.insert(0,{"source":"conversation",
-                        "when":project["updated_utc"],
-                        "fact":"Stato progetto fornito dall'utente: "
-                                +project["summary"][:260]})
-                history=workspace.recent("project",active_project_id,3)
-                earlier=[{"utente":item["utente"],"lia":item["jarvis"],
-                          "tipo":item["tipo"]} for item in history]
-                progress=[{"title":step["title"][:95],
-                           "status":step["status"],
-                           "detail":step["detail"][:110],
-                           "verified":bool(step["verified"])}
-                          for step in workspace.project_steps(active_project_id,limit=4)]
-                return attach(json.dumps({
-                    "breve":earlier+json.loads(short),
-                    "progress":progress,
-                    "permanente":{"related":evidence},
-                },ensure_ascii=False),
-                project_name=project["name"] if project else "")
-            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
-                workspace_status.set("Ricerca progetto: "+str(exc)[:90])
-                return attach(short)
-        if not memory_enabled.get() or durable_brain is None:
-            return attach(short)
+                preferences=preference_store.context()
+            except (OSError,sqlite3.Error,MemoryBoundaryError):
+                pass
         try:
-            long=durable_brain.prompt_context(spoken,budget=530)
-        except (OSError,sqlite3.Error,BrainError) as exc:
+            return recall_context(spoken,conversation_memory,
+                brain=durable_brain if memory_enabled.get() else None,
+                workspace=workspace,project_id=active_project_id,
+                preferences=preferences)
+        except (OSError,sqlite3.Error,BrainError,WorkspaceError,ValueError) as exc:
             memory_status.set("Ricerca memoria: "+str(exc)[:90])
-            return attach(short)
-        return attach(json.dumps({
-            "breve":json.loads(short),
-            "permanente":json.loads(long)},ensure_ascii=False))
+            return recall_context(spoken,conversation_memory,
+                                  preferences=preferences)
 
     project_dialog=None
 
@@ -1042,7 +993,7 @@ def main() -> None:
     def handle_unanchored_short_reply(spoken: str) -> bool:
         """Never pretend an isolated yes/no confirms a stale action."""
         if (not is_ambiguous_short_reply(spoken)
-                or conversation_memory.last_question()):
+                or context_question(recent_memory_for_gpt(spoken))):
             return False
         message="A quale domanda ti riferisci?"
         write_line("JARVIS > "+message)
@@ -1786,7 +1737,7 @@ def main() -> None:
             user_utterance = params.get("utterance", "") if structured else ""
             typed_question = params.get("source", "") if action == "ask" else ""
             try:
-                timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
+                timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation", "typed_conversation") else 40
                 sdk_action = "ask" if structured else action
                 sdk_params = {key: value for key, value in params.items()
                               if key not in ("epoch", "document_id", "utterance", "source")}
@@ -3617,9 +3568,8 @@ def main() -> None:
         """App-only autostart: never adds Windows login/run-at-boot entries."""
         if closing:
             return
-        if auto_listen_enabled.get():
-            voice_mode.set(GPT_CONVERSATION)
-            change_voice_mode()
+        # Standby was selected at creation. Never override a mode the user
+        # already chose manually before this deferred greeting callback.
         # The local SAPI voice is suppressed from Vosk input by
         # ignore_audio=speaker.is_audible, also during the cooldown.
         greeting = startup_greeting()

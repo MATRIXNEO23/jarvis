@@ -25,3 +25,14 @@ Conservare le soluzioni riuscite come riferimenti entro il loro ambito verificat
 **Prove:** docs/architecture-20261031/jarvis.html e candidato/ricevuta su main. Validate, deliver e check PASS. Browser-check saltato perché Chrome/Chromium assente; finalize codice 2. Non dichiarare riuscita completa o ispezione visiva.
 
 **Lezione:** distinguere integrità/fonti dell'artefatto, controllo browser e collaudo dell'app. Nessuna dipendenza Archify aggiunta al runtime.
+
+## 2026-10-31 — Correzione del nucleo: verifica locale completata
+**Autorizzazione:** piano approvato dall'utente con «Sì» nella continuazione della sessione.
+
+**Decisione e motivazione:** raccogliere i record senza budget intermedi, selezionarli una volta nel prompt finale, recuperare SQLite e conservare la domanda finale. Il confronto tra vecchio e nuovo payload dimostra il problema del doppio taglio; aumentare solo la RAM non lo corregge. Nessun modello aggiuntivo o add-on. Dettagli in CORREZIONE-NUCLEO-DIALOGO-20261031.md.
+
+**Prove locali:** 386 test OK, skipped=5; 13 nuovi test anche sui callback reali voce/testo fino alla chiamata client. Sintassi e diff PASS. In attesa di CI Windows/Linux e smoke Windows senza login; non dichiarare ancora collaudo GPT/Pavilion o pacchetto pronto.
+
+**Tentativi scartati e lezioni:** conteggio con len Python insufficiente per emoji/escaping, corretto con unità UTF-16 come Node; domanda finale con prefisso residuo dopo salvataggio, corretto il separatore. Entrambi i casi ora hanno test di regressione. Non eliminare i vecchi log diagnostici.
+
+**Microfono:** inizializzazione in standby senza sovrascrivere una scelta manuale; impostazioni salvate conservate, rimosso solo l'effetto della migrazione che riabilitava auto_listen. Il controllo della vecchia opzione automatica è sospeso in UI.

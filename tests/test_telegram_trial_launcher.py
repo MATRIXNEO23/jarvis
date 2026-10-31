@@ -71,15 +71,19 @@ class TelegramTrialTests(unittest.TestCase):
                              "keep-trial")
         self.assertTrue(load_settings(self.trial/"settings.json")["telegram_enabled"])
 
-    def test_existing_trial_enables_microphone_once_and_then_respects_off(self):
+    def test_existing_trial_never_reenables_microphone_without_legacy_marker(self):
         prepare_trial(self.original,self.trial)
         settings_path=self.trial/"settings.json"
         current=load_settings(settings_path)
         current["auto_listen"]=False
         save_settings(current,settings_path)
-        (self.trial/".microphone-on-startup-v2").unlink()
+        marker = self.trial/".microphone-on-startup-v2"
+        if marker.exists():
+            marker.unlink()
+        before = settings_path.read_bytes()
         prepare_trial(self.original,self.trial)
-        self.assertTrue(load_settings(settings_path)["auto_listen"])
+        self.assertEqual(settings_path.read_bytes(), before)
+        self.assertFalse(load_settings(settings_path)["auto_listen"])
         current=load_settings(settings_path)
         current["auto_listen"]=False
         save_settings(current,settings_path)

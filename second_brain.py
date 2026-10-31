@@ -16,6 +16,7 @@ from contextlib import contextmanager
 from uuid import uuid4
 
 from settings import default_path
+from conversation_memory import bounded_answer
 
 
 class BrainError(ValueError):
@@ -126,7 +127,7 @@ class SecondBrain:
         if _SENSITIVE.search(str(user)) or _SENSITIVE.search(str(reply)):
             return False
         u = _clean(user, MAX_STORED_UTTERANCE)
-        a = _clean(reply, MAX_STORED_ANSWER)
+        a = bounded_answer(_clean(reply, 30000), MAX_STORED_ANSWER, kind)
         if not u or not a:
             return False
         with self._db() as db:
