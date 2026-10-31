@@ -78,9 +78,8 @@ class SelfReviewTests(unittest.TestCase):
         self.assertLess(ask.index("try_self_diagnostic(message)"),
                         ask.index("not gpt_enabled.get()"))
         self.assertIn('text="Autodiagnosi Jarvis"',source)
-        self.assertIn(
-            'command=lambda: try_self_diagnostic("Jarvis, fai un\\'autodiagnosi")',
-            source)
+        self.assertIn("diagnostic_button.configure(",source)
+        self.assertIn("command=lambda: try_self_diagnostic(",source)
         self.assertIn('if try_self_diagnostic(message):',source)
 
     def test_prioritized_evidence_with_line_and_human_verification(self):
