@@ -117,6 +117,18 @@ class AutomaticContinuityTests(unittest.TestCase):
         self.assertIn("planned",compressed)
         self.assertLessEqual(len(compressed),700)
 
+    def test_last_focused_project_is_restored_after_restart(self):
+        p = self.memory.create_project("Mondo")
+        q = self.memory.create_project("Altro")
+        self.memory.select_project(p)
+        self.assertEqual(WorkspaceMemory(self.dbpath).current_project(), p)
+        self.memory.select_project(q)
+        self.assertEqual(WorkspaceMemory(self.dbpath).current_project(), q)
+        self.memory.select_project(None)
+        self.assertIsNone(WorkspaceMemory(self.dbpath).current_project())
+        with self.assertRaises(WorkspaceError):
+            self.memory.select_project("00000000000000000000000000000000")
+
     def test_secret_does_not_enter_project_journal(self):
         ident = self.memory.create_project("Privato")
         with self.assertRaises(WorkspaceError):
