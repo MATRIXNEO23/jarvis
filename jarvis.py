@@ -24,7 +24,8 @@ from dialogue_focus import (focus_hint, PendingProjectReference,
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
 from diagnostic_handoff import (build_external_review_prompt,
-                                is_external_review_request, wants_external_advice)
+                                is_external_review_request, wants_external_advice,
+                                summarize_operation_outcomes)
 from settings import default_path
 from telegram_commands import explicit_telegram_note
 from telegram_bridge import TelegramBridge
@@ -947,8 +948,8 @@ def main() -> None:
             "JARVIS — valutazione esterna",
             "Vuoi inviare al GPT collegato soltanto un rapporto tecnico "
             "ridotto dell'autodiagnosi?\n\n"
-            "Contiene: file sorgenti RELATIVI, righe, segnali statici e "
-            "indicatori generali di disponibilità.\n"
+            "Contiene: file sorgenti RELATIVI, righe, segnali statici, "
+            "indicatori generali e CONTEGGI ANONIMI delle operazioni.\n"
             "NON contiene codice completo, credenziali, documenti, "
             "log di sistema, percorsi personali né dati dei progetti.\n\n"
             "È un'analisi di possibili miglioramenti, NON una verifica "
@@ -965,7 +966,14 @@ def main() -> None:
                 "local_engine":"available" if engine is not None else "not_tested",
                 "projects":"available" if workspace is not None else "not_tested",
             }
-            prompt=build_external_review_prompt(last_diagnostic_audit,snapshot)
+            try:
+                history=(operation_ledger.recent(limit=20)
+                         if operation_ledger is not None else ())
+                outcomes=summarize_operation_outcomes(history)
+            except (OSError,sqlite3.Error,MemoryBoundaryError):
+                outcomes=summarize_operation_outcomes(())
+            prompt=build_external_review_prompt(
+                last_diagnostic_audit,snapshot,outcomes)
         except (ValueError,TypeError) as exc:
             write_line("DIAGNOSTICA > Non posso preparare il rapporto: "
                        +str(exc)[:140])
