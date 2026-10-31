@@ -45,7 +45,7 @@ class DialogueContinuityTests(unittest.TestCase):
         self.assertIn("ironia",prompt)
         self.assertIn("Segui il filo del discorso",prompt)
         self.assertIn('"kind":"chat"',prompt)
-        self.assertIn("non è un'autorizzazione",prompt)
+        self.assertIn("Ogni azione deve avere un intento attuale chiaro",prompt)
         self.assertIn("notepad.open",prompt)
 
     def test_prior_user_request_is_never_current_authorization(self):
