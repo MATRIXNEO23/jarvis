@@ -384,3 +384,18 @@ Implementazioni:
 **Conferma test finale del ramo sperimentale:** [GitHub Actions run 41157513574](https://github.com/MATRIXNEO23/jarvis/actions/runs/41157513574), **SUCCESS** su 4 job Linux/Windows Python 3.11/3.12, HEAD `b68f9af5fb82a40fc413f1c655398920d8bdf8b9`. Comprende test di integrazione Telegram *senza rete* con nota autorizzata consegnata fedelmente, ricevuta simulata, blocco delle duplicazioni e controllo disattivazione. **Nessun accesso o invio Telegram reale verificato**; non considerare conclusa la fase di collaudo sul Pavilion.
 
 **Regola definitiva per i messaggi lasciati al contatto:** il testo esplicitamente dettato/scritto dall'utente viene pronunciato **letteralmente**, senza riscrittura GPT, in una nota vocale, al primo messaggio ricevuto quando Telegram è attivo. Lunghezza ammessa `MAX_NOTE=320` caratteri per evitare troncature, **una sola nota in attesa per risposta**, e marcatura `sent` solo dopo ricezione dell'ID di invio Telegram. Se l'esito è incerto si lascia `uncertain` e non si ritenta automaticamente. La conversazione ordinaria (senza note pendenti) usa la risposta GPT in contesto Telegram separato.
+
+
+## 21. Fix setup Telegram: API hash non incollabile su Windows (31 ottobre 2026)
+
+**Segnalazione concreta dell'utente, dopo avvio sul Pavilion:** lanciando `configura_telegram.bat`, dopo `API ID:` la richiesta `API hash (non viene mostrato):` non consentiva di incollare e proseguire. Causa tecnica nel codice precedente: `getpass.getpass()` sulla console Windows legge input segreto senza echo; incollare con Ctrl+V non è affidabile in alcuni host e non dà feedback visivo.
+
+**Correzione in ramo isolato:** `fix/telegram-secret-paste-dialog`, [PR #13 DRAFT](https://github.com/MATRIXNEO23/jarvis/pull/13), derivato da `feature/project-memory-orbits-telegram`, senza toccare main né la versione testata precedente.
+
+- `telegram_secret_dialog.py` nuovo: finestra nativa Tkinter con campo `show="*"`, **Ctrl+V**, pulsante **Incolla** che legge gli appunti solo su azione dell'utente, pulsanti **Conferma**/**Cancella**, validazione e feedback su errori. Non scrive il testo incollato nei log o a schermo.
+- `configura_telegram.py`: passa da `getpass` al dialogo protetto per API hash, codice di verifica e password Telegram 2FA; controlla API hash di esattamente 32 caratteri esadecimali; Annulla non salva sessioni.
+- `tests/test_telegram_secret_dialog.py`: test di validazione cross-platform più smoke test Windows Tk che incolla un valore fittizio dal clipboard mediante pulsante, verifica la mascheratura e conferma; anche Annulla.
+- ZIP: https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/fix/telegram-secret-paste-dialog.zip , ora prima opzione in `main/Download/README.md`.
+- **CI del codice della correzione:** [run 41160005117](https://github.com/MATRIXNEO23/jarvis/actions/runs/41160005117), **SUCCESS** su tutti e quattro i job Python 3.11/3.12 Windows e Linux, HEAD `9e4f4a956eac7944e96da6bfc725d7d01040066a`. Dopo è stato aggiunto solo un aggiornamento guida (senza toccare il codice). L'esecuzione su Pavilion e il login Telegram reale restano da verificare.
+
+**Procedura di collaudo:** chiudere la vecchia console di configurazione, estrarre la nuova ZIP in cartella diversa, eseguire `configura_telegram.bat`, inserire API ID nella console, premere Invio; quando appare la finestra API hash, incollare con Ctrl+V o pulsante Incolla, verificare la presenza di asterischi e premere Conferma. Dopo il setup, Telegram deve restare disattivato fino alla scelta dell'utente e del singolo contatto. Non richiedere mai all'utente di condividere hash, codice o password in chat. La modifica non riguarda GPT, Vosk, grafica, archivi, colori o risposta vocale.
