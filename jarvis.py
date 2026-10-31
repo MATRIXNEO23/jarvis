@@ -1875,6 +1875,9 @@ def main() -> None:
         message = request.get().strip()
         if not message:
             return
+        if project_voice_command(message):
+            request.set("")
+            return
         if handle_project_reference(message):
             request.set("")
             return
