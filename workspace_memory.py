@@ -279,12 +279,16 @@ class WorkspaceMemory:
         # Scrub this peer there too, without touching other contacts/projects.
         backup=self.path.with_name(self.path.stem+".pre-telegram-50.sqlite3")
         if backup.exists():
-            with sqlite3.connect(str(backup),timeout=6) as archived:
-                archived.execute("DELETE FROM telegram_events WHERE peer_id=?",
-                                 (peer_id,))
-                archived.execute(
-                    "DELETE FROM messages WHERE scope='telegram' AND scope_id=?",
-                    (str(peer_id),))
+            archived=sqlite3.connect(str(backup),timeout=6)
+            try:
+                with archived:
+                    archived.execute("DELETE FROM telegram_events WHERE peer_id=?",
+                                     (peer_id,))
+                    archived.execute(
+                        "DELETE FROM messages WHERE scope='telegram' AND scope_id=?",
+                        (str(peer_id),))
+            finally:
+                archived.close()
         with self._db() as db:
             db.execute("DELETE FROM telegram_events WHERE peer_id=?",(peer_id,))
             db.execute("DELETE FROM messages WHERE scope='telegram' AND scope_id=?",
