@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Jarvis: continuità conversazionale corretta",
+    "locale": "it",
+    "quality_profile": "showcase",
+    "output": ".archify/architecture-jarvis-core-20261031-220000/jarvis-core.html",
+    "repository": {
+      "url": "https://github.com/MATRIXNEO23/jarvis.git",
+      "revision": "a86c2c932af988b23916e8d4495025de5ee0a730"
+    }
+  },
+  "components": [
+    {
+      "id": "ingresso",
+      "type": "frontend",
+      "label": "Voce e testo",
+      "sublabel": "Instradamento e risposta",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "jarvis.py",
+          "line": 1758,
+          "end_line": 1785
+        },
+        {
+          "path": "jarvis.py",
+          "line": 2680,
+          "end_line": 2705
+        },
+        {
+          "path": "jarvis.py",
+          "line": 3226,
+          "end_line": 3236
+        }
+      ]
+    },
+    {
+      "id": "contesto",
+      "type": "backend",
+      "label": "Richiamo e focus",
+      "sublabel": "RAM e SQLite senza tagli",
+      "pos": [
+        430,
+        40
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "conversation_context.py",
+          "line": 52,
+          "end_line": 99
+        },
+        {
+          "path": "jarvis.py",
+          "line": 541,
+          "end_line": 563
+        },
+        {
+          "path": "jarvis.py",
+          "line": 615,
+          "end_line": 631
+        }
+      ]
+    },
+    {
+      "id": "ram",
+      "type": "database",
+      "label": "Memoria RAM",
+      "sublabel": "16 scambi e domanda finale",
+      "pos": [
+        430,
+        230
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "conversation_memory.py",
+          "line": 20,
+          "end_line": 37
+        },
+        {
+          "path": "conversation_memory.py",
+          "line": 70,
+          "end_line": 83
+        }
+      ]
+    },
+    {
+      "id": "persistenza",
+      "type": "database",
+      "label": "Memoria su disco",
+      "sublabel": "Second Brain o progetto",
+      "pos": [
+        40,
+        230
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "second_brain.py",
+          "line": 122,
+          "end_line": 136
+        },
+        {
+          "path": "workspace_memory.py",
+          "line": 477,
+          "end_line": 503
+        },
+        {
+          "path": "conversation_context.py",
+          "line": 60,
+          "end_line": 80
+        }
+      ]
+    },
+    {
+      "id": "prompt",
+      "type": "backend",
+      "label": "Costruzione prompt",
+      "sublabel": "Unica selezione finale",
+      "pos": [
+        820,
+        40
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "conversation_router.py",
+          "line": 110,
+          "end_line": 146
+        },
+        {
+          "path": "jarvis_persona.py",
+          "line": 78,
+          "end_line": 123
+        },
+        {
+          "path": "jarvis_persona.py",
+          "line": 184,
+          "end_line": 204
+        }
+      ]
+    },
+    {
+      "id": "client",
+      "type": "backend",
+      "label": "GPTClient Python",
+      "sublabel": "Pipe JSON; ID richiesta",
+      "pos": [
+        820,
+        430
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "gpt_client.py",
+          "line": 129,
+          "end_line": 156
+        },
+        {
+          "path": "jarvis.py",
+          "line": 1733,
+          "end_line": 1756
+        }
+      ]
+    },
+    {
+      "id": "bridge",
+      "type": "backend",
+      "label": "Bridge Node e SDK",
+      "sublabel": "Accesso account e modello",
+      "pos": [
+        430,
+        430
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "gpt_bridge.mjs",
+          "line": 121,
+          "end_line": 153
+        }
+      ]
+    },
+    {
+      "id": "esterno",
+      "type": "external",
+      "label": "Modello GPT esterno",
+      "sublabel": "Risposta via SDK",
+      "pos": [
+        40,
+        430
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "gpt_bridge.mjs",
+          "line": 140,
+          "end_line": 153
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "a",
+      "from": "ingresso",
+      "to": "contesto",
+      "label": "richiamo"
+    },
+    {
+      "id": "b",
+      "from": "contesto",
+      "to": "ram",
+      "label": "legge e aggiorna"
+    },
+    {
+      "id": "c",
+      "from": "contesto",
+      "to": "persistenza",
+      "label": "se abilitata o progetto"
+    },
+    {
+      "id": "d",
+      "from": "contesto",
+      "to": "prompt",
+      "label": "dati e focus"
+    },
+    {
+      "id": "e",
+      "from": "prompt",
+      "to": "client",
+      "label": "massimo 5000 caratteri"
+    },
+    {
+      "id": "f",
+      "from": "client",
+      "to": "bridge",
+      "label": "JSON stdin e stdout"
+    },
+    {
+      "id": "g",
+      "from": "bridge",
+      "to": "esterno",
+      "label": "streamResponse"
+    },
+    {
+      "id": "h",
+      "from": "client",
+      "to": "ingresso",
+      "label": "risposta in coda"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Contesto finale",
+      "items": [
+        "Recenti SQLite recuperati anche dopo riavvio; isolamento del progetto mantenuto.",
+        "Fino a dieci scambi secondo budget; estratti iniziali e finali, nessun riassunto generato.",
+        "Cataloghi opzionali subordinati alla memoria; limite invariato di 5000 unità UTF-16."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Prove e limiti",
+      "items": [
+        "386 test locali: OK, 5 controlli Windows saltati in Linux.",
+        "La verifica del payload non sostituisce il collaudo GPT reale sul Pavilion.",
+        "Mappa del commit a86c2c9, non dei sorgenti storici alla radice main."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Confini preservati",
+      "items": [
+        "Memoria e focus sono dati, non autorizzano azioni.",
+        "Standby all’avvio; selezione manuale del microfono conservata.",
+        "Archify solo sviluppo; nessuna API aggiuntiva o nuovo add-on."
+      ]
+    }
+  ]
+}

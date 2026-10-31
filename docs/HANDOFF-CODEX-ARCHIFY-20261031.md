@@ -72,3 +72,12 @@
 - Locale: 386 test OK skipped=5 (Windows); 13 nuove regressioni inclusi callback reali fino alla chiamata client. compileall/node --check/diff --check PASS. Smoke Windows attivato sulla PR senza login o richieste al modello.
 - Rapporto implementazione e lezioni sul ramo evoluto: docs/CORREZIONE-NUCLEO-DIALOGO-20261031.md e docs/DECISIONI-E-LEZIONI.md. Due difetti di prima implementazione trovati e corretti: conteggio Unicode e separatore domanda finale; conservarne i test.
 - Esiti remoti da registrare nella prossima fase. Non dichiarare collaudo GPT/Pavilion; nessuno ZIP distribuibile prima dei controlli previsti.
+
+## Fase 6 completata — CI e smoke verificati, consegna del nucleo
+- Commit runtime/test a86c2c932af988b23916e8d4495025de5ee0a730, PR #32 sul ramo esistente. Nessun merge su main: qui restano catalogo e documentazione.
+- Run unit https://github.com/MATRIXNEO23/jarvis/actions/runs/41236238213 completed SUCCESS. Log letti: Ubuntu 3.11.17 job 124640509613 e 3.12.15 job 124640509442, ciascuno 386 test OK skipped=5; Windows 3.11.9 job 124640509588 e 3.12.10 job 124640509685, ciascuno 386 test OK senza skip. Sintassi Python/Node e parser PowerShell PASS.
+- Run smoke https://github.com/MATRIXNEO23/jarvis/actions/runs/41236238208 completed SUCCESS, job 124640509415. SDK import OK; protocollo reale bridge ready/status disconnected/shutdown verificato, senza login e senza richieste al modello.
+- Archify aggiornato sul commit a86c2c9: docs/architecture-core-20261031/jarvis-core.html, candidato e ricevuta accanto. validate/deliver/check PASS; browser-check saltato perché Chrome/Chromium assente, finalize codice 2, nessuna verifica visiva. Questo limite riguarda la mappa, non la CI Jarvis.
+- Implementazione, prove e limiti in docs/CORREZIONE-NUCLEO-DIALOGO-20261031.md; evidenze sintetiche in docs/VERIFICA-NUCLEO-DIALOGO-20261031.json; lezioni aggiornate in docs/DECISIONI-E-LEZIONI.md.
+- Esito: correzione tecnica verificata automaticamente e pronta per collaudo reale. Non dimostrata ancora la qualità semantica delle risposte GPT sul Pavilion; vecchie informazioni già troncate non recuperabili. Budget limitato e dedup dei prefissi storici esplicitamente documentati.
+- Nessun ZIP prodotto o pubblicato. Per distribuire resta il collaudo Windows 10 con account GPT, salvataggi/progetti, comandi e modalità microfono manuali. Non serve richiedere di nuovo approvazione per il piano già approvato; non dichiarare il collaudo reale senza prove.

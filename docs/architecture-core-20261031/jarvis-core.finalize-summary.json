@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-core-20261031-220000/candidate.json",
+    "sha256": "95a154a1213d3b4b8744ed91f050e858b81aea437fa8715e46e998415c7d7ec7",
+    "bytes": 6441
+  },
+  "artifact": {
+    "path": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-core-20261031-220000/jarvis-core.html",
+    "sha256": "80d8b6f69a189e60e90f5c742c6d870fe78acb9514d36c4a96479203efd442f2",
+    "bytes": 846883
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "skipped"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-core-20261031-220000/jarvis-core.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-core-20261031-220000/jarvis-core.finalize.json",
+    "summaryReceipt": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-core-20261031-220000/jarvis-core.finalize-summary.json",
+    "browserCheckReceipt": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-core-20261031-220000/jarvis-core.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 785,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  }
+}

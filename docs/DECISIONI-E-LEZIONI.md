@@ -25,3 +25,14 @@ Conservare le soluzioni riuscite come riferimenti entro il loro ambito verificat
 **Prove:** docs/architecture-20261031/jarvis.html e candidato/ricevuta su main. Validate, deliver e check PASS. Browser-check saltato perché Chrome/Chromium assente; finalize codice 2. Non dichiarare riuscita completa o ispezione visiva.
 
 **Lezione:** distinguere integrità/fonti dell'artefatto, controllo browser e collaudo dell'app. Nessuna dipendenza Archify aggiunta al runtime.
+
+## 2026-10-31 — Nucleo dialogo: soluzione verificata automaticamente
+**Autorizzazione:** piano approvato con «Sì». Commit a86c2c932af988b23916e8d4495025de5ee0a730 sul ramo evoluto, nessun add-on o API aggiuntiva.
+
+**Scelta e motivo:** raccolta locale senza tagli intermedi, recupero recenti SQLite, domanda pendente preservata e una sola selezione nel prompt finale. Le prove dimostravano che la capacità RAM non equivale al contesto ricevuto dal modello. Limite invariato 5000 unità UTF-16; cataloghi opzionali subordinati alla memoria. Timeout testo breve allineato alla voce. Standby all'avvio senza cambiare le modalità manuali e senza riscrivere preferenze salvate.
+
+**Prove:** 386 test per ognuno dei quattro job Windows/Linux, Python 3.11/3.12 nella run 41236238213 SUCCESS (Linux 5 skip Windows-only, Windows nessuno). Smoke reale bridge/SDK Windows senza login run 41236238208 SUCCESS. Le 13 nuove regressioni coprono riavvio, dieci turni, payload effettivo dei callback voce/testo, cataloghi, Unicode, isolamento e assenza replay.
+
+**Errori scartati:** primo conteggio con len Python insufficiente per emoji/escaping, corretto con unità UTF-16; prima conservazione della domanda finale produceva un prefisso residuo, corretto il separatore. Entrambi restano nei test per evitare ricadute. Non promuovere tentativi precedenti a riferimenti.
+
+**Limiti:** collaudo GPT/Pavilion non eseguito, nessun pacchetto distribuito. Archify aggiornato: tre gate PASS, browser-check assente per Chrome mancante. Il dedup confronta solo prefissi disponibili nei vecchi archivi; i dati già troncati non si ricostruiscono. Dettagli e piano di collaudo in CORREZIONE-NUCLEO-DIALOGO-20261031.md.

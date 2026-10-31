@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-31",
+  "source_commit": "a86c2c932af988b23916e8d4495025de5ee0a730",
+  "unit_run": 41236238213,
+  "status": "success",
+  "jobs": [
+    {
+      "id": 124640509613,
+      "os": "Ubuntu",
+      "python": "3.11.17",
+      "tests": 386,
+      "skipped": 5
+    },
+    {
+      "id": 124640509442,
+      "os": "Ubuntu",
+      "python": "3.12.15",
+      "tests": 386,
+      "skipped": 5
+    },
+    {
+      "id": 124640509588,
+      "os": "Windows",
+      "python": "3.11.9",
+      "tests": 386,
+      "skipped": 0
+    },
+    {
+      "id": 124640509685,
+      "os": "Windows",
+      "python": "3.12.10",
+      "tests": 386,
+      "skipped": 0
+    }
+  ],
+  "smoke": {
+    "run": 41236238208,
+    "job": 124640509415,
+    "status": "success",
+    "login": false,
+    "model_request": false
+  },
+  "not_verified": [
+    "GPT connected multi-turn quality on Pavilion",
+    "Pavilion hardware and Windows 10 manual acceptance",
+    "Archify browser check: Chrome unavailable"
+  ],
+  "packages_published": []
+}
