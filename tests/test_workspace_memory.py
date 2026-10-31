@@ -83,12 +83,16 @@ class WorkspaceMemoryTests(unittest.TestCase):
         self.assertTrue(self.hub.telegram_event(a,"incoming",100,"text","Ciao"))
         self.assertFalse(self.hub.telegram_event(a,"incoming",100,"text","Ciao"))
         self.hub.telegram_event(a,"outgoing",101,"voice","Sono Jarvis.")
+        self.hub.telegram_event(a,"incoming",102,"voice","")
+        self.assertTrue(self.hub.telegram_transcript(a,102,"Appuntamento domani"))
+        self.assertEqual(self.hub.telegram_activity(a)[0]["text"],
+                         "Appuntamento domani")
         self.assertEqual(self.hub.telegram_counts(a),
-                         {"unread":1,"received":1,"replied":1})
+                         {"unread":2,"received":2,"replied":1})
         self.assertEqual(self.hub.telegram_counts(b)["replied"],0)
         self.hub.mark_telegram_read(a)
         self.assertEqual(self.hub.telegram_counts(a)["unread"],0)
-        self.assertEqual(len(self.hub.telegram_activity(a)),2)
+        self.assertEqual(len(self.hub.telegram_activity(a)),3)
 
     def test_failed_send_will_not_auto_retry_uncertain_note(self):
         p=self.hub.note_for_contact(777,"Messaggio una tantum")
