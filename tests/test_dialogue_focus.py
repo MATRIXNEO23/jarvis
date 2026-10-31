@@ -6,7 +6,7 @@ from conversation_memory import ConversationMemory
 from conversation_router import build_conversation_prompt, parse_conversation_intent
 from dialogue_focus import (
     PendingProjectReference,focus_hint,is_short_followup,
-    is_unusable_project_name,mentions_current_project,
+    is_ambiguous_short_reply,is_unusable_project_name,mentions_current_project,
     needs_project_clarification,single_question,
 )
 from jarvis_persona import build_chat_prompt,compact_memory
@@ -31,6 +31,9 @@ class BriefReplyTests(unittest.TestCase):
         memory.remember("Che facciamo?","Quale argomento vuoi approfondire?","chat")
         self.assertTrue(is_short_followup("Quello"))
         self.assertTrue(is_short_followup("Minecraft"))
+        self.assertFalse(is_short_followup("apri un file"))
+        self.assertTrue(is_ambiguous_short_reply("Sì"))
+        self.assertFalse(is_ambiguous_short_reply("Apri Blocco note"))
         self.assertEqual(focus_hint("Quello",last_question=memory.last_question())[
                          "pending_question"],"Quale argomento vuoi approfondire?")
         memory.clear()
@@ -74,6 +77,7 @@ class ProjectReferenceTests(unittest.TestCase):
         self.assertIsNone(pending.parse_answer("sì"))
         self.assertEqual(pending.parse_answer("Minecraft Builder"),
                          "Minecraft Builder")
+        self.assertIsNone(pending.parse_answer("apri blocco note"))
         self.assertEqual(pending.question,"A che punto siamo con questo progetto")
         pending.reset()
         self.assertEqual(pending.question,"")
