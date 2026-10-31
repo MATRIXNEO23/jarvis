@@ -337,3 +337,23 @@ Implementazioni:
 **Ultima CI finale verificata:** [run 41153785798](https://github.com/MATRIXNEO23/jarvis/actions/runs/41153785798), **SUCCESS** sui quattro job Python 3.11/3.12 Windows e Ubuntu, HEAD del ramo `902b05f05b90428cdf934ed0300f4a791faf00f1`. Anche il test Windows che carica effettivamente PNG in Tk è incluso. Restano da misurare grafica e CPU sul Pavilion reale.
 
 **Prova reale imprescindibile:** confrontare direttamente una foto della nuova UI con la reference originale, non accettare «simile» come equivalente di «quasi identica» senza feedback. Valutare il carico CPU iniziale durante generazione raster e l'uso del microfono mentre sono aperti Minecraft/altri programmi; verificare palette, movimento della Terra, telemetria reale e integrità dei pulsanti di consenso/salvataggio. L'arte raster è **procedurale**, non i pixel originali della reference e non dà una garanzia di identità visiva. Non cancellare la vecchia installazione o `%LOCALAPPDATA%\\Jarvis`. Nessuna decisione automatica di adozione.
+
+
+## 19. Sfondo dark cinematico dopo foto reale dell'HUD High Fidelity (31 ottobre 2026)
+
+**Feedback visivo dell'utente:** è stata inviata una nuova fotografia della versione High Fidelity effettivamente avviata sul Pavilion. L'utente ha osservato che **anche lo sfondo deve essere più simile al preview** originale. La UI reale ha ancora una **griglia regolare blu** attorno al cerchio e al globo e superfici troppo blu luminose. Il preview originale ha invece uno sfondo quasi nero, tracce di circuiti ciano sottili, piccoli nodi e accenti angolari, con il colore intenso concentrato soprattutto sul reattore e sulla Terra.
+
+**Branch isolato:** `feature/high-fidelity-cinematic-background`, [PR draft #11](https://github.com/MATRIXNEO23/jarvis/pull/11), discendente di `feature/high-fidelity-reference-hud`. Nessun merge né sostituzione della versione funzionante. ZIP di prova: https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/high-fidelity-cinematic-background.zip.
+
+**Interventi effettuati:**
+- Nuovo `hud_backdrop.py`: disegna su Canvas 24 bande di colore vicinissimo al nero (componenti RGB < 18), linee elettroniche **non regolari**, nodi luminosi ciano e microdettagli collocati soprattutto ai margini. Evita esplicitamente la precedente griglia blu a quadrati che copriva uniformemente lo sfondo.
+- `hud_reference.py`: usa lo sfondo cinematico dietro al reattore e al globo, preservando sprite raster pre-renderizzati, animazioni, orbite, statuizioni audio e i fallback vettoriali.
+- `animated_hud.py` e `jarvis.py`: scuriti leggermente le superfici di console, pannelli inferiori e cronologia chat per un contrasto più vicino alla reference.
+- `tests/test_hud_backdrop.py`: test della palette molto scura, delle linee circuitali sparse invece della griglia, dei limiti sul numero di forme statiche, del determinismo e del controllo dimensionale.
+- Documento di prova: [docs/HUD_CINEMATIC_BACKGROUND.md](https://github.com/MATRIXNEO23/jarvis/blob/feature/high-fidelity-cinematic-background/docs/HUD_CINEMATIC_BACKGROUND.md).
+
+**Prestazioni:** il disegno del backdrop avviene solo in build/resize del Canvas, **mai nel tick di animazione**; non introduce nuove dipendenze, thread, servizi, API o costi. L'utente vuole maggiore somiglianza anche accettando un modesto aumento del carico grafico, ma non deve perdere ascolto continuo o interattività del Pavilion i3-2100.
+
+**Comportamenti da non modificare:** ciano nel silenzio anche con mic aperto; arancione pulsante quando l'utente parla; verde pulsante quando parla JARVIS. Avvio del microfono in Conversazione continua GPT all'apertura dell'app con interruttore di opt-out, saluto iniziale basato sull'orario, Second Brain, comandi e conferme sui file invariati.
+
+**Verifica:** eseguire test Windows/Linux sull'ultimo HEAD del ramo e poi confronto fotografico reale sul Pavilion prima di considerare il risultato abbastanza fedele. Conservare vecchia installazione, modello Vosk e `%LOCALAPPDATA%\\Jarvis`. I test della geometria non garantiscono la resa visiva del monitor.
