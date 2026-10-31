@@ -21,7 +21,7 @@ from hud_reference import (
 )
 
 BG = REF_BG
-PANEL = "#031321"
+PANEL = "#020b14"
 FRAME = "#11506f"
 BLUE = "#169ef1"
 CYAN = REF_CYAN
@@ -113,7 +113,7 @@ def _outline_box(canvas, w, h, color="#124a6e", inset=4, cut=14):
 
 class MetricTile:
     def __init__(self,parent,label):
-        self.canvas=tk.Canvas(parent,height=82,bg="#031424",
+        self.canvas=tk.Canvas(parent,height=82,bg="#020c17",
                               highlightthickness=1,
                               highlightbackground="#104968",bd=0)
         self.canvas.pack(side="left",fill="both",expand=True,padx=4)
