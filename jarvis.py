@@ -41,6 +41,8 @@ from telegram_outbound_flow import (
 from telegram_bridge import TelegramBridge
 from live_capabilities import (LiveCapabilityRegistry, snapshot_capabilities,
                                capability_status_prompt)
+from addon_manager import AddonManager, AddonError
+from addon_ui import AddonSettingsWindow
 from telegram_security import credentials_present
 from telegram_voice import missing_voice_dependencies
 from jarvis_persona import build_chat_prompt
@@ -166,6 +168,13 @@ def main() -> None:
     telegram_available_contacts=[]
     telegram_voice_dialog=VoiceSendDialog()
     addon_capability_registry=LiveCapabilityRegistry()
+    addon_manager=None
+    addon_setup_error=""
+    try:
+        addon_manager=AddonManager(addon_capability_registry)
+    except (AddonError,OSError,ValueError) as exc:
+        addon_setup_error=str(exc)[:150]
+    addon_settings_window=None
     telegram_owner_busy=False
     orbit_nodes_cache=()
 
@@ -1269,6 +1278,13 @@ def main() -> None:
 
     def current_capability_snapshot(has_document:bool=False) -> dict:
         """Re-evaluate runtime permissions on every external GPT request."""
+        if addon_manager is not None:
+            try:
+                addon_manager.refresh()
+            except (AddonError,OSError,ValueError):
+                # Fail closed: do not claim stale addon actions are available.
+                for binding in addon_capability_registry.available_addons():
+                    addon_capability_registry.unregister(binding["id"])
         try:
             stream=voice.is_listening()
         except (AttributeError,RuntimeError,OSError):
@@ -1280,6 +1296,23 @@ def main() -> None:
             telegram_voice_dependencies=(not missing_voice_dependencies()),
             voice_stream_open=stream,
             registry=addon_capability_registry)
+
+    def open_addon_settings() -> None:
+        nonlocal addon_settings_window
+        if addon_manager is None:
+            messagebox.showerror(
+                "Add-on Jarvis",
+                "Archivio add-on non disponibile: "+addon_setup_error,parent=root)
+            return
+        if (addon_settings_window is not None
+                and addon_settings_window.exists()):
+            addon_settings_window.focus()
+            return
+        addon_settings_window=AddonSettingsWindow(
+            root,addon_manager,
+            on_change=lambda: write_line(
+                "ADD-ON > Registro aggiornato. Le capacità attive saranno "
+                "comunicate al GPT alla prossima richiesta."))
 
     def load_telegram_contacts_for_ui() -> None:
         """Read real Telegram private users on a worker, never on Tk."""
