@@ -81,3 +81,8 @@
 - Implementazione, prove e limiti in docs/CORREZIONE-NUCLEO-DIALOGO-20261031.md; evidenze sintetiche in docs/VERIFICA-NUCLEO-DIALOGO-20261031.json; lezioni aggiornate in docs/DECISIONI-E-LEZIONI.md.
 - Esito: correzione tecnica verificata automaticamente e pronta per collaudo reale. Non dimostrata ancora la qualità semantica delle risposte GPT sul Pavilion; vecchie informazioni già troncate non recuperabili. Budget limitato e dedup dei prefissi storici esplicitamente documentati.
 - Nessun ZIP prodotto o pubblicato. Per distribuire resta il collaudo Windows 10 con account GPT, salvataggi/progetti, comandi e modalità microfono manuali. Non serve richiedere di nuovo approvazione per il piano già approvato; non dichiarare il collaudo reale senza prove.
+
+## Chiusura e ripresa
+- Documentazione/mappa/evidenze finali su main nel commit c814ee6ae0d8b3d4d1e84782b60eea14a9b34268; risultati riportati anche nel ramo evoluto con commit solo documentale 5e61e53fbb58ccb5d95b85671604cc5f365d6e04.
+- PR #32 aggiornata per rappresentare timer e continuità; aperta, mergeable, nessun merge effettuato. I test verdi si riferiscono al codice di a86c2c9: 5e61e53 cambia soltanto documentazione.
+- Prossimo collaudo reale: avviare il codice del ramo evoluto in cartella separata, verificare standby; collegare GPT; provare 6–10 scambi con due mete nominate, domanda e risposta breve, poi richiamo della scelta iniziale. Con Second Brain attivo riavviare e rispondere al chiarimento precedente; con memoria disattiva non aspettarsi ricordi dal disco. Cambiare progetto e verificare assenza di contaminazione. Controllare selezione manuale microfono, comandi locali e salvataggi. Annotare esito osservato senza attribuirgli risultati non misurati.
