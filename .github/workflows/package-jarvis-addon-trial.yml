@@ -1,0 +1,94 @@
+name: Publish experimental Jarvis Add-on lifecycle trial ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-addon-trial.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout catalog without changing previous archives
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout reviewed addon lifecycle source
+        uses: actions/checkout@v4
+        with:
+          ref: dc77a7c256466688dc13d93ed290a6d7dd6f7e63
+          path: source
+          persist-credentials: false
+      - name: Install Python for verification
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run complete Python tests before shipping a source trial
+        working-directory: source
+        shell: bash
+        run: |
+          python -m compileall -q .
+          python -m unittest discover -s tests -v
+      - name: Package and verify contents against SHA-256
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import hashlib, json
+          source=Path("source")
+          target=Path("catalog/Download/Jarvis-AddOn-Registro-GPT-Test.zip")
+          prefix="Jarvis-AddOn-Registro-GPT/"
+          target.parent.mkdir(parents=True,exist_ok=True)
+          records=[]
+          with ZipFile(target,"w",ZIP_DEFLATED,compresslevel=6) as archive:
+              for file in sorted(source.rglob("*")):
+                  if not file.is_file() or file.is_symlink():
+                      continue
+                  parts=file.relative_to(source).parts
+                  if parts[0] in (".github","Download") or any(
+                          segment in (".git",".venv","venv","__pycache__")
+                          for segment in parts):
+                      continue
+                  name=prefix+"/".join(parts)
+                  archive.write(file,name)
+                  records.append({
+                      "path":name,
+                      "sha256":hashlib.sha256(file.read_bytes()).hexdigest(),
+                  })
+              archive.writestr(prefix+"SOURCE-COMMIT.txt","dc77a7c256466688dc13d93ed290a6d7dd6f7e63\n")
+              archive.writestr(prefix+"SOURCE-MANIFEST.json",
+                               json.dumps(records,indent=2))
+          with ZipFile(target) as archive:
+              assert archive.testzip() is None
+              names=set(archive.namelist())
+              for expected in (
+                  "avvia_jarvis.bat","jarvis.py",
+                  "addon_manager.py","addon_ui.py","live_capabilities.py",
+                  "capability_registry.py","conversation_router.py",
+                  "examples/addons/DiagnosticaSistema.jaddon",
+                  "tests/test_addon_lifecycle.py",
+                  "docs/ADDON_LIFECYCLE.md",
+                  "telegram_bridge.py","telegram_directory.py",
+                  "telegram_outbound_flow.py"
+              ):
+                  assert prefix+expected in names,expected
+              for row in records:
+                  assert hashlib.sha256(archive.read(row["path"])).hexdigest()==row["sha256"]
+          print("VERIFIED ADDON ZIP",target,target.stat().st_size)
+          PY
+      - name: Publish new archive without overwriting old builds
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-AddOn-Registro-GPT-Test.zip
+          git -C catalog commit -m "download: publish isolated Jarvis addon lifecycle trial"
+          git -C catalog pull --rebase origin main
+          git -C catalog push origin HEAD:main
