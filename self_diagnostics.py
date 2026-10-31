@@ -70,8 +70,6 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
     phrase=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
                   text.strip(" ,.!?;:"),flags=re.I).casefold()
     phrase=" ".join(phrase.split())
-    if _SELF_REVIEW_COMPOUND.fullmatch(phrase):
-        return ("review","")
     if re.fullmatch(
             r"(?:dove\s+(?:sono|tieni)\s+(?:i\s+)?tuoi\s+file|"
             r"mostra(?:mi)?\s+(?:i\s+)?tuoi\s+file|"
@@ -107,6 +105,10 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
             r"|suggerisci\s+(?:delle\s+)?correzioni\s+(?:al\s+)?(?:tuo\s+)?codice"
             ,phrase):
         return ("overview","")
+    # Keep legacy simple commands ('analizza il tuo codice') stable.
+    # Only new compound forms need the extended review intent.
+    if _SELF_REVIEW_COMPOUND.fullmatch(phrase):
+        return ("review","")
     module=re.fullmatch(
         r"(?:analizza|esamina|controlla|studia|mostra)\s+"
         r"(?:(?:il\s+)?(?:file|modulo)\s+)?([a-z0-9_]{1,72}\.py)",phrase)
