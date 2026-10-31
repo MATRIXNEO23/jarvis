@@ -295,7 +295,10 @@ class VoiceController:
                     self._speech_active_until = 0.0
                 if self._worker is threading.current_thread():
                     self._worker = None
-                restart = (not failed and not self._closed
+                # A failed OBSOLETE worker must not suppress a newer,
+                # explicitly selected continuous/GPT mode. Never retry when
+                # the CURRENT generation fails: manual mode remains in control.
+                restart = (not self._closed
                            and self.mode in (CONTINUOUS, GPT_CONVERSATION)
                            and self._generation != generation)
             if restart:
