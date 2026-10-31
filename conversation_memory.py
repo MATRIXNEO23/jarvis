@@ -60,13 +60,25 @@ class ConversationMemory:
             return "[]"
         budget = min(max_chars, MAX_CONTEXT)
         selected = []
+        # Keep the newest follow-up even when a long assistant answer would
+        # otherwise exceed the entire budget. Older turns are less important.
         for turn in reversed(self._turns):
-            item = {"utente": turn.user, "lia": turn.jarvis, "tipo": turn.kind}
-            candidate = [item] + selected
-            encoded = json.dumps(candidate, ensure_ascii=False, separators=(",", ":"))
-            if len(encoded) > budget:
+            included = False
+            for maximum_user, maximum_reply in (
+                    (175, 185), (125, 135), (90, 100), (55, 65), (28, 35)):
+                item = {
+                    "utente": turn.user[:maximum_user],
+                    "lia": turn.jarvis[:maximum_reply],
+                    "tipo": turn.kind,
+                }
+                candidate = [item] + selected
+                if len(json.dumps(candidate, ensure_ascii=False,
+                                  separators=(",", ":"))) <= budget:
+                    selected = candidate
+                    included = True
+                    break
+            if not included:
                 break
-            selected = candidate
         return json.dumps(selected, ensure_ascii=False, separators=(",", ":"))
 
     def last_question(self) -> str:
