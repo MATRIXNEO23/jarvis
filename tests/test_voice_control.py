@@ -1,6 +1,8 @@
 """Voice safety checks: no live microphone or model required."""
 import unittest
+import os
 from pathlib import Path
+from unittest.mock import patch
 from tempfile import TemporaryDirectory
 
 from desktop_dictation import DesktopDictation, FocusedWindow, dictation_voice_action
@@ -107,6 +109,32 @@ class WakeWordTests(unittest.TestCase):
         self.assertEqual(gate.route("disattiva dettatura",
                                     dictation_active=True),
                          ("command", "disattiva dettatura"))
+
+
+class VoiceModelTrialPathTests(unittest.TestCase):
+    def test_trial_reuses_existing_original_vosk_model_without_copying(self):
+        from voice_control import model_directory, MODEL_NAME
+        with TemporaryDirectory() as directory:
+            base=Path(directory)
+            original=base/"Jarvis"/"models"/MODEL_NAME
+            original.mkdir(parents=True)
+            trial=base/"Jarvis-Telegram50-Trial"
+            trial.mkdir()
+            with patch.dict(os.environ,{"LOCALAPPDATA":str(base),
+                                         "JARVIS_TRIAL_HOME":str(trial)}):
+                self.assertEqual(model_directory(),original)
+                self.assertFalse((trial/"models"/MODEL_NAME).exists())
+
+    def test_trial_prefers_its_own_model_if_present(self):
+        from voice_control import model_directory, MODEL_NAME
+        with TemporaryDirectory() as directory:
+            base=Path(directory)
+            trial=base/"Jarvis-Telegram50-Trial"
+            personal=trial/"models"/MODEL_NAME
+            personal.mkdir(parents=True)
+            with patch.dict(os.environ,{"LOCALAPPDATA":str(base),
+                                         "JARVIS_TRIAL_HOME":str(trial)}):
+                self.assertEqual(model_directory(),personal)
 
 
 class MicrophoneSafetyTests(unittest.TestCase):
