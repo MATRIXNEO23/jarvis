@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 import unicodedata
+from dialogue_focus import is_unusable_project_name
 
 
 @dataclass(frozen=True)
@@ -81,7 +82,8 @@ def safe_project_name(name: str) -> str:
     if (not value or len(value)>65 or
             any(ord(ch)<32 for ch in value) or
             "/" in value or "\\" in value or
-            _UNSAFE.search(value) or value.casefold() in (
+            _UNSAFE.search(value) or is_unusable_project_name(value)
+            or value.casefold() in (
                 "il progetto","un progetto","nuovo progetto","progetto",
                 "generale","la cartella","sul progetto")):
         raise ValueError("Nome del progetto ambiguo o non valido.")
@@ -93,6 +95,9 @@ def parse_project_voice(utterance: str) -> ProjectVoiceCommand | None:
         return None
     text=unicodedata.normalize("NFKC",utterance).strip()
     text=_PREFIX.sub("",text).strip(" ,.!?;:")
+    text=re.sub(r"^(rinomina(?:mi)?|elimina|cancella|rimuovi)\s+"
+                r"questo\s+progetto(?=\s|$)",
+                r"\1 il progetto corrente",text,flags=re.I)
     # Honor clear polite imperatives, but not hypothetical or quoted text.
     text=re.sub(r"^(?:(?:per favore|vorrei)\s+|(?:mi\s+)?(?:puoi|potresti)\s+)"
                 r"(?=(?:rinomina|rinominare|cambia|cambiare|modifica|modificare|"
