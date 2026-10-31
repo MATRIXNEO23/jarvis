@@ -612,13 +612,38 @@ def main() -> None:
     ).pack(anchor="w", pady=(0, 4))
 
     # Conversation is always visible at the left of the animated HUD.
-    input_row = ttk.Frame(hud.command_host)
+    # The console composer follows the supplied reference: a circular mic,
+    # one conversation field and a send arrow. The previous explicit tools
+    # remain available behind the small menu (never silently removed).
+    input_row = tk.Frame(hud.command_host, bg=PANEL)
     input_row.pack(fill="x")
     request = tk.StringVar()
-    input_box = ttk.Entry(input_row, textvariable=request)
-    input_box.pack(side="left", fill="x", expand=True, padx=(0, 6))
+    hud_mic_button = tk.Button(
+        input_row, text="●", width=2,
+        font=("Segoe UI", 13, "bold"),
+        bg="#092d47", fg=CYAN,
+        activebackground="#124766", activeforeground=WHITE,
+        bd=1, relief="flat", cursor="hand2")
+    hud_mic_button.pack(side="left", padx=(0, 6), ipady=3)
+    input_box = ttk.Entry(
+        input_row, textvariable=request, font=("Segoe UI", 10))
+    input_box.pack(side="left", fill="x", expand=True, padx=(0, 5),
+                   ipady=6)
+    hud_send_button = tk.Button(
+        input_row, text="➤", width=2,
+        font=("Segoe UI Symbol", 15),
+        bg="#072c44", fg=CYAN,
+        activebackground="#0c4968", activeforeground=WHITE,
+        bd=0, relief="flat", cursor="hand2")
+    hud_send_button.pack(side="left", padx=(0, 3), ipady=1)
+    tools_button = tk.Button(
+        input_row, text="⋯", width=2, font=("Segoe UI", 14),
+        bg=PANEL, fg="#76b9d1",
+        activebackground="#0b344b", activeforeground=WHITE,
+        bd=0, relief="flat", cursor="hand2")
+    tools_button.pack(side="left")
     buttons_row = ttk.Frame(hud.command_host)
-    buttons_row.pack(fill="x", pady=(6, 0))
+    # Hidden until the user clicks ⋯, like secondary controls in the concept.
     local_button = ttk.Button(buttons_row, text="Esegui locale")
     local_button.pack(side="left", padx=(0, 4))
     ask_button = ttk.Button(buttons_row, text="Chiedi a GPT")
@@ -867,6 +892,9 @@ def main() -> None:
         choose_save_button.configure(state="disabled")
         wake_gate.reset()
         voice.set_mode(selected)
+        hud_mic_button.configure(
+            text="●" if selected == STANDBY else "◉",
+            fg="#67899c" if selected == STANDBY else CYAN)
         if selected != CONTINUOUS and dictation.enabled:
             sync_dictation_ui(dictation.disable())
         dictation_button.configure(state="normal" if selected == CONTINUOUS else "disabled")
@@ -1347,6 +1375,32 @@ def main() -> None:
                 start_conversation_gpt(follow_up)
         root.after(120, poll)
 
+    def toggle_hud_microphone() -> None:
+        # A real manual on/off action, not a decorative toggle.
+        voice_mode.set(
+            STANDBY if voice_mode.get() != STANDBY else GPT_CONVERSATION)
+        change_voice_mode()
+
+    def send_console_input(event=None) -> None:
+        if not request.get().strip():
+            return
+        if gpt_enabled.get() and active_gpt:
+            if busy_gpt:
+                write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
+                return
+            submit_gpt()
+        else:
+            submit_local()
+
+    def toggle_console_tools() -> None:
+        if buttons_row.winfo_manager():
+            buttons_row.pack_forget()
+        else:
+            buttons_row.pack(fill="x", pady=(6, 0))
+
+    hud_send_button.configure(command=send_console_input)
+    hud_mic_button.configure(command=toggle_hud_microphone)
+    tools_button.configure(command=toggle_console_tools)
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
     plan_button.configure(command=submit_plan)
@@ -1370,7 +1424,7 @@ def main() -> None:
     ptt_button.bind("<ButtonRelease-1>", ptt_release)
     root.bind_all("<ButtonRelease-1>", ptt_release, add="+")
     root.bind("<FocusOut>", ptt_release, add="+")
-    input_box.bind("<Return>", submit_local)
+    input_box.bind("<Return>", send_console_input)
 
     def close() -> None:
         nonlocal closing
