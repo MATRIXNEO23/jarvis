@@ -1,8 +1,10 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
-## NUOVA VERSIONE — PROGETTI A VOCE E FILE SALVATI NEL PROGETTO (31 OTTOBRE 2026)
+## SOSPESO PER VERIFICA ANTIVIRUS — PROGETTI A VOCE E FILE SALVATI NEL PROGETTO (31 OTTOBRE 2026)
 
-**[SCARICA JARVIS PROGETTI VOCALI E SALVATAGGIO — ZIP](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Progetti-Vocali-e-Salvataggio.zip)**
+**ATTENZIONE: un utente ha segnalato un blocco «virus rilevato» durante il download. Non forzare il download, non autorizzare il file in Defender e non aggiungere esclusioni fino alla verifica del nome della minaccia. Il pacchetto resta disponibile in archivio per analisi, ma il collaudo sul Pavilion è sospeso.**
+
+**[ARCHIVIO IN VERIFICA — NON SCARICARE PER ORA](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Progetti-Vocali-e-Salvataggio.zip)**
 
 Questa versione è stata inserita **fisicamente** in `Download/Jarvis-Progetti-Vocali-e-Salvataggio.zip`; include le funzioni Telegram precedenti, la memoria automatica per progetti e ora il riconoscimento di comandi vocali locali come «Jarvis, crea un progetto chiamato Minecraft», «apri il progetto Minecraft», «quali progetti sono attivi» e «apri la cartella del progetto».
 
