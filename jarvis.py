@@ -322,7 +322,17 @@ def main() -> None:
                      user + " " + reply, re.I):
             return
         conversation_memory.remember(user, reply, kind)
-        if durable_brain is not None and memory_enabled.get():
+        if not memory_enabled.get():
+            return
+        if active_project_id is not None:
+            if workspace is not None:
+                try:
+                    workspace.add_turn("project",active_project_id,
+                                       user,reply,kind)
+                except (OSError,sqlite3.Error,WorkspaceError) as exc:
+                    workspace_status.set("Memoria progetto: "+str(exc)[:90])
+            return
+        if durable_brain is not None:
             try:
                 durable_brain.remember_turn(user, reply, kind)
                 memory_status_refresh()
