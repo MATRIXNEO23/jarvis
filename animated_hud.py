@@ -388,12 +388,14 @@ class JarvisHUD:
             f"GPT  {'ON' if connected else 'OFF'}    /    "
             f"MEMORIA  {'ON' if memory else 'OFF'}")
         status=("JARVIS // TRASMISSIONE VOCALE" if speaking else
+                "JARVIS // VOCE RILEVATA" if listening else
                 "JARVIS // ELABORAZIONE" if thinking else
-                "JARVIS // MICROFONO ATTIVO" if listening else
+                "JARVIS // MICROFONO ATTIVO - IN ATTESA" if mic_enabled else
                 "JARVIS // STANDBY")
         info=("JARVIS STA PARLANDO" if speaking else
+              "LA TUA VOCE È RILEVATA" if listening else
               "ELABORAZIONE IN CORSO" if thinking else
-              "MICROFONO ATTIVO" if listening else
+              "MICROFONO ATTIVO  •  ATTESA VOCE" if mic_enabled else
               "MICROFONO SPENTO  •  CONTROLLO MANUALE")
         if self.state_text.get()!=title:
             self.state_text.set(title)
@@ -419,7 +421,7 @@ class JarvisHUD:
             self._drawn_size=size
         self.phase+=elapsed
         self.core_art.tick(self.phase,mode,connected=connected,
-                           memory=memory,listening=listening)
+                           memory=memory,listening=mic_enabled)
         self.earth_art.tick(self.phase)
 
     def close(self):

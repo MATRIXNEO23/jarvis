@@ -1,7 +1,7 @@
-"""Optional offline Italian speech recognition. Microphone starts OFF, always.
+"""Offline Italian Vosk recognition with externally configured microphone mode.
 
-Vosk and sounddevice are imported only in the explicitly requested listener
-thread. No microphone access, model loading or network at application startup.
+Only the desktop UI decides whether listening starts automatically. Vosk and
+sounddevice import on the listener thread; no model runs before that choice.
 Only the trusted local command registry can execute speech automatically.
 """
 from __future__ import annotations
@@ -14,6 +14,7 @@ from pathlib import Path
 from collections.abc import Callable
 
 from settings import default_path
+from speech_activity import SpeechActivity
 
 STANDBY = "standby"
 PUSH_TO_TALK = "premi_per_parlare"
@@ -125,12 +126,24 @@ class VoiceController:
         # Generation-bound state of the actual Windows audio input stream.
         # Selecting a listening mode is not proof that Vosk opened a mic.
         self._active_generation = -1
+        self._speech_active_until = 0.0
 
     def is_listening(self) -> bool:
         """Real microphone-stream state for the HUD, not a mode toggle."""
         with self._lock:
             return (not self._closed and self.mode != STANDBY
                     and self._active_generation == self._generation)
+
+    def is_user_speaking(self) -> bool:
+        """True only while actual input audio exceeds the speech threshold.
+
+        Unlike is_listening(), this is False between spoken phrases, even
+        while continuous GPT microphone capture is still running.
+        """
+        with self._lock:
+            return (not self._closed and self.mode != STANDBY
+                    and self._active_generation == self._generation
+                    and time.monotonic() < self._speech_active_until)
 
     def set_mode(self, mode: str) -> None:
         if mode not in MODES:
@@ -141,6 +154,7 @@ class VoiceController:
             self.mode = mode
             self._generation += 1
             self._active_generation = -1
+            self._speech_active_until = 0.0
             if self._stop is not None:
                 self._stop.set()
             if mode == STANDBY:
@@ -185,6 +199,7 @@ class VoiceController:
             self.mode = STANDBY
             self._generation += 1
             self._active_generation = -1
+            self._speech_active_until = 0.0
             self._model = None
             if self._stop is not None:
                 self._stop.set()
@@ -232,10 +247,17 @@ class VoiceController:
                         self._active_generation = generation
                 fragments: list[str] = []
                 suppressed = False
+                activity = SpeechActivity()
                 while not stop.is_set() and self._is_current(generation):
                     data, overflow = stream.read(4000)
+                    pcm = bytes(data)
                     # Keep the microphone open; ignore self-generated speaker audio.
+                    # Neither TTS greetings nor responses light the USER indicator.
                     if self.ignore_audio and self.ignore_audio():
+                        activity.reset()
+                        with self._lock:
+                            if self._generation == generation:
+                                self._speech_active_until = 0.0
                         if not suppressed:
                             recognizer = KaldiRecognizer(model, 16000)
                             fragments.clear()
@@ -244,9 +266,13 @@ class VoiceController:
                     if suppressed:
                         recognizer = KaldiRecognizer(model, 16000)
                         suppressed = False
+                    activity.feed(pcm)
+                    with self._lock:
+                        if self._is_current(generation) and not stop.is_set():
+                            self._speech_active_until = activity.active_until
                     if overflow:
                         self._report("voice_status", "Audio in ritardo: parla più lentamente.", generation)
-                    if recognizer.AcceptWaveform(bytes(data)):
+                    if recognizer.AcceptWaveform(pcm):
                         part = json.loads(recognizer.Result()).get("text", "").strip()
                         if part:
                             if self.mode == PUSH_TO_TALK:
@@ -266,6 +292,7 @@ class VoiceController:
             with self._lock:
                 if self._active_generation == generation:
                     self._active_generation = -1
+                    self._speech_active_until = 0.0
                 if self._worker is threading.current_thread():
                     self._worker = None
                 restart = (not failed and not self._closed
