@@ -19,6 +19,7 @@ from conversation_router import (
     ConversationRejected, build_conversation_prompt, parse_conversation_intent,
 )
 import threading
+from datetime import datetime
 from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
@@ -232,7 +233,9 @@ def main() -> None:
                     or low.startswith(("errore", "gpt: impossibile")))
                 else "sistema")
         output.configure(state="normal")
-        output.insert("end", label + "\n\n", role)
+        output.insert(
+            "end", "[" + datetime.now().strftime("%H:%M:%S")
+            + "] " + label + "\n\n", role)
         output.see("end")
         output.configure(state="disabled")
 
@@ -884,6 +887,7 @@ def main() -> None:
                                 write_line("VOCABOLARIO LIA > " + spoken)
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
+                            write_line("TU > " + spoken)
                             # Pending document decisions never go through GPT:
                             # only the owner of this selected document may close.
                             if doc_dialog.phase.startswith("awaiting_"):
@@ -930,7 +934,7 @@ def main() -> None:
                                 except ConversationRejected as exc:
                                     write_line("Conversazione: " + str(exc))
                                 else:
-                                    write_line("CONVERSAZIONE GPT > " + spoken)
+                                    write_line("JARVIS > Elaboro la tua richiesta con GPT...")
                                     run_gpt("conversation", prompt=prompt,
                                             epoch=conversation_epoch,
                                             document_id=snapshot, utterance=spoken)
@@ -952,6 +956,9 @@ def main() -> None:
                             # Only manual dictation may insert free speech.
                             sync_dictation_ui(dictation.insert(spoken))
                             continue
+                        # Log commands that passed the wake/press gate.
+                        # Do not record free dictation or phrases ignored by wake.
+                        write_line("TU > " + spoken)
                         dictation_action = dictation_voice_action(spoken)
                         if dictation_action == "stop":
                             sync_dictation_ui(dictation.disable())
@@ -962,7 +969,6 @@ def main() -> None:
                                 sync_dictation_ui(
                                     "Per dettare in altre finestre seleziona Ascolto continuo.")
                         else:
-                            write_line("VOCE (offline) > " + spoken)
                             command = speech_to_local_command(spoken)
                             if command and not busy_local:
                                 submit_local(message_override=command,
@@ -1290,6 +1296,8 @@ def main() -> None:
         "memory": memory_enabled.get(),
     })
     root.protocol("WM_DELETE_WINDOW", close)
+    settings_window.bind("<Escape>", lambda _event: settings_window.withdraw())
+    root.bind("<Control-comma>", lambda _event: show_settings())
     refresh_buttons()
     input_box.focus_set()
     root.after(120, poll)
