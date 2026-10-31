@@ -30,6 +30,8 @@ INSTALLAZIONE SENZA SOVRASCRIVERE JARVIS
    duplicati automaticamente: potrebbero essere troppo grandi.
    NON modifica il database originale.
 5. Al primo avvio le risposte Telegram automatiche sono OFF e il microfono e' ON.
+   Il modello Vosk gia' installato nel Jarvis originale viene riutilizzato
+   in sola lettura: non e' necessario copiarlo o reinstallarlo.
    Accendi Telegram solo quando vuoi verificare le risposte con un contatto
    che sa di dialogare con un assistente.
 6. Puoi verificare la conversazione dalle impostazioni, senza inviare niente.
