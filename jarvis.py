@@ -39,6 +39,8 @@ from telegram_outbound_flow import (
     VoiceSendDialog, parse_telegram_send_intent, resolve_selected_recipient,
 )
 from telegram_bridge import TelegramBridge
+from live_capabilities import (LiveCapabilityRegistry, snapshot_capabilities,
+                               capability_status_prompt)
 from telegram_security import credentials_present
 from telegram_voice import missing_voice_dependencies
 from jarvis_persona import build_chat_prompt
@@ -163,6 +165,7 @@ def main() -> None:
     telegram_contact_vars={}
     telegram_available_contacts=[]
     telegram_voice_dialog=VoiceSendDialog()
+    addon_capability_registry=LiveCapabilityRegistry()
     telegram_owner_busy=False
     orbit_nodes_cache=()
 
@@ -1264,6 +1267,20 @@ def main() -> None:
         return [c for c in settings.get("telegram_contacts", [])
                 if c.get("enabled") is True]
 
+    def current_capability_snapshot(has_document:bool=False) -> dict:
+        """Re-evaluate runtime permissions on every external GPT request."""
+        try:
+            stream=voice.is_listening()
+        except (AttributeError,RuntimeError,OSError):
+            stream=False
+        return snapshot_capabilities(
+            settings=settings,
+            has_document=has_document,
+            telegram_credentials=credentials_present(),
+            telegram_voice_dependencies=(not missing_voice_dependencies()),
+            voice_stream_open=stream,
+            registry=addon_capability_registry)
+
     def load_telegram_contacts_for_ui() -> None:
         """Read real Telegram private users on a worker, never on Tk."""
         if not credentials_present():
@@ -1570,9 +1587,12 @@ def main() -> None:
         reconcile_document_session(force=True)
         snapshot = documents.current.ident if documents.current else None
         try:
+            live=current_capability_snapshot(snapshot is not None)
             prompt = build_conversation_prompt(
                 spoken, has_document=snapshot is not None,
-                memory_context=recent_memory_for_gpt(spoken))
+                memory_context=recent_memory_for_gpt(spoken),
+                telegram_send_ready=live["telegram_voice_send"],
+                runtime_info=capability_status_prompt(live))
         except ConversationRejected as exc:
             write_line("JARVIS > " + str(exc))
             return
@@ -2419,8 +2439,10 @@ def main() -> None:
         request.set("")
         write_line("DOMANDA A GPT > " + message)
         try:
+            live=current_capability_snapshot(documents.current is not None)
             prompt = build_chat_prompt(
-                message, memory_context=recent_memory_for_gpt(message))
+                message, memory_context=recent_memory_for_gpt(message),
+                runtime_info=capability_status_prompt(live))
         except ValueError as exc:
             request.set(message)
             write_line("JARVIS > " + str(exc))
@@ -2912,9 +2934,11 @@ def main() -> None:
                             voice_mode.get() == GPT_CONVERSATION and
                             gpt_enabled.get() and active_gpt):
                         try:
+                            latest=current_capability_snapshot(documents.current is not None)
                             intent = parse_conversation_intent(
                                 result.get("text", ""),
-                                has_document=doc_snapshot is not None)
+                                has_document=doc_snapshot is not None,
+                                telegram_send_ready=latest["telegram_voice_send"])
                         except ConversationRejected as exc:
                             write_line("GPT: impossibile interpretare la risposta: " + str(exc))
                             speak_result("Non ho capito con sicurezza. Puoi ripetere?")
@@ -2948,6 +2972,12 @@ def main() -> None:
                                             source_utterance=original_phrase)
                                     else:
                                         speak_result("Operazione in corso, riprova.")
+                                elif cap.handler == "telegram_voice_dialog":
+                                    # GPT proposes a name, it never authorizes
+                                    # a contact or sends audio. Local selection
+                                    # and two-step owner confirmation are final.
+                                    try_telegram_voice_send(
+                                        "manda un messaggio a "+cap.recipient)
                                 elif cap.handler == "document_open":
                                     if current_id is None:
                                         document_operation(
