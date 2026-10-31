@@ -1,0 +1,67 @@
+name: Publish Jarvis memory reliability source ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-memory-reliability.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - uses: actions/checkout@v4
+        with:
+          ref: 15658a1ad140c60247502052d634173f3ad184c5
+          path: source
+          persist-credentials: false
+      - name: Build source package and verify
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import hashlib, json
+          root=Path("source")
+          dest=Path("catalog/Download/Jarvis-Memoria-Affidabile.zip")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          manifest=[]
+          with ZipFile(dest,"w",ZIP_DEFLATED,compresslevel=6) as archive:
+              for file in sorted(root.rglob("*")):
+                  if not file.is_file(): continue
+                  parts=file.relative_to(root).parts
+                  if any(part in (".git",".venv","venv","__pycache__") for part in parts):
+                      continue
+                  if parts[0] in (".github","Download"): continue
+                  name="Jarvis-Memoria-Affidabile/"+"/".join(parts)
+                  archive.write(file,name)
+                  manifest.append({"path":name,"sha256":hashlib.sha256(file.read_bytes()).hexdigest()})
+              archive.writestr("Jarvis-Memoria-Affidabile/SOURCE-COMMIT.txt",
+                               "15658a1ad140c60247502052d634173f3ad184c5\n")
+              archive.writestr("Jarvis-Memoria-Affidabile/SOURCE-MANIFEST.json",
+                               json.dumps(manifest,indent=2))
+          with ZipFile(dest) as archive:
+              assert archive.testzip() is None
+              names=set(archive.namelist())
+              for required in ("avvia_jarvis.bat","jarvis.py","workspace_memory.py",
+                   "second_brain.py","memory_boundaries.py","preference_voice.py",
+                   "conversation_memory.py","tests/test_memory_boundaries.py"):
+                  assert "Jarvis-Memoria-Affidabile/"+required in names,required
+          print("ZIP VERIFIED",dest, dest.stat().st_size, "bytes")
+          PY
+      - name: Commit new ZIP to Download without removing previous files
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Memoria-Affidabile.zip
+          git -C catalog commit -m "download: publish Jarvis memory reliability test build"
+          git -C catalog push origin HEAD:main
