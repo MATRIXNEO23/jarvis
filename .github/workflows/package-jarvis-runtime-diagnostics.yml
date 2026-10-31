@@ -25,10 +25,16 @@ jobs:
           ref: d6578989459326bed6ddba590f0c21d1d0e75702
           path: source
           persist-credentials: false
+      - name: Match the Python runtime used by the passing CI matrix
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Recheck runtime diagnostic tests before packaging
+        working-directory: source
+        shell: bash
         run: |
-          cd source
-          python -m unittest discover -s tests -p 'test_*.py'
+          python --version
+          python -m unittest discover -s tests -v
       - name: Package and verify source with per-file SHA-256 manifest
         shell: bash
         run: |
