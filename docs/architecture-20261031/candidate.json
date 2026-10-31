@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Jarvis: conversazione e memoria nel ramo evoluto",
+    "locale": "it",
+    "quality_profile": "showcase",
+    "output": ".archify/architecture-jarvis-20261031-213000/jarvis.html",
+    "repository": {
+      "url": "https://github.com/MATRIXNEO23/jarvis.git",
+      "revision": "1f7310f67887dcc756646513151c90b3d12ac703"
+    }
+  },
+  "components": [
+    {
+      "id": "ingresso",
+      "type": "frontend",
+      "label": "Voce e testo",
+      "sublabel": "Instradamento e risposta",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "jarvis.py",
+          "line": 1807,
+          "end_line": 1834
+        },
+        {
+          "path": "jarvis.py",
+          "line": 2724,
+          "end_line": 2754
+        },
+        {
+          "path": "jarvis.py",
+          "line": 3275,
+          "end_line": 3285
+        }
+      ]
+    },
+    {
+      "id": "contesto",
+      "type": "backend",
+      "label": "Contesto locale",
+      "sublabel": "RAM, focus e richiamo",
+      "pos": [
+        430,
+        40
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "jarvis.py",
+          "line": 541,
+          "end_line": 563
+        },
+        {
+          "path": "jarvis.py",
+          "line": 616,
+          "end_line": 680
+        }
+      ]
+    },
+    {
+      "id": "ram",
+      "type": "database",
+      "label": "Memoria RAM",
+      "sublabel": "16 scambi; invio a 860 caratteri",
+      "pos": [
+        430,
+        230
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "conversation_memory.py",
+          "line": 13,
+          "end_line": 16
+        },
+        {
+          "path": "conversation_memory.py",
+          "line": 48,
+          "end_line": 82
+        }
+      ]
+    },
+    {
+      "id": "persistenza",
+      "type": "database",
+      "label": "Memoria su disco",
+      "sublabel": "Second Brain o progetto",
+      "pos": [
+        40,
+        230
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "second_brain.py",
+          "line": 122,
+          "end_line": 135
+        },
+        {
+          "path": "second_brain.py",
+          "line": 255,
+          "end_line": 277
+        },
+        {
+          "path": "jarvis.py",
+          "line": 641,
+          "end_line": 680
+        }
+      ]
+    },
+    {
+      "id": "prompt",
+      "type": "backend",
+      "label": "Costruzione prompt",
+      "sublabel": "Compattazione e catalogo",
+      "pos": [
+        820,
+        40
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "conversation_router.py",
+          "line": 95,
+          "end_line": 159
+        },
+        {
+          "path": "jarvis_persona.py",
+          "line": 84,
+          "end_line": 105
+        },
+        {
+          "path": "jarvis_persona.py",
+          "line": 172,
+          "end_line": 204
+        }
+      ]
+    },
+    {
+      "id": "client",
+      "type": "backend",
+      "label": "GPTClient Python",
+      "sublabel": "Pipe JSON; ID richiesta",
+      "pos": [
+        820,
+        430
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "gpt_client.py",
+          "line": 122,
+          "end_line": 159
+        },
+        {
+          "path": "jarvis.py",
+          "line": 1782,
+          "end_line": 1804
+        }
+      ]
+    },
+    {
+      "id": "bridge",
+      "type": "backend",
+      "label": "Bridge Node e SDK",
+      "sublabel": "Accesso account e modello",
+      "pos": [
+        430,
+        430
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "gpt_bridge.mjs",
+          "line": 121,
+          "end_line": 153
+        }
+      ]
+    },
+    {
+      "id": "esterno",
+      "type": "external",
+      "label": "Modello GPT esterno",
+      "sublabel": "Risposta via SDK",
+      "pos": [
+        40,
+        430
+      ],
+      "size": [
+        210,
+        70
+      ],
+      "sources": [
+        {
+          "path": "gpt_bridge.mjs",
+          "line": 140,
+          "end_line": 153
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "a",
+      "from": "ingresso",
+      "to": "contesto",
+      "label": "richiamo"
+    },
+    {
+      "id": "b",
+      "from": "contesto",
+      "to": "ram",
+      "label": "legge e aggiorna"
+    },
+    {
+      "id": "c",
+      "from": "contesto",
+      "to": "persistenza",
+      "label": "se abilitata o progetto"
+    },
+    {
+      "id": "d",
+      "from": "contesto",
+      "to": "prompt",
+      "label": "dati e focus"
+    },
+    {
+      "id": "e",
+      "from": "prompt",
+      "to": "client",
+      "label": "massimo 5000 caratteri"
+    },
+    {
+      "id": "f",
+      "from": "client",
+      "to": "bridge",
+      "label": "JSON stdin e stdout"
+    },
+    {
+      "id": "g",
+      "from": "bridge",
+      "to": "esterno",
+      "label": "streamResponse"
+    },
+    {
+      "id": "h",
+      "from": "client",
+      "to": "ingresso",
+      "label": "risposta in coda"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Identità dei sorgenti",
+      "items": [
+        "Mappa del commit 1f7310f, non dei sorgenti storici alla radice di main.",
+        "Main 2e10d52 distribuisce ZIP con sorgenti più evoluti."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Perdite dimostrate",
+      "items": [
+        "Riduzione RAM a 860 caratteri, poi compattazione vocale fino a 850.",
+        "permanente.recent è prodotto da SQLite ma ignorato dal compattatore.",
+        "Il bridge passa input: prompt; non passa un ID di conversazione."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Confini",
+      "items": [
+        "Memoria descrittiva: non concede permessi di esecuzione.",
+        "Azioni sottoposte a validazione locale; Archify resta uno strumento di sviluppo."
+      ]
+    }
+  ]
+}
