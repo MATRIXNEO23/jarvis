@@ -1,5 +1,21 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA VERSIONE — PROGETTI A VOCE E FILE SALVATI NEL PROGETTO (31 OTTOBRE 2026)
+
+**[SCARICA JARVIS PROGETTI VOCALI E SALVATAGGIO — ZIP](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Progetti-Vocali-e-Salvataggio.zip)**
+
+Questa versione è stata inserita **fisicamente** in `Download/Jarvis-Progetti-Vocali-e-Salvataggio.zip`; include le funzioni Telegram precedenti, la memoria automatica per progetti e ora il riconoscimento di comandi vocali locali come «Jarvis, crea un progetto chiamato Minecraft», «apri il progetto Minecraft», «quali progetti sono attivi» e «apri la cartella del progetto».
+
+**Percorsi dei dati:** `%LOCALAPPDATA%\Jarvis\projects\<UUID>\` per ogni progetto; la sottocartella `files\` ospita i TXT. `PROGETTO.txt` descrive il progetto, `CONTINUITA.md` e gli altri file registrano lo stato e i passi. La directory UUID esistente non cambia, dunque non si migra né si cancella la memoria precedente.
+
+**Documenti:** quando il progetto è attivo e il Blocco note è gestito da Jarvis, la frase «salva» crea una copia `.txt` nella sua cartella `files` con un nome basato sulla richiesta originale; il programma rimane aperto. Un secondo salvataggio dopo modifiche crea una nuova versione, non sovrascrive quella precedente. «Salva e chiudi» continua a essere distinto. Senza progetto è ancora necessario indicare cartella e nome.
+
+**Prima prova:** chiudi Jarvis, **fai il backup di tutta `%LOCALAPPDATA%\Jarvis`**, estrai lo ZIP in **una cartella nuova** e avvia `avvia_jarvis.bat` con lo stesso account Windows. Non tenere aperta anche la versione vecchia, perché il database è condiviso.
+
+**Verifiche:** [test Windows e Ubuntu superati](https://github.com/MATRIXNEO23/jarvis/actions/runs/41177638619); collaudo fisico su Pavilion (microfono, Blocco note, velocità HDD) ancora necessario. [PR isolata #15](https://github.com/MATRIXNEO23/jarvis/pull/15) e [guida delle funzioni](https://github.com/MATRIXNEO23/jarvis/blob/feature/voice-project-folder-documents/docs/VOICE_PROJECT_DOCUMENTS.md). Nessun merge in main.
+
+---
+
 ## VERSIONE AGGIORNATA — MEMORIA AUTOMATICA DEI PROGETTI (31/10/2026)
 
 **[SCARICA JARVIS CON MEMORIA AUTOMATICA — ZIP NELLA CARTELLA DOWNLOAD](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Memoria-Automatica.zip)**
