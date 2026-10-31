@@ -281,6 +281,9 @@ def main() -> None:
     timer_volume = tk.DoubleVar(value=float(settings.get("timer_volume", 80)))
     timer_volume_label = tk.StringVar(value=str(settings.get("timer_volume", 80)) + "%")
     timer_repeat = tk.BooleanVar(value=settings.get("timer_repeat", True))
+    timer_audio_beep = tk.BooleanVar(
+        value=settings.get("timer_audio_mode", "auto") == "beep")
+    timer_audio_status = tk.StringVar(value="Premi Prova per verificare l'audio.")
     sound_row = ttk.Frame(timer_box)
     sound_row.pack(fill="x", pady=5)
     ttk.Label(sound_row, text="Suono:").pack(side="left", padx=(0, 8))
@@ -291,12 +294,13 @@ def main() -> None:
 
     def save_timer_preferences() -> None:
         old = {key: settings[key] for key in
-               ("timer_sound", "timer_volume", "timer_repeat")}
+               ("timer_sound", "timer_volume", "timer_repeat", "timer_audio_mode")}
         selected = next((key for key, name in SOUNDS.items()
                          if name == timer_sound_label.get()), "digital")
         settings.update(timer_sound=selected,
                         timer_volume=int(round(timer_volume.get())),
-                        timer_repeat=bool(timer_repeat.get()))
+                        timer_repeat=bool(timer_repeat.get()),
+                        timer_audio_mode="beep" if timer_audio_beep.get() else "auto")
         try:
             save_settings(settings)
         except (OSError, ValueError) as exc:
@@ -304,14 +308,39 @@ def main() -> None:
             timer_sound_label.set(SOUNDS[old["timer_sound"]])
             timer_volume.set(old["timer_volume"])
             timer_repeat.set(old["timer_repeat"])
+            timer_audio_beep.set(old["timer_audio_mode"] == "beep")
             messagebox.showerror("Impostazioni timer", str(exc), parent=settings_window)
 
     timer_picker.bind("<<ComboboxSelected>>",
                       lambda event: save_timer_preferences())
-    ttk.Button(sound_row, text="▶ Prova", command=lambda: preview_sound(
-        next((key for key, name in SOUNDS.items()
-              if name == timer_sound_label.get()), "digital"),
-        int(round(timer_volume.get())))).pack(side="left")
+    def preview_timer_sound(force_beep: bool = False) -> None:
+        chosen = next((key for key, name in SOUNDS.items()
+                       if name == timer_sound_label.get()), "digital")
+        mode = ("beep" if force_beep else
+                ("beep" if timer_audio_beep.get() else "auto"))
+        timer_audio_status.set("Invio del suono a Windows...")
+        def audio_result(success: bool, message: str) -> None:
+            try:
+                root.after(0, lambda: timer_audio_status.set(
+                    ("Audio: " if success else "Errore: ") + message))
+            except (RuntimeError, tk.TclError):
+                pass
+        preview_sound(chosen, int(round(timer_volume.get())),
+                      mode=mode, on_status=audio_result)
+
+    ttk.Button(sound_row, text="▶ Prova",
+               command=preview_timer_sound).pack(side="left")
+    ttk.Button(sound_row, text="▶ Bip alternativo",
+               command=lambda: preview_timer_sound(True)).pack(side="left", padx=5)
+    ttk.Label(timer_box, textvariable=timer_audio_status,
+              wraplength=590).pack(anchor="w", pady=(5, 3))
+    ttk.Checkbutton(timer_box,
+                    text="Usa bip alternativo Windows per l'allarme",
+                    variable=timer_audio_beep,
+                    command=save_timer_preferences).pack(anchor="w", pady=(5, 0))
+    ttk.Label(timer_box,
+              text="Il bip alternativo usa il volume di Windows, "
+                   "non il cursore Jarvis.", wraplength=590).pack(anchor="w")
     volume_row = ttk.Frame(timer_box)
     volume_row.pack(fill="x", pady=(12, 5))
     ttk.Label(volume_row, text="Volume").pack(side="left", padx=(0, 8))
