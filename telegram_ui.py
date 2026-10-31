@@ -9,11 +9,14 @@ from tkinter import messagebox, ttk
 
 
 class TelegramContactsWindow:
-    def __init__(self, parent, stored, on_load, on_save):
+    def __init__(self, parent, stored, on_load, on_save,
+                 on_open_history=None, on_clear_history=None):
+        self.on_open_history=on_open_history
+        self.on_clear_history=on_clear_history
         self.window=tk.Toplevel(parent)
         self.window.title("JARVIS // Telegram — autorizza contatti")
-        self.window.geometry("590x550")
-        self.window.minsize(420,330)
+        self.window.geometry("720x550")
+        self.window.minsize(540,330)
         self.saved={c["id"]:c for c in stored}
         self.on_save=on_save
         self.on_load=on_load
@@ -66,9 +69,13 @@ class TelegramContactsWindow:
         if self.saved:
             self.status.set("Contatti già salvati (carica Telegram prima di modificare).")
             for c in self.saved.values():
-                ttk.Label(self.inner,text=(
+                line=ttk.Frame(self.inner)
+                line.pack(fill="x",pady=2)
+                ttk.Label(line,text=(
                     ("✓ " if c["enabled"] else "○ ")+c["name"]+
-                    " — elenco non aggiornato")).pack(anchor="w",pady=2)
+                    " — elenco non aggiornato")).pack(side="left")
+                if c["enabled"]:
+                    self.add_history_buttons(line,c["id"])
 
     def load(self):
         self.load_button.configure(state="disabled")
@@ -85,13 +92,28 @@ class TelegramContactsWindow:
             pid=item["id"]
             name=item["name"]
             var=tk.BooleanVar(value=self.saved.get(pid,{}).get("enabled",False))
-            ttk.Checkbutton(self.inner,text=f"{name}  [ID {pid}]",
-                            variable=var).pack(anchor="w",pady=2,padx=5)
+            line=ttk.Frame(self.inner)
+            line.pack(fill="x",pady=2)
+            ttk.Checkbutton(line,text=f"{name}  [ID {pid}]",
+                            variable=var).pack(side="left",padx=5)
+            if self.saved.get(pid,{}).get("enabled",False):
+                self.add_history_buttons(line,pid)
             self.rows.append((pid,name,var))
         self.status.set(f"Caricati {len(self.rows)} contatti. "
                         "Spunta i destinatari e premi Salva.")
         if not self.rows:
             self.save_button.configure(state="disabled")
+
+    def add_history_buttons(self,frame,peer_id):
+        """Local history tools only for contacts already authorized."""
+        if self.on_open_history is not None:
+            ttk.Button(frame,text="Apri conversazione",
+                       command=lambda p=peer_id:self.on_open_history(p)).pack(
+                           side="right",padx=(4,0))
+        if self.on_clear_history is not None:
+            ttk.Button(frame,text="Cancella cronologia",
+                       command=lambda p=peer_id:self.on_clear_history(p)).pack(
+                           side="right",padx=(4,0))
 
     def failed(self, reason):
         self.load_button.configure(state="normal")
