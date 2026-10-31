@@ -105,6 +105,40 @@ class PreferenceStore:
                       "source": "user_confirmed"} for p in self.all())
 
 
+_OBSERVABLE_LOCAL_ACTIONS = frozenset({
+    "system_status", "list_downloads", "find_download", "history",
+})
+
+
+def observed_local_result(result) -> bool:
+    """A direct local read with a persisted executor receipt can be verified.
+
+    Launching a process, opening a browser, or issuing a web search is only
+    a success report: Jarvis has no independent observation of the window.
+    """
+    return bool(
+        getattr(result,"status",None)=="completed"
+        and getattr(result,"action",None) in _OBSERVABLE_LOCAL_ACTIONS
+        and isinstance(getattr(result,"task_id",None),str)
+        and re.fullmatch(r"[a-f0-9]{32}", result.task_id)
+    )
+
+
+def observed_saved_file(result) -> bool:
+    """Conservatively verify the observed filesystem artifact, not a window."""
+    if getattr(result,"kind",None) not in (
+            "saved_open", "saved_but_open", "saved_and_closed"):
+        return False
+    path=getattr(result,"saved_path",None)
+    if path is None:
+        return False
+    try:
+        target=Path(path)
+        return target.is_file() and not target.is_symlink()
+    except (OSError,ValueError,TypeError):
+        return False
+
+
 class OperationJournal:
     """Operation outcomes are not automatically verified just because a tool ran."""
 
