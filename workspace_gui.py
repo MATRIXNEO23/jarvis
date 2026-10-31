@@ -15,7 +15,7 @@ from workspace_memory import WorkspaceError
 
 class ProjectManagerWindow:
     def __init__(self,parent,memory,on_open,on_general,on_change,
-                 can_modify=None,on_renamed=None):
+                 can_modify=None,on_renamed=None,on_trashed=None):
         self.parent=parent
         self.memory=memory
         self.on_open=on_open
@@ -23,6 +23,7 @@ class ProjectManagerWindow:
         self.on_change=on_change
         self.can_modify=can_modify or (lambda:True)
         self.on_renamed=on_renamed or (lambda _ident,_name:None)
+        self.on_trashed=on_trashed or (lambda _ident:None)
         self.show_trash=False
         self.window=None
         self._rows=[]
@@ -110,6 +111,11 @@ class ProjectManagerWindow:
                 self.editor.insert("1.0",details["summary"])
 
     def _create(self):
+        if not self.can_modify():
+            messagebox.showwarning("Progetti",
+                "Concludi prima l'attività o chiudi Blocco note.",
+                parent=self.window)
+            return
         name=simpledialog.askstring(
             "Nuovo progetto","Nome del progetto:",
             parent=self.window)
@@ -184,7 +190,7 @@ class ProjectManagerWindow:
             return
         try:
             self.memory.trash_project(project["id"])
-            self.on_general()
+            self.on_trashed(project["id"])
         except (WorkspaceError,OSError) as exc:
             messagebox.showerror("Progetti",str(exc),parent=self.window)
             return
