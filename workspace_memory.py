@@ -638,7 +638,10 @@ class WorkspaceMemory:
                 return
             tasks=["# Passi del progetto — "+project["name"],"",
                    "Fonte: ricevute locali e registro; i passi pianificati non sono completati.",""]
-            tasks.extend("- ["+x["status"]+"] "+x["title"]
+            tasks.extend("- ["+x["status"]+
+                         ("/verified" if x["status"]=="completed" and x["verified"]
+                          else "/reported" if x["status"]=="completed" else "")+
+                         "] "+x["title"]
                          +(" — "+x["detail"] if x["detail"] else "")
                          +(" (ricevuta "+x["receipt"]+")" if x["receipt"] else "")
                          for x in steps)
