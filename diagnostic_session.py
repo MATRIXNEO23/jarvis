@@ -85,6 +85,15 @@ class DiagnosticSession:
         self._completed=self._total
         return True
 
+    def cancel(self) -> int | None:
+        """Release UI ownership; cannot stop an OS/Python worker thread."""
+        if not self.active:
+            return None
+        prior=self._id
+        self._id=0
+        self._phase="annullata"
+        return prior
+
     def check(self) -> str:
         """Poll on Tk main thread; returns '', 'stalled' or 'timeout' once."""
         if not self.active:
