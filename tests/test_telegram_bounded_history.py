@@ -1,5 +1,5 @@
 """Offline regression tests for Telegram's bounded per-contact local history."""
-import asyncio
+from contextlib import closing
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -79,7 +79,7 @@ class HistoryTests(unittest.TestCase):
 
     def test_migration_backups_old_history_once_and_sets_legacy_intro(self):
         # Simulate a pre-retention version of the real SQLite database.
-        with sqlite3.connect(self.path) as conn:
+        with closing(sqlite3.connect(self.path)) as conn:
             conn.execute("DELETE FROM workspace_session WHERE key='telegram_retention_50_v1'")
             for n in range(1,65):
                 conn.execute("""INSERT INTO telegram_events(
@@ -90,16 +90,17 @@ class HistoryTests(unittest.TestCase):
             conn.execute("""INSERT INTO messages(
                 scope,scope_id,user_text,reply,kind,time_utc)
                 VALUES('telegram','123','old','duplicate','chat','2026-10-31')""")
+            conn.commit()
         migrated=WorkspaceMemory(self.path)
         self.assertEqual(len(migrated.telegram_activity(123,limit=100)),50)
         self.assertFalse(migrated.telegram_needs_introduction(123))
-        with sqlite3.connect(self.path) as conn:
+        with closing(sqlite3.connect(self.path)) as conn:
             count=conn.execute("SELECT COUNT(*) FROM messages "
                                "WHERE scope='telegram'").fetchone()[0]
         self.assertEqual(count,0)
         backup=self.path.with_name(self.path.stem+".pre-telegram-50.sqlite3")
         self.assertTrue(backup.exists())
-        with sqlite3.connect(backup) as conn:
+        with closing(sqlite3.connect(backup)) as conn:
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM telegram_events "
                                           "WHERE peer_id=123").fetchone()[0],64)
         WorkspaceMemory(self.path)
@@ -108,8 +109,9 @@ class HistoryTests(unittest.TestCase):
     def test_manual_owner_voice_does_not_count_as_introduction(self):
         self.db.telegram_event(234,"outgoing",9,"voice","Messaggio dettato da Alberto")
         self.assertTrue(self.db.telegram_needs_introduction(234))
-        with sqlite3.connect(self.path) as conn:
+        with closing(sqlite3.connect(self.path)) as conn:
             conn.execute("DELETE FROM workspace_session WHERE key='telegram_retention_50_v1'")
+            conn.commit()
         self.assertTrue(WorkspaceMemory(self.path).telegram_needs_introduction(234))
 
     def test_full_telegram_text_retained_but_context_is_short(self):
@@ -151,7 +153,7 @@ class IntroductionTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(outgoing),2)
             self.assertEqual(sum("sono Jarvis" in s for s in outgoing),1)
             self.assertFalse(WorkspaceMemory(path).telegram_needs_introduction(123))
-            with sqlite3.connect(path) as conn:
+            with closing(sqlite3.connect(path)) as conn:
                 self.assertEqual(conn.execute("SELECT COUNT(*) FROM messages "
                                               "WHERE scope='telegram'").fetchone()[0],0)
 
