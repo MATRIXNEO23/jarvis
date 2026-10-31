@@ -2506,12 +2506,28 @@ def main() -> None:
             return
         request.set("")
         write_line("DOMANDA A GPT > " + message)
+        document_snapshot=(documents.current.ident if documents.current else None)
         try:
-            live=current_capability_snapshot(documents.current is not None)
+            live=current_capability_snapshot(document_snapshot is not None)
+            if len(message)<=450:
+                # Typed commands must use the SAME reviewed capability contract
+                # as voice, not a text-only model that falsely says it cannot act.
+                prompt=build_conversation_prompt(
+                    message,has_document=document_snapshot is not None,
+                    memory_context=recent_memory_for_gpt(message),
+                    telegram_send_ready=live["telegram_voice_send"],
+                    runtime_info=capability_status_prompt(live),
+                    addon_actions=active_addon_actions())
+                run_gpt("typed_conversation",prompt=prompt,
+                        epoch=conversation_epoch,
+                        document_id=document_snapshot,utterance=message)
+                return
+            # Longer free-form questions are conversational only; never
+            # interpret a 5000-character document as an executable action.
             prompt = build_chat_prompt(
                 message, memory_context=recent_memory_for_gpt(message),
                 runtime_info=capability_status_prompt(live))
-        except ValueError as exc:
+        except (ValueError,ConversationRejected) as exc:
             request.set(message)
             write_line("JARVIS > " + str(exc))
             return
