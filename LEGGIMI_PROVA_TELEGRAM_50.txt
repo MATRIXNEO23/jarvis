@@ -1,6 +1,11 @@
 JARVIS — AUDIT COMPLETO + TELEGRAM 50 (WINDOWS 10)
 =================================================
 Questa ZIP e' un test isolato, NON una release stabile.
+INTERFACCIA CORRETTA: stile blu/ciano e nero come immagine di riferimento,
+autodiagnosi discreta visibile solo durante l'analisi, CPU/RAM/DISCO C/RETE
+con riquadri di uguale larghezza, colori ascolto/parlato SOLO al centro.
+UNICO LAUNCHER: avvia_jarvis.bat (nessun launcher TEST separato).
+
 Contiene il codice Python di Jarvis e gli script di avvio, NON un .exe.
 Non include WhatsApp e non richiede nuove API a pagamento.
 
