@@ -102,7 +102,8 @@ def load_catalog(path: Path | None = None) -> tuple[dict, ...]:
 
 def capability_prompt(*, has_document: bool = False,
                       compact: bool = False,
-                      telegram_send_ready: bool = False) -> str:
+                      telegram_send_ready: bool = False,
+                      brief: bool = False) -> str:
     """Compact description generated from the catalog, not hardcoded examples."""
     actions = []
     for item in load_catalog():
@@ -112,7 +113,12 @@ def capability_prompt(*, has_document: bool = False,
             continue
         if aid == "telegram.voice.start" and not telegram_send_ready:
             continue
-        if compact:
+        if compact and brief:
+            actions.append({
+                "id": aid,
+                "example": item["examples"][0][:42],
+            })
+        elif compact:
             actions.append({
                 "id": aid,
                 "does": item["description"][:68],
