@@ -519,7 +519,8 @@ class WorkspaceMemory:
             try:
                 with state_file.open("r",encoding="utf-8") as handle:
                     state=json.load(handle)
-                if (state.get("name")!=name
+                if (state.get("schema_version")!=2
+                        or state.get("name")!=name
                         or state.get("trashed")!=bool(trashed)
                         or state.get("last_event_id")!=last_event
                         or state.get("last_message_id")!=last_message
@@ -619,7 +620,7 @@ class WorkspaceMemory:
             self._atomic_file(folder/"CONTINUITA.md","\n".join(lines)+"\n",
                               keep_previous=True)
             state={
-                "schema_version":1, "project_id":ident,"name":project["name"],
+                "schema_version":2, "project_id":ident,"name":project["name"],
                 "last_event_id":events[0][0] if events else 0,
                 "last_message_id":message_seq,
                 "active":project["active"],"trashed":project["trashed"],
@@ -637,13 +638,13 @@ class WorkspaceMemory:
             if not steps_changed:
                 return
             tasks=["# Passi del progetto — "+project["name"],"",
-                   "Fonte: ricevute locali e registro; i passi pianificati non sono completati.",""]
+                   "Un ID risultato non è automaticamente prova dell'esito esterno.",""]
             tasks.extend("- ["+x["status"]+
                          ("/verified" if x["status"]=="completed" and x["verified"]
                           else "/reported" if x["status"]=="completed" else "")+
                          "] "+x["title"]
                          +(" — "+x["detail"] if x["detail"] else "")
-                         +(" (ricevuta "+x["receipt"]+")" if x["receipt"] else "")
+                         +(" (ID risultato "+x["receipt"]+")" if x["receipt"] else "")
                          for x in steps)
             self._atomic_file(folder/"PASSI.md","\n".join(tasks)+"\n")
             artifact_lines=["# File verificati — "+project["name"],"",
