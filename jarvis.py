@@ -1345,7 +1345,12 @@ def main() -> None:
         written=message.strip()
         def worker() -> None:
             try:
-                msg_id=send_telegram_voice(peer_id,written,voice_snapshot)
+                msg_id=send_telegram_voice(
+                    peer_id,written,voice_snapshot,
+                    still_authorized=lambda: (
+                        not closing and any(
+                            c.get("id")==peer_id and c.get("enabled") is True
+                            for c in settings.get("telegram_contacts",[]))))
                 output_queue.put(("telegram_owner_sent",peer_id,name,msg_id,written))
             except Exception as exc:
                 # Never auto-retry: a network timeout may follow acceptance.
