@@ -1,6 +1,6 @@
 # Jarvis: interfaccia corretta - Riferimento 31/10/2026
 
-**[SCARICA JARVIS COMPLETO - HUD CORRETTO + TELEGRAM 50](./Jarvis-Full-Audit-Telegram50-20261031.zip)**
+**[SCARICA JARVIS COMPLETO - HUD CORRETTO + TELEGRAM 50](./Jarvis-HUD-Riferimento-20261031.zip)**
 
 Pacchetto sorgente Python completo per Windows 10, non un EXE. Include un solo launcher `avvia_jarvis.bat` con profilo isolato, microfono attivo all'avvio (se modello/dispositivo disponibili). Nuova UI scura blu/ciano: autodiagnosi discreta quando attiva, CPU RAM DISCO C RETE uguali e colori dinamici solo al centro. GPT esterno, documenti, progetti, add-on e Telegram (50 messaggi per contatto, contesto degli ultimi 4 senza riassunti).
 
