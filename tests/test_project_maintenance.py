@@ -129,9 +129,12 @@ class DurableProjectMaintenanceTests(unittest.TestCase):
 
     def test_schema_upgrade_preserves_prior_record(self):
         self.memory.create_project("Un progetto precedente")
-        with sqlite3.connect(self.path) as db:
+        db=sqlite3.connect(self.path)
+        try:
             self.assertIn("trashed", [c[1] for c in
                                       db.execute("PRAGMA table_info(projects)")])
+        finally:
+            db.close()
         restored=WorkspaceMemory(self.path)
         self.assertEqual(len(restored.projects()),1)
 
