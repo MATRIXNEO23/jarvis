@@ -64,6 +64,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk, simpledialog
 import webbrowser
 
+from document_execution import run_document_worker
 from document_dialog import DocumentDialog
 from document_language import classify_document_choice
 from document_store import destination_from_voice
@@ -1399,10 +1400,17 @@ def main() -> None:
                 allowed[peer_id]+"?\n\n"
                 "Non verranno cancellati contatto, autorizzazioni, "
                 "messaggi in attesa né lo stato della presentazione. "
+                "Le risposte automatiche saranno disattivate prima della pulizia, "
+                "se attive. Un invio già partito potrebbe ancora arrivare. "
                 "I messaggi eliminati non potranno essere recuperati "
                 "dall'archivio attivo.",
                 parent=root,default="no"):
             return
+        # Never delete a peer's active events while the listener is still
+        # handling that contact. User explicitly approved disabling Telegram.
+        if telegram_bridge and telegram_bridge.is_enabled():
+            telegram_auto.set(False)
+            toggle_telegram_automatic()
         try:
             workspace.telegram_clear_history(peer_id)
         except (OSError,sqlite3.Error,WorkspaceError) as exc:
@@ -2161,28 +2169,18 @@ def main() -> None:
         document_status.set("Operazione in corso su Blocco note...")
 
         def worker() -> None:
-            try:
-                if operation == "open" or (
-                        operation == "compose" and target == "new_notepad"):
-                    documents.forget_if_closed()
-                if operation == "open":
-                    result = documents.open_blank()
-                elif operation == "compose":
-                    result = documents.compose(content, target)
-                elif operation == "save" and path is not None:
-                    result = documents.save_and_close(document_id, path)
-                elif operation == "save_only" and path is not None:
-                    result = documents.save_only(document_id, path)
-                elif operation == "discard":
-                    result = documents.discard_and_close(document_id)
-                else:
-                    raise ValueError("Operazione documento non consentita.")
-                output_queue.put(("document_ok", operation, result, close_after))
-            except (OSError, ValueError) as exc:
-                output_queue.put(("document_error", operation, str(exc)[:250]))
+            output_queue.put(run_document_worker(
+                documents, operation, content=content, target=target,
+                document_id=document_id, path=path, close_after=close_after))
 
         # A started save must finish even when the Jarvis UI closes.
-        threading.Thread(target=worker, daemon=False, name="jarvis-document-worker").start()
+        try:
+            threading.Thread(target=worker, daemon=False,
+                             name="jarvis-document-worker").start()
+        except RuntimeError as exc:
+            output_queue.put(("document_error",operation,
+                              "Impossibile avviare la scrittura: "+
+                              type(exc).__name__))
 
     def ask_to_close_document(source_utterance: str = "") -> None:
         if document_busy:
@@ -2617,9 +2615,16 @@ def main() -> None:
         # A malformed or unexpected event must not permanently kill the
         # event pump and strand an in-progress diagnostic forever.
         root.after(120, poll)
-        reconcile_document_session()
         try:
-            while True:
+            reconcile_document_session()
+        except (OSError,ValueError,TypeError,RuntimeError) as exc:
+            runtime_events.record("document_failure")
+            write_line("DOCUMENTI > Controllo sessione non riuscito: "+
+                       type(exc).__name__)
+        try:
+            # Never starve Tk on a burst of voice, GPT or diagnostic events.
+            # Remaining events are processed during the next 120 ms tick.
+            for _ in range(80):
                 kind, *data = output_queue.get_nowait()
                 if kind == "self_audit_progress":
                     run_id,phase,completed,total=data
@@ -3247,7 +3252,7 @@ def main() -> None:
             pass
 
         try:
-            while True:
+            for _ in range(30):
                 event = service.events.get_nowait()
                 if event.get("event") == "open_browser":
                     url = event.get("url", "")

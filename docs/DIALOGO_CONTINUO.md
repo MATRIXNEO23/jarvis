@@ -1,5 +1,6 @@
 # JARVIS — dialogo continuativo e personalità coerente
 
+> **Nota aggiornata 31/10/2026:** questa guida documenta una fase precedente con microfono spento al lancio. Nel ramo di audit attuale è richiesta e configurata la **conversazione GPT con microfono attivo all'avvio**, purché Vosk e il dispositivo funzionino. Le modalità si possono sempre modificare manualmente; le sezioni sottostanti sono prove storiche.\n\n
 **Ramo sperimentale:** `feature/dialogue-continuity-personality`, PR draft [#8](https://github.com/MATRIXNEO23/jarvis/pull/8), derivato dalla nuova interfaccia più fedele al preview (`feature/hud-reference-redesign`). Non modifica automaticamente la versione già installata sul Pavilion.
 
 ## Problema riscontrato nel test reale

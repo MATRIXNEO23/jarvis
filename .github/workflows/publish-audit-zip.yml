@@ -1,0 +1,142 @@
+name: Publish reviewed Jarvis ZIP to Download
+
+on:
+  push:
+    branches: [audit/full-jarvis-fixes-20261031]
+    paths:
+      - '.github/workflows/publish-audit-zip.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jarvis-full-audit-download-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Package, validate and publish complete Jarvis ZIP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout audited source
+        uses: actions/checkout@v4
+        with:
+          ref: audit/full-jarvis-fixes-20261031
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify source syntax and offline tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m compileall -q .
+          python -m unittest discover -s tests -q
+
+      - name: Create and verify complete source ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import os
+          import subprocess
+          import zipfile
+
+          archive=Path(os.environ["RUNNER_TEMP"])/"Jarvis-Full-Audit-Telegram50-20261031.zip"
+          files=[Path(os.fsdecode(p)) for p in subprocess.check_output(
+              ["git","ls-files","-z"]).split(b"\0") if p]
+          files=[p for p in files if not (len(p.parts)>1 and p.parts[0]=="Download"
+                 and p.suffix.casefold()==".zip")]
+          required={
+              "jarvis.py", "gpt_client.py", "gpt_bridge.mjs", "workspace_memory.py",
+              "telegram_bridge.py", "voice_control.py", "managed_documents.py",
+              "prepara_test_telegram50.py",
+              "avvia_jarvis.bat", "LEGGIMI_PROVA_TELEGRAM_50.txt",
+          }
+          found={p.as_posix() for p in files}
+          assert required.issubset(found), "Missing critical Jarvis components"
+          assert len(files)>110, "Archive appears incomplete"
+          root="Jarvis-Full-Audit-20261031/"
+          with zipfile.ZipFile(archive,"w",zipfile.ZIP_DEFLATED,compresslevel=9,
+                               allowZip64=True) as z:
+              for path in files:
+                  if path.is_symlink() or not path.is_file():
+                      raise RuntimeError("Non-regular tracked file: "+str(path))
+                  entry=zipfile.ZipInfo(root+path.as_posix(),(2026,10,31,0,0,0))
+                  entry.compress_type=zipfile.ZIP_DEFLATED
+                  entry.external_attr=0o100644 << 16
+                  z.writestr(entry,path.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,
+                             compresslevel=9)
+          with zipfile.ZipFile(archive) as z:
+              assert z.testzip() is None, "Archive CRC failed"
+              inside=set(z.namelist())
+              assert {root+name for name in required}.issubset(inside)
+          print("PUBLISH_ARTIFACT",archive.name)
+          print("SOURCE_COMMIT",subprocess.check_output(["git","rev-parse","HEAD"],
+                                                       text=True).strip())
+          print("FILES",len(files),"ZIP_BYTES",archive.stat().st_size)
+          print("SHA256",hashlib.sha256(archive.read_bytes()).hexdigest())
+          PY
+
+      - name: Checkout only main's Download folder
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: publish-main
+          persist-credentials: true
+
+      - name: Publish archive and update Download index
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "$RUNNER_TEMP/Jarvis-Full-Audit-Telegram50-20261031.zip" \
+             publish-main/Download/Jarvis-Full-Audit-Telegram50-20261031.zip
+          python - <<'PY'
+          from pathlib import Path
+          readme=Path("publish-main/Download/README.md")
+          before=readme.read_text(encoding="utf-8")
+          heading="# Jarvis: versione completa corretta - Audit 31/10/2026"
+          section=(
+              heading+"\n\n"
+              "**[SCARICA BUILD COMPLETA JARVIS - AUDIT + TELEGRAM 50]"
+              "(./Jarvis-Full-Audit-Telegram50-20261031.zip)**\n\n"
+              "Pacchetto sorgente Python completo per Windows 10, non un EXE. "
+              "Include un solo launcher `avvia_jarvis.bat` con profilo isolato, "
+              "microfono attivo all'avvio (se modello/dispositivo disponibili), "
+              "GPT esterno, documenti, progetti, add-on e Telegram (50 messaggi "
+              "per contatto, contesto degli ultimi 4 senza riassunti).\n\n"
+              "Non sovrascrivere la versione stabile: estrai in una cartella nuova "
+              "e avvia `avvia_jarvis.bat` nella nuova cartella. "
+              "Il collegamento Telegram opera sull'account reale quando attivato. "
+              "Test automatici Windows e Ubuntu superati; prova finale sul Pavilion "
+              "ancora necessaria. La PR #30 resta separata da main.\n\n---\n\n"
+          )
+          divider="\n---\n"
+          if before.startswith(heading):
+              if divider not in before:
+                  raise RuntimeError("Download index cannot be updated safely")
+              original=before.split(divider,1)[1].lstrip("\n")
+          else:
+              original=before
+          readme.write_text(section+original,encoding="utf-8")
+          PY
+          cd publish-main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- Download/Jarvis-Full-Audit-Telegram50-20261031.zip Download/README.md
+          git diff --cached --stat
+          git commit -m "Publish verified full Jarvis audit ZIP in Download"
+          git push origin HEAD:main
+
+      - name: Confirm published ZIP exists in main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C publish-main fetch origin main
+          git -C publish-main ls-tree -r --name-only origin/main -- Download | \
+            grep -Fx "Download/Jarvis-Full-Audit-Telegram50-20261031.zip"

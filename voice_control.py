@@ -7,6 +7,7 @@ Only the trusted local command registry can execute speech automatically.
 from __future__ import annotations
 
 import json
+import os
 import re
 import threading
 import time
@@ -25,7 +26,20 @@ MODEL_NAME = "vosk-model-small-it-0.22"
 
 
 def model_directory() -> Path:
-    return default_path().parent / "models" / MODEL_NAME
+    """Share the existing read-only Vosk model with an isolated trial profile.
+
+    The trial copies settings and memory, not the large offline speech model.
+    The installed original model is read, never moved or overwritten.
+    """
+    preferred=default_path().parent / "models" / MODEL_NAME
+    if preferred.is_dir() or not os.environ.get("JARVIS_TRIAL_HOME"):
+        return preferred
+    localappdata=os.environ.get("LOCALAPPDATA")
+    if localappdata:
+        installed=Path(localappdata)/"Jarvis"/"models"/MODEL_NAME
+        if installed.is_dir():
+            return installed
+    return preferred
 
 
 def speech_to_local_command(text: str) -> str | None:
@@ -295,7 +309,10 @@ class VoiceController:
                     self._speech_active_until = 0.0
                 if self._worker is threading.current_thread():
                     self._worker = None
-                restart = (not failed and not self._closed
+                # A failed OBSOLETE worker must not suppress a newer,
+                # explicitly selected continuous/GPT mode. Never retry when
+                # the CURRENT generation fails: manual mode remains in control.
+                restart = (not self._closed
                            and self.mode in (CONTINUOUS, GPT_CONVERSATION)
                            and self._generation != generation)
             if restart:

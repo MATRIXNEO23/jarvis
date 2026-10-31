@@ -29,6 +29,7 @@ class GPTClient:
         self._process: subprocess.Popen | None = None
         self._ready_signal = threading.Event()
         self._startup_error: str | None = None
+        self._stopping = False
 
     @staticmethod
     def installed_sdk() -> Path:
@@ -39,6 +40,8 @@ class GPTClient:
 
     def start(self) -> None:
         with self._lock:
+            if self._stopping:
+                raise GPTUnavailable("Il collegamento GPT è in fase di arresto.")
             if self._process and self._process.poll() is None:
                 signal = self._ready_signal
             else:
@@ -79,6 +82,7 @@ class GPTClient:
                 raise GPTUnavailable("Il modulo GPT è terminato prima di essere pronto.")
 
     def _read_loop(self, proc: subprocess.Popen) -> None:
+        """Discard packets from a superseded child, never wake a newer one."""
         try:
             if proc.stdout:
                 for line in proc.stdout:
@@ -88,35 +92,39 @@ class GPTClient:
                         continue
                     if not isinstance(packet, dict):
                         continue
-                    ident = packet.get("id")
-                    if isinstance(ident, int) and ident > 0:
-                        with self._lock:
-                            target = self._pending.get(ident)
-                        if target:
-                            target.put(packet)
-                    elif packet.get("event") in ("ready", "open_browser", "fatal"):
-                        if packet.get("event") == "ready":
+                    with self._lock:
+                        if self._process is not proc:
+                            continue
+                        ident = packet.get("id")
+                        target = (self._pending.get(ident)
+                                  if type(ident) is int and ident > 0 else None)
+                        event = packet.get("event")
+                        if event == "fatal":
+                            self._startup_error = str(
+                                packet.get("error", "Avvio GPT fallito."))[:300]
+                        if event in ("ready", "fatal"):
                             self._ready_signal.set()
-                        elif packet.get("event") == "fatal":
-                            with self._lock:
-                                self._startup_error = str(
-                                    packet.get("error", "Avvio GPT fallito.")
-                                )[:300]
-                            self._ready_signal.set()
+                    if target is not None:
+                        target.put(packet)
+                    elif event in ("ready", "open_browser", "fatal"):
                         self.events.put(packet)
         finally:
-            # An unexpected exit releases blocked callers rather than hanging.
+            # Only the currently owned child may signal failure to current
+            # callers or change readiness; stale readers cannot touch them.
             with self._lock:
-                if self._process is proc:
+                current = self._process is proc
+                if current:
                     self._process = None
-                pending = list(self._pending.values())
+                    pending = list(self._pending.values())
+                    if not self._ready_signal.is_set():
+                        self._startup_error = "Modulo GPT terminato durante l'avvio."
+                        self._ready_signal.set()
+                else:
+                    pending = []
             for target in pending:
                 target.put({"ok": False, "error": "Servizio GPT interrotto."})
-            if not self._ready_signal.is_set():
-                with self._lock:
-                    self._startup_error = "Modulo GPT terminato durante l'avvio."
-                self._ready_signal.set()
-            self.events.put({"event": "stopped"})
+            if current:
+                self.events.put({"event": "stopped"})
 
     def call(self, action: str, *, timeout: float = 40, **arguments) -> dict:
         self.start()
@@ -153,28 +161,56 @@ class GPTClient:
             proc = self._process
         return proc is not None and proc.poll() is None
 
-    def stop(self) -> None:
+    def _call_existing(self, proc: subprocess.Popen, action: str,
+                       timeout: float = 3.0) -> None:
+        """Shutdown request only to the owned child; NEVER call start()."""
+        response: queue.Queue[dict] = queue.Queue()
         with self._lock:
-            proc = self._process
-        if not proc:
-            return
-        if proc.poll() is None:
+            if (self._process is not proc or proc.poll() is not None
+                    or not proc.stdin):
+                return
+            self._next_id += 1
+            ident = self._next_id
+            self._pending[ident] = response
             try:
-                self.call("cancel_sign_in", timeout=3)
-            except (GPTUnavailable, OSError):
-                pass
-            try:
-                self.call("shutdown", timeout=3)
-            except (GPTUnavailable, OSError):
-                pass
+                proc.stdin.write(json.dumps({"id": ident, "action": action})+"\n")
+                proc.stdin.flush()
+            except (OSError, ValueError):
+                self._pending.pop(ident, None)
+                return
         try:
-            proc.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            proc.terminate()
-            try:
-                proc.wait(timeout=2)
-            except subprocess.TimeoutExpired:
-                proc.kill()
+            response.get(timeout=timeout)
+        except queue.Empty:
+            pass
+        finally:
+            with self._lock:
+                self._pending.pop(ident, None)
+
+    def stop(self) -> None:
+        """Stop exactly the current process without accidentally respawning it."""
         with self._lock:
-            if self._process is proc:
-                self._process = None
+            if self._stopping:
+                return
+            self._stopping = True
+            proc = self._process
+        try:
+            if not proc:
+                return
+            if proc.poll() is None:
+                self._call_existing(proc, "cancel_sign_in", timeout=3)
+                self._call_existing(proc, "shutdown", timeout=3)
+            try:
+                proc.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait(timeout=2)
+            with self._lock:
+                if self._process is proc:
+                    self._process = None
+        finally:
+            with self._lock:
+                self._stopping = False

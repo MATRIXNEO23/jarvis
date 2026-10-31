@@ -4,12 +4,15 @@ Use a tiny local fake child process; do not simulate a successful OAuth login.
 """
 from __future__ import annotations
 
+import io
 import json
 import subprocess
 import sys
 import threading
 import time
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from gpt_client import GPTClient, GPTUnavailable
 
@@ -67,6 +70,27 @@ class GPTClientTests(unittest.TestCase):
                 break
         self.assertEqual(event["event"], "open_browser")
         self.assertTrue(event["url"].startswith("https://auth.openai.com/"))
+
+    def test_shutdown_does_not_restart_or_sign_in(self):
+        with patch.object(self.client,"start",
+                          side_effect=AssertionError("stop must not relaunch")):
+            self.client.stop()
+        self.assertFalse(self.client.bridge_running())
+
+
+class StaleBridgeReaderTests(unittest.TestCase):
+    def test_stale_reader_cannot_wake_or_poison_new_bridge(self):
+        client=GPTClient()
+        old=SimpleNamespace(stdout=io.StringIO(
+            '{"event":"fatal","error":"old process failed"}\n'
+            '{"event":"ready"}\n'))
+        current=SimpleNamespace()
+        client._process=current
+        client._read_loop(old)
+        self.assertIs(client._process,current)
+        self.assertFalse(client._ready_signal.is_set())
+        self.assertIsNone(client._startup_error)
+        self.assertTrue(client.events.empty())
 
 
 if __name__ == "__main__":
