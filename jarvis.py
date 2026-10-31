@@ -1442,17 +1442,19 @@ def main() -> None:
             settings["telegram_enabled"]=False
 
     def telegram_reconfigure():
+        nonlocal telegram_bridge
         if telegram_bridge:
             telegram_bridge.stop()
+            telegram_bridge=None
         current=load_settings()
-        for key in ("telegram_peer_id","telegram_contact_name"):
+        for key in ("telegram_peer_id","telegram_contact_name","telegram_contacts"):
             settings[key]=current[key]
         settings["telegram_enabled"]=False
         telegram_auto.set(False)
+        telegram_voice_dialog.reset()
         telegram_status.set(
-            "Contatto autorizzato: "+(
-                settings["telegram_contact_name"] or "nessuno"
-            )+"; risposte spente.")
+            "Contatti selezionati: "+str(len(selected_telegram_contacts()))+
+            "; risposte automatiche spente.")
         save_settings(settings)
 
     def telegram_open_setup():
@@ -3119,6 +3121,8 @@ def main() -> None:
     telegram_configure_button.configure(command=telegram_open_setup)
     telegram_reload_button.configure(command=telegram_reconfigure)
     telegram_note_button.configure(command=leave_telegram_note_dialog)
+    telegram_contacts_button.configure(command=open_telegram_contact_list)
+    telegram_send_button.configure(command=open_telegram_manual_send)
     hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
     hud_mic_button.configure(command=toggle_hud_microphone)
