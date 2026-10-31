@@ -1,0 +1,67 @@
+name: Publish Jarvis natural conversation ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-conversation-style.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - uses: actions/checkout@v4
+        with:
+          ref: fa4b03472dc47107af8dd69d29a3693ccd5988d4
+          path: source
+          persist-credentials: false
+      - name: Build and inspect source archive
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile,ZIP_DEFLATED
+          import json,hashlib
+          source=Path("source")
+          dest=Path("catalog/Download/Jarvis-Conversazione-Naturale.zip")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          manifest=[]
+          with ZipFile(dest,"w",ZIP_DEFLATED,compresslevel=6) as z:
+              for f in sorted(source.rglob("*")):
+                  if not f.is_file(): continue
+                  parts=f.relative_to(source).parts
+                  if parts[0] in ("Download",".github") or any(
+                        part in (".git",".venv","venv","__pycache__") for part in parts):
+                      continue
+                  arc="Jarvis-Conversazione-Naturale/"+"/".join(parts)
+                  z.write(f,arc)
+                  manifest.append({"path":arc,"sha256":hashlib.sha256(f.read_bytes()).hexdigest()})
+              z.writestr("Jarvis-Conversazione-Naturale/SOURCE-COMMIT.txt","fa4b03472dc47107af8dd69d29a3693ccd5988d4\n")
+              z.writestr("Jarvis-Conversazione-Naturale/SOURCE-MANIFEST.json",
+                         json.dumps(manifest,indent=2))
+          with ZipFile(dest) as z:
+              assert z.testzip() is None
+              names=set(z.namelist())
+              for name in ("avvia_jarvis.bat","jarvis.py","dialogue_style.py",
+                           "jarvis_persona.py","conversation_router.py",
+                           "offline_tts.py","tests/test_dialogue_style.py",
+                           "docs/QUALITA_CONVERSAZIONE_V1.md"):
+                  assert "Jarvis-Conversazione-Naturale/"+name in names,name
+          print("ZIP VERIFIED",dest,dest.stat().st_size,"bytes")
+          PY
+      - name: Commit ZIP without changing older versions
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Conversazione-Naturale.zip
+          git -C catalog commit -m "download: Jarvis natural Italian conversation test ZIP"
+          git -C catalog push origin HEAD:main
