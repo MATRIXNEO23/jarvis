@@ -138,8 +138,10 @@ class MemoryBoundariesTests(unittest.TestCase):
         self.assertFalse(status["recent_completed"][1]["verified"])
         reloaded=WorkspaceMemory(self.workspace.path)
         self.assertFalse(reloaded.project_steps(p)[1]["verified"])
-        self.assertIn('"verified": true',
-                      reloaded.prompt_context("project",p,"documento",budget=1700))
+        context=json.loads(reloaded.prompt_context(
+            "project",p,"documento",budget=1700))
+        self.assertTrue(context["steps"][0]["verified"])
+        self.assertFalse(context["steps"][1]["verified"])
         with self.assertRaises(WorkspaceError):
             reloaded.finish_step(p,proven,"completed",receipt="again",verified=False)
         self.assertTrue(self.workspace.project_directory(p).exists())
