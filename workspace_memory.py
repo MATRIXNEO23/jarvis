@@ -447,7 +447,7 @@ class WorkspaceMemory:
                         or state.get("active")!=bool(active)
                         or any(not (folder/name).is_file() for name in (
                             "CONTINUITA.md","PASSI.md","ARTIFATTI.md",
-                            "EVENTI.jsonl"))):
+                            "EVENTI.jsonl","PROGETTO.txt"))):
                     ids.add(ident)
             except (OSError,ValueError,TypeError,AttributeError):
                 ids.add(ident)
@@ -523,11 +523,12 @@ class WorkspaceMemory:
                               "  - JARVIS: "+item["jarvis"][:260]])
             folder=self.continuities/ident
             self.project_files_directory(ident)
-            self._atomic_file(folder/"PROGETTO.txt",
-                "Progetto: "+project["name"]+"\n"
-                "ID: "+ident+"\n"
-                "Cartella documenti: files\n"
-                "La memoria è in CONTINUITA.md, STATO.json e PASSI.md.\n")
+            if not (folder/"PROGETTO.txt").is_file():
+                self._atomic_file(folder/"PROGETTO.txt",
+                    "Progetto: "+project["name"]+"\n"
+                    "ID: "+ident+"\n"
+                    "Cartella documenti: files\n"
+                    "La memoria è in CONTINUITA.md, STATO.json e PASSI.md.\n")
             self._atomic_file(folder/"CONTINUITA.md","\n".join(lines)+"\n",
                               keep_previous=True)
             state={
