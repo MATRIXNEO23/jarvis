@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA VERSIONE DI TEST — COMPRENSIONE DEL CONTESTO (31/10/2026)
+
+**[SCARICA Jarvis-Contesto-e-Risposte-Brevi.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Contesto-e-Risposte-Brevi.zip)**
+
+Pacchetto presente fisicamente nella cartella `Download` della repository, tratto dal commit `eaae39fbb21fa75294221a1363300cda250c34da` su `feature/contextual-followups-and-project-references`. [4/4 test automatici Windows e Linux superati](https://github.com/MATRIXNEO23/jarvis/actions/runs/41181339526). [PR isolata #17](https://github.com/MATRIXNEO23/jarvis/pull/17), non integrata nel branch main.
+
+**Solo miglioramento del contesto:** risposte brevi associate alla domanda precedente, niente «sì/no» trattati come nomi di progetto, riferimento «questo progetto» al solo progetto selezionato, un unico chiarimento concreto quando il riferimento è mancante, limiti alle azioni proposte da GPT dopo un «sì» isolato. Conservate le funzioni precedenti (progetti, memoria automatica, Telegram, diagnostica in sola lettura).
+
+**Sicurezza:** il precedente ZIP di Jarvis è stato segnalato da Microsoft Defender come `Trojan:Script/Wacatac.B!ml`. Questa nuova ZIP **non è stata certificata antivirus**; la segnalazione precedente non è stata risolta. Non disattivare Defender, non creare esclusioni e non autorizzare file segnalati per eseguirli. La pubblicazione in GitHub non garantisce sicurezza.
+
+**Installazione prudente solo dopo verifica antivirus:** chiudi Jarvis; salva un backup completo di `%LOCALAPPDATA%\Jarvis`; estrai in una cartella nuova senza sostituire le precedenti; avvia una sola versione per volta. Test sulla voce reale e GPT collegato ancora da eseguire sul Pavilion.
+
+---
+
 ## NUOVO PACCHETTO SPERIMENTALE — PROGETTI E DIAGNOSTICA (31/10/2026)
 
 **[ZIP: Jarvis-Gestione-Progetti-e-Diagnostica.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Gestione-Progetti-e-Diagnostica.zip)**
