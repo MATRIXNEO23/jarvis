@@ -24,6 +24,9 @@ _PROJECT_QUERY = re.compile(
     r"che cosa (?:sai|abbiamo fatto)|quali (?:passi|file)|"
     r"dove (?:sono|si trovano)|parlami)\b",re.I)
 _BARE_REPLY = re.compile(r"^[\wÀ-ÿ'-]+(?:\s+[\wÀ-ÿ'-]+){0,4}$",re.UNICODE)
+_ACTION_PREFIX = re.compile(
+    r"^(?:apri|crea|salva|elimina|cancella|rinomina|chiudi|invia|"
+    r"cerca|mostra|scrivi|avvia|esegui|analizza|esamina)\b",re.I)
 _INVALID_NAME = frozenset({"si","sì","no","ok","okay","va bene",
     "certo","esatto","giusto","forse","non lo so","quello","quella",
     "questo","questa","il progetto","questo progetto","la cartella",
@@ -40,8 +43,13 @@ def normalized_utterance(value: str) -> str:
 
 def is_short_followup(value: str) -> bool:
     text=normalized_utterance(value)
-    return bool(text and len(text)<=65 and (_SHORT.fullmatch(text)
-                   or _BARE_REPLY.fullmatch(text)))
+    return bool(text and len(text)<=65 and not _ACTION_PREFIX.match(text)
+                and (_SHORT.fullmatch(text) or _BARE_REPLY.fullmatch(text)))
+
+
+def is_ambiguous_short_reply(value: str) -> bool:
+    """An isolated yes/no/pronoun needs a real preceding question."""
+    return bool(_SHORT.fullmatch(normalized_utterance(value)))
 
 
 def is_unusable_project_name(value: str) -> bool:
@@ -112,6 +120,8 @@ class PendingProjectReference:
         if not answer or is_unusable_project_name(answer):
             return None
         if len(answer)>65 or "/" in answer or "\\" in answer:
+            return None
+        if _ACTION_PREFIX.match(answer):
             return None
         if not _BARE_REPLY.fullmatch(answer):
             return None
