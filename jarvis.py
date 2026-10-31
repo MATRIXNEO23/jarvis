@@ -19,7 +19,7 @@ from workspace_gui import ProjectManagerWindow
 from project_voice import (parse_project_voice, safe_project_name,
                            find_existing_project, project_delete_response)
 from dialogue_focus import (focus_hint, PendingProjectReference,
-                            normalized_utterance)
+                            normalized_utterance,is_ambiguous_short_reply)
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
 from settings import default_path
@@ -831,6 +831,17 @@ def main() -> None:
             speak_result(message)
             return True
         return False
+
+    def handle_unanchored_short_reply(spoken: str) -> bool:
+        """Never pretend an isolated yes/no confirms a stale action."""
+        if (not is_ambiguous_short_reply(spoken)
+                or conversation_memory.last_question()):
+            return False
+        message="A quale domanda ti riferisci?"
+        write_line("JARVIS > "+message)
+        speak_result(message)
+        remember_exchange(spoken,message,"clarify")
+        return True
 
     def try_self_diagnostic(spoken: str) -> bool:
         """Read-only, local, bounded source analysis; no edits or network."""
@@ -1867,6 +1878,9 @@ def main() -> None:
         if handle_project_reference(message):
             request.set("")
             return
+        if handle_unanchored_short_reply(message):
+            request.set("")
+            return
         if len(message) > 5000:
             messagebox.showwarning("Testo troppo lungo", "Massimo 5000 caratteri.", parent=root)
             return
@@ -1984,6 +1998,8 @@ def main() -> None:
                                 continue
                             if handle_project_reference(spoken):
                                 continue
+                            if handle_unanchored_short_reply(spoken):
+                                continue
                             if try_self_diagnostic(spoken):
                                 continue
                             if maybe_queue_telegram_note(spoken):
@@ -2047,6 +2063,8 @@ def main() -> None:
                         elif project_voice_command(spoken):
                             pass
                         elif handle_project_reference(spoken):
+                            pass
+                        elif handle_unanchored_short_reply(spoken):
                             pass
                         elif try_self_diagnostic(spoken):
                             pass
@@ -2186,6 +2204,14 @@ def main() -> None:
                                 original_phrase, "Non ho capito con sicurezza. Puoi ripetere?",
                                 "clarify")
                         else:
+                            if (is_ambiguous_short_reply(original_phrase)
+                                    and intent.kind not in ("chat","clarify")):
+                                message=("Per eseguire un'azione, dimmi "
+                                         "esplicitamente cosa vuoi fare.")
+                                write_line("JARVIS > "+message)
+                                speak_result(message)
+                                remember_exchange(original_phrase,message,"clarify")
+                                continue
                             if intent.kind in ("chat", "clarify"):
                                 write_line("JARVIS > " + intent.reply)
                                 speak_result(intent.reply)
@@ -2399,6 +2425,9 @@ def main() -> None:
             request.set("")
             return
         if handle_project_reference(message):
+            request.set("")
+            return
+        if handle_unanchored_short_reply(message):
             request.set("")
             return
         if try_self_diagnostic(message):
