@@ -26,6 +26,8 @@ class ManagedDocuments:
         self.current: NotepadSession | None = None
 
     def open_blank(self) -> DocumentOperation:
+        # A manually closed owned Notepad must never block a new document.
+        self.forget_if_closed()
         if self.current is not None:
             raise NotepadUnavailable(
                 "C'è già un Blocco note gestito da Jarvis. "
@@ -40,6 +42,7 @@ class ManagedDocuments:
         if not isinstance(text, str) or not text.strip() or len(text) > 4500:
             raise ValueError("Testo troppo lungo o vuoto.")
         if target == "new_notepad":
+            self.forget_if_closed()
             if self.current is not None:
                 raise NotepadUnavailable(
                     "Un documento di Jarvis è già aperto. Chiedi di aggiungere "
@@ -144,13 +147,16 @@ class ManagedDocuments:
         return DocumentOperation("closed", "Documento chiuso.", ident)
 
     def forget_if_closed(self) -> bool:
-        """Do not revive a manually closed window from an earlier voice turn."""
-        note = self.current
+        """Drop only a DEFINITELY closed owned window, never a live document.
+
+        A read failure isn't evidence of closure (Win32 timeout, a saved title,
+        a temporarily unavailable Edit control). Preserve the session in such
+        cases so unsaved user text can never be discarded by mistake.
+        """
+        note=self.current
         if note is None:
             return False
-        try:
-            self.bridge.read(note)
-        except NotepadUnavailable:
-            self.current = None
-            return True
-        return False
+        if self.bridge.session_state(note) != "closed":
+            return False
+        self.current=None
+        return True
