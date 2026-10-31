@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVO PACCHETTO SPERIMENTALE — PROGETTI E DIAGNOSTICA (31/10/2026)
+
+**[ZIP: Jarvis-Gestione-Progetti-e-Diagnostica.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Gestione-Progetti-e-Diagnostica.zip)**
+
+Pacchetto pubblicato su richiesta dell'utente nella cartella `Download` e verificato come file presente. Basato sul commit `468ff31f0253bb7de7929076febaa71e6329dc68` del ramo `fix/project-rename-and-discovery`. [Test automatici Windows e Linux superati](https://github.com/MATRIXNEO23/jarvis/actions/runs/41179416762). Il ramo rimane separato da `main`, nessun merge.
+
+**Funzioni incluse:** rinomina del progetto corrente o nominato a voce e da interfaccia, senza alterare UUID e memoria; «elimina il progetto» soltanto verso un cestino logico ripristinabile e previa conferma; «ripristina il progetto ...»; elenco dei progetti salvati, incluso il cestino; autodiagnostica statica offline dei file del programma, senza leggere credenziali o modificare il codice. La diagnosi non esegue test runtime e non certifica la correttezza di ogni funzione.
+
+**AVVISO DI SICUREZZA NON RISOLTO:** Microsoft Defender sul PC dell'utente ha segnalato il pacchetto ZIP precedente come `Trojan:Script/Wacatac.B!ml`. Non è stata effettuata una verifica antivirus indipendente sul nuovo ZIP, quindi **non è possibile dichiararlo sicuro o un falso positivo**. Non disattivare Defender, non autorizzare una rilevazione e non creare esclusioni per eseguirlo. Se viene nuovamente bloccato, conservare l'installazione precedente e fermare il collaudo. La disponibilità in download **non significa approvazione antivirus**.
+
+Prima di ogni futuro collaudo sul Pavilion: chiudere Jarvis, backup di tutta la cartella `%LOCALAPPDATA%\Jarvis`, estrarre in una cartella nuova e non avviare insieme le due versioni.
+
+---
+
 ## SOSPESO PER VERIFICA ANTIVIRUS — PROGETTI A VOCE E FILE SALVATI NEL PROGETTO (31 OTTOBRE 2026)
 
 **ATTENZIONE: un utente ha segnalato un blocco «virus rilevato» durante il download. Non forzare il download, non autorizzare il file in Defender e non aggiungere esclusioni fino alla verifica del nome della minaccia. Il pacchetto resta disponibile in archivio per analisi, ma il collaudo sul Pavilion è sospeso.**
