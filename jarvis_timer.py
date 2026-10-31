@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import io
 import math
+import os
 import re
+import tempfile
 import struct
 import threading
 import time
@@ -108,25 +110,100 @@ def alarm_wav(sound: str = "digital", volume: int = 80) -> bytes:
     return stream.getvalue()
 
 
+def _report_audio(callback: Callable[[bool, str], None] | None,
+                  success: bool, message: str) -> None:
+    """Report if an audio API was accepted, not whether speakers were heard."""
+    if callback is not None:
+        try:
+            callback(success, message)
+        except Exception:
+            pass  # The window might already have closed.
+
+
 def play_alarm(sound: str, volume: int, stop: threading.Event,
-               *, repeat: bool = False) -> None:
-    """Nonblocking for Tk when run in a daemon; stop between short patterns."""
+               *, repeat: bool = False, mode: str = "auto",
+               on_status: Callable[[bool, str], None] | None = None) -> None:
+    """Try WAV filename, WAV memory, beeps and a Windows system signal.
+
+    Manual beep mode is useful when Windows accepts WAV but plays no sound.
+    """
+    if mode not in ("auto", "beep"):
+        _report_audio(on_status, False, "Metodo audio non valido.")
+        return
+    if volume == 0:
+        _report_audio(on_status, False, "Volume timer a 0%: aumentalo.")
+        return
     try:
         import winsound
-    except ImportError:
-        return  # Windows-only playback; core tests remain cross-platform.
-    payload = alarm_wav(sound, volume)
-    while not stop.is_set():
+        payload = alarm_wav(sound, volume)
+    except (ImportError, ValueError, OSError) as exc:
+        _report_audio(on_status, False, "Audio Windows non disponibile: " + str(exc))
+        return
+
+    path = None
+    if mode == "auto":
         try:
-            winsound.PlaySound(payload, winsound.SND_MEMORY | winsound.SND_SYNC)
-        except RuntimeError:
+            # Close the file before asking Windows to open it.
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as output:
+                output.write(payload)
+                path = output.name
+        except OSError:
+            path = None
+
+    try:
+        first = True
+        while not stop.is_set():
+            success, method = False, ""
+            if mode == "auto" and path:
+                try:
+                    winsound.PlaySound(path, winsound.SND_FILENAME |
+                                       winsound.SND_SYNC | winsound.SND_NODEFAULT)
+                    success, method = True, "WAV di Windows"
+                except (RuntimeError, OSError):
+                    pass
+            if mode == "auto" and not success and not stop.is_set():
+                try:
+                    winsound.PlaySound(payload, winsound.SND_MEMORY |
+                                       winsound.SND_SYNC | winsound.SND_NODEFAULT)
+                    success, method = True, "WAV in memoria"
+                except (RuntimeError, OSError):
+                    pass
+            if not success and not stop.is_set():
+                try:
+                    for frequency, duration in _alarm_pattern(sound):
+                        if stop.is_set():
+                            break
+                        if frequency:
+                            winsound.Beep(int(frequency), max(1, int(duration * 1000)))
+                        else:
+                            stop.wait(duration)
+                    if not stop.is_set():
+                        success, method = True, "bip alternativo Windows"
+                except (RuntimeError, OSError):
+                    pass
+            if not success and not stop.is_set():
+                try:
+                    winsound.MessageBeep()
+                    success, method = True, "segnale di sistema Windows"
+                except (RuntimeError, OSError):
+                    pass
+            if first and not stop.is_set():
+                _report_audio(
+                    on_status, success,
+                    ("Riproduzione inviata a " + method +
+                     ". Se non senti nulla, controlla l'uscita audio di Windows.")
+                    if success else
+                    ("Windows non riesce a riprodurre l'allarme: "
+                     "controlla altoparlanti e dispositivo audio."))
+                first = False
+            if not success or not repeat:
+                return
+    finally:
+        if path:
             try:
-                winsound.MessageBeep()
-            except RuntimeError:
+                os.unlink(path)
+            except OSError:
                 pass
-            return
-        if not repeat:
-            break
 
 
 class TimerPopup:
@@ -149,6 +226,8 @@ class TimerPopup:
         self._last_label = ""
         self._timer_id: str | None = None
         self._alarm_stop = threading.Event()
+        self._sound_generation = 0
+        self.audio_feedback: tk.StringVar | None = None
 
     def _alive(self) -> bool:
         return self.window is not None and bool(self.window.winfo_exists())
@@ -161,7 +240,7 @@ class TimerPopup:
         window = tk.Toplevel(self.root)
         self.window = window
         window.title("JARVIS // TIMER")
-        window.geometry("390x286")
+        window.geometry("390x324")
         window.resizable(False, False)
         window.configure(bg=BG)
         window.protocol("WM_DELETE_WINDOW", self.close)
@@ -170,6 +249,7 @@ class TimerPopup:
         tk.Label(header, text="◉  TIMER", fg=CYAN, bg=BG,
                  font=("Segoe UI", 11, "bold")).pack(side="left")
         self.status = tk.StringVar(value="Pronto")
+        self.audio_feedback = tk.StringVar(value="")
         tk.Label(header, textvariable=self.status, bg=BG, fg="#88b5c8",
                  font=("Segoe UI", 9)).pack(side="right")
         self.digits = tk.Canvas(window, width=360, height=90, bg="#020b12",
@@ -198,6 +278,9 @@ class TimerPopup:
                       activeforeground="white", relief="flat",
                       font=("Segoe UI", 9, "bold"), padx=10, pady=6
                       ).pack(side="left", padx=4)
+        tk.Label(window, textvariable=self.audio_feedback, wraplength=350,
+                 fg="#f1bc73", bg=BG, justify="center",
+                 font=("Segoe UI", 9)).pack(padx=12, pady=(5, 0))
         self._last_label = ""
         self._draw(force=True)
 
@@ -275,6 +358,20 @@ class TimerPopup:
 
     def _silence(self) -> None:
         self._alarm_stop.set()
+        self._sound_generation += 1
+
+    def _audio_result(self, generation: int, success: bool, message: str) -> None:
+        def apply() -> None:
+            if generation != self._sound_generation or not self._alive():
+                return
+            if self.audio_feedback is not None:
+                self.audio_feedback.set(message)
+            if not success and self.status is not None:
+                self.status.set("ERRORE AUDIO")
+        try:
+            self.root.after(0, apply)
+        except (RuntimeError, tk.TclError):
+            pass
 
     def start(self, seconds: int | None = None) -> bool:
         self.show()
@@ -287,6 +384,8 @@ class TimerPopup:
             return False
         self._silence()
         self._cancel_tick()
+        if self.audio_feedback is not None:
+            self.audio_feedback.set("")
         self.duration = duration
         self.remaining = float(duration)
         self.deadline = time.monotonic() + duration
@@ -310,11 +409,17 @@ class TimerPopup:
             self.status.set("ALLARME")
             self._silence()
             self._alarm_stop = threading.Event()
+            generation = self._sound_generation
+            if self.audio_feedback is not None:
+                self.audio_feedback.set("Tentativo di riproduzione dell'allarme...")
             pref = self.get_preferences()
             threading.Thread(target=play_alarm,
                              args=(pref.get("timer_sound", "digital"),
                                    pref.get("timer_volume", 80), self._alarm_stop),
-                             kwargs={"repeat": pref.get("timer_repeat", True)},
+                             kwargs={"repeat": pref.get("timer_repeat", True),
+                                     "mode": pref.get("timer_audio_mode", "auto"),
+                                     "on_status": lambda success, message:
+                                     self._audio_result(generation, success, message)},
                              daemon=True, name="jarvis-timer-alarm").start()
         else:
             self._timer_id = self.root.after(200, self._tick)
@@ -348,6 +453,8 @@ class TimerPopup:
         self._silence()
         if self._alive():
             self.status.set("Fermato")
+            if self.audio_feedback is not None:
+                self.audio_feedback.set("")
 
     def reset(self) -> None:
         self.stop()
@@ -370,8 +477,11 @@ class TimerPopup:
         self.digits = None
 
 
-def preview_sound(sound: str, volume: int) -> None:
-    """Play a single short sample; settings controls stay responsive."""
+def preview_sound(sound: str, volume: int, *,
+                  mode: str = "auto",
+                  on_status: Callable[[bool, str], None] | None = None) -> None:
+    """Play one sample and report the audio result to settings."""
     threading.Thread(target=play_alarm,
                      args=(sound, volume, threading.Event()),
+                     kwargs={"mode": mode, "on_status": on_status},
                      daemon=True, name="jarvis-timer-preview").start()
