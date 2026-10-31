@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## ULTIMA VERSIONE SPERIMENTALE — HUD HIGH FIDELITY
+
+**[SCARICA JARVIS CON INTERFACCIA PIÙ VICINA AL PREVIEW — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/high-fidelity-reference-hud.zip)**
+
+Questa è la revisione richiesta per avvicinare **molto di più** l'interfaccia al concept: nucleo **JARVIS più luminoso e stratificato**, Terra con ombreggiatura, continenti e luci su immagini raster generate localmente, orbite animate, cornici tecnologiche e console/chat Segoe UI con campo di inserimento, pulsante microfono e freccia di invio. I vecchi comandi locali e il pianificatore sono sempre disponibili premendo **⋯**.
+
+La grafica è più ricca e leggermente più pesante, ma **le texture vengono calcolate una sola volta in un thread separato**, senza bloccare i comandi né usare GPU, filmati o librerie aggiuntive. Finché non sono pronte si vede il precedente reattore vettoriale. In basso trovi **CPU / RAM / DISCO C / RETE**, con dati reali o **--**, non i numeri fittizi del concept.
+
+Restano tutte le funzioni precedenti: microfono in **Conversazione continua GPT già all'apertura dell'app** (disattivabile da ⚙), saluto iniziale secondo l'orario, conversazione continuativa, Second Brain, dettatura e comandi. Il nucleo rimane **ciano nel silenzio**, pulsa **arancione mentre parli** e **verde quando JARVIS risponde a voce**.
+
+**COME PROVARLA:** chiudi il Jarvis vecchio, scarica questo ZIP, estrailo in **una cartella nuova** e apri `avvia_jarvis.bat`. Non reinstallare Vosk/ChatGPT se funzionano già e non cancellare la versione precedente o `%LOCALAPPDATA%\\Jarvis`. Controlla soprattutto se il risultato è visivamente più vicino al tuo preview e se sul Pavilion il carico CPU rimane accettabile. **Non è ancora collaudata fisicamente sul Pavilion**.
+
+[Guida tecnica e criteri di prova](https://github.com/MATRIXNEO23/jarvis/blob/feature/high-fidelity-reference-hud/docs/HUD_HIGH_FIDELITY.md) · [Sviluppo isolato PR #10](https://github.com/MATRIXNEO23/jarvis/pull/10) · [Test automatici Windows/Linux](https://github.com/MATRIXNEO23/jarvis/actions/runs/41153729061).
+
 ## ULTIMA PROVA — MICROFONO SEMPRE ATTIVO E CENTRO REATTIVO ALLA VOCE
 
 **[SCARICA JARVIS CON ASCOLTO AUTOMATICO E SALUTO VOCALE (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-speech-activity-auto-start.zip)**
