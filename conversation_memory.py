@@ -10,10 +10,10 @@ from collections import deque
 from dataclasses import dataclass
 import json
 
-MAX_TURNS = 8
-MAX_UTTERANCE = 260
-MAX_REPLY = 280
-MAX_CONTEXT = 1050
+MAX_TURNS = 16
+MAX_UTTERANCE = 450
+MAX_REPLY = 650
+MAX_CONTEXT = 2400
 
 
 @dataclass(frozen=True)
@@ -65,7 +65,7 @@ class ConversationMemory:
         for turn in reversed(self._turns):
             included = False
             for maximum_user, maximum_reply in (
-                    (175, 185), (125, 135), (90, 100), (55, 65), (28, 35)):
+                    (320, 340), (220, 230), (150, 160), (95, 110), (55, 65), (28, 35)):
                 item = {
                     "utente": turn.user[:maximum_user],
                     "lia": turn.jarvis[:maximum_reply],
