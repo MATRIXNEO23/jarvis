@@ -1,10 +1,25 @@
-# Jarvis: interfaccia corretta - Riferimento 31/10/2026
+# Download — ultima build completa di Jarvis (31/10/2026)
 
-**[SCARICA JARVIS COMPLETO - HUD CORRETTO + TELEGRAM 50](./Jarvis-HUD-Riferimento-20261031.zip)**
+## Jarvis HUD Riferimento — interfaccia corretta
 
-Pacchetto sorgente Python completo per Windows 10, non un EXE. Include un solo launcher `avvia_jarvis.bat` con profilo isolato, microfono attivo all'avvio (se modello/dispositivo disponibili). Nuova UI scura blu/ciano: autodiagnosi discreta quando attiva, CPU RAM DISCO C RETE uguali e colori dinamici solo al centro. GPT esterno, documenti, progetti, add-on e Telegram (50 messaggi per contatto, contesto degli ultimi 4 senza riassunti).
+**Nome esatto del file:** `Jarvis-HUD-Riferimento-20261031.zip`
 
-Non sovrascrivere la versione stabile: estrai in una cartella nuova e avvia `avvia_jarvis.bat` nella nuova cartella. Il collegamento Telegram opera sull'account reale quando attivato. Test automatici Windows e Ubuntu superati; prova finale sul Pavilion ancora necessaria. La PR #31 resta separata da main.
+**[Scarica Jarvis-HUD-Riferimento-20261031.zip](./Jarvis-HUD-Riferimento-20261031.zip)**  
+[Visualizza il file nella cartella Download](./Jarvis-HUD-Riferimento-20261031.zip) · [Revisione grafica PR #31](https://github.com/MATRIXNEO23/jarvis/pull/31)
+
+Questa è la **versione completa di prova** per Windows 10 (sorgenti Python e script di avvio, non un file `.exe`). Comprende il programma Jarvis con GPT esterno, riconoscimento vocale, documenti, progetti, add-on e Telegram.
+
+**Correzioni rispetto alla build precedente:**
+- Interfaccia scura blu/ciano ispirata alla seconda immagine di riferimento.
+- Autodiagnosi nascosta quando inattiva; durante il controllo compare una barra scura discreta con annullamento.
+- Riquadri **CPU, RAM, Disco C e Rete** con larghezze e allineamenti uniformi.
+- Colori che indicano ascolto e parlato **solo nel nucleo centrale**; gli anelli esterni mantengono il blu/ciano.
+- **Un solo launcher:** `avvia_jarvis.bat`. Nessun doppio launcher di prova.
+- Telegram conserva massimo **50 messaggi locali per contatto** e passa al GPT solo i **4 messaggi precedenti**, senza riassunti.
+
+**Come provarla:** chiudi Jarvis, estrai la ZIP in una cartella nuova senza sovrascrivere la precedente e avvia `avvia_jarvis.bat`. Il profilo di prova mantiene i dati separati; il microfono è predisposto attivo all'avvio se modello vocale e dispositivo sono disponibili. Telegram, quando abilitato, usa l'account reale.
+
+**Verifiche:** test automatici Windows e Ubuntu superati. Il collaudo grafico e funzionale sul Pavilion resta da effettuare. La PR #31 non è stata integrata nel codice `main`: nella cartella `Download` è pubblicata la ZIP già assemblata.
 
 ---
 
