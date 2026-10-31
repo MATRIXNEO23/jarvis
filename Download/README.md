@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA BUILD DI TEST — RECUPERO DOCUMENTI BLOCCO NOTE (31/10/2026)
+
+**[SCARICA Jarvis-Recupero-Documenti.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Recupero-Documenti.zip)**
+
+Pacchetto confermato presente nella cartella `Download` (293782 byte), sorgente nel commit `9fb43205c2c395e4fd6ed2fada089b13e523be12` sul ramo `fix/notepad-stale-session-recovery`, [PR draft #20](https://github.com/MATRIXNEO23/jarvis/pull/20) non unita a `main`. [Test automatici Windows e Linux](https://github.com/MATRIXNEO23/jarvis/actions/runs/41185338882) superati per i nuovi controlli; la documentazione successiva non cambia il codice.
+
+**Correzione mirata:** quando un documento Blocco note controllato da Jarvis è stato davvero chiuso manualmente, Jarvis riconosce la scomparsa del processo/finestra, dimentica il suo vecchio identificatore e le conferme di salvataggio rimaste in sospeso, e consente un nuovo documento di testo. Se la finestra è **ancora aperta** o Windows non può accertarne lo stato, non dimentica la sessione né rischia il testo non salvato. Vecchi file non cancellati né sovrascritti. Il controllo è ora eseguito prima dei comandi voce/chat e durante il polling leggero. Documentazione: `docs/RECUPERO_BLOCCO_NOTE_CHIUSO.md`.
+
+**Collaudo fisico sul Pavilion non eseguito; da effettuare quando l'utente proverà la build.** Prima fare backup completo di `%LOCALAPPDATA%\Jarvis`, estrarre in una cartella nuova e non eseguire due versioni contemporaneamente.
+
+**Avviso antivirus NON risolto:** un precedente ZIP di Jarvis è stato segnalato da Microsoft Defender come `Trojan:Script/Wacatac.B!ml`. Questa build non è stata certificata antivirus. La CI e il manifest dei sorgenti non costituiscono prova di assenza di malware. Se Defender blocca il download, NON disattivarlo né forzare l'esecuzione.
+
+---
+
 ## NUOVA BUILD DI TEST — ITALIANO NATURALE E IRRIVERENZA (31/10/2026)
 
 **[SCARICA Jarvis-Conversazione-Naturale.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Conversazione-Naturale.zip)**
