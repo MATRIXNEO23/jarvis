@@ -53,10 +53,11 @@ class HistoryTests(unittest.TestCase):
             direction="incoming" if n%2 else "outgoing"
             self.db.telegram_event(123,direction,n,"text",f"msg-{n}")
         result=self.db.telegram_recent_context(123,7)
-        self.assertIn("msg-8",result)
-        self.assertIn("msg-4",result)
-        self.assertNotIn("msg-3",result)
+        self.assertIn("msg-6",result)
+        self.assertIn("msg-3",result)
+        self.assertNotIn("msg-2",result)
         self.assertNotIn("msg-7",result)
+        self.assertNotIn("msg-8",result)
         self.assertEqual(result.count('"da"'),4)
         self.assertNotIn("segreto",result)
         self.assertEqual(self.db.add_turn("telegram","123","test","test"),False)
@@ -134,7 +135,8 @@ class IntroductionTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/"jarvis_workspaces.sqlite3"
             db=WorkspaceMemory(path)
-            bridge=TelegramBridge(db,123,"Amico",lambda p:"Tutto bene!",
+            bridge=TelegramBridge(db,123,"Amico",
+                                  lambda p:"Ciao, sono Jarvis, l'assistente di Alberto. Tutto bene!",
                                   lambda x:None)
             bridge._enabled.set()
             client=FakeClient()
