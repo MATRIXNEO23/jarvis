@@ -348,6 +348,17 @@ class WorkspaceMemory:
                  _trim(text,550),_now()))
         return bool(r.rowcount)
 
+    def telegram_transcript(self,peer_id:int,message_id:int,text:str):
+        """Attach locally recognized voice text only to that received event."""
+        if not isinstance(text,str) or not text.strip():
+            return False
+        with self._db() as db:
+            cur=db.execute(
+                "UPDATE telegram_events SET text=? WHERE peer_id=? "
+                "AND direction='incoming' AND message_id=? AND kind='voice'",
+                (_trim(text,550),peer_id,message_id))
+        return bool(cur.rowcount)
+
     def telegram_counts(self,peer_id:int):
         with self._db() as db:
             r=db.execute("""SELECT
