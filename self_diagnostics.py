@@ -32,7 +32,8 @@ def _source_list(root: Path) -> list[Path]:
         for item in sorted(sub.iterdir(),key=lambda p:p.name.casefold()):
             if (len(files)>=_MAX_FILES or item.is_symlink() or not item.is_file()
                     or item.suffix.casefold() not in _SOURCE_SUFFIXES
-                    or any(part.casefold() in _IGNORE for part in item.parts)):
+                    or any(part.casefold() in _IGNORE
+                           for part in item.relative_to(root).parts[:-1])):
                 continue
             files.append(item)
     return files
