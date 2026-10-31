@@ -935,6 +935,11 @@ def main() -> None:
     workspace_panel=ttk.LabelFrame(
         frame,text="Progetti — contesto indipendente e continuità",padding=8)
     workspace_panel.pack(fill="x",pady=(6,8))
+    ttk.Label(frame,
+        text="Memoria progetti automatica: chat e risultati verificati vengono "
+             "salvati nel progetto senza premere Salva. Il Second Brain ON/OFF "
+             "controlla soltanto la memoria della conversazione generale.",
+        wraplength=700).pack(anchor="w",pady=(0,5))
     workspace_button=ttk.Button(
         workspace_panel,text="Gestisci progetti / apri continuità")
     workspace_button.pack(side="left",padx=(0,12))
