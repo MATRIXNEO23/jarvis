@@ -518,6 +518,17 @@ def main() -> None:
                    +". Lo riferirò al prossimo contatto, se Telegram è attivo.")
         return True
 
+    def leave_telegram_note_dialog() -> None:
+        if not settings.get("telegram_peer_id"):
+            telegram_status.set("Configura prima il contatto autorizzato.")
+            return
+        message=simpledialog.askstring(
+            "JARVIS / Telegram",
+            "Che cosa devo riferire al contatto autorizzato?",
+            parent=root)
+        if message:
+            queue_telegram_note(message)
+
     def maybe_queue_telegram_note(message:str) -> bool:
         parsed=explicit_telegram_note(
             message,settings.get("telegram_contact_name",""))
@@ -905,7 +916,10 @@ def main() -> None:
     telegram_configure_button.pack(side="left",padx=(0,8))
     telegram_reload_button=ttk.Button(
         telegram_row,text="Rileggi contatto autorizzato")
-    telegram_reload_button.pack(side="left")
+    telegram_reload_button.pack(side="left",padx=(0,8))
+    telegram_note_button=ttk.Button(
+        telegram_row,text="Lascia un messaggio per il contatto")
+    telegram_note_button.pack(side="left")
     ttk.Label(
         telegram_panel,textvariable=telegram_status,wraplength=690
     ).pack(anchor="w",pady=(3,0))
@@ -1748,6 +1762,7 @@ def main() -> None:
     telegram_toggle.configure(command=toggle_telegram_automatic)
     telegram_configure_button.configure(command=telegram_open_setup)
     telegram_reload_button.configure(command=telegram_reconfigure)
+    telegram_note_button.configure(command=leave_telegram_note_dialog)
     hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
     hud_mic_button.configure(command=toggle_hud_microphone)
