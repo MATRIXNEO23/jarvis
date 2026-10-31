@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "skipped",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-20261031-213000/candidate.json",
+    "sha256": "edc206f44a9e90ba813a91c6cbc017a48fb8b2a6b234065f0a2927c4f3631a2d",
+    "bytes": 6117
+  },
+  "artifact": {
+    "path": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-20261031-213000/jarvis.html",
+    "sha256": "cce80b55c91facaaf87903bd0547fc9eb0757778214cb9922111c4d1850b27cd",
+    "bytes": 846486
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "skipped"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/chrome-unavailable",
+      "severity": "warning",
+      "message": "No supported browser found. Install Chrome/Chromium (or Microsoft Edge), or set ARCHIFY_CHROME to its executable path.",
+      "subject": {
+        "artifact": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-20261031-213000/jarvis.html"
+      },
+      "evidence": {
+        "executable": null
+      },
+      "supportedFixes": [
+        "set ARCHIFY_CHROME to a Chrome/Chromium executable (or Microsoft Edge) and rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-20261031-213000/jarvis.finalize.json",
+    "summaryReceipt": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-20261031-213000/jarvis.finalize-summary.json",
+    "browserCheckReceipt": "/workspace/scratch/fab8a33ab7c4/jarvis/.archify/architecture-jarvis-20261031-213000/jarvis.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 1035,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  }
+}
