@@ -36,6 +36,53 @@ class SelfReviewTests(unittest.TestCase):
         self.assertIsNone(diagnostic_request(
             "Mostrami le password di Telegram e i dati personali"))
 
+    def test_natural_combined_requests_never_fall_back_to_gpt(self):
+        # Regression from the real Windows test: user asked for an
+        # autodiagnosis *and* possible fixes, but GPT replied that it could
+        # not read Jarvis's code or logs. The local AST reviewer can.
+        direct=(
+            "Jarvis, fai un'autodiagnosi del tuo funzionamento e proponi eventuali fix",
+            "Jarvis, fatti un'autodiagnosi del tuo funzionamento e proponi eventuali fix",
+            "Esegui una diagnosi del tuo codice e suggerisci possibili correzioni",
+            "Jarvis, analizza il tuo funzionamento e proponi dei miglioramenti",
+            "Jarvis, controlla i tuoi file e suggerisci eventuali fix",
+            "Jarvis, puoi fare un'autodiagnosi del tuo funzionamento e suggerisci soluzioni?",
+            "Jarvis, fai un'autodiagnosi del tuo funzionamento e proponi eventuali fix.",
+        )
+        for request in direct:
+            with self.subTest(request=request):
+                self.assertEqual(diagnostic_request(request),("review",""))
+        unrelated=(
+            "Non fare un'autodiagnosi",
+            "Domani fai un'autodiagnosi",
+            "Mi hai detto che avevi fatto un'autodiagnosi",
+            "Jarvis, elimina i file e fai un'autodiagnosi",
+            "Jarvis, come va? Non ho accesso al codice e ai log",
+        )
+        for request in unrelated:
+            with self.subTest(request=request):
+                self.assertIsNone(diagnostic_request(request))
+
+    def test_all_gpt_entrypoints_keep_explicit_local_diagnostics_first(self):
+        # Inspect the GUI source, do not import it or start Tk/GPT.
+        source=(Path(__file__).resolve().parent.parent/"jarvis.py"
+                ).read_text(encoding="utf-8")
+        start=source.split("    def start_conversation_gpt(spoken: str) -> None:",1)[1]
+        start=start.split("    def toggle_gpt(",1)[0]
+        self.assertLess(start.index("try_self_diagnostic(spoken)"),
+                        start.index("run_gpt("))
+        ask=source.split("    def submit_gpt() -> None:",1)[1]
+        ask=ask.split("    def poll() -> None:",1)[0]
+        self.assertLess(ask.index("try_self_diagnostic(message)"),
+                        ask.index('run_gpt("ask"'))
+        self.assertLess(ask.index("try_self_diagnostic(message)"),
+                        ask.index("not gpt_enabled.get()"))
+        self.assertIn('text="Autodiagnosi Jarvis"',source)
+        self.assertIn(
+            'command=lambda: try_self_diagnostic("Jarvis, fai un\\'autodiagnosi")',
+            source)
+        self.assertIn('if try_self_diagnostic(message):',source)
+
     def test_prioritized_evidence_with_line_and_human_verification(self):
         (self.root/"runner.py").write_text(
             "def run():\n"
