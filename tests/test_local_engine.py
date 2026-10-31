@@ -34,6 +34,15 @@ class LocalEngineTests(TestCase):
         self.assertEqual(found.status, "completed")
         self.assertIn("documento prova.txt", found.message)
 
+    def test_large_download_listing_is_bounded_and_reports_remainder(self):
+        for n in range(55):
+            (self.downloads / ("file-%03d.txt" % n)).touch()
+        result=self.engine.execute("mostra download")
+        self.assertEqual(result.status,"completed")
+        self.assertIn("... e altri 25 elementi.",result.message)
+        self.assertIn("file-000.txt",result.message)
+        self.assertNotIn("file-054.txt",result.message)
+
     def test_no_symlink_walk(self):
         target = Path(self.temp.name) / "private"
         target.mkdir()
