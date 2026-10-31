@@ -1292,6 +1292,42 @@ def main() -> None:
     def ptt_release(event=None) -> None:
         voice.release()
 
+    def journal_plan_approved(plan):
+        """Capture the project identity before the plan's worker starts."""
+        if active_project_id is None:
+            return None
+        tickets=[]
+        project_id=active_project_id
+        for step in plan.steps:
+            ticket=begin_project_work(step.description,"planner",
+                                      project_id=project_id,planned=True)
+            if ticket is False:
+                for prior in tickets:
+                    finish_project_work(prior,"interrupted","Avvio piano non riuscito.")
+                raise WorkspaceError("Impossibile memorizzare i passi: nessuna esecuzione.")
+            tickets.append(ticket)
+        return tuple(tickets)
+
+    def journal_plan_step(tickets,index,status,message,receipt):
+        if not tickets:
+            return
+        if not 1 <= index <= len(tickets):
+            raise WorkspaceError("Indice passo fuori piano.")
+        result=finish_project_work(
+            tickets[index-1],
+            "completed" if status=="completed" else "failed",
+            message,receipt=receipt if status=="completed" else "")
+        if not result:
+            raise WorkspaceError("Esito del piano non registrato.")
+
+    def journal_plan_finished(tickets,reason):
+        if not tickets:
+            return
+        for ticket in tickets:
+            # Completed steps are immutable; remaining planned steps are
+            # interrupted. Nothing will be silently replayed on restart.
+            finish_project_work(ticket,"interrupted","Piano terminato: "+reason)
+
     def submit_plan() -> None:
         if not gpt_enabled.get() or not active_gpt or busy_gpt or closing:
             return
@@ -1299,6 +1335,9 @@ def main() -> None:
             root, service, engine,
             lambda: bool(gpt_enabled.get() and active_gpt and not busy_gpt and not closing),
             local_execution_lock, planner_abort_event,
+            on_approved=journal_plan_approved,
+            on_step=journal_plan_step,
+            on_finished=journal_plan_finished,
         )
 
     def submit_local(event=None, message_override: str | None = None,
