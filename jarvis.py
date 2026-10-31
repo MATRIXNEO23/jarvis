@@ -1,8 +1,9 @@
-"""Jarvis alpha — local commands, optional GPT and opt-in offline voice.
+"""Jarvis alpha — local commands, GPT conversation and offline voice.
 
-The microphone always starts OFF; only a user action opens an audio stream.
-The optional speech model is never loaded at application startup.
-GPT requires the official SDK and an explicit sign-in.
+App startup may automatically enable the locally configured Vosk microphone.
+A visible settings switch can disable auto-listening for future launches; all
+modes, including Standby, remain manually selectable at any time.
+GPT requires the official SDK and an explicit account sign-in.
 """
 from __future__ import annotations
 
@@ -13,6 +14,7 @@ import re
 import sqlite3
 from conversation_memory import ConversationMemory
 from jarvis_persona import build_chat_prompt
+from startup_greeting import startup_greeting
 from adaptive_voice import SpeechCorrections, SpeechCorrectionError
 from second_brain import SecondBrain, BrainError
 from animated_hud import JarvisHUD, BG, PANEL, CYAN, MUTED, WHITE, GREEN, AMBER
@@ -107,10 +109,13 @@ def main() -> None:
     frame.pack(fill="both", expand=True)
     ttk.Label(frame, text="Impostazioni JARVIS",
               font=("Segoe UI", 17, "bold")).pack(anchor="w")
-    mic_status = tk.StringVar(value="Microfono: SPENTO all'avvio")
+    mic_status = tk.StringVar(value=(
+        "Microfono: avvio dell'ascolto continuo in preparazione..."
+        if settings["auto_listen"] else "Microfono: SPENTO all'avvio"))
     ttk.Label(frame, textvariable=mic_status, wraplength=710).pack(anchor="w", pady=(2, 6))
     voice_mode = tk.StringVar(value=STANDBY)
-    audio_controls = ttk.LabelFrame(frame, text="Voce offline — attivazione solo manuale", padding=8)
+    audio_controls = ttk.LabelFrame(
+        frame, text="Voce offline — ascolto e modalità selezionabili", padding=8)
     audio_controls.pack(fill="x", pady=(0, 9))
     mode_buttons = []
     mode_row = ttk.Frame(audio_controls)
@@ -122,6 +127,18 @@ def main() -> None:
         button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
         button.pack(side="left", padx=(0, 12))
         mode_buttons.append(button)
+    auto_listen_enabled = tk.BooleanVar(value=settings["auto_listen"])
+    auto_listen_switch = ttk.Checkbutton(
+        audio_controls,
+        text="Avvia Jarvis già in Conversazione continua GPT (microfono attivo)",
+        variable=auto_listen_enabled)
+    auto_listen_switch.pack(anchor="w", pady=(5, 1))
+    ttk.Label(
+        audio_controls,
+        text="Il microfono resta acceso fino a quando scegli Standby. "
+             "La voce non viene salvata: Vosk trascrive in locale; "
+             "le frasi vengono inviate a GPT quando connesso.",
+        wraplength=710).pack(anchor="w", pady=(0, 4))
     ptt_button = ttk.Button(audio_controls, text="Tieni premuto per parlare", state="disabled")
     ptt_button.pack(anchor="w", pady=(5, 0))
     dictation_row = ttk.Frame(audio_controls)
