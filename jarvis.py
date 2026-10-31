@@ -31,7 +31,8 @@ from jarvis_persona import build_chat_prompt
 from startup_greeting import startup_greeting
 from adaptive_voice import SpeechCorrections, SpeechCorrectionError
 from second_brain import SecondBrain, BrainError
-from memory_boundaries import (PreferenceStore, OperationJournal, MemoryBoundaryError)
+from memory_boundaries import (PreferenceStore, OperationJournal, MemoryBoundaryError,
+                               observed_local_result, observed_saved_file)
 from preference_voice import parse_preference_intent
 from animated_hud import JarvisHUD, BG, PANEL, CYAN, MUTED, WHITE, GREEN, AMBER
 from desktop_dictation import DesktopDictation, dictation_voice_action
@@ -383,7 +384,8 @@ def main() -> None:
                                   summary: str, receipt_id: str,
                                   *, filename: str = "", folder: str = "",
                                   observed: bool = False) -> None:
-        if observed is not True or durable_brain is None or not memory_enabled.get():
+        if (observed is not True or durable_brain is None or not memory_enabled.get()
+                or active_project_id is not None):
             return
         metadata = {}
         if filename:
@@ -537,7 +539,7 @@ def main() -> None:
         root.after(2600,refresh_orbit_nodes)
 
     def switch_context(project_id=None) -> bool:
-        nonlocal active_project_id,conversation_epoch
+        nonlocal active_project_id,conversation_epoch,pending_preference
         if busy_gpt or busy_local or document_busy:
             write_line("JARVIS > Finisco questa operazione prima di cambiare progetto.")
             return False
@@ -564,6 +566,7 @@ def main() -> None:
         conversation_memory.clear()
         pending_conversation.clear()
         pending_project_reference.reset()
+        pending_preference=None
         write_line(
             "JARVIS > "+("Progetto aperto: "+project["name"]+"."
                         if project_id else "Conversazione generale ripristinata."))
@@ -2212,10 +2215,7 @@ def main() -> None:
                     last_user_for_action = ""
                     # A successful subprocess launch is only reported, not
                     # proof that the requested window became usable.
-                    observed=(result.status=="completed"
-                              and result.action in (
-                                  "system_status","list_downloads","find_download",
-                                  "history") and len(result.task_id)>=3)
+                    observed=observed_local_result(result)
                     if operation_ledger is not None and local_operation_id:
                         try:
                             operation_ledger.finish(
@@ -2278,7 +2278,7 @@ def main() -> None:
                     # File presente sul disco: prova di salvataggio. Una finestra
                     # lanciata o modificata non è invece osservata indipendentemente.
                     saved_file=getattr(result,"saved_path",None)
-                    observed_file=bool(saved_file and Path(saved_file).is_file())
+                    observed_file=observed_saved_file(result)
                     if operation_ledger is not None and document_operation_id:
                         try:
                             operation_ledger.finish(
