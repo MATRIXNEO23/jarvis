@@ -126,7 +126,7 @@ class TelegramBridge:
             self._enabled.clear()
             self._loop=None
             self._shutdown=None
-            self.notify(("telegram_stopped",))
+            self.notify(("telegram_stopped",id(self)))
 
     async def _run(self):
         if not self._enabled.is_set():
