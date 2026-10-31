@@ -1,0 +1,65 @@
+name: Publish experimental JARVIS ZIP in Download
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-download.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository Download directory
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout pinned tested Jarvis source
+        uses: actions/checkout@v4
+        with:
+          ref: 9ae0c269e3acd497b0310cc0a6b483a89474eaea
+          path: source
+          persist-credentials: false
+      - name: Create complete ZIP without local memory or secrets
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          source = Path("source")
+          destination = Path("catalog/Download/Jarvis-Memoria-Automatica.zip")
+          destination.parent.mkdir(parents=True, exist_ok=True)
+          count = 0
+          with ZipFile(destination, "w", ZIP_DEFLATED, compresslevel=6) as archive:
+              for file in sorted(source.rglob("*")):
+                  if not file.is_file():
+                      continue
+                  parts = file.relative_to(source).parts
+                  if any(part in (".git", "__pycache__", ".venv", "venv") for part in parts):
+                      continue
+                  if parts[0] in (".github", "Download"):
+                      continue
+                  archive.write(file, "Jarvis-Memoria-Automatica/" + "/".join(parts))
+                  count += 1
+          with ZipFile(destination) as check:
+              names = set(check.namelist())
+              assert check.testzip() is None
+              for filename in ("avvia_jarvis.bat", "jarvis.py", "workspace_memory.py",
+                               "planner_ui.py", "telegram_bridge.py",
+                               "tests/test_auto_project_continuity.py"):
+                  assert "Jarvis-Memoria-Automatica/" + filename in names, filename
+          print("ZIP generated:", destination, destination.stat().st_size, "bytes", count, "files")
+          PY
+      - name: Commit ZIP to the Download folder on main
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Memoria-Automatica.zip
+          git -C catalog commit -m "download: publish tested automatic-memory Jarvis ZIP"
+          git -C catalog push origin HEAD:main
