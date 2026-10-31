@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## VERSIONE AGGIORNATA — MEMORIA AUTOMATICA DEI PROGETTI (31/10/2026)
+
+**[SCARICA JARVIS CON MEMORIA AUTOMATICA — ZIP NELLA CARTELLA DOWNLOAD](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Memoria-Automatica.zip)**
+
+**File presente nella repository:** [Download/Jarvis-Memoria-Automatica.zip](https://github.com/MATRIXNEO23/jarvis/blob/main/Download/Jarvis-Memoria-Automatica.zip) — pacchetto ZIP completo dell'HEAD testato `9ae0c269e3acd497b0310cc0a6b483a89474eaea` del ramo `feature/automatic-project-continuity`, pubblicato senza integrare il ramo in `main`. Contiene anche i fix già presenti per l'inserimento dell'API hash di Telegram.
+
+**Novità:** ogni progetto aggiorna automaticamente `CONTINUITA.md`, `STATO.json`, `PASSI.md`, `EVENTI.jsonl` e `ARTIFATTI.md`, con avanzamenti e ricevute delle azioni; al riavvio viene recuperato il progetto selezionato e le attività non verificate risultano interrotte. La gestione completamente vocale dei progetti NON è ancora implementata.
+
+**Installazione prudente:** chiudi Jarvis; fai prima una copia di `%LOCALAPPDATA%\Jarvis` (database, memorie, Telegram); estrai lo ZIP in una **cartella nuova**, senza sovrascrivere quella funzionante; avvia `avvia_jarvis.bat` con lo stesso utente Windows. **Non eseguire contemporaneamente la nuova versione e quella vecchia:** condividono i dati in `%LOCALAPPDATA%\Jarvis`.
+
+**Stato:** [test automatici Windows/Linux PASS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41175634069); mancano ancora collaudo e verifica della conservazione della memoria sul Pavilion. [Dettagli tecnici nella PR #14](https://github.com/MATRIXNEO23/jarvis/pull/14).
+
+---
+
 ## FIX TELEGRAM — INCOLLA API HASH NELLA FINESTRA PROTETTA
 
 **[SCARICA JARVIS CON CORREZIONE API HASH TELEGRAM — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/fix/telegram-secret-paste-dialog.zip)**
