@@ -91,7 +91,8 @@ def list_telegram_contacts() -> list[dict]:
     return asyncio.run(_list_telegram_contacts())
 
 
-async def _send_telegram_voice(peer_id: int, text: str, voice_name: str):
+async def _send_telegram_voice(peer_id: int, text: str, voice_name: str,
+                               still_authorized=None):
     if type(peer_id) is not int or peer_id <= 0:
         raise TelegramDirectoryError("Destinatario non valido.")
     if not isinstance(text, str) or not 1 <= len(text.strip()) <= 480:
@@ -106,6 +107,9 @@ async def _send_telegram_voice(peer_id: int, text: str, voice_name: str):
         with tempfile.TemporaryDirectory(prefix="jarvis-tg-owner-") as folder:
             audio = await asyncio.to_thread(
                 make_telegram_voice, text.strip(), Path(folder), voice_name)
+            if still_authorized is not None and not still_authorized():
+                raise TelegramDirectoryError(
+                    "Invio annullato: autorizzazione del contatto revocata.")
             try:
                 result = await client.send_file(peers[peer_id][1], str(audio),
                                                 voice_note=True)
@@ -123,6 +127,8 @@ async def _send_telegram_voice(peer_id: int, text: str, voice_name: str):
         await client.disconnect()
 
 
-def send_telegram_voice(peer_id: int, text: str, voice_name: str = "") -> int:
+def send_telegram_voice(peer_id: int, text: str, voice_name: str = "",
+                        still_authorized=None) -> int:
     """One explicit owner action, not a text fallback, never sent by GPT."""
-    return asyncio.run(_send_telegram_voice(peer_id, text, voice_name))
+    return asyncio.run(_send_telegram_voice(
+        peer_id, text, voice_name, still_authorized))
