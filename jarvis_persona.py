@@ -76,7 +76,7 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
         return "{}"
     if type(max_chars) is not int or max_chars < 80:
         return "{}"
-    max_chars = min(max_chars, 1000)
+    max_chars = min(max_chars, 2000)
     try:
         data = json.loads(raw)
     except (ValueError, TypeError):
@@ -169,8 +169,8 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
         if fits(candidate):
             packed=candidate
 
-    for entry in reversed(recents[-6:]):
-        for cap_user, cap_reply in ((135, 145), (95, 100),
+    for entry in reversed(recents[-12:]):
+        for cap_user, cap_reply in ((260, 270), (180, 190), (135, 145), (95, 100),
                                     (65, 65), (38, 42)):
             cleaned = _recent_item(entry, cap_user, cap_reply)
             if cleaned is None:
@@ -232,7 +232,7 @@ def build_chat_prompt(message: str, memory_context: str = "",
         raise ValueError("Domanda troppo lunga per mantenere il contesto GPT.")
     room = MAX_GPT_PROMPT - len(primary) - len(CONTEXT_RULE) - 28
     if room >= 100:
-        context = compact_memory(memory_context, min(room, 850))
+        context = compact_memory(memory_context, min(room, 1600))
         candidate = PERSONA + status + CONTEXT_RULE + "Contesto (JSON): " + context + ". " + instruction
         if len(candidate) <= MAX_GPT_PROMPT:
             return candidate
