@@ -59,7 +59,7 @@ class AlarmTests(unittest.TestCase):
     def test_filename_wav_playback_reports_selected_backend(self):
         calls, statuses = [], []
         fake = SimpleNamespace(
-            SND_FILENAME=1, SND_SYNC=2, SND_NODEFAULT=4, SND_MEMORY=8,
+            SND_FILENAME=1, SND_NODEFAULT=4, SND_MEMORY=8,
             PlaySound=lambda payload, flags: calls.append((payload, flags)),
             Beep=lambda freq, ms: self.fail("Fallback beep should not run"),
             MessageBeep=lambda: self.fail("MessageBeep should not run"),
@@ -77,7 +77,7 @@ class AlarmTests(unittest.TestCase):
         def broken_wav(payload, flags):
             raise RuntimeError("No WAV output")
         fake = SimpleNamespace(
-            SND_FILENAME=1, SND_SYNC=2, SND_NODEFAULT=4, SND_MEMORY=8,
+            SND_FILENAME=1, SND_NODEFAULT=4, SND_MEMORY=8,
             PlaySound=broken_wav,
             Beep=lambda freq, ms: calls.append((freq, ms)),
             MessageBeep=lambda: self.fail("Beep worked; system signal not needed"),
