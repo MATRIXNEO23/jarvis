@@ -177,6 +177,9 @@ class ReactorArt:
         self.rim=None
         self.system_lamps=[]
         self.canvas=None
+        self._glow_photo_item=None
+        self._glow_photos={}
+        self._glow_size=0
 
     def build(self, canvas) -> None:
         self.canvas=canvas
@@ -187,6 +190,11 @@ class ReactorArt:
         cx,cy=w*.51,h*.51
         r=max(45,min(w*.45,h*.44,245))
         self.geometry=(cx,cy,r)
+        self.system_lamps=[]
+        self._glow_photos={}
+        self._glow_size=min(490,max(110,int(r*2.16)))
+        from hud_raster import ASSETS
+        ASSETS.request("reactor",self._glow_size)
         rng=random.Random(33)
         # Fine blueprint lines and small connection nodes.
         for x in range(16,int(w),36):
@@ -198,6 +206,9 @@ class ReactorArt:
             y=rng.randrange(12,max(13,int(h-12)))
             sz=1.1 if i%5 else 1.8
             c.create_oval(x-sz,y-sz,x+sz,y+sz,fill="#135375",outline="")
+        # High-fidelity emissive art underneath the moving vector gauges.
+        # Worker generates PNGs once; until ready all vector art still works.
+        self._glow_photo_item=c.create_image(cx,cy,anchor="center")
         # Smaller telemetry card, similar to the approved concept, without
         # inventing the state of any external service.
         if w>345:
@@ -289,6 +300,22 @@ class ReactorArt:
             return
         c=self.canvas
         cx,cy,r=self.geometry
+        if not self._glow_photos:
+            from hud_raster import ASSETS, photoimage_from_png
+            images=ASSETS.get("reactor",self._glow_size)
+            if images:
+                try:
+                    self._glow_photos={
+                        name: photoimage_from_png(
+                            __import__("tkinter"), png)
+                        for name,png in zip(("idle","listening","speaking"),
+                                            images)
+                    }
+                except Exception:
+                    self._glow_photos={}
+        if mode in self._glow_photos:
+            c.itemconfigure(self._glow_photo_item,
+                            image=self._glow_photos[mode])
         hue,strength=core_light(mode,phase)
         # Small oscillation while listening or talking; cyan steady when idle.
         amount=strength if mode!="idle" else .23
@@ -362,6 +389,10 @@ class GlobeArt:
         self.latitudes=[]
         self.orbits=[]
         self.frame=0
+        self._earth_image_item=None
+        self._earth_photos=[]
+        self._earth_size=0
+        self._earth_raster_ready=False
 
     def build(self,canvas):
         self.canvas=canvas
@@ -372,6 +403,11 @@ class GlobeArt:
         cx,cy=w*.51,h*.48
         r=max(38,min(w*.46,h*.355,220))
         self.geometry=(cx,cy,r)
+        self._earth_size=min(455,max(110,int(r*2.12)))
+        self._earth_photos=[]
+        self._earth_raster_ready=False
+        from hud_raster import ASSETS
+        ASSETS.request("earth",self._earth_size)
         rng=random.Random(20)
         for i in range(28):
             px=rng.randint(4,max(5,int(w-4)))
@@ -391,6 +427,9 @@ class GlobeArt:
             inner_r=r*(.78 +i*.032)
             _ellipse(c,cx,cy,inner_r,
                      fill=lerp_color("#0b2a45","#032039",i/6))
+        # The PNG globe carries textured continents and dimensional light.
+        # Gridlines and orbit paths remain moving Tk vector elements above it.
+        self._earth_image_item=c.create_image(cx,cy,anchor="center")
         self.latitudes=[c.create_line(0,0,1,1,fill="#134c70",
                                        smooth=True,width=1)
                         for _ in (-60,-40,-20,0,20,40,60)]
@@ -448,32 +487,53 @@ class GlobeArt:
             return
         c=self.canvas
         cx,cy,r=self.geometry
-        # One full rotation takes several minutes; never block voice commands.
+        if not self._earth_raster_ready:
+            from hud_raster import ASSETS, photoimage_from_png
+            frames=ASSETS.get("earth",self._earth_size)
+            if frames:
+                try:
+                    self._earth_photos=[
+                        photoimage_from_png(__import__("tkinter"),png)
+                        for png in frames]
+                    self._earth_raster_ready=True
+                    for item in (self.earth_coast + self.land_texture_items
+                                 + self.earth_lights):
+                        c.itemconfigure(item,state="hidden")
+                except Exception:
+                    self._earth_photos=[]
+        if self._earth_photos:
+            position=(1.0+math.sin(phase*.17))*.5
+            index=round(position*(len(self._earth_photos)-1))
+            c.itemconfigure(
+                self._earth_image_item,image=self._earth_photos[index])
+        # Vector fallback continues to work if PNG generation fails.
+        # The moving telemetry orbits and soft geographic grid remain.
         turn=phase*.045
-        for item,poly in zip(self.earth_coast,COASTS):
-            visible=clip_coast(poly,turn,r)
-            if visible:
-                coords=[q for x,y in visible for q in (cx+x,cy+y)]
-                c.coords(item,*coords)
-                c.itemconfigure(item,state="normal")
-            else:
-                c.itemconfigure(item,state="hidden")
-        for item,(lat,lon) in zip(self.land_texture_items,LAND_TEXTURE):
-            p=projected_earth_point(lat,lon,turn,r)
-            if p is None:
-                c.itemconfigure(item,state="hidden")
-            else:
-                x,y=cx+p[0],cy+p[1]
-                c.coords(item,x-.7,y-.7,x+.7,y+.7)
-                c.itemconfigure(item,state="normal")
-        for item,(lat,lon) in zip(self.earth_lights,LIGHTS):
-            pos=projected_earth_point(lat,lon,turn,r)
-            if pos is None:
-                c.itemconfigure(item,state="hidden")
-            else:
-                x,y=cx+pos[0],cy+pos[1]
-                c.coords(item,x-1.4,y-1.4,x+1.4,y+1.4)
-                c.itemconfigure(item,state="normal")
+        if not self._earth_raster_ready:
+            for item,poly in zip(self.earth_coast,COASTS):
+                visible=clip_coast(poly,turn,r)
+                if visible:
+                    coords=[q for x,y in visible for q in (cx+x,cy+y)]
+                    c.coords(item,*coords)
+                    c.itemconfigure(item,state="normal")
+                else:
+                    c.itemconfigure(item,state="hidden")
+            for item,(lat,lon) in zip(self.land_texture_items,LAND_TEXTURE):
+                p=projected_earth_point(lat,lon,turn,r)
+                if p is None:
+                    c.itemconfigure(item,state="hidden")
+                else:
+                    x,y=cx+p[0],cy+p[1]
+                    c.coords(item,x-.7,y-.7,x+.7,y+.7)
+                    c.itemconfigure(item,state="normal")
+            for item,(lat,lon) in zip(self.earth_lights,LIGHTS):
+                pos=projected_earth_point(lat,lon,turn,r)
+                if pos is None:
+                    c.itemconfigure(item,state="hidden")
+                else:
+                    x,y=cx+pos[0],cy+pos[1]
+                    c.coords(item,x-1.4,y-1.4,x+1.4,y+1.4)
+                    c.itemconfigure(item,state="normal")
         for lat,item in zip((-60,-40,-20,0,20,40,60),
                             self.latitudes):
             pts=[]
