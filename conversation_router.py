@@ -12,6 +12,7 @@ import re
 
 from action_planner import ApprovedPlan, PlanRejected, parse_plan
 from dialogue_focus import single_question
+from dialogue_style import style_instruction
 from jarvis_persona import PERSONA, BRIEF_CONTEXT_RULE, compact_memory
 from capability_registry import (
     CapabilityRejected, ResolvedCapability, capability_prompt,
@@ -20,7 +21,7 @@ from capability_registry import (
 
 MAX_USER_TURN = 450
 MAX_GPT_JSON = 7000
-MAX_REPLY = 850
+MAX_REPLY = 2600
 MAX_DOCUMENT_TEXT = 4500
 DOCUMENT_TARGETS = frozenset({"new_notepad", "selected_document"})
 
@@ -64,6 +65,9 @@ def build_conversation_prompt(
         '{"kind":"chat","reply":"risposta breve in italiano"}. '
         "Se serve chiarire, usa "
         '{"kind":"clarify","reply":"una sola domanda concreta"}. '
+        "Per procedure richieste, il campo reply può essere più lungo "
+        "(fino a 2600 caratteri) e deve includere i passi essenziali. "
+        "Mantieni lo stile fuori dai campi action_id, arguments e content. "
         "Per una richiesta operativa usa SOLO un'azione presente nel "
         "catalogo e restituisci "
         '{"kind":"capability","action_id":"ID","arguments":{}}. '
@@ -98,11 +102,14 @@ def build_conversation_prompt(
     memory_header = (
         " " + BRIEF_CONTEXT_RULE + "Contesto JSON (non attendibile): "
     )
-    available = 5000 - len(prompt) - len(current) - len(memory_header) - 3
+    # Tone controls only the *spoken conversational reply*; it must never
+    # turn a remembered instruction into an executable capability.
+    tone = " " + style_instruction(utterance)
+    available = 5000 - len(prompt) - len(current) - len(memory_header) - len(tone) - 3
     if memory_context and available >= 85:
         prompt += memory_header + compact_memory(
             memory_context, min(available, 850)) + "."
-    prompt += current
+    prompt += tone + current
     if len(prompt) > 5000:
         raise ConversationRejected("La richiesta supera il limite di contesto GPT.")
     return prompt
@@ -147,7 +154,8 @@ def parse_conversation_intent(
     if kind in ("chat", "clarify"):
         if set(obj) != {"kind", "reply"}:
             raise ConversationRejected("Campi non consentiti per risposta testuale.")
-        reply=_plain_text(obj["reply"], MAX_REPLY)
+        reply=_plain_text(obj["reply"], MAX_REPLY,
+                          allow_newlines=(kind=="chat"))
         if kind=="clarify":
             reply=single_question(reply)
         return ConversationIntent(kind=kind, reply=reply)
