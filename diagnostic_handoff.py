@@ -75,6 +75,32 @@ def safe_audit_payload(audit: SourceAudit,
     }
 
 
+def is_external_review_request(phrase: str) -> bool:
+    """Explicit request about an already collected local diagnostic report."""
+    if not isinstance(phrase,str) or len(phrase)>220:
+        return False
+    text=" ".join(phrase.casefold().strip(" \n\t,;:.?!").split())
+    text=re.sub(r"^(?:jarvis[, ]+|ehi jarvis[, ]+)", "", text)
+    return bool(re.fullmatch(
+        r"(?:valuta|analizza|commenta|esamina)\s+"
+        r"(?:(?:il|la|l['’])\s*)?"
+        r"(?:rapporto|autodiagnosi|diagnosi)\s+"
+        r"(?:con|tramite|usando)\s+"
+        r"(?:gpt|chatgpt|il\s+modello\s+esterno)",
+        text,re.I))
+
+
+def wants_external_advice(phrase: str) -> bool:
+    """Detect a direct request for advice after performing a diagnosis."""
+    if not isinstance(phrase,str) or len(phrase)>450:
+        return False
+    text=" ".join(phrase.casefold().split())
+    return bool(re.search(
+        r"\b(?:proponi|suggerisci|indicami|consigliami)\s+"
+        r"(?:(?:eventuali|possibili|dei|delle|qualche)\s+)*"
+        r"(?:fix|miglioramenti|correzioni|soluzioni)\b", text))
+
+
 def build_external_review_prompt(audit: SourceAudit,
                                  runtime: dict[str,str] | None = None) -> str:
     """Bounded prompt for the existing authenticated ask-only GPT bridge.
