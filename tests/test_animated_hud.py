@@ -68,6 +68,40 @@ class AnimatedHUDGeometryTests(unittest.TestCase):
         if os.name!="nt":
             self.assertIsNone(WindowsCPU().sample())
 
+    def test_reference_hud_widgets_when_tk_display_available(self):
+        import os
+        import tkinter as tk
+        if os.name != "nt":
+            self.skipTest("Tk Windows GUI smoke test runs only on Windows CI")
+        try:
+            root=tk.Tk()
+        except tk.TclError:
+            self.skipTest("No desktop session for Tk in this runner")
+        try:
+            root.withdraw()
+            hud=JarvisHUD(root,lambda:None)
+            root.update_idletasks()
+            self.assertEqual(hud._tab,"CONSOLE")
+            console=tk.Text(hud.console_host)
+            console.pack()
+            for role in ("utente","jarvis","azione","errore","sistema"):
+                console.tag_configure(role)
+            hud.attach_console(console)
+            hud.select_tab("ATTIVITÀ")
+            self.assertEqual(hud._tab,"ATTIVITÀ")
+            self.assertTrue(bool(console.tag_cget("utente","elide")))
+            hud.select_tab("CONSOLE")
+            self.assertFalse(bool(int(console.tag_cget("utente","elide"))))
+            hud.core_art.build(hud.core_canvas)
+            hud.earth_art.build(hud.earth_canvas)
+            hud.core_art.tick(.5,"listening",listening=True)
+            hud.core_art.tick(1.0,"speaking",listening=True)
+            hud.earth_art.tick(2.0,force=True)
+            self.assertGreater(len(hud.core_art.arc_items),10)
+            hud.close()
+        finally:
+            root.destroy()
+
     def test_hud_has_safe_shutdown_api(self):
         # A fake HUD has no Tk widgets, but its stop mechanism should be
         # independent from the microphone state and other background threads.
