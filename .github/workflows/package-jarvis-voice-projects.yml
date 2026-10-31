@@ -1,0 +1,61 @@
+name: Publish Jarvis voice projects package to Download
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-voice-projects.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - uses: actions/checkout@v4
+        with:
+          ref: d20999446ccad0ff72203436b9b7ed4abebe2321
+          path: source
+          persist-credentials: false
+      - name: Create tested-source ZIP
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile,ZIP_DEFLATED
+          source=Path("source")
+          dest=Path("catalog/Download/Jarvis-Progetti-Vocali-e-Salvataggio.zip")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          with ZipFile(dest,"w",ZIP_DEFLATED,compresslevel=6) as z:
+              for file in sorted(source.rglob("*")):
+                  if not file.is_file():
+                      continue
+                  parts=file.relative_to(source).parts
+                  if any(p in (".git","__pycache__",".venv","venv") for p in parts):
+                      continue
+                  if parts[0] in ("Download",".github"):
+                      continue
+                  z.write(file,"Jarvis-Progetti-Vocali/"+"/".join(parts))
+          with ZipFile(dest) as z:
+              assert z.testzip() is None
+              names=set(z.namelist())
+              for name in ("avvia_jarvis.bat","jarvis.py","project_voice.py",
+                           "project_documents.py","workspace_memory.py",
+                           "managed_documents.py","telegram_bridge.py",
+                           "tests/test_voice_project_documents.py"):
+                  assert "Jarvis-Progetti-Vocali/"+name in names,name
+          print("PACKAGE VERIFIED",dest,dest.stat().st_size)
+          PY
+      - name: Commit new ZIP to Download without replacing previous versions
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Progetti-Vocali-e-Salvataggio.zip
+          git -C catalog commit -m "download: publish Jarvis voice projects and project file saving"
+          git -C catalog push origin HEAD:main
