@@ -1,4 +1,4 @@
-"""One-time interactive Telegram account setup; NEVER sends a message.
+"""One-time account login; contacts selected later inside Jarvis.
 
 Requires optional free Telethon. Stores API hash + user StringSession sealed
 using Windows DPAPI, and stores only the selected private contact's numeric
@@ -77,42 +77,19 @@ async def configure():
                 await client.sign_in(password=password)
         if not await client.is_user_authorized():
             raise RuntimeError("Accesso Telegram non autorizzato.")
-        dialogs=await client.get_dialogs(limit=200)
-        contacts=[
-            d for d in dialogs
-            if d.is_user and not getattr(d.entity,"bot",False)
-            and not getattr(d.entity,"is_self",False)
-        ]
-        if not contacts:
-            raise RuntimeError(
-                "Non risultano chat private. Apri prima una conversazione Telegram.")
-        print("\nSeleziona UN contatto, senza gruppi o bot:")
-        for i,d in enumerate(contacts,1):
-            print(f"{i:3d}. {str(d.name)[:54]}  [ID: {d.entity.id}]")
-        selection=input("Numero del contatto autorizzato (INVIO per annullare): ").strip()
-        if not selection:
-            print("Nessun contatto scelto. Configurazione annullata.")
-            return
-        n=int(selection)
-        if not 1<=n<=len(contacts):
-            raise ValueError("Numero di contatto non valido.")
-        contact=contacts[n-1]
-        confirm=input(
-            "Autorizzare SOLO "+str(contact.name)[:55]
-            +" (ID "+str(contact.entity.id)+")? Scrivi SI: ").strip()
-        if confirm!="SI":
-            print("Nessuna modifica: autorizzazione annullata.")
-            return
-        # Commit credentials first; no message is sent in any phase.
+        # A new login may be a different account; revoke stale old recipients.
+        # Contacts are selected exclusively by checkbox in Jarvis settings.
         save_credentials(api_id,api_hash,client.session.save())
         settings=load_settings()
-        settings["telegram_peer_id"]=int(contact.entity.id)
-        settings["telegram_contact_name"]=str(contact.name)[:90]
+        settings["telegram_peer_id"]=0
+        settings["telegram_contact_name"]=""
+        settings["telegram_contacts"]=[]
         settings["telegram_enabled"]=False
         save_settings(settings)
-        print("\nCollegamento salvato cifrato via DPAPI.")
-        print("Le risposte automatiche sono SPENTE. Attivale dal menu ⚙ di Jarvis.")
-        print("La tua amica deve sapere che l'assistente può rispondere al posto tuo.")
+        print("\nAccesso Telegram salvato con cifratura Windows DPAPI.")
+        print("Apri Jarvis > Impostazioni > Gestisci contatti Telegram.")
+        print("Carica i contatti reali e selezionali con la spunta.")
+        print("Le risposte automatiche restano SPENTE. Nessun messaggio inviato.")
     finally:
         await client.disconnect()
 

@@ -36,7 +36,7 @@ class TelegramNoNetworkTest(unittest.IsolatedAsyncioTestCase):
                                   forbidden_gpt,events.append)
             bridge._enabled.set()
             client=FakeClient()
-            event=SimpleNamespace(message=SimpleNamespace(
+            event=SimpleNamespace(sender_id=peer_id,message=SimpleNamespace(
                 id=10,voice=False,message="Ciao"))
             with patch("telegram_bridge.make_telegram_voice",fake_voice):
                 await bridge._handle(client,object(),event)
@@ -57,7 +57,7 @@ class TelegramNoNetworkTest(unittest.IsolatedAsyncioTestCase):
             bridge=TelegramBridge(db,45,"Contatto",lambda _: "Ciao",
                                   lambda _:None)
             client=FakeClient()
-            event=SimpleNamespace(message=SimpleNamespace(
+            event=SimpleNamespace(sender_id=45,message=SimpleNamespace(
                 id=11,voice=False,message="Ciao"))
             await bridge._handle(client,object(),event)
             self.assertEqual(client.sent,[])
