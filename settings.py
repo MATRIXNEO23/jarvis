@@ -10,7 +10,7 @@ DEFAULTS = {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "",
             "telegram_enabled": False, "telegram_peer_id": 0,
             "telegram_contact_name": "", "telegram_contacts": [],
             "timer_sound": "digital", "timer_volume": 80,
-            "timer_repeat": True}
+            "timer_repeat": True, "timer_audio_mode": "auto"}
 
 
 def normalize_telegram_contacts(value) -> list[dict]:
@@ -89,6 +89,8 @@ def load_settings(path: Path | None = None) -> dict:
             result["timer_volume"] = volume
         if type(data.get("timer_repeat")) is bool:
             result["timer_repeat"] = data["timer_repeat"]
+        if data.get("timer_audio_mode") in ("auto", "beep"):
+            result["timer_audio_mode"] = data["timer_audio_mode"]
         voice = data.get("tts_voice")
         if isinstance(voice, str) and len(voice) <= 180:
             result["tts_voice"] = voice
@@ -112,9 +114,11 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
     sound = settings.get("timer_sound", "digital")
     volume = settings.get("timer_volume", 80)
     repeat = settings.get("timer_repeat", True)
+    audio_mode = settings.get("timer_audio_mode", "auto")
     if (sound not in ("digital", "double", "electronic", "siren", "soft")
             or type(sound) is not str or type(volume) is not int
-            or not 0 <= volume <= 100 or type(repeat) is not bool):
+            or not 0 <= volume <= 100 or type(repeat) is not bool
+            or audio_mode not in ("auto", "beep")):
         raise ValueError("Invalid timer alarm preferences")
     if not isinstance(contacts, list) or normalize_telegram_contacts(contacts) != contacts:
         raise ValueError("Invalid Telegram contact selection")
@@ -136,6 +140,7 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
                                "telegram_contact_name": peer_name,
                                "telegram_contacts": contacts,
                                "timer_sound": sound, "timer_volume": volume,
-                               "timer_repeat": repeat},
+                               "timer_repeat": repeat,
+                               "timer_audio_mode": audio_mode},
                               ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp, target)
