@@ -111,6 +111,8 @@ class WorkspaceMemory:
                     status IN ('planned','running','completed','failed','interrupted')),
                 detail TEXT NOT NULL DEFAULT '', receipt TEXT NOT NULL DEFAULT '',
                 created_utc TEXT NOT NULL, updated_utc TEXT NOT NULL)""")
+            if "verified" not in {r[1] for r in db.execute("PRAGMA table_info(project_steps)")}:
+                db.execute("ALTER TABLE project_steps ADD COLUMN verified INTEGER NOT NULL DEFAULT 0")
             db.execute("""CREATE INDEX IF NOT EXISTS project_steps_recent
                 ON project_steps(project_id,updated_utc DESC,id DESC)""")
             db.execute("""CREATE TABLE IF NOT EXISTS project_events(
@@ -365,7 +367,8 @@ class WorkspaceMemory:
                 # Include verified operational state, not GPT-inferred achievements.
                 steps=self.project_steps(scope_id,limit=5)
                 compact=[{"step":x["title"][:90],"status":x["status"],
-                          "detail":x["detail"][:120]} for x in steps]
+                          "detail":x["detail"][:120],
+                          "verified":bool(x["verified"])} for x in steps]
                 for count in range(len(compact),0,-1):
                     candidate={**context,"steps":compact[:count]}
                     if len(json.dumps(candidate,ensure_ascii=False))<=budget:
@@ -397,12 +400,12 @@ class WorkspaceMemory:
             raise WorkspaceError("Progetto inesistente.")
         with self._db() as db:
             rows=db.execute(
-                "SELECT id,title,source,status,detail,receipt,created_utc,updated_utc "
-                "FROM project_steps WHERE project_id=? "
+                "SELECT id,title,source,status,detail,receipt,created_utc,updated_utc,"
+                "verified FROM project_steps WHERE project_id=? "
                 "ORDER BY updated_utc DESC,rowid DESC LIMIT ?",
                 (ident,min(100,max(1,int(limit))))).fetchall()
         return tuple(dict(zip(("id","title","source","status","detail","receipt",
-                               "created_utc","updated_utc"),row)) for row in rows)
+                               "created_utc","updated_utc","verified"),row)) for row in rows)
 
     def begin_step(self, ident, title, *, source="jarvis", planned=False):
         """Record before dispatch. An unfinished step is never silently marked done."""
@@ -430,7 +433,7 @@ class WorkspaceMemory:
         self._save_snapshot(ident)
         return ticket
 
-    def finish_step(self, ident, ticket, status, detail="", *, receipt=""):
+    def finish_step(self, ident, ticket, status, detail="", *, receipt="", verified=False):
         """Idempotent terminal transition, backed by one SQLite transaction."""
         if not self.project(ident) or not _project_id(ticket):
             raise WorkspaceError("Progetto o passo non valido.")
@@ -441,13 +444,15 @@ class WorkspaceMemory:
                 if _SECRET.search(str(detail)) else _trim(str(detail),480))
         receipt=_trim(str(receipt),120) if receipt else ""
         if status=="completed" and not receipt:
-            raise WorkspaceError("Un passo completato richiede una ricevuta verificabile.")
+            raise WorkspaceError("Un passo completato richiede l'ID del risultato.")
+        if type(verified) is not bool or (verified and status!="completed"):
+            raise WorkspaceError("Verifica non consentita per questo stato.")
         now=_now()
         with self._db() as db:
             cur=db.execute(
-                "UPDATE project_steps SET status=?,detail=?,receipt=?,updated_utc=? "
-                "WHERE id=? AND project_id=? AND status IN ('planned','running')",
-                (status,detail,receipt,now,ticket,ident))
+                "UPDATE project_steps SET status=?,detail=?,receipt=?,updated_utc=?,"
+                "verified=? WHERE id=? AND project_id=? AND status IN ('planned','running')",
+                (status,detail,receipt,now,int(verified),ticket,ident))
             if cur.rowcount!=1:
                 return False
             row=db.execute(
@@ -587,7 +592,10 @@ class WorkspaceMemory:
             if not steps:
                 lines.append("(nessun passo operativo ancora registrato)")
             for item in steps[:18]:
-                lines.append("- ["+item["status"].upper()+"] "+item["title"]
+                label=("VERIFICATO" if item["status"]=="completed" and item["verified"]
+                       else "RIFERITO, NON VERIFICATO" if item["status"]=="completed"
+                       else item["status"].upper())
+                lines.append("- ["+label+"] "+item["title"]
                              +(" — "+item["detail"][:180] if item["detail"] else ""))
             lines.extend(["","## File verificati"])
             lines.extend("- "+path for path,_ in files[:18])
@@ -621,8 +629,8 @@ class WorkspaceMemory:
                 "unfinished":[{"id":x["id"],"title":x["title"],"status":x["status"]}
                               for x in steps if x["status"] in ("planned","running","interrupted")][:20],
                 "recent_completed":[{"id":x["id"],"title":x["title"],"detail":x["detail"],
-                                     "receipt":x["receipt"]}
-                                    for x in steps if x["status"]=="completed"][:12],
+                                     "receipt":x["receipt"],"verified":bool(x["verified"])}
+                                     for x in steps if x["status"]=="completed"][:12],
             }
             self._atomic_file(folder/"STATO.json",
                               json.dumps(state,ensure_ascii=False,indent=2)+"\n")
