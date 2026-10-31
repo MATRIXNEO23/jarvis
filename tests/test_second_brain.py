@@ -23,9 +23,17 @@ class ShortTermTests(unittest.TestCase):
         memory = ConversationMemory()
         for i in range(20):
             memory.remember("frase " + str(i), "risposta " + str(i))
-        self.assertLessEqual(len(memory), 8)
+        # The reviewed dialogue change deliberately retains 16 exchanges.
+        # Check eviction and order, not just the configured container size.
+        self.assertEqual(len(memory), 16)
+        turns = json.loads(memory.context())
+        self.assertEqual([turn["utente"] for turn in turns],
+                         ["frase " + str(i) for i in range(4, 20)])
         self.assertNotIn("frase 0", memory.context())
-        self.assertLessEqual(len(memory.context()), 1050)
+        self.assertLessEqual(len(memory.context()), 2400)
+        bounded = memory.context(max_chars=1050)
+        self.assertLessEqual(len(bounded), 1050)
+        self.assertEqual(json.loads(bounded)[-1]["utente"], "frase 19")
         memory.clear()
         self.assertEqual(memory.context(), "[]")
 

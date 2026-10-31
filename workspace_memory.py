@@ -7,6 +7,7 @@ state, never composed by the language model or blindly replayed as commands.
 """
 from __future__ import annotations
 
+from conversation_memory import bounded_answer
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
@@ -490,7 +491,7 @@ class WorkspaceMemory:
         if _SECRET.search(str(user)) or _SECRET.search(str(reply)):
             return False
         u=_trim(user,MAX_TURN)
-        a=_trim(reply,MAX_ANSWER)
+        a=bounded_answer(_trim(reply,30000),MAX_ANSWER,kind)
         if not u or not a:
             return False
         with self._db() as db:

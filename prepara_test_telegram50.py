@@ -23,25 +23,15 @@ def prepare_trial(original_home: Path, trial_home: Path) -> list[str]:
     target.mkdir(parents=True, exist_ok=True)
     notes = []
     trial_settings = target / "settings.json"
-    microphone_migration = target / ".microphone-on-startup-v2"
     if not trial_settings.exists():
         current = load_settings(source / "settings.json")
         current["telegram_enabled"] = False
-        current["auto_listen"] = True
+        # Preserve the saved preference; runtime startup is always standby.
         save_settings(current, trial_settings)
-        notes.append("Profilo nuovo: Telegram automatico OFF, microfono ON all'avvio.")
-    elif not microphone_migration.exists():
-        # Apply the owner's newly approved startup preference once, including
-        # an existing trial profile. Future explicit OFF choices remain valid.
-        current = load_settings(trial_settings)
-        current["auto_listen"] = True
-        save_settings(current, trial_settings)
-        notes.append("Preferenza aggiornata: microfono ON all'avvio (modificabile).")
+        notes.append("Profilo nuovo: Telegram automatico OFF; avvio microfono in standby.")
     else:
+        # An absent old migration marker must never rewrite user settings.
         notes.append("Impostazioni del test gia presenti: non sovrascritte.")
-    if not microphone_migration.exists():
-        microphone_migration.write_text("microphone-on-startup-v2\n",
-                                        encoding="utf-8")
 
     source_auth = source / "telegram-auth.dpapi"
     trial_auth = target / "telegram-auth.dpapi"

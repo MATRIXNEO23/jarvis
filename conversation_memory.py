@@ -9,11 +9,32 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass
 import json
+import re
 
-MAX_TURNS = 8
-MAX_UTTERANCE = 260
-MAX_REPLY = 280
-MAX_CONTEXT = 1050
+MAX_TURNS = 16
+MAX_UTTERANCE = 450
+MAX_REPLY = 650
+MAX_CONTEXT = 2400
+
+
+def pending_question(answer: str, kind: str = "chat") -> str:
+    """Capture a final single question before truncating a long answer."""
+    if kind not in ("chat", "clarify") or not isinstance(answer, str):
+        return ""
+    clean = " ".join(answer.replace("\x00", " ").split())
+    if not clean.endswith("?") or clean.count("?") != 1:
+        return ""
+    question = re.split(r"(?:[.!]|…)\s+", clean)[-1]
+    return question[-180:]
+
+
+def bounded_answer(answer: str, maximum: int, kind: str = "chat") -> str:
+    """Keep a real trailing question in the existing bounded SQLite field."""
+    text = " ".join(answer.split())
+    question = pending_question(text, kind)
+    if len(text) > maximum and question:
+        return text[:maximum-len(question)-2] + "… " + question
+    return text[:maximum]
 
 
 @dataclass(frozen=True)
@@ -21,6 +42,7 @@ class VoiceTurn:
     user: str
     jarvis: str
     kind: str
+    question: str = ""
 
 
 class ConversationMemory:
@@ -52,7 +74,13 @@ class ConversationMemory:
         u = self._clean(user, MAX_UTTERANCE)
         a = self._clean(jarvis, MAX_REPLY)
         if u and a:
-            self._turns.append(VoiceTurn(u, a, kind))
+            self._turns.append(VoiceTurn(u, a, kind, pending_question(jarvis, kind)))
+
+    def snapshot(self) -> tuple[dict, ...]:
+        """All bounded records for one final prompt selection, oldest first."""
+        return tuple({"utente": turn.user, "jarvis": turn.jarvis,
+                      "tipo": turn.kind, "question": turn.question}
+                     for turn in self._turns)
 
     def context(self, max_chars: int = MAX_CONTEXT) -> str:
         """JSON with the latest turns that fit, newest turn always preferred."""
@@ -65,7 +93,7 @@ class ConversationMemory:
         for turn in reversed(self._turns):
             included = False
             for maximum_user, maximum_reply in (
-                    (175, 185), (125, 135), (90, 100), (55, 65), (28, 35)):
+                    (320, 340), (220, 230), (150, 160), (95, 110), (55, 65), (28, 35)):
                 item = {
                     "utente": turn.user[:maximum_user],
                     "lia": turn.jarvis[:maximum_reply],
@@ -85,8 +113,4 @@ class ConversationMemory:
         """Useful in tests and GUI, but never interpreted as current consent."""
         if not self._turns:
             return ""
-        turn = self._turns[-1]
-        answer = turn.jarvis.strip()
-        if turn.kind not in ("clarify", "chat") or answer.count("?") != 1:
-            return ""
-        return answer[-180:] if answer.endswith("?") else ""
+        return self._turns[-1].question
