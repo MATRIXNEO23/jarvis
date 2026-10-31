@@ -16,6 +16,8 @@ import sqlite3
 from conversation_memory import ConversationMemory
 from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
+from project_voice import parse_project_voice, safe_project_name, find_existing_project
+from project_documents import parse_simple_save, project_save_destination
 from telegram_commands import explicit_telegram_note
 from telegram_bridge import TelegramBridge
 from telegram_security import credentials_present
@@ -245,6 +247,10 @@ def main() -> None:
     document_busy = False
     documents = ManagedDocuments()
     doc_dialog = DocumentDialog()
+    document_topic = ""
+    document_owner_project_id = None
+    pending_project_name = False
+    save_only_waiting = False
     conversation_memory = ConversationMemory()
     # Up to three follow-ups may arrive while the model is still responding.
     # Never silently discard an earlier phrase or replay after mode changes.
@@ -481,22 +487,26 @@ def main() -> None:
                 workspace_status.set("Memoria progetti: "+str(exc)[:95])
         root.after(2600,refresh_orbit_nodes)
 
-    def switch_context(project_id=None) -> None:
+    def switch_context(project_id=None) -> bool:
         nonlocal active_project_id,conversation_epoch
-        if busy_gpt or busy_local:
+        if busy_gpt or busy_local or document_busy:
             write_line("JARVIS > Finisco questa operazione prima di cambiare progetto.")
-            return
+            return False
+        if documents.current is not None or doc_dialog.phase != "idle":
+            write_line("JARVIS > Chiudi il documento di Blocco note prima di cambiare progetto.")
+            speak_result("Chiudi prima il documento aperto, per non confondere i progetti.")
+            return False
         if project_id is not None:
             if workspace is None or not workspace.project(project_id):
                 write_line("JARVIS > Progetto non trovato.")
-                return
+                return False
             project=workspace.project(project_id)
         if workspace is not None:
             try:
                 workspace.select_project(project_id)
             except (OSError,sqlite3.Error,WorkspaceError) as exc:
                 workspace_status.set("Contesto non salvato: "+str(exc)[:100])
-                return
+                return False
         active_context_label.set(
             "Contesto: "+project["name"][:35] if project_id else "Contesto: GENERALE")
         active_project_id=project_id
@@ -506,6 +516,92 @@ def main() -> None:
         write_line(
             "JARVIS > "+("Progetto aperto: "+project["name"]+"."
                         if project_id else "Conversazione generale ripristinata."))
+        return True
+
+    def project_voice_command(spoken: str) -> bool:
+        """Both speech and typed chat share one local, validated executor."""
+        nonlocal pending_project_name
+        if workspace is None:
+            return False
+        if pending_project_name:
+            pending_project_name = False
+            if spoken.casefold().strip(" ,.!?") in ("annulla","lascia stare","niente"):
+                speak_result("Creazione del progetto annullata.")
+                return True
+            try:
+                name=safe_project_name(spoken)
+                command_action="create"
+            except ValueError:
+                speak_result("Nome non valido. Chiedimi di creare un progetto con un nome preciso.")
+                return True
+        else:
+            try:
+                command=parse_project_voice(spoken)
+            except ValueError as exc:
+                write_line("JARVIS > "+str(exc))
+                speak_result(str(exc))
+                return True
+            if command is None:
+                return False
+            command_action=command.action
+            name=command.name
+
+        if command_action=="list":
+            projects=workspace.projects(limit=100)
+            message=("I progetti sono: "+", ".join(x["name"] for x in projects[:12])
+                     if projects else "Non ci sono ancora progetti.")
+        elif command_action=="create":
+            if not name:
+                pending_project_name=True
+                message="Come vuoi chiamare il nuovo progetto?"
+            elif busy_gpt or busy_local or document_busy or documents.current is not None:
+                message="Finisci prima l'operazione o chiudi il documento aperto."
+            else:
+                try:
+                    existing=find_existing_project(workspace.projects(limit=200),name)
+                    if existing:
+                        message="Un progetto con questo nome esiste già. Dimmi di aprirlo."
+                    else:
+                        ident=workspace.create_project(name)
+                        if switch_context(ident):
+                            message="Creato e aperto il progetto "+name+". Memoria e cartella pronte."
+                        else:
+                            message="Il progetto è stato creato, ma non riesco ad aprirlo."
+                except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                    message="Impossibile creare il progetto: "+str(exc)[:110]
+        elif command_action=="open":
+            try:
+                selected=find_existing_project(workspace.projects(limit=200),name)
+                if selected and switch_context(selected["id"]):
+                    message="Ripreso il progetto "+selected["name"]+"."
+                elif selected:
+                    message="Non posso cambiare progetto durante un'operazione."
+                else:
+                    message="Non trovo il progetto "+name+"."
+            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                message="Impossibile aprire il progetto: "+str(exc)[:105]
+        elif command_action=="general":
+            message=("Sono tornato alla conversazione generale."
+                     if switch_context(None) else
+                     "Non posso cambiare contesto finché il documento è aperto.")
+        elif command_action=="folder":
+            if active_project_id is None:
+                message="Apri un progetto prima di chiedermi la sua cartella."
+            else:
+                try:
+                    folder=workspace.project_directory(active_project_id)
+                    if os.name=="nt":
+                        os.startfile(str(folder))
+                        message="Ho aperto la cartella del progetto."
+                    else:
+                        message="Cartella del progetto: "+str(folder)
+                except (OSError,WorkspaceError) as exc:
+                    message="Non riesco ad aprire la cartella: "+str(exc)[:100]
+        else:
+            return False
+        write_line("JARVIS > "+message)
+        speak_result(message)
+        return True
 
     def open_project_manager():
         nonlocal project_dialog
