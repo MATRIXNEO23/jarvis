@@ -1,5 +1,6 @@
 # Jarvis: prima versione comando vocale offline (alpha)
 
+> **Nota aggiornata 31/10/2026:** questa guida documenta una fase precedente con microfono spento al lancio. Nel ramo di audit attuale è richiesta e configurata la **conversazione GPT con microfono attivo all'avvio**, purché Vosk e il dispositivo funzionino. Le modalità si possono sempre modificare manualmente; le sezioni sottostanti sono prove storiche.\n\n
 Il microfono parte **sempre spento** a ogni apertura di Jarvis.
 Il riconoscimento non richiede GPT, servizi cloud, chiavi API o account.
 Il motore vocale non e' incluso automaticamente per non appesantire il Pavilion.
