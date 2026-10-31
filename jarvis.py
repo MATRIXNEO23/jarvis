@@ -447,6 +447,11 @@ def main() -> None:
                 return raw
             if hint:
                 parsed["focus"]=hint
+            if preference_store is not None:
+                try:
+                    parsed["preferences"]=list(preference_store.context())
+                except (OSError,sqlite3.Error,MemoryBoundaryError):
+                    pass
             return json.dumps(parsed,ensure_ascii=False)
 
         if active_project_id is not None:
@@ -857,6 +862,60 @@ def main() -> None:
         write_line("JARVIS > "+message)
         speak_result(message)
         remember_exchange(spoken,message,"clarify")
+        return True
+
+    def preference_command(spoken: str) -> bool:
+        """Only an explicitly confirmed request can change preference records."""
+        nonlocal pending_preference
+        if pending_preference is not None:
+            answer=normalized_utterance(spoken).casefold()
+            intent=pending_preference
+            pending_preference=None
+            if answer=="confermo":
+                if preference_store is None:
+                    message="Preferenze non disponibili; nessuna modifica."
+                else:
+                    try:
+                        if intent.kind=="remove":
+                            preference_store.remove(intent.key,user_confirmed=True)
+                            message="Preferenza rimossa."
+                        else:
+                            preference_store.set(intent.key,intent.value,
+                                                 user_confirmed=True)
+                            message="Preferenza confermata e salvata."
+                    except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+                        message="Preferenza non salvata: "+str(exc)[:90]
+                write_line("JARVIS > "+message)
+                speak_result(message)
+                return True
+            if answer in ("annulla","no","lascia stare","non salvare"):
+                write_line("JARVIS > Preferenza non salvata.")
+                speak_result("Preferenza non salvata.")
+                return True
+            # A new topic cancels stale pending consent.
+        intent=parse_preference_intent(spoken)
+        if intent is None:
+            return False
+        if preference_store is None:
+            message="Archivio preferenze non disponibile."
+        elif intent.kind=="list":
+            try:
+                rows=preference_store.all()
+                message=("Preferenze confermate: "+
+                         ", ".join(p["key"]+"="+p["value"] for p in rows)
+                         if rows else "Nessuna preferenza confermata.")
+            except (OSError,sqlite3.Error):
+                message="Impossibile leggere le preferenze."
+        elif intent.kind=="unsupported":
+            message="Posso ricordare solo preferenze su risposte, lingua o interazione."
+        else:
+            pending_preference=intent
+            message=("Vuoi "+("rimuovere" if intent.kind=="remove" else "salvare")+
+                     " la preferenza "+intent.key+
+                     ("="+intent.value if intent.value else "")+
+                     "? Di' confermo oppure annulla.")
+        write_line("JARVIS > "+message)
+        speak_result(message)
         return True
 
     def try_self_diagnostic(spoken: str) -> bool:
@@ -1894,6 +1953,9 @@ def main() -> None:
         if project_voice_command(message):
             request.set("")
             return
+        if preference_command(message):
+            request.set("")
+            return
         if handle_project_reference(message):
             request.set("")
             return
@@ -2015,6 +2077,8 @@ def main() -> None:
                                 continue
                             if project_voice_command(spoken):
                                 continue
+                            if preference_command(spoken):
+                                continue
                             if handle_project_reference(spoken):
                                 continue
                             if handle_unanchored_short_reply(spoken):
@@ -2080,6 +2144,8 @@ def main() -> None:
                         elif save_only_waiting:
                             receive_save_only_destination(spoken)
                         elif project_voice_command(spoken):
+                            pass
+                        elif preference_command(spoken):
                             pass
                         elif handle_project_reference(spoken):
                             pass
@@ -2441,6 +2507,9 @@ def main() -> None:
                 execute_document_choice(decision)
                 return
         if project_voice_command(message):
+            request.set("")
+            return
+        if preference_command(message):
             request.set("")
             return
         if handle_project_reference(message):
