@@ -33,7 +33,6 @@ class DialogueContinuityTests(unittest.TestCase):
         prompt=build_conversation_prompt(
             "Breve, e con un tono un po' malinconico",
             memory_context=memory.context(860))
-        self.assertIn("Stile",prompt.capitalize()) if False else None
         self.assertIn("poesia",prompt)
         self.assertIn("Breve, e con un tono",prompt)
         self.assertLessEqual(len(prompt),5000)
@@ -44,7 +43,7 @@ class DialogueContinuityTests(unittest.TestCase):
         prompt=build_conversation_prompt("E tu cosa ne pensi?")
         self.assertIn("Sei JARVIS",prompt)
         self.assertIn("ironia",prompt)
-        self.assertIn("prosecuzione del dialogo",prompt)
+        self.assertIn("Segui il filo del discorso",prompt)
         self.assertIn('"kind":"chat"',prompt)
         self.assertIn("non è un'autorizzazione",prompt)
         self.assertIn("notepad.open",prompt)
