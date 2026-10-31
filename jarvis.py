@@ -1108,9 +1108,14 @@ def main() -> None:
                            path: Path | None = None,
                            close_after: bool = False,
                            source_utterance: str = "") -> None:
-        nonlocal document_busy, last_user_for_document
+        nonlocal document_busy, last_user_for_document, project_document_ticket
         if document_busy or closing:
             announce_document("Sto già lavorando sul documento: attendi.")
+            return
+        project_document_ticket = begin_project_work(
+            source_utterance or operation,source="document")
+        if project_document_ticket is False:
+            announce_document("Checkpoint progetto non disponibile: azione non eseguita.")
             return
         document_busy = True
         last_user_for_document = source_utterance or last_user_for_document or operation
@@ -1540,6 +1545,15 @@ def main() -> None:
                     announce_document(result.message)
                     source = last_user_for_document or operation
                     last_user_for_document = ""
+                    finish_project_work(project_document_ticket,"completed",result.message,
+                                        receipt=str(result.document_id)+":"+result.kind)
+                    if (project_document_ticket and workspace is not None
+                            and getattr(result,"saved_path",None) is not None):
+                        try:
+                            workspace.record_artifact(project_document_ticket[0],result.saved_path)
+                        except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                            workspace_status.set("File non registrato: "+str(exc)[:110])
+                    project_document_ticket = None
                     remember_exchange(source, result.message, "action")
                     if result.kind in ("opened", "created", "appended",
                                        "saved_and_closed", "closed_without_saving",
@@ -1577,6 +1591,8 @@ def main() -> None:
                     choose_save_button.configure(state="disabled")
                     error_message = "Operazione non riuscita; nessun documento chiuso: " + reason
                     announce_document(error_message)
+                    finish_project_work(project_document_ticket,"failed",error_message)
+                    project_document_ticket = None
                     remember_exchange(last_user_for_document or operation,
                                       error_message, "error")
                     last_user_for_document = ""
