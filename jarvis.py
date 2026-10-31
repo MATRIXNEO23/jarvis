@@ -23,6 +23,9 @@ from dialogue_focus import (focus_hint, PendingProjectReference,
                             normalized_utterance,is_ambiguous_short_reply)
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
+from diagnostic_handoff import (build_external_review_prompt,
+                                is_external_review_request, wants_external_advice,
+                                summarize_operation_outcomes)
 from settings import default_path
 from telegram_commands import explicit_telegram_note
 from telegram_bridge import TelegramBridge
@@ -264,6 +267,8 @@ def main() -> None:
     pending_project_trash_id = None
     pending_project_reference = PendingProjectReference()
     diagnostic_busy = False
+    last_diagnostic_audit = None
+    pending_external_review = False
     save_only_waiting = False
     conversation_memory = ConversationMemory()
     pending_preference = None
@@ -924,9 +929,65 @@ def main() -> None:
         speak_result(message)
         return True
 
+    def offer_external_diagnostic_review() -> bool:
+        """Explicitly confirm sending *redacted findings*, not local files."""
+        if last_diagnostic_audit is None:
+            write_line("DIAGNOSTICA > Prima esegui l'autodiagnosi locale.")
+            speak_result("Prima devo eseguire l'autodiagnosi locale.")
+            return True
+        if not gpt_enabled.get() or not active_gpt:
+            write_line("DIAGNOSTICA > Rapporto locale disponibile. "
+                       "Per la valutazione esterna devi collegare GPT.")
+            speak_result("Il rapporto locale è pronto, ma GPT non è collegato.")
+            return True
+        if busy_gpt:
+            write_line("DIAGNOSTICA > GPT sta già rispondendo; "
+                       "non ho inviato nessun dato.")
+            return True
+        approved=messagebox.askyesno(
+            "JARVIS — valutazione esterna",
+            "Vuoi inviare al GPT collegato soltanto un rapporto tecnico "
+            "ridotto dell'autodiagnosi?\n\n"
+            "Contiene: file sorgenti RELATIVI, righe, segnali statici, "
+            "indicatori generali e CONTEGGI ANONIMI delle operazioni.\n"
+            "NON contiene codice completo, credenziali, documenti, "
+            "log di sistema, percorsi personali né dati dei progetti.\n\n"
+            "È un'analisi di possibili miglioramenti, NON una verifica "
+            "del corretto funzionamento e non autorizza modifiche.",
+            parent=root)
+        if not approved:
+            write_line("DIAGNOSTICA > Invio al modello esterno annullato. "
+                       "Il rapporto locale è conservato.")
+            return True
+        try:
+            snapshot={
+                "gpt_bridge":"available" if active_gpt else "not_tested",
+                "voice_engine":"available" if voice is not None else "not_tested",
+                "local_engine":"available" if engine is not None else "not_tested",
+                "projects":"available" if workspace is not None else "not_tested",
+            }
+            try:
+                history=(operation_ledger.recent(limit=20)
+                         if operation_ledger is not None else ())
+                outcomes=summarize_operation_outcomes(history)
+            except (OSError,sqlite3.Error,MemoryBoundaryError):
+                outcomes=summarize_operation_outcomes(())
+            prompt=build_external_review_prompt(
+                last_diagnostic_audit,snapshot,outcomes)
+        except (ValueError,TypeError) as exc:
+            write_line("DIAGNOSTICA > Non posso preparare il rapporto: "
+                       +str(exc)[:140])
+            return True
+        write_line("DIAGNOSTICA > Consenso ricevuto. Invio SOLO metadati "
+                   "della diagnosi locale al GPT esterno per suggerimenti.")
+        run_gpt("ask",prompt=prompt,source="")
+        return True
+
     def try_self_diagnostic(spoken: str) -> bool:
-        """Read-only, local, bounded source analysis; no edits or network."""
-        nonlocal diagnostic_busy
+        """Read-only source diagnosis; optional GPT is separately authorized."""
+        nonlocal diagnostic_busy,pending_external_review
+        if is_external_review_request(spoken):
+            return offer_external_diagnostic_review()
         request_kind=diagnostic_request(spoken)
         if request_kind is None:
             return False
@@ -946,6 +1007,7 @@ def main() -> None:
             speak_result("Conosco le cartelle del mio programma e dei dati. Le ho mostrate nel registro.")
             return True
         diagnostic_busy=True
+        pending_external_review=(mode=="review" and wants_external_advice(spoken))
         write_line("DIAGNOSTICA > Analisi statica locale avviata, senza modificare file.")
 
         def worker():
@@ -2068,7 +2130,7 @@ def main() -> None:
     def poll() -> None:
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
         nonlocal local_operation_id, document_operation_id
-        nonlocal diagnostic_busy
+        nonlocal diagnostic_busy,last_diagnostic_audit,pending_external_review
         nonlocal last_user_for_action, last_user_for_document
         nonlocal project_local_ticket, project_document_ticket
         nonlocal document_topic,document_owner_project_id,save_only_waiting
@@ -2081,7 +2143,12 @@ def main() -> None:
                 if kind == "self_audit":
                     diagnostic_busy=False
                     audit=data[0]
+                    last_diagnostic_audit=audit
                     write_line("DIAGNOSTICA > "+format_audit(audit))
+                    write_line("DIAGNOSTICA > Se vuoi un parere del modello "
+                               "esterno, puoi chiedere: "
+                               "'Jarvis, valuta la diagnosi con GPT'. "
+                               "Prima di inviare dati chiederò il consenso.")
                     if audit.recommendations:
                         first=audit.recommendations[0]
                         message=(str(len(audit.recommendations))+
@@ -2095,8 +2162,12 @@ def main() -> None:
                                  "le funzioni siano state provate. "
                                  "Trovi il resoconto nel registro.")
                     speak_result(message)
+                    if pending_external_review:
+                        pending_external_review=False
+                        offer_external_diagnostic_review()
                 elif kind == "self_audit_error":
                     diagnostic_busy=False
+                    pending_external_review=False
                     write_line("DIAGNOSTICA > Errore di lettura: "+str(data[0])[:180])
                     speak_result("Non sono riuscito a completare la diagnosi dei sorgenti.")
                 elif kind == "project_journal_error":
