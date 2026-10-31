@@ -110,6 +110,12 @@ def main() -> None:
     style.configure("TCombobox", fieldbackground=PANEL, foreground=WHITE)
     style.configure("Vertical.TScrollbar", background=PANEL,
                     troughcolor=BG)
+    style.configure("TNotebook", background=BG, borderwidth=0)
+    style.configure("TNotebook.Tab", background=PANEL, foreground=CYAN,
+                    padding=(13, 8))
+    style.map("TNotebook.Tab",
+              background=[("selected", "#124058"), ("active", "#0b344a")],
+              foreground=[("selected", WHITE)])
 
     # Every existing setting remains available without crowding the main HUD.
     # The settings window is created once, hidden until the user presses ⚙.
