@@ -5,7 +5,8 @@ import unittest
 
 from diagnostic_handoff import (build_external_review_prompt,
                                 is_external_review_request,
-                                safe_audit_payload,wants_external_advice)
+                                safe_audit_payload,wants_external_advice,
+                                summarize_operation_outcomes)
 from self_diagnostics import SourceAudit
 from source_review import Improvement
 
@@ -79,6 +80,31 @@ class DiagnosticHandoffTests(unittest.TestCase):
         payload=safe_audit_payload(bad)
         self.assertEqual([x["file"] for x in payload["issues"]],
                          ["[file non condiviso]","[file non condiviso]"])
+
+    def test_operation_history_shares_only_anonymized_status_counts(self):
+        source=(
+            {"id":"deadbeef","action":"telegram.send",
+             "detail":"password=secret in C:\\Users\\private",
+             "project_id":"private-project","status":"failed"},
+            {"id":"code1","action":"notepad.save",
+             "detail":"C:\\Users\\Alberto\\Documenti", "status":"verified"},
+            {"status":"reported","detail":"secret API_HASH"},
+            {"status":"other","detail":"should never go to model"},
+        )
+        counts=summarize_operation_outcomes(source)
+        self.assertEqual(counts["sample_size"],3)
+        self.assertEqual(counts["failed"],1)
+        self.assertEqual(counts["verified"],1)
+        self.assertEqual(counts["reported"],1)
+        prompt=build_external_review_prompt(sample_audit(),
+                                            operation_counts=counts)
+        payload=json.loads(prompt.split("DATI_DIAGNOSTICI_JSON:\n",1)[1])
+        self.assertEqual(payload["operation_history"]["failed"],1)
+        self.assertEqual(payload["operation_history"]["verified"],1)
+        for sensitive in ("password=secret","private-project","API_HASH",
+                          "telegram.send","notepad.save","Alberto"):
+            self.assertNotIn(sensitive,prompt)
+        self.assertLessEqual(len(prompt),4800)
 
     def test_long_reviews_are_bounded_and_no_raw_source(self):
         audit=SourceAudit("x","y",(),tuple(
