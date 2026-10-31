@@ -1625,7 +1625,9 @@ def main() -> None:
                 spoken, has_document=snapshot is not None,
                 memory_context=recent_memory_for_gpt(spoken),
                 telegram_send_ready=live["telegram_voice_send"],
-                runtime_info=capability_status_prompt(live))
+                runtime_info=capability_status_prompt(live),
+                addon_actions=(addon_manager.active_actions()
+                               if addon_manager is not None else ()))
         except ConversationRejected as exc:
             write_line("JARVIS > " + str(exc))
             return
@@ -1868,6 +1870,17 @@ def main() -> None:
              "manuale, che richiede conferma. I vocali usano Windows SAPI "
              "e OGG/Opus, senza GPT per trasformare il testo in audio.",
         wraplength=690).pack(anchor="w",pady=(3,0))
+
+    addon_panel=ttk.LabelFrame(
+        frame,text="Add-on — installazione locale e permessi",padding=8)
+    addon_panel.pack(fill="x",pady=(3,9))
+    addon_settings_button=ttk.Button(
+        addon_panel,text="Gestisci add-on (installa, attiva, aggiorna, rimuovi)")
+    addon_settings_button.pack(side="left",padx=(0,10))
+    ttk.Label(addon_panel,
+              text="Solo pacchetti .jaddon descrittivi; nessun codice esterno "
+                   "viene eseguito automaticamente.",
+              wraplength=455).pack(side="left",fill="x",expand=True)
 
     # Conversation is always visible at the left of the animated HUD.
     # The console composer follows the supplied reference: a circular mic,
@@ -2971,7 +2984,10 @@ def main() -> None:
                             intent = parse_conversation_intent(
                                 result.get("text", ""),
                                 has_document=doc_snapshot is not None,
-                                telegram_send_ready=latest["telegram_voice_send"])
+                                telegram_send_ready=latest["telegram_voice_send"],
+                                addon_resolver=(addon_manager.resolve
+                                                if addon_manager is not None
+                                                else None))
                         except ConversationRejected as exc:
                             write_line("GPT: impossibile interpretare la risposta: " + str(exc))
                             speak_result("Non ho capito con sicurezza. Puoi ripetere?")
@@ -2999,7 +3015,13 @@ def main() -> None:
                                 if cap is None:
                                     announce_document("Azione non disponibile.")
                                 elif cap.handler == "local" and cap.plan is not None:
-                                    if not busy_local:
+                                    # A GPT proposal cannot retain permission after
+                                    # a local add-on is disabled or uninstalled.
+                                    if (cap.action_id.startswith("addon.") and
+                                            (addon_manager is None or not
+                                             addon_manager.is_active(cap.action_id))):
+                                        speak_result("L'add-on non è più attivo.")
+                                    elif not busy_local:
                                         submit_local(
                                             message_override=cap.plan.steps[0].command,
                                             source_utterance=original_phrase)
@@ -3248,6 +3270,7 @@ def main() -> None:
     telegram_note_button.configure(command=leave_telegram_note_dialog)
     telegram_contacts_button.configure(command=open_telegram_contact_list)
     telegram_send_button.configure(command=open_telegram_manual_send)
+    addon_settings_button.configure(command=open_addon_settings)
     hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
     hud_mic_button.configure(command=toggle_hud_microphone)
