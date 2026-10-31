@@ -558,7 +558,7 @@ def main() -> None:
             telegram_status.set("Telegram: risposte automatiche disattivate.")
         else:
             peer_id=settings.get("telegram_peer_id",0)
-            if not peer_id or not credentials_present():
+            if not peer_id or not credentials_present() or workspace is None:
                 telegram_auto.set(False)
                 telegram_status.set(
                     "Telegram: configura prima l'account e un solo contatto.")
