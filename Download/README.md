@@ -2,7 +2,7 @@
 
 ## NUOVA PROVA — AUTODIAGNOSI CON EVIDENZE RUNTIME E GPT ESTERNO (31/10/2026)
 
-**[Scarica il ramo sperimentale Jarvis-Diagnostica-Runtime-GPT (ZIP da GitHub)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/diagnostic-runtime-evidence-external-gpt.zip)**
+**[Scarica Jarvis-Diagnostica-Runtime-GPT.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Diagnostica-Runtime-GPT.zip)** — archivio pubblicato e verificato in `Download`, senza sostituire le versioni precedenti.
 
 Questa è una versione di prova isolata, basata sulla diagnostica visibile precedente; il codice **non** è integrato automaticamente in `main`. [Modifiche e PR draft #25](https://github.com/MATRIXNEO23/jarvis/pull/25). [CI Windows/Linux 4/4 SUCCESS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41192534100) sui sorgenti `d6578989459326bed6ddba590f0c21d1d0e75702`.
 
