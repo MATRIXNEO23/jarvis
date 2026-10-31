@@ -42,7 +42,7 @@ def main() -> None:
     settings = load_settings()
     root = tk.Tk()
     root.title("JARVIS // Interfaccia")
-    root.geometry("1260x730")
+    root.geometry("1200x670")
     root.minsize(940, 580)
     root.configure(bg=BG)
     # The classic Windows ttk theme ignores colors; clam permits a coherent
@@ -73,7 +73,7 @@ def main() -> None:
     # The settings window is created once, hidden until the user presses ⚙.
     settings_window = tk.Toplevel(root)
     settings_window.title("JARVIS // Impostazioni")
-    settings_window.geometry("850x740")
+    settings_window.geometry("820x650")
     settings_window.minsize(650, 480)
     settings_window.withdraw()
     settings_window.protocol("WM_DELETE_WINDOW", settings_window.withdraw)
