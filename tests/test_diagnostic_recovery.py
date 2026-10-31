@@ -61,6 +61,18 @@ class DiagnosticSessionTests(unittest.TestCase):
         self.assertTrue(self.session.finish(new,succeeded=False))
         self.assertEqual(self.session.snapshot().phase,"errore")
 
+    def test_user_cancel_releases_ui_but_does_not_accept_late_results(self):
+        old=self.session.start()
+        self.assertEqual(self.session.cancel(),old)
+        self.assertEqual(self.session.snapshot().phase,"annullata")
+        self.assertIsNone(self.session.cancel())
+        another=self.session.start()
+        self.assertNotEqual(old,another)
+        self.assertFalse(self.session.progress(old,"completamento",1,1))
+        self.assertFalse(self.session.finish(old,succeeded=True))
+        self.assertTrue(self.session.active)
+        self.assertTrue(self.session.finish(another,succeeded=True))
+
     def test_new_progress_resets_stall_warning(self):
         run=self.session.start()
         self.clock.advance(12)
@@ -131,6 +143,9 @@ class LocalAuditProgressTests(unittest.TestCase):
         self.assertIn('text="Autodiagnosi Jarvis"',src)
         self.assertIn('diagnostic_status = tk.StringVar',src)
         self.assertIn('diagnostic_percent = tk.IntVar',src)
+        self.assertIn('text="Annulla"',src)
+        self.assertIn("diagnostic_cancel_button.configure(command=cancel_diagnostic)",src)
+        self.assertIn("diagnostic_session.cancel()",src)
         self.assertIn("diagnostic_session.check()",src)
         heartbeat=src.split("    def diagnostic_heartbeat() -> None:",1)[1]
         heartbeat=heartbeat.split("    def poll() -> None:",1)[0]
