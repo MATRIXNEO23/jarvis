@@ -207,7 +207,10 @@ class WorkspaceMemory:
     def rename_project(self,ident,new_name):
         """Rename the same UUID; keep messages, documents and steps intact."""
         from project_voice import safe_project_name
-        new_name=safe_project_name(new_name)
+        try:
+            new_name=safe_project_name(new_name)
+        except ValueError as exc:
+            raise WorkspaceError(str(exc)) from exc
         project=self.project(ident)
         if not project or project["trashed"]:
             raise WorkspaceError("Progetto inesistente o nel cestino.")
