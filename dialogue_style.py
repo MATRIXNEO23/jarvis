@@ -38,16 +38,10 @@ _PROCEDURE = re.compile(
     r"configurare|installare|riparare|disinstallare)\b",
     re.I,
 )
-_FORMAL = re.compile(
-    r"\b(?:parlami con riverenza|rivolgiti a me con riverenza|"
-    r"tono (?:riverente|cerimonioso|solenne|formale)|"
-    r"con rispetto formale|sii formale|"
-    r"usami il lei|dammi del lei)\b",re.I,
-)
 _PLAYFUL = re.compile(
     r"\b(?:fammi (?:una battuta|ridere)|"
     r"una battuta|scherz[oa]|ironia|ironico|ironica|"
-    r"sarcasm[oa]|sarcastic[oa]|prendimi in giro|"
+    r"sarcasm[oa]|sarcastic[oa]|irriveren[tz][aei]|irriveren[tz]a|"
     r"risposta spiritosa)\b",re.I,
 )
 _TEXT_ARTIFACT = re.compile(
@@ -65,13 +59,10 @@ _RULES = {
         "STILE: procedura completa, ordinata e concreta: prerequisiti, passi, "
         "verifiche e avvisi essenziali. Non sacrificare dettagli alla brevità; niente battute."
     ),
-    "formal": (
-        "STILE: cortesia distinta, con un tocco di deferenza o riverenza "
-        "se naturale; mai adulazione, servilismo o titoli ripetuti."
-    ),
     "playful": (
-        "STILE: ironia intelligente e sarcasmo leggero, se opportuni. "
-        "Non deridere l'utente; resta utile e non inserire battute a ogni frase."
+        "STILE: ironia intelligente, sarcasmo leggero e un pizzico di "
+        "irriverenza quando pertinenti; mai offensivo, mai deridere l'utente. "
+        "Non forzare una battuta in ogni frase."
     ),
     "artifact": (
         "STILE: redigi il contenuto richiesto nel tono adatto allo scopo, "
@@ -79,7 +70,7 @@ _RULES = {
     ),
     "conversation": (
         "STILE: conversazione naturale e sintetica, una risposta pertinente "
-        "senza preamboli; una battuta asciutta solo se nasce dal contesto."
+        "senza preamboli; ironia asciutta e irriverenza solo se nascono dal contesto."
     ),
 }
 
@@ -95,8 +86,6 @@ def choose_dialogue_style(utterance: str) -> DialogueStyle:
         mode="sensitive"
     elif _PROCEDURE.search(phrase):
         mode="procedure"
-    elif _FORMAL.search(phrase):
-        mode="formal"
     elif _TEXT_ARTIFACT.search(phrase):
         mode="artifact"
     elif _PLAYFUL.search(phrase):
