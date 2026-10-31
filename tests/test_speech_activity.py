@@ -1,10 +1,14 @@
 """Test the lightweight voice activity indicator and spoken greetings."""
 from array import array
+import time
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 
 from speech_activity import SpeechActivity, pcm16_rms
 from startup_greeting import greeting_for_hour
 from hud_reference import CYAN, AMBER, GREEN, core_light, core_mode
+from voice_control import VoiceController, GPT_CONVERSATION, STANDBY
 
 
 def audio(level):
@@ -41,6 +45,25 @@ class ActivityTests(unittest.TestCase):
         self.assertFalse(gate.feed(audio(500), now=1))
         self.assertFalse(gate.feed(audio(600), now=1.25))
         self.assertTrue(gate.feed(audio(1800), now=1.5))
+
+    def test_open_stream_without_speech_is_not_orange(self):
+        with TemporaryDirectory() as folder:
+            voice = VoiceController(
+                lambda event: None, Path(folder) / "no-audio-model")
+            self.assertFalse(voice.is_listening())
+            self.assertFalse(voice.is_user_speaking())
+            with voice._lock:
+                voice.mode = GPT_CONVERSATION
+                voice._generation = 3
+                voice._active_generation = 3
+            self.assertTrue(voice.is_listening())
+            self.assertFalse(voice.is_user_speaking())
+            with voice._lock:
+                voice._speech_active_until = time.monotonic() + 1
+            self.assertTrue(voice.is_user_speaking())
+            voice.close()
+            self.assertEqual(voice.mode, STANDBY)
+            self.assertFalse(voice.is_user_speaking())
 
     def test_audio_rms(self):
         self.assertEqual(pcm16_rms(audio(500)), 500)
