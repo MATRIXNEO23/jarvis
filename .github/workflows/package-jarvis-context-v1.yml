@@ -1,0 +1,64 @@
+name: Publish Jarvis contextual dialogue test ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-context-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Download catalog
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout pinned CI-tested source
+        uses: actions/checkout@v4
+        with:
+          ref: eaae39fbb21fa75294221a1363300cda250c34da
+          path: source
+          persist-credentials: false
+      - name: Build and inspect source ZIP
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          src=Path("source")
+          dest=Path("catalog/Download/Jarvis-Contesto-e-Risposte-Brevi.zip")
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          with ZipFile(dest,"w",ZIP_DEFLATED,compresslevel=6) as z:
+              for item in sorted(src.rglob("*")):
+                  if not item.is_file():
+                      continue
+                  parts=item.relative_to(src).parts
+                  if any(x in (".git",".venv","venv","__pycache__") for x in parts):
+                      continue
+                  if parts[0] in ("Download",".github"):
+                      continue
+                  z.write(item,"Jarvis-Contesto/"+"/".join(parts))
+          with ZipFile(dest) as z:
+              assert z.testzip() is None
+              names=set(z.namelist())
+              for required in ("avvia_jarvis.bat","jarvis.py","dialogue_focus.py",
+                               "conversation_memory.py","conversation_router.py",
+                               "project_voice.py","workspace_memory.py",
+                               "tests/test_dialogue_focus.py"):
+                  assert "Jarvis-Contesto/"+required in names,required
+          print("VERIFIED",dest,dest.stat().st_size)
+          PY
+      - name: Publish ZIP without replacing old versions
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Contesto-e-Risposte-Brevi.zip
+          git -C catalog commit -m "download: Jarvis context follow-up test build"
+          git -C catalog push origin HEAD:main
