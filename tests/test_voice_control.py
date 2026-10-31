@@ -150,6 +150,25 @@ class MicrophoneSafetyTests(unittest.TestCase):
             control.close()
             self.assertEqual(control.mode, STANDBY)
 
+    def test_hud_listening_requires_real_current_microphone_stream(self):
+        # Selecting an always-listening mode is not enough to show orange
+        # when microphone initialization failed or is still loading.
+        with TemporaryDirectory() as folder:
+            control = VoiceController(lambda event: None,
+                                      Path(folder) / "nonexistent")
+            self.assertFalse(control.is_listening())
+            with control._lock:
+                control.mode = CONTINUOUS
+                control._generation = 8
+                control._active_generation = 7
+            self.assertFalse(control.is_listening())
+            with control._lock:
+                control._active_generation = 8
+            self.assertTrue(control.is_listening())
+            control.close()
+            self.assertFalse(control.is_listening())
+            self.assertEqual(control.mode, STANDBY)
+
     def test_reject_unknown_mode(self):
         control = VoiceController(lambda event: None)
         with self.assertRaises(ValueError):
