@@ -26,13 +26,13 @@ Conservare le soluzioni riuscite come riferimenti entro il loro ambito verificat
 
 **Lezione:** distinguere integrità/fonti dell'artefatto, controllo browser e collaudo dell'app. Nessuna dipendenza Archify aggiunta al runtime.
 
-## 2026-10-31 — Correzione del nucleo: verifica locale completata
-**Autorizzazione:** piano approvato dall'utente con «Sì» nella continuazione della sessione.
+## 2026-10-31 — Nucleo dialogo: soluzione verificata automaticamente
+**Autorizzazione:** piano approvato con «Sì». Commit a86c2c932af988b23916e8d4495025de5ee0a730 sul ramo evoluto, nessun add-on o API aggiuntiva.
 
-**Decisione e motivazione:** raccogliere i record senza budget intermedi, selezionarli una volta nel prompt finale, recuperare SQLite e conservare la domanda finale. Il confronto tra vecchio e nuovo payload dimostra il problema del doppio taglio; aumentare solo la RAM non lo corregge. Nessun modello aggiuntivo o add-on. Dettagli in CORREZIONE-NUCLEO-DIALOGO-20261031.md.
+**Scelta e motivo:** raccolta locale senza tagli intermedi, recupero recenti SQLite, domanda pendente preservata e una sola selezione nel prompt finale. Le prove dimostravano che la capacità RAM non equivale al contesto ricevuto dal modello. Limite invariato 5000 unità UTF-16; cataloghi opzionali subordinati alla memoria. Timeout testo breve allineato alla voce. Standby all'avvio senza cambiare le modalità manuali e senza riscrivere preferenze salvate.
 
-**Prove locali:** 386 test OK, skipped=5; 13 nuovi test anche sui callback reali voce/testo fino alla chiamata client. Sintassi e diff PASS. In attesa di CI Windows/Linux e smoke Windows senza login; non dichiarare ancora collaudo GPT/Pavilion o pacchetto pronto.
+**Prove:** 386 test per ognuno dei quattro job Windows/Linux, Python 3.11/3.12 nella run 41236238213 SUCCESS (Linux 5 skip Windows-only, Windows nessuno). Smoke reale bridge/SDK Windows senza login run 41236238208 SUCCESS. Le 13 nuove regressioni coprono riavvio, dieci turni, payload effettivo dei callback voce/testo, cataloghi, Unicode, isolamento e assenza replay.
 
-**Tentativi scartati e lezioni:** conteggio con len Python insufficiente per emoji/escaping, corretto con unità UTF-16 come Node; domanda finale con prefisso residuo dopo salvataggio, corretto il separatore. Entrambi i casi ora hanno test di regressione. Non eliminare i vecchi log diagnostici.
+**Errori scartati:** primo conteggio con len Python insufficiente per emoji/escaping, corretto con unità UTF-16; prima conservazione della domanda finale produceva un prefisso residuo, corretto il separatore. Entrambi restano nei test per evitare ricadute. Non promuovere tentativi precedenti a riferimenti.
 
-**Microfono:** inizializzazione in standby senza sovrascrivere una scelta manuale; impostazioni salvate conservate, rimosso solo l'effetto della migrazione che riabilitava auto_listen. Il controllo della vecchia opzione automatica è sospeso in UI.
+**Limiti:** collaudo GPT/Pavilion non eseguito, nessun pacchetto distribuito. Archify aggiornato: tre gate PASS, browser-check assente per Chrome mancante. Il dedup confronta solo prefissi disponibili nei vecchi archivi; i dati già troncati non si ricostruiscono. Dettagli e piano di collaudo in CORREZIONE-NUCLEO-DIALOGO-20261031.md.

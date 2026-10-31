@@ -24,3 +24,6 @@ Python 3.12.14, Node 24.22.1: 386 test OK, 5 test Windows saltati; compileall, n
 
 ## Limiti
 La verifica automatica dimostra il trasporto del contesto, non la qualità semantica delle risposte GPT. Necessario collaudo con account collegato e hardware Windows 10/Pavilion. La selezione resta limitata (fino a dieci turni nel prompt, secondo spazio disponibile); non è una memoria illimitata. Nessun nuovo ZIP distribuito in questa fase. Risultati CI e commit registrati nell'handoff autorevole su main.
+
+## Esiti remoti verificati
+Commit a86c2c932af988b23916e8d4495025de5ee0a730. Run unit [41236238213](https://github.com/MATRIXNEO23/jarvis/actions/runs/41236238213) SUCCESS: 386 test per ciascuna delle quattro combinazioni, Linux 5 skip Windows-only e Windows nessuno. Run smoke [41236238208](https://github.com/MATRIXNEO23/jarvis/actions/runs/41236238208) SUCCESS: import SDK e ready/status/shutdown del bridge, senza login o richieste al modello. Non equivalgono al collaudo conversazionale reale sul Pavilion.
