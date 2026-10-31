@@ -225,8 +225,8 @@ def parse_conversation_intent(
                     obj["action_id"], obj["arguments"],
                     has_document=has_document,
                     telegram_send_ready=telegram_send_ready)
-        except (CapabilityRejected, ValueError) as exc:
-            raise ConversationRejected(str(exc)) from exc
+        except (CapabilityRejected, ValueError, OSError) as exc:
+            raise ConversationRejected("Azione add-on o capacità locale non disponibile.") from exc
         return ConversationIntent(kind="capability", capability=resolved)
 
     if kind == "tool":
