@@ -40,6 +40,30 @@ try {
 """
 _POWERSHELL_ENCODED = __import__("base64").b64encode(_PS_SCRIPT.encode("utf-16-le")).decode("ascii")
 _MAX_SPEECH = 600
+_MAX_SPEECH_MESSAGE = 2800
+
+
+def _speech_chunks(text: str) -> tuple[str, ...]:
+    """Bounded, word-safe SAPI chunks; never silently clip a procedure at 600."""
+    text = " ".join(text.split())[:_MAX_SPEECH_MESSAGE].strip()
+    parts = []
+    while len(text) > _MAX_SPEECH:
+        chunk = text[:_MAX_SPEECH]
+        # Prefer a natural sentence boundary, but avoid tiny fragments.
+        candidates = [chunk.rfind(mark) for mark in (". ", "? ", "! ", "; ")]
+        cut = max(candidates)
+        if cut >= _MAX_SPEECH // 2:
+            cut += 1
+        else:
+            cut = chunk.rfind(" ")
+            if cut <= 0:
+                cut = _MAX_SPEECH
+        parts.append(text[:cut].strip())
+        text = text[cut:].strip()
+    if text:
+        parts.append(text)
+    return tuple(parts)
+
 
 
 def _invoke(payload: dict, *, timeout: int = 90) -> str:
@@ -95,7 +119,7 @@ class OfflineSpeaker:
             return False
         if not isinstance(voice, str) or len(voice) > 180:
             return False
-        snippet = " ".join(text.split())[:_MAX_SPEECH]
+        snippet = " ".join(text.split())[:_MAX_SPEECH_MESSAGE]
         try:
             self._messages.put_nowait((snippet, voice))
         except queue.Full:
@@ -119,8 +143,11 @@ class OfflineSpeaker:
                 break
             self._busy.set()
             try:
-                self._runner({"mode": "speak", "text": text, "voice": voice},
-                             timeout=90)
+                for part in _speech_chunks(text):
+                    if self._closed.is_set():
+                        break
+                    self._runner({"mode": "speak", "text": part, "voice": voice},
+                                 timeout=90)
             except (OSError, ValueError, subprocess.TimeoutExpired):
                 if self._notify_error:
                     self._notify_error("Impossibile riprodurre la voce selezionata.")
