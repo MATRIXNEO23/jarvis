@@ -2192,6 +2192,29 @@ def main() -> None:
             return
         run_gpt("ask", prompt=prompt, source=message)
 
+    def diagnostic_heartbeat() -> None:
+        """Independent watchdog: runs even if another event handler fails."""
+        nonlocal diagnostic_busy,pending_external_review
+        if closing:
+            return
+        root.after(800,diagnostic_heartbeat)
+        check=diagnostic_session.check()
+        if check=="timeout":
+            diagnostic_busy=False
+            pending_external_review=False
+            update_diagnostic_ui()
+            write_line("DIAGNOSTICA > Tempo massimo superato (120 s). "
+                       "Ho sbloccato l'interfaccia; il vecchio controllo "
+                       "potrebbe ancora essere attivo. Risultati tardivi ignorati.")
+            speak_result("La diagnosi non risponde. "
+                         "Ho sbloccato i comandi, senza modificare file.")
+        elif check=="stalled":
+            update_diagnostic_ui()
+            write_line("DIAGNOSTICA > Nessun avanzamento da 12 secondi. "
+                       "Il controllo è ancora attivo; scadrà dopo 120 secondi.")
+        elif diagnostic_session.active:
+            update_diagnostic_ui()
+
     def poll() -> None:
         """Always schedule another UI tick before consuming potentially bad events."""
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
@@ -2745,26 +2768,6 @@ def main() -> None:
         except queue.Empty:
             pass
 
-        # A worker can hang or crash before delivering a queue result.
-        # The time limit makes the UI recover without falsely claiming
-        # the underlying background thread was terminated.
-        check=diagnostic_session.check()
-        if check=="timeout":
-            diagnostic_busy=False
-            pending_external_review=False
-            update_diagnostic_ui()
-            write_line("DIAGNOSTICA > Tempo massimo superato (120 s). "
-                       "Ho sbloccato l'interfaccia; il vecchio controllo "
-                       "potrebbe ancora essere attivo. Risultati tardivi ignorati.")
-            speak_result("La diagnosi non risponde. "
-                         "Ho sbloccato i comandi, senza modificare file.")
-        elif check=="stalled":
-            update_diagnostic_ui()
-            write_line("DIAGNOSTICA > Nessun avanzamento da 12 secondi. "
-                       "Il controllo è ancora attivo; scadrà dopo 120 secondi.")
-        elif diagnostic_session.active:
-            update_diagnostic_ui()
-
         try:
             while True:
                 event = service.events.get_nowait()
@@ -2956,6 +2959,7 @@ def main() -> None:
     refresh_buttons()
     input_box.focus_set()
     root.after(120, poll)
+    root.after(800, diagnostic_heartbeat)
     root.after(400, refresh_voices)
     root.after(650, initial_launch)
     root.after(1100, refresh_orbit_nodes)
