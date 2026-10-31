@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import io
+import sys
+import threading
 import unittest
 import wave
+from types import SimpleNamespace
 from unittest.mock import patch
 
-from jarvis_timer import SOUNDS, TimerPopup, alarm_wav, parse_timer_command
+from jarvis_timer import SOUNDS, TimerPopup, alarm_wav, parse_timer_command, play_alarm
 
 
 class TimerParsingTests(unittest.TestCase):
@@ -52,6 +55,46 @@ class AlarmTests(unittest.TestCase):
                              ("digital", 101), ("digital", True)):
             with self.assertRaises(ValueError):
                 alarm_wav(kind, volume)
+
+    def test_filename_wav_playback_reports_selected_backend(self):
+        calls, statuses = [], []
+        fake = SimpleNamespace(
+            SND_FILENAME=1, SND_SYNC=2, SND_NODEFAULT=4, SND_MEMORY=8,
+            PlaySound=lambda payload, flags: calls.append((payload, flags)),
+            Beep=lambda freq, ms: self.fail("Fallback beep should not run"),
+            MessageBeep=lambda: self.fail("MessageBeep should not run"),
+        )
+        with patch.dict(sys.modules, {"winsound": fake}):
+            play_alarm("digital", 80, threading.Event(),
+                       on_status=lambda *value: statuses.append(value))
+        self.assertTrue(calls)
+        self.assertTrue(calls[0][1] & fake.SND_FILENAME)
+        self.assertTrue(statuses[0][0])
+        self.assertIn("WAV", statuses[0][1])
+
+    def test_wav_failures_fall_back_to_beep(self):
+        calls, statuses = [], []
+        def broken_wav(payload, flags):
+            raise RuntimeError("No WAV output")
+        fake = SimpleNamespace(
+            SND_FILENAME=1, SND_SYNC=2, SND_NODEFAULT=4, SND_MEMORY=8,
+            PlaySound=broken_wav,
+            Beep=lambda freq, ms: calls.append((freq, ms)),
+            MessageBeep=lambda: self.fail("Beep worked; system signal not needed"),
+        )
+        with patch.dict(sys.modules, {"winsound": fake}):
+            play_alarm("double", 80, threading.Event(),
+                       on_status=lambda *value: statuses.append(value))
+        self.assertGreater(len(calls), 0)
+        self.assertEqual(statuses[0][0], True)
+        self.assertIn("bip alternativo", statuses[0][1])
+
+    def test_volume_zero_reports_visible_error(self):
+        statuses = []
+        play_alarm("digital", 0, threading.Event(),
+                   on_status=lambda *result: statuses.append(result))
+        self.assertEqual(statuses[0][0], False)
+        self.assertIn("0%", statuses[0][1])
 
     def test_start_resumes_when_paused_without_editing_duration(self):
         t = TimerPopup(root=None, get_preferences=lambda: {})
