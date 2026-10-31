@@ -267,3 +267,29 @@ Implementazioni reali:
 **Distribuzione:** nuova ZIP isolata [feature/hud-reference-redesign](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-reference-redesign.zip) linkata anche in [Download](https://github.com/MATRIXNEO23/jarvis/tree/main/Download); [guida](https://github.com/MATRIXNEO23/jarvis/blob/feature/hud-reference-redesign/docs/HUD_REFERENCE_V2.md).
 
 **Prossima prova fisica:** mostrare e confrontare il nuovo UI con la reference foto dell'utente. Verificare (1) ciano standby (2) arancione pulsante con flusso Vosk realmente aperto (3) verde durante la voce SAPI (4) globo e tutti i tre tab della console (5) impostazioni dietro ⚙ e pulsanti save/annulla (6) carico CPU/memoria mentre Minecraft o altri programmi pesanti sono attivi. Non fare merge fino a esito positivo e decisione separata dell'utente. Conservare vecchia cartella e `%LOCALAPPDATA%\\Jarvis`.
+
+
+## 16. Continuità conversazionale e personalità JARVIS (31 ottobre 2026)
+
+**Nuovo feedback da test utente:** nonostante il riconoscimento abbastanza corretto delle parole, Jarvis tratta una nuova frase come nuovo input autonomo invece di proseguire la conversazione; l'utente vuole inoltre che abbia una personalità sobria simile all'assistente JARVIS. L'utente non chiede soltanto più accuratezza acustica di Vosk.
+
+**Difetti reali individuati nella logica del ramo precedente:**
+- `conversation_memory.context(max_chars=360)` poteva restituire `[]` per un singolo scambio utente/GPT troppo lungo. Alla domanda successiva GPT non riceveva il riferimento, pur essendo appena stato pronunciato.
+- Durante un'operazione `busy_gpt` le nuove frasi in modalità conversazione venivano scartate con il messaggio «GPT sta rispondendo», non conservate.
+- Il prompt vocale era centrato sul ruolo di traduttore di comandi, poco naturale; quello scritto presentava ancora l'assistente come Lia, con diverso stile.
+- Il collegamento DevKit ChatGPT ha un **limite massimo di 5000 caratteri per richiesta** e la lista descrittiva completa dei comandi riduceva lo spazio per memorie e personalità.
+
+**Soluzione isolata:** branch `feature/dialogue-continuity-personality`, [PR #8 draft](https://github.com/MATRIXNEO23/jarvis/pull/8), basato sul redesign HUD precedente `feature/hud-reference-redesign`. **Non sostituire il Jarvis già funzionante; nessun merge automatico.**
+
+Implementazioni:
+- `conversation_memory.py`: mantiene l'ultimo scambio anche se lungo, usando troncamenti progressivi, senza eliminare l'intero turno quando supera il budget; memoria breve **sempre attiva in RAM**, senza Second Brain persistente.
+- `jarvis_persona.py`: profilo testuale leggero **JARVIS**, italiano naturale, competente, discreto e lievemente ironico solo quando appropriato; risposte non ripetitive, nessuna falsa dichiarazione di azioni o capacità. Funzioni di compattazione JSON dei ricordi per mantenere i riferimenti immediati e prompt della chat scritta con lo stesso profilo.
+- `conversation_router.py` e `capability_registry.py`: il modello riceve un catalogo di azioni più conciso (con esempi), istruzioni di conversazione e un contesto di memoria prioritario. La **frase corrente** è alla fine del prompt. Il passato non autorizza azioni; strumenti e conferme continuano a essere verificati localmente. Tutto il prompt rientra nei 5000 caratteri del collegamento.
+- `jarvis.py`: recupero di una finestra recente più ampia per GPT, nuovo stile anche nel campo «Chiedi a GPT», e **coda di massimo 3 interventi vocali** quando GPT sta elaborando. Le frasi sono inviate una alla volta, dopo la registrazione dell'esito precedente; niente perdita silenziosa delle frasi già ricevute. La coda viene cancellata se si cambia modalità, GPT viene disattivato o il collegamento si interrompe. Mai riavviare una vecchia richiesta da memoria.
+- `tests/test_jarvis_persona.py` e test preesistenti: coperti memoria lunga, chiarimenti in più turni, ruolo/personalità, prompt limitati, assenza di ri-esecuzione dalla memoria.
+
+**CI verificata:** [run 41150861417](https://github.com/MATRIXNEO23/jarvis/actions/runs/41150861417), **SUCCESS** su Python 3.11/3.12 × Windows/Ubuntu (4 job); ultimo commit di codice testato `52134b28417656d6604383a19e5302286b87c1a4`. Documentazione su branch successiva alla CI non modifica l'eseguibile.
+
+**Documentazione:** [docs/DIALOGO_CONTINUO.md](https://github.com/MATRIXNEO23/jarvis/blob/feature/dialogue-continuity-personality/docs/DIALOGO_CONTINUO.md). **ZIP testabile** [feature/dialogue-continuity-personality](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/dialogue-continuity-personality.zip) esposta in [Download](https://github.com/MATRIXNEO23/jarvis/tree/main/Download).
+
+**Limiti onesti:** questa correzione non migliora direttamente il riconoscimento fonetico Vosk; la protezione eco continua a ignorare il microfono quando Jarvis sta parlando, quindi non c'è ancora vero barge-in/full-duplex. La memoria persistente continua a richiedere opt-in. I test Windows/Linux non dimostrano che GPT interpreti perfettamente ogni follow-up: serve test fisico del dialogo sul Pavilion con account collegato. Mantieni standby/OFF all'avvio e modalità manuali, vecchia versione e directory del profilo intatte.
