@@ -1,5 +1,17 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NOVITÀ DI PROVA — TELEGRAM MULTI-CONTATTO E MESSAGGI VOCALI (31/10/2026)
+
+**[Scarica Jarvis-Telegram-Contatti-Vocali-Test.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Telegram-Contatti-Vocali-Test.zip)**
+
+Include selezione dei contatti reali tramite **spunte**, risposte automatiche per i soli contatti autorizzati, pulsante **Invia messaggio vocale** (destinatario e testo + conferma), e comando «Jarvis, manda un messaggio a Nico» con dettatura del contenuto e conferma. Testo scritto o dettato viene trasformato localmente in OGG/Opus (Windows SAPI e FFmpeg) e inviato come nota vocale Telegram. Nessun modello locale aggiuntivo, nessuna API GPT nuova.
+
+Codice nel [ramo isolato](https://github.com/MATRIXNEO23/jarvis/tree/feature/telegram-multicontact-voice-outbound), [PR draft #26](https://github.com/MATRIXNEO23/jarvis/pull/26); non integrato nel programma principale. Archivio separato dalle versioni precedenti. [Istruzioni e limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/telegram-multicontact-voice-outbound/docs/TELEGRAM_CONTATTI_INVIO_VOCALI.md).
+
+Il pacchetto è stato creato da una revisione fissata dopo controllo dei test automatici (senza invii reali) e verifica del contenuto SHA-256. **Non è ancora collaudato sul tuo Pavilion con un destinatario Telegram reale.** Prima di provarlo, chiudi Jarvis, salva una copia di `%LOCALAPPDATA%\\Jarvis` ed estrailo in una cartella distinta. Se Windows Defender lo segnala, interrompi la prova, senza disattivare la protezione e senza creare esclusioni. Le credenziali Telegram e gli archivi esistenti non vanno cancellati.
+
+---
+
 ## NUOVA PROVA — AUTODIAGNOSI CON EVIDENZE RUNTIME E GPT ESTERNO (31/10/2026)
 
 **[Scarica Jarvis-Diagnostica-Runtime-GPT.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Diagnostica-Runtime-GPT.zip)** — archivio pubblicato e verificato in `Download`, senza sostituire le versioni precedenti.
