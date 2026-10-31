@@ -157,5 +157,47 @@ class TelegramVoiceDialogTests(unittest.TestCase):
         self.assertIn("telegram_owner_error",source)
 
 
+class TelegramOutboundNetworkBoundaryTests(unittest.IsolatedAsyncioTestCase):
+    async def test_revoke_before_send_prevents_network_call(self):
+        from unittest.mock import patch
+        from telegram_directory import _send_telegram_voice, TelegramDirectoryError
+        import telegram_directory
+
+        class FakeClient:
+            def __init__(self):
+                self.sent = 0
+                self.closed = False
+            async def send_file(self, peer, path, voice_note=False):
+                self.sent += 1
+                self.voice_note = voice_note
+                return SimpleNamespace(id=123)
+            async def disconnect(self):
+                self.closed = True
+
+        client = FakeClient()
+        async def fake_auth():
+            return client
+        async def fake_contacts(_client):
+            return {11: ("Nico Rossi", object())}
+        def fake_voice(_text,folder,_voice=""):
+            file = Path(folder)/"test.ogg"
+            file.write_bytes(b"not real audio")
+            return file
+
+        with patch.object(telegram_directory, "_authenticated_client", fake_auth), \
+             patch.object(telegram_directory, "verified_contact_entities", fake_contacts), \
+             patch.object(telegram_directory, "make_telegram_voice", fake_voice):
+            with self.assertRaises(TelegramDirectoryError):
+                await _send_telegram_voice(11,"Ciao Nico","",lambda:False)
+            self.assertEqual(client.sent,0)
+            self.assertTrue(client.closed)
+            client.closed = False
+            result = await _send_telegram_voice(11,"Ciao Nico","",lambda:True)
+            self.assertEqual(result,123)
+            self.assertEqual(client.sent,1)
+            self.assertTrue(client.voice_note)
+            self.assertTrue(client.closed)
+
+
 if __name__ == "__main__":
     unittest.main()
