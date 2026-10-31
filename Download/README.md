@@ -2,9 +2,9 @@
 
 **[SCARICA BUILD COMPLETA JARVIS - AUDIT + TELEGRAM 50](./Jarvis-Full-Audit-Telegram50-20261031.zip)**
 
-Pacchetto sorgente Python completo per Windows 10, non un EXE. Include l'avvio di prova separato `AVVIA_TEST_TELEGRAM50.bat`, microfono attivo all'avvio (se modello/dispositivo disponibili), GPT esterno, documenti, progetti, add-on e Telegram (50 messaggi per contatto, contesto degli ultimi 4 senza riassunti).
+Pacchetto sorgente Python completo per Windows 10, non un EXE. Include un solo launcher `avvia_jarvis.bat` con profilo isolato, microfono attivo all'avvio (se modello/dispositivo disponibili), GPT esterno, documenti, progetti, add-on e Telegram (50 messaggi per contatto, contesto degli ultimi 4 senza riassunti).
 
-Non sovrascrivere la versione stabile: estrai in una cartella nuova e avvia `AVVIA_TEST_TELEGRAM50.bat`. Il collegamento Telegram opera sull'account reale quando attivato. Test automatici Windows e Ubuntu superati; prova finale sul Pavilion ancora necessaria. La PR #30 resta separata da main.
+Non sovrascrivere la versione stabile: estrai in una cartella nuova e avvia `avvia_jarvis.bat` nella nuova cartella. Il collegamento Telegram opera sull'account reale quando attivato. Test automatici Windows e Ubuntu superati; prova finale sul Pavilion ancora necessaria. La PR #30 resta separata da main.
 
 ---
 
