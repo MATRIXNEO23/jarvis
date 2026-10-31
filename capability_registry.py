@@ -98,7 +98,8 @@ def load_catalog(path: Path | None = None) -> tuple[dict, ...]:
     return tuple(result)
 
 
-def capability_prompt(*, has_document: bool = False) -> str:
+def capability_prompt(*, has_document: bool = False,
+                      compact: bool = False) -> str:
     """Compact description generated from the catalog, not hardcoded examples."""
     actions = []
     for item in load_catalog():
@@ -106,12 +107,19 @@ def capability_prompt(*, has_document: bool = False) -> str:
         # A missing session never authorizes Notepad close or append.
         if aid == "notepad.close" and not has_document:
             continue
-        actions.append({
-            "id": aid,
-            "app": item["application"],
-            "does": item["description"],
-            "example": item["examples"][0],
-        })
+        if compact:
+            actions.append({
+                "id": aid,
+                "does": item["description"][:68],
+                "example": item["examples"][0],
+            })
+        else:
+            actions.append({
+                "id": aid,
+                "app": item["application"],
+                "does": item["description"],
+                "example": item["examples"][0],
+            })
     rendered = json.dumps(actions, ensure_ascii=False, separators=(",", ":"))
     if len(rendered) > 3500:
         raise CapabilityRejected("Catalogo troppo lungo per GPT.")
