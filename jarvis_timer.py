@@ -37,6 +37,8 @@ def parse_timer_command(text: str) -> TimerCommand | None:
     value = re.sub(r"^(?:ehi\s+)?jarvis\s*[,.:]?\s*", "", value)
     if not re.search(r"\btimer\b", value):
         return None
+    if re.search(r"-\\s*\\d", value):
+        return None
     for action, expressions in (
         ("pause", ("pausa", "metti in pausa", "sospendi")),
         ("resume", ("riprendi", "continua")),
