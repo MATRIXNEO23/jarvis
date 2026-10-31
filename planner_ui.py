@@ -17,7 +17,8 @@ from plan_runner import run_approved_plan
 
 
 def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool],
-                 execution_lock: Lock, abort_event: threading.Event) -> None:
+                 execution_lock: Lock, abort_event: threading.Event,
+                 on_approved=None, on_step=None, on_finished=None) -> None:
     previous = getattr(parent, "_jarvis_planner_window", None)
     if previous is not None and previous.winfo_exists():
         previous.lift()
@@ -57,6 +58,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
     closed = False
     events: queue.Queue[tuple] = queue.Queue()
     cancel_event = threading.Event()
+    tracking = None  # Durable tickets for the particular approved plan.
 
     def show(text: str) -> None:
         if closed:
@@ -118,7 +120,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         threading.Thread(target=worker, name="jarvis-gpt-planner", daemon=True).start()
 
     def approve() -> None:
-        nonlocal pending, busy, phase, cancel_requested
+        nonlocal pending, busy, phase, cancel_requested, tracking
         if busy or pending is None:
             return
         if abort_event.is_set():
@@ -144,6 +146,14 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
             buttons()
             return
         accepted = pending
+        # Stop before executing if the project checkpoint cannot be persisted.
+        try:
+            tracking = on_approved(accepted) if on_approved is not None else None
+        except (OSError,ValueError,RuntimeError) as exc:
+            status.set("Checkpoint progetto fallito: piano non eseguito.")
+            show("Nessuna azione avviata: "+str(exc)[:160])
+            buttons()
+            return
         pending = None
         busy = True
         phase = "running"
@@ -154,8 +164,24 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         buttons()
 
         def worker() -> None:
+            def notify_tracked(event) -> None:
+                # Worker thread: journaling uses SQLite/files only, NEVER Tk.
+                try:
+                    if event[0]=="step" and on_step is not None:
+                        on_step(tracking,event[1],event[4],event[5],
+                                event[6] if len(event)>6 else "")
+                    elif event[0]=="finished" and on_finished is not None:
+                        on_finished(tracking,event[1])
+                except Exception:
+                    # Do not allow later steps after a missing audit receipt.
+                    abort_event.set()
+                    events.put(("journal_error",
+                                "Checkpoint del progetto non registrato: "
+                                "esecuzione interrotta in sicurezza."))
+                events.put(event)
             run_approved_plan(
-                accepted, engine, execution_lock, cancel_event, abort_event, events.put
+                accepted, engine, execution_lock, cancel_event,
+                abort_event, notify_tracked
             )
 
         threading.Thread(target=worker, name="jarvis-local-planned-task",
@@ -224,8 +250,11 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
                         status.set("Richiesta annullata.")
                     cancel_requested = False
                 elif event == "step":
-                    index, count, description, result, message = values
+                    index, count, description, result, message, *receipts = values
                     show(f"PASSO {index}/{count}: {description}\n[{result}] {message}")
+                elif event == "journal_error":
+                    show(values[0])
+                    status.set(values[0])
                 elif event == "finished":
                     busy = False
                     phase = "idle"

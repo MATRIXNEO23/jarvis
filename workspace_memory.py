@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import threading
 from uuid import uuid4
 
 from settings import default_path
@@ -51,7 +52,9 @@ class WorkspaceMemory:
             "jarvis_workspaces.sqlite3")
         self.path.parent.mkdir(parents=True,exist_ok=True)
         self.continuities=self.path.parent/"projects"
+        self._projection_lock=threading.RLock()
         self._initialize()
+        self._recover_unfinished()
 
     @contextmanager
     def _db(self):
@@ -97,6 +100,28 @@ class WorkspaceMemory:
                 receipt_id INTEGER, created_utc TEXT NOT NULL)""")
             db.execute("""CREATE INDEX IF NOT EXISTS tg_outbox_ready
                 ON telegram_outbox(peer_id,state,created_utc)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS workspace_session(
+                key TEXT PRIMARY KEY, value TEXT NOT NULL)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS project_steps(
+                id TEXT PRIMARY KEY, project_id TEXT NOT NULL,
+                title TEXT NOT NULL, source TEXT NOT NULL,
+                status TEXT NOT NULL CHECK(
+                    status IN ('planned','running','completed','failed','interrupted')),
+                detail TEXT NOT NULL DEFAULT '', receipt TEXT NOT NULL DEFAULT '',
+                created_utc TEXT NOT NULL, updated_utc TEXT NOT NULL)""")
+            db.execute("""CREATE INDEX IF NOT EXISTS project_steps_recent
+                ON project_steps(project_id,updated_utc DESC,id DESC)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS project_events(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id TEXT NOT NULL, step_id TEXT NOT NULL DEFAULT '',
+                kind TEXT NOT NULL CHECK(kind IN ('step','artifact')),
+                title TEXT NOT NULL, status TEXT NOT NULL,
+                detail TEXT NOT NULL, time_utc TEXT NOT NULL)""")
+            db.execute("""CREATE INDEX IF NOT EXISTS project_events_recent
+                ON project_events(project_id,id DESC)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS project_artifacts(
+                project_id TEXT NOT NULL, path TEXT NOT NULL,
+                verified_utc TEXT NOT NULL, PRIMARY KEY(project_id,path))""")
             # Optional FTS5: built into common Windows Python distributions.
             # If unavailable, search only a small recent window by SQL.
             self.fts_available=True
@@ -136,6 +161,23 @@ class WorkspaceMemory:
         return ({"id":row[0],"name":row[1],"active":bool(row[2]),
                  "summary":row[3],"updated_utc":row[4]}
                 if row else None)
+
+    def select_project(self, ident=None):
+        """Persist the current focus; None means general chat."""
+        if ident is not None and not self.project(ident):
+            raise WorkspaceError("Progetto da aprire inesistente.")
+        with self._db() as db:
+            db.execute(
+                "INSERT OR REPLACE INTO workspace_session(key,value) "
+                "VALUES('current_project',?)",(ident or "",))
+
+    def current_project(self):
+        """Restore the last selected project only if it still exists."""
+        with self._db() as db:
+            row=db.execute("SELECT value FROM workspace_session "
+                           "WHERE key='current_project'").fetchone()
+        ident=row[0] if row and row[0] else None
+        return ident if ident and self.project(ident) else None
 
     def projects(self,active_only=False,limit=60):
         with self._db() as db:
@@ -184,7 +226,7 @@ class WorkspaceMemory:
             if scope=="project":
                 db.execute("UPDATE projects SET updated_utc=? WHERE id=?",(_now(),scope_id))
         if scope=="project":
-            self._save_snapshot(scope_id)
+            self._save_snapshot(scope_id, steps_changed=False)
         return True
 
     def recent(self,scope,scope_id,limit=6):
@@ -247,6 +289,15 @@ class WorkspaceMemory:
                     summary=project["summary"][:280]
                     if len(json.dumps({**context,"state":summary},ensure_ascii=False))<=budget:
                         context["state"]=summary
+                # Include verified operational state, not GPT-inferred achievements.
+                steps=self.project_steps(scope_id,limit=5)
+                compact=[{"step":x["title"][:90],"status":x["status"],
+                          "detail":x["detail"][:120]} for x in steps]
+                for count in range(len(compact),0,-1):
+                    candidate={**context,"steps":compact[:count]}
+                    if len(json.dumps(candidate,ensure_ascii=False))<=budget:
+                        context=candidate
+                        break
         return json.dumps(context,ensure_ascii=False,separators=(",",":"))
 
     def continuity_file(self,ident):
@@ -254,42 +305,248 @@ class WorkspaceMemory:
             raise WorkspaceError("Progetto inesistente.")
         return self.continuities/ident/"CONTINUITA.md"
 
-    def _save_snapshot(self,ident):
-        project=self.project(ident)
-        if not project:
+    def project_steps(self, ident, limit=40):
+        if not self.project(ident):
             raise WorkspaceError("Progetto inesistente.")
-        history=self.recent("project",ident,8)
-        lines=[
-            "# Continuità — "+project["name"],
-            "",
-            "ID progetto: "+ident,
-            "Stato: "+("attivo" if project["active"] else "archiviato"),
-            "Aggiornato (UTC): "+project["updated_utc"],
-            "",
-            "## Stato consolidato dall'utente",
-            project["summary"] or "(nessuno stato consolidato fornito)",
-            "",
-            "## Ultimi scambi (estratto automatico, non decisioni verificate)",
-        ]
-        for item in history:
-            lines.extend([
-                "", "- ["+item["when"]+"] Utente: "+item["utente"][:240],
-                "  - JARVIS: "+item["jarvis"][:260],
-            ])
-        contents="\n".join(lines)+"\n"
-        target=self.continuity_file(ident)
-        target.parent.mkdir(parents=True,exist_ok=True)
-        # Last valid generation remains recoverable if a write fails.
-        if target.is_file():
-            backup=target.with_suffix(".previous.md")
-            backup.write_bytes(target.read_bytes())
-        temp=target.with_suffix(".pending")
+        with self._db() as db:
+            rows=db.execute(
+                "SELECT id,title,source,status,detail,receipt,created_utc,updated_utc "
+                "FROM project_steps WHERE project_id=? "
+                "ORDER BY updated_utc DESC,rowid DESC LIMIT ?",
+                (ident,min(100,max(1,int(limit))))).fetchall()
+        return tuple(dict(zip(("id","title","source","status","detail","receipt",
+                               "created_utc","updated_utc"),row)) for row in rows)
+
+    def begin_step(self, ident, title, *, source="jarvis", planned=False):
+        """Record before dispatch. An unfinished step is never silently marked done."""
+        if not self.project(ident):
+            raise WorkspaceError("Progetto inesistente.")
+        if (not isinstance(title,str) or not title.strip()
+                or len(title)>240 or _SECRET.search(title)
+                or not isinstance(source,str) or not source.isidentifier()
+                or len(source)>30 or type(planned) is not bool):
+            raise WorkspaceError("Passo non valido o potenzialmente sensibile.")
+        ticket=uuid4().hex
+        now=_now()
+        state="planned" if planned else "running"
+        label=_trim(title,240)
+        with self._db() as db:
+            db.execute(
+                "INSERT INTO project_steps(id,project_id,title,source,status,created_utc,updated_utc) "
+                "VALUES(?,?,?,?,?,?,?)",
+                (ticket,ident,label,source,state,now,now))
+            db.execute(
+                "INSERT INTO project_events(project_id,step_id,kind,title,status,detail,time_utc) "
+                "VALUES(?,?,'step',?,?,?,?)",
+                (ident,ticket,label,state,"",now))
+            db.execute("UPDATE projects SET updated_utc=? WHERE id=?",(now,ident))
+        self._save_snapshot(ident)
+        return ticket
+
+    def finish_step(self, ident, ticket, status, detail="", *, receipt=""):
+        """Idempotent terminal transition, backed by one SQLite transaction."""
+        if not self.project(ident) or not _project_id(ticket):
+            raise WorkspaceError("Progetto o passo non valido.")
+        if status not in ("completed","failed","interrupted"):
+            raise WorkspaceError("Stato del passo non valido.")
+        # Sensitive error/output text must never be persisted.
+        detail=("[Dettaglio omesso per sicurezza]"
+                if _SECRET.search(str(detail)) else _trim(str(detail),480))
+        receipt=_trim(str(receipt),120) if receipt else ""
+        if status=="completed" and not receipt:
+            raise WorkspaceError("Un passo completato richiede una ricevuta verificabile.")
+        now=_now()
+        with self._db() as db:
+            cur=db.execute(
+                "UPDATE project_steps SET status=?,detail=?,receipt=?,updated_utc=? "
+                "WHERE id=? AND project_id=? AND status IN ('planned','running')",
+                (status,detail,receipt,now,ticket,ident))
+            if cur.rowcount!=1:
+                return False
+            row=db.execute(
+                "SELECT title FROM project_steps WHERE id=?",(ticket,)).fetchone()
+            db.execute(
+                "INSERT INTO project_events(project_id,step_id,kind,title,status,detail,time_utc) "
+                "VALUES(?,?,'step',?,?,?,?)",
+                (ident,ticket,row[0],status,detail,now))
+            db.execute("UPDATE projects SET updated_utc=? WHERE id=?",(now,ident))
+        self._save_snapshot(ident)
+        return True
+
+    def record_artifact(self, ident, path):
+        """Only register a file that really exists; never copy or move it."""
+        if not self.project(ident):
+            raise WorkspaceError("Progetto inesistente.")
+        target=Path(path).resolve(strict=True)
+        if (not target.is_file() or
+                any(_SECRET.search(part) for part in target.parts) or
+                target.suffix.casefold() in (".dpapi",".key",".pem")):
+            raise WorkspaceError("File non verificabile o sensibile.")
+        now=_now()
+        with self._db() as db:
+            cur=db.execute(
+                "INSERT OR IGNORE INTO project_artifacts(project_id,path,verified_utc) "
+                "VALUES(?,?,?)",(ident,str(target),now))
+            if cur.rowcount:
+                db.execute(
+                    "INSERT INTO project_events(project_id,kind,title,status,detail,time_utc) "
+                    "VALUES(?,'artifact',?,'verified',?,?)",
+                    (ident,target.name,str(target)[:480],now))
+                db.execute("UPDATE projects SET updated_utc=? WHERE id=?",(now,ident))
+        if cur.rowcount:
+            self._save_snapshot(ident)
+        return bool(cur.rowcount)
+
+    def _recover_unfinished(self):
+        """On restart, stop stale plans; never pretend they finished or replay."""
+        now=_now()
+        with self._db() as db:
+            rows=db.execute(
+                "SELECT id,project_id,title FROM project_steps "
+                "WHERE status IN ('planned','running')").fetchall()
+            for ticket,ident,title in rows:
+                db.execute(
+                    "UPDATE project_steps SET status='interrupted', "
+                    "detail='Sessione precedente interrotta: verificare prima di ripetere.', "
+                    "updated_utc=? WHERE id=?",(now,ticket))
+                db.execute(
+                    "INSERT INTO project_events(project_id,step_id,kind,title,status,detail,time_utc) "
+                    "VALUES(?,?,'step',?,'interrupted',?,?)",
+                    (ident,ticket,title,"Interrotto al riavvio: risultato non verificato.",now))
+            ids={ident for _,ident,_ in rows}
+            # Regenerate projections absent after migration or a crash.
+            existing=db.execute("""SELECT p.id, p.active, p.summary,
+                COALESCE((SELECT MAX(id) FROM project_events
+                          WHERE project_id=p.id),0),
+                COALESCE((SELECT MAX(id) FROM messages
+                          WHERE scope='project' AND scope_id=p.id),0)
+                FROM projects p""").fetchall()
+        for ident,active,summary,last_event,last_message in existing:
+            folder=self.continuities/ident
+            state_file=folder/"STATO.json"
+            try:
+                with state_file.open("r",encoding="utf-8") as handle:
+                    state=json.load(handle)
+                if (state.get("last_event_id")!=last_event
+                        or state.get("last_message_id")!=last_message
+                        or state.get("summary_from_user")!=summary
+                        or state.get("active")!=bool(active)
+                        or any(not (folder/name).is_file() for name in (
+                            "CONTINUITA.md","PASSI.md","ARTIFATTI.md",
+                            "EVENTI.jsonl"))):
+                    ids.add(ident)
+            except (OSError,ValueError,TypeError,AttributeError):
+                ids.add(ident)
+        for ident in ids:
+            self._save_snapshot(ident)
+
+    @staticmethod
+    def _atomic_file(path, content, *, keep_previous=False):
+        path.parent.mkdir(parents=True,exist_ok=True)
+        temp=path.with_name(path.name+"."+uuid4().hex+".pending")
         try:
-            temp.write_text(contents,encoding="utf-8")
-            os.replace(temp,target)
+            with temp.open("w",encoding="utf-8",newline="\n") as handle:
+                handle.write(content)
+                handle.flush()
+                os.fsync(handle.fileno())
+            if keep_previous and path.is_file():
+                backup=path.with_suffix(".previous.md")
+                # Old snapshot remains available across interrupted writes.
+                backup.write_bytes(path.read_bytes())
+            os.replace(temp,path)
         finally:
             if temp.exists():
                 temp.unlink()
+
+    def _save_snapshot(self, ident, *, steps_changed=True):
+        """SQLite is canonical; projections can be rebuilt at any restart."""
+        with self._projection_lock:
+            project=self.project(ident)
+            if not project:
+                raise WorkspaceError("Progetto inesistente.")
+            history=self.recent("project",ident,8)
+            steps=self.project_steps(ident,limit=80)
+            with self._db() as db:
+                files=db.execute(
+                    "SELECT path,verified_utc FROM project_artifacts "
+                    "WHERE project_id=? ORDER BY verified_utc DESC,path LIMIT 70",
+                    (ident,)).fetchall()
+                events=db.execute(
+                    "SELECT id,step_id,kind,title,status,detail,time_utc "
+                    "FROM project_events WHERE project_id=? ORDER BY id DESC LIMIT 100",
+                    (ident,)).fetchall()
+                counters=db.execute(
+                    "SELECT status,COUNT(*) FROM project_steps "
+                    "WHERE project_id=? GROUP BY status",(ident,)).fetchall()
+                message_seq=db.execute(
+                    "SELECT COALESCE(MAX(id),0) FROM messages "
+                    "WHERE scope='project' AND scope_id=?",(ident,)).fetchone()[0]
+            counts=dict(counters)
+            lines=[
+                "# Continuità — "+project["name"],
+                "",
+                "ID progetto: "+ident,
+                "Stato: "+("attivo" if project["active"] else "archiviato"),
+                "Aggiornato (UTC): "+project["updated_utc"],
+                "",
+                "## Stato consolidato dall'utente",
+                project["summary"] or "(nessuno stato consolidato fornito)",
+                "",
+                "## Avanzamento operativo (registrato, non inventato da GPT)",
+            ]
+            if not steps:
+                lines.append("(nessun passo operativo ancora registrato)")
+            for item in steps[:18]:
+                lines.append("- ["+item["status"].upper()+"] "+item["title"]
+                             +(" — "+item["detail"][:180] if item["detail"] else ""))
+            lines.extend(["","## File verificati"])
+            lines.extend("- "+path for path,_ in files[:18])
+            if not files:
+                lines.append("(nessun file prodotto verificato)")
+            lines.extend(["","## Ultimi scambi (estratto automatico, non decisioni verificate)"])
+            for item in history:
+                lines.extend(["", "- ["+item["when"]+"] Utente: "+item["utente"][:240],
+                              "  - JARVIS: "+item["jarvis"][:260]])
+            folder=self.continuities/ident
+            (folder/"files").mkdir(parents=True,exist_ok=True)
+            self._atomic_file(folder/"CONTINUITA.md","\n".join(lines)+"\n",
+                              keep_previous=True)
+            state={
+                "schema_version":1, "project_id":ident,"name":project["name"],
+                "last_event_id":events[0][0] if events else 0,
+                "last_message_id":message_seq,
+                "active":project["active"],"updated_utc":project["updated_utc"],
+                "summary_from_user":project["summary"],
+                "counts":counts,
+                "unfinished":[{"id":x["id"],"title":x["title"],"status":x["status"]}
+                              for x in steps if x["status"] in ("planned","running","interrupted")][:20],
+                "recent_completed":[{"id":x["id"],"title":x["title"],"detail":x["detail"],
+                                     "receipt":x["receipt"]}
+                                    for x in steps if x["status"]=="completed"][:12],
+            }
+            self._atomic_file(folder/"STATO.json",
+                              json.dumps(state,ensure_ascii=False,indent=2)+"\n")
+            if not steps_changed:
+                return
+            tasks=["# Passi del progetto — "+project["name"],"",
+                   "Fonte: ricevute locali e registro; i passi pianificati non sono completati.",""]
+            tasks.extend("- ["+x["status"]+"] "+x["title"]
+                         +(" — "+x["detail"] if x["detail"] else "")
+                         +(" (ricevuta "+x["receipt"]+")" if x["receipt"] else "")
+                         for x in steps)
+            self._atomic_file(folder/"PASSI.md","\n".join(tasks)+"\n")
+            artifact_lines=["# File verificati — "+project["name"],"",
+                            "Questo elenco registra riferimenti a file esistenti, "
+                            "non li copia né li sposta.",""]
+            artifact_lines.extend("- ["+when+"] "+p for p,when in files)
+            self._atomic_file(folder/"ARTIFATTI.md","\n".join(artifact_lines)+"\n")
+            # Capped read-friendly projection; complete append-only evidence is in SQLite.
+            audit=[]
+            for seq,ticket,kind,title,status,detail,when in reversed(events):
+                audit.append(json.dumps({"id":seq,"step_id":ticket,"kind":kind,
+                    "title":title,"status":status,"detail":detail,"utc":when},
+                    ensure_ascii=False,separators=(",",":")))
+            self._atomic_file(folder/"EVENTI.jsonl","\n".join(audit)+("\n" if audit else ""))
 
     def note_for_contact(self,peer_id:int,message:str) -> str:
         if type(peer_id) is not int or peer_id<=0:

@@ -26,7 +26,8 @@ def run_approved_plan(
         except Exception:
             notify(("finished", "errore locale interno; arresto prudenziale"))
             return
-        notify(("step", index, total, step.description, result.status, result.message))
+        notify(("step", index, total, step.description, result.status, result.message,
+                str(getattr(result, "task_id", "") or "")))
         if result.status != "completed":
             notify(("finished", "fermato: un passo non è riuscito"))
             return
