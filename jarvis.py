@@ -41,6 +41,8 @@ from telegram_outbound_flow import (
 from telegram_bridge import TelegramBridge
 from live_capabilities import (LiveCapabilityRegistry, snapshot_capabilities,
                                capability_status_prompt)
+from addon_manager import AddonManager, AddonError
+from addon_ui import AddonSettingsWindow
 from telegram_security import credentials_present
 from telegram_voice import missing_voice_dependencies
 from jarvis_persona import build_chat_prompt
@@ -166,6 +168,13 @@ def main() -> None:
     telegram_available_contacts=[]
     telegram_voice_dialog=VoiceSendDialog()
     addon_capability_registry=LiveCapabilityRegistry()
+    addon_manager=None
+    addon_setup_error=""
+    try:
+        addon_manager=AddonManager(addon_capability_registry)
+    except (AddonError,OSError,ValueError) as exc:
+        addon_setup_error=str(exc)[:150]
+    addon_settings_window=None
     telegram_owner_busy=False
     orbit_nodes_cache=()
 
@@ -1269,6 +1278,13 @@ def main() -> None:
 
     def current_capability_snapshot(has_document:bool=False) -> dict:
         """Re-evaluate runtime permissions on every external GPT request."""
+        if addon_manager is not None:
+            try:
+                addon_manager.refresh()
+            except (AddonError,OSError,ValueError):
+                # Fail closed: do not claim stale addon actions are available.
+                for binding in addon_capability_registry.available_addons():
+                    addon_capability_registry.unregister(binding["id"])
         try:
             stream=voice.is_listening()
         except (AttributeError,RuntimeError,OSError):
@@ -1280,6 +1296,34 @@ def main() -> None:
             telegram_voice_dependencies=(not missing_voice_dependencies()),
             voice_stream_open=stream,
             registry=addon_capability_registry)
+
+    def open_addon_settings() -> None:
+        nonlocal addon_settings_window
+        if addon_manager is None:
+            messagebox.showerror(
+                "Add-on Jarvis",
+                "Archivio add-on non disponibile: "+addon_setup_error,parent=root)
+            return
+        if (addon_settings_window is not None
+                and addon_settings_window.exists()):
+            addon_settings_window.focus()
+            return
+        addon_settings_window=AddonSettingsWindow(
+            root,addon_manager,
+            on_change=lambda: write_line(
+                "ADD-ON > Registro aggiornato. Le capacità attive saranno "
+                "comunicate al GPT alla prossima richiesta."))
+
+    def active_addon_actions() -> tuple[dict,...]:
+        if addon_manager is None:
+            return ()
+        try:
+            return addon_manager.active_actions()
+        except (AddonError,OSError,ValueError):
+            # Never let a broken or modified add-on directory break GPT chat.
+            for item in addon_capability_registry.available_addons():
+                addon_capability_registry.unregister(item["id"])
+            return ()
 
     def load_telegram_contacts_for_ui() -> None:
         """Read real Telegram private users on a worker, never on Tk."""
@@ -1542,7 +1586,7 @@ def main() -> None:
         refresh_buttons()
         if action == "sign_in":
             gpt_status.set("GPT: in attesa del login nel browser...")
-        elif action in ("ask", "conversation"):
+        elif action in ("ask", "conversation","typed_conversation"):
             gpt_status.set("GPT: elaborazione richiesta...")
         elif action == "disconnect":
             gpt_status.set("GPT: scollegamento...")
@@ -1550,25 +1594,26 @@ def main() -> None:
             gpt_status.set("GPT: verifica connessione...")
 
         def worker() -> None:
-            epoch = params.get("epoch") if action == "conversation" else None
-            doc_snapshot = params.get("document_id") if action == "conversation" else None
-            user_utterance = params.get("utterance", "") if action == "conversation" else ""
+            structured = action in ("conversation","typed_conversation")
+            epoch = params.get("epoch") if structured else None
+            doc_snapshot = params.get("document_id") if structured else None
+            user_utterance = params.get("utterance", "") if structured else ""
             typed_question = params.get("source", "") if action == "ask" else ""
             try:
                 timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
-                sdk_action = "ask" if action == "conversation" else action
+                sdk_action = "ask" if structured else action
                 sdk_params = {key: value for key, value in params.items()
                               if key not in ("epoch", "document_id", "utterance", "source")}
                 result = service.call(sdk_action, timeout=timeout, **sdk_params)
-                if action == "conversation":
+                if structured:
                     output_queue.put(("conversation_ok", epoch, doc_snapshot,
-                                      user_utterance, result))
+                                      user_utterance, result, action))
                 else:
                     output_queue.put(("gpt_ok", action, result, typed_question))
             except Exception as exc:
-                if action == "conversation":
+                if structured:
                     output_queue.put(("conversation_error", epoch, user_utterance,
-                                      str(exc)[:220]))
+                                      str(exc)[:220], action))
                 else:
                     output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
@@ -1592,7 +1637,8 @@ def main() -> None:
                 spoken, has_document=snapshot is not None,
                 memory_context=recent_memory_for_gpt(spoken),
                 telegram_send_ready=live["telegram_voice_send"],
-                runtime_info=capability_status_prompt(live))
+                runtime_info=capability_status_prompt(live),
+                addon_actions=active_addon_actions())
         except ConversationRejected as exc:
             write_line("JARVIS > " + str(exc))
             return
@@ -1835,6 +1881,17 @@ def main() -> None:
              "manuale, che richiede conferma. I vocali usano Windows SAPI "
              "e OGG/Opus, senza GPT per trasformare il testo in audio.",
         wraplength=690).pack(anchor="w",pady=(3,0))
+
+    addon_panel=ttk.LabelFrame(
+        frame,text="Add-on — installazione locale e permessi",padding=8)
+    addon_panel.pack(fill="x",pady=(3,9))
+    addon_settings_button=ttk.Button(
+        addon_panel,text="Gestisci add-on (installa, attiva, aggiorna, rimuovi)")
+    addon_settings_button.pack(side="left",padx=(0,10))
+    ttk.Label(addon_panel,
+              text="Solo pacchetti .jaddon descrittivi; nessun codice esterno "
+                   "viene eseguito automaticamente.",
+              wraplength=455).pack(side="left",fill="x",expand=True)
 
     # Conversation is always visible at the left of the animated HUD.
     # The console composer follows the supplied reference: a circular mic,
@@ -2362,10 +2419,15 @@ def main() -> None:
         )
 
     def submit_local(event=None, message_override: str | None = None,
-                     source_utterance: str = "") -> None:
+                     source_utterance: str = "",
+                     addon_action_id: str = "") -> None:
         nonlocal busy_local, last_user_for_action, project_local_ticket
         nonlocal local_operation_id
         if busy_local or closing:
+            return
+        if addon_action_id and (addon_manager is None or not
+                                addon_manager.is_active(addon_action_id)):
+            write_line("ADD-ON > Comando rifiutato: add-on non più autorizzato.")
             return
         message = (message_override if message_override is not None else request.get()).strip()
         if not message:
@@ -2400,7 +2462,13 @@ def main() -> None:
         def worker() -> None:
             try:
                 with local_execution_lock:
-                    result = engine.execute(message)
+                    if addon_action_id and (
+                            addon_manager is None or not
+                            addon_manager.is_active(addon_action_id)):
+                        result=TaskResult("-","addon","rejected",
+                                          "Add-on disattivato prima dell'esecuzione.")
+                    else:
+                        result = engine.execute(message)
                 output_queue.put(("local", result))
             except Exception:
                 output_queue.put(("local", TaskResult("-", "internal", "failed",
@@ -2438,12 +2506,28 @@ def main() -> None:
             return
         request.set("")
         write_line("DOMANDA A GPT > " + message)
+        document_snapshot=(documents.current.ident if documents.current else None)
         try:
-            live=current_capability_snapshot(documents.current is not None)
+            live=current_capability_snapshot(document_snapshot is not None)
+            if len(message)<=450:
+                # Typed commands must use the SAME reviewed capability contract
+                # as voice, not a text-only model that falsely says it cannot act.
+                prompt=build_conversation_prompt(
+                    message,has_document=document_snapshot is not None,
+                    memory_context=recent_memory_for_gpt(message),
+                    telegram_send_ready=live["telegram_voice_send"],
+                    runtime_info=capability_status_prompt(live),
+                    addon_actions=active_addon_actions())
+                run_gpt("typed_conversation",prompt=prompt,
+                        epoch=conversation_epoch,
+                        document_id=document_snapshot,utterance=message)
+                return
+            # Longer free-form questions are conversational only; never
+            # interpret a 5000-character document as an executable action.
             prompt = build_chat_prompt(
                 message, memory_context=recent_memory_for_gpt(message),
                 runtime_info=capability_status_prompt(live))
-        except ValueError as exc:
+        except (ValueError,ConversationRejected) as exc:
             request.set(message)
             write_line("JARVIS > " + str(exc))
             return
@@ -2929,16 +3013,21 @@ def main() -> None:
                     last_user_for_document = ""
                 elif kind == "conversation_ok":
                     busy_gpt = False
-                    epoch, doc_snapshot, original_phrase, result = data
+                    epoch, doc_snapshot, original_phrase, result, *channels = data
+                    channel=channels[0] if channels else "conversation"
                     if (epoch == conversation_epoch and
-                            voice_mode.get() == GPT_CONVERSATION and
+                            (channel=="typed_conversation" or
+                             voice_mode.get() == GPT_CONVERSATION) and
                             gpt_enabled.get() and active_gpt):
                         try:
                             latest=current_capability_snapshot(documents.current is not None)
                             intent = parse_conversation_intent(
                                 result.get("text", ""),
                                 has_document=doc_snapshot is not None,
-                                telegram_send_ready=latest["telegram_voice_send"])
+                                telegram_send_ready=latest["telegram_voice_send"],
+                                addon_resolver=(addon_manager.resolve
+                                                if addon_manager is not None
+                                                else None))
                         except ConversationRejected as exc:
                             write_line("GPT: impossibile interpretare la risposta: " + str(exc))
                             speak_result("Non ho capito con sicurezza. Puoi ripetere?")
@@ -2966,10 +3055,19 @@ def main() -> None:
                                 if cap is None:
                                     announce_document("Azione non disponibile.")
                                 elif cap.handler == "local" and cap.plan is not None:
-                                    if not busy_local:
+                                    # A GPT proposal cannot retain permission after
+                                    # a local add-on is disabled or uninstalled.
+                                    if (cap.action_id.startswith("addon.") and
+                                            (addon_manager is None or not
+                                             addon_manager.is_active(cap.action_id))):
+                                        speak_result("L'add-on non è più attivo.")
+                                    elif not busy_local:
                                         submit_local(
                                             message_override=cap.plan.steps[0].command,
-                                            source_utterance=original_phrase)
+                                            source_utterance=original_phrase,
+                                            addon_action_id=(cap.action_id if
+                                                cap.action_id.startswith("addon.")
+                                                else ""))
                                     else:
                                         speak_result("Operazione in corso, riprova.")
                                 elif cap.handler == "telegram_voice_dialog":
@@ -3049,8 +3147,11 @@ def main() -> None:
                 elif kind == "conversation_error":
                     runtime_events.record("gpt_failure")
                     busy_gpt = False
-                    epoch, original_phrase, reason = data
-                    if epoch == conversation_epoch and voice_mode.get() == GPT_CONVERSATION:
+                    epoch, original_phrase, reason, *channels = data
+                    channel=channels[0] if channels else "conversation"
+                    if (epoch == conversation_epoch and (
+                            channel=="typed_conversation" or
+                            voice_mode.get() == GPT_CONVERSATION)):
                         write_line("Conversazione GPT: " + reason)
                         speak_result("GPT non è disponibile. Puoi riprovare.")
                         remember_exchange(original_phrase, "GPT non disponibile, riprova.",
@@ -3215,6 +3316,7 @@ def main() -> None:
     telegram_note_button.configure(command=leave_telegram_note_dialog)
     telegram_contacts_button.configure(command=open_telegram_contact_list)
     telegram_send_button.configure(command=open_telegram_manual_send)
+    addon_settings_button.configure(command=open_addon_settings)
     hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
     hud_mic_button.configure(command=toggle_hud_microphone)
