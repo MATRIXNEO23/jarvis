@@ -1,5 +1,17 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA PROVA — JARVIS CONVERSA E MANTIENE IL FILO DEL DISCORSO
+
+**[SCARICA JARVIS CON DIALOGO CONTINUO, PERSONALITÀ E HUD RINNOVATO (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/dialogue-continuity-personality.zip)**
+
+Questa versione sperimentale mantiene l'**interfaccia più simile al preview**, il globo animato e il nucleo ciano/arancione/verde, ma migliora anche le conversazioni: JARVIS tiene in RAM più scambi recenti, interpreta risposte che completano la domanda precedente e non perde subito le frasi pronunciate mentre GPT sta elaborando (fino a 3 in attesa). Ha inoltre un tono più naturale, professionale e discretamente ironico, ispirato all'assistente JARVIS.
+
+**Per il test sul Pavilion:** chiudi il Jarvis attuale, scarica lo ZIP e decomprimilo in **una cartella nuova**; avvia `avvia_jarvis.bat` e seleziona manualmente **Conversazione continua GPT**. Verifica con un semplice scambio: «Scrivimi un racconto», poi alla sua richiesta di chiarimento rispondi solo «Breve e malinconico». JARVIS dovrebbe collegare le due frasi senza ripartire da zero.
+
+**Niente nuove installazioni**, se Vosk e ChatGPT funzionano già. Memoria breve utilizzabile anche con Second Brain persistente disattivato. Microfono spento all'avvio; le azioni locali e le conferme dei file restano controllate. **Non cancellare il vecchio Jarvis o `%LOCALAPPDATA%\\Jarvis`**.
+
+Questa versione va ancora verificata nel dialogo reale sul Pavilion. Le risposte possono comunque richiedere chiarimenti, e JARVIS non è full-duplex durante la propria voce SAPI. [Guida del dialogo e limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/dialogue-continuity-personality/docs/DIALOGO_CONTINUO.md) · [PR di prova #8](https://github.com/MATRIXNEO23/jarvis/pull/8).
+
 ## ULTIMA PROVA — INTERFACCIA JARVIS COME NEL PREVIEW
 
 **[SCARICA JARVIS HUD CON GLOBO DETTAGLIATO E REATTORE CIANO/ARANCIONE/VERDE (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-reference-redesign.zip)**
