@@ -1,6 +1,6 @@
 > **RAMO DI AUDIT JARVIS COMPLETO (PR #30), NON VERSIONE STABILE.**  
 > [Scarica la ZIP di prova con le correzioni](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/audit/full-jarvis-fixes-20261031.zip).  
-> Estrai in una cartella nuova e avvia **AVVIA_TEST_TELEGRAM50.bat**: crea un profilo dati separato.  
+> Estrai in una cartella nuova e avvia **avvia_jarvis.bat**: crea un profilo dati separato.  
 > **Nuova scelta dell'utente:** microfono ATTIVO all'avvio (se Vosk e il dispositivo sono disponibili); resta disattivabile manualmente dalle impostazioni. Risposte Telegram automatiche OFF nel nuovo profilo.  
 > Le sezioni seguenti descrivono anche fasi storiche precedenti: fanno fede le istruzioni aggiornate in **LEGGIMI_PROVA_TELEGRAM_50.txt** e **docs/AUDIT_COMPLETO_20261031.md**.
 
