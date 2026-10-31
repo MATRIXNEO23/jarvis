@@ -44,6 +44,29 @@ def main() -> None:
     root.geometry("1260x730")
     root.minsize(940, 580)
     root.configure(bg=BG)
+    # The classic Windows ttk theme ignores colors; clam permits a coherent
+    # dark HUD without adding any UI toolkit or graphics dependency.
+    style = ttk.Style(root)
+    if "clam" in style.theme_names():
+        style.theme_use("clam")
+    style.configure("TFrame", background=BG)
+    style.configure("TLabel", background=BG, foreground=WHITE)
+    style.configure("TLabelframe", background=BG, foreground=WHITE)
+    style.configure("TLabelframe.Label", background=BG, foreground=CYAN)
+    style.configure("TCheckbutton", background=BG, foreground=WHITE)
+    style.map("TCheckbutton", background=[("active", BG)])
+    style.configure("TRadiobutton", background=BG, foreground=WHITE)
+    style.map("TRadiobutton", background=[("active", BG)])
+    style.configure("TButton", background=PANEL, foreground=CYAN,
+                    bordercolor="#0b4a6b", padding=(8, 5))
+    style.map("TButton",
+              foreground=[("disabled", "#486579"), ("active", WHITE)],
+              background=[("active", "#0b3950")])
+    style.configure("TEntry", fieldbackground=PANEL, foreground=WHITE,
+                    insertcolor=CYAN)
+    style.configure("TCombobox", fieldbackground=PANEL, foreground=WHITE)
+    style.configure("Vertical.TScrollbar", background=PANEL,
+                    troughcolor=BG)
 
     # Every existing setting remains available without crowding the main HUD.
     # The settings window is created once, hidden until the user presses ⚙.
@@ -149,6 +172,9 @@ def main() -> None:
     doc_choices = ttk.Frame(hud.command_host)
     doc_choices.pack(fill="x", pady=(0, 5))
     doc_choices.pack_forget()
+    hud_save_file_button = ttk.Button(
+        doc_choices, text="Scegli file...", state="disabled")
+    hud_save_file_button.pack(side="left", padx=(0, 6))
     doc_save_button = ttk.Button(doc_choices, text="Salva e chiudi", state="disabled")
     doc_save_button.pack(side="left", padx=(0, 6))
     doc_discard_button = ttk.Button(doc_choices, text="Esci senza salvare", state="disabled")
@@ -594,9 +620,16 @@ def main() -> None:
         doc_discard_button.configure(
             state="normal" if can_choose else "disabled")
         doc_cancel_button.configure(state="normal" if pending else "disabled")
+        destination_ready = (
+            doc_dialog.phase == "awaiting_save_destination" and not document_busy)
         choose_save_button.configure(
-            state="normal" if doc_dialog.phase == "awaiting_save_destination"
-            and not document_busy else "disabled")
+            state="normal" if destination_ready else "disabled")
+        hud_save_file_button.configure(
+            state="normal" if destination_ready else "disabled")
+        if pending and not doc_choices.winfo_manager():
+            doc_choices.pack(fill="x", pady=(0, 5), before=input_row)
+        elif not pending and doc_choices.winfo_manager():
+            doc_choices.pack_forget()
 
     def announce_document(message: str) -> None:
         update_document_buttons()
@@ -1213,6 +1246,7 @@ def main() -> None:
     dictation_button.configure(command=toggle_dictation)
     voice_correction_button.configure(command=show_voice_corrections)
     choose_save_button.configure(command=choose_save_destination)
+    hud_save_file_button.configure(command=choose_save_destination)
     doc_save_button.configure(
         command=lambda: handle_document_confirmation("salva e chiudi"))
     doc_discard_button.configure(command=press_discard_button)
@@ -1239,11 +1273,22 @@ def main() -> None:
         wake_gate.reset()
         voice.close()
         speaker.close()
+        hud.close()
         root.destroy()
         # Non-daemon: ensure the Node child is terminated before Python exits.
         threading.Thread(target=service.stop, daemon=False, name="jarvis-gpt-shutdown").start()
 
     ttk.Button(frame, text="Esci", command=close).pack(anchor="e", pady=(9, 0))
+    # Settings are intentionally hidden until the gear is pressed.
+    # The normal window-close control invokes the same safe shutdown.
+    hud.set_close_handler(close)
+    hud.set_state_provider(lambda: {
+        "speaking": speaker.is_speaking(),
+        "listening": voice_mode.get() != STANDBY,
+        "thinking": busy_gpt or busy_local or document_busy,
+        "connected": active_gpt,
+        "memory": memory_enabled.get(),
+    })
     root.protocol("WM_DELETE_WINDOW", close)
     refresh_buttons()
     input_box.focus_set()
