@@ -1,0 +1,67 @@
+name: Publish Jarvis project maintenance source ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-project-maintenance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Download folder
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout tested source revision
+        uses: actions/checkout@v4
+        with:
+          ref: 468ff31f0253bb7de7929076febaa71e6329dc68
+          path: source
+          persist-credentials: false
+      - name: Package source and verify contents
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          source = Path("source")
+          destination = Path("catalog/Download/Jarvis-Gestione-Progetti-e-Diagnostica.zip")
+          destination.parent.mkdir(parents=True, exist_ok=True)
+          count = 0
+          with ZipFile(destination, "w", ZIP_DEFLATED, compresslevel=6) as archive:
+              for file in sorted(source.rglob("*")):
+                  if not file.is_file():
+                      continue
+                  parts = file.relative_to(source).parts
+                  if any(part in (".git", "__pycache__", ".venv", "venv") for part in parts):
+                      continue
+                  if parts[0] in (".github", "Download"):
+                      continue
+                  archive.write(file, "Jarvis-Gestione-Progetti/" + "/".join(parts))
+                  count += 1
+          with ZipFile(destination) as check:
+              assert check.testzip() is None
+              names = set(check.namelist())
+              for filename in (
+                  "avvia_jarvis.bat", "jarvis.py", "workspace_memory.py",
+                  "project_voice.py", "self_diagnostics.py",
+                  "workspace_gui.py", "tests/test_project_maintenance.py"
+              ):
+                  assert "Jarvis-Gestione-Progetti/" + filename in names, filename
+          print("Verified ZIP:", destination, destination.stat().st_size, "bytes;", count, "files")
+          PY
+      - name: Publish new file without removing previous ZIPs
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Gestione-Progetti-e-Diagnostica.zip
+          git -C catalog commit -m "download: publish tested project rename trash and source diagnostics ZIP"
+          git -C catalog push origin HEAD:main
