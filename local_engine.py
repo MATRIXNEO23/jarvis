@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import ctypes
 from contextlib import contextmanager
+from heapq import nsmallest
 import os
 from pathlib import Path
 import re
@@ -154,11 +155,18 @@ class LocalEngine:
         folder = self.download_dir
         if not folder.is_dir():
             raise FileNotFoundError("Cartella Download non trovata.")
-        names = sorted((item.name for item in folder.iterdir()), key=str.casefold)
+        total=0
+        def entries():
+            nonlocal total
+            for item in folder.iterdir():
+                total+=1
+                yield item.name
+        # Large download directories must not be fully materialized in RAM.
+        names=nsmallest(30,entries(),key=str.casefold)
         if not names:
             return "La cartella Download è vuota."
-        return "File e cartelle in Download (max 30):\n" + "\n".join(names[:30]) + (
-            f"\n... e altri {len(names) - 30} elementi." if len(names) > 30 else "")
+        return "File e cartelle in Download (max 30):\n" + "\n".join(names) + (
+            f"\n... e altri {total - 30} elementi." if total > 30 else "")
 
     def _find_download(self, query: str) -> str:
         query = query.strip()
