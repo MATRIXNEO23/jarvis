@@ -55,7 +55,7 @@ jobs:
           required={
               "jarvis.py", "gpt_client.py", "gpt_bridge.mjs", "workspace_memory.py",
               "telegram_bridge.py", "voice_control.py", "managed_documents.py",
-              "prepara_test_telegram50.py", "AVVIA_TEST_TELEGRAM50.bat",
+              "prepara_test_telegram50.py",
               "avvia_jarvis.bat", "LEGGIMI_PROVA_TELEGRAM_50.txt",
           }
           found={p.as_posix() for p in files}
@@ -106,18 +106,24 @@ jobs:
               "**[SCARICA BUILD COMPLETA JARVIS - AUDIT + TELEGRAM 50]"
               "(./Jarvis-Full-Audit-Telegram50-20261031.zip)**\n\n"
               "Pacchetto sorgente Python completo per Windows 10, non un EXE. "
-              "Include l'avvio di prova separato `AVVIA_TEST_TELEGRAM50.bat`, "
+              "Include un solo launcher `avvia_jarvis.bat` con profilo isolato, "
               "microfono attivo all'avvio (se modello/dispositivo disponibili), "
               "GPT esterno, documenti, progetti, add-on e Telegram (50 messaggi "
               "per contatto, contesto degli ultimi 4 senza riassunti).\n\n"
               "Non sovrascrivere la versione stabile: estrai in una cartella nuova "
-              "e avvia `AVVIA_TEST_TELEGRAM50.bat`. "
+              "e avvia `avvia_jarvis.bat` nella nuova cartella. "
               "Il collegamento Telegram opera sull'account reale quando attivato. "
               "Test automatici Windows e Ubuntu superati; prova finale sul Pavilion "
               "ancora necessaria. La PR #30 resta separata da main.\n\n---\n\n"
           )
-          if heading not in before:
-              readme.write_text(section+before,encoding="utf-8")
+          divider="\\n---\\n"
+          if before.startswith(heading):
+              if divider not in before:
+                  raise RuntimeError("Download index cannot be updated safely")
+              original=before.split(divider,1)[1].lstrip("\\n")
+          else:
+              original=before
+          readme.write_text(section+original,encoding="utf-8")
           PY
           cd publish-main
           git config user.name "github-actions[bot]"
