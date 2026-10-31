@@ -142,8 +142,9 @@ class MemoryBoundariesTests(unittest.TestCase):
             "project",p,"documento",budget=1700))
         self.assertTrue(context["steps"][0]["verified"])
         self.assertFalse(context["steps"][1]["verified"])
-        with self.assertRaises(WorkspaceError):
-            reloaded.finish_step(p,proven,"completed",receipt="again",verified=False)
+        self.assertFalse(reloaded.finish_step(
+            p,proven,"completed",receipt="again",verified=False))
+        self.assertTrue(reloaded.project_steps(p)[0]["verified"])
         self.assertTrue(self.workspace.project_directory(p).exists())
 
     def test_explicit_preferences_are_data_not_commands(self):
