@@ -18,6 +18,8 @@ from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
 from project_voice import (parse_project_voice, safe_project_name,
                            find_existing_project, project_delete_response)
+from dialogue_focus import (focus_hint, PendingProjectReference,
+                            normalized_utterance)
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
 from settings import default_path
@@ -255,6 +257,7 @@ def main() -> None:
     pending_project_name = False
     pending_project_rename_id = None
     pending_project_trash_id = None
+    pending_project_reference = PendingProjectReference()
     diagnostic_busy = False
     save_only_waiting = False
     conversation_memory = ConversationMemory()
@@ -411,46 +414,65 @@ def main() -> None:
             return False
 
     def recent_memory_for_gpt(spoken: str) -> str:
+        """Bounded recall with the *real* active project and latest question."""
         short=conversation_memory.context(max_chars=860)
+        question=conversation_memory.last_question()
+
+        def attach(raw,*,project_name=""):
+            hint=focus_hint(spoken,active_project_name=project_name,
+                            last_question=question)
+            try:
+                parsed=json.loads(raw)
+            except (ValueError,TypeError):
+                return raw
+            if isinstance(parsed,list):
+                parsed={"breve":parsed}
+            if not isinstance(parsed,dict):
+                return raw
+            if hint:
+                parsed["focus"]=hint
+            return json.dumps(parsed,ensure_ascii=False)
+
         if active_project_id is not None:
             if workspace is None:
-                return short
+                return attach(short)
             try:
-                p=workspace.project(active_project_id)
+                project=workspace.project(active_project_id)
                 saved=json.loads(workspace.prompt_context(
                     "project",active_project_id,spoken,budget=620))
                 evidence=saved.get("evidence",[])
-                if p and p["summary"]:
+                if project and project["summary"]:
                     evidence.insert(0,{"source":"conversation",
-                        "when":p["updated_utc"],
+                        "when":project["updated_utc"],
                         "fact":"Stato progetto fornito dall'utente: "
-                                +p["summary"][:260]})
+                                +project["summary"][:260]})
                 history=workspace.recent("project",active_project_id,3)
-                earlier=[{"utente":r["utente"],"lia":r["jarvis"],
-                          "tipo":r["tipo"]} for r in history]
-                # Actual step receipts outrank conversation summaries.
+                earlier=[{"utente":item["utente"],"lia":item["jarvis"],
+                          "tipo":item["tipo"]} for item in history]
                 progress=[{"title":step["title"][:95],
                            "status":step["status"],
                            "detail":step["detail"][:110],
                            "verified":bool(step["receipt"])}
                           for step in workspace.project_steps(active_project_id,limit=4)]
-                return json.dumps({"breve":earlier+json.loads(short),
-                                   "progress":progress,
-                                   "permanente":{"related":evidence}},
-                                  ensure_ascii=False)
+                return attach(json.dumps({
+                    "breve":earlier+json.loads(short),
+                    "progress":progress,
+                    "permanente":{"related":evidence},
+                },ensure_ascii=False),
+                project_name=project["name"] if project else "")
             except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
                 workspace_status.set("Ricerca progetto: "+str(exc)[:90])
-                return short
+                return attach(short)
         if not memory_enabled.get() or durable_brain is None:
-            return short
+            return attach(short)
         try:
             long=durable_brain.prompt_context(spoken,budget=530)
         except (OSError,sqlite3.Error,BrainError) as exc:
             memory_status.set("Ricerca memoria: "+str(exc)[:90])
-            return short
-        return json.dumps({"breve":json.loads(short),
-                           "permanente":json.loads(long)},
-                          ensure_ascii=False)
+            return attach(short)
+        return attach(json.dumps({
+            "breve":json.loads(short),
+            "permanente":json.loads(long)},ensure_ascii=False))
 
     project_dialog=None
 
@@ -520,6 +542,7 @@ def main() -> None:
         conversation_epoch+=1
         conversation_memory.clear()
         pending_conversation.clear()
+        pending_project_reference.reset()
         write_line(
             "JARVIS > "+("Progetto aperto: "+project["name"]+"."
                         if project_id else "Conversazione generale ripristinata."))
@@ -583,7 +606,8 @@ def main() -> None:
                 command_action="rename"
                 target_ident=ident
             except ValueError:
-                return acknowledge("Il nuovo nome non è valido. Dimmi di rinominare il progetto.")
+                pending_project_rename_id=ident
+                return acknowledge("Quale nome preciso vuoi dare a questo progetto?")
         elif pending_project_name:
             pending_project_name = False
             if spoken.casefold().strip(" ,.!?") in ("annulla","lascia stare","niente"):
@@ -595,7 +619,8 @@ def main() -> None:
                 command_action="create"
                 target_ident=None
             except ValueError:
-                return acknowledge("Nome non valido. Chiedimi di creare un progetto con un nome preciso.")
+                pending_project_name=True
+                return acknowledge("Quale nome preciso vuoi dare al nuovo progetto?")
         else:
             try:
                 command=parse_project_voice(spoken)
@@ -603,6 +628,7 @@ def main() -> None:
                 return acknowledge(str(exc))
             if command is None:
                 return False
+            pending_project_reference.reset()
             command_action=command.action
             name=command.name
             target_ident=None
