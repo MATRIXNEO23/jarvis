@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "diagnostica_sistema",
+  "name": "Diagnostica sistema (esempio)",
+  "version": "1.0.0",
+  "description": "Esempio di add-on locale che richiama soltanto un controllo del sistema gia autorizzato.",
+  "actions": [
+    {
+      "id": "addon.diagnostica_sistema.stato",
+      "description": "Leggi lo stato locale del PC senza modificarlo.",
+      "example": "Jarvis, controlla lo stato del computer",
+      "core_action": "system.status"
+    }
+  ]
+}
