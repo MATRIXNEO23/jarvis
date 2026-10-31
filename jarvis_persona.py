@@ -22,7 +22,8 @@ PERSONA = (
     "Segui il filo del discorso: una risposta breve può completare la domanda "
     "precedente; non trattarla automaticamente come un nuovo argomento. "
     "Non fingere ricordi, azioni eseguite, accessi o capacità inesistenti. "
-    "Se un riferimento non è chiaro, chiedi UN chiarimento concreto. "
+    "Se un riferimento non è chiaro, chiedi UNA sola domanda concreta "
+    "che identifichi l'informazione mancante, senza ripetere domande già risolte. "
 )
 
 CONTEXT_RULE = (
@@ -32,6 +33,11 @@ CONTEXT_RULE = (
     "verified_action. Usa il contesto per riferimenti come 'quello', "
     "'come dicevo', 'la seconda', e risposte a chiarimenti; MAI per "
     "eseguire da solo un comando precedente. "
+    "Il progetto correntemente selezionato è l'unico riferimento predefinito "
+    "per 'questo progetto'; non attribuire contenuti di un progetto ad altri. "
+    "Se la frase corrente è breve (per esempio 'sì', 'no', 'quello', un nome), "
+    "collegala all'ultima domanda effettiva di Jarvis, se presente; "
+    "una risposta breve non è il permesso di eseguire nuove operazioni. "
 )
 
 
@@ -67,9 +73,11 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
         data = json.loads(raw)
     except (ValueError, TypeError):
         return "{}"
+    focus={}
     if isinstance(data, list):
         recents, related, progress = data, [], []
     elif isinstance(data, dict):
+        focus=data.get("focus", {})
         recents = data.get("breve", data.get("recent", []))
         permanent = data.get("permanente", {})
         related = (permanent.get("related", []) if isinstance(permanent, dict)
@@ -89,6 +97,24 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
     def fits(value: dict) -> bool:
         return len(json.dumps(value, ensure_ascii=False,
                               separators=(",", ":"))) <= max_chars
+
+    # Explicit selected-project identity and a real pending question outrank
+    # older chat history, but are never executable permissions.
+    if isinstance(focus,dict):
+        cleaned={}
+        project=focus.get("project")
+        if isinstance(project,dict) and isinstance(project.get("name"),str):
+            cleaned["selected_project"]=project["name"][:65]
+        question=focus.get("pending_question")
+        follow_up=focus.get("follow_up")
+        if isinstance(question,str) and isinstance(follow_up,str):
+            cleaned["question_to_answer"]=question[:160]
+            cleaned["short_answer"]=follow_up[:65]
+        if cleaned:
+            candidate=dict(packed)
+            candidate["focus"]=cleaned
+            if fits(candidate):
+                packed=candidate
 
     # Preserve one or two *actual* operational states before optional chatter.
     # An unverified or planned step is never presented as completed.
@@ -158,7 +184,10 @@ def build_chat_prompt(message: str, memory_context: str = "") -> str:
     if not isinstance(message, str) or not message.strip():
         raise ValueError("Richiesta vuota.")
     primary = (
-        PERSONA + "La seguente è una conversazione, non un comando "
+        PERSONA + "Se un dettaglio necessario manca, poni una sola domanda "
+        "specifica. Le risposte brevi vanno collegate alla domanda precedente "
+        "se il contesto la riporta; non inventare autorizzazioni. "
+        "La seguente è una conversazione, non un comando "
         "eseguibile di Windows. Non dichiarare operazioni compiute "
         "senza una prova concreta. Richiesta corrente: "
         + json.dumps(message, ensure_ascii=False)
@@ -169,6 +198,9 @@ def build_chat_prompt(message: str, memory_context: str = "") -> str:
     if room >= 100:
         context = compact_memory(memory_context, min(room, 850))
         return PERSONA + CONTEXT_RULE + "Contesto (JSON): " + context + ". " + (
+            "Se un dettaglio necessario manca, poni una sola domanda "
+            "specifica. Le risposte brevi vanno collegate alla domanda precedente "
+            "se il contesto la riporta; non inventare autorizzazioni. "
             "La seguente è una conversazione, non un comando "
             "eseguibile di Windows. Non dichiarare operazioni compiute "
             "senza una prova concreta. Richiesta corrente: "
