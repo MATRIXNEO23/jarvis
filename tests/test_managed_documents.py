@@ -4,12 +4,15 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import ctypes
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from document_dialog import DocumentDialog
 from document_store import (
     DocumentSaveError, destination_from_voice, save_new_text, simple_filename
 )
 from managed_documents import ManagedDocuments
+from document_recovery import release_closed_document
 from notepad_controller import ClassicNotepadBridge, NotepadSession, NotepadUnavailable
 
 
@@ -77,6 +80,11 @@ class FakeNotepadBridge:
         self.counter = 0
         self.fail_close = False
 
+    def session_state(self, note):
+        if getattr(self, "inaccessible", False):
+            return "uncertain"
+        return "open" if note.ident in self.notes else "closed"
+
     def open_blank(self):
         self.counter += 1
         ident = f"jarvis-note-{self.counter}"
@@ -102,6 +110,46 @@ class FakeNotepadBridge:
             raise NotepadUnavailable("Finestra ancora aperta.")
         self.closed.append(note.ident)
         del self.notes[note.ident]
+
+
+class Win32SessionPresenceTests(unittest.TestCase):
+    def make_note(self, exit_code=None):
+        return NotepadSession("own-note",301,601,901,
+                              SimpleNamespace(poll=lambda:exit_code),
+                              original_title="Senza titolo")
+
+    def test_terminated_process_is_closed_without_accessing_other_windows(self):
+        bridge=ClassicNotepadBridge()
+        with patch.object(bridge,"_user32",side_effect=AssertionError("unexpected")):
+            self.assertEqual(bridge.session_state(self.make_note(0)),"closed")
+
+    def test_missing_original_window_is_closed(self):
+        bridge=ClassicNotepadBridge()
+        with patch.object(bridge,"_user32",
+                          return_value=SimpleNamespace(IsWindow=lambda _:False)):
+            self.assertEqual(bridge.session_state(self.make_note()),"closed")
+
+    def test_reused_original_handle_with_different_pid_is_closed(self):
+        bridge=ClassicNotepadBridge()
+        with patch.object(bridge,"_user32",
+                          return_value=SimpleNamespace(IsWindow=lambda _:True)):
+            with patch("notepad_controller._pid_of",return_value=991):
+                self.assertEqual(bridge.session_state(self.make_note()),"closed")
+
+    def test_live_saved_title_does_not_mean_closed(self):
+        bridge=ClassicNotepadBridge()
+        with patch.object(bridge,"_user32",
+                          return_value=SimpleNamespace(IsWindow=lambda _:True)):
+            with patch("notepad_controller._pid_of",return_value=301):
+                with patch("notepad_controller._class_of",return_value="Notepad"):
+                    with patch("notepad_controller._title_of",
+                               side_effect=AssertionError("title is not a closure signal")):
+                        self.assertEqual(bridge.session_state(self.make_note()),"open")
+
+    def test_win32_check_error_is_inconclusive_not_closed(self):
+        bridge=ClassicNotepadBridge()
+        with patch.object(bridge,"_user32",side_effect=OSError("access denied")):
+            self.assertEqual(bridge.session_state(self.make_note()),"uncertain")
 
 
 class ManagedDocumentTests(unittest.TestCase):
@@ -181,6 +229,74 @@ class ManagedDocumentTests(unittest.TestCase):
         self.assertEqual(
             self.docs.discard_and_close(ident).kind, "closed_without_saving")
         self.assertEqual(self.backend.closed, [ident])
+
+    def test_manual_closed_window_does_not_block_new_blank(self):
+        old = self.docs.open_blank()
+        del self.backend.notes[old.document_id]
+        result = self.docs.open_blank()
+        self.assertEqual(result.kind, "opened")
+        self.assertNotEqual(result.document_id, old.document_id)
+        self.assertEqual(self.docs.current.ident, result.document_id)
+        self.assertEqual(self.backend.closed, [])
+
+    def test_manual_closed_window_does_not_block_new_composition(self):
+        previous = self.docs.compose("vecchia nota", "new_notepad")
+        del self.backend.notes[previous.document_id]
+        created = self.docs.compose("nuovo testo", "new_notepad")
+        self.assertEqual(created.kind, "created")
+        self.assertEqual(self.backend.read(self.docs.current), "nuovo testo")
+        self.assertNotEqual(created.document_id, previous.document_id)
+
+    def test_live_but_temporarily_inaccessible_document_is_preserved(self):
+        original = self.docs.compose("Testo non ancora salvato", "new_notepad")
+        self.backend.inaccessible = True
+        self.assertFalse(self.docs.forget_if_closed())
+        with self.assertRaises(NotepadUnavailable):
+            self.docs.open_blank()
+        with self.assertRaises(NotepadUnavailable):
+            self.docs.compose("Nuovo", "new_notepad")
+        self.assertEqual(self.docs.current.ident, original.document_id)
+        self.assertEqual(self.backend.notes[original.document_id],
+                         "Testo non ancora salvato")
+        self.assertEqual(self.backend.closed, [])
+
+    def test_old_session_id_cannot_modify_new_document(self):
+        original = self.docs.open_blank()
+        del self.backend.notes[original.document_id]
+        updated = self.docs.open_blank()
+        with self.assertRaises(NotepadUnavailable):
+            self.docs.save_only(original.document_id, Path("ignored.txt"))
+        self.assertEqual(self.docs.current.ident, updated.document_id)
+
+    def test_stale_pending_save_dialog_is_reset_after_manual_close(self):
+        opened=self.docs.compose("Testo ancora da salvare", "new_notepad")
+        dialog=DocumentDialog()
+        dialog.begin(opened.document_id,"Nuovo Blocco note",dirty=True)
+        dialog.request_close()
+        dialog.reply("salva e chiudi")
+        self.assertEqual(dialog.phase,"awaiting_save_destination")
+        # The user independently closes Notepad, perhaps after saving
+        # directly via Windows. Jarvis must not reuse its old confirmation.
+        del self.backend.notes[opened.document_id]
+        self.assertTrue(release_closed_document(self.docs,dialog))
+        self.assertIsNone(self.docs.current)
+        self.assertEqual(dialog.phase,"idle")
+        self.assertIsNone(dialog.document_id)
+        self.assertEqual(dialog.reply("salva").kind,"ignored")
+        new=self.docs.compose("Nuova nota", "new_notepad")
+        dialog.begin(new.document_id,"Nuovo Blocco note",dirty=True)
+        self.assertEqual(dialog.document_id,new.document_id)
+
+    def test_dialog_remains_pending_for_live_but_unreadable_window(self):
+        created=self.docs.compose("Da non perdere", "new_notepad")
+        dialog=DocumentDialog()
+        dialog.begin(created.document_id,"Nuovo Blocco note",dirty=True)
+        dialog.request_close()
+        self.backend.inaccessible=True
+        self.assertFalse(release_closed_document(self.docs,dialog))
+        self.assertEqual(dialog.document_id,created.document_id)
+        self.assertEqual(dialog.phase,"awaiting_close_choice")
+        self.assertEqual(self.backend.notes[created.document_id],"Da non perdere")
 
     def test_manual_close_does_not_act_on_new_session(self):
         self.docs.compose("testo", "new_notepad")

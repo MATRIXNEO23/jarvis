@@ -13,6 +13,7 @@ from collections import deque
 import json
 import re
 import sqlite3
+import time
 from conversation_memory import ConversationMemory
 from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
@@ -50,6 +51,7 @@ from document_dialog import DocumentDialog
 from document_language import classify_document_choice
 from document_store import destination_from_voice
 from managed_documents import ManagedDocuments
+from document_recovery import release_closed_document
 from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
@@ -267,6 +269,7 @@ def main() -> None:
     pending_preference = None
     local_operation_id = None
     document_operation_id = None
+    last_notepad_probe = 0.0
     preference_store = None
     operation_ledger = None
     # Up to three follow-ups may arrive while the model is still responding.
@@ -1208,6 +1211,7 @@ def main() -> None:
         if (busy_gpt or closing or voice_mode.get() != GPT_CONVERSATION
                 or not gpt_enabled.get() or not active_gpt):
             return
+        reconcile_document_session(force=True)
         snapshot = documents.current.ident if documents.current else None
         try:
             prompt = build_conversation_prompt(
@@ -1584,6 +1588,41 @@ def main() -> None:
         elif not pending and doc_choices.winfo_manager():
             doc_choices.pack_forget()
 
+    def reconcile_document_session(*, force: bool = False) -> bool:
+        """Reconcile a manually closed owned Notepad with the UI state.
+
+        Only a definitely terminated original process/HWND can release the
+        document. A temporarily inaccessible but still-live window is kept.
+        This runs on Tk's UI thread, never while a document worker is active.
+        """
+        nonlocal save_only_waiting,document_topic,document_owner_project_id
+        nonlocal last_notepad_probe,conversation_epoch
+        if document_busy or documents.current is None:
+            return False
+        now=time.monotonic()
+        if not force and now-last_notepad_probe<1.5:
+            return False
+        last_notepad_probe=now
+        try:
+            closed=release_closed_document(documents,doc_dialog)
+        except (OSError,ValueError,AttributeError):
+            # An inconclusive Windows probe must never discard unsaved text.
+            return False
+        if not closed:
+            return False
+        save_only_waiting=False
+        document_topic=""
+        document_owner_project_id=None
+        # An old in-flight GPT reply cannot act on a document just closed.
+        conversation_epoch+=1
+        pending_conversation.clear()
+        update_document_buttons()
+        message=("Il precedente Blocco note è stato chiuso manualmente. "
+                 "Puoi aprire un nuovo documento.")
+        document_status.set(message)
+        write_line("DOCUMENTO > "+message)
+        return True
+
     def announce_document(message: str) -> None:
         update_document_buttons()
         document_status.set(message)
@@ -1600,6 +1639,7 @@ def main() -> None:
         if document_busy or closing:
             announce_document("Sto già lavorando sul documento: attendi.")
             return
+        reconcile_document_session(force=True)
         project_document_ticket = begin_project_work(
             source_utterance or operation,source="document")
         if project_document_ticket is False:
@@ -1984,6 +2024,7 @@ def main() -> None:
     def submit_gpt() -> None:
         if not gpt_enabled.get() or not active_gpt or busy_gpt or closing:
             return
+        reconcile_document_session(force=True)
         message = request.get().strip()
         if not message:
             return
@@ -2022,6 +2063,7 @@ def main() -> None:
         nonlocal document_topic,document_owner_project_id,save_only_waiting
         if closing:
             return
+        reconcile_document_session()
         try:
             while True:
                 kind, *data = output_queue.get_nowait()
@@ -2563,6 +2605,7 @@ def main() -> None:
         message=request.get().strip()
         if not message:
             return
+        reconcile_document_session(force=True)
         if save_only_waiting:
             request.set("")
             receive_save_only_destination(message)

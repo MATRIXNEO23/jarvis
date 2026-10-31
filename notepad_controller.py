@@ -143,6 +143,34 @@ class ClassicNotepadBridge:
             "Non riesco a controllare in sicurezza il Blocco note aperto. "
             "La finestra eventualmente avviata rimane aperta.")
 
+    def session_state(self, note: NotepadSession) -> str:
+        """Return 'closed', 'open' or 'uncertain' for the ORIGINAL owned window.
+
+        Never infer closure merely because reading text timed out, the title
+        changed (e.g. manual Save As), or the Edit control is inaccessible.
+        A dead process, missing original HWND, or a reused HWND with a
+        different PID unambiguously ends this tracked session. This does
+        not close, read, write or select any unrelated window.
+        """
+        try:
+            if note.process.poll() is not None:
+                return "closed"
+            u = self._user32()
+            if not u.IsWindow(wintypes.HWND(note.hwnd)):
+                return "closed"
+            actual_pid = _pid_of(u, note.hwnd)
+            if actual_pid and actual_pid != note.pid:
+                return "closed"
+            if actual_pid != note.pid:
+                return "uncertain"
+            if _class_of(u, note.hwnd) != "Notepad":
+                return "uncertain"
+            # Manual saving changes the window title, not its identity.
+            # Missing/changed Edit must not be interpreted as a closed window.
+            return "open"
+        except (OSError, ValueError, TypeError):
+            return "uncertain"
+
     def _verify(self, note: NotepadSession):
         u = self._user32()
         if (note.process.poll() is not None
