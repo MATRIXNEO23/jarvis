@@ -1,5 +1,19 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NOVITÀ SPERIMENTALE — GESTIONE ADD-ON E CATALOGO GPT (31/10/2026)
+
+**[Scarica Jarvis-AddOn-Registro-GPT-Test.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-AddOn-Registro-GPT-Test.zip)**
+
+Questa build di prova comprende tutte le funzioni dei rami Telegram (selezione contatti, invio OGG/Opus manuale e con conferma vocale) e del registro delle capacità GPT esterno, più un vero **pannello Gestisci add-on** con installazione, aggiornamento, attivazione, disattivazione, rimozione, approvazioni persistenti e aggiornamento del catalogo a ogni richiesta. Anche il campo testuale di Jarvis usa ora il dispatcher autorizzato per le richieste operative brevi.
+
+Gli add-on `.jaddon` sono **file dichiarativi senza codice eseguibile**, limitati per ora a tre azioni locali in sola lettura già approvate: `system.status`, `downloads.list` e `history.list`. Le future capacità che richiedono esecuzione di nuovo codice dovranno essere implementate come handler revisionati; un file add-on da solo non può introdurre processi o permessi. L'archivio include `examples/addons/DiagnosticaSistema.jaddon` **non installato né abilitato automaticamente**.
+
+Codice e test sul [ramo di sviluppo separato](https://github.com/MATRIXNEO23/jarvis/tree/feature/trusted-addon-lifecycle-gpt), [PR draft #28](https://github.com/MATRIXNEO23/jarvis/pull/28). [Guida e limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/trusted-addon-lifecycle-gpt/docs/ADDON_LIFECYCLE.md).
+
+Test Python/Node automatici [4/4 PASS su Windows e Ubuntu](https://github.com/MATRIXNEO23/jarvis/actions/runs/41200751953). ZIP pubblicato dal commit sperimentale `dc77a7c256466688dc13d93ed290a6d7dd6f7e63`, dopo un secondo recheck della suite, e verificato con manifest SHA-256. **Non collaudato realmente sul Pavilion né con invii Telegram reali**. La pubblicazione non aggiorna l'installazione principale e non sostituisce le vecchie build. Prima di provarla, chiudi Jarvis, salva una copia di `%LOCALAPPDATA%\\Jarvis`, estrai in una cartella diversa; se Defender rileva una minaccia, non bypassare i controlli.
+
+---
+
 ## NOVITÀ DI PROVA — TELEGRAM MULTI-CONTATTO E MESSAGGI VOCALI (31/10/2026)
 
 **[Scarica Jarvis-Telegram-Contatti-Vocali-Test.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Telegram-Contatti-Vocali-Test.zip)**
