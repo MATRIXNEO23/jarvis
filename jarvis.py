@@ -1918,6 +1918,7 @@ def main() -> None:
     def submit_local(event=None, message_override: str | None = None,
                      source_utterance: str = "") -> None:
         nonlocal busy_local, last_user_for_action, project_local_ticket
+        nonlocal local_operation_id
         if busy_local or closing:
             return
         message = (message_override if message_override is not None else request.get()).strip()
@@ -1930,6 +1931,22 @@ def main() -> None:
         project_local_ticket = begin_project_work(last_user_for_action,"local")
         if project_local_ticket is False:
             write_line("JARVIS > Impossibile salvare il checkpoint: comando non eseguito.")
+            return
+        if operation_ledger is None:
+            finish_project_work(project_local_ticket,"interrupted",
+                                "Registro operativo non disponibile.")
+            project_local_ticket=None
+            write_line("JARVIS > Registro operativo non disponibile: non eseguo.")
+            return
+        try:
+            local_operation_id=operation_ledger.begin(
+                "local_request",origin="local",project_id=active_project_id or "")
+            operation_ledger.running(local_operation_id)
+        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+            finish_project_work(project_local_ticket,"interrupted",
+                                "Impossibile registrare l'operazione.")
+            project_local_ticket=None
+            write_line("JARVIS > Operazione bloccata: "+str(exc)[:95])
             return
         busy_local = True
         refresh_buttons()
@@ -1978,6 +1995,7 @@ def main() -> None:
 
     def poll() -> None:
         nonlocal busy_local, busy_gpt, active_gpt, conversation_epoch, document_busy
+        nonlocal local_operation_id, document_operation_id
         nonlocal diagnostic_busy
         nonlocal last_user_for_action, last_user_for_document
         nonlocal project_local_ticket, project_document_ticket
@@ -2175,9 +2193,28 @@ def main() -> None:
                     write_line(f"[{result.status}] {result.message}")
                     source = last_user_for_action or result.action
                     last_user_for_action = ""
+                    # A successful subprocess launch is only reported, not
+                    # proof that the requested window became usable.
+                    observed=(result.status=="completed"
+                              and result.action in (
+                                  "system_status","list_downloads","find_download",
+                                  "history") and len(result.task_id)>=3)
+                    if operation_ledger is not None and local_operation_id:
+                        try:
+                            operation_ledger.finish(
+                                local_operation_id,
+                                ("verified" if observed else "reported"
+                                 if result.status=="completed" else "failed"),
+                                receipt=result.task_id if observed else "",
+                                observed=observed,action=result.action
+                                if result.action!="internal" else "local_error")
+                        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+                            write_line("JARVIS > Registro operazioni: "+str(exc)[:90])
+                    local_operation_id=None
                     finish_project_work(project_local_ticket,
                         "completed" if result.status=="completed" else "failed",
-                        result.message,receipt=result.task_id if result.status=="completed" else "")
+                        result.message,receipt=result.task_id if result.status=="completed" else "",
+                        observed=observed)
                     project_local_ticket = None
                     remember_exchange(
                         source, result.message,
@@ -2185,7 +2222,7 @@ def main() -> None:
                     if result.status == "completed":
                         remember_completed_action(
                             result.action, result.action.split("_")[0],
-                            result.message, result.task_id)
+                            result.message, result.task_id,observed=observed)
                         speak_result(result.message)
                 elif kind == "document_ok":
                     document_busy = False
