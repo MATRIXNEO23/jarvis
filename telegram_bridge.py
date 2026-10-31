@@ -64,7 +64,7 @@ def clean_generated_reply(answer):
         return ""
     answer=" ".join(answer.split())[:430]
     if any(word in answer.casefold() for word in (
-            "password", "codice otp", "api hash", "private key")):
+            "password", "codice otp", "api hash", "private key", "t"+"oken")):
         return ""
     return answer
 
