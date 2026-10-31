@@ -133,6 +133,34 @@ class ProjectDocumentTests(unittest.TestCase):
         self.assertIn(updated.name,(self.workspace.project_directory(
             self.project_id)/"ARTIFATTI.md").read_text(encoding="utf-8"))
 
+    def test_saved_document_can_close_after_new_verified_version(self):
+        bridge=FakeNotepadBridge()
+        docs=ManagedDocuments(bridge)
+        note=docs.compose("Prima versione","new_notepad")
+        original=project_save_destination(
+            self.workspace,self.project_id,"scrivi note sul collaudo")
+        docs.save_only(note.document_id,original)
+        bridge.notes[note.document_id]="Nuova versione del collaudo"
+        fresh=project_save_destination(
+            self.workspace,self.project_id,"scrivi note sul collaudo")
+        outcome=docs.save_and_close(note.document_id,fresh)
+        self.assertEqual(outcome.kind,"saved_and_closed")
+        self.assertEqual(original.read_text(encoding="utf-8"),"Prima versione")
+        self.assertEqual(fresh.read_text(encoding="utf-8"),
+                         "Nuova versione del collaudo")
+        self.assertEqual(bridge.closed,[note.document_id])
+
+    def test_reopen_project_keeps_all_documents_and_history(self):
+        p=self.project_id
+        dest=project_save_destination(self.workspace,p,"note sul collaudo")
+        dest.write_text("Già presente",encoding="utf-8")
+        self.assertTrue(self.workspace.record_artifact(p,dest))
+        reopened=WorkspaceMemory(self.workspace.path)
+        self.assertEqual(reopened.project_files_directory(p),dest.parent)
+        later=project_save_destination(reopened,p,"note sul collaudo")
+        self.assertNotEqual(later,dest)
+        self.assertEqual(dest.read_text(encoding="utf-8"),"Già presente")
+
     def test_save_words_do_not_close_and_do_not_parse_unrelated_commands(self):
         self.assertEqual(parse_simple_save("Jarvis salva"),"")
         self.assertEqual(parse_simple_save("salva il documento"),"")
