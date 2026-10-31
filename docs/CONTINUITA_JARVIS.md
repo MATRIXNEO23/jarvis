@@ -606,7 +606,7 @@ Implementazioni:
 - tests/test_managed_documents.py: prova creazione dopo chiusura manuale, salvaguardia finestra viva ma illeggibile, revoca conferma vecchia, vecchio ID non può operare su nuovo, PID riutilizzato e title change.
 - docs/RECUPERO_BLOCCO_NOTE_CHIUSO.md: regole e prova manuale.
 
-**Test automatici:** https://github.com/MATRIXNEO23/jarvis/actions/runs/41185338882 SUCCESS 4/4 Windows/Ubuntu sul codice con nuovi test di regressione (commit baa6b4c1f9363f2154cf5709e645723188408cfb). Build documentale finale https://github.com/MATRIXNEO23/jarvis/actions/runs/41185397771 in esecuzione al momento della nota; la sola documentazione è cambiata dopo il codice testato. Mai affermare collaudo reale sul PC avvenuto.
+**Test automatici:** https://github.com/MATRIXNEO23/jarvis/actions/runs/41185338882 SUCCESS 4/4 Windows/Ubuntu sul codice con nuovi test di regressione (commit baa6b4c1f9363f2154cf5709e645723188408cfb). CI del commit finale https://github.com/MATRIXNEO23/jarvis/actions/runs/41185397771 SUCCESS 4/4 Windows/Ubuntu (commit 9fb43205c2c395e4fd6ed2fada089b13e523be12); correzione confermata dai test automatici, resta da collaudare sulla macchina fisica. Mai affermare collaudo reale sul PC avvenuto.
 
 **Pacchetto ZIP pubblicato:** main/Download/Jarvis-Recupero-Documenti.zip 293782 byte; verificato con GitHub API, URL https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Recupero-Documenti.zip ; workflow https://github.com/MATRIXNEO23/jarvis/actions/runs/41185456693 SUCCESS. Contiene SOURCE-COMMIT.txt, SOURCE-MANIFEST.json e sorgenti; Download/README.md aggiornato come prima build. ZIP precedenti preservati; file AppData e progetti dell'utente non toccati.
 
