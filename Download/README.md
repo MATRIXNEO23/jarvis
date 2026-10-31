@@ -1,5 +1,21 @@
 # Scarica Jarvis per Windows 10 — HP Pavilion
 
+## NUOVA BUILD DI TEST — DIAGNOSTICA VISIBILE, RECUPERO E VOCE (31/10/2026)
+
+**[SCARICA Jarvis-Fix-Diagnostica-Visibile.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Fix-Diagnostica-Visibile.zip)**
+
+Pacchetto verificato nella cartella `Download` (321915 byte), sorgenti `fa372c2ffdf9210642c9febd973068c9bac0af9b` sul ramo `fix/diagnostic-visible-progress-recovery-voice`, PR draft [#24](https://github.com/MATRIXNEO23/jarvis/pull/24). Include `SOURCE-COMMIT.txt` e SHA-256 di ogni sorgente nello ZIP. [Test automatici Windows e Ubuntu](https://github.com/MATRIXNEO23/jarvis/actions/runs/41190775816). Il ramo di codice resta separato da `main` e le ZIP precedenti sono intatte.
+
+**Bug reale segnalato sul Pavilion:** il pulsante Autodiagnosi riportava «sta già eseguendo» ma senza progressi visibili né risultato; a voce non partiva. Dal codice erano assenti timeout e progressi; un'eccezione non prevista nel worker poteva lasciare il blocco permanente. Una conferma di documento poteva inoltre avere priorità sul comando vocale. Il ciclo eventi GUI poteva smettere di programmare i successivi controlli se un gestore generava un errore.
+
+**Correzioni:** progresso visibile sul pannello principale `Autodiagnosi: inventario/sintassi/consigli X/Y (secondi)`, barra di completamento e pulsante **Annulla**. Il rapporto rimane in console. Dopo 12 secondi senza avanzamento compare avviso, dopo 120 secondi viene liberata la GUI, con risultati tardivi ignorati; il vecchio worker non è forzatamente terminato. Errori imprevisti mostrano il tipo di errore e sbloccano il controllo. Il watchdog è indipendente dal ciclo generale. Comandi vocali più robusti per `auto diagnosi`, `auto-diagnosi`, `l'autodiagnosi`; autodiagnosi locale prioritaria rispetto a GPT e alle vecchie conferme documenti. Una nuova scansione invalida il vecchio rapporto prima di valutare suggerimenti col modello esterno.
+
+**Prova locale:** chiudere tutte le vecchie istanze; backup di tutto `%LOCALAPPDATA%\Jarvis`; estrarre nella nuova cartella e avviare una sola versione. Premere `⋯ → Autodiagnosi Jarvis`; devono apparire i progressi e poi il rapporto o un errore preciso. Provare `Annulla`. A voce dire «Jarvis, fai un'autodiagnosi» e controllare nella console il testo realmente trascritto. Il collaudo fisico della build nuova NON è ancora stato eseguito.
+
+**Avviso antivirus ancora irrisolto:** una ZIP precedente è stata segnalata da Defender come `Trojan:Script/Wacatac.B!ml`. Nessuna verifica antivirus indipendente è stata effettuata sulla ZIP nuova: una CI verde e un manifest non dimostrano assenza di malware. Non creare esclusioni, non disattivare Defender, non consentire rilevazioni per eseguire il programma. Se Defender blocca il file, sospendere il collaudo.
+
+---
+
 ## NUOVA VERSIONE — AUTODIAGNOSI IBRIDA: MOTORE LOCALE + GPT ESTERNO (31/10/2026)
 
 **[SCARICA Jarvis-Autodiagnosi-Ibrida-GPT.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Autodiagnosi-Ibrida-GPT.zip)**
