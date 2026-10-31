@@ -13,6 +13,7 @@ import shutil
 import time
 import tkinter as tk
 
+from network_telemetry import NetworkTelemetry, friendly_rate
 from hud_reference import (
     AMBER, BG as REF_BG, CYAN as REF_CYAN, GREEN as REF_GREEN,
     LAND, ReactorArt, GlobeArt, projected_earth_point,
@@ -118,14 +119,20 @@ class MetricTile:
         self.canvas.pack(side="left",fill="both",expand=True,padx=4)
         self.label=label
         self.value=None
+        self.caption="--"
         self.history=deque(maxlen=21)
+        self.network_history=deque(maxlen=21)
         self.canvas.bind("<Configure>",self._draw)
         self._draw()
 
     def update(self,value,caption=""):
         self.value=value
         self.caption=caption
-        if isinstance(value,(int,float)):
+        if self.label=="RETE" and isinstance(value,(tuple,list)):
+            rx,tx=value
+            self.network_history.append((max(0.0,float(rx)),
+                                         max(0.0,float(tx))))
+        elif isinstance(value,(int,float)):
             self.history.append(max(0.0,min(100.0,float(value))))
         self._draw()
 
@@ -138,34 +145,57 @@ class MetricTile:
             _outline_box(c,w,h,color="#164d70",inset=3,cut=10)
             c.create_text(12,12,anchor="w",text=self.label,
                           font=("Consolas",8,"bold"),fill="#8eb9d0")
-            cx,cy=39,h*.62
-            r=min(26,h*.31)
-            c.create_arc(cx-r,cy-r,cx+r,cy+r,start=90,extent=359,
-                         outline="#13314b",width=5,style="arc")
-            v=self.value
-            if isinstance(v,(int,float)):
-                c.create_arc(cx-r,cy-r,cx+r,cy+r,start=90,
-                             extent=-max(0.2,360*v/100),
-                             outline=CYAN,width=5,style="arc")
-                label=f"{v:.0f}%"
+            if self.label=="RETE":
+                rates=self.value if isinstance(self.value,tuple) else None
+                rx,tx=rates if rates else (None,None)
+                c.create_text(12,35,anchor="w",text="↓  "+friendly_rate(rx),
+                              fill=CYAN,font=("Consolas",9,"bold"))
+                c.create_text(12,53,anchor="w",text="↑  "+friendly_rate(tx),
+                              fill="#70b5d7",font=("Consolas",9))
+                hist=list(self.network_history)
+                maximum=max((max(pair) for pair in hist),default=1.0) or 1.0
+                bar_width=max(2,(w*.39)/21)
+                start=w*.58
+                for i,(rx_value,tx_value) in enumerate(hist):
+                    x=start+i*bar_width
+                    c.create_line(x,h-12,x,h-12-(h*.38*rx_value/maximum),
+                                  fill="#28b6ff",width=max(1,bar_width*.6))
+                    c.create_line(x,h-12,x,h-12-(h*.25*tx_value/maximum),
+                                  fill="#2b7291",width=1)
             else:
-                label="--"
-            c.create_text(cx,cy,text=label,fill=WHITE,
-                          font=("Consolas",11,"bold"))
-            bar_start=78
-            bar_right=w-9
-            bar_w=max(2,(bar_right-bar_start)/23)
-            history=list(self.history)
-            for i,v in enumerate(history):
-                height=(h-38)*v/100
-                x=bar_start+i*bar_w
-                y=h-10-height
-                c.create_line(x,y,x,h-10,fill="#16658a",
-                              width=max(1,bar_w*.5))
-            if not history and self.label=="GPT":
-                c.create_text(w-12,h*.64,anchor="e",
-                              text=getattr(self,"caption","OFF"),
-                              fill=MUTED,font=("Consolas",8))
+                cx,cy=39,h*.61
+                r=min(26,h*.30)
+                for scale,color,width in (
+                        (1.13,"#0a3552",1),(1.00,"#14446d",5),
+                        (.80,"#0d3551",1)):
+                    rr=r*scale
+                    c.create_arc(cx-rr,cy-rr,cx+rr,cy+rr,start=90,
+                                 extent=359,outline=color,
+                                 width=width,style="arc")
+                v=self.value
+                if isinstance(v,(int,float)):
+                    c.create_arc(cx-r,cy-r,cx+r,cy+r,start=90,
+                                 extent=-max(.2,360*v/100),
+                                 outline="#20cfff",width=5,style="arc")
+                    label=f"{v:.0f}%"
+                else:
+                    label="--"
+                c.create_text(cx,cy,text=label,fill=WHITE,
+                              font=("Consolas",11,"bold"))
+                bar_start=78
+                bar_right=w-9
+                bar_w=max(2,(bar_right-bar_start)/23)
+                history=list(self.history)
+                for i,v in enumerate(history):
+                    height=(h-38)*v/100
+                    x=bar_start+i*bar_w
+                    y=h-10-height
+                    c.create_line(x,y,x,h-10,fill="#1a91bd",
+                                  width=max(1,bar_w*.57))
+            # Fine corner glints are static and cheap to paint.
+            c.create_line(3,22,3,9,11,3,35,3,fill="#1ac9fd",width=1)
+            c.create_line(w-35,h-3,w-11,h-3,w-3,h-11,w-3,h-22,
+                          fill="#145376",width=1)
         except tk.TclError:
             return
 
@@ -187,6 +217,7 @@ class JarvisHUD:
         self._console=None
         self._tabs={}
         self._cpu=WindowsCPU()
+        self._network=NetworkTelemetry()
         self._last_mode="idle"
 
         self.frame=tk.Frame(parent,bg=BG)
@@ -194,6 +225,32 @@ class JarvisHUD:
 
         header=tk.Frame(self.frame,bg=BG,height=54)
         header.pack(fill="x",padx=13,pady=(9,0))
+        header_chrome=tk.Canvas(header,bg=BG,highlightthickness=0,bd=0)
+        header_chrome.place(x=0,y=0,relwidth=1,relheight=1)
+        header_chrome.lower()
+
+        def draw_header(event):
+            header_chrome.delete("all")
+            w,h=event.width,event.height
+            header_chrome.create_line(
+                5,h-6,5,14,17,2,240,2,252,13,
+                fill="#1485aa",width=1.5)
+            header_chrome.create_line(
+                270,11,w*.65,11,w*.68,2,w-210,2,
+                fill="#0c3d64",width=1)
+            header_chrome.create_line(
+                w-210,h-6,w-17,h-6,w-4,h-19,
+                fill="#0a3b5e",width=1.3)
+            for index in range(18):
+                x=280+index*19
+                if x<w-250:
+                    header_chrome.create_line(
+                        x,h-4,x+7,h-4,fill="#0b3451")
+            for x,y in ((w*.69,11),(w*.79,2),(w-210,2)):
+                header_chrome.create_oval(
+                    x-1.5,y-1.5,x+1.5,y+1.5,
+                    fill="#1d9bc4",outline="")
+        header.bind("<Configure>",draw_header)
         tk.Label(header,text="◈  J A R V I S",
                  bg=BG,fg=CYAN,
                  font=("Segoe UI",15,"bold")).pack(
@@ -223,10 +280,13 @@ class JarvisHUD:
         layout=tk.Frame(self.frame,bg=BG)
         layout.pack(fill="both",expand=True,padx=12,pady=(7,5))
         self.left=tk.Frame(layout,bg=PANEL,
-                           highlightbackground=FRAME,
+                           highlightbackground="#1191c6",
                            highlightthickness=1,width=360)
         self.left.pack(side="left",fill="both",padx=(0,8))
         self.left.pack_propagate(False)
+        # A thin luminous edge reproduces the polished panel outline.
+        tk.Frame(self.left,bg="#0d668e",width=2).place(
+            x=0,y=19,relheight=.89)
         nav=tk.Frame(self.left,bg=PANEL,height=45)
         nav.pack(fill="x",padx=9,pady=(8,4))
         for name in ("CONSOLE","ATTIVITÀ","SISTEMA"):
@@ -271,12 +331,14 @@ class JarvisHUD:
                  bg=BG,fg="#60abc5",
                  font=("Consolas",9),pady=3).pack(fill="x")
 
-        footer=tk.Frame(self.visual,bg=BG,height=90)
+        footer=tk.Frame(self.visual,bg=BG,height=108)
         footer.pack(fill="x",pady=(7,3))
         self.cpu_tile=MetricTile(footer,"CPU")
         self.ram_tile=MetricTile(footer,"RAM")
         self.disk_tile=MetricTile(footer,"DISCO C")
-        self.gpt_tile=MetricTile(footer,"GPT")
+        self.network_tile=MetricTile(footer,"RETE")
+        # Connectivity remains visible in the header and nucleus status card;
+        # the fourth telemetry tile shows only real measured traffic.
         # Compatibility with previous public HUD state API.
         self.ram_text=tk.StringVar(value="RAM --")
         self.disk_text=tk.StringVar(value="DISCO C --")
@@ -356,6 +418,10 @@ class JarvisHUD:
             self.disk_tile.update(None)
             self.disk_text.set("DISCO C --")
         self.clock_text.set(datetime.now().strftime("%H:%M"))
+        # Slow, read-only network polling occurs off the UI thread.
+        measured=self._network.result()
+        self.network_tile.update(measured)
+        self._network.request()
 
     def _tick(self):
         if self.closed:
@@ -403,12 +469,6 @@ class JarvisHUD:
             self.visual_status.set(status)
         if self.chat_info.get()!=info:
             self.chat_info.set(info)
-        # Connection status is event-like, not a sampled percentage:
-        # update its tile only when the value changes.
-        desired_gpt = 100 if connected else 0
-        if self.gpt_tile.value != desired_gpt:
-            self.gpt_tile.update(
-                desired_gpt, "ONLINE" if connected else "OFFLINE")
         if not self.parent.winfo_viewable():
             return
         size=(self.core_canvas.winfo_width(),
