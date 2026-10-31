@@ -1,0 +1,94 @@
+name: Publish experimental Jarvis Telegram multi-contact voice ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-telegram-multi.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout existing download catalog
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout pinned Telegram trial source
+        uses: actions/checkout@v4
+        with:
+          ref: 30013ec9937cdde9955551783d6da67eddbc274a
+          path: source
+          persist-credentials: false
+      - name: Match Python from passing development CI
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recheck complete unit test suite before packaging
+        working-directory: source
+        shell: bash
+        run: |
+          python -m compileall -q .
+          python -m unittest discover -s tests -v
+      - name: Package and verify source ZIP using SHA-256
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          import hashlib, json
+          src=Path("source")
+          dst=Path("catalog/Download/Jarvis-Telegram-Contatti-Vocali-Test.zip")
+          prefix="Jarvis-Telegram-Contatti-Vocali/"
+          dst.parent.mkdir(parents=True,exist_ok=True)
+          records=[]
+          with ZipFile(dst,"w",ZIP_DEFLATED,compresslevel=6) as archive:
+              for file in sorted(src.rglob("*")):
+                  if not file.is_file() or file.is_symlink():
+                      continue
+                  parts=file.relative_to(src).parts
+                  if parts[0] in (".github","Download") or any(
+                      part in (".git",".venv","venv","__pycache__")
+                      for part in parts
+                  ):
+                      continue
+                  name=prefix+"/".join(parts)
+                  archive.write(file,name)
+                  records.append({
+                      "path":name,
+                      "sha256":hashlib.sha256(file.read_bytes()).hexdigest(),
+                  })
+              archive.writestr(prefix+"SOURCE-COMMIT.txt","30013ec9937cdde9955551783d6da67eddbc274a\n")
+              archive.writestr(prefix+"SOURCE-MANIFEST.json",
+                               json.dumps(records,indent=2))
+          with ZipFile(dst) as archive:
+              assert archive.testzip() is None
+              names=set(archive.namelist())
+              for file in (
+                  "avvia_jarvis.bat","jarvis.py","settings.py",
+                  "configura_telegram.py","configura_telegram.bat",
+                  "telegram_directory.py","telegram_ui.py",
+                  "telegram_bridge.py","telegram_outbound_flow.py",
+                  "telegram_voice.py","tests/test_telegram_multi_contacts.py",
+                  "docs/TELEGRAM_CONTATTI_INVIO_VOCALI.md",
+              ):
+                  assert prefix+file in names,file
+              for entry in records:
+                  assert hashlib.sha256(archive.read(
+                      entry["path"])).hexdigest()==entry["sha256"]
+          print("ZIP VERIFIED",dst,dst.stat().st_size)
+          PY
+      - name: Publish new ZIP without replacing old builds
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Telegram-Contatti-Vocali-Test.zip
+          git -C catalog commit -m "download: publish Jarvis Telegram selected contacts voice trial"
+          git -C catalog pull --rebase origin main
+          git -C catalog push origin HEAD:main
