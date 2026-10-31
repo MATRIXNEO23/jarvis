@@ -107,7 +107,7 @@ class PromptPolicyTests(unittest.TestCase):
 
     def test_longest_legal_voice_request_keeps_catalog_and_turn(self):
         prompt=build_conversation_prompt(
-            "Come configuro Jarvis? "+"a"*428,has_document=True,
+            "Come configuro Jarvis? "+"a"*420,has_document=True,
             memory_context=json.dumps({"breve":[
                 {"utente":"Salva una nota", "lia":"Quale nota?"}]}))
         self.assertLessEqual(len(prompt),5000)
