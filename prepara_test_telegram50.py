@@ -70,6 +70,50 @@ def prepare_trial(original_home: Path, trial_home: Path) -> list[str]:
         notes.append("Database di test gia presente: conservato con i suoi messaggi.")
     else:
         notes.append("Nessun database originale: Jarvis creera un archivio di test vuoto.")
+    # Keep ordinary work and preference databases in the trial profile too.
+    # They are NEVER written back to the original installation.
+    for filename in ("second_brain.sqlite3", "jarvis_preferences.sqlite3",
+                     "jarvis_actions.sqlite3", "tasks.db"):
+        extra_source=source/filename
+        extra_target=target/filename
+        if not extra_source.is_file() or extra_target.exists():
+            continue
+        temp=target/(filename+".initializing")
+        if temp.exists():
+            raise RuntimeError("Copia database temporanea incompleta: "+filename)
+        try:
+            with closing(sqlite3.connect(extra_source.as_uri()+"?mode=ro",
+                                         uri=True,timeout=10)) as original:
+                with closing(sqlite3.connect(str(temp),timeout=10)) as copied:
+                    original.backup(copied)
+            os.replace(temp,extra_target)
+        finally:
+            if temp.exists():
+                temp.unlink()
+        notes.append("Copia separata creata: "+filename)
+
+    # The add-ons are bounded, data-only manifests; do not follow links or
+    # copy executable extensions, caches or user project documents.
+    original_addons=source/"addons"
+    trial_addons=target/"addons"
+    if original_addons.is_dir() and not original_addons.is_symlink():
+        trial_addons.mkdir(parents=True,exist_ok=True)
+        for entry in sorted(original_addons.glob("*.json"))[:20]:
+            if (entry.is_symlink() or not entry.is_file()
+                    or entry.stat().st_size>12_000):
+                continue
+            dest=trial_addons/entry.name
+            if not dest.exists() and not dest.is_symlink():
+                shutil.copyfile(entry,dest)
+        approvals=source/"addons-approvals.json"
+        destination=target/"addons-approvals.json"
+        if (approvals.is_file() and not approvals.is_symlink()
+                and approvals.stat().st_size<=12_000
+                and not destination.exists()):
+            shutil.copyfile(approvals,destination)
+        notes.append("Manifest add-on di prova copiati, senza eseguire codice.")
+    # Project documents can be very large and contain personal files: never
+    # silently duplicate them; trial DB still retains project metadata.
     return notes
 
 
