@@ -51,6 +51,7 @@ from document_dialog import DocumentDialog
 from document_language import classify_document_choice
 from document_store import destination_from_voice
 from managed_documents import ManagedDocuments
+from document_recovery import release_closed_document
 from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
@@ -1603,13 +1604,12 @@ def main() -> None:
             return False
         last_notepad_probe=now
         try:
-            closed=documents.forget_if_closed()
+            closed=release_closed_document(documents,doc_dialog)
         except (OSError,ValueError,AttributeError):
             # An inconclusive Windows probe must never discard unsaved text.
             return False
         if not closed:
             return False
-        doc_dialog.reset()
         save_only_waiting=False
         document_topic=""
         document_owner_project_id=None
