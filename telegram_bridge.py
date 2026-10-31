@@ -1,4 +1,4 @@
-"""Opt-in MTProto listener for ONE selected Telegram private contact.
+"""Opt-in MTProto listener for selected private Telegram contacts.
 
 Uses the *owner's* Telegram user account through optional Telethon. The
 friend is always told it is JARVIS replying as an assistant, never impersonated.
@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 
 from telegram_security import load_credentials, TelegramAuthError
+from telegram_directory import verified_contact_entities
 from telegram_voice import (
     TelegramVoiceError,make_telegram_voice,transcribe_incoming_voice)
 from workspace_memory import WorkspaceMemory,WorkspaceError
@@ -26,8 +27,10 @@ class TelegramBridgeError(RuntimeError):
 
 def accepted_private_message(sender_id,is_private,outgoing,allowed_peer):
     """Default deny. IDs, not display names/usernames, are compared."""
-    return (type(sender_id) is int and type(allowed_peer) is int
-            and sender_id>0 and sender_id==allowed_peer
+    authorized=(sender_id==allowed_peer if type(allowed_peer) is int
+                else sender_id in allowed_peer if isinstance(
+                    allowed_peer,(dict,set,tuple,list)) else False)
+    return (type(sender_id) is int and sender_id>0 and authorized
             and is_private is True and outgoing is False)
 
 
@@ -74,12 +77,24 @@ class TelegramBridge:
 
     def __init__(self,workspace:WorkspaceMemory,peer_id:int,
                  peer_name:str,ask_gpt,notify,
-                 voice_name:str="",credential_loader=load_credentials):
-        if type(peer_id) is not int or peer_id<=0 or not peer_name.strip():
-            raise TelegramBridgeError("Contatto Telegram da autorizzare.")
+                 voice_name:str="",credential_loader=load_credentials,
+                 allowed_contacts=None):
+        if allowed_contacts is None:
+            allowed_contacts=[{"id":peer_id,"name":peer_name,"enabled":True}]
+        selected={}
+        for entry in allowed_contacts[:80]:
+            if (isinstance(entry,dict)
+                    and type(entry.get("id")) is int and entry["id"]>0
+                    and entry.get("enabled") is True
+                    and isinstance(entry.get("name"),str)
+                    and entry["name"].strip()):
+                selected[entry["id"]]=entry["name"].strip()[:90]
+        if not selected:
+            raise TelegramBridgeError("Seleziona almeno un contatto Telegram.")
         self.workspace=workspace
-        self.peer_id=peer_id
-        self.peer_name=peer_name[:90]
+        self.allowed_contacts=selected
+        self.peer_id=next(iter(selected))
+        self.peer_name=selected[self.peer_id]
         self.ask_gpt=ask_gpt
         self.notify=notify
         self.voice_name=voice_name
@@ -88,7 +103,7 @@ class TelegramBridge:
         self._thread=None
         self._loop=None
         self._shutdown=None
-        self._last_sent=0.0
+        self._last_sent={}
 
     def start(self):
         if self._thread is not None and self._thread.is_alive():
@@ -150,21 +165,17 @@ class TelegramBridge:
             if not await client.is_user_authorized():
                 raise TelegramBridgeError(
                     "Sessione Telegram scaduta. Riconfigura l'account.")
-            # StringSession does not store the per-peer entity database.
-            # Resolve strictly from owner's actual private chats.
-            dialogs=await client.get_dialogs(limit=200)
-            peer=None
-            for dialog in dialogs:
-                if (dialog.is_user and dialog.entity.id==self.peer_id
-                        and not getattr(dialog.entity,"bot",False)
-                        and not getattr(dialog.entity,"is_self",False)):
-                    peer=dialog.entity
-                    break
-            if peer is None:
+            # StringSession does not cache entities: resolve actual Telegram
+            # users again for every session. Never trust names or guessed IDs.
+            available=await verified_contact_entities(client)
+            peers={pid:available[pid][1] for pid in self.allowed_contacts
+                   if pid in available}
+            if not peers:
                 raise TelegramBridgeError(
-                    "Contatto non trovato tra le chat private autorizzate.")
+                    "Nessun contatto selezionato trovato nelle chat/rubrica Telegram.")
             self.notify(("telegram_status",
-                         "Telegram: ascolto attivo solo per "+self.peer_name))
+                         "Telegram: risposte attive per "+str(len(peers))+
+                         " contatti autorizzati."))
             # Incoming callbacks may overlap: serialize reading, GPT and
             # sending so that simultaneous messages cannot trigger duplicate
             # notes or bypass the outgoing rate limit.
@@ -176,12 +187,12 @@ class TelegramBridge:
                     return
                 if not accepted_private_message(
                         event.sender_id,bool(event.is_private),
-                        bool(event.out),self.peer_id):
+                        bool(event.out),peers):
                     return
                 try:
                     async with processing_lock:
                         if self._enabled.is_set():
-                            await self._handle(client,peer,event)
+                            await self._handle(client,peers[event.sender_id],event)
                 except (TelegramBridgeError,TelegramVoiceError,
                         WorkspaceError,OSError,ValueError) as exc:
                     self.notify(("telegram_status",
@@ -197,6 +208,10 @@ class TelegramBridge:
     async def _handle(self,client,peer,event):
         if not self._enabled.is_set():
             return
+        peer_id=getattr(event,"sender_id",None)
+        if peer_id not in self.allowed_contacts:
+            return
+        peer_name=self.allowed_contacts[peer_id]
         message=event.message
         is_voice=bool(getattr(message,"voice",False))
         incoming_text=str(getattr(message,"message","") or "").strip()
@@ -204,9 +219,9 @@ class TelegramBridge:
         # Record the inbound event before any async work. Duplicate updates
         # must not cause duplicate outgoing messages.
         if not self.workspace.telegram_event(
-                self.peer_id,"incoming",message.id,kind,incoming_text):
+                peer_id,"incoming",message.id,kind,incoming_text):
             return
-        self.notify(("telegram_received",self.peer_name,kind))
+        self.notify(("telegram_received",peer_name,kind))
         if is_voice:
             size=getattr(getattr(message,"file",None),"size",0) or 0
             duration=getattr(getattr(message,"file",None),"duration",0) or 0
@@ -223,16 +238,16 @@ class TelegramBridge:
                     transcribe_incoming_voice,Path(target))
                 if incoming_text:
                     self.workspace.telegram_transcript(
-                        self.peer_id,message.id,incoming_text)
+                        peer_id,message.id,incoming_text)
         if not incoming_text or not self._enabled.is_set():
             return
         # Anti-spam: at most one reply per 8s. Other incoming events remain
         # visible and searchable, never marked as answered.
-        if time.monotonic()-self._last_sent<8:
+        if time.monotonic()-self._last_sent.get(peer_id,0.0)<8:
             self.notify(("telegram_status",
                          "Telegram: messaggio ricevuto, nessuna risposta per limite frequenza."))
             return
-        notes=self.workspace.pending_for_contact(self.peer_id)
+        notes=self.workspace.pending_for_contact(peer_id)
         # Authorized owner messages must be relayed verbatim. Never rely on
         # GPT to decide whether to include or paraphrase an approved note.
         delivering=notes[:1]
@@ -246,7 +261,7 @@ class TelegramBridge:
             reply=relay
         else:
             context=self.workspace.prompt_context(
-                "telegram",str(self.peer_id),incoming_text,budget=820)
+                "telegram",str(peer_id),incoming_text,budget=820)
             prompt=telegram_assistant_prompt(incoming_text,context)
             reply=clean_generated_reply(
                 await asyncio.to_thread(self.ask_gpt,prompt))
@@ -259,24 +274,24 @@ class TelegramBridge:
                 return
             note_ids=[n["id"] for n in delivering]
             if note_ids:
-                self.workspace.reserve_notes(self.peer_id,note_ids)
+                self.workspace.reserve_notes(peer_id,note_ids)
             try:
                 sent=await client.send_file(peer,str(audio_path),
                                             voice_note=True)
             except Exception:
                 if note_ids:
-                    self.workspace.finish_notes(self.peer_id,note_ids,None)
+                    self.workspace.finish_notes(peer_id,note_ids,None)
                 raise TelegramBridgeError(
                     "Invio incerto. Non riprovo automaticamente per evitare duplicati.")
             if not sent or not getattr(sent,"id",None):
                 if note_ids:
-                    self.workspace.finish_notes(self.peer_id,note_ids,None)
+                    self.workspace.finish_notes(peer_id,note_ids,None)
                 raise TelegramBridgeError("Ricevuta d'invio Telegram mancante.")
-            self._last_sent=time.monotonic()
+            self._last_sent[peer_id]=time.monotonic()
             self.workspace.telegram_event(
-                self.peer_id,"outgoing",sent.id,"voice",reply)
+                peer_id,"outgoing",sent.id,"voice",reply)
             self.workspace.add_turn(
-                "telegram",str(self.peer_id),incoming_text,reply)
+                "telegram",str(peer_id),incoming_text,reply)
             if note_ids:
-                self.workspace.finish_notes(self.peer_id,note_ids,sent.id)
-            self.notify(("telegram_sent",self.peer_name))
+                self.workspace.finish_notes(peer_id,note_ids,sent.id)
+            self.notify(("telegram_sent",peer_name))
