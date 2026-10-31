@@ -245,3 +245,25 @@ L'utente ha approvato un concept futuristico blu/ciano e ha chiesto di implement
 
 
 **Verifica automatica conclusiva HUD:** [CI run 41148255002](https://github.com/MATRIXNEO23/jarvis/actions/runs/41148255002), **SUCCESS** su quattro job Python 3.11/3.12 Windows e Ubuntu, HEAD del ramo `83815ce94067aac212f8b5ddf7df7881325a6fbd`. Test GUI/resa 3D/consumo effettivo **non** svolti sul Pavilion; la ZIP sperimentale rimane separata e pronto per il collaudo utente.
+
+
+## 15. Revisione HUD per maggiore fedeltà al preview e nuovi colori (31 ottobre 2026)
+
+L'utente ha confrontato una fotografia dell'interfaccia Jarvis realmente avviata sul Pavilion con un precedente preview grafico in stile cinematografico, indicando che la prima implementazione era troppo semplice. Ha confermato che desidera un layout **molto più simile al preview originale**: console verticale sulla sinistra con schede Console/Attività/Sistema, grande reattore JARVIS luminoso al centro, Terra geografica animata più dettagliata a destra e strumenti di monitoraggio nella fascia bassa.
+
+**Indicazione vincolante sul nucleo:** deve avere il testo **JARVIS** fisso, senza scritte «ASCOLTO» dentro il cerchio. **Ciano** in riposo; **arancione pulsante** quando il microfono è realmente attivo; **verde pulsante** durante la risposta vocale, con priorità del verde se la voce SAPI parla mentre il microfono è aperto. Dopo la voce deve tornare arancione se il microfono rimane attivo, altrimenti ciano. Non cambiare le modalità microfono automaticamente: all'avvio devono rimanere standby/off.
+
+**Nuovo ramo isolato:** `feature/hud-reference-redesign`, [PR #7 draft](https://github.com/MATRIXNEO23/jarvis/pull/7) basato sul precedente ramo `feature/animated-hud-interface`. **Non integrato in main**.
+
+Implementazioni reali:
+- `hud_reference.py`: arte vettoriale Tkinter con reattore a più fasce concentriche/archi, piccoli punti e circuiti, nucleo a sfumatura di stato; globo con coste/continenti pieni, texture luminosa campionata, punti decorativi, paralleli, meridiani, orbite e rotazione lenta. Non è una texture fotografica né una vera telemetria satellitare.
+- `animated_hud.py`: nuova struttura più fedele al preview, console con 3 schede **funzionanti**, riquadri CPU/RAM/disco C/GPT con valori realmente campionati o «--» quando non disponibili (niente velocità rete, GPS o CPU inventati), risparmio CPU con redraw solo su cambi di stato, globe aggiornato ogni terzo tick.
+- `jarvis.py`: conversazione visualizzata come sequenza «TU», «JARVIS», «OPERAZIONE» e «SISTEMA» con timestamp; tutte le precedenti azioni e conferme file restano attive; colorazione reale collegata a `voice.is_listening()` e `speaker.is_speaking()`.
+- `voice_control.py`: `is_listening()` riferito al reale stream audio generazionale, per evitare false segnalazioni arancioni quando la modalità è selezionata ma il microfono non si apre. Non modifica la logica di ascolto o accensione.
+- Test aggiornati `tests/test_animated_hud.py` e `tests/test_voice_control.py`: stati e colori, clip del globo, limiti del loop e smoke test GUI Tk Windows.
+
+**Verifica automatica:** [CI Windows/Linux run 41150102312](https://github.com/MATRIXNEO23/jarvis/actions/runs/41150102312), **SUCCESS** su quattro job; codice del redesign allo stato successivo da ricontrollare dopo altri commit. Non equiparare i test del modello geometrico al collaudo fisico del Pavilion.
+
+**Distribuzione:** nuova ZIP isolata [feature/hud-reference-redesign](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-reference-redesign.zip) linkata anche in [Download](https://github.com/MATRIXNEO23/jarvis/tree/main/Download); [guida](https://github.com/MATRIXNEO23/jarvis/blob/feature/hud-reference-redesign/docs/HUD_REFERENCE_V2.md).
+
+**Prossima prova fisica:** mostrare e confrontare il nuovo UI con la reference foto dell'utente. Verificare (1) ciano standby (2) arancione pulsante con flusso Vosk realmente aperto (3) verde durante la voce SAPI (4) globo e tutti i tre tab della console (5) impostazioni dietro ⚙ e pulsanti save/annulla (6) carico CPU/memoria mentre Minecraft o altri programmi pesanti sono attivi. Non fare merge fino a esito positivo e decisione separata dell'utente. Conservare vecchia cartella e `%LOCALAPPDATA%\\Jarvis`.
