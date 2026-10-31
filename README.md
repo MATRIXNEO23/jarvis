@@ -4,6 +4,14 @@
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
+## Ultimo aggiornamento visivo: sfondo cinematico più fedele al preview
+
+**[Scarica JARVIS HUD con sfondo nero e circuiti discreti — ZIP](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/high-fidelity-cinematic-background.zip)**.
+
+Dopo il test reale dell'HUD High Fidelity sul Pavilion, l'utente ha chiesto uno sfondo più vicino all'immagine originale: il ramo di prova ora rimpiazza la griglia blu uniforme dietro reattore e Terra con **nero-blu quasi assoluto, piste elettroniche sottili e punti ciano molto discreti**. Anche console e pannelli inferiori sono più scuri. Nessuna nuova libreria, API o costo; lo sfondo viene ridisegnato solo se la finestra è creata o ridimensionata.
+
+**Non perde le funzioni** di ascolto automatico GPT, saluto orario, Second Brain, dialogo, comandi e approvazione dei file. [Guida e test sul Pavilion](https://github.com/MATRIXNEO23/jarvis/blob/feature/high-fidelity-cinematic-background/docs/HUD_CINEMATIC_BACKGROUND.md) · [PR draft #11](https://github.com/MATRIXNEO23/jarvis/pull/11). Estrai in una cartella diversa dalla versione che già funziona; collaudo visivo da eseguire.
+
 ## Ultima interfaccia di prova: JARVIS high fidelity
 
 **[Scarica JARVIS HUD più fedele al concept originale (ZIP)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/high-fidelity-reference-hud.zip)**.
