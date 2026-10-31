@@ -122,6 +122,15 @@ class VoiceController:
         self._generation = 0
         self._closed = False
         self._model = None
+        # Generation-bound state of the actual Windows audio input stream.
+        # Selecting a listening mode is not proof that Vosk opened a mic.
+        self._active_generation = -1
+
+    def is_listening(self) -> bool:
+        """Real microphone-stream state for the HUD, not a mode toggle."""
+        with self._lock:
+            return (not self._closed and self.mode != STANDBY
+                    and self._active_generation == self._generation)
 
     def set_mode(self, mode: str) -> None:
         if mode not in MODES:
@@ -131,6 +140,7 @@ class VoiceController:
                 return
             self.mode = mode
             self._generation += 1
+            self._active_generation = -1
             if self._stop is not None:
                 self._stop.set()
             if mode == STANDBY:
@@ -174,6 +184,7 @@ class VoiceController:
             self._closed = True
             self.mode = STANDBY
             self._generation += 1
+            self._active_generation = -1
             self._model = None
             if self._stop is not None:
                 self._stop.set()
@@ -216,6 +227,9 @@ class VoiceController:
             # No recordings are written to disk or sent over the network.
             with sd.RawInputStream(samplerate=16000, blocksize=4000,
                                    channels=1, dtype="int16") as stream:
+                with self._lock:
+                    if self._is_current(generation) and not stop.is_set():
+                        self._active_generation = generation
                 fragments: list[str] = []
                 suppressed = False
                 while not stop.is_set() and self._is_current(generation):
@@ -250,6 +264,8 @@ class VoiceController:
         finally:
             self._report("voice_status", "Microfono spento.", generation)
             with self._lock:
+                if self._active_generation == generation:
+                    self._active_generation = -1
                 if self._worker is threading.current_thread():
                     self._worker = None
                 restart = (not failed and not self._closed
