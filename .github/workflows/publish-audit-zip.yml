@@ -1,4 +1,4 @@
-name: Publish Jarvis timer and settings ZIP to Download
+name: Publish Jarvis timer audio fix ZIP to Download
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
           import subprocess
           import zipfile
 
-          archive=Path(os.environ["RUNNER_TEMP"])/"Jarvis-Timer-Impostazioni-20261031.zip"
+          archive=Path(os.environ["RUNNER_TEMP"])/"Jarvis-Timer-Audio-Corretto-20261031.zip"
           files=[Path(os.fsdecode(p)) for p in subprocess.check_output(
               ["git","ls-files","-z"]).split(b"\0") if p]
           files=[p for p in files if not (len(p.parts)>1 and p.parts[0]=="Download"
@@ -64,7 +64,7 @@ jobs:
           assert required.issubset(found), "Missing critical Jarvis components"
           assert "AVVIA_TEST_TELEGRAM50.bat" not in found, "Duplicate launcher"
           assert len(files)>110, "Archive appears incomplete"
-          root="Jarvis-Timer-Impostazioni-20261031/"
+          root="Jarvis-Timer-Audio-Corretto-20261031/"
           with zipfile.ZipFile(archive,"w",zipfile.ZIP_DEFLATED,compresslevel=9,
                                allowZip64=True) as z:
               for path in files:
@@ -97,17 +97,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp "$RUNNER_TEMP/Jarvis-Timer-Impostazioni-20261031.zip" \
-             publish-main/Download/Jarvis-Timer-Impostazioni-20261031.zip
+          cp "$RUNNER_TEMP/Jarvis-Timer-Audio-Corretto-20261031.zip" \
+             publish-main/Download/Jarvis-Timer-Audio-Corretto-20261031.zip
           python - <<'PY'
           from pathlib import Path
           readme=Path("publish-main/Download/README.md")
           before=readme.read_text(encoding="utf-8")
-          heading="# Jarvis: Timer vocale e Impostazioni - 31/10/2026"
+          heading="# Jarvis: Timer con audio corretto - 31/10/2026"
           section=(
               heading+"\n\n"
-              "**[SCARICA JARVIS CON TIMER E IMPOSTAZIONI RIORDINATE]"
-              "(./Jarvis-Timer-Impostazioni-20261031.zip)**\n\n"
+              "**[SCARICA JARVIS COMPLETO CON FIX AUDIO TIMER]"
+              "(./Jarvis-Timer-Audio-Corretto-20261031.zip)**\n\n"
               "Versione completa per Windows 10 con un solo launcher "
               "`avvia_jarvis.bat`. Il timer e' una finestra indipendente "
               "con cifre digitali, START, PAUSA, STOP, RESET e durata modificabile. "
@@ -115,6 +115,9 @@ jobs:
               "'riprendi timer', 'stop timer' e 'quanto manca al timer'. "
               "Cinque suonerie offline con anteprima, volume e ripetizione "
               "nelle impostazioni gia' esistenti, ora organizzate per categorie. "
+              "**Fix audio:** riproduzione WAV da file con ripiego in memoria, "
+              "bip alternativo Windows selezionabile e messaggi di stato visibili "
+              "sia nel tasto Prova che alla scadenza del timer. "
               "I comandi originali, Telegram, memoria, progetti, microfono, "
               "add-on e GPT esterno non sono stati rimossi.\n\n"
               "Estrai in una cartella nuova e avvia `avvia_jarvis.bat`. "
@@ -129,9 +132,9 @@ jobs:
           cd publish-main
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- Download/Jarvis-Timer-Impostazioni-20261031.zip Download/README.md
+          git add -- Download/Jarvis-Timer-Audio-Corretto-20261031.zip Download/README.md
           git diff --cached --stat
-          git commit -m "Publish Jarvis timer and settings ZIP with single launcher"
+          git commit -m "Publish complete Jarvis ZIP with fixed timer audio"
           git push origin HEAD:main
 
       - name: Confirm published ZIP exists in main
@@ -140,4 +143,4 @@ jobs:
           set -euo pipefail
           git -C publish-main fetch origin main
           git -C publish-main ls-tree -r --name-only origin/main -- Download | \
-            grep -Fx "Download/Jarvis-Timer-Impostazioni-20261031.zip"
+            grep -Fx "Download/Jarvis-Timer-Audio-Corretto-20261031.zip"
