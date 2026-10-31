@@ -300,6 +300,20 @@ class WorkspaceMemory:
                         break
         return json.dumps(context,ensure_ascii=False,separators=(",",":"))
 
+    def project_directory(self,ident):
+        """Stable folder inside AppData/Jarvis/projects; never use spoken names as paths."""
+        if not _project_id(ident) or not self.project(ident):
+            raise WorkspaceError("Progetto inesistente.")
+        return self.continuities/ident
+
+    def project_files_directory(self,ident):
+        """Authoritative destination for documents of this single project."""
+        folder=self.project_directory(ident)/"files"
+        if folder.is_symlink():
+            raise WorkspaceError("Cartella file del progetto non sicura.")
+        folder.mkdir(parents=True,exist_ok=True)
+        return folder
+
     def continuity_file(self,ident):
         if not _project_id(ident):
             raise WorkspaceError("Progetto inesistente.")
@@ -508,7 +522,12 @@ class WorkspaceMemory:
                 lines.extend(["", "- ["+item["when"]+"] Utente: "+item["utente"][:240],
                               "  - JARVIS: "+item["jarvis"][:260]])
             folder=self.continuities/ident
-            (folder/"files").mkdir(parents=True,exist_ok=True)
+            self.project_files_directory(ident)
+            self._atomic_file(folder/"PROGETTO.txt",
+                "Progetto: "+project["name"]+"\n"
+                "ID: "+ident+"\n"
+                "Cartella documenti: files\n"
+                "La memoria è in CONTINUITA.md, STATO.json e PASSI.md.\n")
             self._atomic_file(folder/"CONTINUITA.md","\n".join(lines)+"\n",
                               keep_previous=True)
             state={
