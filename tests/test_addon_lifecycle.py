@@ -187,6 +187,23 @@ class AddonLifecycleTests(unittest.TestCase):
                 self.root,pkg(version="2.0.0",core="explorer.drive_c")))
         self.assertTrue(self.manager.is_active(self.action))
 
+    def test_longest_voice_request_never_truncated_by_addons(self):
+        self._install()
+        self.manager.set_enabled("monitor",True)
+        info=snapshot_capabilities(
+            settings={"telegram_contacts":[]},
+            has_document=True,telegram_credentials=False,
+            telegram_voice_dependencies=False,
+            registry=self.hub,telethon_installed=False)
+        utterance="x"*450
+        prompt=build_conversation_prompt(
+            utterance,has_document=True,
+            runtime_info=capability_status_prompt(info),
+            addon_actions=self.manager.active_actions())
+        self.assertLessEqual(len(prompt),5000)
+        self.assertTrue(prompt.endswith(json.dumps(utterance)))
+        self.assertIn("notepad.open",prompt)
+
     def test_maximum_size_bounded_and_no_network_required(self):
         huge=self.root/"huge.jaddon"
         huge.write_text(" "*12500,encoding="utf8")
