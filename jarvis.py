@@ -632,10 +632,51 @@ def main() -> None:
         wraplength=710
     ).pack(anchor="w", pady=(0, 4))
 
+    workspace_panel=ttk.LabelFrame(
+        frame,text="Progetti — contesto indipendente e continuità",padding=8)
+    workspace_panel.pack(fill="x",pady=(6,8))
+    workspace_button=ttk.Button(
+        workspace_panel,text="Gestisci progetti / apri continuità")
+    workspace_button.pack(side="left",padx=(0,12))
+    ttk.Label(workspace_panel,textvariable=workspace_status,
+              wraplength=420).pack(side="left",fill="x",expand=True)
+
+    telegram_panel=ttk.LabelFrame(
+        frame,text="Telegram — un solo contatto e risposte vocali",padding=8)
+    telegram_panel.pack(fill="x",pady=(3,10))
+    telegram_toggle=ttk.Checkbutton(
+        telegram_panel,text="Risposte vocali automatiche ON / OFF",
+        variable=telegram_auto)
+    telegram_toggle.pack(anchor="w")
+    telegram_row=ttk.Frame(telegram_panel)
+    telegram_row.pack(fill="x",pady=(4,3))
+    telegram_configure_button=ttk.Button(
+        telegram_row,text="Configura Telegram (accesso sicuro)")
+    telegram_configure_button.pack(side="left",padx=(0,8))
+    telegram_reload_button=ttk.Button(
+        telegram_row,text="Rileggi contatto autorizzato")
+    telegram_reload_button.pack(side="left")
+    ttk.Label(
+        telegram_panel,textvariable=telegram_status,wraplength=690
+    ).pack(anchor="w",pady=(3,0))
+    ttk.Label(
+        telegram_panel,
+        text="Solo la chat privata autorizzata; le risposte sono note vocali "
+             "SAPI/OGG e JARVIS si presenta come assistente. "
+             "Occorrono Telethon gratuito e FFmpeg locale. Nessun invio "
+             "di test o risposta finché non attivi questa opzione.",
+        wraplength=690).pack(anchor="w",pady=(3,0))
+
     # Conversation is always visible at the left of the animated HUD.
     # The console composer follows the supplied reference: a circular mic,
     # one conversation field and a send arrow. The previous explicit tools
     # remain available behind the small menu (never silently removed).
+    scope_row=ttk.Frame(hud.command_host)
+    scope_row.pack(fill="x",pady=(0,5))
+    ttk.Label(scope_row,textvariable=active_context_label,
+              font=("Consolas",8)).pack(side="left",fill="x",expand=True)
+    scope_button=ttk.Button(scope_row,text="Progetti")
+    scope_button.pack(side="right")
     input_row = tk.Frame(hud.command_host, bg=PANEL)
     input_row.pack(fill="x")
     request = tk.StringVar()
