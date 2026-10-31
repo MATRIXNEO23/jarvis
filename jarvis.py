@@ -1593,7 +1593,7 @@ def main() -> None:
                            close_after: bool = False,
                            source_utterance: str = "") -> None:
         nonlocal document_busy, last_user_for_document, project_document_ticket
-        nonlocal document_topic,document_owner_project_id
+        nonlocal document_topic,document_owner_project_id,document_operation_id
         if document_busy or closing:
             announce_document("Sto già lavorando sul documento: attendi.")
             return
@@ -1601,6 +1601,23 @@ def main() -> None:
             source_utterance or operation,source="document")
         if project_document_ticket is False:
             announce_document("Checkpoint progetto non disponibile: azione non eseguita.")
+            return
+        if operation_ledger is None:
+            finish_project_work(project_document_ticket,"interrupted",
+                                "Registro operativo non disponibile.")
+            project_document_ticket=None
+            announce_document("Registro operativo non disponibile: operazione bloccata.")
+            return
+        try:
+            document_operation_id=operation_ledger.begin(
+                "notepad."+operation,origin="document",
+                project_id=document_owner_project_id or active_project_id or "")
+            operation_ledger.running(document_operation_id)
+        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+            finish_project_work(project_document_ticket,"interrupted",
+                                "Registro operativo non disponibile.")
+            project_document_ticket=None
+            announce_document("Impossibile registrare l'azione: "+str(exc)[:95])
             return
         document_busy = True
         if operation == "open" or (operation=="compose" and target=="new_notepad"):
@@ -2258,8 +2275,24 @@ def main() -> None:
                     announce_document(result.message)
                     source = last_user_for_document or operation
                     last_user_for_document = ""
+                    # File presente sul disco: prova di salvataggio. Una finestra
+                    # lanciata o modificata non è invece osservata indipendentemente.
+                    saved_file=getattr(result,"saved_path",None)
+                    observed_file=bool(saved_file and Path(saved_file).is_file())
+                    if operation_ledger is not None and document_operation_id:
+                        try:
+                            operation_ledger.finish(
+                                document_operation_id,
+                                "verified" if observed_file else "reported",
+                                receipt="file:"+str(result.document_id)[:65]
+                                if observed_file else "",observed=observed_file,
+                                action="notepad."+operation)
+                        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+                            write_line("JARVIS > Registro documento: "+str(exc)[:90])
+                    document_operation_id=None
                     finish_project_work(project_document_ticket,"completed",result.message,
-                                        receipt=str(result.document_id)+":"+result.kind)
+                                        receipt=str(result.document_id)+":"+result.kind,
+                                        observed=observed_file)
                     if (project_document_ticket and workspace is not None
                             and getattr(result,"saved_path",None) is not None):
                         try:
@@ -2284,7 +2317,7 @@ def main() -> None:
                         remember_completed_action(
                             action_name, "Blocco note", result.message,
                             "jarvis:" + uuid4().hex,
-                            filename=filename, folder=folder)
+                            filename=filename, folder=folder,observed=observed_file)
                     if close_after and result.kind in ("created", "appended"):
                         ask_to_close_document(source)
                 elif kind == "document_error":
@@ -2304,6 +2337,13 @@ def main() -> None:
                     choose_save_button.configure(state="disabled")
                     error_message = "Operazione non riuscita; nessun documento chiuso: " + reason
                     announce_document(error_message)
+                    if operation_ledger is not None and document_operation_id:
+                        try:
+                            operation_ledger.finish(document_operation_id,"failed",
+                                                    action="notepad."+operation)
+                        except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
+                            write_line("JARVIS > Registro documento: "+str(exc)[:90])
+                    document_operation_id=None
                     finish_project_work(project_document_ticket,"failed",error_message)
                     project_document_ticket = None
                     remember_exchange(last_user_for_document or operation,
