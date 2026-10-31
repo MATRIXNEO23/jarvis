@@ -77,7 +77,7 @@ class TelegramTrialTests(unittest.TestCase):
         current=load_settings(settings_path)
         current["auto_listen"]=False
         save_settings(current,settings_path)
-        (self.trial/".microphone-on-startup-v1").unlink()
+        (self.trial/".microphone-on-startup-v2").unlink()
         prepare_trial(self.original,self.trial)
         self.assertTrue(load_settings(settings_path)["auto_listen"])
         current=load_settings(settings_path)
@@ -107,6 +107,15 @@ class TelegramTrialTests(unittest.TestCase):
         with closing(sqlite3.connect(self.original/"second_brain.sqlite3")) as db:
             self.assertEqual(db.execute("SELECT value FROM facts").fetchone()[0],
                              "owner")
+
+    def test_single_launcher_always_prepares_isolated_trial(self):
+        launcher=(Path(__file__).resolve().parent.parent/"avvia_jarvis.bat").read_text(
+            encoding="utf-8")
+        self.assertIn("JARVIS_TRIAL_HOME",launcher)
+        self.assertIn("prepara_test_telegram50.py",launcher)
+        self.assertIn("py -3 jarvis.py",launcher)
+        self.assertFalse(
+            (Path(__file__).resolve().parent.parent/"AVVIA_TEST_TELEGRAM50.bat").exists())
 
     def test_default_path_redirects_only_when_explicitly_enabled(self):
         with patch.dict(os.environ,{"JARVIS_TRIAL_HOME":str(self.trial)}):
