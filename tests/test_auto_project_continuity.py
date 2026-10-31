@@ -99,6 +99,24 @@ class AutomaticContinuityTests(unittest.TestCase):
         self.assertIn("report.txt", recovered.continuity_file(ident).read_text(
             encoding="utf-8"))
 
+    def test_compacted_context_keeps_verified_step_state(self):
+        from jarvis_persona import compact_memory
+        raw = json.dumps({
+            "breve":[{"utente":"Chiacchiera","lia":"Avanti","tipo":"chat"}],
+            "progress":[
+                {"title":"Compilazione Minecraft","status":"completed",
+                 "detail":"Test passato","verified":True},
+                {"title":"Prova nel mondo","status":"planned",
+                 "detail":"","verified":False}],
+            "permanente":{"related":[]}
+        },ensure_ascii=False)
+        compressed=compact_memory(raw,700)
+        self.assertIn("Compilazione Minecraft",compressed)
+        self.assertIn("Test passato",compressed)
+        self.assertIn("verified_action",compressed)
+        self.assertIn("planned",compressed)
+        self.assertLessEqual(len(compressed),700)
+
     def test_secret_does_not_enter_project_journal(self):
         ident = self.memory.create_project("Privato")
         with self.assertRaises(WorkspaceError):
