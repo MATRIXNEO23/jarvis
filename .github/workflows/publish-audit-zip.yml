@@ -47,7 +47,7 @@ jobs:
           import subprocess
           import zipfile
 
-          archive=Path(os.environ["RUNNER_TEMP"])/"Jarvis-Full-Audit-Telegram50-20261031.zip"
+          archive=Path(os.environ["RUNNER_TEMP"])/"Jarvis-HUD-Riferimento-20261031.zip"
           files=[Path(os.fsdecode(p)) for p in subprocess.check_output(
               ["git","ls-files","-z"]).split(b"\0") if p]
           files=[p for p in files if not (len(p.parts)>1 and p.parts[0]=="Download"
@@ -97,8 +97,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp "$RUNNER_TEMP/Jarvis-Full-Audit-Telegram50-20261031.zip" \
-             publish-main/Download/Jarvis-Full-Audit-Telegram50-20261031.zip
+          cp "$RUNNER_TEMP/Jarvis-HUD-Riferimento-20261031.zip" \
+             publish-main/Download/Jarvis-HUD-Riferimento-20261031.zip
           python - <<'PY'
           from pathlib import Path
           readme=Path("publish-main/Download/README.md")
@@ -108,7 +108,7 @@ jobs:
           section=(
               heading+"\n\n"
               "**[SCARICA JARVIS COMPLETO - HUD CORRETTO + TELEGRAM 50]"
-              "(./Jarvis-Full-Audit-Telegram50-20261031.zip)**\n\n"
+              "(./Jarvis-HUD-Riferimento-20261031.zip)**\n\n"
               "Pacchetto sorgente Python completo per Windows 10, non un EXE. "
               "Include un solo launcher `avvia_jarvis.bat` con profilo isolato, "
               "microfono attivo all'avvio (se modello/dispositivo disponibili). "
@@ -134,7 +134,7 @@ jobs:
           cd publish-main
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- Download/Jarvis-Full-Audit-Telegram50-20261031.zip Download/README.md
+          git add -- Download/Jarvis-HUD-Riferimento-20261031.zip Download/README.md
           git diff --cached --stat
           git commit -m "Update Download with verified Jarvis reference HUD and single launcher"
           git push origin HEAD:main
@@ -145,4 +145,4 @@ jobs:
           set -euo pipefail
           git -C publish-main fetch origin main
           git -C publish-main ls-tree -r --name-only origin/main -- Download | \
-            grep -Fx "Download/Jarvis-Full-Audit-Telegram50-20261031.zip"
+            grep -Fx "Download/Jarvis-HUD-Riferimento-20261031.zip"
