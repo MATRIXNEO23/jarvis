@@ -1217,17 +1217,19 @@ def main() -> None:
             switch_context(identifier)
 
     def queue_telegram_note(message:str) -> bool:
-        peer_id=settings.get("telegram_peer_id",0)
-        if not peer_id or workspace is None:
-            write_line("JARVIS > Devi prima autorizzare un contatto Telegram.")
+        chosen=selected_telegram_contacts()
+        if len(chosen)!=1 or workspace is None:
+            write_line("TELEGRAM > Il vecchio promemoria usa un solo destinatario. "
+                       "Per scegliere tra più contatti usa 'Invia messaggio vocale'.")
             return False
+        peer_id=chosen[0]["id"]
         try:
             workspace.note_for_contact(peer_id,message)
         except (OSError,sqlite3.Error,WorkspaceError) as exc:
             write_line("JARVIS > Non posso salvare il messaggio: "+str(exc)[:100])
             return False
         write_line("JARVIS > Messaggio memorizzato per "
-                   +settings["telegram_contact_name"]
+                   +chosen[0]["name"]
                    +". Lo riferirò al prossimo contatto, se Telegram è attivo.")
         return True
 
@@ -1243,8 +1245,10 @@ def main() -> None:
             queue_telegram_note(message)
 
     def maybe_queue_telegram_note(message:str) -> bool:
-        parsed=explicit_telegram_note(
-            message,settings.get("telegram_contact_name",""))
+        chosen=selected_telegram_contacts()
+        if len(chosen)!=1:
+            return False
+        parsed=explicit_telegram_note(message,chosen[0]["name"])
         if parsed is None:
             return False
         queue_telegram_note(parsed)
