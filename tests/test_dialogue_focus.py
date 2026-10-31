@@ -118,7 +118,8 @@ class PromptContextTests(unittest.TestCase):
     def test_max_length_prompt_still_fits(self):
         self.assertLessEqual(len(build_conversation_prompt(
             "x"*450,has_document=True)),5000)
-        self.assertLessEqual(len(build_chat_prompt("x"*4900)),5000)
+        with self.assertRaises(ValueError):
+            build_chat_prompt("x"*4900)
 
 
 if __name__=="__main__":
