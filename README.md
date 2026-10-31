@@ -4,6 +4,16 @@
 
 Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo **zero costi aggiuntivi**. Sviluppo incrementale: non dichiarare funzionanti funzioni non testate.
 
+## Ultima prova sperimentale: JARVIS con dialogo continuo e personalità
+
+**[Scarica la ZIP con JARVIS conversazionale e HUD rinnovato](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/dialogue-continuity-personality.zip)**.
+
+La nuova versione mantiene il reattore ciano/arancione/verde e la Terra animata, ma corregge due limiti del dialogo: il contesto breve che si svuotava se una risposta era troppo lunga e le frasi che venivano scartate mentre GPT elaborava. Ora JARVIS conserva i turni recenti in RAM e accoda fino a tre frasi in elaborazione, mantenendo come unica richiesta corrente l'ultima frase pronunciata. Usa inoltre una personalità coerente, italiana, competente e leggermente ironica; non scambia ricordi passati per autorizzazioni a nuove operazioni.
+
+[Guida e limiti](https://github.com/MATRIXNEO23/jarvis/blob/feature/dialogue-continuity-personality/docs/DIALOGO_CONTINUO.md) · [Test Windows/Linux PASS](https://github.com/MATRIXNEO23/jarvis/actions/runs/41150861417) · [PR draft #8](https://github.com/MATRIXNEO23/jarvis/pull/8).
+
+**Non integrare automaticamente:** l'efficacia va testata sul Pavilion in modalità Conversazione continua GPT, usando una nuova cartella per la ZIP. La memoria breve funziona anche senza attivare il Second Brain permanente. Nessun nuovo modello o servizio a pagamento.
+
 ## Ultimo concept JARVIS HUD — versione sperimentale
 
 **[ZIP con reattore JARVIS e Terra animata più vicini al preview](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/hud-reference-redesign.zip)**.
