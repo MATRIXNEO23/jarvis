@@ -1200,14 +1200,15 @@ def main() -> None:
             speaker.speak(message, selected_voice())
 
     def update_document_buttons() -> None:
-        pending = doc_dialog.phase.startswith("awaiting_") and not document_busy
+        pending = (doc_dialog.phase.startswith("awaiting_") or save_only_waiting) and not document_busy
         can_choose = doc_dialog.phase == "awaiting_close_choice" and not document_busy
         doc_save_button.configure(state="normal" if can_choose else "disabled")
         doc_discard_button.configure(
             state="normal" if can_choose else "disabled")
         doc_cancel_button.configure(state="normal" if pending else "disabled")
         destination_ready = (
-            doc_dialog.phase == "awaiting_save_destination" and not document_busy)
+            (doc_dialog.phase == "awaiting_save_destination" or save_only_waiting)
+            and not document_busy)
         choose_save_button.configure(
             state="normal" if destination_ready else "disabled")
         hud_save_file_button.configure(
@@ -1229,6 +1230,7 @@ def main() -> None:
                            close_after: bool = False,
                            source_utterance: str = "") -> None:
         nonlocal document_busy, last_user_for_document, project_document_ticket
+        nonlocal document_topic,document_owner_project_id
         if document_busy or closing:
             announce_document("Sto già lavorando sul documento: attendi.")
             return
@@ -1238,6 +1240,11 @@ def main() -> None:
             announce_document("Checkpoint progetto non disponibile: azione non eseguita.")
             return
         document_busy = True
+        if operation == "open" or (operation=="compose" and target=="new_notepad"):
+            document_owner_project_id=active_project_id
+            document_topic=source_utterance if operation=="compose" else ""
+        elif operation=="compose" and source_utterance and not document_topic:
+            document_topic=source_utterance
         last_user_for_document = source_utterance or last_user_for_document or operation
         update_document_buttons()
         document_status.set("Operazione in corso su Blocco note...")
@@ -1253,6 +1260,8 @@ def main() -> None:
                     result = documents.compose(content, target)
                 elif operation == "save" and path is not None:
                     result = documents.save_and_close(document_id, path)
+                elif operation == "save_only" and path is not None:
+                    result = documents.save_only(document_id, path)
                 elif operation == "discard":
                     result = documents.discard_and_close(document_id)
                 else:
