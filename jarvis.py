@@ -2609,6 +2609,8 @@ def main() -> None:
                             # response or a stale Notepad confirmation.
                             if try_self_diagnostic(spoken):
                                 continue
+                            if try_telegram_voice_send(spoken):
+                                continue
                             # Pending save/close decisions are handled locally.
                             if save_only_waiting:
                                 receive_save_only_destination(spoken)
@@ -2688,8 +2690,13 @@ def main() -> None:
                             continue
                         route_type = "command"  # Push-to-talk already requires a manual press.
                         if voice_mode.get() == CONTINUOUS:
-                            route_type, spoken = wake_gate.route(
-                                spoken, dictation_active=dictation.enabled)
+                            if telegram_voice_dialog.pending:
+                                # The user already addressed Jarvis and is answering
+                                # a bounded question. Confirmation is still required.
+                                route_type="command"
+                            else:
+                                route_type, spoken = wake_gate.route(
+                                    spoken, dictation_active=dictation.enabled)
                             if route_type == "wake":
                                 mic_status.set("Ehi Jarvis riconosciuto: ascolto il prossimo comando.")
                             if route_type not in ("command", "dictation"):
@@ -2702,6 +2709,8 @@ def main() -> None:
                         # Do not record free dictation or phrases ignored by wake.
                         write_line("TU > " + spoken)
                         if try_self_diagnostic(spoken):
+                            continue
+                        if try_telegram_voice_send(spoken):
                             continue
                         dictation_action = dictation_voice_action(spoken)
                         if dictation_action == "stop":
@@ -3102,6 +3111,9 @@ def main() -> None:
         if not message:
             return
         reconcile_document_session(force=True)
+        if try_telegram_voice_send(message):
+            request.set("")
+            return
         if save_only_waiting:
             request.set("")
             receive_save_only_destination(message)
