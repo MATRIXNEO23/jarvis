@@ -401,8 +401,12 @@ class JarvisHUD:
             self.visual_status.set(status)
         if self.chat_info.get()!=info:
             self.chat_info.set(info)
-        self.gpt_tile.update(100 if connected else 0,
-                             "ONLINE" if connected else "OFFLINE")
+        # Connection status is event-like, not a sampled percentage:
+        # update its tile only when the value changes.
+        desired_gpt = 100 if connected else 0
+        if self.gpt_tile.value != desired_gpt:
+            self.gpt_tile.update(
+                desired_gpt, "ONLINE" if connected else "OFFLINE")
         if not self.parent.winfo_viewable():
             return
         size=(self.core_canvas.winfo_width(),
