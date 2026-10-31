@@ -94,7 +94,8 @@ def build_conversation_prompt(
         + "Se NO, non chiudere né modificare documenti non identificati. "
         "Catalogo delle azioni CONSENTITE: "
         + capability_prompt(has_document=has_document, compact=True,
-                            telegram_send_ready=telegram_send_ready)
+                            telegram_send_ready=telegram_send_ready,
+                            brief=True)
         + ". "
     )
     # Small live status is refreshed by Jarvis before EACH external request.
