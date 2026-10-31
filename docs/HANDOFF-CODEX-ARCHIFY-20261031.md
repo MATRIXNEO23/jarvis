@@ -56,3 +56,9 @@
 ## Nuova regola persistente richiesta dall'utente
 - Registrare decisioni, motivazioni tecniche, prove ed esiti; promuovere solo soluzioni verificate. Escludere approcci falliti dalle soluzioni consigliate, conservando causa e lezione per evitare ricadute. Non cancellare prove diagnostiche, salvataggi o cronologia.
 - Applicazione nelle istruzioni AGENTS.md e nel registro docs/DECISIONI-E-LEZIONI.md.
+
+## Fase 4 completata — registro persistente di decisioni e lezioni
+- Regola AGENTS.md presente su main (commit b2b28b2785b4b16c8d3c5f7e9f03a7ffc3c71abb) e sul ramo evoluto (bcf705869e0c9ff956bfb840feab1f3e1e6480a2).
+- Registro docs/DECISIONI-E-LEZIONI.md presente su main (f5230f4550da0543a776c8450b37334a97efba8d) e sul ramo evoluto (d332c10aed102c671841f2e45fcee73939b15b83).
+- Registrati soluzione CI verificata, aumento dei soli limiti scartato come soluzione sufficiente e limite del controllo browser Archify. Soluzioni fallite escluse dalle raccomandazioni; cause conservate per evitare di ripeterle.
+- Questi ultimi commit modificano solo documentazione: nessuna nuova verifica runtime necessaria rispetto al fix test faba673 già verificato. Nessun pacchetto prodotto.
