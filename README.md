@@ -22,7 +22,7 @@ La progettazione **GPT-first + esecutore locale controllato + funzioni offline**
 
 - **ChatGPT abilitato per impostazione predefinita**. L'utente può disattivarlo e riattivarlo manualmente dalle impostazioni; la scelta viene salvata.
 - **Nessun timeout di inattività GPT**: il servizio resta consentito fino alla disattivazione manuale o alla chiusura di Jarvis. Non significa che una sessione OAuth sia già autenticata.
-- **Microfono sempre spento quando parte Jarvis**, anche dopo riavvio; attivazione solo manuale. GPT e microfono sono opzioni indipendenti.
+- **Microfono attivo all'avvio**, per parlare subito con Jarvis quando Vosk/dispositivo sono disponibili; puoi disattivarlo manualmente e la preferenza viene rispettata. GPT e microfono sono opzioni indipendenti.
 - Quando sarà disponibile il riconoscimento vocale: modalità standby, ascolto continuo, premi-per-parlare. Non cambiare modalità senza comando esplicito.
 - Processi e moduli opzionali vanno caricati solo quando necessari; niente demoni separati in avvio automatico.
 - Niente API a consumo, crediti aggiuntivi, rinnovi automatici o chiavi inserite nel codice.
@@ -38,13 +38,13 @@ Per provarla, scarica lo
 [ZIP della versione voce](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/offline-voice-pavilion.zip),
 estrailo **in una cartella nuova**, esegui una volta `installa_voce.bat`,
 poi `avvia_jarvis.bat`. Guida: [voce offline](docs/VOCE_OFFLINE.md).
-Il microfono e' spento a ogni avvio. Test reali del microfono sul Pavilion da fare.
+Questa sezione descrive una prova vocale storica. Nel ramo di audit attuale il microfono è predisposto attivo all'avvio; test reali sul Pavilion ancora richiesti.
 
 ## Stato di questa prima base
 
 - [x] Interfaccia minimale delle impostazioni e salvataggio locale.
 - [x] Interruttore GPT acceso di default e spento/riacceso manualmente, con stato persistente.
-- [x] Microfono impostato su standby ad ogni lancio.
+- [x] Modalità standby disponibile e controllabile; **in questo ramo** la preferenza predefinita è ascolto attivo all'avvio.
 - [x] Motore locale a comandi consentiti, con registro attività SQLite (`local_engine.py`). Comandi supportati: `aiuto`, `stato sistema`, `mostra download`, `cerca file NOME` (ricerca limitata a Download), `apri blocco note`, `apri calcolatrice`, `apri esplora file`, `apri download`, `ultimi comandi`. Nessun comando shell arbitrario.
 - [x] Campo comandi testuale integrato nella finestra, con lavoro su thread separato per non bloccare la GUI.
 - [x] Test unitari e sintassi **superati sui runner GitHub Actions Windows e Linux** ([esecuzione riuscita](https://github.com/MATRIXNEO23/jarvis/actions/runs/41084817158)). **Primo avvio e prima risposta GPT confermati dall'utente sul Pavilion il 30/10/2026; collaudo delle altre funzioni ancora necessario**.
@@ -71,7 +71,7 @@ Con Python 3.12 (presente sul Pavilion) e Tkinter: doppio clic su `avvia_jarvis.
 - I comandi locali **non richiedono Node**.
 - Per abilitare davvero il collegamento GPT: segui [docs/GPT_SETUP.md](docs/GPT_SETUP.md), installa Node 22.12+, lancia `installa_gpt.bat`, poi **Connetti ChatGPT** nella finestra.
 - GPT resta **abilitato per scelta predefinita** ma richiede autenticazione. Non avviene alcuna richiesta AI senza comando esplicito.
-- Il riconoscimento vocale **non è ancora implementato**; il microfono rimane spento.
+- **Nota storica:** il riconoscimento vocale descritto qui era ancora in sviluppo. Nel ramo di audit il componente Vosk è presente, ma richiede l'installazione del modello e un collaudo reale; il microfono è predisposto attivo all'avvio.
 
 Le impostazioni si salvano in `%LOCALAPPDATA%\\Jarvis\\settings.json`, non nella repository. Non committare credenziali, token o dati personali.
 
