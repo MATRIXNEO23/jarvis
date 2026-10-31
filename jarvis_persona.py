@@ -135,8 +135,8 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
                      ("; risultato "+detail[:95]
                       if isinstance(detail,str) and detail else "")),
         }
-        candidate={"recent":packed["recent"],
-                   "evidence":packed["evidence"]+[record]}
+        candidate=dict(packed)
+        candidate["evidence"]=packed["evidence"]+[record]
         if fits(candidate):
             packed=candidate
 
@@ -146,10 +146,8 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
             cleaned = _recent_item(entry, cap_user, cap_reply)
             if cleaned is None:
                 break
-            candidate = {
-                "recent": [cleaned] + packed["recent"],
-                "evidence": packed["evidence"],
-            }
+            candidate = dict(packed)
+            candidate["recent"]=[cleaned]+packed["recent"]
             if fits(candidate):
                 packed = candidate
                 break
@@ -169,10 +167,8 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
         if kind not in ("verified_action", "conversation"):
             continue
         item = {"source": kind, "when": when[:24], "fact": fact[:125]}
-        candidate = {
-            "recent": packed["recent"],
-            "evidence": packed["evidence"] + [item],
-        }
+        candidate = dict(packed)
+        candidate["evidence"]=packed["evidence"]+[item]
         if fits(candidate):
             packed = candidate
 
