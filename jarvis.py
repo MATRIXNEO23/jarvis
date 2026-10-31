@@ -491,15 +491,14 @@ def main() -> None:
                 write_line("JARVIS > Progetto non trovato.")
                 return
             project=workspace.project(project_id)
-            active_context_label.set("Contesto: "+project["name"][:35])
-        else:
-            active_context_label.set("Contesto: GENERALE")
         if workspace is not None:
             try:
                 workspace.select_project(project_id)
             except (OSError,sqlite3.Error,WorkspaceError) as exc:
                 workspace_status.set("Contesto non salvato: "+str(exc)[:100])
                 return
+        active_context_label.set(
+            "Contesto: "+project["name"][:35] if project_id else "Contesto: GENERALE")
         active_project_id=project_id
         conversation_epoch+=1
         conversation_memory.clear()
