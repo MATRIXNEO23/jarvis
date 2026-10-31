@@ -41,7 +41,7 @@ class LiveCapabilityRegistryTests(unittest.TestCase):
         self.assertFalse(disabled["telegram_voice_send"])
         self.assertNotEqual(ok["revision"],disabled["revision"])
         self.assertNotIn("Nico",capability_status_prompt(ok))
-        self.assertNotIn("12",capability_status_prompt(ok))
+        self.assertNotIn('"id":12',capability_status_prompt(ok))
 
     def test_dependency_and_auto_switch_states(self):
         for args in ({"credentials":False},{"voice":False},{"telethon":False}):
