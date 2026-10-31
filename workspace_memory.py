@@ -179,7 +179,9 @@ class WorkspaceMemory:
         with self._db() as db:
             db.execute("""INSERT OR IGNORE INTO telegram_peer_state(peer_id,introduced)
                 SELECT DISTINCT peer_id,1 FROM telegram_events
-                WHERE direction='outgoing'""")
+                WHERE direction='outgoing'
+                  AND (lower(text) LIKE '%jarvis%'
+                       OR lower(text) LIKE '%assistente di alberto%')""")
             peer_ids=[row[0] for row in db.execute(
                 "SELECT DISTINCT peer_id FROM telegram_events").fetchall()]
             for peer_id in peer_ids:
@@ -268,6 +270,16 @@ class WorkspaceMemory:
         exported=self.telegram_export_path(peer_id)
         if exported.exists():
             exported.unlink()
+        # The one-time migration snapshot may contain old messages for this peer.
+        # Scrub this peer there too, without touching other contacts/projects.
+        backup=self.path.with_name(self.path.stem+".pre-telegram-50.sqlite3")
+        if backup.exists():
+            with sqlite3.connect(str(backup),timeout=6) as archived:
+                archived.execute("DELETE FROM telegram_events WHERE peer_id=?",
+                                 (peer_id,))
+                archived.execute(
+                    "DELETE FROM messages WHERE scope='telegram' AND scope_id=?",
+                    (str(peer_id),))
         with self._db() as db:
             db.execute("DELETE FROM telegram_events WHERE peer_id=?",(peer_id,))
             db.execute("DELETE FROM messages WHERE scope='telegram' AND scope_id=?",
@@ -847,7 +859,7 @@ class WorkspaceMemory:
                    peer_id,direction,message_id,kind,text,time_utc)
                    VALUES(?,?,?,?,?,?)""",
                 (peer_id,direction,message_id,_trim(kind,28),
-                 _trim(text,550),_now()))
+                 _trim(text,4096),_now()))
             if r.rowcount:
                 db.execute("""DELETE FROM telegram_events
                     WHERE peer_id=? AND rowid NOT IN
@@ -864,7 +876,7 @@ class WorkspaceMemory:
             cur=db.execute(
                 "UPDATE telegram_events SET text=? WHERE peer_id=? "
                 "AND direction='incoming' AND message_id=? AND kind='voice'",
-                (_trim(text,550),peer_id,message_id))
+                (_trim(text,4096),peer_id,message_id))
         return bool(cur.rowcount)
 
     def telegram_counts(self,peer_id:int):
