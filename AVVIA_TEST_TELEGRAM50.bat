@@ -26,7 +26,7 @@ echo.
 echo Attenzione: il test usa lo stesso account Telegram e GPT, ma una
 echo copia separata delle memorie e delle impostazioni locali di Jarvis.
 echo Non avviare contemporaneamente la vecchia versione di Jarvis.
-echo Telegram automatico parte disattivato al primo avvio del test.
+echo Telegram automatico parte disattivato; microfono attivo all'avvio.
 echo.
 call avvia_jarvis.bat
 endlocal
