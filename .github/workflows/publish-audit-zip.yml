@@ -116,11 +116,11 @@ jobs:
               "Test automatici Windows e Ubuntu superati; prova finale sul Pavilion "
               "ancora necessaria. La PR #30 resta separata da main.\n\n---\n\n"
           )
-          divider="\\n---\\n"
+          divider="\n---\n"
           if before.startswith(heading):
               if divider not in before:
                   raise RuntimeError("Download index cannot be updated safely")
-              original=before.split(divider,1)[1].lstrip("\\n")
+              original=before.split(divider,1)[1].lstrip("\n")
           else:
               original=before
           readme.write_text(section+original,encoding="utf-8")
