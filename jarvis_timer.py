@@ -157,14 +157,14 @@ def play_alarm(sound: str, volume: int, stop: threading.Event,
             if mode == "auto" and path:
                 try:
                     winsound.PlaySound(path, winsound.SND_FILENAME |
-                                       winsound.SND_SYNC | winsound.SND_NODEFAULT)
+                                       winsound.SND_NODEFAULT)
                     success, method = True, "WAV di Windows"
                 except (RuntimeError, OSError):
                     pass
             if mode == "auto" and not success and not stop.is_set():
                 try:
                     winsound.PlaySound(payload, winsound.SND_MEMORY |
-                                       winsound.SND_SYNC | winsound.SND_NODEFAULT)
+                                       winsound.SND_NODEFAULT)
                     success, method = True, "WAV in memoria"
                 except (RuntimeError, OSError):
                     pass
