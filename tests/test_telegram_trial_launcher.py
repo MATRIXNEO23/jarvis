@@ -86,6 +86,28 @@ class TelegramTrialTests(unittest.TestCase):
         prepare_trial(self.original,self.trial)
         self.assertFalse(load_settings(settings_path)["auto_listen"])
 
+    def test_other_memory_databases_and_addons_are_trial_only(self):
+        with closing(sqlite3.connect(self.original/"second_brain.sqlite3")) as db:
+            db.execute("CREATE TABLE facts(value TEXT)")
+            db.execute("INSERT INTO facts VALUES('owner')")
+            db.commit()
+        addon_dir=self.original/"addons"
+        addon_dir.mkdir()
+        (addon_dir/"diagnostica.json").write_text('{"example":1}',encoding="utf-8")
+        (self.original/"addons-approvals.json").write_text(
+            '{"diagnostica":"approved"}',encoding="utf-8")
+        prepare_trial(self.original,self.trial)
+        self.assertTrue((self.trial/"addons"/"diagnostica.json").exists())
+        self.assertTrue((self.trial/"addons-approvals.json").exists())
+        with closing(sqlite3.connect(self.trial/"second_brain.sqlite3")) as db:
+            self.assertEqual(db.execute("SELECT value FROM facts").fetchone()[0],
+                             "owner")
+            db.execute("UPDATE facts SET value='trial'")
+            db.commit()
+        with closing(sqlite3.connect(self.original/"second_brain.sqlite3")) as db:
+            self.assertEqual(db.execute("SELECT value FROM facts").fetchone()[0],
+                             "owner")
+
     def test_default_path_redirects_only_when_explicitly_enabled(self):
         with patch.dict(os.environ,{"JARVIS_TRIAL_HOME":str(self.trial)}):
             self.assertEqual(default_path(),self.trial/"settings.json")
