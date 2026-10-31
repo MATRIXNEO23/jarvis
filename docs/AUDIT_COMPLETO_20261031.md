@@ -37,6 +37,6 @@ Lettura strutturale dei componenti principali: interfaccia `jarvis.py`, avvio e 
 
 ## Collaudo raccomandato
 
-Chiudere il Jarvis precedente; estrarre la ZIP del ramo di audit in una nuova cartella; leggere `LEGGIMI_PROVA_TELEGRAM_50.txt`; usare **`AVVIA_TEST_TELEGRAM50.bat`**, non `avvia_jarvis.bat`, alla prima prova. La copia dati vive in `%LOCALAPPDATA%\Jarvis-Telegram50-Trial`, separata dall'archivio originale `%LOCALAPPDATA%\Jarvis`.
+Chiudere il Jarvis precedente; estrarre la ZIP del ramo di audit in una nuova cartella; leggere `LEGGIMI_PROVA_TELEGRAM_50.txt`; usare **`avvia_jarvis.bat`**, non `avvia_jarvis.bat`, alla prima prova. La copia dati vive in `%LOCALAPPDATA%\Jarvis-Telegram50-Trial`, separata dall'archivio originale `%LOCALAPPDATA%\Jarvis`.
 
 **Test CI superati ≠ autorizzazione al merge né alla sostituzione della versione stabile.** Richiedere prima collaudo end-to-end sul Pavilion.
