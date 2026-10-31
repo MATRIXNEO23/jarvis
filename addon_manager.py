@@ -128,6 +128,8 @@ class AddonManager:
         self._records: dict[str,dict] = {}
         self._registered: set[str] = set()
         self._invalid: list[str] = []
+        self._consent_path=self.folder.with_name(self.folder.name+"-approvals.json")
+        self._consents: dict[str,str]={}
         self.folder.mkdir(parents=True,exist_ok=True)
         if self.folder.is_symlink():
             raise AddonError("Cartella add-on non sicura.")
@@ -155,10 +157,51 @@ class AddonManager:
             if temporary.is_file():
                 temporary.unlink()
 
+    def _read_consents(self) -> dict[str,str]:
+        """Separate permission ledger: files copied into addons are NOT enabled."""
+        target=self._consent_path
+        if not target.exists():
+            return {}
+        try:
+            if target.is_symlink() or target.stat().st_size>12_000:
+                return {}
+            data=json.loads(target.read_text(encoding="utf-8"))
+            if not isinstance(data,dict) or len(data)>MAX_ADDONS:
+                return {}
+            if any(not isinstance(k,str) or not _ID.fullmatch(k) or
+                   not isinstance(v,str) or not re.fullmatch(
+                       r"[0-9a-f]{64}",v) for k,v in data.items()):
+                return {}
+            return data
+        except (OSError,ValueError,UnicodeError):
+            return {}
+
+    def _write_consent(self, addon_id: str, digest: str | None) -> None:
+        if not _ID.fullmatch(addon_id):
+            raise AddonError("ID add-on non valido.")
+        approvals=self._read_consents()
+        if digest is None:
+            approvals.pop(addon_id,None)
+        else:
+            if not re.fullmatch(r"[0-9a-f]{64}",digest):
+                raise AddonError("Hash autorizzazione non valido.")
+            approvals[addon_id]=digest
+        tmp=self._consent_path.with_suffix(".tmp")
+        if self._consent_path.is_symlink() or tmp.is_symlink():
+            raise AddonError("File autorizzazioni add-on non sicuro.")
+        try:
+            tmp.write_text(json.dumps(approvals,sort_keys=True)+"\n",
+                           encoding="utf-8")
+            os.replace(tmp,self._consent_path)
+        finally:
+            if tmp.is_file():
+                tmp.unlink()
+
     def refresh(self) -> None:
         """Observe installs/changes/removals; do not trust arbitrary new files."""
         with self._lock:
             files=sorted(self.folder.glob("*.json"))
+            approvals=self._read_consents()
             fresh={}
             invalid=[]
             if len(files)>MAX_ADDONS:
@@ -170,7 +213,14 @@ class AddonManager:
                     if not _ID.fullmatch(file.stem):
                         raise AddonError("nome file non valido")
                     raw=_read_json_file(file)
-                    fresh[file.stem]=_decode_record(raw,file.stem)
+                    record=_decode_record(raw,file.stem)
+                    if (record["enabled"] and
+                            approvals.get(file.stem)!=record["digest"]):
+                        # Do not accept an enabled bit placed in the install
+                        # directory without consent from the settings UI.
+                        record["enabled"]=False
+                        invalid.append(file.name+": autorizzazione mancante")
+                    fresh[file.stem]=record
                 except (AddonError,OSError) as exc:
                     invalid.append(file.name+" ("+str(exc)[:80]+")")
             bindings={}
@@ -198,6 +248,7 @@ class AddonManager:
                 self.registry.register(item)
             self._registered=set(bindings)
             self._records=fresh
+            self._consents=approvals
             self._invalid=invalid
 
     def _available(self, addon_id: str, action_id: str, digest: str) -> bool:
@@ -246,6 +297,8 @@ class AddonManager:
                 raise AddonError("Limite di 32 azioni add-on raggiunto.")
             record={"manifest":manifest,"enabled":False,
                     "digest":_manifest_digest(manifest)}
+            # Revoke first: upgrades never inherit prior approval.
+            self._write_consent(addon_id,None)
             self._save(addon_id,record)
             self.refresh()
             return {"id":addon_id,"version":manifest["version"],
@@ -260,6 +313,10 @@ class AddonManager:
             if before is None:
                 raise AddonError("Add-on non trovato o non valido.")
             record={**before,"enabled":enabled}
+            # Revoke approval BEFORE disabling on disk. For enabling, the
+            # state file remains off until the new consent is durable.
+            self._write_consent(addon_id,
+                                before["digest"] if enabled else None)
             self._save(addon_id,record)
             self.refresh()
 
@@ -271,6 +328,7 @@ class AddonManager:
             target=self._path(addon_id)
             if target.is_symlink():
                 raise AddonError("Collegamento add-on non consentito.")
+            self._write_consent(addon_id,None)
             target.unlink()
             self.refresh()
 
