@@ -1642,13 +1642,22 @@ def main() -> None:
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
                             write_line("TU > " + spoken)
-                            # Pending document decisions never go through GPT:
-                            # only the owner of this selected document may close.
+                            # Pending save/close decisions are handled locally.
+                            if save_only_waiting:
+                                receive_save_only_destination(spoken)
+                                continue
                             if doc_dialog.phase.startswith("awaiting_"):
                                 handle_document_confirmation(spoken)
                                 continue
                             if doc_dialog.phase == "executing" or document_busy:
                                 write_line("Blocco note: operazione in corso, attendi.")
+                                continue
+                            # "Salva" writes a file but leaves Notepad open;
+                            # only "salva e chiudi" closes the owned document.
+                            explicit_name=parse_simple_save(spoken)
+                            if (doc_dialog.phase=="editing" and
+                                    explicit_name is not None):
+                                save_document_now(spoken,explicit_name=explicit_name)
                                 continue
                             # An explicit natural phrase to discard changes
                             # is a single authorization: do not ask twice.
@@ -1667,6 +1676,8 @@ def main() -> None:
                                 "chiudi il file", "chiudi file", "chiudilo",
                             ):
                                 ask_to_close_document(spoken)
+                                continue
+                            if project_voice_command(spoken):
                                 continue
                             if maybe_queue_telegram_note(spoken):
                                 continue
@@ -1724,6 +1735,12 @@ def main() -> None:
                             else:
                                 sync_dictation_ui(
                                     "Per dettare in altre finestre seleziona Ascolto continuo.")
+                        elif project_voice_command(spoken):
+                            pass
+                        elif save_only_waiting:
+                            receive_save_only_destination(spoken)
+                        elif doc_dialog.phase=="editing" and parse_simple_save(spoken) is not None:
+                            save_document_now(spoken,explicit_name=parse_simple_save(spoken))
                         else:
                             command = speech_to_local_command(spoken)
                             if command and not busy_local:
@@ -2037,9 +2054,26 @@ def main() -> None:
         change_voice_mode()
 
     def send_console_input(event=None) -> None:
-        if not request.get().strip():
+        message=request.get().strip()
+        if not message:
             return
-        if maybe_queue_telegram_note(request.get()):
+        if save_only_waiting:
+            request.set("")
+            receive_save_only_destination(message)
+            return
+        if doc_dialog.phase.startswith("awaiting_"):
+            request.set("")
+            handle_document_confirmation(message)
+            return
+        requested_name=parse_simple_save(message)
+        if doc_dialog.phase=="editing" and requested_name is not None:
+            request.set("")
+            save_document_now(message,explicit_name=requested_name)
+            return
+        if project_voice_command(message):
+            request.set("")
+            return
+        if maybe_queue_telegram_note(message):
             request.set("")
             return
         if gpt_enabled.get() and active_gpt:
