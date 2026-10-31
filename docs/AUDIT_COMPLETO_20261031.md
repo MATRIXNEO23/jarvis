@@ -4,6 +4,8 @@
 
 ## Requisito microfono aggiornato
 
+Nel profilo isolato il riconoscimento vocale ora riutilizza in sola lettura il modello Vosk già presente in `%LOCALAPPDATA%\\Jarvis\\models`, invece di cercarlo esclusivamente nella cartella di prova. Questo risolve la differenza fra launcher normale e test, senza duplicare centinaia di megabyte.
+
 Su esplicita richiesta dell'utente, il **microfono è predisposto come attivo all'avvio** di Jarvis, in modalità conversazione GPT, se il modello Vosk e il dispositivo audio sono effettivamente disponibili. L'impostazione resta disattivabile manualmente; non ci sono passaggi automatici in standby in risposta ai carichi pesanti. Il launcher di prova abilita questa preferenza una sola volta anche su profili di test preesistenti; le scelte manuali successive sono rispettate. Lo stato HUD indica attivo soltanto dopo apertura reale dello stream, non sulla sola selezione del toggle.
 
 ## Ambiti verificati
