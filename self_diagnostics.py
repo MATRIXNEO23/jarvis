@@ -19,6 +19,28 @@ _MAX_FILES = 140
 _MAX_BYTES = 260_000
 _MODULE = re.compile(r"[A-Za-z0-9_]{1,72}\.py\Z",re.I)
 
+# Explicit multi-clause requests must reach local inspection rather than GPT.
+# The allowed tail is intentionally narrow: avoid interpreting quotations,
+# negated instructions or arbitrary discussion of diagnostics as commands.
+_SELF_REVIEW_COMPOUND = re.compile(
+    r"^(?:(?:puoi|potresti)\s+)?"
+    r"(?:(?:fai|fammi|fatti|esegui|effettua|prepara|avvia|fare)\s+"
+    r"(?:(?:un|una|un['’])\s*)?(?:auto[\s-]?diagnosi|diagnosi)"
+    r"|(?:autoanalizza|analizza|controlla|verifica|esamina|studia)\s+"
+    r"(?:(?:i|il|lo)\s+)?(?:(?:tuoi|tuo)\s+)?"
+    r"(?:funzionamento|codice|programma|file|sorgenti))"
+    r"(?:\s+(?:del|della|dei|delle|sul|sui|di)\s+"
+    r"(?:(?:tuo|tuoi|tua|tue)\s+)?"
+    r"(?:funzionamento|codice|programma|file|sorgenti|funzioni|moduli|jarvis))?"
+    r"(?:\s+e\s+(?:"
+    r"(?:proponi|suggerisci|dimmi|indicami|consigliami)\s+"
+    r"(?:(?:eventuali|possibili|dei|delle|qualche)\s+)*"
+    r"(?:fix|correzioni|miglioramenti|soluzioni|problemi)"
+    r"|(?:suggerisci|dimmi|indicami|consigliami)\s+"
+    r"come\s+(?:migliorare|migliorarti|correggere\s+gli\s+errori)"
+    r"))?$",re.I,
+)
+
 @dataclass(frozen=True)
 class SourceAudit:
     summary: str
@@ -43,10 +65,13 @@ def _source_list(root: Path) -> list[Path]:
 
 def diagnostic_request(text: str) -> tuple[str,str] | None:
     """Recognize deliberate local self-analysis requests, not general questions."""
-    if not isinstance(text,str) or len(text)>220:
+    if not isinstance(text,str) or len(text)>450:
         return None
     phrase=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
                   text.strip(" ,.!?;:"),flags=re.I).casefold()
+    phrase=" ".join(phrase.split())
+    if _SELF_REVIEW_COMPOUND.fullmatch(phrase):
+        return ("review","")
     if re.fullmatch(
             r"(?:dove\s+(?:sono|tieni)\s+(?:i\s+)?tuoi\s+file|"
             r"mostra(?:mi)?\s+(?:i\s+)?tuoi\s+file|"
