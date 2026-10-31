@@ -609,6 +609,10 @@ def main() -> None:
         nonlocal active_gpt, conversation_epoch
         connected = state.get("status") == "connected" and state.get("sharing") is True
         active_gpt = connected
+        if connected and gpt_enabled.get():
+            telegram_gpt_ready.set()
+        else:
+            telegram_gpt_ready.clear()
         if not connected:
             conversation_epoch += 1
             pending_conversation.clear()
@@ -1300,7 +1304,26 @@ def main() -> None:
         try:
             while True:
                 kind, *data = output_queue.get_nowait()
-                if kind == "voice_status":
+                if kind == "telegram_status":
+                    telegram_status.set(str(data[0])[:220])
+                    write_line("TELEGRAM > "+str(data[0])[:170])
+                elif kind == "telegram_received":
+                    who,format_type=data
+                    write_line("TELEGRAM > Ricevuto da "
+                               +str(who)[:55]+" ("+str(format_type)+").")
+                elif kind == "telegram_sent":
+                    write_line("TELEGRAM > Risposta vocale inviata a "
+                               +str(data[0])[:55]+".")
+                elif kind == "telegram_stopped":
+                    if telegram_auto.get():
+                        telegram_auto.set(False)
+                        settings["telegram_enabled"]=False
+                        try:
+                            save_settings(settings)
+                        except (OSError,ValueError):
+                            pass
+                        telegram_status.set("Telegram: collegamento terminato.")
+                elif kind == "voice_status":
                     if voice_mode.get() != STANDBY:
                         mic_status.set(data[0])
                     if (dictation.enabled and
@@ -1346,6 +1369,8 @@ def main() -> None:
                                 "chiudi il file", "chiudi file", "chiudilo",
                             ):
                                 ask_to_close_document(spoken)
+                                continue
+                            if maybe_queue_telegram_note(spoken):
                                 continue
                             # Fixed local actions do not require an online model.
                             command = speech_to_local_command(spoken)
@@ -1701,6 +1726,9 @@ def main() -> None:
     def send_console_input(event=None) -> None:
         if not request.get().strip():
             return
+        if maybe_queue_telegram_note(request.get()):
+            request.set("")
+            return
         if gpt_enabled.get() and active_gpt:
             if busy_gpt:
                 write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
@@ -1715,6 +1743,12 @@ def main() -> None:
         else:
             buttons_row.pack(fill="x", pady=(6, 0))
 
+    workspace_button.configure(command=open_project_manager)
+    scope_button.configure(command=open_project_manager)
+    telegram_toggle.configure(command=toggle_telegram_automatic)
+    telegram_configure_button.configure(command=telegram_open_setup)
+    telegram_reload_button.configure(command=telegram_reconfigure)
+    hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
     hud_mic_button.configure(command=toggle_hud_microphone)
     tools_button.configure(command=toggle_console_tools)
@@ -1751,6 +1785,9 @@ def main() -> None:
         dictation.disable()
         wake_gate.reset()
         voice.close()
+        if telegram_bridge:
+            telegram_bridge.stop()
+        telegram_gpt_ready.clear()
         speaker.close()
         hud.close()
         root.destroy()
@@ -1770,6 +1807,7 @@ def main() -> None:
         "thinking": busy_gpt or busy_local or document_busy,
         "connected": active_gpt,
         "memory": memory_enabled.get(),
+        "orbit_nodes": orbit_nodes_cache,
     })
     def initial_launch() -> None:
         """App-only autostart: never adds Windows login/run-at-boot entries."""
@@ -1792,6 +1830,9 @@ def main() -> None:
     root.after(120, poll)
     root.after(400, refresh_voices)
     root.after(650, initial_launch)
+    root.after(1100, refresh_orbit_nodes)
+    if telegram_auto.get():
+        root.after(1400,toggle_telegram_automatic)
     if gpt_enabled.get():
         root.after(200, lambda: run_gpt("status"))
     root.mainloop()
