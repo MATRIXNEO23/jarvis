@@ -56,3 +56,17 @@ L'indicatore Telegram viola tiene conto di messaggi **ricevuti e risposti durant
 ### Prova della ZIP
 
 Scarica `https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/feature/project-memory-orbits-telegram.zip`, estraila in una **cartella nuova** e avvia `avvia_jarvis.bat`. Non cancellare `%LOCALAPPDATA%\Jarvis`, il precedente Vosk, le altre installazioni né la repository principale. Verifica prima creazione progetti, pallini, mouse hover, click, file continuità, separazione di contesti, voce breve/ironia e memoria; configura Telegram **solo dopo** questi controlli. Non integrare automaticamente il ramo in `main` senza l'approvazione dopo il test sul Pavilion.
+
+
+## Correzione configurazione Telegram — incolla API hash (31 ottobre 2026)
+
+Se durante `configura_telegram.bat`, dopo `API ID:`, compariva `API hash (non viene mostrato)` e non riuscivi a incollare, il problema era l'acquisizione con `getpass` nella console Windows: l'input è invisibile e, in alcuni ambienti, Ctrl+V non funziona.
+
+La revisione `fix/telegram-secret-paste-dialog` sostituisce quel passaggio con **una finestra protetta**. Inserisci l'API ID nella console come prima, premi Invio, poi nella finestra **JARVIS / Telegram - API hash** incolla usando Ctrl+V o il pulsante **Incolla**. Vedrai asterischi, non il contenuto. Premi **Conferma** per proseguire. Deve trattarsi dell'API hash da 32 caratteri esadecimali fornito da `my.telegram.org`, non del numero API ID.
+
+Anche il codice di accesso e l'eventuale password in due passaggi utilizzano una finestra incollabile. **Annulla/Esc** interrompe senza salvare l'accesso, mentre il resto della configurazione e il contatto autorizzato rimangono invariati. La funzione legge gli appunti soltanto se si preme esplicitamente **Incolla**; il testo non viene scritto a schermo in chiaro, nel log o nei parametri di comando. Se si copia la credenziale negli appunti, si può eliminare manualmente dagli appunti dopo la configurazione.
+
+Scarica la ZIP di questo ramo:
+`https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/fix/telegram-secret-paste-dialog.zip`
+
+Estrai sempre in una cartella separata. Non comunicare API hash, codici o password nella chat di supporto. Le risposte automatiche Telegram rimangono **OFF** alla fine della configurazione.
