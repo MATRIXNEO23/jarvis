@@ -1,0 +1,76 @@
+name: Publish Jarvis diagnostic recovery source ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-jarvis-diagnostic-recovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Download catalog
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: catalog
+      - name: Checkout pinned tested source
+        uses: actions/checkout@v4
+        with:
+          ref: fa372c2ffdf9210642c9febd973068c9bac0af9b
+          path: source
+          persist-credentials: false
+      - name: Package and validate source with SHA-256 manifest
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile,ZIP_DEFLATED
+          import hashlib,json
+          source=Path("source")
+          target=Path("catalog/Download/Jarvis-Fix-Diagnostica-Visibile.zip")
+          prefix="Jarvis-Diagnostica-Visibile/"
+          target.parent.mkdir(parents=True,exist_ok=True)
+          entries=[]
+          with ZipFile(target,"w",ZIP_DEFLATED,compresslevel=6) as out:
+              for f in sorted(source.rglob("*")):
+                  if not f.is_file(): continue
+                  parts=f.relative_to(source).parts
+                  if parts[0] in ("Download",".github") or any(
+                          p in (".git",".venv","venv","__pycache__") for p in parts):
+                      continue
+                  relative=prefix+"/".join(parts)
+                  out.write(f,relative)
+                  entries.append({"path":relative,
+                      "sha256":hashlib.sha256(f.read_bytes()).hexdigest()})
+              out.writestr(prefix+"SOURCE-COMMIT.txt","fa372c2ffdf9210642c9febd973068c9bac0af9b\n")
+              out.writestr(prefix+"SOURCE-MANIFEST.json",json.dumps(entries,indent=2))
+          with ZipFile(target) as archive:
+              assert archive.testzip() is None
+              names=set(archive.namelist())
+              for item in (
+                      "avvia_jarvis.bat","jarvis.py","diagnostic_session.py",
+                      "self_diagnostics.py","source_review.py",
+                      "diagnostic_handoff.py","tests/test_diagnostic_recovery.py",
+                      "docs/DIAGNOSTICA_VISIBILE_E_RECUPERO.md"):
+                  assert prefix+item in names,item
+              gui=archive.read(prefix+"jarvis.py").decode("utf-8")
+              assert "diagnostic_heartbeat()" in gui
+              assert 'text="Annulla"' in gui
+              assert "try_self_diagnostic(spoken)" in gui
+              assert "diagnostic_session.finish(run_id,succeeded=True)" in gui
+          print("ZIP VERIFIED",target,target.stat().st_size,"bytes")
+          PY
+      - name: Publish ZIP preserving all previous builds
+        shell: bash
+        run: |
+          git -C catalog config user.name "github-actions[bot]"
+          git -C catalog config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C catalog add Download/Jarvis-Fix-Diagnostica-Visibile.zip
+          git -C catalog commit -m "download: publish bounded, observable Jarvis diagnostic recovery build"
+          git -C catalog push origin HEAD:main
