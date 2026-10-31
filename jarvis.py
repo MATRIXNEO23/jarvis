@@ -566,6 +566,7 @@ def main() -> None:
             missing=missing_voice_dependencies()
             if missing:
                 telegram_auto.set(False)
+                settings["telegram_enabled"]=False
                 telegram_status.set(
                     "Telegram: manca "+", ".join(missing)
                     +". Nessun invio verrà effettuato.")
