@@ -156,3 +156,7 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Ogni add-on include percorso comando vocale naturale → interpretazione GPT esterna/stato → capacità registrata → esecuzione locale → verifica → risposta. UI, esempi e capacità allineati; prove delle vie voce/testo e chiarimenti contestuali.
 - Separare callback/trascrizione simulata, audio di prova e microfono/account reali. Non trasformare una prova simulata in collaudo completo.
 - Solo documentazione aggiornata. Nessun nuovo test, build o implementazione web. Prossimo passo resta la revisione tecnica del piano web prima della realizzazione autorizzata.
+
+## 2026-11-01 — In corso: linguaggio naturale ed elenco capacità aggiornato
+- Precisazione: esempi vocali non sono formule obbligatorie; GPT esterno interpreta varianti e contesto. «Cosa puoi fare?» deve riflettere capacità installate, attive e disponibili.
+- Aggiornamento solo documentale previsto in regole/piano/lezioni; nessuna implementazione o test avviati. Verifica prevista: presenza delle clausole e chiusura del checkpoint.
