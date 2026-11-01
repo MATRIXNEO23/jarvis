@@ -80,3 +80,8 @@ Precisazione dell'utente: recupero necessario anche se la sessione termina all'i
 **Decisione:** ogni nuova add-on include test automatici propri e prove d'integrazione prima della consegna, più regressioni pertinenti di Jarvis e verifica del pacchetto. I test delle parti reali non sono sostituibili da sole simulazioni; controlli obbligatori non eseguiti bloccano la dichiarazione di prontezza.
 **Motivo:** individuare in sviluppo errori riproducibili di interfaccia, collegamento, configurazione e recupero, senza farli scoprire all'utente nell'installazione. Sul PC rimangono account, dispositivi, prestazioni e ambiente reale.
 **Stato:** salvato in AGENTS.md e piano web. Nessun nuovo test implementato/eseguito in questa fase documentale. Non attribuire retroattivamente copertura alle add-on esistenti senza inventario.
+
+## 2026-11-01 — Nessuna aggiunta a sorpresa, add-on completa anche nella voce
+**Richiesta:** rispettare l'obiettivo; suggerire prima eventuali extra. Includere comandi vocali e tutti i collegamenti, per evitare una funzione implementata ma non riconosciuta da Jarvis.
+**Decisione:** contratto completo frase/trascrizione → GPT esterno/stato → capacità registrata → azione locale → verifica → risposta. Test delle vie voce/testo e disponibilità attivo/disattivo; catalogo capacità, esempi e UI aggiornati insieme. Distinguere simulazioni da audio/microfono reali.
+**Stato:** regola e piano aggiornati, nessuna nuova funzione, test o build. Non dichiarare risolto un bug vocale senza una riproduzione e prova della correzione.
