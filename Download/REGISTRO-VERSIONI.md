@@ -76,3 +76,12 @@ Fotografia del commit bb94afa1865fe0315021f783736be3cb77c4af84. Presenza, dimens
 
 ## Fonti rapide
 [Handoff](../docs/HANDOFF-CODEX-ARCHIFY-20261031.md), [decisioni e lezioni](../docs/DECISIONI-E-LEZIONI.md), [stato attività](../docs/STATO-ATTIVITA.md), [sorgenti](../docs/INDICE-SORGENTI.md), [installazione e dati](../Prima-installazione/06-Reinstallazione-e-dati.md).
+
+## Candidato Accesso file 63bfd04 — 2026-11-01
+
+- ZIP persistente: Download/Jarvis-Accesso-File-0.1.0-20261101-63bfd04.zip
+- Sorgenti: 63bfd048032f51ff5d52f87a14060f27fad720c0
+- SHA-256: 43867ec86094eac5c7e9ef6f03674d9c5ad19cd6736f3594638eadfb85d6db0e
+- Windows CI: run 41321679044, due job 3.11/3.12, pacchetto estratto e avvio UI.
+- Collaudo PC: pendente. La base confermata BASE-UTENTE-20261101 b936879 resta invariata.
+- Recupero: usare la cartella precedente Timer Audio Fix2; non cancellare profili o dati.

@@ -1,5 +1,14 @@
 > **Recupero delle versioni:** [registro dei pacchetti e dei punti di ripristino](REGISTRO-VERSIONI.md). Distingue presenza dello ZIP, test automatici e prova sul PC. Base confermata: **Jarvis-Timer-Audio-Fix2-20261031.zip**, sorgenti **b936879**; [audit concreto completato](../docs/VERIFICA-CONCRETA-BASE-20261101.md). Nessuna nuova build. Le voci successive alla base sono storico.
 
+## Accesso file 0.1.0 — build candidata Windows (63bfd04)
+
+[Scarica Jarvis-Accesso-File-0.1.0-20261101-63bfd04.zip](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/Jarvis-Accesso-File-0.1.0-20261101-63bfd04.zip)
+
+Ricerca, cartelle consentite con spunte, lettura senza modifica e integrazione voce/testo/GPT. Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Accesso file > Configura, Salva e Attiva. Profilo di prova separato, precedente installazione preservata. Test automatici solo Windows, archivio estratto e avvio UI verificati. Collaudo PC/account/microfono reali ancora da fare; indice Windows non disponibile nel runner, fallback verificato.
+
+Sorgenti: [63bfd04](https://github.com/MATRIXNEO23/jarvis/tree/63bfd048032f51ff5d52f87a14060f27fad720c0). [Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41321679044). SHA-256: `43867ec86094eac5c7e9ef6f03674d9c5ad19cd6736f3594638eadfb85d6db0e`.
+
+
 # Jarvis: Timer audio Fix 2 - 31/10/2026
 
 **[SCARICA JARVIS COMPLETO CON FIX AUDIO TIMER](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/bb94afa1865fe0315021f783736be3cb77c4af84/Download/Jarvis-Timer-Audio-Fix2-20261031.zip)**
