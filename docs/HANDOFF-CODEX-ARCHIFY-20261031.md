@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## In corso — primo incremento: app classiche e Store selezionabili
+2026-11-01: l'utente sceglie di partire dai programmi e richiede rilevamento classici/Store, spunte nelle impostazioni e apertura dell'app corretta anche da frase naturale. Solo progettazione/fattibilità in corso: Windows documenta Get-StartApps/AppsFolder e AUMID, con limite Start e inventario Store per utente; apertura sul PC non ancora provata. Aggiornare scheda/stato/lezioni, verificare salvataggi e chiudere checkpoint. Nessun codice o pacchetto.
+
 ## Checkpoint attuale — consegna essenziale e componenti mancanti, 2026-11-01
 Metodo in AGENTS/RECUPERO da leggere da ogni istanza con accesso al repository; non garantisce accesso automatico in altre chat. Requisiti ZIP operativo e console salvati in AGENTS, scheda WINDOWS, STATO e lezioni; RECUPERO aggiornato. Riletture dei cinque documenti ZIP e dei quattro successivi aggiornamenti console: contenuti coincidenti ai salvataggi.
 Publisher b936879 letto: seleziona git ls-files salvo ZIP Download, non una lista runtime. Prossime consegne autorizzate dovranno selezionare file necessari con dipendenze/risorse/launcher/installazione e istruzioni essenziali, includendo sorgenti direttamente eseguiti; lasciare strumenti/test/handoff di sviluppo nella repository. Verifica sul pacchetto estratto, base e ZIP storici preservati. Nessuna ripacchettizzazione o modifica workflow eseguita.
