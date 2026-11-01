@@ -1,3 +1,6 @@
+## Ricontrollo della sola fixture preesistente — passo 3
+Run 41337083235: 421 test, un NameError nel vecchio test che esegue send_console_input isolato senza fornire pending_project_name/rename/trash. Nel runtime reale questi stati sono definiti nel main; il nuovo test del callback completo passa. Correzione esclusivamente dati della fixture preesistente, senza cambiare il runtime né rimuovere verifiche. Sorgenti ba7fe5b2d2ec36651e398fd06e3a9cf0cbc326f5, run 41337250044 in corso. Nessuna build, nessun incremento ulteriore. Prossimo controllo unico esito della run.
+
 ## Ultimo ricontrollo passo 3 — precedenza dialoghi conservata
 Sorgenti e61346b29cc76b3df4985247a79cc1cc980d4455, run 41337083235 in attesa. Il gate Enter assegna l’apertura relativa ai file solo senza domanda pendente di creazione/rinomina/cestino progetto; conferme documento e Telegram mantengono la precedenza. Test del callback completo include entrambe le precedenze e progetto esplicito. Nessun nuovo requisito, solo contenimento del conflitto individuato. Lezione preventiva: leggere e testare l’intero ingresso UI prima di pubblicare parser che riconoscono «apri Nome», non solo LocalEngine/servizio. Un nuovo verde è necessario perché il risultato 420/421 dei commit precedenti non copre questa ultima precisazione. Nessuna build.
 
