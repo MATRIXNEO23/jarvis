@@ -52,6 +52,9 @@ Aggiornamento pomeridiano: l'utente vuole partire dai file, non da una sola app 
 ## Profilo e ricerca automatici
 Jarvis deve rilevare account/profilo Windows e percorsi reali delle cartelle note senza input manuale o nomi dedotti dalla chat; usare Windows Search dove disponibile e distinguere indice incompleto da file assente. Fonti Known Folders/profilo e criteri di prova aggiunti nella scheda WINDOWS. Nessun accesso reale al PC, implementazione o test nuovi.
 
+## Proposta UI — cartelle consentite con spunte
+L'utente suggerisce spunte per unità/cartelle, comprese sottocartelle; chiede semplicità. Proposta salvata in WINDOWS: selezione ampia con ereditarietà, eccezioni espandibili, riepilogo chiaro e caricamento su espansione. Primo incremento sola lettura; sistema protetto; spunte non cambiano permessi Windows. addon_ui.py base letto: configuratore non presente, da integrare nel gestore esistente. Dettagli ancora da discutere/validare; nessun codice o permesso modificato.
+
 ## Prossimo passo corrente
 Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
 
