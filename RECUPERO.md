@@ -35,3 +35,7 @@ Guide aggiornate in Prima-installazione/README.md; distinguono codice di riferim
 
 ## Recuperare un punto funzionante
 Leggere Download/REGISTRO-VERSIONI.md prima di cercare fra commit o artifact: contiene percorso, commit e stato di verifica dei pacchetti. Usare la scheda identificata e i relativi dati compatibili; chiedere soltanto se il riferimento resta ambiguo. La prova PC va collegata al pacchetto esatto prima di promuoverlo a riferimento funzionante. I pacchetti di recupero devono restare versionati in Download.
+
+## Metodo valido per ogni ripresa con accesso al repository
+Le regole operative sono in AGENTS.md corrente su main e valgono per ogni attività: recuperarle insieme a questo ingresso e alla scheda pertinente senza chiedere all'utente di ripeterle, anche lavorando da b936879 che non contiene questi documenti. Distinguere regole, requisiti concordati e attività eseguite. Registrare in handoff metodo recuperato, fonti mancanti e prossimo passo; non dichiarare recupero completo senza lettura effettiva. Questo richiede accesso al repository e lettura da parte dell'istanza: non promettere caricamento automatico in ogni chat esterna.
+Regole recenti da recuperare: Windows/codice esistente prima di dipendenze nuove, funzioni esistenti migliorate senza doppioni, cartella riconoscibile per nuove add-on, piano con prove e ZIP operativo essenziale. Nello ZIP restano i sorgenti eseguiti dal programma; documenti e strumenti di sviluppo restano nella repository. Verificare selezione e pacchetto estratto prima della consegna.
