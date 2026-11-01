@@ -2,14 +2,22 @@
 Aggiornato il 2026-11-01. Questo è l'indice diretto per recuperare una versione senza analizzare tutta la cronologia o cercare artifact.
 
 ## Riferimento funzionante confermato
-**Non ancora identificato con sufficiente precisione in questa sessione.**
-L'utente riferisce un dialogo molto migliorato sul Pavilion, ma versione/ZIP/SHA installato non sono stati acquisiti. Non attribuire quel feedback a un pacchetto a caso.
-La correzione nucleo a86c2c932af988b23916e8d4495025de5ee0a730 ha CI documentata (386 test per combinazione e smoke bridge), ma non ha un nuovo ZIP corrispondente pubblicato in questa fase. Non associarla ai pacchetti precedenti.
+**BASE-UTENTE-20261101 — build attualmente usata da Alberto, funzionante nell'uso riferito.**
+Il 2026-11-01 l'utente conferma che l'ultima build usata «va benissimo» per il momento, la indica come base per le prossime aggiunte e chiede di conservarla per tornare indietro in caso di peggioramenti.
 
-| Riferimento | Test automatici | Prova PC | ZIP corrispondente | Uso come ripristino |
-|---|---|---|---|---|
-| Nucleo a86c2c9; sorgenti evoluti 5e61e53 | Esiti registrati nell'handoff | Feedback positivo non ancora collegato a SHA esatto | Nessuno nuovo pubblicato qui | Sorgenti recuperabili, non pacchetto stabile PC certificato |
-| ZIP già presenti sotto | Presenza verificata, prove da associare a ciascuna versione | Non ricostruire per supposizione | Presenti e versionati | Inventario storico, non promozione automatica a funzionante |
+| Campo | Stato |
+|---|---|
+| Prova PC | Riscontro positivo esplicito dell'utente; nessuna nuova osservazione diretta dell'agente |
+| Ambito | Uso attuale riferito; non certificazione di tutte le funzioni o stabilità universale |
+| Nome ZIP installato | Da confermare con l'utente |
+| Candidato in cima al catalogo | Jarvis-Timer-Audio-Fix2-20261031.zip; associazione al PC non ancora confermata |
+| Candidato conservato | [ZIP al riferimento immutabile](https://github.com/MATRIXNEO23/jarvis/raw/bb94afa1865fe0315021f783736be3cb77c4af84/Download/Jarvis-Timer-Audio-Fix2-20261031.zip), Git blob 6aa9e6f9eb040dc7390b4edb55c9ae175bd4e512, 406653 byte |
+| Commit sorgente della build PC | Da associare al pacchetto esatto; non dedurlo dal solo nome |
+| Prossima azione | Chiedere se il pacchetto usato è il candidato; poi verificare sorgenti e dati compatibili prima di realizzare nuove aggiunte |
+
+Non sovrascrivere o eliminare il pacchetto funzionante. Prima delle nuove modifiche usare come base il suo codice effettivo, identificato e conservato, senza sostituirlo con un ramo soltanto più recente.
+La correzione nucleo a86c2c932af988b23916e8d4495025de5ee0a730 ha CI documentata (386 test per combinazione e smoke bridge), ma non ha un nuovo ZIP pubblicato in questa fase: non associarla automaticamente alla build PC o agli ZIP precedenti.
+Il primo riscontro sul dialogo resta valido; questo aggiornamento aggiunge la scelta esplicita della base da parte dell'utente.
 
 ## Scheda obbligatoria per ogni punto di ripristino
 Compilare una scheda compatta prima della promozione:
