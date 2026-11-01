@@ -113,3 +113,9 @@
 
 ## Continuità tra argomenti — 2026-11-01
 Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962108a357b. Leggerlo insieme a piano e registro quando l'utente riprende un argomento. Piano web già persistito, implementazione non avviata; ricordare stato e questioni aperte senza ricominciare la raccolta dei requisiti. Aggiornati AGENTS.md e lezioni con questa procedura. Nessuna modifica del programma o nuovo test.
+
+## 2026-11-01 — Recupero unico e continuità per ogni modifica
+- Creato RECUPERO.md, commit aa1bce7e0f56ce4ede2258fe5e6742f14ded4186. AGENTS.md aggiornato con lettura iniziale obbligatoria, recupero autonomo delle fonti e checkpoint per ogni modifica prima di chiudere il lavoro. Indice e lezioni collegati.
+- L'utente richiede anche che l'assistente segnali incompatibilità e suggerisca alternative concrete; non limitarsi a eseguire richieste incoerenti e non trasferire scelte tecniche all'utente.
+- Ambito verificato: creazione/aggiornamento documenti nel repository. Nessun test di nuova istanza, nessuna funzione runtime aggiunta. L'accesso al repository resta prerequisito della ripresa; una chat generica non legge questi file automaticamente.
+- Punto di ripresa invariato: piano web documentato da rivedere, implementazione non avviata; requisiti e prove nei documenti collegati dall'indice.
