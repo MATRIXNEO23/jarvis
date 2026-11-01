@@ -7,7 +7,7 @@
 Gli esempi descrivono ciò che Jarvis deve fare, non come costruirlo. L'assistente propone la soluzione tecnica in maniera semplice, con prove, usando prima Jarvis e Windows. Non creare moduli per comandi già disponibili. Add-on organizzata e codice leggibile non significano un framework nuovo o un file per ogni comando. Questa precisazione supera le scelte tecniche premature della prima stesura locale di questo documento, mai implementate o pubblicate.
 Se un dubbio residuo cambia il risultato desiderato, chiedere conferma con poche opzioni concrete e una raccomandazione; non chiedere all'utente di scegliere dettagli tecnici che possono essere verificati autonomamente.
 
-**Conservazione:** documento ed evidenze preparati nei commit locali b93cbfa/b360505. Dopo il blocco automatico iniziale, l’utente ha autorizzato esplicitamente la pubblicazione documentale su main. Chiarito che «locale» indicava il checkout dell’ambiente di sessione, non il suo PC; GitHub è il punto di conservazione e recupero concordato. Nessun cambiamento del programma o pacchetto in questa pubblicazione.
+**Conservazione:** documento ed evidenze pubblicati su main nel commit b58ee03c5aef261fcdec45e0e3b8092cc80bd8ff; preparazione locale nei commit b93cbfa/b360505. Contenuti principali riletti via connettore e coincidenti; tree identico al locale preparato. Dopo il blocco automatico iniziale, l’utente ha autorizzato esplicitamente la pubblicazione documentale su main. Chiarito che «locale» indicava il checkout dell’ambiente di sessione, non il suo PC; GitHub è il punto di conservazione e recupero concordato. Nessun cambiamento del programma o pacchetto in questa pubblicazione.
 
 ## Proposta da spiegare all'utente
 
