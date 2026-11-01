@@ -267,6 +267,7 @@ class FileAccessTests(unittest.TestCase):
             def set(self,value): self.value=value
         request = Request()
         env={'request':request,'reconcile_document_session':lambda **kw:None,
+             'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,
              'try_telegram_voice_send':lambda x:False,'save_only_waiting':False,
              'doc_dialog':types.SimpleNamespace(phase='idle'),'parse_simple_save':lambda x:None,
              'project_voice_command':lambda x:False,'preference_command':lambda x:False,
