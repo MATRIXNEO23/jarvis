@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## In corso — piano verificabile e nessun duplicato, 2026-11-01
+L'utente richiede piano basato su evidenze, prima dell'implementazione, e precisa: migliorare le funzioni già presenti anziché crearne doppioni. Unità documentale: piano per fasi nella scheda WINDOWS, regola persistente AGENTS, stato/lezioni e chiusura handoff. Nessun codice, nuova add-on o test runtime autorizzati ora. Prossimo controllo: rilettura e coerenza dei documenti, poi spiegazione semplice all'utente.
+
 ## In corso — ricerca per indizi e lettura dei file, 2026-11-01
 L'utente chiarisce che vuole sia ricerca/apertura sia lettura/spiegazione. Ricerca con nome parziale, prefisso, contesto di cartella o scopo anche senza nome preciso; esempio «cartella d'installazione di Minecraft». Aggiornamento previsto: scheda WINDOWS, stato e lezioni; nessun codice o nuovo test. Distinguere interpretazione GPT da ricerca/verifica locale, senza garantire il ritrovamento con zero indizi. Prossimo controllo: rilettura dei documenti salvati.
 
