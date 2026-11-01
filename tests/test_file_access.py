@@ -507,11 +507,13 @@ class FileAccessTests(unittest.TestCase):
                 {'path':str(self.docs),'name':'Jarvis Test Store App'},
                 {'path':str(self.hidden),'name':'Jarvis Test Store App'}]}):
             rows=installed_locations('Jarvis Test Store App')
-        self.assertIn((self.docs,'Registrazione Windows: Jarvis Test Store App'),rows)
+        self.assertTrue(any(os.path.samefile(path,self.docs) and
+            why=='Registrazione Windows: Jarvis Test Store App' for path,why in rows))
         with patch('file_access.service.installed_locations',return_value=rows),patch.object(self.files,'index',side_effect=AssertionError('No scan')):
             result=self.files.execute('locate',{'query':'Jarvis Test Store App'})
-        self.assertIn(str(self.docs),result.message)
-        self.assertNotIn(str(self.hidden),result.message)
+        self.assertEqual(len(result.listing['items']),1)
+        self.assertTrue(os.path.samefile(result.listing['items'][0][2],self.docs))
+        self.assertFalse(any(os.path.samefile(row[2],self.hidden) for row in result.listing['items']))
 
     def _pending_folder_choice(self):
         first=self.docs/'Foto-A'; second=self.docs/'Foto-B'
