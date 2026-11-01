@@ -112,3 +112,6 @@ Riconciliate le formulazioni generiche GPT con la decisione ibrida finale; corre
 
 ## 2026-11-01 — Registro di recupero persistente e tracciabilità
 Creato Download/REGISTRO-VERSIONI.md con schema delle prove e inventario di 20 ZIP già presenti al commit bb94afa1865fe0315021f783736be3cb77c4af84. Esistenza/dimensione/Git blob SHA verificati, non download o collaudo PC dei contenuti. Nessuno promosso a stabile per supposizione. Il feedback sul dialogo non identifica ancora lo ZIP installato; a86c2c9 non ha nuovo pacchetto consegnato in questa fase. Per le versioni future collegare motivazione tecnica, commit, SHA-256 del pacchetto, test, collaudo PC e dati compatibili. Recupero diretto dalla scheda invece di scansione della storia. Solo documentazione, nessun ripristino o build.
+
+## 2026-11-01 — L'utente sceglie la build attuale come base funzionante
+Riscontro esplicito: l'ultima build usata funziona bene per il momento; conservarla e partire da quella per le prossime aggiunte. Creato riferimento BASE-UTENTE-20261101 nel registro. Nome ZIP/commit installato ancora da confermare; candidato in cima a Download è Jarvis-Timer-Audio-Fix2-20261031.zip, non automaticamente associato al PC. Preservare pacchetto e codice identificati prima di intervenire. Nessuna nuova build, prova runtime o ripristino.
