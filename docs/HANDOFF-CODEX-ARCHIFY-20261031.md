@@ -94,3 +94,13 @@
 - Versione/SHA installato, numero di scambi e payload non acquisiti: non attribuire causalmente il miglioramento al commit a86c2c9 senza verificarne la presenza sul PC.
 - Restano da verificare riavvio e recupero SQLite, isolamento progetti, salvataggi/comandi e modalità manuali del microfono. Nessuna nuova build, merge o distribuzione eseguiti in questa fase; le CI citate sopra rimangono prove del codice testato.
 - Richiesta successiva: valutare maggiore autonomia web con lettura pagine e browser automatico. Solo valutazione, nessuna implementazione autorizzata da questa domanda. Nuova funzionalità da progettare come .jaddon, con GPT esterno e zero costi aggiuntivi.
+
+## 2026-11-01 — Pianificazione add-on web, diagnostica e memoria di sviluppo
+- Requisiti e piano in docs/PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md, creazione 04c8bf86c3f39158f6dd14b8cd9cb1125a541d3a; successivo aggiornamento aggiunge checkpoint e stato delle fasi. Solo documentazione.
+- L'utente ha richiesto memoria di sviluppo nel repository, lettura obbligatoria prima di implementare, integrazione con ciò che esiste, piani per fasi e registrazione continua di scelte, prove, esiti e lezioni. Procedura AGENTS.md commit cf19eff734c7b85e81fa296f73b7b258d3aafc1c; registro aggiornato commit b955495008080940d63d78793a7f64fc6362e346.
+- Add-on web on demand, GPT esterno decide e motore locale esegue; browser visibile; estensione Edge candidata, non validata. Cartella concordata Estensione-Edge. Navigazione e ricerca interna al sito, chiarimenti contestuali e confronto fonti; nessuna fonte obbligatoria dai soli esempi.
+- Per ogni add-on: separazione file/configurazione, contenimento errori, versioni e recupero; UI semplice; «Ripristina impostazioni iniziali dell'add-on» distinto da «Torna alla versione precedente». Non alterare dati personali o altre funzioni.
+- Diagnostica richiesta nella chat, con errore, fase e indicazione utile; dettagli limitati e autoverifiche finite nel programma, non scansioni continue.
+- Verifica preliminare in sola lettura: gestore .jaddon descrittivo limitato, da progettare adattatore; diagnostica statica/passiva esistente, non prova operativa del browser. Evidenze/blob nel piano.
+- Nessuna implementazione o test nuovo eseguito; nessuna misura RAM, nessuna build o distribuzione. Il valore 1–2 GB non è una misura. Non dichiarare estensione più leggera senza confronti.
+- Prossimo passo: revisione del piano con l'utente; completare inventario tecnico prima di modificare codice, rispettando la richiesta di discutere prima di costruire.
