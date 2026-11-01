@@ -1,21 +1,29 @@
 # Stato attività Jarvis
-Aggiornamento: 2026-11-01. Indice per recuperare il lavoro dopo cambi di argomento; verificare sempre documenti, codice e SHA prima di agire.
+Punto di arresto salvato il 2026-11-01: metodo e documenti allineati; fermo prima dell'implementazione web come richiesto dall'utente.
 
-| Attività | Stato reale | Fonte | Punto di ripresa |
-|---|---|---|---|
-| Navigazione web vocale e add-on | Progettazione; requisiti raccolti, implementazione non avviata | [Piano](PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md) | Rivedere il piano con l'utente, chiarire i punti aperti; prima del codice completare inventario di integrazione e rispettare autorizzazione |
-| Continuità dialogo | Correzione verificata dalla CI documentata; utente riferisce miglioramento sul PC, SHA installato non verificato | [Handoff](HANDOFF-CODEX-ARCHIFY-20261031.md), [lezioni](DECISIONI-E-LEZIONI.md) | Verificare versione sul PC e controlli reali ancora aperti; non trasformare il feedback in collaudo completo |
-| Metodo di sviluppo, UI add-on e diagnostica | Regole e piano documentati; nuove funzioni UI/diagnostiche non implementate | [Istruzioni](../AGENTS.md), [piano](PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md) | Applicare il metodo alla prossima fase autorizzata; mantenere separati proposta, lavoro eseguito e verifica |
+| Attività | Stato reale | Fonte e prossimo passo |
+|---|---|---|
+| Metodo di sviluppo | Definito e allineato documentalmente | [AGENTS](../AGENTS.md): piano per aggiunta, revisione finita, test, memoria continua, consegna scaricabile |
+| Recupero tra sessioni/argomenti | Istruzioni salvate, non testate con una nuova istanza | [RECUPERO](../RECUPERO.md), [handoff](HANDOFF-CODEX-ARCHIFY-20261031.md); richiede accesso al repository |
+| Add-on web: requisiti | Raccolti e salvati | [Piano](PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md), comprese domande/risposte brevi e ricerca interna al sito |
+| Add-on web: fase 1 tecnica | Inventario preliminare svolto; revisione completa pendente, sospesa | Alla ripresa confrontare soluzioni esistenti, contratto/adattatore, permessi e modalità; poi presentare risultato prima del codice |
+| Add-on web: fasi 2–8 | Da fare | Nessuna estensione, nuovo esecutore, suite web, misura RAM o ZIP pubblicato |
+| Continuità dialogo precedente | CI documentata; utente riferisce miglioramento sul PC | SHA installato non verificato; consultare handoff per prove e collaudi reali residui |
+| Istruzioni di installazione | Nove guide create e riferimenti controllati | [Prima-installazione](../Prima-installazione/README.md); nessuna nuova installazione Windows collaudata |
+| Diagnostica/UI/recupero add-on richiesti | Requisiti e test pianificati | Controlli passivi già presenti distinti da nuove funzioni non realizzate |
+| Riordino dei file operativi | Contraddizioni individuate, pulizia ulteriore da verificare | [Manutenzione](../Prima-installazione/08-Manutenzione.md); nessuna cancellazione di sorgenti/launcher |
 
-## Ripresa fra argomenti
-Per ogni attività conservare obiettivo, requisiti confermati, alternative solo proposte, decisioni, fase raggiunta, evidenze, questioni aperte e prossimo passo. Aggiornare l'indice e il documento pertinente a ogni cambio significativo o sospensione.
-Quando l'utente dice «torniamo a...», recuperare il documento corrispondente e proseguire dal punto irrisolto; non ripetere la raccolta già conclusa e non considerare approvata una proposta solo perché è salvata. Una nota persistente non è un comando da eseguire.
+## Decisioni da preservare
+- GPT esterno e motore locale: comando preciso riconosciuto localmente senza chiamata GPT; interpretazione del modello per richieste non risolte, entro collegamento e modalità consentite; domanda solo se resta dubbio.
+- L'utente decide obiettivi e compromessi e non deve programmare. Nessuna funzione extra senza proposta; domande specifiche sui dubbi sostanziali.
+- Add-on modulari, risorse limitate per Pavilion i3-2100/10 GB/Windows 10, caricamento a richiesta dove possibile; test propri e integrazione prima della consegna.
+- Configurazione ordinata e semplice, reset del solo add-on distinto da ritorno di versione, dati preservati e controllo manuale del microfono.
+- Confrontare riuso/adattamento/sviluppo nuovo dopo ricerca web e verifica del codice esistente, con licenze/costi/dipendenze compatibili.
+- Consegna dichiarabile soltanto dopo pacchetto verificato e link scaricabile controllato in Download/README.md. Nessuna nuova build in questa sessione documentale.
 
-## Punto d'ingresso per nuove sessioni
-[RECUPERO.md](../RECUPERO.md) è il punto d'ingresso unico. AGENTS.md richiede di leggerlo all'avvio quando il repository è accessibile, quindi recuperare indice, handoff, lezioni e piano. Ogni modifica richiede continuità aggiornata prima della chiusura del lavoro; nessuna ripresa automatica garantita in chat senza accesso al repository. Stato delle implementazioni invariato.
+## Fonti del programma
+[Indice sorgenti](INDICE-SORGENTI.md): codice evoluto nel ramo feature/timer-settings-ui-20261031, riferimento esaminato 5e61e53fbb58ccb5d95b85671604cc5f365d6e04. Radice main storica distinta. [Mappa Archify](architecture-core-20261031/jarvis-core.html) del nucleo a86c2c9: limiti di verifica nell'handoff.
+Questo indice non sostituisce codice, piano e prove. Alla ripresa verificare eventuali aggiornamenti di ramo/SHA.
 
-## Installazione, riordino e stato di consegna — 2026-11-01
-- Cartella [Prima-installazione](../Prima-installazione/README.md): create guide per base, GPT, voce, Telegram, moduli/add-on, reinstallazione e componenti mancanti; ricavate dal riferimento 5e61e53. Documentazione, non installazione Windows collaudata o nuova build.
-- Contraddizioni storiche identificate in README, guida voce, LEGGIMI ed echo launcher: elenco in Prima-installazione/08-Manutenzione.md. Nessun file sorgente cancellato; pulizia operativa ulteriore da verificare.
-- Diagnostica componenti: controlli esistenti inventariati; unificazione in chat e nuovi test ancora da progettare/realizzare.
-- Consegna futura: pacchetto testato, pubblicato e scaricabile dal link verificato in Download/README.md prima dell'annuncio di funzione installabile. Nessun nuovo pacchetto prodotto in questa fase.
+## Prossimo passo unico
+Attendere la ripresa richiesta dall'utente; quindi completare la revisione tecnica della fase 1 del piano web, senza iniziare l'implementazione fino al successivo via. Nessun'altra raccolta dei requisiti da zero. Aggiornare piano/handoff prima e dopo ogni unità coerente e registrare prove/esiti nel [registro](DECISIONI-E-LEZIONI.md).
