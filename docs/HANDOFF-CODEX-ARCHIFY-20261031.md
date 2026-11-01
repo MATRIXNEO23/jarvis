@@ -130,3 +130,9 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Richiesta: valutare progetto e criticità prima dell'implementazione, con controlli finiti e mirati; usare gli errori documentati per evitare ricadute.
 - Intervento previsto: aggiornare AGENTS.md, piano web e DECISIONI-E-LEZIONI con revisione iniziale, ricontrollo delle sole correzioni e uso selettivo delle lezioni. Nessun codice applicativo da modificare.
 - Verifica prevista: rilettura dei documenti aggiornati; nessun test runtime richiesto per queste sole modifiche testuali. Poi chiudere questo checkpoint con esito e prossimo passo.
+
+## 2026-11-01 — Completata: procedura di revisione preventiva
+- Aggiornati AGENTS.md (cebd5af94939c110e26fdb3af5ebb9aa85889cbf), piano web (a7d5ef3c14a843394a5cbfd3a01b3040bdfe19be) e registro (f0a30b5fd7b7f88d36c9a8ea9a0a10beda7cf9fa).
+- Regola: una revisione iniziale prima del codice, correzione e ricontrollo mirato; blocchi residui espliciti, niente cicli globali infiniti. Dopo autorizzazione provare presto il percorso minimo completo.
+- Errori da trasformare in lezioni pertinenti con evidenze e rimedi verificati; test di regressione solo quando significativo. Non promettere di trovare ogni errore prima dell'esecuzione.
+- Solo documentazione modificata. Nessuna build o prova runtime. La revisione tecnica completa del piano web resta da eseguire; implementazione non avviata.
