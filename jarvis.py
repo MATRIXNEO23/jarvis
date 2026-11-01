@@ -2173,6 +2173,7 @@ def main() -> None:
         if addon_manager is not None:
             try:
                 engine.file_access = addon_manager.file_service
+                engine.file_access.progress=lambda snapshot:output_queue.put(('file_progress',snapshot))
             except (ImportError,OSError,ValueError) as exc:
                 engine.file_access_blocked = True
                 write_line("ACCESSO FILE > Componente incompleto: "+str(exc)+
@@ -3158,11 +3159,25 @@ def main() -> None:
                                 write_line("Testo non eseguito: il campo contiene già una richiesta.")
                             else:
                                 write_line("Comando non riconosciuto; dettatura invariata.")
+                elif kind == "file_progress":
+                    if (addon_manager is not None and addon_manager.files_enabled()
+                            and addon_manager.file_service.accepts_progress(data[0])):
+                        try:
+                            from file_access.ui import show_result_progress
+                            show_result_progress(root,data[0])
+                        except (ImportError,OSError,ValueError,tk.TclError) as exc:
+                            write_line("ACCESSO FILE > Avanzamento visuale non disponibile: "+str(exc)[:120])
                 elif kind == "local":
                     result = data[0]
                     if result.status in ("failed", "rejected"):
                         runtime_events.record("local_failure")
                     busy_local = False
+                    if result.action.startswith('files_') and result.file_listing is None:
+                        try:
+                            from file_access.ui import finish_result_progress
+                            finish_result_progress(root,result.message)
+                        except (ImportError,OSError,ValueError,tk.TclError) as exc:
+                            write_line("ACCESSO FILE > Stato ricerca non aggiornato: "+str(exc)[:120])
                     if result.file_listing is not None:
                         from dataclasses import replace
                         listing=result.file_listing

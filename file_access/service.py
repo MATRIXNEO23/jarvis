@@ -98,6 +98,10 @@ class FileAccessService:
         self._result_revision = -1
         self._result_token = uuid4().hex
         self._view_selection = None
+        self.progress=None
+        self._progress_id=uuid4().hex
+        self._progress_active=False
+        self._progress_at=0.0
         self.max_entries = 5000
         self.max_seconds = 10.0
 
@@ -112,6 +116,22 @@ class FileAccessService:
             self._pending_app = None
             self._result_token = uuid4().hex
             self._view_selection = None
+            self._progress_id=uuid4().hex
+            self._progress_active=False
+
+    def accepts_progress(self,snapshot):
+        return (self._progress_active and snapshot.get('id')==self._progress_id
+                and self.enabled() and not self.cancelled.is_set())
+
+    def _notify_progress(self,stage,current='',scanned=0,directories=0,errors=0,excluded=0,*,force=False):
+        now=time.monotonic()
+        if self.progress is None or (not force and now-self._progress_at<0.25):
+            return
+        self._progress_at=now
+        self.progress({'id':self._progress_id,'stage':stage,'current':str(current),
+            'scanned':scanned,'directories':directories,'errors':errors,'excluded':excluded,
+            'summary':stage+'. Cartella: '+(str(current) if current else 'radici consentite')+
+                f'. Voci incontrate: {scanned}; cartelle lette: {directories}; errori lettura: {errors}; fuori ambito/non verificabili: {excluded}.'})
 
     def _live(self, revision):
         return (self.enabled() and not self.cancelled.is_set()
@@ -516,7 +536,7 @@ class FileAccessService:
         except (OSError, ValueError, KeyError, UnicodeError) as exc:
             return FileResult('rejected', str(exc)[:500])
 
-    def _report(self, paths, revision, note):
+    def _report(self, paths, revision, note, coverage=None):
         if not self._live(revision):
             return FileResult('rejected', 'Ricerca annullata o accesso revocato; risultati scartati.')
         # Final scope check before exposing even a filename.
@@ -542,6 +562,7 @@ class FileAccessService:
         guidance = ('\nScegli il numero. Esempi per questo elenco: '+ ' / '.join(suggestions)+'.') if suggestions else ''
         listing={'token':token,
                  'items':tuple(('Cartella' if p.is_dir() else 'File',p.name,str(p)) for p in allowed),
+                 'coverage':coverage or {},
                  'summary':('Mostrati '+str(len(allowed))+' risultati nella finestra dedicata. ' if allowed else message+' ')+note}
         return FileResult('completed', message+'\n'+note+guidance,listing=listing)
 
@@ -562,6 +583,18 @@ class FileAccessService:
         return self._report(paths, revision, 'Ambito: '+str(root))
 
     def _search(self, query, scope, revision, *, locate=False, kind=None):
+        job=uuid4().hex
+        self._progress_id=job
+        self._progress_active=True
+        self._progress_at=0
+        try:
+            self._notify_progress('Avvio ricerca per nome',force=True)
+            return self._search_impl(query,scope,revision,locate=locate,kind=kind)
+        finally:
+            if self._progress_id==job:
+                self._progress_active=False
+
+    def _search_impl(self, query, scope, revision, *, locate=False, kind=None):
         if locate:
             kind = 'folder'
             self._pending_app = None
@@ -582,6 +615,8 @@ class FileAccessService:
         if scope and not self.policy.permits(roots[0]):
             raise PermissionError('Ambito di ricerca non consentito.')
         paths, reason, scanned, partial = [], '', 0, False
+        directories,errors,excluded=0,0,0
+        stop_reason=''
         limited = False
         def add(path):
             if kind=='folder' and not path.is_dir():
@@ -591,6 +626,7 @@ class FileAccessService:
             if path not in paths and self.policy.permits(path):
                 paths.append(path)
         if locate:
+            self._notify_progress('Consulto registrazioni del programma',force=True)
             locations = [(path,why) for path,why in installed_locations(query) if self.policy.permits(path)]
             applications = list(dict.fromkeys(why.removeprefix('Registrazione Windows: ') for _,why in locations))
             if len(applications)>1 and not any(query.casefold()==name.casefold() for name in applications):
@@ -609,6 +645,7 @@ class FileAccessService:
         for root in roots:
             if not self._live(revision):
                 break
+            self._notify_progress('Interrogo indice Windows',root,scanned,directories,errors,excluded,force=True)
             indexed, note = self.index(query, root)
             reason = reason or note
             for path in indexed:
@@ -621,35 +658,50 @@ class FileAccessService:
                     continue
                 visited.add(current)
                 if not self.policy.permits(current):
+                    excluded+=1
                     continue
+                self._notify_progress('Scansione nomi, sottocartelle incluse',current,scanned,directories,errors,excluded)
                 try:
                     with os.scandir(current) as entries:
+                        directories+=1
                         for entry in entries:
                             scanned += 1
+                            self._notify_progress('Scansione nomi, sottocartelle incluse',current,scanned,directories,errors,excluded)
                             path = Path(entry.path)
                             # Do not traverse links/reparse points; explicit selected roots still work.
-                            if entry.is_symlink() or getattr(entry.stat(follow_symlinks=False), 'st_file_attributes', 0) & 0x400:
-                                continue
-                            if not self.policy.permits(path):
-                                continue
-                            if query.casefold() in entry.name.casefold():
-                                add(path)
-                            if entry.is_dir(follow_symlinks=False):
-                                stack.append(path)
+                            if (entry.is_symlink() or getattr(entry.stat(follow_symlinks=False), 'st_file_attributes', 0) & 0x400
+                                    or not self.policy.permits(path)):
+                                excluded+=1
+                            else:
+                                if query.casefold() in entry.name.casefold():
+                                    add(path)
+                                if entry.is_dir(follow_symlinks=False):
+                                    stack.append(path)
                             if (len(paths) >= 20 or scanned >= self.max_entries or
                                     time.monotonic()-started > self.max_seconds or not self._live(revision)):
                                 partial = True
                                 limited = True
+                                stop_reason=('result_limit' if len(paths)>=20 else 'entry_limit' if scanned>=self.max_entries else
+                                             'time_limit' if time.monotonic()-started>self.max_seconds else 'cancelled')
                                 break
                 except OSError:
                     partial = True
+                    errors+=1
                 if limited:
                     break
             if limited or len(paths) >= 20:
                 partial = True
+                stop_reason=stop_reason or 'result_limit'
                 break
-        suffix = ' Ricerca parziale: limite o cartella non leggibile.' if partial else ' Ricerca conclusa nelle radici selezionate.'
-        return self._report(paths, revision, reason+suffix+' Elementi esaminati: '+str(scanned)+'.')
+        stop_reason=stop_reason or ('read_errors' if errors else 'complete')
+        labels={'result_limit':'raggiunto limite risultati (20)','entry_limit':'raggiunto limite voci ('+str(self.max_entries)+')',
+                'time_limit':'raggiunto limite tempo della passata','cancelled':'annullamento o revoca','read_errors':'errori di lettura'}
+        suffix=(' Ricerca parziale: '+labels[stop_reason]+'.' if partial else
+                ' Ricerca conclusa nelle radici selezionate.')
+        coverage={'scanned':scanned,'directories':directories,'errors':errors,'excluded':excluded,
+                  'stop_reason':stop_reason,'subfolders':True,'roots':len(roots)}
+        return self._report(paths, revision, reason+suffix+' Elementi esaminati: '+str(scanned)+
+            f' (voci nella scansione diretta, non contenuti letti). Cartelle lette: {directories}; errori lettura: {errors}; fuori ambito/non verificabili: {excluded}. Sottocartelle incluse. Radici selezionate: {len(roots)}.',coverage)
 
     def _read(self, path, revision, explain):
         if path.suffix.casefold() not in TEXT_TYPES:

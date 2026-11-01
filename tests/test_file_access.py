@@ -984,3 +984,115 @@ function New-Object {
         self.assertIn('Quale cartella',result.message)
         self.assertTrue(self.files._pending[1]['_missing_target'])
         launch.assert_not_called()
+
+    def test_progress_reports_phase_current_folder_and_exact_finish_reason(self):
+        seen=[]
+        def progress(snapshot):
+            self.assertTrue(self.files.accepts_progress(snapshot))
+            seen.append(snapshot)
+            self.files._progress_at=time.monotonic()-1
+        self.files.progress=progress
+        result=self.engine.execute('cerca file preventivo')
+        self.assertTrue(any(s['stage']=='Interrogo indice Windows' for s in seen))
+        self.assertTrue(any(s['current'] and s['scanned']>0 and os.path.samefile(s['current'],self.docs) for s in seen))
+        self.assertFalse(self.files.accepts_progress(seen[-1]))
+        self.assertEqual(result.file_listing['coverage']['stop_reason'],'complete')
+        self.assertTrue(result.file_listing['coverage']['subfolders'])
+        self.assertIn('non contenuti letti',result.file_listing['summary'])
+        self.assertEqual(result.spoken_message,'')
+
+    def test_search_budget_and_cancellation_also_apply_to_excluded_entries(self):
+        self.a.unlink()  # The only root entry is the excluded directory.
+        self.files.max_entries=1
+        result=self.engine.execute('cerca file assente')
+        self.assertEqual(result.file_listing['coverage']['scanned'],1)
+        self.assertEqual(result.file_listing['coverage']['stop_reason'],'entry_limit')
+        self.assertEqual(result.file_listing['coverage']['excluded'],1)
+        self.assertIn('limite voci',result.message)
+        seen=[]
+        def progress(snapshot):
+            seen.append(snapshot)
+            self.files._progress_at=time.monotonic()-1
+            if snapshot['scanned']:
+                self.files.reset()
+        self.files.progress=progress
+        result=self.engine.execute('cerca file assente')
+        self.assertEqual(result.status,'rejected')
+        self.assertIn('annullata',result.message)
+        self.assertTrue(all(not self.files.accepts_progress(s) for s in seen))
+
+    def test_real_progress_window_reuses_view_and_cancellation_clears_running_state(self):
+        import tkinter as tk
+        from file_access.ui import show_result_progress,finish_result_progress,show_results
+        root=tk.Tk(); root.withdraw(); self.addCleanup(root.destroy)
+        view=show_result_progress(root,{'id':'job','summary':'Scansione nomi. Voci incontrate: 1.'})
+        root.update()
+        self.assertTrue(view.in_progress)
+        self.assertEqual(str(view.open_button.cget('state')),'disabled')
+        finish_result_progress(root,'Ricerca interrotta su richiesta.')
+        root.update()
+        self.assertFalse(view.in_progress)
+        self.assertIn('interrotta',view.status.get())
+        report=self.engine.execute('elenca cartella '+str(self.docs))
+        again=show_results(root,report.file_listing,lambda *a:None,self.files.mark_view_selection)
+        root.update()
+        self.assertIs(view,again)
+        self.assertFalse(view.in_progress)
+        self.assertEqual(len(view.tree.get_children()),1)
+
+    def test_actual_progress_callback_updates_only_window_and_drops_old_events(self):
+        tree=ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
+        main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
+        poll=next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name=='poll')
+        branch=next(n for n in ast.walk(poll) if isinstance(n,ast.If) and isinstance(n.test,ast.Compare)
+            and isinstance(n.test.left,ast.Name) and n.test.left.id=='kind'
+            and isinstance(n.test.comparators[0],ast.Constant) and n.test.comparators[0].value=='file_progress')
+        code=compile(ast.Module(body=branch.body,type_ignores=[]),'real-file-progress-callback','exec')
+        env={'addon_manager':self.manager,'root':object(),
+             'write_line':lambda *a:self.fail('Progress must not flood chat'),
+             'speak_result':lambda *a:self.fail('Progress must not be spoken')}
+        seen=[]
+        def progress(snapshot):
+            seen.append(snapshot)
+            env['data']=[snapshot]
+            with patch('file_access.ui.show_result_progress') as show:
+                exec(code,env)
+                show.assert_called_once()
+        self.files.progress=progress
+        self.engine.execute('cerca file preventivo')
+        env['data']=[seen[0]]
+        with patch('file_access.ui.show_result_progress') as show:
+            exec(code,env)
+            show.assert_not_called()
+
+    def test_coverage_distinguishes_result_time_and_read_error_limits(self):
+        for i in range(25):
+            (self.docs/f'campione-{i}.txt').write_text('test',encoding='utf-8')
+        result=self.engine.execute('cerca file campione')
+        self.assertEqual(result.file_listing['coverage']['stop_reason'],'result_limit')
+        self.files.max_seconds=-1  # Deterministically exhausted time budget.
+        result=self.engine.execute('cerca file assente')
+        self.assertEqual(result.file_listing['coverage']['stop_reason'],'time_limit')
+        self.files.max_seconds=10
+        with patch('file_access.service.os.scandir',side_effect=PermissionError('controlled sample')):
+            result=self.engine.execute('cerca file assente')
+        self.assertEqual(result.file_listing['coverage']['stop_reason'],'read_errors')
+        self.assertEqual(result.file_listing['coverage']['errors'],1)
+        self.assertIn('Ricerca parziale: errori di lettura',result.message)
+
+    def test_actual_voice_cancel_callback_is_accepted_while_search_is_busy(self):
+        tree=ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
+        main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
+        callback=next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name=='try_file_command')
+        calls=[]
+        env={'addon_manager':self.manager,'active_project_id':None,'busy_local':True,
+             'write_line':lambda *a:None,'submit_local':lambda **kw:calls.append(kw)}
+        exec(compile(ast.Module(body=[callback],type_ignores=[]),'real-busy-search-cancel','exec'),env)
+        def index(*args):
+            self.assertTrue(env['try_file_command']('annulla ricerca'))
+            return [],'Indice controllato'
+        self.files.index=index
+        result=self.engine.execute('cerca file preventivo')
+        self.assertEqual(result.status,'rejected')
+        self.assertTrue(self.files.cancelled.is_set())
+        self.assertEqual(calls,[])

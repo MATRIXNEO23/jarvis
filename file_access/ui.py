@@ -203,6 +203,7 @@ class ResultWindow:
         self.update(listing,on_open,on_select)
 
     def update(self,listing,on_open,on_select):
+        self.in_progress=False
         self.listing=listing
         self.on_open=on_open; self.on_select=on_select
         self.tree.delete(*self.tree.get_children())
@@ -218,11 +219,14 @@ class ResultWindow:
             self.select()
 
     def select(self,_event=None):
+        if self.in_progress:
+            self.open_button.configure(state='disabled')
+            return
         selected=self.tree.selection()
         number=int(selected[0]) if selected else None
         valid=self.on_select(number,self.listing['token'],self.window.winfo_id())
         self.open_button.configure(state='normal' if selected and valid else 'disabled')
-        if not valid:
+        if selected and not valid:
             self.status.set('Elenco scaduto o sostituito: ripeti la ricerca o aggiorna l’elenco.')
 
     def open_selected(self,_event=None):
@@ -243,6 +247,26 @@ def show_results(parent,listing,on_open,on_select):
     view.window.deiconify()
     view.window.lift()
     return view
+
+
+def show_result_progress(parent,snapshot):
+    view=getattr(parent,'_jarvis_file_results',None)
+    if view is None or not view.window.winfo_exists():
+        view=show_results(parent,{'token':snapshot['id'],'items':(),'summary':snapshot['summary']},
+                          lambda *a:None,lambda *a:False)
+    view.in_progress=True
+    view.open_button.configure(state='disabled')
+    view.status.set(snapshot['summary'])
+    return view
+
+
+def finish_result_progress(parent,message):
+    view=getattr(parent,'_jarvis_file_results',None)
+    if view is not None and view.window.winfo_exists() and view.in_progress:
+        view.in_progress=False
+        view.tree.delete(*view.tree.get_children())
+        view.open_button.configure(state='disabled')
+        view.status.set(message)
 
 
 def sync_result_selection(parent,service):
