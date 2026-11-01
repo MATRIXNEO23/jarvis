@@ -1,3 +1,6 @@
+## Priorità vigente — riusare l'indice Windows prima di crearne uno
+L'utente preferisce integrazione Windows e semplicità: indice proprio soltanto se la verifica del sistema esistente dimostra che serve. Questo supera l'obbligo di un indice autonomo nelle sezioni storiche sotto. windows_search.ps1 interroga già SYSTEMINDEX tramite Search.CollatorDSO; servizio/adattatore lo usano già. Prossimo passo: verificare provider/copertura/query positive su Windows e migliorare limiti/paging/fallback esistenti, evitando doppioni. La CI disponibile aveva indice non disponibile, quindi non prova il provider operativo. Persistenza e aggiornamento restano requisiti del risultato; nessun nuovo runtime o build in questa decisione.
+
 ## Persistenza confermata — pausa, riavvio e aggiornamento
 Indice locale e avanzamento devono sopravvivere a stop della scansione, riavvio di Jarvis e installazione di una nuova versione. Dati del profilo già esistente, separati dal programma; nessuna scansione integrale da rifare per il solo aggiornamento. Consolidamento progressivo, migrazione conservativa e recupero dell'ultimo checkpoint valido da progettare/verificare. Requisito salvato, nessun codice o test nuovo. Contratto completo nel rapporto passo 5 collegato sotto.
 

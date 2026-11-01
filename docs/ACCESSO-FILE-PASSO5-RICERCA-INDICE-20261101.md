@@ -1,5 +1,17 @@
 # Ricerca vocale, passo 5A e indice locale per ogni PC — 2026-11-01
 
+## Decisione vigente — prima Windows Search, indice proprio solo se necessario
+Precisazione successiva dell'utente: la funzione richiesta è una ricerca affidabile integrata col Windows corrente, semplice e senza duplicati. Preferire l'indice Windows se soddisfa i requisiti; NON è obbligatorio costruirne uno di Jarvis. Questa decisione supera le formulazioni sotto che impongono un catalogo autonomo per macchina. Restano validi i risultati desiderati: adattamento al PC, dischi/unità accessibili, novità, persistenza dopo aggiornamento e copertura dichiarata.
+
+Verifica effettiva sul source 61deabcf: file_access/windows_search.ps1 usa ADODB.Connection con Provider=Search.CollatorDSO e interroga SYSTEMINDEX con SCOPE della radice consentita e filtro System.FileName LIKE; input JSON su stdin, TOP 50, timeout. windows.indexed_candidates lo chiama già; _search_impl lo consulta e integra con scansione diretta. Il lavoro da fare è migliorare/verificare questo percorso, non aggiungere un secondo raccordo Windows o assumere necessaria una nuova banca dati.
+Microsoft documenta modalità Classic/Enhanced e posizioni incluse/escluse: Windows non garantisce che tutti i file di ogni unità siano già nell'indice. Fonte corrente:
+https://support.microsoft.com/en-us/windows/experience/performance-optimization/search-indexing-in-windows
+https://support.microsoft.com/en-us/windows/privacy/windows-search-and-privacy
+La pagina Win32 sulle esclusioni dei rimovibili contiene note specifiche Vista/7: NON usarla per proclamare un divieto universale attuale su ogni disco USB Windows 10/11.
+
+Prossimo passo sostitutivo: prova Windows mirata di disponibilità/provider, interrogazione positiva su contenuti temporanei realmente indicizzati e distinzione fra vuoto, non indicizzato, indice in aggiornamento ed errore; leggere configurazione/copertura prima di cambiare il sistema. Verificare paging, query e latenza sul raccordo esistente; il TOP 50 del provider e le 20 righe del servizio non dimostrano assenza di altri risultati. Sulle zone/periferiche non coperte usare/migliorare il fallback già presente con continuazione recuperabile; valutare persistenza aggiuntiva solo per una lacuna dimostrata, mantenendo un solo percorso operativo.
+La CI 41341801789 aveva index_available=false: prova il fallback e gli altri controlli, NON un'interrogazione positiva dell'indice nativo. Indice di Windows è gestito dal sistema e non va ricreato per aggiornare Jarvis; eventuale checkpoint del fallback resta nei dati persistenti del profilo. Nessun indice proprio implementato, nessuna installazione, cambio di configurazione Windows o nuova build eseguiti.
+
 ## Persistenza fra interruzioni, riavvii e aggiornamenti — requisito confermato
 L'utente richiede che l'arresto conservi ciò che è già stato catalogato e il punto raggiunto. La continuazione deve funzionare anche dopo chiusura/riavvio di Jarvis. Installare una nuova versione non deve cancellare indice o avanzamento né obbligare a rifare la scansione iniziale.
 Indice e checkpoint devono vivere nei dati persistenti del profilo Jarvis già previsto (addon-data/accesso_file), separati dalla directory del codice/distribuzione. Riutilizzare la risoluzione del profilo attivo e le regole di migrazione esistenti; non creare una cartella dati concorrente né cambiare automaticamente profilo a ogni aggiornamento.

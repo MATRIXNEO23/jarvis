@@ -1,3 +1,6 @@
+## Priorità vigente — riusare l'indice Windows prima di crearne uno
+L'utente preferisce integrazione Windows e semplicità: indice proprio soltanto se la verifica del sistema esistente dimostra che serve. Questo supera l'obbligo di un indice autonomo nelle sezioni storiche sotto. windows_search.ps1 interroga già SYSTEMINDEX tramite Search.CollatorDSO; servizio/adattatore lo usano già. Prossimo passo: verificare provider/copertura/query positive su Windows e migliorare limiti/paging/fallback esistenti, evitando doppioni. La CI disponibile aveva indice non disponibile, quindi non prova il provider operativo. Persistenza e aggiornamento restano requisiti del risultato; nessun nuovo runtime o build in questa decisione.
+
 ## Indice durevole attraverso riavvii/aggiornamenti — 2026-11-01
 Preservare indice e avanzamento nella cartella dati del profilo attivo, separata dai file del programma: pausa, chiusura/riavvio o nuova versione non devono azzerarli. Riutilizzare addon-data/accesso_file e la risoluzione del profilo esistenti; salvare checkpoint coerenti e prevedere migrazione/recupero conservativi. Dopo crash ripartire dall'ultimo checkpoint valido, senza promettere scritture non completate. Distinguere aggiornamento sullo stesso PC da nuova macchina. Requisito confermato, codice e prove dedicati ancora da realizzare.
 
