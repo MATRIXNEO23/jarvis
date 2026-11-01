@@ -110,3 +110,6 @@
 - Evitare di trasferire all'utente scelte tecniche verificabili, ripetere domande già risolte o introdurre conferme per ogni micro-passaggio già autorizzato.
 - Regola persistente AGENTS.md commit e3e09f6045fd741aa12dcd905651b7922ae4ff10; piano aggiornato commit 62a68c40143649c3dc0f5e6434eff1bf4c97449e; registro commit d90796af2ab3c05f79b1f80a495d7bc71ce19fd7.
 - Solo documentazione modificata. Piano disponibile per revisione, nessuna implementazione web o prova funzionale avviata.
+
+## Continuità tra argomenti — 2026-11-01
+Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962108a357b. Leggerlo insieme a piano e registro quando l'utente riprende un argomento. Piano web già persistito, implementazione non avviata; ricordare stato e questioni aperte senza ricominciare la raccolta dei requisiti. Aggiornati AGENTS.md e lezioni con questa procedura. Nessuna modifica del programma o nuovo test.
