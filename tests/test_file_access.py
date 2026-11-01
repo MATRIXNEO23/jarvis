@@ -803,6 +803,7 @@ function New-Object {
         env={'request':request,'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
              'write_line':lambda *a:None,'submit_local':lambda **kw:calls.append(kw),
              'reconcile_document_session':lambda **kw:None,'try_telegram_voice_send':lambda s:False,
+             'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,
              'save_only_waiting':False,'doc_dialog':SimpleNamespace(phase='idle'),
              'parse_simple_save':lambda s:None,'project_voice_command':lambda s:projects.append(s) or True,
              'preference_command':lambda s:False,'handle_project_reference':lambda s:False,
@@ -822,4 +823,9 @@ function New-Object {
         request.get.return_value='apri Foto'
         env['send_console_input']()
         self.assertEqual(confirmations,['apri Foto'])
+        self.assertEqual(len(calls),1)
+        env['doc_dialog'].phase='idle'
+        env['pending_project_name']=True
+        env['send_console_input']()
+        self.assertEqual(projects,['apri progetto Romanzo','apri Foto'])
         self.assertEqual(len(calls),1)

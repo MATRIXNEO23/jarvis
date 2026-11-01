@@ -3599,7 +3599,8 @@ def main() -> None:
                 decision=doc_dialog.request_close_with_choice(message)
                 execute_document_choice(decision)
                 return
-        if try_file_command(message):
+        if (not (pending_project_name or pending_project_rename_id is not None
+                 or pending_project_trash_id is not None) and try_file_command(message)):
             request.set("")
             return
         if project_voice_command(message):
