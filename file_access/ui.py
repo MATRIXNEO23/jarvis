@@ -7,7 +7,7 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from .policy import contains
-from .windows import drives, known_folder
+from .windows import drives, known_folder, long_path
 
 
 class FolderSettings:
@@ -61,6 +61,10 @@ class FolderSettings:
         self.update_labels()
 
     def mark(self, path):
+        try:
+            path = long_path(path)
+        except OSError:
+            pass
         matches = [(Path(p), allow) for p, allow in self.rules.items() if contains(Path(p), path)]
         allowed = max(matches, key=lambda item: len(item[0].parts))[1] if matches else False
         children = [a for p, a in self.rules.items() if Path(p) != path and contains(path, Path(p))]
@@ -69,6 +73,10 @@ class FolderSettings:
         return '☑' if allowed else '☐'
 
     def insert(self, parent, path):
+        try:
+            path = long_path(path)
+        except OSError:
+            pass
         ident = self.tree.insert(parent, 'end', text='')
         self.paths[ident] = path
         self.tree.item(ident, text=self.mark(path)+' '+(str(path) if not parent else path.name))
@@ -103,7 +111,7 @@ class FolderSettings:
     def add_folder(self):
         value = filedialog.askdirectory(parent=self.window, title='Scegli una cartella da consentire')
         if value:
-            path = Path(value)
+            path = long_path(Path(value))
             self.rules[str(path)] = True
             self.insert('', path)
             self.update_labels()

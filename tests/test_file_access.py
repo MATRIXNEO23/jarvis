@@ -230,3 +230,18 @@ class FileAccessTests(unittest.TestCase):
         self.assertIn(self.a.name,result.message)
         self.assertFalse(env['try_file_command']('ieri ho visto un film'))
         self.assertIsNone(self.files.parse_command('il primo'))
+
+    def test_windows_short_names_do_not_change_access_or_consent(self):
+        import ctypes
+        from ctypes import wintypes
+        from file_access.windows import native_kernel, long_path
+        kernel = native_kernel()
+        kernel.GetShortPathNameW.argtypes = [wintypes.LPCWSTR,wintypes.LPWSTR,wintypes.DWORD]
+        buffer = ctypes.create_unicode_buffer(32768)
+        self.assertTrue(kernel.GetShortPathNameW(str(self.a),buffer,len(buffer)))
+        short = Path(buffer.value)
+        self.assertEqual(long_path(short),long_path(self.a))
+        self.assertTrue(self.files.policy.permits(short), (str(short),self.files.policy.rules()))
+        old = self.files.policy.rules()
+        self.files.policy.configure([(self.docs,True),(self.hidden,False)])
+        self.assertEqual(self.files.policy.rules(),old)

@@ -749,6 +749,8 @@ def main() -> None:
         active_context_label.set(
             "Contesto: "+project["name"][:35] if project_id else "Contesto: GENERALE")
         active_project_id=project_id
+        if addon_manager is not None and addon_manager._file_service is not None:
+            addon_manager.file_service.reset(project_id)
         conversation_epoch+=1
         conversation_memory.clear()
         pending_conversation.clear()
@@ -3073,7 +3075,10 @@ def main() -> None:
                             continue
                         route_type = "command"  # Push-to-talk already requires a manual press.
                         if voice_mode.get() == CONTINUOUS:
-                            if telegram_voice_dialog.pending:
+                            if (telegram_voice_dialog.pending or (addon_manager is not None
+                                    and addon_manager.files_enabled()
+                                    and addon_manager.file_service.parse_command(spoken) is not None
+                                    and addon_manager.file_service.parse_command(spoken)[0]=="select")):
                                 # The user already addressed Jarvis and is answering
                                 # a bounded question. Confirmation is still required.
                                 route_type="command"
@@ -3575,6 +3580,9 @@ def main() -> None:
         if handle_project_reference(message):
             request.set("")
             return
+        if try_file_command(message):
+            request.set("")
+            return
         if handle_unanchored_short_reply(message):
             request.set("")
             return
@@ -3642,6 +3650,8 @@ def main() -> None:
     def close() -> None:
         nonlocal closing
         closing = True
+        if addon_manager is not None and addon_manager._file_service is not None:
+            addon_manager.file_service.reset()
         planner_abort_event.set()
         doc_dialog.revoke_pending()
         dictation.disable()

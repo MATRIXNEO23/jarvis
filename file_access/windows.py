@@ -173,3 +173,20 @@ def installed_locations(query: str) -> list[tuple[Path, str]]:
             except OSError:
                 continue
     return found[:50]
+
+
+def long_path(path: Path) -> Path:
+    """Expand DOS 8.3 aliases without following a junction to another location."""
+    kernel = native_kernel()
+    kernel.GetLongPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    kernel.GetLongPathNameW.restype = wintypes.DWORD
+    current, tail = Path(path), []
+    while True:
+        buffer = ctypes.create_unicode_buffer(32768)
+        result = kernel.GetLongPathNameW(str(current), buffer, len(buffer))
+        if result and result < len(buffer):
+            return Path(buffer.value).joinpath(*reversed(tail))
+        if current.parent == current:
+            raise OSError('Nome del percorso non verificabile.')
+        tail.append(current.name)
+        current = current.parent

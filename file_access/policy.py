@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 import threading
-from .windows import resolved_path, volume_identity
+from .windows import resolved_path, volume_identity, long_path
 
 
 def contains(parent: Path, child: Path) -> bool:
@@ -92,9 +92,10 @@ class AccessPolicy:
         fresh = {}
         previous = {str(Path(r["path"])).casefold(): r for r in self.rules()}
         for path, allow in rules:
-            existing = previous.get(str(safe_path(path)).casefold())
+            lexical = long_path(safe_path(path))
+            existing = previous.get(str(lexical).casefold())
             if existing is not None and existing["allow"] == allow:
-                fresh[str(safe_path(path)).casefold()] = existing
+                fresh[str(lexical).casefold()] = existing
                 continue
             if type(allow) is not bool:
                 raise ValueError('Spunta non valida.')
@@ -143,7 +144,7 @@ class AccessPolicy:
 
     def permits(self, path: Path, *, resolved: bool = False) -> bool:
         try:
-            lexical = safe_path(path)
+            lexical = long_path(safe_path(path))
             actual = lexical if resolved else resolved_path(lexical)
             rows = self.valid_roots()
             def allowed(target):
