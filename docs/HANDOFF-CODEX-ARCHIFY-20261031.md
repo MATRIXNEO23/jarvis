@@ -104,3 +104,9 @@
 - Verifica preliminare in sola lettura: gestore .jaddon descrittivo limitato, da progettare adattatore; diagnostica statica/passiva esistente, non prova operativa del browser. Evidenze/blob nel piano.
 - Nessuna implementazione o test nuovo eseguito; nessuna misura RAM, nessuna build o distribuzione. Il valore 1–2 GB non è una misura. Non dichiarare estensione più leggera senza confronti.
 - Prossimo passo: revisione del piano con l'utente; completare inventario tecnico prima di modificare codice, rispettando la richiesta di discutere prima di costruire.
+
+## Chiarimento del ruolo dell'utente — 2026-11-01
+- L'utente decide obiettivi, priorità e compromessi; non deve programmare. L'assistente svolge il lavoro tecnico autorizzato e guida eventuali operazioni manuali sul PC con passi semplici e brevi, uno alla volta.
+- Evitare di trasferire all'utente scelte tecniche verificabili, ripetere domande già risolte o introdurre conferme per ogni micro-passaggio già autorizzato.
+- Regola persistente AGENTS.md commit e3e09f6045fd741aa12dcd905651b7922ae4ff10; piano aggiornato commit 62a68c40143649c3dc0f5e6434eff1bf4c97449e; registro commit d90796af2ab3c05f79b1f80a495d7bc71ce19fd7.
+- Solo documentazione modificata. Piano disponibile per revisione, nessuna implementazione web o prova funzionale avviata.
