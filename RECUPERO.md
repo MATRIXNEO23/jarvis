@@ -1,6 +1,9 @@
 # Recupero del lavoro Jarvis
 
-## Punto di arresto vigente — 2026-11-01
+## Aggiornamento vigente — progetti da discutere
+L'utente vuole definire e salvare le caratteristiche di ciascun progetto prima di implementare e discutere prima eventuali funzioni più semplici del browser. Aprire [indice implementabili](docs/IMPLEMENTABILI.md), poi la scheda pertinente in docs/implementabili/. Schede con requisiti, decisioni, prove e punto di ripresa; proposte distinte dalle approvazioni. Gli appunti sono documentazione dell'assistente nella repository, non una nuova funzione Jarvis. Il prossimo lavoro è la discussione delle priorità, non l'avvio automatico del web. Nessuna nuova implementazione autorizzata.
+
+## Punto di arresto precedente — 2026-11-01
 Audit concreto completato: base funzionante Jarvis-Timer-Audio-Fix2-20261031.zip, sorgenti esatti b936879a431370d206152be7b089baf587d15499; 155 file corrispondenti e ZIP riprodotto identico. Test locali 373 OK, 5 Windows-only saltati; CI storica verificata. Leggere per primo docs/VERIFICA-CONCRETA-BASE-20261101.md e Download/REGISTRO-VERSIONI.md per prove e limiti. Il ramo 5e61e53 è successivo e separato, non la base PC. Prima di eventuale sviluppo recuperare il commit b936879, non confondere i due comportamenti del microfono.
 Metodo e documenti allineati. Nuova add-on web non implementata, nessun pacchetto pubblicato. L'utente ha chiesto di fermarsi prima del codice. Attendere il successivo via dell’utente; poi verificare docs/STATO-ATTIVITA.md e completare la revisione tecnica della fase 1 del piano web; non ripetere domande già risolte e non dedurre autorizzazione al codice da una semplice richiesta di recupero.
 Questo è il punto d'ingresso per una nuova sessione di sviluppo con accesso al repository MATRIXNEO23/jarvis. Non è memoria runtime di Jarvis e non concede autorizzazioni nuove.
