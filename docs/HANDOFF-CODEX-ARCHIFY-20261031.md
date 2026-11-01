@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## In corso — struttura cartelle approvata e codice modulare
+2026-11-01: utente approva dischi selezionabili con sottocartelle ed eccezioni, prima delle scritture. Richiede codice add-on suddiviso in file comprensibili, evitando un unico file di migliaia di righe. Aggiornare regola persistente, scheda, stato e lezioni; nessun codice o pacchetto. Prossimo controllo: rilettura dei salvataggi, poi chiusura checkpoint.
+
 ## Checkpoint vigente — proposta selezione cartelle e fonti esistenti, 2026-11-01 pomeriggio
 L'utente propone selezione con spunte di unità/cartelle/sottocartelle e chiede interfaccia semplice; dettagli ancora da discutere. Proposta in WINDOWS: radici selezionabili, ereditarietà, eccezioni espandibili, stato parziale e riepilogo chiaro; caricamento sottocartelle su espansione senza scansione completa. Primo incremento sola lettura, protezione sistema non superata dalla spunta. La spunta autorizza Jarvis ma non concede diritti Windows/ACL/UAC. addon_ui.py base letto: esiste pannello gestore, configuratore cartelle da realizzare senza duplicarlo.
 Su richiesta cercate/aperti fonti primarie Everything Options/Exclude, Syncthing Ignoring Files e Microsoft Known Folders/WRP/SfcIsFileProtected. Tutti i riferimenti e limiti salvati: esempi per UI/regole, Windows per percorsi/protezioni; non installare quei programmi per le sole spunte, nessuna licenza/codice di riuso ancora selezionati. Filtri indice non sono controlli accesso; attributo system e risposta WRP negativa non classificano universalmente il sistema. Nessun database universale verificato. API Windows non provate sul PC.
