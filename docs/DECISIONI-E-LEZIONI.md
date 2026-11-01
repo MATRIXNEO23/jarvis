@@ -61,3 +61,8 @@ Conservare le soluzioni riuscite come riferimenti entro il loro ambito verificat
 
 ## 2026-11-01 — Continuità fra attività
 L'utente richiede recupero dei progetti precedenti anche dopo un cambio di argomento. Creato docs/STATO-ATTIVITA.md nel commit d074634e96b584c1a1f339176ea22962108a357b, con fonti e punti di ripresa per web, dialogo e metodo. Regola in AGENTS.md: recuperare dati confermati, distinguere proposte/autorizzazioni/esecuzione, aggiornare checkpoint prima di sospendere. Solo documentazione: nessuna nuova funzione runtime o test.
+
+## 2026-11-01 — Recupero iniziale e aggiornamento a ogni modifica
+**Decisione:** RECUPERO.md come ingresso unico, creato nel commit aa1bce7e0f56ce4ede2258fe5e6742f14ded4186; AGENTS.md ne impone la lettura all'avvio e collega indice/handoff/lezioni/piano. Aggiornare continuità per ogni modifica e prima di sospendere, raggruppando edit correlati in checkpoint coerenti.
+**Motivo:** recuperare fatti e autorizzazioni senza dipendere dal contesto della chat e senza ripetere lavoro o errori. Se una richiesta è incompatibile, proporre alternative motivate invece di seguirla alla cieca.
+**Limite:** regole documentali verificate per presenza, non un test con una nuova istanza; la sessione deve avere accesso al repository. Nessun caricamento automatico garantito in chat esterna; nessun nuovo test runtime o implementazione web.
