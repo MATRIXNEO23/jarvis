@@ -1,0 +1,25 @@
+{
+  "source_commit": "b936879a431370d206152be7b089baf587d15499",
+  "environment": {
+    "os": "Linux",
+    "python": "3.12.14"
+  },
+  "modules": [
+    "test_addon_lifecycle",
+    "test_capability_registry",
+    "test_live_capabilities",
+    "test_local_engine",
+    "test_conversation_router",
+    "test_voice_control",
+    "test_document_execution",
+    "test_voice_project_documents"
+  ],
+  "collected": 88,
+  "passed": 88,
+  "skipped": [],
+  "failures": 0,
+  "errors": 0,
+  "scope": "Baseline regressions only. Windows launches and GPT replies mocked where used; no new add-on implemented.",
+  "method": "TestSuite(defaultTestLoader.discover(\"tests\", pattern=module+\".py\") for each selected module), TextTestRunner(verbosity=2)",
+  "reproduction_command": "PYTHONPATH=tests python -m unittest test_addon_lifecycle test_capability_registry test_live_capabilities test_local_engine test_conversation_router test_voice_control test_document_execution test_voice_project_documents -v"
+}

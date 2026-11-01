@@ -1,0 +1,76 @@
+{
+  "commit": "b936879a431370d206152be7b089baf587d15499",
+  "scope": "Only 14 files pertinent to this review, not a repeat audit of all packages",
+  "files": [
+    {
+      "path": "addon_manager.py",
+      "sha256": "6882ccd1a44821f1e16f4741954da54fa1ae08f7b2cf7fc150f13976f7dd52a5",
+      "matches_source_commit": true
+    },
+    {
+      "path": "addon_ui.py",
+      "sha256": "eef3d3b490ce8ff27d590d25ed45da112c0f9651d4703a7947eed41a57045eb9",
+      "matches_source_commit": true
+    },
+    {
+      "path": "live_capabilities.py",
+      "sha256": "5152227abda8f0a374489aced0a21489263ae7dd6e1aab4ba2c5f9ff884a1510",
+      "matches_source_commit": true
+    },
+    {
+      "path": "capability_registry.py",
+      "sha256": "377185db898aec3f8265e615e803e058f86f0a659f928b91eba012e44da97fd9",
+      "matches_source_commit": true
+    },
+    {
+      "path": "conversation_router.py",
+      "sha256": "c5a1987f1f434b1ef900d0a3bc3d31c643982e0e8b80b9debee4c58632b8def7",
+      "matches_source_commit": true
+    },
+    {
+      "path": "local_engine.py",
+      "sha256": "2893126541915c128868323ef6fc5381616ca4a14f933440fca9b3b4a812a1cf",
+      "matches_source_commit": true
+    },
+    {
+      "path": "jarvis.py",
+      "sha256": "712c7667d6f7ed6fbf54e4f048cfc620d13f6d77ba0d7b0d771c92e9f4a5885f",
+      "matches_source_commit": true
+    },
+    {
+      "path": "voice_control.py",
+      "sha256": "c9e4287a79bccdd66daff810f85a1fa9d3cf1944b07e8daab517a034ac6ed7fa",
+      "matches_source_commit": true
+    },
+    {
+      "path": "dialogue_focus.py",
+      "sha256": "f74b12d3f9125bcec6f7ef5427b1122931c08ed87b6e912d4c0ad1d100c16458",
+      "matches_source_commit": true
+    },
+    {
+      "path": "managed_documents.py",
+      "sha256": "11541bf7c6047902d9f2b7279bb26dcd965da8fc5c9ccd3b0de7411bf104e9a9",
+      "matches_source_commit": true
+    },
+    {
+      "path": "document_store.py",
+      "sha256": "b98a0020658109e8ee47a1432c3e3217d133646c6d3dfac23e499a64c3a2473b",
+      "matches_source_commit": true
+    },
+    {
+      "path": "project_documents.py",
+      "sha256": "d868771b0916b8e44c74628869f2a75db6a4d07d787709437073fb29b3e433a3",
+      "matches_source_commit": true
+    },
+    {
+      "path": "settings.py",
+      "sha256": "c89c3e1dd050b506fd570a294db0d86e81a14f7a3ea30f846a4a8dbbe88d6e16",
+      "matches_source_commit": true
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "sha256": "cef0aa9f0fb96d0edf5fd26086c32959a5d1ffb4713a7cb81eb04cfd89aafc9f",
+      "matches_source_commit": true
+    }
+  ]
+}

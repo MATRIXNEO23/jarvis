@@ -1,5 +1,9 @@
 # Istruzioni persistenti — Jarvis
 
+## Interpretare gli obiettivi, proporre la soluzione minima — 2026-11-01
+Precisazione dell'utente: le sue descrizioni ed esempi specificano la funzione finale desiderata, non un'architettura da tradurre letteralmente in moduli. L'assistente deve proporre la soluzione tecnica in parole semplici, dopo aver verificato codice e funzioni Windows reali. Prima riusare e integrare quanto esiste; aggiungere codice/moduli soltanto per lacune dimostrate. Non fissare framework, nuovi schemi, processi o numero di file prima di provarne la necessità. Cartella add-on e separazione per responsabilità restano requisiti di leggibilità, non un obbligo di frammentare ogni comando. Conservare leggerezza sul Pavilion, prove osservabili e distinzione fra proposta, verifica e implementazione; niente soluzioni complesse inventate per soddisfare esempi di dialogo.
+Se resta un dubbio sostanziale su risultato, ambito o comportamento desiderato, chiedere conferma con una domanda breve e poche opzioni concrete, indicando la raccomandazione e l'effetto di ciascuna. Non inventare preferenze dell'utente. Le scelte tecniche ordinarie verificabili restano responsabilità dell'assistente: non chiedere conferme ripetute per dettagli già autorizzati.
+
 ## Avvio e recupero automatico del contesto di sviluppo
 All'avvio di una sessione con accesso a questo repository, prima di proporre o implementare lavoro leggere RECUPERO.md e seguirne l'ordine di lettura. Recuperare autonomamente handoff, indice, lezioni e piano pertinente senza chiedere all'utente di ricostruire la storia. Verificare lo stato con il codice corrente; non dichiarare recupero completo se le fonti non sono accessibili.
 

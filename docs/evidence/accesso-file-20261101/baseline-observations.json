@@ -1,0 +1,12 @@
+{
+  "source_commit": "b936879a431370d206152be7b089baf587d15499",
+  "observed": {
+    "search_scope": "Downloads files only; excludes outside file and directory name",
+    "addon_arguments": "Nonempty arguments rejected even for active addon",
+    "general_file_provider": "files.search manifest target rejected",
+    "voice_exact_search": "No speech_to_local_command mapping for cerca file",
+    "short_reply": "il secondo classified ambiguous; application guard inspected separately, not exercised by this probe"
+  },
+  "checks": 5,
+  "scope": "Local baseline only; no new add-on or Windows test"
+}

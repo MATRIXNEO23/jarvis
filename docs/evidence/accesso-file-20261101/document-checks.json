@@ -1,0 +1,11 @@
+{
+  "scope": "documentation and development-only reproduction evidence",
+  "runtime_files_changed": false,
+  "package_changed": false,
+  "local_links_checked": 48,
+  "broken_local_links": 0,
+  "json_parse": "PASS",
+  "reproduction_script_syntax": "PASS",
+  "baseline_test_log_count": 88,
+  "windows_integration_executed": false
+}

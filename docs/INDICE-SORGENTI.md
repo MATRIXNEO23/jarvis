@@ -18,6 +18,8 @@ Verificato il 2026-11-01 con inventario Git ricorsivo non troncato: 167 voci, 16
 - Prima di ogni lavoro verificare nuovamente ramo/SHA, diff e codice; prima di rilasciare collegare il pacchetto a un commit preciso dei sorgenti.
 
 ## Punti d'ingresso già presenti
+Per l'accesso file sulla base b936879: [inventario mirato e proposta semplice](implementabili/ACCESSO-FILE-CONTRATTO.md), con collegamenti immutabili ai punti del codice e [integrità dei 14 file](evidence/accesso-file-20261101/source-integrity.json). La cartella del componente e la divisione dei file sono da realizzare secondo necessità effettiva; nessun nuovo schema/framework o numero di moduli prescritto. Prova nativa Windows da eseguire prima di promuovere il collegamento a soluzione verificata.
+
 | Area | File da leggere sul ramo evoluto |
 |---|---|
 | Applicazione e integrazione UI | jarvis.py, settings.py |

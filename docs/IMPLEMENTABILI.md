@@ -1,15 +1,15 @@
 # Cose implementabili — Jarvis
-Aggiornato: 2026-11-01. **Stato: discussione delle alternative prima dell'implementazione.** Il browser non è una priorità obbligata. Nessuna delle nuove proposte qui sotto è approvata per il codice.
+Aggiornato: 2026-11-01. **Stato: accesso file prioritario, inventario/contratto e revisione iniziale completati; prova Windows e codice runtime ancora da eseguire.** Il browser resta sospeso. Requisiti approvati, prove e implementazione sono distinti nelle schede.
 
 ## Indice delle schede
 | ID | Funzione | Stato | Complessità preliminare | Prossimo passo |
 |---|---|---|---|---|
-| WINDOWS | [File, cartelle e programmi](implementabili/WINDOWS.md) | Requisiti utente in discussione; lettura codice/fonti svolta | Avvio programmi più circoscritto; ricerca generale da progettare | Riuso Windows prima di nuove dipendenze; chiarire verifiche sui file |
+| WINDOWS | [File, cartelle e programmi](implementabili/WINDOWS.md) | Accesso file generale prioritario; [proposta semplice/revisione iniziale](implementabili/ACCESSO-FILE-CONTRATTO.md) salvate; 88 regressioni della base OK | Riuso Jarvis/Windows, collegamento parametrico e policy mancanti | Prova nativa Windows circoscritta, poi percorso completo su b936879 |
 | CRONOMETRO | [Cronometro](implementabili/CRONOMETRO.md) | Proposta dell'assistente da discutere | Potenzialmente bassa; da verificare col timer esistente | Chiarire utilità e funzioni minime |
 | PROMEMORIA | [Promemoria locali](implementabili/PROMEMORIA.md) | Proposta dell'assistente da discutere | Media per persistenza, riavvio e scadenze | Concordare comportamento a PC spento |
 | WEB | [Navigazione browser](implementabili/WEB.md) | Requisiti raccolti; revisione tecnica sospesa | Alta rispetto a un modulo locale senza servizi esterni | Discutere prima le alternative; nessuna precedenza automatica |
 
-Le difficoltà sono stime di pianificazione, non misure o esiti di fattibilità. Le prime due idee sono suggerimenti dell'assistente, non richieste già approvate dall'utente. Non fissare ordine di sviluppo finché la discussione non lo definisce. Un miglioramento di funzione esistente non richiede necessariamente una nuova add-on.
+Le difficoltà sono stime di pianificazione, non misure o esiti di fattibilità. Cronometro e promemoria sono suggerimenti dell'assistente, non richieste già approvate dall'utente. L'utente ha scelto l'accesso file come priorità; non cambiare l'ordine senza una nuova indicazione. Un miglioramento di funzione esistente non richiede necessariamente una nuova add-on.
 
 ## Come riprendere
 Per «riprendiamo il cronometro» aprire la relativa scheda: obiettivo, stato/autorizzazioni, decisioni, prove, dubbi e prossimo passo. Leggere i riferimenti puntuali e verificare i soli componenti coinvolti; non ricostruire ogni volta tutti i commit/artifact. Per tornare a una build usare [registro versioni](../Download/REGISTRO-VERSIONI.md).
