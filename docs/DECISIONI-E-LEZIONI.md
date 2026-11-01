@@ -184,3 +184,7 @@ Richiesta: spunte per dischi/cartelle e sottocartelle, interfaccia semplice. Pro
 
 ## 2026-11-01 — Riferimenti esistenti per cartelle e protezioni
 Su richiesta cercati/aperti documenti primari Everything Options/Exclude, Syncthing Ignoring Files e Microsoft Known Folders/WRP/SfcIsFileProtected. Proposta: riusare il modello di selezione con eccezioni e informazioni locali Windows, senza installare i due prodotti o un nuovo indicizzatore per avere le spunte. Filtri indice non sono barriera di accesso; attributo system o risposta WRP negativa non bastano a classificare tutti i file di sistema. Nessun database universale verificato e nessun codice/licenza di riuso selezionati. Fonti/differenze/limiti nella scheda WINDOWS; ricerca documentale soltanto. Dettagli UI/policy ancora proposti, da discutere e collaudare prima della consegna.
+
+
+## 2026-11-01 — Struttura dischi/eccezioni approvata, add-on leggibili
+Utente approva la struttura semplice dischi/cartelle con sottocartelle ed eccezioni prima delle scritture. Richiede codice delle add-on separato per responsabilità e analizzabile, evitando un solo file di migliaia di righe. Regola persistente AGENTS, scheda WINDOWS e stato aggiornati; LEGGIMI come mappa, test pertinenti e verifica import/pacchetto dopo implementazione. Nessun numero massimo righe imposto, nuovo framework o migrazione del nucleo decisi. Solo documentazione; nessun codice, nuova suite runtime o consegna.
