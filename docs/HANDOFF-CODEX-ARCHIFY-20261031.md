@@ -250,3 +250,10 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Unità in corso: confrontare i byte dello ZIP confermato con la storia sorgente; eseguire suite inclusa e sintassi disponibili; verificare guide, mappa e riferimenti. Annotare difetti senza correggere il runtime durante questo audit.
 - File previsti: rapporto VERIFICA-CONCRETA-BASE, evidenze sintetiche/log di test, registro versioni, indice sorgenti, stato, recupero, piano, lezioni e questo handoff. Nessuna nuova add-on, build, installazione o modifica dei dati utente.
 - Arresto richiesto: allineamento del metodo e dei dati reali; presentare esito e limiti, fermarsi prima del codice web. Il precedente prossimo passo generico «revisione web» è subordinato alla chiusura di questo audit.
+
+## 2026-11-01 — Audit fasi 1–3 verificato, allineamento documenti in corso
+- Download diretto HTTP 200, 406653 byte e SHA-256 c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352; byte identici allo ZIP versionato. CRC e percorsi PASS.
+- Tutti i 155 file dell'archivio coincidono con b936879a431370d206152be7b089baf587d15499. Conferma indipendente dal log del job 124620508446, run 41229495866 SUCCESS: SOURCE_COMMIT, FILES, ZIP_BYTES e SHA256 corrispondono.
+- Sullo ZIP estratto: Python 3.12.14, Linux; 373 test, OK, 5 skip Windows/Tk; compileall e node --check (Node 24.22.1) PASS. La prova locale non copre login, audio, microfono o Windows reale.
+- Rispetto al ramo 5e61e53: 145 file identici, 10 modificati e 5 aggiunti; correzione a86c2c9 assente dallo ZIP. Baseline avvia il microfono secondo auto_listen; codice successivo impone standby. Nessun cambio runtime autorizzato in questo audit.
+- Restano aggiornamento dei documenti e controllo finale dei riferimenti. Nessuna implementazione web o nuova distribuzione.
