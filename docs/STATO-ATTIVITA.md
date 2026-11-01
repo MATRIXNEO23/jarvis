@@ -49,6 +49,9 @@ L'utente conferma dialogo naturale: Jarvis deve distinguere conversazione, richi
 ## Priorità vigente — accesso generale a file e cartelle
 Aggiornamento pomeridiano: l'utente vuole partire dai file, non da una sola app campione. Funzione generale su cartelle accessibili fuori dal sistema, primo incremento in sola lettura; obiettivo più ampio RW/cancellazione fuori dal sistema e sistema solo lettura da progettare. Non richiedere nome di programma come prerequisito. Applicare tutti i requisiti .jaddon/cartella/riuso/dialogo/test/consegna/recupero, non duplicare la ricerca esistente. Dettagli e limiti in WINDOWS.md; nessun codice/test runtime/pacchetto. I precedenti «primo incremento app» sono superati per priorità, restano requisiti da riprendere.
 
+## Profilo e ricerca automatici
+Jarvis deve rilevare account/profilo Windows e percorsi reali delle cartelle note senza input manuale o nomi dedotti dalla chat; usare Windows Search dove disponibile e distinguere indice incompleto da file assente. Fonti Known Folders/profilo e criteri di prova aggiunti nella scheda WINDOWS. Nessun accesso reale al PC, implementazione o test nuovi.
+
 ## Prossimo passo corrente
 Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
 
