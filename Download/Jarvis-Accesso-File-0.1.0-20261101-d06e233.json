@@ -1,0 +1,11 @@
+{
+  "source_commit": "d06e233a98e4ea5b4e99a9d296b9570ce0c92d86",
+  "archive": "Jarvis-Accesso-File-0.1.0-20261101-d06e233.zip",
+  "files": 79,
+  "bytes": 266689,
+  "sha256": "ac130883d32518b430737f8f3d767a16a56e3cad9b3ae32f37d8f20799f42699",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "windows_workflow_run": "41350638557",
+  "pc_test": "pending"
+}
