@@ -239,3 +239,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - L'utente chiarisce che la build funzionante è il primo file scaricabile in cima a Download/README.md.
 - Riletto il catalogo: primo ZIP Jarvis-Timer-Audio-Fix2-20261031.zip. Metadati directory verificati: 406653 byte, Git blob SHA 6aa9e6f9eb040dc7390b4edb55c9ae175bd4e512, uguali al riferimento immutabile inventariato.
 - Aggiornare il puntatore BASE-UTENTE-20261101 con nome esatto e conferma PC; nessuna domanda identificativa ulteriore necessaria. Commit sorgente interno della ZIP ancora da associare prima di modificarne il codice; non attribuire automaticamente a86c2c9.
+
+## 2026-11-01 — In corso: verifica concreta autorizzata della base
+- L'utente richiede di pianificare e avviare le verifiche concrete per allineare i dati, senza deduzioni inventate. Piano in docs/VERIFICA-CONCRETA-BASE-20261101.md.
+- ZIP reale acquisito: 406653 byte, blob 6aa9e6f9eb040dc7390b4edb55c9ae175bd4e512, SHA-256 c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352. CRC/percorso/estrazione: PASS, 155 voci. Baseline utente identificata; confronto sorgenti e test inclusi prossimi.
+- Nessun codice modificato né add-on iniziata; questo audit è autorizzato, la successiva implementazione resta sospesa.
