@@ -1,8 +1,8 @@
 # Piano proposto — add-on web e diagnostica Jarvis
-Data: 2026-11-01. Stato: requisiti raccolti e piano da rivedere con l'utente; nessuna implementazione avviata, nessun nuovo test eseguito o pacchetto prodotto.
+Data: 2026-11-01. Stato di arresto: metodo/requisiti/documenti allineati; revisione tecnica del progetto web ancora da completare. Nessuna implementazione, nuovo test runtime o pacchetto. L'utente ha chiesto di fermarsi qui, prima del codice.
 
 ## Risultato richiesto
-- GPT esterno interpreta richieste naturali, confronta risultati e pagine, segue link intermedi e propone le azioni; il motore locale mantiene lo stato dell'attività, controlla ed esegue le azioni, restituisce osservazioni ed esiti.
+- Comando preciso supportato e completo: gestione locale senza GPT. Richiesta non risolta/ambigua: GPT esterno, se consentito e collegato, interpreta la richiesta e i dati delle pagine e propone l'azione disponibile; il motore mantiene lo stato, valida, esegue e restituisce l'esito. Se resta dubbio, domanda contestuale e risposta breve.
 - Cercare il sito richiesto e aprire la destinazione attendibile, senza fermarsi al motore di ricerca. Nessuna fonte fissa: GiardiniBlog e CB01 erano esempi. In caso di dubbio residuo chiedere all'utente e interpretare «il secondo» nella stessa attività.
 - Continuare sul sito aperto: leggere contenuti, riconoscere una ricerca interna, compilare il campo, attivare il pulsante e controllare i risultati. Individuare la pagina e gli elementi attuali; non dichiarare successo per il solo invio di un comando.
 - Browser visibile, Edge primo candidato; alternativa proposta: estensione Edge e collegamento locale gestito da .jaddon. Nessun obbligo di Playwright.
@@ -62,9 +62,9 @@ Dopo ogni fase e prima di una pausa aggiornare i documenti. Non avanzare su dipe
 Stato iniziale:
 - Raccolta requisiti e lettura preliminare dei moduli: completate; evidenze nelle sezioni sopra.
 - Procedura persistente: aggiunta ad AGENTS.md su main.
-- Fasi 1–8: pianificate, non completate. La lettura preliminare non equivale a verifica completa di integrazione.
+- Fase 1: inventario preliminare svolto, revisione tecnica completa ancora da concludere; lavoro sospeso per richiesta dell'utente. Fasi 2–8: da fare. La lettura preliminare non equivale a verifica completa di integrazione.
 - Implementazione web, autoverifiche, prova Edge/Jarvis, misure RAM e pacchetto: non eseguiti.
-- Prossimo passo: rivedere con l'utente il piano e le questioni aperte; dopo autorizzazione passare all'inventario tecnico completo della fase 1.
+- Prossimo passo, alla ripresa: completare la revisione tecnica della fase 1, confrontare soluzioni esistenti e adattamento, definire contratto e limiti dell'integrazione. Presentare il risultato; nessun codice prima del successivo via dell'utente.
 
 ## Responsabilità e guida
 L'utente prende decisioni su risultato, priorità e compromessi; non deve programmare. L'assistente prepara e realizza il lavoro tecnico autorizzato, esegue le verifiche disponibili e conserva le prove. Le sole attività sul Pavilion che richiedono intervento dell'utente saranno guidate con passi brevi, uno alla volta, e un risultato da osservare. Niente domande tecniche scaricate sull'utente o ripetute conferme sui dettagli già autorizzati.
@@ -118,3 +118,16 @@ Ogni nuova add-on va progettata per HP Pavilion i3-2100/10 GB RAM/Windows 10, no
 L'utente approva la precedenza dei gestori locali: comando supportato e completo riconosciuto con certezza → azione locale senza richiesta al modello. Richiesta ambigua o formulazione diversa non risolta → interpretazione GPT esterna, quando abilitata/collegata → azione definita validata dal motore. Solo se resta dubbio fare domanda contestuale; la risposta breve riprende l'attività pendente. Questa scelta precisa, senza estendere l'ambito, i paragrafi precedenti sul percorso vocale completo: la chiamata GPT non è obbligatoria per ogni comando.
 Evidenza dal codice letto: voce in Conversazione GPT prova gestori locali e poi fallback; altre modalità possono inserire la frase nel campo invece di inviarla al modello. L'integrazione deve definire il comportamento per ciascuna modalità rispettando selezione manuale e GPT ON/OFF; nessuna modifica runtime eseguita ora.
 Aggiungere ai criteri di prova: assenza di chiamata GPT per comando preciso, interpretazione della parafrasi, conferma riferita all'azione pendente, gestione offline e assenza di doppia esecuzione. Le conferme già richieste dalle funzioni esistenti rimangono rispettate.
+
+## Fotografia finale delle fasi — punto di arresto
+| Attività | Stato | Prova/limite |
+|---|---|---|
+| Raccolta requisiti e decisioni di comportamento | Completata | Scelte registrate, compreso percorso ibrido locale/GPT |
+| Metodo, istruzioni, indice sorgenti e recupero | Allineati documentalmente | Coerenza dei riferimenti e degli stati controllata; nessuna prova runtime |
+| Fase 1: progetto tecnico | Parzialmente svolta, sospesa | Moduli e limiti letti; contratto, permessi, confronto alternative e revisione tecnica completa pendenti |
+| Fasi 2–6: collegamento, lettura, azioni, GPT, UI/recupero | Da fare | Codice, estensione e nuovi test non realizzati |
+| Fase 7: regressioni e prestazioni | Da fare | Nessuna nuova misura o CI per il web |
+| Fase 8: pacchetto e link Download | Da fare | Nessuna nuova add-on installabile |
+
+Prima di scegliere componenti nuovi cercare soluzioni e codice sul web, confrontando riuso/adattamento/sviluppo con fonti originali, licenze, costi, semplicità e consumo. La scelta dell'estensione Edge resta candidata da validare, non una decisione tecnica già provata. Nessuna fonte web fissa per la ricerca dei siti.
+Alla ripresa non ricominciare la raccolta dei requisiti. Ripartire dalla revisione tecnica della fase 1, rispettando il fermo prima dell'implementazione. Se resta una scelta di prodotto non deducibile, porre una domanda specifica.
