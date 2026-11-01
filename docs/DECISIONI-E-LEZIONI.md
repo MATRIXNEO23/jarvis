@@ -36,3 +36,11 @@ Conservare le soluzioni riuscite come riferimenti entro il loro ambito verificat
 **Errori scartati:** primo conteggio con len Python insufficiente per emoji/escaping, corretto con unità UTF-16; prima conservazione della domanda finale produceva un prefisso residuo, corretto il separatore. Entrambi restano nei test per evitare ricadute. Non promuovere tentativi precedenti a riferimenti.
 
 **Limiti:** collaudo GPT/Pavilion non eseguito, nessun pacchetto distribuito. Archify aggiornato: tre gate PASS, browser-check assente per Chrome mancante. Il dedup confronta solo prefissi disponibili nei vecchi archivi; i dati già troncati non si ricostruiscono. Dettagli e piano di collaudo in CORREZIONE-NUCLEO-DIALOGO-20261031.md.
+
+
+## 2026-11-01 — Dialogo reale: riscontro positivo riferito dall'utente
+**Prova disponibile:** Alberto riferisce durante uso reale che Jarvis «mantiene abbastanza il contesto» ed è «molto migliorato».
+
+**Decisione e motivo:** registrare un miglioramento percepito nell'uso reale, distinguendolo dai test automatici e da un collaudo completo. Il feedback aggiorna la precedente mancanza di riscontri pratici; non prova da solo tutte le regressioni.
+
+**Limiti:** versione/SHA sul PC non verificato, nessuna misura del numero di turni o ispezione dei prompt. Non attribuire automaticamente il risultato al commit a86c2c9; riavvio, progetti, salvataggi e microfono restano da collaudare. Nessun nuovo test o pacchetto in questa fase. Dettagli nel handoff, sezione 2026-11-01.
