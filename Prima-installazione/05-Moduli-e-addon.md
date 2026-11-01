@@ -1,5 +1,5 @@
 # 5. Impostazioni dei moduli inclusi
-Le etichette seguenti sono lette dal riferimento 5e61e53. Pacchetti di altre fasi possono avere posizioni diverse.
+Le etichette seguenti corrispondono al codice della base b936879; le funzioni ancora soltanto progettate sono indicate separatamente. Pacchetti di altre fasi possono avere posizioni diverse.
 
 | Modulo | Preparazione | Dove configurare | Prova breve |
 |---|---|---|---|
