@@ -182,3 +182,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Evidenze: letti script GPT/voce/Telegram, configurazione Telegram, percorsi dati e diagnostica; raccolti import di 60 moduli Python non-test del riferimento evoluto 5e61e53. Dipendenze dirette facoltative individuate: Vosk, sounddevice e Telethon; FFmpeg eseguibile per OGG/Opus, Node/npm e SDK fissato per GPT, SAPI/PowerShell Windows per TTS. Nessuna installazione eseguita.
 - Contraddizioni reali: README/guida voce/LEGGIMI/echo launcher citano microfono ON, mentre codice corretto e preparatore avviano in standby; documentazione vecchia non va seguita alla cieca. Launcher usa profilo Trial, SDK/modello possono restare condivisi nel profilo base.
 - Previsto: cartella Prima-installazione con guida iniziale, moduli, ripristino e diagnostica, più regole manutenzione/riordino; nessuna cancellazione di sorgenti o aggiunta di funzioni runtime durante questa fase.
+
+## 2026-11-01 — In corso: completamento guide e criterio di consegna
+- Create nove guide in Prima-installazione su main, da verificare nei riferimenti; nessuna build applicativa nuova. Ultimo commit guide 238be19be7ee0f1036b42aa7863219fc7962c71b.
+- Nuova richiesta: non annunciare una funzione/add-on come implementata e installabile finché il pacchetto verificato non è pubblicato e linkato in Download/README.md con download funzionante. Prima riportare soltanto lo stato intermedio reale.
+- Previsto: collegare le guide dall'ingresso principale, salvare regole su manutenzione/riordino/domande e consegna, verificare i file e chiudere il checkpoint. Nessun pacchetto o link Download fittizio da creare.
