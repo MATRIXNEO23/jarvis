@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "accesso_file",
+  "name": "Accesso file",
+  "version": "0.1.0",
+  "description": "File e cartelle consentiti: ricerca, lettura e apertura controllata tramite Windows.",
+  "actions": [
+    {"id":"addon.accesso_file.elenca","description":"Elenca una cartella consentita, senza modifiche.","example":"elenca cartella documenti","core_action":"files.list"},
+    {"id":"addon.accesso_file.cerca","description":"Cerca file e cartelle per nome o indizi nelle radici selezionate.","example":"cerca file preventivo","core_action":"files.search"},
+    {"id":"addon.accesso_file.leggi","description":"Legge testo del risultato scelto, spiegazione se richiesta.","example":"leggi file 1","core_action":"files.read"},
+    {"id":"addon.accesso_file.apri","description":"Apre cartella in Explorer o testo in vista senza modifica.","example":"apri cartella 1","core_action":"files.open"},
+    {"id":"addon.accesso_file.localizza","description":"Trova cartelle candidate del programma da registrazioni Windows.","example":"trovami cartella installazione Firefox","core_action":"files.locate"}
+  ]
+}

@@ -629,6 +629,10 @@ def main() -> None:
                 parsed={"breve":parsed}
             if not isinstance(parsed,dict):
                 return raw
+            if addon_manager is not None and addon_manager.files_enabled():
+                file_hint=addon_manager.file_service.context_hint()
+                if file_hint:
+                    hint["file_results"]=file_hint
             if hint:
                 parsed["focus"]=hint
             if preference_store is not None:
@@ -2158,6 +2162,8 @@ def main() -> None:
 
     try:
         engine = LocalEngine()
+        if addon_manager is not None:
+            engine.file_access = addon_manager.file_service
     except (OSError, ValueError) as exc:
         messagebox.showerror("Motore locale non disponibile", str(exc), parent=root)
         root.destroy()
@@ -2626,9 +2632,34 @@ def main() -> None:
             write_line("TIMER > Tempo rimasto: " + timer.remaining_text())
         return True
 
+    def try_file_command(message: str) -> bool:
+        if addon_manager is None or not addon_manager.files_enabled():
+            return False
+        provider=addon_manager.file_service
+        if provider._context != active_project_id:
+            provider.reset(active_project_id)
+        parsed=provider.parse_command(message)
+        if parsed is None:
+            # A new conversation topic revokes an old numbered selection.
+            if not any(word in message.casefold() for word in
+                       ("file","cartella","quello","questo","aprilo","leggilo")):
+                provider.reset(active_project_id)
+            return False
+        operation,args=parsed
+        if operation=="cancel":
+            provider.cancelled.set()
+            write_line("FILE > Interruzione richiesta; attendo la chiusura della chiamata Windows.")
+            return True
+        if busy_local:
+            write_line("FILE > Ricerca/operazione in corso. Puoi dire ‘annulla ricerca’.")
+            return True
+        submit_local(message_override=message,source_utterance=message,file_call=parsed)
+        return True
+
     def submit_local(event=None, message_override: str | None = None,
                      source_utterance: str = "",
-                     addon_action_id: str = "") -> None:
+                     addon_action_id: str = "",
+                     file_call=None) -> None:
         nonlocal busy_local, last_user_for_action, project_local_ticket
         nonlocal local_operation_id
         if closing:
@@ -2684,7 +2715,8 @@ def main() -> None:
                         result=TaskResult("-","addon","rejected",
                                           "Add-on disattivato prima dell'esecuzione.")
                     else:
-                        result = engine.execute(message)
+                        result = (engine.execute_file(*file_call) if file_call is not None
+                                  else engine.execute(message))
                 output_queue.put(("local", result))
             except Exception:
                 output_queue.put(("local", TaskResult("-", "internal", "failed",
@@ -2696,6 +2728,9 @@ def main() -> None:
             return
         message = request.get().strip()
         if not message:
+            return
+        if try_file_command(message):
+            request.set("")
             return
         # Timer commands are local, independent of GPT connectivity.
         if try_timer_command(message):
@@ -2949,6 +2984,8 @@ def main() -> None:
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
                             write_line("TU > " + spoken)
+                            if try_file_command(spoken):
+                                continue
                             if try_timer_command(spoken):
                                 continue
                             # Safe local diagnostics must not wait for a GPT
@@ -3054,6 +3091,9 @@ def main() -> None:
                         # Log commands that passed the wake/press gate.
                         # Do not record free dictation or phrases ignored by wake.
                         write_line("TU > " + spoken)
+                        if try_file_command(spoken):
+                            continue
+
                         if try_timer_command(spoken):
                             continue
                         if try_self_diagnostic(spoken):
@@ -3103,6 +3143,16 @@ def main() -> None:
                         runtime_events.record("local_failure")
                     busy_local = False
                     write_line(f"[{result.status}] {result.message}")
+                    if result.preview_path:
+                        from file_access.ui import show_preview
+                        show_preview(root,result.preview_path,result.preview)
+                        if result.explain:
+                            if gpt_enabled.get() and active_gpt and not busy_gpt:
+                                from file_access.service import explanation_prompt
+                                run_gpt("ask",prompt=explanation_prompt(result.preview),
+                                        source="Spiega il file letto su mia richiesta")
+                            else:
+                                write_line("FILE > Testo letto. Per spiegarlo collega GPT e ripeti ‘spiega file …’.")
                     source = last_user_for_action or result.action
                     last_user_for_action = ""
                     # A successful subprocess launch is only reported, not
@@ -3285,6 +3335,15 @@ def main() -> None:
                                               if documents.current else None)
                                 if cap is None:
                                     announce_document("Azione non disponibile.")
+                                elif cap.handler == "file_access":
+                                    if (addon_manager is None or not addon_manager.is_active(cap.action_id)):
+                                        speak_result("Accesso file non è più attivo.")
+                                    elif not busy_local:
+                                        submit_local(message_override=original_phrase,
+                                            source_utterance=original_phrase,addon_action_id=cap.action_id,
+                                            file_call=(cap.file_operation,dict(cap.file_arguments)))
+                                    else:
+                                        speak_result("Operazione file già in corso.")
                                 elif cap.handler == "local" and cap.plan is not None:
                                     # A GPT proposal cannot retain permission after
                                     # a local add-on is disabled or uninstalled.

@@ -27,6 +27,8 @@ _ID = re.compile(r"^[a-z][a-z0-9_]{1,30}$")
 _SUB = re.compile(r"^[a-z][a-z0-9_]{1,35}$")
 _VERSION = re.compile(r"^(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]{0,3})$")
 _SAFE_TARGETS = frozenset(("system.status", "downloads.list", "history.list"))
+_FILE_TARGETS = {"files.list": "elenca", "files.search": "cerca", "files.read": "leggi",
+                 "files.open": "apri", "files.locate": "localizza"}
 MAX_ADDONS = 20
 MAX_ACTIONS = 5
 MAX_FILE_BYTES = 12_000
@@ -70,8 +72,11 @@ def validate_manifest(value: object) -> dict:
                 or name in seen):
             raise AddonError("ID azione duplicato o non appartenente all'add-on.")
         if (not isinstance(item["core_action"],str)
-                or item["core_action"] not in _SAFE_TARGETS):
+                or item["core_action"] not in (_SAFE_TARGETS | _FILE_TARGETS.keys())):
             raise AddonError("Funzione add-on non approvata: nessun codice viene eseguito.")
+        if item["core_action"] in _FILE_TARGETS and (addon_id != "accesso_file" or
+                name != "addon.accesso_file."+_FILE_TARGETS[item["core_action"]]):
+            raise AddonError("Identità del componente Accesso file non valida.")
         if not _safe_text(item["description"], 125) or not _safe_text(
                 item["example"], 85):
             raise AddonError("Testo dell'azione non valido.")
@@ -125,6 +130,7 @@ class AddonManager:
         self.folder=(Path(folder) if folder is not None else
                      default_path().parent/"addons")
         self._lock=threading.RLock()
+        self._file_service = None
         self._records: dict[str,dict] = {}
         self._registered: set[str] = set()
         self._invalid: list[str] = []
@@ -134,6 +140,25 @@ class AddonManager:
         if self.folder.is_symlink():
             raise AddonError("Cartella add-on non sicura.")
         self.refresh()
+
+    @property
+    def file_service(self):
+        if self._file_service is None:
+            from file_access.service import FileAccessService
+            self._file_service = FileAccessService(
+                self.folder.parent/"addon-data"/"accesso_file", self.files_enabled, descriptors=self.file_descriptors)
+        return self._file_service
+
+    def files_enabled(self, operation=None):
+        with self._lock:
+            return any(r["enabled"] and any(a["core_action"] in _FILE_TARGETS
+                       and (operation is None or a["core_action"] == "files."+operation)
+                       for a in r["manifest"]["actions"]) for r in self._records.values())
+
+    def file_descriptors(self):
+        with self._lock:
+            return tuple(dict(a) for r in self._records.values() if r["enabled"]
+                         for a in r["manifest"]["actions"] if a["core_action"] in _FILE_TARGETS)
 
     def _path(self, addon_id: str) -> Path:
         if not isinstance(addon_id,str) or not _ID.fullmatch(addon_id):
@@ -250,15 +275,20 @@ class AddonManager:
             self._records=fresh
             self._consents=approvals
             self._invalid=invalid
+            if self._file_service is not None and not self.files_enabled():
+                self._file_service.reset()
 
     def _available(self, addon_id: str, action_id: str, digest: str) -> bool:
         # Never perform disk I/O here; refresh() is called by the app per turn.
         with self._lock:
             item=self._records.get(addon_id)
-            return bool(
+            valid = bool(
                 item and item["enabled"] is True and item["digest"]==digest
-                and any(a["id"]==action_id
-                        for a in item["manifest"]["actions"]))
+                and any(a["id"]==action_id for a in item["manifest"]["actions"]))
+            if valid and any(a["id"]==action_id and a["core_action"] in _FILE_TARGETS
+                             for a in item["manifest"]["actions"]):
+                return self.file_service.available()
+            return valid
 
     def list_installed(self) -> tuple[dict, ...]:
         with self._lock:
@@ -341,14 +371,16 @@ class AddonManager:
                 if not item["enabled"]:
                     continue
                 for action in item["manifest"]["actions"]:
+                    if action["core_action"] in _FILE_TARGETS and not self.file_service.available():
+                        continue
                     actions.append({"id":action["id"],
                                     "example":action["example"][:42]})
             return tuple(actions)
 
     def resolve(self, action_id: str, arguments: object) -> ResolvedCapability:
         """Local execution gate: recheck disk state and map to safe core plan."""
-        if not isinstance(arguments,dict) or arguments:
-            raise CapabilityRejected("L'azione add-on non accetta parametri.")
+        if not isinstance(arguments,dict):
+            raise CapabilityRejected("Parametri add-on non validi.")
         self.refresh()
         with self._lock:
             for record in self._records.values():
@@ -356,6 +388,14 @@ class AddonManager:
                     continue
                 for action in record["manifest"]["actions"]:
                     if action["id"]==action_id:
+                        if action["core_action"] in _FILE_TARGETS:
+                            from file_access.service import validate_arguments
+                            operation=action["core_action"].split(".")[1]
+                            clean=validate_arguments(operation,arguments)
+                            return ResolvedCapability(action_id=action_id,handler="file_access",
+                                file_operation=operation,file_arguments=tuple(clean.items()))
+                        if arguments:
+                            raise CapabilityRejected("L’azione add-on non accetta parametri.")
                         delegated=resolve_capability(
                             action["core_action"],{})
                         if delegated.handler!="local" or delegated.plan is None:

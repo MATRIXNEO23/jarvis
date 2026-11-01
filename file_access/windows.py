@@ -137,3 +137,39 @@ def indexed_candidates(query: str, root: Path, *, timeout: float = 8) -> tuple[l
         return [Path(p) for p in paths], 'Indice Windows interrogato; copertura non necessariamente completa.'
     except (OSError, ValueError, subprocess.TimeoutExpired):
         return [], 'Indice Windows non disponibile o scaduto; ricerca diretta nelle cartelle consentite.'
+
+
+def installed_locations(query: str) -> list[tuple[Path, str]]:
+    """Read registered program identities, not just folder-name matches."""
+    require_windows()
+    import winreg
+    found = []
+    for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+        for view in (winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY):
+            try:
+                with winreg.OpenKey(hive, r'Software\Microsoft\Windows\CurrentVersion\Uninstall',
+                                    0, winreg.KEY_READ | view) as root:
+                    count = min(winreg.QueryInfoKey(root)[0], 3000)
+                    for i in range(count):
+                        try:
+                            with winreg.OpenKey(root, winreg.EnumKey(root, i)) as item:
+                                name = winreg.QueryValueEx(item, 'DisplayName')[0]
+                                if not isinstance(name, str) or query.casefold() not in name.casefold():
+                                    continue
+                                for field in ('InstallLocation', 'DisplayIcon'):
+                                    try:
+                                        raw = winreg.QueryValueEx(item, field)[0]
+                                        if not isinstance(raw, str):
+                                            continue
+                                        path = Path(raw.split(',')[0].strip('" '))
+                                        if field == 'DisplayIcon':
+                                            path = path.parent
+                                        if path.is_absolute() and path.is_dir():
+                                            found.append((path, 'Registrazione Windows: '+name[:100]))
+                                    except OSError:
+                                        pass
+                        except OSError:
+                            continue
+            except OSError:
+                continue
+    return found[:50]

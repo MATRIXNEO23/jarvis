@@ -52,6 +52,8 @@ class ResolvedCapability:
     target: str = ""
     close_after: bool = False
     recipient: str = ""
+    file_operation: str = ""
+    file_arguments: tuple = ()
 
 
 def load_catalog(path: Path | None = None) -> tuple[dict, ...]:

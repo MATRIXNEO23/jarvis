@@ -49,6 +49,8 @@ class AddonSettingsWindow:
                    command=self.install).pack(side="left",padx=(0,6))
         ttk.Button(controls,text="Attiva / Disattiva",
                    command=self.toggle).pack(side="left",padx=(0,6))
+        ttk.Button(controls,text="Configura",
+                   command=self.configure).pack(side="left",padx=(0,6))
         ttk.Button(controls,text="Rimuovi",
                    command=self.remove).pack(side="left",padx=(0,6))
         ttk.Button(controls,text="Ricarica",
@@ -138,6 +140,17 @@ class AddonSettingsWindow:
             self.on_change()
         except (AddonError,OSError,ValueError) as exc:
             self._error(exc)
+
+    def configure(self):
+        if self._selected() != "accesso_file":
+            self.status.set("Seleziona Accesso file; le altre add-on non hanno opzioni cartelle.")
+            return
+        try:
+            from file_access.ui import FolderSettings
+            FolderSettings(self.window,self.manager.file_service,on_change=self.on_change)
+        except (ImportError,OSError,ValueError) as exc:
+            self._error("Configurazione Accesso file non disponibile: "+str(exc)+
+                        ". Reinstalla il pacchetto completo se manca file_access/.")
 
     def remove(self):
         ident=self._selected()

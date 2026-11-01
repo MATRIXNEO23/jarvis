@@ -98,6 +98,10 @@ def build_conversation_prompt(
                             brief=True)
         + ". "
     )
+    if any(str(a.get("id","")).startswith("addon.accesso_file.") for a in addon_actions):
+        prompt += (" Accesso file: cerca/localizza usano arguments.query; cerca accetta scope facoltativo; "
+                   "elenca/apri/leggi usano target (numero risultato o cartella nota); leggi accetta "
+                   "explain booleano. Nessuna scrittura. ")
     # Small live status is refreshed by Jarvis before EACH external request.
     # This is descriptive evidence, never an authorization for an action.
     if runtime_info:

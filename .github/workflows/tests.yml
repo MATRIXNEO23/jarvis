@@ -57,3 +57,12 @@ jobs:
 
       - name: Native Windows file access probe
         run: python tools/probe_file_access_windows.py
+      - name: Windows Search service observation (CI only)
+        shell: powershell
+        run: |
+          $service = Get-Service WSearch -ErrorAction SilentlyContinue
+          if ($null -ne $service) {
+            $service | Format-List Name,Status,StartType
+          } else {
+            Write-Host 'WSearch not installed in runner: index retrieval remains unverified; fallback must pass.'
+          }

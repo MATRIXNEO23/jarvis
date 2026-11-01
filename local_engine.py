@@ -28,6 +28,9 @@ class TaskResult:
     action: str
     status: str
     message: str
+    preview: str = ""
+    preview_path: str = ""
+    explain: bool = False
 
 
 class LocalEngine:
@@ -35,6 +38,7 @@ class LocalEngine:
 
     def __init__(self, *, download_dir: Path | None = None,
                  db_path: Path | None = None, windows: bool | None = None):
+        self.file_access = None
         self.download_dir = Path(download_dir) if download_dir else Path.home() / "Downloads"
         self.db_path = Path(db_path) if db_path else default_path().with_name("tasks.db")
         self.windows = os.name == "nt" if windows is None else windows
@@ -94,6 +98,13 @@ class LocalEngine:
         if len(request) > 300:
             return self._record(TaskResult(uuid4().hex, "validation", "rejected",
                                            "Comando troppo lungo (massimo 300 caratteri)."))
+        if " ".join(request.casefold().strip(" .!?").split()) in ("aiuto","comandi","help","cosa puoi fare","cosa sai fare"):
+            extra = ("\n"+self.file_access.commands()) if self.file_access is not None else ""
+            return self._record(TaskResult(uuid4().hex,"help","completed",self.available_commands()+extra))
+        if self.file_access is not None and self.file_access.enabled():
+            parsed = self.file_access.parse_command(request)
+            if parsed is not None:
+                return self.execute_file(*parsed)
         cmd = " ".join(request.casefold().split())
         action = "unknown"
         try:
@@ -129,6 +140,14 @@ class LocalEngine:
         except (OSError, ValueError, sqlite3.Error) as exc:
             return self._record(TaskResult(uuid4().hex, action, "failed",
                                            "Operazione non riuscita: " + str(exc)[:350]))
+
+    def execute_file(self, operation, arguments):
+        if self.file_access is None:
+            return self._record(TaskResult(uuid4().hex,"files","rejected",
+                "Accesso file non disponibile: reinstalla il pacchetto completo."))
+        result=self.file_access.execute(operation,arguments)
+        return self._record(TaskResult(uuid4().hex,"files_"+operation,result.status,
+            result.message,result.preview,result.preview_path,result.explain))
 
     def _system_status(self) -> str:
         lines = [f"CPU logiche: {os.cpu_count() or 'non disponibile'}"]
