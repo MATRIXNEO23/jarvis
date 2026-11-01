@@ -229,3 +229,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Alberto conferma che l'ultima build che sta usando funziona bene per il momento e chiede di mantenerla come base da cui migliorare e a cui tornare in caso di regressioni.
 - Registrare il riscontro come BASE-UTENTE-20261101; ambito: uso riferito, non prova universale. Associazione al nome ZIP/SHA installato ancora da confermare: in cima Download/README figura Jarvis-Timer-Audio-Fix2-20261031.zip, candidato da verificare con l'utente.
 - Previsto: aggiornare registro/stato/lezioni, chiedere una sola conferma identificativa, nessuna build o ripristino.
+
+## 2026-11-01 — Riscontro della base salvato, identificazione ZIP pendente
+- BASE-UTENTE-20261101 registrata come build attuale funzionante nell'uso riferito dall'utente. Registro aggiornato commit cae5e5d16fae3c9b300c53de987afb6b83764daa; stato e lezioni coerenti.
+- Resta una sola conferma identificativa: il pacchetto usato è Jarvis-Timer-Audio-Fix2-20261031.zip, quello in cima a Download? Non associare il candidato o a86c2c9 senza riscontro.
+- Preservare la base e ripartire dal suo codice verificato nelle prossime aggiunte. Nessun codice, nuovo test, pacchetto o ripristino in questa fase; fermo prima dell'implementazione mantenuto.
