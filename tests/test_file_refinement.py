@@ -16,7 +16,7 @@ from test_activity_status import Value, GlobalCallbacks
 from conversation_router import build_conversation_prompt, parse_conversation_intent, ConversationRejected
 from dialogue_focus import is_ambiguous_short_reply
 from local_engine import TaskResult
-from voice_control import GPT_CONVERSATION
+from voice_control import GPT_CONVERSATION, STANDBY
 
 
 @unittest.skipUnless(os.name == 'nt', 'Windows-only user requirement')
@@ -58,7 +58,7 @@ class FileRefinementTests(unittest.TestCase):
             gpt_enabled=Value(True),gpt_request_action='',gpt_status=Value(''),
             addon_manager=self.manager,engine=self.engine,active_project_id=None,
             documents=SimpleNamespace(current=None),conversation_epoch=7,
-            voice_mode=Value(GPT_CONVERSATION),GPT_CONVERSATION=GPT_CONVERSATION,
+            voice_mode=Value(GPT_CONVERSATION),GPT_CONVERSATION=GPT_CONVERSATION,STANDBY=STANDBY,
             speaker=SimpleNamespace(is_audible=lambda:False),speech_lexicon=None,
             memory_enabled=Value(True),last_voice_sample=Value(''),
             refresh_buttons=Mock(),write_line=Mock(),speak_result=Mock(),
@@ -110,7 +110,8 @@ class FileRefinementTests(unittest.TestCase):
                     self.receive('local',env)
                 self.assertFalse(workers)
                 env['service'].call.assert_not_called()
-                self.assertIn(self.a,self.files._results)
+                self.assertEqual(len(self.files._results),1)
+                self.assertTrue(os.path.samefile(self.a,self.files._results[0]))
                 env['speak_result'].assert_not_called()
 
     def test_empty_to_actual_worker_model_and_local_result_without_clicks(self):
@@ -129,7 +130,8 @@ class FileRefinementTests(unittest.TestCase):
             self.receive('local',env)
         self.assertEqual(env['service'].call.call_count,1)
         self.assertFalse(workers)
-        self.assertIn(self.a,self.files._results)
+        self.assertEqual(len(self.files._results),1)
+        self.assertTrue(os.path.samefile(self.a,self.files._results[0]))
         self.assertNotIn('file_refinement',env['service'].call.call_args.kwargs)
         env['speak_result'].assert_not_called()
 

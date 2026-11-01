@@ -78,7 +78,10 @@ class ActivityStatusTests(unittest.TestCase):
                       and n.test.left.id == "kind" and isinstance(n.test.comparators[0], ast.Constant)
                       and n.test.comparators[0].value == kind)
         env["data"] = data
-        exec(compile(ast.Module(body=copy.deepcopy(branch.body), type_ignores=[]),
+        wrapper = ast.For(target=ast.Name(id='_event', ctx=ast.Store()),
+                          iter=ast.Tuple(elts=[ast.Constant(1)], ctx=ast.Load()),
+                          body=copy.deepcopy(branch.body), orelse=[])
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[wrapper], type_ignores=[])),
                      "real-result-"+kind, "exec"), env)
 
     def test_existing_tk_status_row_follows_real_phases_and_voice_priority(self):
