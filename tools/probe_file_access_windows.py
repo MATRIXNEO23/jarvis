@@ -5,11 +5,14 @@ from pathlib import Path
 import sys
 import tempfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from file_access.windows import known_folder, volume_identity, resolved_path, indexed_candidates
+from file_access.windows import known_folder, volume_identity, resolved_path, indexed_candidates, explorer_view
 
 if os.name != 'nt':
     raise SystemExit('This probe must run on Windows, not Linux.')
 report = {'platform': sys.platform, 'python': sys.version.split()[0]}
+view=explorer_view()
+report['explorer_observation']=view.get('status','unavailable')
+report['explorer_personal_desktop_verified']=False
 for name in ('profilo', 'documenti', 'download', 'appdata', 'windows'):
     path = known_folder(name)
     assert path.is_absolute(), name

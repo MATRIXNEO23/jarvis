@@ -198,12 +198,32 @@ def shell_query(request: dict, *, timeout=6) -> dict:
         if run.returncode or len(run.stdout)>64000:
             raise ValueError('Native query failed')
         result=json.loads(run.stdout.lstrip('\ufeff'))
-        if (not isinstance(result,dict) or result.get('status') not in ('ok','unavailable','ambiguous')
+        if (not isinstance(result,dict) or result.get('status') not in ('ok','unavailable','ambiguous','none')
                 or not isinstance(result.get('rows',[]),list) or len(result.get('rows',[]))>50):
             raise ValueError('Invalid native reply')
         return result
     except (OSError,ValueError,subprocess.TimeoutExpired):
         return {'status':'unavailable','rows':[]}
+
+
+def explorer_view() -> dict:
+    """On demand: foreground Explorer, or the sole Explorer view if Jarvis has focus."""
+    require_windows()
+    user = ctypes.WinDLL('user32',use_last_error=True)
+    user.GetForegroundWindow.restype = wintypes.HWND
+    result = shell_query({'operation':'view','hwnd':int(user.GetForegroundWindow() or 0)})
+    if result.get('status')=='ok':
+        if (not isinstance(result.get('path'),str) or len(result['path'])>32767
+                or type(result.get('hwnd')) is not int or result['hwnd']<=0
+                or not isinstance(result.get('selected'),list) or len(result['selected'])>20
+                or any(not isinstance(p,str) or len(p)>32767 for p in result['selected'])):
+            return {'status':'unavailable'}
+    return result
+
+
+def navigate_explorer(view: dict, target: Path) -> bool:
+    return shell_query({'operation':'navigate','hwnd':view['hwnd'],
+        'source':view['path'],'target':str(target)}).get('status')=='ok'
 
 
 def long_path(path: Path) -> Path:

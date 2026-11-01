@@ -25,6 +25,7 @@ class FileAccessTests(unittest.TestCase):
         self.manager = AddonManager(LiveCapabilityRegistry(), self.root/'profile/addons')
         self.manager.install(Path('file_access/AccessoFile.jaddon'))
         self.files = self.manager.file_service
+        self.explorer=self.enterContext(patch('file_access.service.explorer_view',return_value={'status':'none'}))
         self.files.index = lambda *args: ([], 'Indice assente nel campione: fallback reale.')
         self.files.policy.configure([(self.docs, True), (self.hidden, False)])
         self.manager.set_enabled('accesso_file', True)
@@ -679,3 +680,115 @@ class FileAccessTests(unittest.TestCase):
         self.assertEqual(result.preview,'Testo reale di esempio')
         self.assertTrue(result.explain)
         self.assertIsNone(self.files._pending)
+
+    def test_explorer_child_parent_and_manual_change_use_observed_folder(self):
+        first=self.docs/'Foto'; first.mkdir()
+        second=first/'Vacanze'; second.mkdir()
+        state={'status':'ok','hwnd':101,'path':str(self.docs),'selected':[]}
+        self.explorer.side_effect=lambda:dict(state)
+        def navigate(view,target):
+            self.assertEqual(view['path'],state['path'])
+            state['path']=str(target)
+            return True
+        with patch('file_access.service.navigate_explorer',side_effect=navigate) as nav,patch.object(self.files,'index',side_effect=AssertionError('No general search')),patch('subprocess.Popen') as launch:
+            for phrase,expected in (('apri Foto',first),('apri cartella Vacanze',second),('vai indietro di una cartella',first)):
+                result=self.engine.execute(phrase)
+                self.assertEqual(result.status,'completed',result.message)
+                self.assertTrue(os.path.samefile(state['path'],expected))
+            state['path']=str(self.docs)  # User changed Explorer without asking Jarvis.
+            result=self.engine.execute('apri Foto')
+            self.assertEqual(result.status,'completed',result.message)
+            self.assertEqual(nav.call_count,4)
+            launch.assert_not_called()
+
+    def test_explorer_missing_child_does_not_search_and_ambiguous_view_does_not_guess(self):
+        self.explorer.return_value={'status':'ok','hwnd':101,'path':str(self.docs),'selected':[]}
+        with patch.object(self.files,'index',side_effect=AssertionError('Do not broaden scope')),patch('file_access.service.navigate_explorer') as nav,patch('subprocess.Popen') as launch:
+            result=self.engine.execute('apri NonPresente')
+            self.assertEqual(result.status,'rejected')
+            self.assertIn('Nessuna ricerca generale',result.message)
+            for status in ('ambiguous','unavailable','none'):
+                self.explorer.return_value={'status':status}
+                result=self.engine.execute('apri Foto')
+                self.assertEqual(result.status,'rejected',result.message)
+            nav.assert_not_called(); launch.assert_not_called()
+
+    def test_explorer_selection_reads_supported_file_and_checks_policy(self):
+        self.explorer.return_value={'status':'ok','hwnd':101,'path':str(self.docs),'selected':[str(self.a)]}
+        result=self.engine.execute('apri questo')
+        self.assertEqual(result.preview,'Testo reale di esempio')
+        self.assertLess(len(result.spoken_message),100)
+        with patch('file_access.service.navigate_explorer') as nav:
+            self.explorer.return_value['selected']=[str(self.hidden/'segreto.txt')]
+            self.assertEqual(self.engine.execute('apri questo').status,'rejected')
+            self.explorer.return_value['selected']=[]
+            self.assertEqual(self.engine.execute('apri questo').status,'rejected')
+            self.explorer.return_value['path']=str(self.hidden)
+            self.assertEqual(self.engine.execute('elenca qui dentro').status,'rejected')
+            nav.assert_not_called()
+
+    def test_explorer_origin_change_and_parent_outside_consent_are_rejected(self):
+        folder=self.docs/'Foto'; folder.mkdir()
+        self.explorer.return_value={'status':'ok','hwnd':101,'path':str(self.docs),'selected':[]}
+        with patch('file_access.service.navigate_explorer',return_value=False) as nav,patch('subprocess.Popen') as launch:
+            result=self.engine.execute('apri Foto')
+            self.assertEqual(result.status,'rejected')
+            self.assertIn('Explorer è cambiato',result.message)
+            nav.assert_called_once()
+            result=self.engine.execute('vai indietro di una cartella')
+            self.assertEqual(result.status,'rejected')
+            self.assertEqual(nav.call_count,1)
+            launch.assert_not_called()
+
+    def test_explorer_current_list_is_silent_and_core_commands_keep_priority(self):
+        self.explorer.return_value={'status':'ok','hwnd':101,'path':str(self.docs),'selected':[]}
+        result=self.engine.execute('elenca qui dentro')
+        self.assertIn(self.a.name,result.message)
+        self.assertEqual(result.spoken_message,'')
+        for phrase in ('apri blocco note','apri il blocco note','apri browser','apri calcolatrice','apri esplora file','apri notepad','apri calc'):
+            self.assertIsNone(self.files.parse_command(phrase),phrase)
+
+    def test_real_powershell_explorer_selection_and_navigation_contract(self):
+        import subprocess
+        script=Path('file_access/windows_shell.ps1').resolve()
+        marker=self.root/'navigation-target.txt'
+        harness=self.root/'explorer-fixture.ps1'
+        def run(request,windows):
+            fixture=json.dumps(windows).replace("'","''")
+            harness.write_text("$script:views=@('"+fixture+"' | ConvertFrom-Json)\n$script:marker='"+str(marker).replace("'","''")+"'\n"+r'''
+function New-Object {
+    param([string]$ComObject)
+    if ($ComObject -ne 'Shell.Application') { throw 'Unexpected COM request' }
+    $items = @(foreach ($row in $script:views) {
+        $doc=[pscustomobject]@{Folder=[pscustomobject]@{Self=[pscustomobject]@{Path=$row.path;IsFileSystem=$row.filesystem}};Items=@($row.selected)}
+        $doc | Add-Member ScriptMethod SelectedItems { $this.Items }
+        $win=[pscustomobject]@{HWND=$row.hwnd;FullName='C:\Windows\explorer.exe';Document=$doc;Marker=$script:marker}
+        $win | Add-Member ScriptMethod Navigate2 { param($target) [IO.File]::WriteAllText($this.Marker,$target) }
+        $win
+    })
+    $shell=[pscustomobject]@{Views=$items}
+    $shell | Add-Member ScriptMethod Windows { $this.Views }
+    return $shell
+}
+''' + ". '"+str(script).replace("'","''")+"'\n",encoding='utf-8-sig')
+            powershell=Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe'
+            result=subprocess.run([str(powershell),'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',str(harness)],
+                input=json.dumps(request),capture_output=True,text=True,encoding='utf-8',timeout=15,cwd=os.environ['SystemRoot'])
+            self.assertEqual(result.returncode,0,result.stderr)
+            return json.loads(result.stdout.lstrip('\ufeff'))
+        views=[{'hwnd':101,'path':str(self.docs),'filesystem':True,'selected':[str(self.a)]},
+               {'hwnd':202,'path':str(self.hidden),'filesystem':True,'selected':[]}]
+        reply=run({'operation':'view','hwnd':101},views)
+        self.assertEqual(reply['status'],'ok',reply)
+        self.assertEqual(reply['selected'],[str(self.a)])
+        self.assertEqual(run({'operation':'view','hwnd':999},views)['status'],'ambiguous')
+        self.assertEqual(run({'operation':'view','hwnd':999},views[:1])['path'],str(self.docs))
+        request={'operation':'navigate','hwnd':101,'source':str(self.docs),'target':str(self.hidden)}
+        self.assertEqual(run(request,views)['status'],'ok')
+        self.assertEqual(marker.read_text(),str(self.hidden))
+        marker.unlink()
+        request['source']=str(self.hidden)
+        self.assertEqual(run(request,views)['status'],'unavailable')
+        self.assertFalse(marker.exists())
+        views[1]['hwnd']=101
+        self.assertEqual(run({'operation':'view','hwnd':101},views)['status'],'ambiguous')

@@ -56,8 +56,10 @@ def speech_to_local_command(text: str) -> str | None:
             return None
     exact = {
         "apri calcolatrice": "apri calcolatrice",
+        "apri calc": "apri calcolatrice",
         "apri la calcolatrice": "apri calcolatrice",
         "apri blocco note": "apri blocco note",
+        "apri notepad": "apri blocco note",
         "apri il blocco note": "apri blocco note",
         "apri esplora file": "apri esplora file",
         "apri disco locale c": "apri disco locale c",

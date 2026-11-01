@@ -8,7 +8,7 @@ import threading
 import time
 from uuid import uuid4
 from .policy import AccessPolicy, safe_path, contains
-from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations, long_path
+from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations, long_path, explorer_view, navigate_explorer
 
 OPERATIONS = frozenset(('list', 'search', 'read', 'open', 'locate'))
 TEXT_TYPES = frozenset(('.txt', '.md', '.json', '.log', '.csv', '.ini', '.yaml', '.yml'))
@@ -20,6 +20,7 @@ _RESULT_WORDS = dict(zip(
 _RESULT_WORDS.update({'una':'1','il primo':'1','la prima':'1',
     'il secondo':'2','la seconda':'2','il terzo':'3','la terza':'3'})
 _DEICTIC_TARGETS = frozenset(('questo','quello','questa','quella','selezionato','il file','la cartella','selezionata'))
+_CURRENT_TARGETS = frozenset(('qui','qui dentro','cartella corrente','cartella aperta','cartella a schermo'))
 
 
 def result_number(value):
@@ -47,7 +48,7 @@ class FileResult:
 def validate_arguments(operation, arguments):
     if operation not in OPERATIONS or not isinstance(arguments, dict):
         raise ValueError('Azione file non riconosciuta.')
-    permitted = {'query', 'scope'} if operation == 'search' else {'query'} if operation == 'locate' else {'target', 'explain', 'kind'} if operation == 'read' else {'target', 'kind'} if operation == 'open' else {'target'}
+    permitted = {'query', 'scope'} if operation == 'search' else {'query'} if operation == 'locate' else {'target', 'explain', 'kind', 'scope'} if operation == 'read' else {'target', 'kind', 'scope'} if operation == 'open' else {'target'}
     if set(arguments) - permitted:
         raise ValueError('Parametri file non consentiti.')
     if operation in ('search', 'locate') and not arguments.get('query'):
@@ -59,6 +60,8 @@ def validate_arguments(operation, arguments):
         arguments["target"] = str(arguments["target"])
     if "kind" in arguments and arguments["kind"] not in ("file", "folder"):
         raise ValueError("Tipo richiesto non valido: file oppure folder.")
+    if operation in ('open','read') and arguments.get('scope','current')!='current':
+        raise ValueError('Ambito relativo non valido.')
     for key, value in arguments.items():
         if key == 'explain':
             if type(value) is not bool:
@@ -141,6 +144,43 @@ class FileAccessService:
                 return self._results[int(number)-1]
         return safe_path(value)
 
+    def _explorer_context(self, *, required=True):
+        view=explorer_view()
+        if view.get('status')=='none' and not required:
+            return None
+        if view.get('status')=='ambiguous':
+            raise ValueError('Più finestre o schede Explorer: porta in primo piano quella desiderata e ripeti.')
+        if view.get('status')!='ok':
+            raise ValueError('Cartella Explorer non identificabile: aprila in primo piano o indica un percorso completo.')
+        root=safe_path(view['path'])
+        if not root.is_dir() or not self.policy.permits(root):
+            raise PermissionError('La cartella Explorer non è consentita o non è più disponibile: controlla Configura.')
+        return view
+
+    def _explorer_target(self, name, *, required=True):
+        view=self._explorer_context(required=required)
+        if view is None:
+            return None,None
+        root=safe_path(view['path'])
+        low=name.casefold()
+        if low in _CURRENT_TARGETS:
+            return root,view
+        if low=='cartella superiore':
+            if root.parent==root:
+                raise ValueError('Questa cartella è già la radice del disco.')
+            return root.parent,view
+        if low=='selezione explorer':
+            selected=view.get('selected',[])
+            if len(selected)!=1:
+                raise ValueError('Seleziona un solo file o una sola cartella in Explorer, poi ripeti.')
+            return safe_path(selected[0]),view
+        if Path(name).name!=name or name in ('.','..'):
+            raise ValueError('Indica il nome di un elemento dentro la cartella corrente.')
+        child=root/name
+        if not child.exists():
+            raise ValueError('Non trovo “'+name+'” nella cartella corrente. Nessuna ricerca generale avviata; puoi chiedere “elenca qui dentro” o una ricerca esplicita.')
+        return child,view
+
     def remember_file_clarification(self, original):
         """Retain one explicit read-only installation-folder goal, not arbitrary chat."""
         missing=self._missing_file_request(original)
@@ -217,6 +257,12 @@ class FileAccessService:
             return None
         clean = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+', '', text.strip(), flags=re.I).strip()
         low = clean.casefold().strip(' .!?')
+        if low in ('elenca qui','elenca qui dentro','mostra qui dentro','mostra la cartella corrente'):
+            return ('list',{'target':'qui'})
+        if low in ('vai indietro','vai indietro di una cartella','torna indietro di una cartella','sali di una cartella'):
+            return ('open',{'target':'cartella superiore','kind':'folder'})
+        if low in ('apri questo','apri questa','aprilo','aprila'):
+            return ('open',{'target':'selezione explorer'})
         if (self._pending_app is not None or self._pending is not None) and low in ('annulla','lascia perdere','non importa'):
             return ('cancel', {})
         missing=self._missing_file_request(clean)
@@ -268,6 +314,12 @@ class FileAccessService:
                     args['explain'] = True
                 self._pending_app = None
                 return operation, args
+        generic=re.fullmatch(r'(?:apri|aprimi)\s+(.+)',clean,re.I)
+        if generic:
+            # Reuse the existing command map so app/document commands retain priority.
+            from voice_control import speech_to_local_command
+            if speech_to_local_command(clean) is None:
+                return ('open',{'target':generic.group(1).strip(),'scope':'current'})
         # Complete an existing choice before the UI treats a bare name as new chat.
         # Exact names only: unrelated short sentences cannot become guessed actions.
         if self._pending is not None and self.available():
@@ -357,21 +409,27 @@ class FileAccessService:
             revision = self.policy.revision
             if operation in ('search', 'locate'):
                 return self._search(args['query'], args.get('scope'), revision, locate=operation == 'locate')
-            try:
-                target = self._target(args.get('target', 'profilo'))
-            except ValueError:
-                name = args.get('target', '')
-                if operation not in ('read', 'open') or not name or Path(name).is_absolute() or result_number(name) is not None or name.casefold() in _DEICTIC_TARGETS:
-                    raise
-                # A requested action with a partial name reuses the same search.
-                self.cancelled.clear()
-                answer = self._search(name, None, revision, kind=args.get('kind'))
-                if answer.status != 'completed' or not self._results:
-                    return answer
-                if len(self._results) == 1:
-                    return self.execute(operation, {**args, 'target': str(self._results[0])})
-                self._pending = (operation, {k:v for k,v in args.items() if k != 'target'})
-                return FileResult('completed', answer.message+'\nQuale risultato vuoi '+('leggere' if operation=='read' else 'aprire')+'?')
+            view=None
+            name=args.get('target','profilo')
+            special=name.casefold() in _CURRENT_TARGETS or name.casefold() in ('cartella superiore','selezione explorer')
+            if special or args.get('scope')=='current':
+                target,view=self._explorer_target(name)
+            else:
+                try:
+                    target = self._target(name)
+                except ValueError:
+                    if operation not in ('read','open') or not name or Path(name).is_absolute() or result_number(name) is not None or name.casefold() in _DEICTIC_TARGETS:
+                        raise
+                    target,view=self._explorer_target(name,required=False)
+                    if view is None:
+                        # With no Explorer view, preserve the existing explicit name search.
+                        answer = self._search(name,None,revision,kind=args.get('kind'))
+                        if answer.status!='completed' or not self._results:
+                            return answer
+                        if len(self._results)==1:
+                            return self.execute(operation,{**args,'target':str(self._results[0])})
+                        self._pending=(operation,{k:v for k,v in args.items() if k!='target'})
+                        return FileResult('completed',answer.message+'\nQuale risultato vuoi '+('leggere' if operation=='read' else 'aprire')+'?')
             if not self.policy.permits(target):
                 raise PermissionError('Accesso non consentito o percorso/volume cambiato: '+str(target))
             if args.get('kind')=='folder' and not target.is_dir():
@@ -385,6 +443,10 @@ class FileAccessService:
             if target.is_dir():
                 if operation == 'read':
                     return self._list(target, revision)
+                if view is not None:
+                    if not navigate_explorer(view,target):
+                        raise ValueError('Explorer è cambiato o non ha accettato la navigazione. Ripeti dalla cartella attuale.')
+                    return FileResult('completed','Navigazione richiesta nella stessa finestra Explorer: '+str(target)+'. Verifica la finestra; visibilità non confermata.')
                 # Fixed executable, argument is a verified local folder, no shell.
                 import subprocess
                 subprocess.Popen([str(Path(os.environ['SystemRoot'])/'explorer.exe'), str(target)],
@@ -584,7 +646,8 @@ class FileAccessService:
         return ('Accesso file attivo, sola lettura nelle cartelle selezionate:\n' +
                 '\n'.join('• '+a['description']+' Esempio: '+a['example'] for a in actions)+
                 '\nPuoi scegliere un risultato per numero, chiedere la spiegazione del testo letto, '
-                'oppure annullare la ricerca. Le varianti naturali usano il GPT esterno quando collegato.')
+                'dire “elenca qui dentro”, “apri Foto”, “apri questo” per la selezione Explorer, '
+                '“vai indietro di una cartella”, oppure annullare la ricerca. Le varianti naturali usano il GPT esterno quando collegato.')
 
 
 
