@@ -1,3 +1,6 @@
+## Precisazione vigente — voce primaria, mouse/tastiera facoltativi
+L’utente vuole gestire Jarvis e il PC principalmente a voce; la finestra è un supporto visuale, non un passaggio obbligato col mouse. Nessuna promessa di automazione universale: applicare il criterio alle capacità attive, con permessi e contesto. Prima CI UI 22c8e8d/run 41338428408 conclusa; codice aggiornato per nuovi percorsi senza clic da verificare separatamente. Sorgenti d6721801c5d2f018cfba88495c713e709facc408, run 41339073468 in corso. «Apri il secondo risultato», «apri quello chiamato Foto», «spiega il primo risultato»; omonimi chiedono solo numero conservando l’azione. «Due» evidenzia la riga e «aprilo» la apre, senza clic. Tipi file/cartella e token/scadenza/revoca restano controllati. Quattro prove vocali controllate nuove (non microfono personale); UI Tk reale e callback poll/worker già nella suite. Nessuna build, TTS degli elenchi spento. Non chiudere col verde del commit precedente; leggere esito aggiornato.
+
 # Passo 4 — finestra dei risultati, chat breve e selezione
 
 ## Passo 4 in attesa Windows — finestra risultati e chat breve
