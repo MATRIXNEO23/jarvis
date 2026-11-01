@@ -28,3 +28,6 @@ Consultare docs/INDICE-SORGENTI.md: identifica il ramo del programma evoluto, i 
 
 ## Installazione e consegna
 Guide aggiornate in Prima-installazione/README.md; distinguono codice di riferimento, profilo Trial e dipendenze. Aggiornarle a ogni modulo nuovo. Prima di annunciare una funzione installabile verificare pacchetto e link effettivo in Download/README.md. La sola documentazione non è una nuova build. Per il riordino verificare uso reale dei file e chiedere su ambiguità che cambiano il risultato.
+
+## Recuperare un punto funzionante
+Leggere Download/REGISTRO-VERSIONI.md prima di cercare fra commit o artifact: contiene percorso, commit e stato di verifica dei pacchetti. Usare la scheda identificata e i relativi dati compatibili; chiedere soltanto se il riferimento resta ambiguo. La prova PC va collegata al pacchetto esatto prima di promuoverlo a riferimento funzionante. I pacchetti di recupero devono restare versionati in Download.
