@@ -3207,7 +3207,10 @@ def main() -> None:
                         remember_completed_action(
                             result.action, result.action.split("_")[0],
                             result.message, result.task_id,observed=observed)
-                        speak_result(result.message)
+                        spoken=(result.message if result.spoken_message is None
+                                else result.spoken_message)
+                        if spoken:
+                            speak_result(spoken)
                 elif kind == "document_ok":
                     document_busy = False
                     operation, result, close_after = data
@@ -3366,7 +3369,9 @@ def main() -> None:
                                     elif not busy_local:
                                         submit_local(message_override=original_phrase,
                                             source_utterance=original_phrase,addon_action_id=cap.action_id,
-                                            file_call=(cap.file_operation,dict(cap.file_arguments)))
+                                            file_call=(cap.file_operation,
+                                                addon_manager.file_service.arguments_for_utterance(
+                                                    cap.file_operation,dict(cap.file_arguments),original_phrase)))
                                     else:
                                         speak_result("Operazione file già in corso.")
                                 elif cap.handler == "local" and cap.plan is not None:

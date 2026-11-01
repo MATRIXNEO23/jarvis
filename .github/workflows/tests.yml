@@ -127,7 +127,7 @@ jobs:
           text=page.read_text(encoding='utf-8')
           title=f'## Accesso file 0.1.0 — build candidata Windows ({sha[:7]})'
           entry=(title+'\n\n'+f'[Scarica {name}](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/{name})\n\n'
-                 'Ricerca, cartelle consentite con spunte, lettura senza modifica e integrazione voce/testo/GPT. '
+                 'Ricerca, cartelle consentite con spunte, lettura senza modifica e integrazione voce/testo/GPT. Elenchi solo in chat e conferme vocali brevi. '
                  'Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Accesso file > Configura, Salva e Attiva. '
                  'Profilo di prova separato, precedente installazione preservata. '
                  'Test automatici solo Windows, archivio estratto e avvio UI verificati. '

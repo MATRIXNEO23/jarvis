@@ -196,7 +196,7 @@ class FileAccessTests(unittest.TestCase):
         for chat in ('ieri ho letto un file','Netflix è interessante','stasera voglio guardare un film'):
             self.assertIsNone(self.files.parse_command(chat))
         self.assertEqual(self.files.parse_command('Jarvis cerca file preventivo')[0], 'search')
-        self.assertEqual(self.files.parse_command('spiegami file 1'), ('read', {'target':'1','explain':True}))
+        self.assertEqual(self.files.parse_command('spiegami file 1'), ('read', {'target':'1','kind':'file','explain':True}))
         self.assertIn('Accesso file attivo', self.engine.execute('cosa puoi fare?').message)
         self.assertIn('apri calcolatrice', self.engine.execute('aiuto').message)
 
@@ -321,3 +321,113 @@ class FileAccessTests(unittest.TestCase):
         self.assertIn('parziale',report.message)
         self.manager.remove('accesso_file')
         self.assertNotIn('Accesso file attivo',self.engine.execute('aiuto').message)
+
+    def test_spoken_cardinal_opens_numbered_folder_without_search(self):
+        self.a.unlink()
+        folder = self.docs/'Una-cartella'
+        folder.mkdir()
+        self.engine.execute('elenca cartella '+str(self.docs))
+        self.assertEqual(self.files._results, [folder])
+        with patch.object(self.files, 'index', side_effect=AssertionError('A number must not start a name search')), patch('subprocess.Popen') as launch:
+            result = self.engine.execute('apri cartella uno')
+        self.assertEqual(result.status, 'completed', result.message)
+        self.assertEqual(Path(launch.call_args.args[0][1]), folder)
+        self.assertEqual(self.files.parse_command('uno'), ('select', {'target':'1'}))
+        with patch('subprocess.Popen') as launch:
+            result = self.engine.execute('apri la cartella numero uno')
+        self.assertEqual(result.status, 'completed', result.message)
+        self.assertTrue(launch.called)
+
+    def test_expired_spoken_number_and_deictic_never_turn_into_name_search(self):
+        self.files.execute('list', {'target':str(self.docs)})
+        self.files._expires = time.monotonic()-1
+        with patch.object(self.files, 'index', side_effect=AssertionError('Stale result must ask to refresh')), patch('subprocess.Popen') as launch:
+            for target in ('uno','numero uno','1','quello','questa'):
+                result = self.files.execute('open', {'target':target,'kind':'folder'})
+                self.assertEqual(result.status,'rejected',result.message)
+        launch.assert_not_called()
+
+    def test_gpt_integer_target_normalized_and_explicit_kind_enforced(self):
+        from conversation_router import parse_conversation_intent, ConversationRejected
+        self.files.execute('list', {'target':str(self.docs)})
+        # The only visible initial entry is the MD/TXT-like file, not the excluded folder.
+        intent = parse_conversation_intent(json.dumps({'kind':'capability',
+            'action_id':'addon.accesso_file.apri','arguments':{'target':1}}),
+            addon_resolver=self.manager.resolve)
+        self.assertEqual(dict(intent.capability.file_arguments)['target'],'1')
+        args = self.files.arguments_for_utterance('open',dict(intent.capability.file_arguments),'puoi aprire la cartella uno?')
+        self.assertEqual(args['kind'],'folder')
+        with patch('subprocess.Popen') as launch:
+            result = self.engine.execute_file('open',args)
+        self.assertEqual(result.status,'rejected')
+        self.assertIn('è un file',result.message)
+        self.assertFalse(result.preview_path)
+        launch.assert_not_called()
+        with self.assertRaises(ConversationRejected) as caught:
+            parse_conversation_intent(json.dumps({'kind':'capability',
+                'action_id':'addon.accesso_file.apri','arguments':{'target':True}}),
+                addon_resolver=self.manager.resolve)
+        self.assertIn('Parametro file non valido',str(caught.exception))
+
+    def test_folder_request_cannot_read_a_text_file_and_guidance_matches_types(self):
+        folder = self.docs/'Destinazione'
+        folder.mkdir()
+        report = self.engine.execute('elenca cartella '+str(self.docs))
+        file_number = self.files._results.index(self.a)+1
+        folder_number = self.files._results.index(folder)+1
+        self.assertIn('apri cartella '+str(folder_number),report.message)
+        self.assertIn('leggi file '+str(file_number),report.message)
+        with patch('subprocess.Popen') as launch:
+            rejected = self.engine.execute('apri cartella '+str(file_number))
+        self.assertEqual(rejected.status,'rejected')
+        self.assertIn('è un file',rejected.message)
+        self.assertFalse(rejected.preview)
+        self.assertFalse(rejected.preview_path)
+        launch.assert_not_called()
+        rejected = self.engine.execute('leggi file '+str(folder_number))
+        self.assertEqual(rejected.status,'rejected')
+        self.assertIn('è una cartella',rejected.message)
+        with patch('subprocess.Popen') as launch:
+            opened = self.engine.execute('apri cartella '+str(folder_number))
+        self.assertEqual(opened.status,'completed',opened.message)
+        self.assertEqual(Path(launch.call_args.args[0][1]), folder)
+
+    def test_file_result_numbers_and_speech_are_distinct_from_visible_list(self):
+        from file_access.service import result_number
+        for value, expected in (('uno','1'),('numero due','2'),('diciassette','17'),('venti','20'),('il secondo','2')):
+            self.assertEqual(result_number(value),expected)
+        report = self.engine.execute('elenca cartella '+str(self.docs))
+        self.assertIn(self.a.name,report.message)
+        self.assertEqual(report.spoken_message,'')
+        report = self.engine.execute('cerca file preventivo')
+        self.assertIn(self.a.name,report.message)
+        self.assertEqual(report.spoken_message,'')
+        result = self.engine.execute('leggi file uno')
+        self.assertEqual(result.preview,'Testo reale di esempio')
+        self.assertLess(len(result.spoken_message),100)
+        self.assertNotIn(str(self.docs),result.spoken_message)
+
+    def test_actual_result_callback_keeps_file_list_in_chat_without_speech(self):
+        from local_engine import TaskResult
+        tree = ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
+        main = next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
+        poll = next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name=='poll')
+        branch = next(n for n in ast.walk(poll) if isinstance(n,ast.If)
+            and isinstance(n.test,ast.Compare) and isinstance(n.test.left,ast.Name)
+            and n.test.left.id=='kind' and isinstance(n.test.comparators[0],ast.Constant)
+            and n.test.comparators[0].value=='local')
+        writes, spoken = [], []
+        result = self.engine.execute('elenca cartella '+str(self.docs))
+        env = {'data':[result],'runtime_events':None,'write_line':writes.append,
+            'last_user_for_action':'elenca cartella documenti','observed_local_result':lambda r:False,
+            'operation_ledger':None,'local_operation_id':None,'project_local_ticket':None,
+            'finish_project_work':lambda *a,**kw:None,'remember_exchange':lambda *a,**kw:None,
+            'remember_completed_action':lambda *a,**kw:None,'speak_result':spoken.append}
+        code = compile(ast.Module(body=branch.body,type_ignores=[]),'real-local-result-callback','exec')
+        exec(code,env)
+        self.assertTrue(any(self.a.name in line for line in writes))
+        self.assertFalse(spoken)
+        # Ordinary speech keeps the old behavior; the fix is scoped to file output.
+        env['data']=[TaskResult('a'*32,'system_status','completed','CPU e RAM disponibili.')]
+        exec(code,env)
+        self.assertEqual(spoken,['CPU e RAM disponibili.'])

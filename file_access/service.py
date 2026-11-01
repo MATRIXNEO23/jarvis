@@ -13,6 +13,27 @@ from .windows import known_folder, resolved_path, final_path, indexed_candidates
 OPERATIONS = frozenset(('list', 'search', 'read', 'open', 'locate'))
 TEXT_TYPES = frozenset(('.txt', '.md', '.json', '.log', '.csv', '.ini', '.yaml', '.yml'))
 
+_RESULT_WORDS = dict(zip(
+    ('uno','due','tre','quattro','cinque','sei','sette','otto','nove','dieci',
+     'undici','dodici','tredici','quattordici','quindici','sedici','diciassette',
+     'diciotto','diciannove','venti'), map(str,range(1,21))))
+_RESULT_WORDS.update({'una':'1','il primo':'1','la prima':'1',
+    'il secondo':'2','la seconda':'2','il terzo':'3','la terza':'3'})
+_DEICTIC_TARGETS = frozenset(('questo','quello','questa','quella','selezionato','il file','la cartella','selezionata'))
+
+
+def result_number(value):
+    if type(value) is int:
+        return str(value) if 1 <= value <= 20 else None
+    if not isinstance(value,str):
+        return None
+    value = ' '.join(value.casefold().strip(' .!?').split())
+    value = re.sub(r'^(?:il numero|numero|risultato)\s+', '', value)
+    if value.isdigit():
+        return value
+    return _RESULT_WORDS.get(value)
+
+
 
 @dataclass(frozen=True)
 class FileResult:
@@ -26,13 +47,18 @@ class FileResult:
 def validate_arguments(operation, arguments):
     if operation not in OPERATIONS or not isinstance(arguments, dict):
         raise ValueError('Azione file non riconosciuta.')
-    permitted = {'query', 'scope'} if operation == 'search' else {'query'} if operation == 'locate' else {'target', 'explain'} if operation == 'read' else {'target'}
+    permitted = {'query', 'scope'} if operation == 'search' else {'query'} if operation == 'locate' else {'target', 'explain', 'kind'} if operation == 'read' else {'target', 'kind'} if operation == 'open' else {'target'}
     if set(arguments) - permitted:
         raise ValueError('Parametri file non consentiti.')
     if operation in ('search', 'locate') and not arguments.get('query'):
         raise ValueError('Quale nome o indizio devo cercare?')
     if operation in ('read', 'open') and not arguments.get('target'):
         raise ValueError('Quale risultato vuoi usare?')
+    arguments = dict(arguments)
+    if type(arguments.get("target")) is int and 1 <= arguments["target"] <= 20:
+        arguments["target"] = str(arguments["target"])
+    if "kind" in arguments and arguments["kind"] not in ("file", "folder"):
+        raise ValueError("Tipo richiesto non valido: file oppure folder.")
     for key, value in arguments.items():
         if key == 'explain':
             if type(value) is not bool:
@@ -85,12 +111,11 @@ class FileAccessService:
                 return ''
             # No full paths/content sent in the catalog. Selection still checked locally.
             return 'Risultati file selezionabili: '+', '.join(
-                str(i+1)+': '+p.name[:60] for i, p in enumerate(self._results[:8]))
+                str(i+1)+': '+('Cartella ' if p.is_dir() else 'File ')+p.name[:55] for i, p in enumerate(self._results[:8]))
 
     def _target(self, text):
         value = str(text).strip().strip('"')
-        value = {'il primo':'1','la prima':'1','il secondo':'2','la seconda':'2',
-                 'il terzo':'3','la terza':'3'}.get(value.casefold(), value)
+        number = result_number(value)
         aliases = {'documenti': 'documenti', 'download': 'download', 'desktop': 'desktop',
                    'appdata': 'appdata', 'profilo': 'profilo', 'cartella utente': 'profilo'}
         if value.casefold() in aliases:
@@ -98,14 +123,13 @@ class FileAccessService:
         with self._lock:
             valid = (time.monotonic() < self._expires and
                      self._result_revision == self.policy.revision)
-            if value.casefold() in ('questo', 'quello', 'selezionato', 'il file', 'la cartella', 'selezionata'):
+            if value.casefold() in _DEICTIC_TARGETS:
                 if not valid or self._selected is None:
                     raise ValueError('Prima scegli un risultato della ricerca corrente.')
                 return self._selected
-            number = value.casefold().removeprefix('risultato ').strip()
-            if number.isdigit():
+            if number is not None:
                 if not valid or not 1 <= int(number) <= len(self._results):
-                    raise ValueError('Quel risultato non è più disponibile: ripeti la ricerca.')
+                    raise ValueError('Quel risultato non è più disponibile: aggiorna l’elenco o ripeti la ricerca.')
                 return self._results[int(number)-1]
         return safe_path(value)
 
@@ -124,25 +148,27 @@ class FileAccessService:
             return ('open', {'target': 'C:\\'})
         if low in ('aiuto', 'comandi', 'cosa puoi fare', 'cosa sai fare'):
             return ('help', {})
-        choices = {'il primo': '1', 'la prima': '1', 'il secondo': '2', 'la seconda': '2',
-                   'il terzo': '3', 'la terza': '3'}
-        if low in choices or low.isdigit():
+        number = result_number(low)
+        if number is not None:
             with self._lock:
-                if self._results and time.monotonic() < self._expires:
-                    return ('select', {'target': choices.get(low, low)})
+                if self._results:
+                    return ('select', {'target': number})
             return None
         patterns = (
             (r'^(?:cerca|cercami|trova|trovami) (?:il |la |un |una )?(?:file|cartella)\s+(.+)$', 'search'),
             (r'^(?:elenca|mostra) (?:i file in|la cartella|il contenuto di)\s+(.+)$', 'list'),
-            (r'^(?:leggi|leggimi|spiega|spiegami) (?:il |la )?(?:file|risultato)\s+(.+)$', 'read'),
-            (r'^(?:apri|aprimi) (?:il |la )?(?:file|cartella|risultato)\s+(.+)$', 'open'),
+            (r'^(?:leggi|leggimi|spiega|spiegami) (?:il |la )?(?P<kind>file|risultato)\s+(.+)$', 'read'),
+            (r'^(?:apri|aprimi) (?:il |la )?(?P<kind>file|cartella|risultato)\s+(.+)$', 'open'),
             (r'^(?:trova|trovami) (?:la )?cartella (?:di installazione|dati) (?:di )?(.+)$', 'locate'),
         )
         # Program-identity query is more specific than the general search pattern.
         for pattern, operation in (patterns[-1],)+patterns[:-1]:
             match = re.fullmatch(pattern, clean, re.I)
             if match:
-                args = {'query' if operation in ('search', 'locate') else 'target': match.group(1).strip()}
+                args = {'query' if operation in ('search', 'locate') else 'target': match.group(match.lastindex).strip()}
+                noun = match.groupdict().get('kind')
+                if noun in ('file', 'cartella'):
+                    args['kind'] = 'folder' if noun=='cartella' else 'file'
                 if operation == 'search':
                     scoped = re.fullmatch(r'(.+?) (?:in|nella cartella) (documenti|download|desktop|profilo|appdata)', args['query'], re.I)
                     if scoped:
@@ -173,7 +199,9 @@ class FileAccessService:
                 if pending is not None:
                     op, opts = pending
                     return self.execute(op, {**opts, 'target': str(path)})
-                return FileResult('completed', 'Selezionato: '+str(path)+'. Puoi dire “leggi file selezionato” o “apri cartella selezionata”.')
+                if path.is_dir():
+                    return FileResult('completed', 'Cartella selezionata: '+str(path)+'. Puoi dire “apri cartella selezionata” o “elenca cartella selezionata”.')
+                return FileResult('completed', 'File selezionato: '+str(path)+'. Puoi dire “leggi file selezionato” o “apri file selezionato”.')
             except (OSError, ValueError) as exc:
                 return FileResult('rejected', str(exc))
         try:
@@ -192,11 +220,11 @@ class FileAccessService:
                 target = self._target(args.get('target', 'profilo'))
             except ValueError:
                 name = args.get('target', '')
-                if operation not in ('read', 'open') or not name or Path(name).is_absolute() or name.isdigit():
+                if operation not in ('read', 'open') or not name or Path(name).is_absolute() or result_number(name) is not None or name.casefold() in _DEICTIC_TARGETS:
                     raise
                 # A requested action with a partial name reuses the same search.
                 self.cancelled.clear()
-                answer = self._search(name, None, revision)
+                answer = self._search(name, None, revision, kind=args.get('kind'))
                 if answer.status != 'completed' or not self._results:
                     return answer
                 if len(self._results) == 1:
@@ -205,6 +233,10 @@ class FileAccessService:
                 return FileResult('completed', answer.message+'\nQuale risultato vuoi '+('leggere' if operation=='read' else 'aprire')+'?')
             if not self.policy.permits(target):
                 raise PermissionError('Accesso non consentito o percorso/volume cambiato: '+str(target))
+            if args.get('kind')=='folder' and not target.is_dir():
+                return FileResult('rejected', 'Il risultato scelto è un file, non una cartella: '+target.name+'. Scegli una voce etichettata Cartella nell’elenco.')
+            if args.get('kind')=='file' and target.is_dir():
+                return FileResult('rejected', 'Il risultato scelto è una cartella, non un file: '+target.name+'. Puoi aprirla con “apri cartella” oppure elencarne il contenuto.')
             if operation == 'list':
                 return self._list(target, revision)
             if not self._live(revision):
@@ -234,7 +266,15 @@ class FileAccessService:
             self._result_revision = revision
         lines = [f'{i+1}. {"Cartella" if p.is_dir() else "File"}: {p}' for i, p in enumerate(allowed)]
         message = '\n'.join(lines) if lines else 'Nessun risultato nell’ambito effettivamente esaminato.'
-        return FileResult('completed', message+'\n'+note+('\nScegli il numero, oppure di’ “leggi file 1” / “apri cartella 1”.' if allowed else ''))
+        suggestions = []
+        folder_number = next((i+1 for i,p in enumerate(allowed) if p.is_dir()), None)
+        text_number = next((i+1 for i,p in enumerate(allowed) if p.is_file() and p.suffix.casefold() in TEXT_TYPES), None)
+        if folder_number is not None:
+            suggestions.append('apri cartella '+str(folder_number))
+        if text_number is not None:
+            suggestions.append('leggi file '+str(text_number))
+        guidance = ('\nScegli il numero. Esempi per questo elenco: '+ ' / '.join(suggestions)+'.') if suggestions else ''
+        return FileResult('completed', message+'\n'+note+guidance)
 
     def _list(self, root, revision):
         if not root.is_dir():
@@ -252,7 +292,7 @@ class FileAccessService:
                     return self._report(paths, revision, 'Elenco parziale: limite raggiunto. Ambito: '+str(root))
         return self._report(paths, revision, 'Ambito: '+str(root))
 
-    def _search(self, query, scope, revision, *, locate=False):
+    def _search(self, query, scope, revision, *, locate=False, kind=None):
         roots = [self._target(scope)] if scope else [Path(r['path']) for r in self.policy.valid_roots() if r['allow']]
         roots = list(dict.fromkeys(roots))
         if not scope:
@@ -271,6 +311,10 @@ class FileAccessService:
         paths, reason, scanned, partial = [], '', 0, False
         limited = False
         def add(path):
+            if kind=='folder' and not path.is_dir():
+                return
+            if kind=='file' and not path.is_file():
+                return
             if path not in paths and self.policy.permits(path):
                 paths.append(path)
         if locate:
@@ -345,6 +389,34 @@ class FileAccessService:
         if not self._live(revision):
             raise PermissionError('Accesso revocato durante la lettura.')
         return FileResult('completed', 'Letto in sola lettura: '+str(path), text, str(path), explain)
+
+    @staticmethod
+    def arguments_for_utterance(operation, arguments, utterance):
+        clean = validate_arguments(operation, arguments)
+        if operation not in ('open','read'):
+            return clean
+        found = re.search(r"\b(?:apri(?:mi)?|aprire|leggi(?:mi)?|leggere)\s+(?:(?:il|la|un|una|quel|quella|questo|questa)\s+)?(cartella|file)\b", utterance, re.I)
+        if found:
+            clean['kind'] = 'folder' if found.group(1).casefold()=='cartella' else 'file'
+        return clean
+
+    def spoken_reply(self, operation, result):
+        """Presentation only: file lists stay on screen, never in the TTS queue."""
+        if operation in ('list', 'search', 'locate', 'help'):
+            return ''
+        if result.status != 'completed':
+            return ''
+        if result.preview_path:
+            return 'Il testo è nella finestra di lettura.'
+        if self._pending is not None:
+            return 'Quale risultato vuoi leggere?' if self._pending[0]=='read' else 'Quale risultato vuoi aprire?'
+        if operation == 'open':
+            return 'Ho richiesto l’apertura della cartella.'
+        if operation == 'select':
+            return 'Risultato selezionato.'
+        if operation == 'cancel':
+            return 'Ho richiesto l’interruzione della ricerca.'
+        return 'Risultato mostrato in chat.'
 
     def commands(self):
         if not self.available():

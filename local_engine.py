@@ -31,6 +31,7 @@ class TaskResult:
     preview: str = ""
     preview_path: str = ""
     explain: bool = False
+    spoken_message: str | None = None
 
 
 class LocalEngine:
@@ -152,7 +153,8 @@ class LocalEngine:
                 "Accesso file non disponibile: reinstalla il pacchetto completo."))
         result=self.file_access.execute(operation,arguments)
         return self._record(TaskResult(uuid4().hex,"files_"+operation,result.status,
-            result.message,result.preview,result.preview_path,result.explain))
+            result.message,result.preview,result.preview_path,result.explain,
+            self.file_access.spoken_reply(operation,result)))
 
     def _system_status(self) -> str:
         lines = [f"CPU logiche: {os.cpu_count() or 'non disponibile'}"]

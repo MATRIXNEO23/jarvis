@@ -100,8 +100,8 @@ def build_conversation_prompt(
     )
     if any(str(a.get("id","")).startswith("addon.accesso_file.") for a in addon_actions):
         prompt += (" Accesso file: cerca/localizza usano arguments.query; cerca accetta scope facoltativo; "
-                   "elenca/apri/leggi usano target (numero risultato o cartella nota); leggi accetta "
-                   "explain booleano. Nessuna scrittura. ")
+                   "elenca/apri/leggi usano target (esempio {\"target\":\"1\"}, numero risultato o cartella nota); leggi accetta "
+                   "explain booleano. Per apri/leggi usa kind folder o file se richiesto dall’utente. Nessuna scrittura. ")
     # Small live status is refreshed by Jarvis before EACH external request.
     # This is descriptive evidence, never an authorization for an action.
     if runtime_info:
@@ -230,7 +230,9 @@ def parse_conversation_intent(
                     has_document=has_document,
                     telegram_send_ready=telegram_send_ready)
         except (CapabilityRejected, ValueError, OSError) as exc:
-            raise ConversationRejected("Azione add-on o capacità locale non disponibile.") from exc
+            reason = ' '.join(str(exc).split())[:180]
+            raise ConversationRejected("Azione non eseguita: "+(reason or
+                "capacità locale non disponibile.")) from exc
         return ConversationIntent(kind="capability", capability=resolved)
 
     if kind == "tool":
