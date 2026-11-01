@@ -1,3 +1,6 @@
+## Passo 3 — primo fallimento isolato, ricontrollo Windows in corso
+Run 41336018787 FALLITA: 420 test per job, un solo nuovo test PS restituisce unavailable. Job 124935894701/124935894989. Non dichiarare passo verificato né procedere a UI/programmi. Sorgenti correttivi 9e4d09b532b363760deab9f0b2825fba6fc963e0, run 41336293846 in attesa. Rimosso wrapper @() superfluo nella fixture JSON Shell (possibile array annidato su PS5.1); diagnosi da confermare, non attribuirla a COM reale prima dell’esito. Helper aggiunge error_id tecnico senza messaggi/percorsi per rendere verificabile un eventuale errore successivo. Nessun indebolimento delle verifiche o nuova build. Prossimo controllo soltanto esito della run; i dati/script/diagnosi sono persistenti.
+
 # Passo 3 — Explorer corrente e navigazione relativa
 
 ## Passo 3 in corso — Explorer corrente, file e navigazione
