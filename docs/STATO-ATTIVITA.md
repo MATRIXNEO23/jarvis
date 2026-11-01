@@ -29,4 +29,7 @@ Questo indice non sostituisce codice, piano e prove. Alla ripresa verificare eve
 Attendere la ripresa richiesta dall'utente; quindi completare la revisione tecnica della fase 1 del piano web, senza iniziare l'implementazione fino al successivo via. Nessun'altra raccolta dei requisiti da zero. Aggiornare piano/handoff prima e dopo ogni unità coerente e registrare prove/esiti nel [registro](DECISIONI-E-LEZIONI.md).
 
 ## Recupero di versioni funzionanti
-[Registro versioni](../Download/REGISTRO-VERSIONI.md): 20 ZIP storici inventariati con riferimenti fissati. Nessun nuovo pacchetto e nessun punto PC promosso a stabile senza versione esatta. Il dialogo migliorato resta un feedback non collegato a SHA installato. Per «riprendi da lì» usare prima scheda/indice, poi verificare solo dati necessari e condizioni cambiate.
+[Registro versioni](../Download/REGISTRO-VERSIONI.md): 20 ZIP storici inventariati con riferimenti fissati. Nessun nuovo pacchetto. L'utente ha indicato come base funzionante la build attualmente usata; il nome ZIP esatto resta da confermare. Il dialogo migliorato resta un feedback non collegato a SHA installato. Per «riprendi da lì» usare prima scheda/indice, poi verificare solo dati necessari e condizioni cambiate.
+
+## Base funzionante confermata dall'utente
+BASE-UTENTE-20261101: Alberto conferma l'ultima build usata come funzionante e chiede di partire da quella per le aggiunte, preservandola per regressioni. Nome ZIP/SHA non ancora collegati. Candidato del catalogo: Jarvis-Timer-Audio-Fix2-20261031.zip. Alla prossima domanda confermare il nome, senza reinterpretare il feedback come prova di tutte le funzioni. Fermo prima dell'implementazione mantenuto.
