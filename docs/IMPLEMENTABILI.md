@@ -4,6 +4,7 @@ Aggiornato: 2026-11-01. **Stato: discussione delle alternative prima dell'implem
 ## Indice delle schede
 | ID | Funzione | Stato | Complessità preliminare | Prossimo passo |
 |---|---|---|---|---|
+| WINDOWS | [File, cartelle e programmi](implementabili/WINDOWS.md) | Requisiti utente in discussione; lettura codice/fonti svolta | Avvio programmi più circoscritto; ricerca generale da progettare | Riuso Windows prima di nuove dipendenze; chiarire verifiche sui file |
 | CRONOMETRO | [Cronometro](implementabili/CRONOMETRO.md) | Proposta dell'assistente da discutere | Potenzialmente bassa; da verificare col timer esistente | Chiarire utilità e funzioni minime |
 | PROMEMORIA | [Promemoria locali](implementabili/PROMEMORIA.md) | Proposta dell'assistente da discutere | Media per persistenza, riavvio e scadenze | Concordare comportamento a PC spento |
 | WEB | [Navigazione browser](implementabili/WEB.md) | Requisiti raccolti; revisione tecnica sospesa | Alta rispetto a un modulo locale senza servizi esterni | Discutere prima le alternative; nessuna precedenza automatica |
