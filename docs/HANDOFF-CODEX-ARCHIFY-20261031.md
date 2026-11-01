@@ -205,3 +205,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Regola in AGENTS.md fed120f5abeeb1c2e039d92fc4f57482f2f34595, piano 38a25509e2badeb87273a68275a1e3fd7c65e339, lezioni edd9126892b89beb86a7a568b8fe9d1a2acf72cc.
 - Comando preciso riconosciuto localmente senza modello; richieste non risolte interpretate da GPT esterno con motore esecutore e chiarimenti contestuali. Nessun obbligo di interrogare GPT per ogni frase; preservare modalità manuali e connessione consentita.
 - Nessun codice, nuovo test o pacchetto. Prossimo passo: revisione tecnica del piano e comportamento nelle modalità prima dell'implementazione autorizzata.
+
+## 2026-11-01 — In corso: allineamento finale e arresto prima del codice
+- Richiesta: completare l'allineamento del metodo e dei documenti, salvare un punto di ripresa pulito e fermarsi prima di implementare la nuova add-on.
+- Controllo documentale: individuate formulazioni generiche sul passaggio GPT da precisare con la scelta ibrida finale; vecchia clausola di approvazione del nucleo superata dal piano già approvato e dalla correzione documentata. La politica di riuso/ricerca web va esplicitata.
+- Previsto: correggere queste formulazioni, rendere univoci stato delle fasi e prossimo passo in piano/STATO/RECUPERO, registrare esito. Nessun codice, pacchetto o test runtime in questo allineamento.
