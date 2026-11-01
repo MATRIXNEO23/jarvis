@@ -1,4 +1,7 @@
 # Recupero del lavoro Jarvis
+
+## Punto di arresto vigente — 2026-11-01
+Metodo e documenti allineati. Nuova add-on web non implementata, nessun pacchetto pubblicato. L'utente ha chiesto di fermarsi prima del codice. Alla ripresa verificare docs/STATO-ATTIVITA.md, poi completare la revisione tecnica della fase 1 del piano web; non ripetere domande già risolte e non dedurre autorizzazione al codice da una semplice richiesta di recupero.
 Questo è il punto d'ingresso per una nuova sessione di sviluppo con accesso al repository MATRIXNEO23/jarvis. Non è memoria runtime di Jarvis e non concede autorizzazioni nuove.
 
 ## Procedura di avvio
