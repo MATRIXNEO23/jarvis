@@ -58,3 +58,6 @@ Conservare le soluzioni riuscite come riferimenti entro il loro ambito verificat
 
 ## 2026-11-01 — Responsabilità nello sviluppo
 **Richiesta e scelta:** l'utente non programma e vuole occuparsi delle decisioni di prodotto. L'assistente assume pianificazione, scelte tecniche motivate, realizzazione autorizzata, test e continuità; interventi manuali inevitabili sul PC guidati un passo alla volta. Regola aggiunta ad AGENTS.md e al piano web. Il piano è documentato, l'implementazione resta non avviata. Nessun nuovo test o workflow.
+
+## 2026-11-01 — Continuità fra attività
+L'utente richiede recupero dei progetti precedenti anche dopo un cambio di argomento. Creato docs/STATO-ATTIVITA.md nel commit d074634e96b584c1a1f339176ea22962108a357b, con fonti e punti di ripresa per web, dialogo e metodo. Regola in AGENTS.md: recuperare dati confermati, distinguere proposte/autorizzazioni/esecuzione, aggiornare checkpoint prima di sospendere. Solo documentazione: nessuna nuova funzione runtime o test.
