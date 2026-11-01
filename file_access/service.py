@@ -257,6 +257,9 @@ class FileAccessService:
             return None
         clean = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+', '', text.strip(), flags=re.I).strip()
         low = clean.casefold().strip(' .!?')
+        # Explicit project requests retain their existing owner, including project folders.
+        if re.match(r'^(?:apri(?:mi)?|mostra(?:mi)?)\s+(?:(?:il|un|un nuovo|nuovo|la cartella del|la cartella di|cartella del|cartella di|cartella)\s+)?progetto\b',low):
+            return None
         if low in ('elenca qui','elenca qui dentro','mostra qui dentro','mostra la cartella corrente'):
             return ('list',{'target':'qui'})
         if low in ('vai indietro','vai indietro di una cartella','torna indietro di una cartella','sali di una cartella'):

@@ -745,7 +745,7 @@ class FileAccessTests(unittest.TestCase):
         result=self.engine.execute('elenca qui dentro')
         self.assertIn(self.a.name,result.message)
         self.assertEqual(result.spoken_message,'')
-        for phrase in ('apri blocco note','apri il blocco note','apri browser','apri calcolatrice','apri esplora file','apri notepad','apri calc'):
+        for phrase in ('apri blocco note','apri il blocco note','apri browser','apri calcolatrice','apri esplora file','apri notepad','apri calc','apri progetto Romanzo','apri un nuovo progetto','apri la cartella del progetto'):
             self.assertIsNone(self.files.parse_command(phrase),phrase)
 
     def test_real_powershell_explorer_selection_and_navigation_contract(self):
@@ -792,3 +792,34 @@ function New-Object {
         self.assertFalse(marker.exists())
         views[1]['hwnd']=101
         self.assertEqual(run({'operation':'view','hwnd':101},views)['status'],'ambiguous')
+
+    def test_actual_console_gate_prefers_explorer_but_preserves_explicit_projects(self):
+        from types import SimpleNamespace
+        tree=ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
+        main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
+        callbacks=[next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name==name)
+                   for name in ('try_file_command','send_console_input')]
+        calls=[]; projects=[]; request=Mock(); request.get.return_value='apri Foto'
+        env={'request':request,'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
+             'write_line':lambda *a:None,'submit_local':lambda **kw:calls.append(kw),
+             'reconcile_document_session':lambda **kw:None,'try_telegram_voice_send':lambda s:False,
+             'save_only_waiting':False,'doc_dialog':SimpleNamespace(phase='idle'),
+             'parse_simple_save':lambda s:None,'project_voice_command':lambda s:projects.append(s) or True,
+             'preference_command':lambda s:False,'handle_project_reference':lambda s:False,
+             'handle_unanchored_short_reply':lambda s:False,'try_self_diagnostic':lambda s:False,
+             'maybe_queue_telegram_note':lambda s:False,'gpt_enabled':SimpleNamespace(get=lambda:False)}
+        exec(compile(ast.Module(body=callbacks,type_ignores=[]),'real-explorer-console-gate','exec'),env)
+        env['send_console_input']()
+        self.assertEqual(calls[0]['file_call'],('open',{'target':'Foto','scope':'current'}))
+        self.assertEqual(projects,[])
+        request.get.return_value='apri progetto Romanzo'
+        env['send_console_input']()
+        self.assertEqual(projects,['apri progetto Romanzo'])
+        self.assertEqual(len(calls),1)
+        confirmations=[]
+        env['doc_dialog'].phase='awaiting_save'
+        env['handle_document_confirmation']=confirmations.append
+        request.get.return_value='apri Foto'
+        env['send_console_input']()
+        self.assertEqual(confirmations,['apri Foto'])
+        self.assertEqual(len(calls),1)

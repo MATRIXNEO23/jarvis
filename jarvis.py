@@ -3599,6 +3599,9 @@ def main() -> None:
                 decision=doc_dialog.request_close_with_choice(message)
                 execute_document_choice(decision)
                 return
+        if try_file_command(message):
+            request.set("")
+            return
         if project_voice_command(message):
             request.set("")
             return
@@ -3606,9 +3609,6 @@ def main() -> None:
             request.set("")
             return
         if handle_project_reference(message):
-            request.set("")
-            return
-        if try_file_command(message):
             request.set("")
             return
         if handle_unanchored_short_reply(message):
