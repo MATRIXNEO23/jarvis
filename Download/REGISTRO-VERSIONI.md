@@ -1,6 +1,9 @@
 # Registro versioni e punti di ripristino Jarvis
 Aggiornato il 2026-11-01. Questo è l'indice diretto per recuperare una versione senza analizzare tutta la cronologia o cercare artifact.
 
+## Ultimo candidato consegnato — d06e233 (collaudo PC pendente)
+[Jarvis-Accesso-File-0.1.0-20261101-d06e233.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Accesso-File-0.1.0-20261101-d06e233.zip), source d06e233a98e4ea5b4e99a9d296b9570ce0c92d86. [Scheda e prove](../docs/CONSEGNA-ACCESSO-FILE-20261101-d06e233.md). Windows CI 41350638557 SUCCESS: 466 test per versione Python, 93 estratti, UI/manifest/launcher unico e download HTTP/hash PASS. 266689 byte; SHA-256 ac130883d32518b430737f8f3d767a16a56e3cad9b3ae32f37d8f20799f42699. BASE-UTENTE sotto conservata; nessun riscontro PC attribuito al candidato.
+
 ## Riferimento funzionante confermato
 **BASE-UTENTE-20261101 — Jarvis-Timer-Audio-Fix2-20261031.zip.**
 Il 2026-11-01 l’utente ha identificato come funzionante Timer Audio Fix2, allora in cima a Download/README.md. Nome e file sono verificati: non serve ripetere la domanda. I candidati aggiunti successivamente in cima al catalogo non ereditano quella conferma PC.
