@@ -1,0 +1,96 @@
+{
+  "runtime_introduction": "d02e9c9580ddf15dd0dd9b384561d7b30969c246",
+  "source_commit": "d379368c0c9ebaee93816fa2ea739bae5cf5b0f0",
+  "run": {
+    "id": 41349291815,
+    "status": "completed",
+    "conclusion": "success",
+    "sha": "d379368c0c9ebaee93816fa2ea739bae5cf5b0f0"
+  },
+  "jobs": [
+    {
+      "id": 124975779970,
+      "python": "3.11.9",
+      "tests": 466,
+      "seconds": 49.775,
+      "result": "OK"
+    },
+    {
+      "id": 124975780199,
+      "python": "3.12.10",
+      "tests": 466,
+      "seconds": 56.655,
+      "result": "OK"
+    }
+  ],
+  "new_tests": 11,
+  "verified": [
+    "native WScript shortcut creation/read with label different from executable/directory",
+    "real temporary HKCU App Paths key, cleaned after test",
+    "actual voice callback, local worker/poll, one folder-open request intercepted",
+    "resolved native evidence without GPT or filename index scan",
+    "two controlled roots and portable model hints resolved through current-profile adapter",
+    "exact identity wins over similar names; ambiguity retains locate",
+    "comma-containing paths, generic hosts, UNC, missing targets and command lines handled",
+    "policy exclusion and revocation before open",
+    "incomplete installation questions do not search literal installato"
+  ],
+  "native_windows_search": {
+    "native_index_verified": true,
+    "runtime_adapter": "indexed_candidates",
+    "scope_changes": false,
+    "global_reindex": false,
+    "personal_pc_verified": false,
+    "checks": {
+      "available_empty_query": "passed",
+      "created_file_found": "passed",
+      "other_scope_empty": "passed",
+      "rename_observed": "passed",
+      "deletion_observed": "passed"
+    },
+    "initial_service": {
+      "running": false,
+      "start_mode": "Disabled"
+    },
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "syntax": [
+    "Python",
+    "Node",
+    "PowerShell"
+  ],
+  "skipped": [
+    "build",
+    "extracted_package",
+    "artifact",
+    "publisher"
+  ],
+  "limitations": [
+    "controlled transcripts, not real microphone or STT audio",
+    "two simulated profile roots, not two actual users/PCs",
+    "Explorer launch intercepted, personal desktop not verified",
+    "not a universal game/launcher installation resolver",
+    "not Pavilion performance measurement",
+    "web optional and not activated"
+  ],
+  "previous_runs": [
+    {
+      "id": 41348798109,
+      "source": "d02e9c9580ddf15dd0dd9b384561d7b30969c246",
+      "result": "failed",
+      "failure": "existing Store test compared DOS and long path aliases as text",
+      "new_tests_result": "all 11 passed"
+    },
+    {
+      "id": 41349085946,
+      "source": "7384a71c73b2d269ee0712a6f41febff491ea4a7",
+      "result": "success",
+      "changes": "test only: samefile/source/uniqueness/exclusion"
+    }
+  ],
+  "official_sources": [
+    "https://learn.microsoft.com/en-us/windows/win32/shell/app-registration",
+    "https://learn.microsoft.com/en-us/windows/win32/shell/links"
+  ]
+}

@@ -1,3 +1,6 @@
+## Riferimento corrente — cartella programma da Windows
+Source d379368c0c9ebaee93816fa2ea739bae5cf5b0f0, checkpoint 5fe2dca279b2fa013b27d646ac9750eb94c770d5, ramo feature/file-access-20261101. [Run 41349291815](https://github.com/MATRIXNEO23/jarvis/actions/runs/41349291815) SUCCESS: 466 test per job Python 3.11/3.12, sintassi/probe/indice live PASS; nessuna build. [Mappa, decisione ed evidenza](ACCESSO-FILE-PASSO8-CARTELLE-PROGRAMMI-20261101.md). Modificati gli adapter Windows/Shell, servizio e prompt esistenti; App Paths/shortcut confluiscono in installed_locations, user_path_hint riusa Known Folders. Manifest localizza/LEGGIMI/catalogo aggiornati, test propri tests/test_program_locations.py. Web opzionale, non prerequisito.
+
 ## Verifica SDK web — sola prova sviluppo
 Source 0af4305227145f777de4aabc8a5869fc214fa33a, checkpoint dd9654e36400c65ed71306177c139002238acb09, ramo feature/file-access-20261101. tools/probe_siwc_web_contract.mjs e raccordo gpt-smoke verificati su Windows: run 41346741167, 8 controlli PASS su SDK effettivo e trasporto simulato; suite 41346741184, 455 test per job PASS. [Review, mappa e prerequisiti live](ACCESSO-FILE-PASSO7-WEB-VERIFICA-20261101.md). Runtime applicativo invariato dal passo 6; nessuna capacità web distribuita o nuova build.
 
