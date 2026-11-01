@@ -16,3 +16,6 @@ Questo è il punto d'ingresso per una nuova sessione di sviluppo con accesso al 
 - Metodo di sviluppo: memoria nel repository, lavoro per fasi, prove osservabili, UI semplice e recupero delle add-on. L'utente decide risultati e compromessi, non deve programmare.
 
 L'indice e gli aggiornamenti nell'handoff sono la fonte per lo stato più recente: questa sintesi non li sostituisce. Le istruzioni hanno effetto solo quando la nuova istanza ha accesso al repository e le legge; nessun meccanismo di questa documentazione può attribuire accesso automatico a una chat esterna.
+
+## Ripresa dopo interruzione improvvisa
+L'handoff viene salvato durante il lavoro, prima della modifica (in corso), subito dopo (eseguita, verifiche pendenti) e dopo i test (esito osservato). Non richiede una richiesta dell'utente a fine sessione. Un checkpoint rimasto in corso può indicare un'interruzione: controllare commit, diff e file effettivi; non trattarlo come successo o assumere che nulla sia cambiato. Resta inevitabile una possibile differenza tra ultimo checkpoint salvato e operazioni interrotte prima del salvataggio.
