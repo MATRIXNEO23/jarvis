@@ -2,22 +2,27 @@
 Aggiornato il 2026-11-01. Questo è l'indice diretto per recuperare una versione senza analizzare tutta la cronologia o cercare artifact.
 
 ## Riferimento funzionante confermato
-**BASE-UTENTE-20261101 — build attualmente usata da Alberto, funzionante nell'uso riferito.**
-Il 2026-11-01 l'utente conferma che l'ultima build usata «va benissimo» per il momento, la indica come base per le prossime aggiunte e chiede di conservarla per tornare indietro in caso di peggioramenti.
+**BASE-UTENTE-20261101 — Jarvis-Timer-Audio-Fix2-20261031.zip.**
+L'utente identifica come funzionante la build in cima a Download/README.md. Nome e file sono stati verificati e collegati alla sua conferma. Non serve chiedere di nuovo quale ZIP.
 
-| Campo | Stato |
+| Campo | Valore verificato |
 |---|---|
-| Prova PC | Riscontro positivo esplicito dell'utente; nessuna nuova osservazione diretta dell'agente |
-| Ambito | Uso attuale riferito; non certificazione di tutte le funzioni o stabilità universale |
-| Nome ZIP installato | Da confermare con l'utente |
-| Candidato in cima al catalogo | Jarvis-Timer-Audio-Fix2-20261031.zip; associazione al PC non ancora confermata |
-| Candidato conservato | [ZIP al riferimento immutabile](https://github.com/MATRIXNEO23/jarvis/raw/bb94afa1865fe0315021f783736be3cb77c4af84/Download/Jarvis-Timer-Audio-Fix2-20261031.zip), Git blob 6aa9e6f9eb040dc7390b4edb55c9ae175bd4e512, 406653 byte |
-| Commit sorgente della build PC | Da associare al pacchetto esatto; non dedurlo dal solo nome |
-| Prossima azione | Chiedere se il pacchetto usato è il candidato; poi verificare sorgenti e dati compatibili prima di realizzare nuove aggiunte |
+| Pacchetto completo | [Jarvis-Timer-Audio-Fix2-20261031.zip](https://github.com/MATRIXNEO23/jarvis/raw/bb94afa1865fe0315021f783736be3cb77c4af84/Download/Jarvis-Timer-Audio-Fix2-20261031.zip) |
+| Commit sorgente esatto | [b936879a431370d206152be7b089baf587d15499](https://github.com/MATRIXNEO23/jarvis/tree/b936879a431370d206152be7b089baf587d15499) |
+| Dimensione e integrità | 406653 byte; Git blob SHA-1 6aa9e6f9eb040dc7390b4edb55c9ae175bd4e512 |
+| SHA-256 | c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352 |
+| Provenienza | Tutti i 155 file identici al tree sorgente; ZIP ricostruito byte-identico; log publisher coerente |
+| Test locali audit | 373 test OK, 5 Windows-only saltati, Python 3.12.14 Linux; sintassi Python/Node PASS |
+| CI storica | Run 41229501460 Windows/Linux 3.11/3.12: 373 per job; file identici al merge testato |
+| Pubblicazione | Run 41229495866, log con sorgente/hash uguali alla copia scaricata |
+| Prova PC | Conferma esplicita di Alberto del 2026-11-01: build attualmente usata funziona bene; ambito riferito, non prova diretta dell'agente di tutte le funzioni |
+| Dati | Launcher profilo Trial separato; backup/profilo compatibile prima di ogni ritorno; credenziali cifrate non portabili liberamente |
+| Avvio microfono | Nella base dipende da auto_listen, inizialmente attivo nel profilo Trial; non attribuirle lo standby del ramo successivo |
+| Evidenze complete | [Rapporto e log](../docs/VERIFICA-CONCRETA-BASE-20261101.md) |
 
-Non sovrascrivere o eliminare il pacchetto funzionante. Prima delle nuove modifiche usare come base il suo codice effettivo, identificato e conservato, senza sostituirlo con un ramo soltanto più recente.
-La correzione nucleo a86c2c932af988b23916e8d4495025de5ee0a730 ha CI documentata (386 test per combinazione e smoke bridge), ma non ha un nuovo ZIP pubblicato in questa fase: non associarla automaticamente alla build PC o agli ZIP precedenti.
-Il primo riscontro sul dialogo resta valido; questo aggiornamento aggiunge la scelta esplicita della base da parte dell'utente.
+Questa è la base da preservare e usare per le aggiunte successive. Non sovrascrivere il pacchetto.
+Il ramo 5e61e53/a86c2c9 contiene successive modifiche al nucleo e 386 test, ma non è il contenuto di questa ZIP: valutarlo separatamente, senza attribuire il miglioramento riferito a codice assente. L'audit non ha sostituito il programma sul PC.
+Il ripristino è ora identificabile direttamente da ZIP, commit e checksum, con i limiti di compatibilità dati descritti sotto.
 
 ## Scheda obbligatoria per ogni punto di ripristino
 Compilare una scheda compatta prima della promozione:
