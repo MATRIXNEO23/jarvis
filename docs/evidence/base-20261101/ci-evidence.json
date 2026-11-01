@@ -1,0 +1,60 @@
+{
+  "packageSource": "b936879a431370d206152be7b089baf587d15499",
+  "publicationRun": 41229495866,
+  "unitRun": 41229501460,
+  "ciMerge": "9988788284850d4b4beac3bff2b77fba5d2079d8",
+  "notes": "Historical CI logs read during audit; no new remote jobs started. Filtered technical evidence only.",
+  "jobs": [
+    {
+      "job_id": 124620508446,
+      "hits": [
+        "2026-10-31T18:27:24.7062139Z b936879a431370d206152be7b089baf587d15499",
+        "2026-10-31T18:27:24.7455149Z   python-version: 3.12",
+        "2026-10-31T18:27:29.3109801Z Ran 373 tests in 3.276s",
+        "2026-10-31T18:27:29.3110586Z OK (skipped=5)",
+        "2026-10-31T18:27:29.3452199Z \u001b[36;1mprint(\"PUBLISH_ARTIFACT\",archive.name)\u001b[0m",
+        "2026-10-31T18:27:29.3452633Z \u001b[36;1mprint(\"SOURCE_COMMIT\",subprocess.check_output([\"git\",\"rev-parse\",\"HEAD\"],\u001b[0m",
+        "2026-10-31T18:27:29.3453497Z \u001b[36;1mprint(\"FILES\",len(files),\"ZIP_BYTES\",archive.stat().st_size)\u001b[0m",
+        "2026-10-31T18:27:29.3453940Z \u001b[36;1mprint(\"SHA256\",hashlib.sha256(archive.read_bytes()).hexdigest())\u001b[0m",
+        "2026-10-31T18:27:29.4683283Z PUBLISH_ARTIFACT Jarvis-Timer-Audio-Fix2-20261031.zip",
+        "2026-10-31T18:27:29.4684001Z SOURCE_COMMIT b936879a431370d206152be7b089baf587d15499",
+        "2026-10-31T18:27:29.4685182Z FILES 155 ZIP_BYTES 406653",
+        "2026-10-31T18:27:29.4685731Z SHA256 c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352"
+      ]
+    },
+    {
+      "job_id": 124620525560,
+      "hits": [
+        "2026-10-31T18:27:28.6920912Z HEAD is now at 9988788 Merge b936879a431370d206152be7b089baf587d15499 into fd7d59972a45488209c79f895c9009a4eda19707",
+        "2026-10-31T18:27:28.7505629Z   python-version: 3.11",
+        "2026-10-31T18:27:38.6419247Z Ran 373 tests in 3.764s",
+        "2026-10-31T18:27:38.6419614Z OK (skipped=5)"
+      ]
+    },
+    {
+      "job_id": 124620525712,
+      "hits": [
+        "2026-10-31T18:27:28.3978894Z HEAD is now at 9988788 Merge b936879a431370d206152be7b089baf587d15499 into fd7d59972a45488209c79f895c9009a4eda19707",
+        "2026-10-31T18:27:28.4338386Z   python-version: 3.12",
+        "2026-10-31T18:27:38.8804700Z Ran 373 tests in 3.778s",
+        "2026-10-31T18:27:38.8805287Z OK (skipped=5)"
+      ]
+    },
+    {
+      "job_id": 124620525714,
+      "hits": [
+        "2026-10-31T18:27:35.7814741Z HEAD is now at 9988788 Merge b936879a431370d206152be7b089baf587d15499 into fd7d59972a45488209c79f895c9009a4eda19707\r",
+        "2026-10-31T18:27:35.9376242Z   python-version: 3.12\r",
+        "2026-10-31T18:28:38.6627525Z Ran 373 tests in 47.191s\r"
+      ]
+    },
+    {
+      "job_id": 124620525776,
+      "hits": [
+        "2026-10-31T18:27:33.4856427Z HEAD is now at 9988788 Merge b936879a431370d206152be7b089baf587d15499 into fd7d59972a45488209c79f895c9009a4eda19707\r",
+        "2026-10-31T18:27:33.6366784Z   python-version: 3.11\r",
+        "2026-10-31T18:28:19.3528110Z Ran 373 tests in 30.211s\r"
+      ]
+    }
+  ]
+}
