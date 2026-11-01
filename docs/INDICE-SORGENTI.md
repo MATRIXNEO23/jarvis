@@ -1,3 +1,6 @@
+## Verifica Windows Search nativa — riferimento corrente
+Runtime invariato dal source 61deabcf; aggiunta prova di sviluppo tools/probe_windows_search_live.py e raccordo CI nel commit 9bec77c31dce3bab5fb7c76d1e08d4d370893d42. Run 41343194895 SUCCESS: 436 test per job Windows 3.11/3.12 e query reale con creazione/rinomina/cancellazione PASS. [Evidenze](evidence/windows-search-live-20261101.json). Il successivo checkpoint sorgente dbd8701aaad67693935acc1b429f2a6b608b0db3 è solo documentale. [Rapporto e prossimo passo](ACCESSO-FILE-PASSO5-RICERCA-INDICE-20261101.md). Nessuna nuova build o copertura completa del PC dimostrata.
+
 ## Riferimento corrente di sviluppo — passo 5A
 Sorgenti effettivi feature/file-access-20261101, commit 61deabcf9cdc5ead14561c37a26e52f4e2ddb1aa. CI Windows 41341801789: 436 test OK per Python 3.11/3.12; nessuna build. Il candidato 7298fb6 sotto resta una distribuzione precedente, non HEAD di sviluppo. [Ripresa, prove e review dell'indice per PC](ACCESSO-FILE-PASSO5-RICERCA-INDICE-20261101.md). Componenti da riusare: file_access/service.py, policy.py, windows.py, ui.py e queue/poll in jarvis.py. Nuovo indice persistente non ancora implementato.
 
