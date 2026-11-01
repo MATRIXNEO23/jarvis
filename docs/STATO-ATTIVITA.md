@@ -34,6 +34,9 @@ Piano per fasi salvato nella scheda WINDOWS: inventario con responsabilità → 
 ## Organizzazione manualmente leggibile
 Richiesta: nuove add-on/moduli con propria cartella dal nome chiaro e LEGGIMI che orienti fra codice, risorse, test, configurazione e dati reali. Pianificare/verificare compatibilità col gestore esistente; niente duplicati o spostamenti automatici dei moduli attuali. Requisito salvato in AGENTS e scheda WINDOWS; nessun file runtime riordinato.
 
+## Metodo per le riprese e ZIP essenziale
+AGENTS/RECUPERO aggiornati: ogni istanza con accesso repo deve leggere il metodo e la scheda, senza farlo ripetere all'utente. Nessuna garanzia di accesso automatico per chat esterne. Prossimi ZIP con soli file operativi/installazione/configurazione/istruzioni essenziali, inclusi sorgenti direttamente eseguiti. Test/handoff/CI e altro sviluppo restano repo; inclusioni motivate e test su ZIP estratto. Publisher b936879 esaminato: oggi include quasi tutto il Git, quindi selezione runtime ancora da implementare. Base/pacchetto confermati invariati.
+
 ## Prossimo passo corrente
 Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
 
