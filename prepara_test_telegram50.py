@@ -122,7 +122,7 @@ def main():
     test_dir = os.environ.get("JARVIS_TRIAL_HOME")
     if not appdata or not test_dir:
         raise RuntimeError("Avvia tramite avvia_jarvis.bat della ZIP sperimentale.")
-    original = Path(appdata) / "Jarvis"
+    original = Path(os.environ["JARVIS_TRIAL_SOURCE"]) if os.environ.get("JARVIS_TRIAL_SOURCE") else Path(appdata) / "Jarvis"
     trial = Path(test_dir)
     print("JARVIS // PROVA TELEGRAM 50")
     print("Profilo originale (sola lettura):", original)

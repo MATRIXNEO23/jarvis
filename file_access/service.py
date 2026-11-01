@@ -150,7 +150,7 @@ class FileAccessService:
 
     def execute(self, operation, arguments):
         if operation == 'cancel':
-            self.cancelled.set()
+            self.reset(self._context)
             return FileResult('completed', 'Interruzione della ricerca richiesta.')
         if not self.enabled():
             self.reset(self._context)
@@ -178,8 +178,9 @@ class FileAccessService:
             args = validate_arguments(operation, arguments)
             if not self.available():
                 raise PermissionError(self.policy.error or 'Seleziona almeno una cartella in Impostazioni > Add-on > Accesso file > Configura.')
-            if operation in ('search', 'locate', 'list'):
-                self.cancelled.clear()
+            # This is a fresh, locally validated request after activation.
+            # Old selections were already revoked by reset on disable/cancel.
+            self.cancelled.clear()
             revision = self.policy.revision
             if operation in ('search', 'locate'):
                 return self._search(args['query'], args.get('scope'), revision, locate=operation == 'locate')

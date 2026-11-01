@@ -14,8 +14,10 @@ if not defined LOCALAPPDATA (
 )
 rem Questa ZIP e' una prova: il launcher UNICO usa sempre dati isolati.
 rem Il vecchio Jarvis nella sua cartella mantiene il suo launcher originale.
-set "JARVIS_TRIAL_HOME=%LOCALAPPDATA%\Jarvis-Telegram50-Trial"
-echo JARVIS // AUDIT COMPLETO - AVVIO IN PROFILO ISOLATO
+set "JARVIS_TRIAL_HOME=%LOCALAPPDATA%\Jarvis-AccessoFile-Trial"
+set "JARVIS_TRIAL_SOURCE=%LOCALAPPDATA%\Jarvis"
+if exist "%LOCALAPPDATA%\Jarvis-Telegram50-Trial\settings.json" set "JARVIS_TRIAL_SOURCE=%LOCALAPPDATA%\Jarvis-Telegram50-Trial"
+echo JARVIS // ACCESSO FILE - AVVIO IN PROFILO ISOLATO
 echo.
 py -3 prepara_test_telegram50.py
 if errorlevel 1 (

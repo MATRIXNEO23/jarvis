@@ -189,6 +189,11 @@ def main() -> None:
     addon_setup_error=""
     try:
         addon_manager=AddonManager(addon_capability_registry)
+        if not any(item["id"]=="accesso_file" for item in addon_manager.list_installed()):
+            bundled=Path(__file__).parent/"file_access"/"AccessoFile.jaddon"
+            if bundled.is_file():
+                addon_manager.install(bundled)  # Descriptive only, remains OFF.
+
     except (AddonError,OSError,ValueError) as exc:
         addon_setup_error=str(exc)[:150]
     addon_settings_window=None
@@ -2649,7 +2654,7 @@ def main() -> None:
             return False
         operation,args=parsed
         if operation=="cancel":
-            provider.cancelled.set()
+            provider.reset(active_project_id)
             write_line("FILE > Interruzione richiesta; attendo la chiusura della chiamata Windows.")
             return True
         if busy_local:

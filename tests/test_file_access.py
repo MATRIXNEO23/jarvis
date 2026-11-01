@@ -84,7 +84,7 @@ class FileAccessTests(unittest.TestCase):
     def test_read_unicode_no_write_no_secret_in_task_log(self):
         before = self.a.read_bytes()
         result = self.engine.execute('leggi file '+str(self.a))
-        self.assertEqual(result.status, 'completed')
+        self.assertEqual(result.status, 'completed', result.message)
         self.assertEqual(result.preview, 'Testo reale di esempio')
         self.assertEqual(self.a.read_bytes(), before)
         self.assertNotIn('Testo reale', result.message)
@@ -170,7 +170,7 @@ class FileAccessTests(unittest.TestCase):
     def test_open_folder_only_fixed_explorer_and_read_preview(self):
         with patch('subprocess.Popen') as launch:
             result = self.files.execute('open', {'target':str(self.docs)})
-        self.assertEqual(result.status, 'completed')
+        self.assertEqual(result.status, 'completed', result.message)
         self.assertEqual(launch.call_args.args[0][1], str(self.docs))
         self.assertFalse(launch.call_args.kwargs['shell'])
         with patch('subprocess.Popen') as launch:
@@ -245,3 +245,27 @@ class FileAccessTests(unittest.TestCase):
         old = self.files.policy.rules()
         self.files.policy.configure([(self.docs,True),(self.hidden,False)])
         self.assertEqual(self.files.policy.rules(),old)
+
+    def test_console_enter_consumes_selection_before_generic_short_reply_guard(self):
+        import types
+        tree = ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
+        main = next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
+        callback = next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name=='send_console_input')
+        self.files.execute('search', {'query':'preventivo'})
+        calls = []
+        class Request:
+            value = 'il primo'
+            def get(self): return self.value
+            def set(self,value): self.value=value
+        request = Request()
+        env={'request':request,'reconcile_document_session':lambda **kw:None,
+             'try_telegram_voice_send':lambda x:False,'save_only_waiting':False,
+             'doc_dialog':types.SimpleNamespace(phase='idle'),'parse_simple_save':lambda x:None,
+             'project_voice_command':lambda x:False,'preference_command':lambda x:False,
+             'handle_project_reference':lambda x:False,
+             'handle_unanchored_short_reply':lambda x:self.fail('file choice reached generic guard'),
+             'try_file_command':lambda text:calls.append(self.files.parse_command(text)) or True}
+        exec(compile(ast.Module(body=[callback],type_ignores=[]),'jarvis-console-callback','exec'),env)
+        env['send_console_input']()
+        self.assertEqual(calls,[('select',{'target':'1'})])
+        self.assertEqual(request.value,'')

@@ -66,3 +66,16 @@ jobs:
           } else {
             Write-Host 'WSearch not installed in runner: index retrieval remains unverified; fallback must pass.'
           }
+
+      - name: Build operational candidate (Windows only)
+        if: matrix.python-version == '3.12'
+        run: python tools/build_file_access.py dist
+      - name: Verify extracted candidate on Windows
+        if: matrix.python-version == '3.12'
+        run: python tools/check_file_access_package.py dist/Jarvis-Accesso-File-0.1.0-20261101.zip
+      - uses: actions/upload-artifact@v4
+        if: success() && matrix.python-version == '3.12'
+        with:
+          name: Jarvis-Accesso-File-0.1.0-20261101
+          path: dist/*
+          retention-days: 30
