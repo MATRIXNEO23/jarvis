@@ -224,3 +224,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Nessun punto «funzionante al 100%» inventato: feedback PC sul dialogo positivo ma ZIP/SHA ancora non identificato. CI precedente distinta dai pacchetti precedenti. Le versioni future saranno promosse solo dopo prove automatiche e riscontro PC collegati al pacchetto esatto e all'ambito provato.
 - Stato finale: metodo e documenti allineati; requisiti web raccolti; fase 1 tecnica parzialmente svolta e sospesa, revisione completa/contratto ancora da concludere; fasi 2–8 da fare. Nuova add-on non implementata, nessuna nuova build/ZIP, misura RAM, installazione, cancellazione di sorgenti, merge o ripristino.
 - Prossimo passo unico: attendere la ripresa richiesta dall'utente, leggere indice e piano e completare la revisione tecnica web; non avviare codice o pubblicazione finché l'utente non darà il successivo via. Se chiede una versione precedente, leggere prima il registro e chiedere solo se il riferimento resta ambiguo.
+
+## 2026-11-01 — In corso: base funzionante indicata dall'utente
+- Alberto conferma che l'ultima build che sta usando funziona bene per il momento e chiede di mantenerla come base da cui migliorare e a cui tornare in caso di regressioni.
+- Registrare il riscontro come BASE-UTENTE-20261101; ambito: uso riferito, non prova universale. Associazione al nome ZIP/SHA installato ancora da confermare: in cima Download/README figura Jarvis-Timer-Audio-Fix2-20261031.zip, candidato da verificare con l'utente.
+- Previsto: aggiornare registro/stato/lezioni, chiedere una sola conferma identificativa, nessuna build o ripristino.
