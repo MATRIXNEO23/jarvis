@@ -58,6 +58,9 @@ L'utente suggerisce spunte per unità/cartelle, comprese sottocartelle; chiede s
 ## Ricerca di riferimenti per selezione/esclusioni
 Fonti primarie consultate e salvate nella scheda: Everything (Options/Exclude), Syncthing (regole ignore), Microsoft Known Folders e WRP/SfcIsFileProtected. Proposta: ispirazione per UI/policy, percorsi/protezioni dal Windows reale; nessuna installazione o copia dei due prodotti. Filtri indice non equivalgono al controllo accessi; nessun database universale verificato. Solo ricerca documentale, niente codice/test API sul PC.
 
+## Decisione vigente — struttura approvata, codice per responsabilità
+L'utente approva selezione dischi/cartelle con sottocartelle ed eccezioni per il primo incremento in sola lettura. Richiede tutte le add-on con propria cartella e codice ripartito in moduli comprensibili, evitando file monolitici di migliaia di righe; regola in AGENTS e scheda WINDOWS. Nessuna nuova build/codice/test runtime. Prossimo passo tecnico: completare contratto/inventario e revisione mirata, con questa struttura come requisito confermato; scritture/cancellazioni e dettagli non verificati non diventano automaticamente approvati.
+
 ## Prossimo passo corrente
 Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
 
