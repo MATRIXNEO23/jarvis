@@ -2,11 +2,12 @@ name: GPT official SDK Windows smoke test
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feature/file-access-20261101']
     paths:
       - '.github/workflows/gpt-smoke.yml'
       - 'installa_gpt.ps1'
       - 'gpt_bridge.mjs'
+      - 'tools/probe_siwc_web_contract.mjs'
   workflow_dispatch:
 
 permissions:
@@ -36,3 +37,8 @@ jobs:
         run: |
           node tests/smoke_gpt_bridge.mjs
           if ($LASTEXITCODE -ne 0) { throw "Bridge transport test failed ($LASTEXITCODE)" }
+      - name: Probe web-search contract on pinned SDK (mock transport, no account)
+        shell: powershell
+        run: |
+          node tools/probe_siwc_web_contract.mjs --ci-only
+          if ($LASTEXITCODE -ne 0) { throw "SDK web contract probe failed ($LASTEXITCODE)" }
