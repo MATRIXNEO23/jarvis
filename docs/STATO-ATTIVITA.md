@@ -40,6 +40,9 @@ AGENTS/RECUPERO aggiornati: ogni istanza con accesso repo deve leggere il metodo
 ## Componenti mancanti e istruzioni nella consegna
 Richiesti avvisi nella console con nome esatto di add-on/file/dipendenza, funzione interessata e rimedio/script o nome/link verificato per scaricarla. File interni: percorso e pacchetto corretto. Rilevatori Telegram/FFmpeg/Vosk e installa_telegram.bat letti sulla base, da riusare; unificazione console/link non implementata o collaudata ora. Requisito in AGENTS e scheda WINDOWS; ZIP operativo con istruzioni essenziali, base invariata.
 
+## Primo incremento scelto: applicazioni classiche e Store
+L'utente sceglie avvio programmi: rilevamento Windows di classici e Store, spunte nelle impostazioni, frase naturale e apertura dell'app corretta (esempio Netflix). Specifica e fonti Microsoft nella scheda WINDOWS; rilevata distinta da avvio collaudato. No sostituzione silenziosa col sito web o promessa di trovare qualunque programma. Nessun codice o prova Windows eseguiti. Prossimo passo specifico: spiegare elenco/spunte/prova apertura e completare contratto/revisione sul gestore esistente prima dell'implementazione.
+
 ## Prossimo passo corrente
 Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
 
