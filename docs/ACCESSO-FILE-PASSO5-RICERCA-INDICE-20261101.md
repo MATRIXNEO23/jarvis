@@ -1,5 +1,10 @@
 # Ricerca vocale, passo 5A e indice locale per ogni PC — 2026-11-01
 
+## In corso — prova positiva Windows Search prima di aggiungere componenti
+Via esplicito dell'utente: proseguire, massima integrazione Windows, rendere semplici a voce funzioni già offerte dal sistema. Base source 61deabcf; main af82d9427b9549fcb6aad6acb09dc2a3c44c544d. Osservazione dimostrata nei log dei job 124953209810/124953210058: WSearch Stopped/Disabled. Il precedente verde non copre una query positiva nativa.
+Unità limitata: nuovo probe di sviluppo tools/probe_windows_search_live.py e passo CI Windows 3.12 in .github/workflows/tests.yml; riusare indexed_candidates e gli adattatori attuali, nessuna modifica al runtime distribuito. Nel SOLO runner CI abilitare temporaneamente WSearch, poi ripristinare stato/startup in finally; fixture in cartella Documenti risolta da Windows. Provare query senza risultato, nuovo file effettivamente indicizzato, scope diverso, rinomina e cancellazione osservate nell'indice con attesa limitata. Fallimento o indice non disponibile NON sono successo o skip equivalente. Nessuna espansione di scope, Reset/Reindex globale o nuovo indicizzatore.
+Prossimo controllo: CI Windows del commit sorgente; preservare prove di fallback quando WSearch è spento, build/ZIP/publisher disattivati. Se ambiente non indicizza la fixture, diagnosticare separatamente copertura e query prima di introdurre altre soluzioni. Prove sul Pavilion/microfono/account restano distinte.
+
 ## Decisione vigente — prima Windows Search, indice proprio solo se necessario
 Precisazione successiva dell'utente: la funzione richiesta è una ricerca affidabile integrata col Windows corrente, semplice e senza duplicati. Preferire l'indice Windows se soddisfa i requisiti; NON è obbligatorio costruirne uno di Jarvis. Questa decisione supera le formulazioni sotto che impongono un catalogo autonomo per macchina. Restano validi i risultati desiderati: adattamento al PC, dischi/unità accessibili, novità, persistenza dopo aggiornamento e copertura dichiarata.
 
