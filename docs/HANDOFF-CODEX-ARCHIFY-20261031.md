@@ -140,3 +140,9 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 ## 2026-11-01 — In corso: verifiche obbligatorie prima dell'installazione
 - Precisazione dell'utente: tutto ciò che è verificabile nel repository deve essere controllato prima della consegna; sul PC restano solo prove dipendenti dall'ambiente reale. Non delegare all'utente il debug dei collegamenti di base.
 - Modifica documentale prevista: esplicitare in AGENTS.md e piano web i controlli automatici e le condizioni per consegnare; aggiornare lezioni e chiudere il checkpoint. Nessuna implementazione web o nuovo test funzionale avviati.
+
+## 2026-11-01 — Completata: regola dei test per add-on
+- Richiesta chiarita: ogni add-on deve avere test automatici propri nel repository prima della prova sul PC. AGENTS.md commit eb1778680002cf24823031f2f9a5e7da4c0c5bb8, piano 2122eed746f0a706255c145dbbd400941ecf4c7a, lezioni 96f04540a3a0c367e95b5fab946e81d931525f5f.
+- Requisiti: comportamento, contratti e integrazione dei componenti, errori/timeout, configurazione e recupero, regressioni pertinenti e prova del pacchetto. Distinguere componenti reali, simulazioni e controlli non eseguiti; non consegnare come pronto quando manca una prova obbligatoria.
+- All'utente rimangono soltanto verifiche realmente dipendenti dal suo ambiente. Non delegargli debug riproducibile in sviluppo.
+- Stato: modifica documentale completata. Nuovi test/add-on web non implementati, nessun nuovo test o workflow eseguito. Inventario della copertura delle add-on esistenti ancora da fare. Prossimo passo: revisione tecnica del piano web prima della realizzazione autorizzata.
