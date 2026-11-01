@@ -21,3 +21,20 @@ Non limitarsi a un elenco di comandi: spiegare il nesso tecnico tra problema, sc
 Main contiene il catalogo Download e sorgenti storici alla radice. Il ramo feature/timer-settings-ui-20261031 contiene l'app evoluta: verificare sempre SHA, ramo, diff e workflow prima di intervenire. Non sostituire in blocco la radice main per correggere un test.
 
 Handoff autorevole: docs/HANDOFF-CODEX-ARCHIFY-20261031.md su main. Rapporto: docs/DIAGNOSI-ARCHIFY-DIALOGO-20261031.md su main.
+
+## Procedura obbligatoria prima e durante ogni modifica
+Richiesta dell'utente del 2026-11-01: la memoria di sviluppo risiede nel repository e deve essere consultata; il solo contesto della chat non basta.
+
+1. Prima di implementare leggere queste istruzioni, l'handoff autorevole, docs/DECISIONI-E-LEZIONI.md e il piano pertinente. Verificare ramo, SHA, diff, file effettivi e prove disponibili; i documenti possono essere superati. In caso di divergenza annotarla e verificarla, senza inventare lo stato.
+2. Esaminare ciò che esiste già e i punti di integrazione: nucleo, capacità, altre add-on, impostazioni, memoria, microfono e modello esterno. Non creare un duplicato di una funzione senza una necessità dimostrata.
+3. Preparare un piano per fasi con obiettivo, interventi, dipendenze, test significativi, risultato atteso e procedura di recupero. Segnalare ipotesi, dati mancanti e possibili modifiche del nucleo. Per l'add-on web l'utente ha chiesto di discutere prima di creare: non avviare l'implementazione finché non autorizzata.
+4. Procedere per fasi controllate. Dopo un fallimento non proseguire con attività che dipendono dal risultato fallito. Conservare riproduzione, causa dimostrata oppure ipotesi esplicita, correzione e prova successiva.
+5. Aggiornare piano, handoff e registro dopo ogni fase significativa e prima di interrompere il lavoro: stato proposto/in corso/verificato/fallito/non eseguito, file interessati, motivazione tecnica sintetica, risultati attesi e osservati, comando e ambiente di prova, commit/workflow, limiti e prossimo passo preciso.
+6. Riutilizzare soluzioni riuscite solo nell'ambito verificato. Escludere quelle fallite dalle raccomandazioni, conservando una nota minima su errore e lezione. Registrare perché una nuova prova supera una vecchia conclusione. Salvare motivazioni tecniche ed evidenze riproducibili, non un flusso di ragionamento privato.
+7. Nessuna dichiarazione di successo senza prova; distinguere test simulati, osservazioni passive, test reali e riscontri riferiti dall'utente. Un aggiornamento documentale non equivale a implementazione o test dell'app.
+
+## Regole add-on e piano web
+Per questa e le future add-on pianificare cartella e configurazione separate, compatibilità, contenimento degli errori, versioni precedenti e recupero senza perdita di dati. Le cartelle da sole non isolano i guasti. Migrazione dei componenti esistenti soltanto dopo valutazione.
+UI semplice e coerente in Impostazioni > Add-on: nome, descrizione, Attivo/Disattivato, stato, Configura; opzioni meno usate distinte. Azioni separate «Ripristina impostazioni iniziali dell'add-on» e «Torna alla versione precedente», con effetti espliciti e dati utente preservati.
+Errori visibili nella chat con fase e azione utile; dettagli tecnici consultabili senza credenziali o conversazioni private. Valutare autoverifiche finite nel programma, senza analisi continua o promesse di diagnosi universale.
+Piano attuale: docs/PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md. GPT resta esterno; add-on web su richiesta, priorità al basso consumo aggiuntivo. Estensione Edge proposta, cartella finale concordata Estensione-Edge; tecnologia e prestazioni ancora da validare.
