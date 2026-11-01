@@ -124,7 +124,8 @@ def indexed_candidates(query: str, root: Path, *, timeout: float = 8) -> tuple[l
             [str(powershell), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(script)],
             input=json.dumps({'query': query, 'root': str(root)}, ensure_ascii=True),
             capture_output=True, text=True, encoding='utf-8', errors='replace',
-            timeout=timeout, shell=False, creationflags=0x08000000)
+            timeout=timeout, shell=False, creationflags=0x08000000,
+            cwd=os.environ.get('SystemRoot', r'C:\Windows'))
         if run.returncode or len(run.stdout) > 64000:
             return [], 'Indice Windows non disponibile; ricerca diretta nelle cartelle consentite.'
         result = json.loads(run.stdout.lstrip('\ufeff'))

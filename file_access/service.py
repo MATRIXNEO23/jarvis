@@ -214,7 +214,8 @@ class FileAccessService:
                     return self._list(target, revision)
                 # Fixed executable, argument is a verified local folder, no shell.
                 import subprocess
-                subprocess.Popen([str(Path(os.environ['SystemRoot'])/'explorer.exe'), str(target)], shell=False)
+                subprocess.Popen([str(Path(os.environ['SystemRoot'])/'explorer.exe'), str(target)],
+                                 shell=False, cwd=os.environ['SystemRoot'])
                 return FileResult('completed', 'Apertura richiesta a Esplora file: '+str(target)+'. Verifica la finestra; non posso confermarne la visibilità.')
             return self._read(target, revision, args.get('explain', False))
         except (OSError, ValueError, KeyError, UnicodeError) as exc:

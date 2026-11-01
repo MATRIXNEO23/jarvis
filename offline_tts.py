@@ -69,13 +69,16 @@ def _speech_chunks(text: str) -> tuple[str, ...]:
 def _invoke(payload: dict, *, timeout: int = 90) -> str:
     if os.name != "nt":
         raise OSError("Risposta vocale disponibile solo su Windows.")
-    command = ["powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive",
+    system_root = os.environ.get("SystemRoot", r"C:\Windows")
+    powershell = os.path.join(system_root,"System32","WindowsPowerShell","v1.0","powershell.exe")
+    command = [powershell, "-NoLogo", "-NoProfile", "-NonInteractive",
                "-EncodedCommand", _POWERSHELL_ENCODED]
     encoded_input = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     completed = subprocess.run(
         command, input=encoded_input, stdout=subprocess.PIPE,
         stderr=subprocess.PIPE, timeout=timeout, check=False,
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        cwd=system_root,  # Native helpers must not pin the installation folder after UI closes.
     )
     if completed.returncode != 0:
         raise OSError("La sintesi vocale Windows non è disponibile.")
