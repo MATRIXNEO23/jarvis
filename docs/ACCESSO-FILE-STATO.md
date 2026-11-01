@@ -1,5 +1,9 @@
 # Accesso file — checkpoint di sviluppo
 
+## Stato vigente — build candidata pubblicata e verificata
+2026-11-01: sorgenti 7298fb632cd9b72386fd7a30f469b307ce7e6fa5, run Windows 41322290359 SUCCESS. 393 test per job 3.11/3.12, 20 test del pacchetto estratto, import e avvio/chiusura/rilascio cartella PASS. ZIP persistente Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip, SHA-256 72c6d57a9a258fe7c875cfdc8646bc4ddf5b75417aa748bb5d4d4b7ef3e96755, 249396 byte/78 file; metadati remoti verificati. Dettagli in ACCESSO-FILE-RAPPORTO-20261101.md.
+Prossimo passo: prova dell’utente sul Pavilion (configura una cartella, cerca/leggi TXT e apre cartella), poi registrare versione/ambito/esito. Base funzionante b936879 preservata. Account GPT, microfono fisico, consumi target e indice Windows reale non collaudati dalla CI; fallback e callback simulati distinti. Nessun nuovo test Linux. Le fasi in corso sotto sono cronologia superata da questo esito.
+
 2026-11-01: utente autorizza «Procediamo passo passo fino all’implementazione e build testabile». Base b936879, ramo feature/file-access-20261101. Regole correnti main ad13e63 recuperate; nessuna migrazione delle correzioni successive del nucleo o del microfono.
 
 Fase 1 in corso: prova Windows nativa con cartelle note, identità volume/percorso e Windows Search, file temporanei controllati. Prima di dipendere da questo esito pubblicare/eseguire il probe su Windows CI. Nessun file utente modificato.
