@@ -66,3 +66,6 @@ L'utente richiede recupero dei progetti precedenti anche dopo un cambio di argom
 **Decisione:** RECUPERO.md come ingresso unico, creato nel commit aa1bce7e0f56ce4ede2258fe5e6742f14ded4186; AGENTS.md ne impone la lettura all'avvio e collega indice/handoff/lezioni/piano. Aggiornare continuità per ogni modifica e prima di sospendere, raggruppando edit correlati in checkpoint coerenti.
 **Motivo:** recuperare fatti e autorizzazioni senza dipendere dal contesto della chat e senza ripetere lavoro o errori. Se una richiesta è incompatibile, proporre alternative motivate invece di seguirla alla cieca.
 **Limite:** regole documentali verificate per presenza, non un test con una nuova istanza; la sessione deve avere accesso al repository. Nessun caricamento automatico garantito in chat esterna; nessun nuovo test runtime o implementazione web.
+
+## 2026-11-01 — Handoff continuo, non a richiesta
+Precisazione dell'utente: recupero necessario anche se la sessione termina all'improvviso. Regola in AGENTS.md e RECUPERO.md: checkpoint prima di ogni modifica coerente, subito dopo e dopo le verifiche. Stato «in corso» recuperabile confrontando codice/diff/commit. Non limitarsi al salvataggio di fine turno e non promettere che scritture interrotte siano persistite. Modifica solo documentale, nessun test runtime.
