@@ -80,3 +80,17 @@ La revisione del piano non sostituisce test, verifica del pacchetto o misure sul
 Ogni difetto realmente riprodotto aggiorna DECISIONI-E-LEZIONI con sintomo, causa provata o ipotesi, rimedio verificato e prevenzione; aggiungere un test di regressione significativo quando utile. La lezione va consultata prima di attività simili, non trasformata in controlli ridondanti.
 
 Stato: procedura documentata; revisione tecnica completa del piano web e prova minima ancora da eseguire. Nessuna implementazione avviata.
+
+## Test propri per add-on e condizioni prima della prova sul Pavilion
+Ogni nuova add-on avrà i propri test nel repository, eseguibili insieme ai controlli di Jarvis. Per l'add-on web la copertura da implementare comprende:
+- contratto dei messaggi e compatibilità delle versioni Jarvis/estensione/adattatore; rifiuto risposte non valide e attività/schede superate;
+- collegamento reale fra componenti in un ambiente di prova predisposto, non soltanto risposte simulate;
+- pagina controllata con estrazione di testo/link/campi, compilazione ricerca, azione sul pulsante e verifica dell'effetto;
+- domande e risposte brevi nella stessa attività, errori e timeout, niente doppia esecuzione o azione dopo disattivazione;
+- impostazioni predefinite, attiva/disattiva, reset e ritorno di versione preservando dati e altri componenti;
+- regressioni pertinenti del nucleo, installazione dal pacchetto estratto e percorsi/manifests dell'estensione e del collegamento.
+
+Organizzazione proposta: test Python del fornitore/adattatore e test dell'estensione identificabili per add-on, con un comando documentato e job CI pertinente. La struttura esatta va adattata al progetto esistente, senza imporre un framework per ogni componente.
+
+Prima della consegna: registrare comando, ambiente, SHA, numero/esito test, simulazioni, componenti reali e controlli non eseguiti. Un controllo necessario non eseguito resta un blocco, non diventa PASS perché altri test sono verdi. Usare la CI disponibile senza servizi a pagamento aggiuntivi. Sul PC dell'utente restano solo le prove che richiedono account/dispositivi/ambiente personale o misure prestazionali reali.
+Stato: requisito e piano documentati; questi nuovi test non sono ancora implementati o eseguiti. La copertura delle add-on esistenti dovrà essere inventariata.
