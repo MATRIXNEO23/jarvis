@@ -1,3 +1,6 @@
+## Verifica SDK web — sola prova sviluppo
+Source 0af4305227145f777de4aabc8a5869fc214fa33a, checkpoint dd9654e36400c65ed71306177c139002238acb09, ramo feature/file-access-20261101. tools/probe_siwc_web_contract.mjs e raccordo gpt-smoke verificati su Windows: run 41346741167, 8 controlli PASS su SDK effettivo e trasporto simulato; suite 41346741184, 455 test per job PASS. [Review, mappa e prerequisiti live](ACCESSO-FILE-PASSO7-WEB-VERIFICA-20261101.md). Runtime applicativo invariato dal passo 6; nessuna capacità web distribuita o nuova build.
+
 ## Riferimento corrente — raccordo locale/modello verificato
 Source a279a4ee944c23a93545835ada740793055418fe, runtime introdotto in 3f7fe6aad8638ad046f1dd3e34b2070876675694; checkpoint sorgente 93343fa2aea7a413a9711ae5a9cb9b5d8b52080f, ramo feature/file-access-20261101. [Run 41345741998](https://github.com/MATRIXNEO23/jarvis/actions/runs/41345741998) SUCCESS: 455 test Windows per job Python 3.11/3.12, sintassi/probe/indice live PASS; build/ZIP/publisher skipped. [Rapporto e mappa dei raccordi](ACCESSO-FILE-PASSO6-MODELLO-20261101.md), [evidenza](evidence/file-refinement-20261101.json). Modificati i componenti esistenti service/LocalEngine/router/Jarvis; nessun indice o bridge parallelo. Test propri tests/test_file_refinement.py, guide e catalogo aggiornati. Pacchetti precedenti distinti da questo codice.
 

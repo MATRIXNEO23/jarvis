@@ -1,0 +1,98 @@
+{
+  "source_commit": "0af4305227145f777de4aabc8a5869fc214fa33a",
+  "sdk_commit": "0a36fefeb913055c8c7a1a29b63d82b96b2e841a",
+  "sdk_blobs": {
+    "types": "e80f3d2fd6c7bb976b2c83469c4453bf57b16e07",
+    "responses": "dd9f6f6a5229e6b42f8e6328b5a2e48587d09bbf"
+  },
+  "upstream_current_matches_pinned_files": true,
+  "runs": [
+    {
+      "id": 41346741184,
+      "name": "Jarvis unit and GPT protocol checks",
+      "status": "completed",
+      "conclusion": "success",
+      "sha": "0af4305227145f777de4aabc8a5869fc214fa33a"
+    },
+    {
+      "id": 41346741167,
+      "name": "GPT official SDK Windows smoke test",
+      "status": "completed",
+      "conclusion": "success",
+      "sha": "0af4305227145f777de4aabc8a5869fc214fa33a"
+    }
+  ],
+  "sdk_smoke_job": 124968075832,
+  "probe": {
+    "pinned_source_verified": true,
+    "actual_sdk": true,
+    "mock_transport": true,
+    "live_account_verified": false,
+    "live_search_verified": false,
+    "plan_coverage_verified": false,
+    "credentials_used": false,
+    "candidate_removed": true,
+    "checks": {
+      "upstream_drops_tools_and_sources": "passed",
+      "candidate_tools_and_deduplicated_sources": "passed",
+      "normal_request_unchanged": "passed",
+      "no_search_not_claimed_as_search": "passed",
+      "unsafe_sources_rejected": "passed",
+      "server_denial_not_hidden": "passed",
+      "incomplete_stream_rejected": "passed",
+      "cancelled_request_rejected": "passed"
+    }
+  },
+  "unit_jobs": [
+    {
+      "id": 124968075723,
+      "python": "3.11.9",
+      "tests": 455,
+      "seconds": 63.635,
+      "result": "OK"
+    },
+    {
+      "id": 124968075948,
+      "python": "3.12.10",
+      "tests": 455,
+      "seconds": 52.904,
+      "result": "OK"
+    }
+  ],
+  "native_search": {
+    "native_index_verified": true,
+    "runtime_adapter": "indexed_candidates",
+    "scope_changes": false,
+    "global_reindex": false,
+    "personal_pc_verified": false,
+    "checks": {
+      "available_empty_query": "passed",
+      "created_file_found": "passed",
+      "other_scope_empty": "passed",
+      "rename_observed": "passed",
+      "deletion_observed": "passed"
+    },
+    "initial_service": {
+      "running": false,
+      "start_mode": "Disabled"
+    },
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "runtime_bridge_changed": false,
+  "live_account_tested": false,
+  "billing_or_plan_coverage_verified": false,
+  "skipped": [
+    "build",
+    "extracted_package",
+    "artifact",
+    "publisher"
+  ],
+  "official_sources": [
+    "https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations",
+    "https://developers.openai.com/api/docs/guides/tools-web-search",
+    "https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt",
+    "https://developers.openai.com/siwc/token-sharing-open-source/profiles-and-sessions",
+    "https://developers.openai.com/siwc/ui-ux-guidelines"
+  ]
+}
