@@ -53,3 +53,15 @@ Dettagli tecnici separati: versione Jarvis/add-on/estensione, ID attività, fase
 
 ## Decisioni ancora aperte
 Nome visualizzato dell'estensione; contratto preciso dell'adattatore; installazione e permessi; distinzione dati/configurazione; valori iniziali delle impostazioni e comportamento dopo reset; misure e soglie prestazionali. L'utente sceglie il comportamento desiderato, lo sviluppatore propone i dettagli tecnici sulla base delle verifiche.
+
+## Memoria di sviluppo e checkpoint obbligatori
+Prima di ogni fase leggere AGENTS.md, handoff, registro delle decisioni e questo piano, poi verificare codice/ramo/SHA attuali. Non dedurre lo stato installato dal solo contesto della chat.
+Per ogni fase registrare: obiettivo, prerequisiti, interventi previsti/eseguiti, motivazione tecnica sintetica, test/ambiente, risultato atteso e osservato, commit/workflow, esito, limiti e prossimo passo. Le cause non dimostrate restano ipotesi; gli errori diventano lezioni, non soluzioni riutilizzabili.
+Dopo ogni fase e prima di una pausa aggiornare i documenti. Non avanzare su dipendenze fallite.
+
+Stato iniziale:
+- Raccolta requisiti e lettura preliminare dei moduli: completate; evidenze nelle sezioni sopra.
+- Procedura persistente: aggiunta ad AGENTS.md su main.
+- Fasi 1–8: pianificate, non completate. La lettura preliminare non equivale a verifica completa di integrazione.
+- Implementazione web, autoverifiche, prova Edge/Jarvis, misure RAM e pacchetto: non eseguiti.
+- Prossimo passo: rivedere con l'utente il piano e le questioni aperte; dopo autorizzazione passare all'inventario tecnico completo della fase 1.
