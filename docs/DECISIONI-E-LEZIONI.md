@@ -88,3 +88,7 @@ Precisazione dell'utente: recupero necessario anche se la sessione termina all'i
 
 ## 2026-11-01 — Interpretazione naturale e catalogo veritiero
 Richiesta: non dover usare parole esatte e ricevere un elenco aggiornato quando si chiede cosa Jarvis può fare. Decisione: interpretazione GPT esterna basata su significato e contesto, esempi non vincolanti, chiarimenti sui dati mancanti; registro delle capacità come fonte per azioni e descrizione di ciò che è realmente disponibile. Test previsti per parafrasi e ciclo attiva/disattiva/rimuovi. Solo regole e piano aggiornati; nessuna prova funzionale o modifica runtime.
+
+## 2026-11-01 — Sorgenti versionati e indice di integrazione
+**Richiesta:** codice intero disponibile nel repository, nuove add-on costruite su ciò che esiste. Verificato inventario Git del ramo feature/timer-settings-ui-20261031: 167 voci non troncate, moduli/bridge/test/workflow presenti; riferimento evoluto 5e61e53. Main mantiene sorgenti storici alla radice. Creato docs/INDICE-SORGENTI.md con punti d'ingresso e fotografia dei file; collegato da AGENTS/RECUPERO. Non è una build o verifica di tutte le dipendenze.
+**Decisione:** versionare sorgenti completi, test e istruzioni; collegare pacchetti a SHA e prove; aggiornare indice/mappa quando cambiano. Riutilizzare la struttura esistente verificando i punti interessati. Nessuna copia massiva su main, merge o modifica runtime. Nessun nuovo test.
