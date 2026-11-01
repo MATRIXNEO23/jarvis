@@ -1,4 +1,8 @@
 # Stato attività Jarvis
+
+## Metodo vigente — documentazione sempre recuperabile dalla repository
+Precisazione dell’utente incorporata in AGENTS/RECUPERO/handoff/lezioni: copie temporanee non sostituiscono conservazione remota di scelte, motivazioni, errori, prove, correzioni e prossimo passo. Nessuna fase dichiarata conclusa senza pubblicazione e verifica della relativa documentazione. Solo chiarimento del metodo; priorità accesso file e prova nativa Windows immutate.
+
 Aggiornato il 2026-11-01 dopo «Procediamo col prossimo passo»: completati inventario/contratto e revisione iniziale accesso file; nessun runtime/ZIP nuovo. Cronologia e audit della base conservati sotto; il punto vigente è la sezione seguente.
 
 ## Punto vigente — accesso file, prossimo passo tecnico completato
