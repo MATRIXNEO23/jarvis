@@ -1,6 +1,9 @@
 # Piano proposto — add-on web e diagnostica Jarvis
 Data: 2026-11-01. Stato di arresto: metodo/requisiti/documenti allineati; revisione tecnica del progetto web ancora da completare. Nessuna implementazione, nuovo test runtime o pacchetto. L'utente ha chiesto di fermarsi qui, prima del codice.
 
+## Base di partenza verificata dall'audit
+La base indicata dall'utente è Jarvis-Timer-Audio-Fix2-20261031.zip, sorgenti b936879a431370d206152be7b089baf587d15499: 155 file verificati, ricostruzione ZIP identica, 373 test locali OK (5 skip Windows). Rapporto e log in docs/VERIFICA-CONCRETA-BASE-20261101.md. Le letture preliminari sotto riferite a 5e61e53 descrivono un ramo successivo: i contratti/limiti comuni possono essere riusati, le differenze vanno valutate. Il nucleo a86c2c9/386 test non è incluso nel pacchetto. Nuova add-on da progettare sulla base b936879 preservata; eventuale integrazione della correzione successiva è una scelta separata, non un cambio automatico. Nessun codice iniziato.
+
 ## Risultato richiesto
 - Comando preciso supportato e completo: gestione locale senza GPT. Richiesta non risolta/ambigua: GPT esterno, se consentito e collegato, interpreta la richiesta e i dati delle pagine e propone l'azione disponibile; il motore mantiene lo stato, valida, esegue e restituisce l'esito. Se resta dubbio, domanda contestuale e risposta breve.
 - Cercare il sito richiesto e aprire la destinazione attendibile, senza fermarsi al motore di ricerca. Nessuna fonte fissa: GiardiniBlog e CB01 erano esempi. In caso di dubbio residuo chiedere all'utente e interpretare «il secondo» nella stessa attività.
@@ -11,7 +14,7 @@ Data: 2026-11-01. Stato di arresto: metodo/requisiti/documenti allineati; revisi
 - Cartella finale Estensione-Edge separata dai file Jarvis e dall'add-on. Nome dell'estensione nel browser ancora da decidere.
 
 ## Evidenze lette, senza esecuzione
-Ramo esaminato: feature/timer-settings-ui-20261031. I blob seguenti identificano i contenuti letti, non il codice installato sul PC.
+Prima lettura sul ramo successivo: feature/timer-settings-ui-20261031 al riferimento 5e61e53. Audit successivo della base ZIP b936879 completato come indicato sopra. I blob seguenti identificano i contenuti letti, non il codice installato sul PC.
 - addon_manager.py, blob 357f2cee713a236707bf71f8d00c38b8257dcaa2: .jaddon JSON descrittivi; azioni ammesse system.status, downloads.list, history.list. Non esiste nel gestore letto un esecutore web generico. Per nuove capacità è necessario progettare un adattatore revisionato; non disabilitare i validatori esistenti.
 - addon_ui.py: gestione installazione, attivazione/disattivazione, rimozione e avvisi. Ripristino impostazioni e ritorno di versione richiesti sono da progettare, non già disponibili.
 - runtime_diagnostics.py, blob 02c7bd3ab15f0b29944c96915378993d715f1bcf: osservazioni passive e contatori in RAM, non prove funzionali e non registro persistente completo.
