@@ -119,3 +119,9 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - L'utente richiede anche che l'assistente segnali incompatibilità e suggerisca alternative concrete; non limitarsi a eseguire richieste incoerenti e non trasferire scelte tecniche all'utente.
 - Ambito verificato: creazione/aggiornamento documenti nel repository. Nessun test di nuova istanza, nessuna funzione runtime aggiunta. L'accesso al repository resta prerequisito della ripresa; una chat generica non legge questi file automaticamente.
 - Punto di ripresa invariato: piano web documentato da rivedere, implementazione non avviata; requisiti e prove nei documenti collegati dall'indice.
+
+## 2026-11-01 — Handoff aggiornato durante il lavoro
+- Richiesta esplicita: l'utente non deve chiedere l'handoff; mantenerlo salvato anche per terminazioni improvvise.
+- Procedura aggiunta a AGENTS.md e RECUPERO.md: prima di ogni modifica coerente salvare stato in corso e intervento previsto; subito dopo salvare risultato effettivo e verifiche pendenti; dopo i test aggiornare esito, prove e prossimo passo.
+- Se resta uno stato in corso, la nuova sessione verifica diff, commit e file reali, senza assumere successo né assenza di cambiamenti. Nessuna garanzia su modifiche non ancora salvate.
+- Stato attuale: completati questi aggiornamenti documentali; implementazione web non avviata, nessun nuovo test runtime. Prossimo passo: revisione del piano web già salvato e chiarimenti ancora aperti.
