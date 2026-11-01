@@ -22,5 +22,11 @@ Aggiornato il 2026-11-01 dopo «Continua»: audit concreto chiuso, metodo e rife
 ## Decisioni preservate
 Comando preciso locale senza GPT; interpretazione esterna quando necessaria e consentita; chiarimenti contestuali. Nessuna funzione extra non concordata. Utente decide risultati e non programma; assistente realizza il lavoro tecnico autorizzato. Add-on per Pavilion i3-2100/10 GB/Windows 10, caricamento a richiesta e test propri. Dati, compatibilità e controllo manuale microfono preservati. Consegna soltanto con pacchetto verificato e link funzionante in Download.
 
-## Prossimo passo unico
+## Aggiornamento vigente — schede dei progetti
+[Catalogo implementabili](IMPLEMENTABILI.md) e schede in implementabili/ creati per recuperare caratteristiche, decisioni, prove, dubbi e prossimo passo di ciascun progetto. Browser sospeso; discutere altre funzioni e concordare priorità prima del codice. Cronometro e promemoria sono proposte dell'assistente, non richieste approvate. Ritirata la proposta appunti vocali nata da un fraintendimento: l'utente chiedeva appunti di sviluppo nella repository. Nessuna modifica runtime, nuova build o test dell'app.
+
+## Prossimo passo corrente
+Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
+
+## Prossimo passo precedente, subordinato alla scelta delle priorità
 Attendere il successivo via dell'utente; poi leggere questi riferimenti e completare la revisione tecnica dell'add-on sulla base b936879 preservata. La revisione tecnica resta da completare, senza implementare finché non arriva il successivo via dell'utente. Non ripetere la ricerca della base o attribuire alla ZIP i 386 test successivi. Per ripristino usare il registro, non scansionare tutti i commit/artifact.
