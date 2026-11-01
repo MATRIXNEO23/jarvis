@@ -74,6 +74,11 @@ jobs:
             Write-Host 'WSearch not installed in runner: index retrieval remains unverified; fallback must pass.'
           }
 
+      - name: Live Windows Search integration (isolated CI only)
+        if: matrix.python-version == '3.12'
+        timeout-minutes: 5
+        run: python tools/probe_windows_search_live.py --ci-only
+
       - name: Build operational candidate (Windows only)
         if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
         run: python tools/build_file_access.py dist
