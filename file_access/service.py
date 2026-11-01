@@ -8,7 +8,7 @@ import threading
 import time
 from uuid import uuid4
 from .policy import AccessPolicy, safe_path, contains
-from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations, long_path, explorer_view, navigate_explorer, window_is_foreground
+from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations, long_path, explorer_view, navigate_explorer, window_is_foreground, user_path_hint
 
 OPERATIONS = frozenset(('list', 'search', 'read', 'open', 'locate'))
 TEXT_TYPES = frozenset(('.txt', '.md', '.json', '.log', '.csv', '.ini', '.yaml', '.yml'))
@@ -219,6 +219,9 @@ class FileAccessService:
                    'appdata': 'appdata', 'profilo': 'profilo', 'cartella utente': 'profilo'}
         if value.casefold() in aliases:
             return known_folder(aliases[value.casefold()])
+        portable = user_path_hint(value)
+        if portable is not None:
+            return safe_path(portable)
         with self._lock:
             valid = (time.monotonic() < self._expires and
                      self._result_revision == self.policy.revision)
@@ -360,6 +363,12 @@ class FileAccessService:
         # Explicit project requests retain their existing owner, including project folders.
         if re.match(r'^(?:apri(?:mi)?|mostra(?:mi)?)\s+(?:(?:il|un|un nuovo|nuovo|la cartella del|la cartella di|cartella del|cartella di|cartella)\s+)?progetto\b',low):
             return None
+        installed = re.fullmatch(r"(?:dove\s+[eè]|dov['’][eè]|dove si trova)\s+(?:installat[oa]\s+)?(?:il programma |l['’]applicazione )?(.+?)[ .!?]*",clean,re.I)
+        if installed and re.search(r'installat[oa]|\bprogramma\b|applicazione',clean,re.I):
+            return ('locate',{'query':installed.group(1)})
+        app_folder = re.fullmatch(r"(?:trova(?:mi)?|cerca(?:mi)?)\s+(?:la\s+)?cartella\s+(?:del programma|dell['’]applicazione)\s+(.+?)[ .!?]*",clean,re.I)
+        if app_folder:
+            return ('locate',{'query':app_folder.group(1)})
         if low in ('elenca qui','elenca qui dentro','mostra qui dentro','mostra la cartella corrente'):
             return ('list',{'target':'qui'})
         if low in ('vai indietro','vai indietro di una cartella','torna indietro di una cartella','sali di una cartella'):
@@ -703,9 +712,17 @@ class FileAccessService:
             if path not in paths and self.policy.permits(path):
                 paths.append(path)
         if locate:
-            self._notify_progress('Consulto registrazioni del programma',force=True)
+            self._notify_progress('Consulto programmi e collegamenti Windows',force=True)
             locations = [(path,why) for path,why in installed_locations(query) if self.policy.permits(path)]
-            applications = list(dict.fromkeys(why.removeprefix('Registrazione Windows: ') for _,why in locations))
+            def app_name(why):
+                return why.partition(': ')[2] or why
+            exact = [(path,why) for path,why in locations if app_name(why).casefold()==query.casefold()]
+            if exact:
+                locations = exact
+            identities = {}
+            for _,why in locations:
+                identities.setdefault(app_name(why).casefold(),app_name(why))
+            applications = list(identities.values())
             if len(applications)>1 and not any(query.casefold()==name.casefold() for name in applications):
                 self._pending_app = (time.monotonic()+120, revision)
                 return FileResult('completed', 'Più applicazioni corrispondono a “'+query+'”: '+
@@ -715,8 +732,8 @@ class FileAccessService:
                 if path in paths:
                     reason = why+'; cartelle candidate, ruolo da verificare. '
             if paths:
-                return self._report(paths,revision,reason+'Percorsi registrati; nessuna scansione generale necessaria.')
-            reason = 'Installazione non risolta dalle registrazioni classiche/Store accessibili; seguono eventuali cartelle con nome corrispondente, ruolo non verificato. '
+                return self._report(paths,revision,reason+'Percorsi da fonti locali; nessuna scansione generale necessaria. Non è un inventario completo delle installazioni.')
+            reason = 'Installazione non risolta dalle registrazioni/collegamenti Windows accessibili; seguono eventuali cartelle con nome corrispondente, ruolo non verificato. '
         started = time.monotonic()
         visited = set()
         for root in roots:

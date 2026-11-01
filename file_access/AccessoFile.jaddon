@@ -9,6 +9,6 @@
     {"id":"addon.accesso_file.cerca","description":"Cerca file e cartelle per nome o indizi nelle radici selezionate.","example":"cerca file preventivo","core_action":"files.search"},
     {"id":"addon.accesso_file.leggi","description":"Legge testo del risultato scelto, spiegazione se richiesta.","example":"leggi file 1","core_action":"files.read"},
     {"id":"addon.accesso_file.apri","description":"Apre cartella in Explorer o testo in vista senza modifica.","example":"apri cartella 1","core_action":"files.open"},
-    {"id":"addon.accesso_file.localizza","description":"Trova cartelle candidate del programma da registrazioni Windows.","example":"trovami cartella installazione Firefox","core_action":"files.locate"}
+    {"id":"addon.accesso_file.localizza","description":"Trova cartelle del programma da registrazioni e collegamenti Windows, con verifica locale.","example":"trovami cartella installazione Firefox","core_action":"files.locate"}
   ]
 }

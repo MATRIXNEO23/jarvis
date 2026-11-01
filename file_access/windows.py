@@ -5,6 +5,7 @@ import ctypes
 from ctypes import wintypes
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import uuid
@@ -140,6 +141,47 @@ def indexed_candidates(query: str, root: Path, *, timeout: float = 8) -> tuple[l
         return [], 'Indice Windows non disponibile o scaduto; ricerca diretta nelle cartelle consentite.'
 
 
+def user_path_hint(value: str) -> Path | None:
+    """Resolve portable user hints through Windows, never a guessed username."""
+    match = re.fullmatch(r'%(APPDATA|LOCALAPPDATA|USERPROFILE)%(?:[\\/](.*))?', value, re.I)
+    if match is None:
+        return None
+    tail = match.group(2) or ''
+    if tail.startswith(('\\','/')) or ':' in tail or any(part == '..' for part in re.split(r'[\\/]', tail)):
+        raise ValueError('Il percorso relativo al profilo non è valido.')
+    key = {'appdata':'appdata','localappdata':'appdata locale','userprofile':'profilo'}[match.group(1).casefold()]
+    return known_folder(key) / tail
+
+
+def program_location(raw, *, executable=False, icon=False, query='') -> Path | None:
+    """Read a local registered/shortcut target; never execute command lines."""
+    if not isinstance(raw, str) or not raw.strip() or len(raw) > 32767:
+        return None
+    value = os.path.expandvars(raw.strip())
+    if icon:
+        value = re.sub(r',\s*-?\d+\s*$', '', value)
+    value = value.strip().strip('"')
+    if value.startswith(('\\\\', '//')) or ':' in value[2:] or any(ord(c)<32 for c in value):
+        return None
+    path = Path(value)
+    if not path.is_absolute():
+        return None
+    try:
+        if executable or icon:
+            if path.suffix.casefold() != '.exe' or not path.is_file():
+                return None
+            hosts = {'cmd','powershell','pwsh','wscript','cscript','rundll32','explorer',
+                     'msiexec','java','javaw','python','pythonw','dotnet'}
+            if path.stem.casefold() in hosts and query.casefold() != path.stem.casefold():
+                return None
+            path = resolved_path(path).parent
+        elif not path.is_dir():
+            return None
+        return long_path(path)
+    except OSError:
+        return None
+
+
 def installed_locations(query: str) -> list[tuple[Path, str]]:
     """Read registered program identities, not just folder-name matches."""
     require_windows()
@@ -160,27 +202,42 @@ def installed_locations(query: str) -> list[tuple[Path, str]]:
                                 for field in ('InstallLocation', 'DisplayIcon'):
                                     try:
                                         raw = winreg.QueryValueEx(item, field)[0]
-                                        if not isinstance(raw, str):
-                                            continue
-                                        path = Path(raw.split(',')[0].strip('" '))
-                                        if field == 'DisplayIcon':
-                                            path = path.parent
-                                        if path.is_absolute() and path.is_dir():
+                                        path = program_location(raw,icon=field=='DisplayIcon',query=query)
+                                        if path is not None:
                                             found.append((path, 'Registrazione Windows: '+name[:100]))
+                                            break
                                     except OSError:
                                         pass
                         except OSError:
                             continue
             except OSError:
-                continue
-    # Store identities supplement classic uninstall registrations. Current user only.
+                pass
+            try:
+                with winreg.OpenKey(hive, r'Software\Microsoft\Windows\CurrentVersion\App Paths',
+                                    0, winreg.KEY_READ | view) as root:
+                    for i in range(min(winreg.QueryInfoKey(root)[0],3000)):
+                        try:
+                            key = winreg.EnumKey(root,i)
+                            name = Path(key).stem
+                            if query.casefold() not in name.casefold():
+                                continue
+                            with winreg.OpenKey(root,key) as item:
+                                path = program_location(winreg.QueryValueEx(item,'')[0],executable=True,query=query)
+                            if path is not None:
+                                found.append((path,'App Paths Windows: '+name[:100]))
+                        except OSError:
+                            continue
+            except OSError:
+                pass
+    # Store and shortcut identities supplement registry entries. Read only.
     reply = shell_query({'operation':'installed', 'query':query})
     for row in reply.get('rows', []):
         if not isinstance(row,dict) or not isinstance(row.get('path'),str) or not isinstance(row.get('name'),str):
             continue
-        path = Path(row['path'])
-        if path.is_absolute() and path.is_dir():
-            found.append((path, 'Registrazione Windows: '+row['name'][:100]))
+        shortcut = row.get('source') == 'shortcut'
+        path = program_location(row['path'],executable=shortcut,query=query)
+        if path is not None:
+            found.append((path, ('Collegamento Windows: ' if shortcut else 'Registrazione Windows: ')+row['name'][:100]))
     return list(dict.fromkeys(found))[:50]
 
 

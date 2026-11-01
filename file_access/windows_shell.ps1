@@ -32,7 +32,41 @@ try {
     $apps = @()
     try { $apps = @(Get-StartApps -ErrorAction Stop) } catch {}
     $rows = [System.Collections.Generic.List[object]]::new()
-    foreach ($package in @(Get-AppxPackage -ErrorAction Stop)) {
+    # Read existing links only; do not run targets, save links or infer an
+    # installation from WorkingDirectory or command-line arguments.
+    try {
+        $wsh = New-Object -ComObject WScript.Shell
+        $pending = [System.Collections.Generic.Stack[string]]::new()
+        $seen = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach ($folderName in @('Desktop','AllUsersDesktop','StartMenu','AllUsersStartMenu')) {
+            $root = [string]$wsh.SpecialFolders.Item($folderName)
+            if ($root -and [IO.Path]::IsPathRooted($root) -and -not $root.StartsWith('\\')) { $pending.Push($root) }
+        }
+        $visited = 0
+        while ($pending.Count -gt 0 -and $visited -lt 2000 -and $rows.Count -lt 40) {
+            $current = $pending.Pop()
+            if (-not $seen.Add($current)) { continue }
+            try {
+                foreach ($entry in (Get-ChildItem -LiteralPath $current -Force -ErrorAction Stop)) {
+                    $visited++
+                    if ($visited -gt 2000) { break }
+                    if (($entry.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { continue }
+                    if ($entry.PSIsContainer) { $pending.Push($entry.FullName); continue }
+                    if ($entry.Extension -ine '.lnk' -or $entry.BaseName.IndexOf($query,[StringComparison]::OrdinalIgnoreCase) -lt 0) { continue }
+                    try {
+                        $target = [string]$wsh.CreateShortcut($entry.FullName).TargetPath
+                        if ($target -and [IO.Path]::IsPathRooted($target) -and -not $target.StartsWith('\\')) {
+                            $rows.Add(@{path=$target;name=[string]$entry.BaseName;source='shortcut'})
+                        }
+                    } catch {}
+                    if ($rows.Count -ge 40) { break }
+                }
+            } catch {}
+        }
+    } catch {}
+    $packages = @()
+    try { $packages = @(Get-AppxPackage -ErrorAction Stop) } catch {}
+    foreach ($package in $packages) {
         $matches = @($apps | Where-Object {
             ([string]$_.AppID).StartsWith(([string]$package.PackageFamilyName + '!'), [StringComparison]::OrdinalIgnoreCase) -and
             ([string]$_.Name).IndexOf($query, [StringComparison]::OrdinalIgnoreCase) -ge 0
