@@ -140,6 +140,8 @@ class ProgramLocationTests(unittest.TestCase):
                        'cerca la cartella dell’applicazione Example'):
             self.assertEqual(self.files.parse_command(phrase),('locate',{'query':'Example'}),phrase)
         self.assertIsNone(self.files.parse_command('dove si trova il mio progetto'))
+        self.assertIsNone(self.files.parse_command("dov'è installato"))
+        self.assertIsNone(self.files.parse_command('dove si trova il programma'))
 
     def test_model_portable_user_path_resolves_locally_for_two_profiles(self):
         for name in ('Profile-A','Profile-B'):

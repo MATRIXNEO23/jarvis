@@ -363,8 +363,8 @@ class FileAccessService:
         # Explicit project requests retain their existing owner, including project folders.
         if re.match(r'^(?:apri(?:mi)?|mostra(?:mi)?)\s+(?:(?:il|un|un nuovo|nuovo|la cartella del|la cartella di|cartella del|cartella di|cartella)\s+)?progetto\b',low):
             return None
-        installed = re.fullmatch(r"(?:dove\s+[eè]|dov['’][eè]|dove si trova)\s+(?:installat[oa]\s+)?(?:il programma |l['’]applicazione )?(.+?)[ .!?]*",clean,re.I)
-        if installed and re.search(r'installat[oa]|\bprogramma\b|applicazione',clean,re.I):
+        installed = re.fullmatch(r"(?:(?:dove\s+[eè]|dov['’][eè])\s+installat[oa]\s+(?:il programma |l['’]applicazione )?|dove si trova\s+(?:il programma |l['’]applicazione ))(.+?)[ .!?]*",clean,re.I)
+        if installed:
             return ('locate',{'query':installed.group(1)})
         app_folder = re.fullmatch(r"(?:trova(?:mi)?|cerca(?:mi)?)\s+(?:la\s+)?cartella\s+(?:del programma|dell['’]applicazione)\s+(.+?)[ .!?]*",clean,re.I)
         if app_folder:
