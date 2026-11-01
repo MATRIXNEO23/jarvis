@@ -1,3 +1,6 @@
+## Raffinamento ricerca — sorgenti verificati, distribuzione pendente
+Nessun comando nuovo: riusati ricerca/localizza/apri/leggi di Accesso file. Se un indizio non produce risultati, il GPT già attivo e collegato può precisarlo una volta; la successiva azione locale mantiene operazione, ambito e tipo. Un chiarimento conserva la richiesta iniziale; annulla ricerca revoca anche la proposta pendente. Errori lettura e figlio Explorer assente non avviano ricerche ampliate. [Prove e limiti](ACCESSO-FILE-PASSO6-MODELLO-20261101.md). Nessuna funzione web leggibile dal modello aggiunta. Non attribuire il comportamento ai vecchi ZIP.
+
 # Catalogo delle capacità di Jarvis
 
 Il file **`jarvis_commands.json`** è l'elenco dichiarativo delle azioni effettivamente disponibili nel ramo sperimentale. `capability_registry.py` lo valida e fornisce a GPT nomi e descrizioni delle azioni. È un **catalogo di capacità**, non un elenco arbitrario di comandi di Windows e non contiene istruzioni eseguibili.
