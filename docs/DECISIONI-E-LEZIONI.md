@@ -85,3 +85,6 @@ Precisazione dell'utente: recupero necessario anche se la sessione termina all'i
 **Richiesta:** rispettare l'obiettivo; suggerire prima eventuali extra. Includere comandi vocali e tutti i collegamenti, per evitare una funzione implementata ma non riconosciuta da Jarvis.
 **Decisione:** contratto completo frase/trascrizione → GPT esterno/stato → capacità registrata → azione locale → verifica → risposta. Test delle vie voce/testo e disponibilità attivo/disattivo; catalogo capacità, esempi e UI aggiornati insieme. Distinguere simulazioni da audio/microfono reali.
 **Stato:** regola e piano aggiornati, nessuna nuova funzione, test o build. Non dichiarare risolto un bug vocale senza una riproduzione e prova della correzione.
+
+## 2026-11-01 — Interpretazione naturale e catalogo veritiero
+Richiesta: non dover usare parole esatte e ricevere un elenco aggiornato quando si chiede cosa Jarvis può fare. Decisione: interpretazione GPT esterna basata su significato e contesto, esempi non vincolanti, chiarimenti sui dati mancanti; registro delle capacità come fonte per azioni e descrizione di ciò che è realmente disponibile. Test previsti per parafrasi e ciclo attiva/disattiva/rimuovi. Solo regole e piano aggiornati; nessuna prova funzionale o modifica runtime.
