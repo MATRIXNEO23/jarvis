@@ -125,3 +125,9 @@ Riscontro esplicito: l'ultima build usata funziona bene per il momento; conserva
 
 ## 2026-11-01 — Chiusura della ripresa concreta
 Verificati anche download diretto, integrità dei 20 ZIP conservati, copertura add-on esistente e DDL dei due archivi. Checkpoint incompleto chiuso con indice/handoff aggiornati; modifiche documentali arrivate nel frattempo riconciliate preservandole, senza duplicare manifest e log. Dettagli nel rapporto e package-checks.json. La prova del metodo è questa ripresa con accesso al repository, non una garanzia per ogni chat. Nessuna funzione aggiunta e nessuna dichiarazione di nuova build pronta.
+
+
+## 2026-11-01 — Scheda per progetto e correzione del fraintendimento sugli appunti
+**Richiesta:** discutere alternative prima del browser, salvare nella repository caratteristiche/decisioni per riprenderle dal file. **Scelta:** indice docs/IMPLEMENTABILI.md, modello e schede autonome; piano web esistente collegato senza duplicarlo. Stato e autorizzazioni separati dai requisiti.
+**Errore:** l'assistente ha suggerito «appunti vocali» come funzione; l'utente chiarisce che parlava degli appunti presi dall'assistente nella repository. Proposta ritirata, scheda rimossa dall'indice e dal percorso corrente, storia Git conservata. Non confondere istruzioni sul metodo di sviluppo con requisiti del prodotto. Cronometro/promemoria restano solo idee da discutere.
+**Ambito:** modifica esclusivamente documentale; nessuna implementazione, test runtime, build o modifica alla base b936879. Verifica prevista: rilettura dei file pubblicati e dei riferimenti. **Prossimo passo:** discutere funzioni desiderate e aggiornare le rispettive schede, nessuna priorità automatica al web.
