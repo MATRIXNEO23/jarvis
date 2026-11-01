@@ -43,6 +43,9 @@ Richiesti avvisi nella console con nome esatto di add-on/file/dipendenza, funzio
 ## Primo incremento scelto: applicazioni classiche e Store
 L'utente sceglie avvio programmi: rilevamento Windows di classici e Store, spunte nelle impostazioni, frase naturale e apertura dell'app corretta (esempio Netflix). Specifica e fonti Microsoft nella scheda WINDOWS; rilevata distinta da avvio collaudato. No sostituzione silenziosa col sito web o promessa di trovare qualunque programma. Nessun codice o prova Windows eseguiti. Prossimo passo specifico: spiegare elenco/spunte/prova apertura e completare contratto/revisione sul gestore esistente prima dell'implementazione.
 
+## Chiarimento vigente sul dialogo
+L'utente conferma dialogo naturale: Jarvis deve distinguere conversazione, richiesta d'azione e dubbio, senza interpretare ogni frase come comando, chiedere ripetutamente o richiedere nomi/formule esatti. GPT esterno per interpretazione necessaria; locale diretto per comandi precisi. Conservare domanda pendente e risposte brevi. Frase personale «Insegna comando» solo opzione discussa, non sostituisce il requisito centrale. Criteri di prova e verifica Cortana/WSR/Windows 11 salvati nella scheda WINDOWS. Nessuna nuova implementazione/test runtime; chiesto chiarimento del funzionamento, non via al codice.
+
 ## Prossimo passo corrente
 Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
 
