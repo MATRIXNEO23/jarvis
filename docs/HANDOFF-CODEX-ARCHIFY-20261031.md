@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## In corso — ricerca per indizi e lettura dei file, 2026-11-01
+L'utente chiarisce che vuole sia ricerca/apertura sia lettura/spiegazione. Ricerca con nome parziale, prefisso, contesto di cartella o scopo anche senza nome preciso; esempio «cartella d'installazione di Minecraft». Aggiornamento previsto: scheda WINDOWS, stato e lezioni; nessun codice o nuovo test. Distinguere interpretazione GPT da ricerca/verifica locale, senza garantire il ritrovamento con zero indizi. Prossimo controllo: rilettura dei documenti salvati.
+
 ## Checkpoint attuale — requisiti Windows e minimo peso, 2026-11-01
 Scheda [WINDOWS](implementabili/WINDOWS.md) salvata con caratteristiche richieste, evidenze sorgenti b936879 e fonti Microsoft. Indice, STATO e lezioni aggiornati; quattro documenti riletti, contenuti coincidenti. Nessun codice/test runtime/pacchetto modificato o benchmark svolto.
 Chiarimento dell'utente: usare prima funzioni Windows e codice già presenti se soddisfano il requisito; nuove dipendenze ammesse solo se giustificate. Valutazione di peso/affidabilità/manutenzione a carico dell'assistente. Add-on logica non equivale a nuova dipendenza. Funzioni richieste: file/cartelle, ricerca/apertura, programmi scelti nelle impostazioni, frase naturale con interpretazione GPT quando serve e elenco «cosa puoi fare?» aggiornato.
