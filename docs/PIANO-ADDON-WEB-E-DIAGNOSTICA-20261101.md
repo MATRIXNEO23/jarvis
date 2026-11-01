@@ -131,3 +131,6 @@ Aggiungere ai criteri di prova: assenza di chiamata GPT per comando preciso, int
 
 Prima di scegliere componenti nuovi cercare soluzioni e codice sul web, confrontando riuso/adattamento/sviluppo con fonti originali, licenze, costi, semplicità e consumo. La scelta dell'estensione Edge resta candidata da validare, non una decisione tecnica già provata. Nessuna fonte web fissa per la ricerca dei siti.
 Alla ripresa non ricominciare la raccolta dei requisiti. Ripartire dalla revisione tecnica della fase 1, rispettando il fermo prima dell'implementazione. Se resta una scelta di prodotto non deducibile, porre una domanda specifica.
+
+## Versioni recuperabili e tracciabilità delle conclusioni
+Ogni consegna deve avere una scheda in Download/REGISTRO-VERSIONI.md con commit sorgente, ZIP completo persistente in Download, checksum, prove automatiche, prova PC identificata e compatibilità dei dati. Dopo la conferma sul PC promuovere soltanto l'ambito collaudato. Conservare pacchetti precedenti e indicare quello di ritorno, senza ricercarlo fra artifact. Collegare decisioni/errori a versione e test con motivazione tecnica sintetica. Alla ripresa aprire indice e scheda; non ricostruire tutta la cronologia. Stato: indice documentale creato, nessun nuovo pacchetto o ripristino eseguito.
