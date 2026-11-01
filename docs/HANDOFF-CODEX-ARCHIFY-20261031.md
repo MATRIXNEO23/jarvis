@@ -234,3 +234,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - BASE-UTENTE-20261101 registrata come build attuale funzionante nell'uso riferito dall'utente. Registro aggiornato commit cae5e5d16fae3c9b300c53de987afb6b83764daa; stato e lezioni coerenti.
 - Resta una sola conferma identificativa: il pacchetto usato è Jarvis-Timer-Audio-Fix2-20261031.zip, quello in cima a Download? Non associare il candidato o a86c2c9 senza riscontro.
 - Preservare la base e ripartire dal suo codice verificato nelle prossime aggiunte. Nessun codice, nuovo test, pacchetto o ripristino in questa fase; fermo prima dell'implementazione mantenuto.
+
+## 2026-11-01 — In corso: identificazione della base confermata
+- L'utente chiarisce che la build funzionante è il primo file scaricabile in cima a Download/README.md.
+- Riletto il catalogo: primo ZIP Jarvis-Timer-Audio-Fix2-20261031.zip. Metadati directory verificati: 406653 byte, Git blob SHA 6aa9e6f9eb040dc7390b4edb55c9ae175bd4e512, uguali al riferimento immutabile inventariato.
+- Aggiornare il puntatore BASE-UTENTE-20261101 con nome esatto e conferma PC; nessuna domanda identificativa ulteriore necessaria. Commit sorgente interno della ZIP ancora da associare prima di modificarne il codice; non attribuire automaticamente a86c2c9.
