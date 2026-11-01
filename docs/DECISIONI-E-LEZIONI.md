@@ -55,3 +55,6 @@ Conservare le soluzioni riuscite come riferimenti entro il loro ambito verificat
 **Memoria persistente:** AGENTS.md ora impone lettura di handoff, registro e piano più verifica del codice prima delle modifiche; checkpoint di fase con fatti, motivazioni tecniche sintetiche, test/esiti e prossimo passo. Regola commit cf19eff734c7b85e81fa296f73b7b258d3aafc1c. Gli approcci falliti restano esclusi dai riferimenti raccomandati, con causa/lezione conservate.
 
 **Risultato:** piano docs/PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md creato nel commit 04c8bf86c3f39158f6dd14b8cd9cb1125a541d3a e aggiornato con checkpoint. Nessuna implementazione, nuovo workflow, prova funzionale o misura prestazionale. Conservare distinzione tra proposta e verifica.
+
+## 2026-11-01 — Responsabilità nello sviluppo
+**Richiesta e scelta:** l'utente non programma e vuole occuparsi delle decisioni di prodotto. L'assistente assume pianificazione, scelte tecniche motivate, realizzazione autorizzata, test e continuità; interventi manuali inevitabili sul PC guidati un passo alla volta. Regola aggiunta ad AGENTS.md e al piano web. Il piano è documentato, l'implementazione resta non avviata. Nessun nuovo test o workflow.
