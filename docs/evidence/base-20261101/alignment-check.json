@@ -1,0 +1,98 @@
+{
+  "checked_documents": [
+    {
+      "path": "AGENTS.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "RECUPERO.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "docs/STATO-ATTIVITA.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "docs/PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "docs/INDICE-SORGENTI.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "Download/REGISTRO-VERSIONI.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "Prima-installazione/README.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "Prima-installazione/03-Voce.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "Prima-installazione/05-Moduli-e-addon.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "Prima-installazione/08-Manutenzione.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    },
+    {
+      "path": "docs/VERIFICA-CONCRETA-BASE-20261101.md",
+      "readOK": true,
+      "baseRefPresent": true,
+      "missingRelativeLinks": []
+    }
+  ],
+  "baseline_zip_unchanged": true,
+  "comparison_base": "c6f0170497f8b2c0b4511950bd722e681cef02b6",
+  "runtime_files_changed": [],
+  "changed_paths": [
+    "AGENTS.md",
+    "Download/REGISTRO-VERSIONI.md",
+    "Prima-installazione/01-Requisiti.md",
+    "Prima-installazione/03-Voce.md",
+    "Prima-installazione/05-Moduli-e-addon.md",
+    "Prima-installazione/08-Manutenzione.md",
+    "Prima-installazione/README.md",
+    "RECUPERO.md",
+    "docs/DECISIONI-E-LEZIONI.md",
+    "docs/HANDOFF-CODEX-ARCHIFY-20261031.md",
+    "docs/INDICE-SORGENTI.md",
+    "docs/PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md",
+    "docs/STATO-ATTIVITA.md",
+    "docs/VERIFICA-CONCRETA-BASE-20261101.md",
+    "docs/evidence/base-20261101/ci-evidence.json",
+    "docs/evidence/base-20261101/ci-source-match.json",
+    "docs/evidence/base-20261101/manifest.json",
+    "docs/evidence/base-20261101/package-checks.json",
+    "docs/evidence/base-20261101/provenance.json",
+    "docs/evidence/base-20261101/syntax.json",
+    "docs/evidence/base-20261101/test-summary.json",
+    "docs/evidence/base-20261101/unittest.log"
+  ],
+  "notes": "Readback and relative-link checks only. This is not a Windows install or new-instance recovery test."
+}
