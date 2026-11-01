@@ -342,3 +342,6 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Sullo ZIP estratto: Python 3.12.14, Linux; 373 test, OK, 5 skip Windows/Tk; compileall e node --check (Node 24.22.1) PASS. La prova locale non copre login, audio, microfono o Windows reale.
 - Rispetto al ramo 5e61e53: 145 file identici, 10 modificati e 5 aggiunti; correzione a86c2c9 assente dallo ZIP. Baseline avvia il microfono secondo auto_listen; codice successivo impone standby. Nessun cambio runtime autorizzato in questo audit.
 - Restano aggiornamento dei documenti e controllo finale dei riferimenti. Nessuna implementazione web o nuova distribuzione.
+
+## 2026-11-01 — Riscontro PC Accesso file e correzioni in corso
+Elenco/lettura funzionano nell’uso riferito, ma emersi difetti voce, numeri, tipo file/cartella e ricerca d’installazione/chiarimenti. Richiesta navigazione nelle sottocartelle e contesto Esplora file. [Checkpoint corrente](ACCESSO-FILE-CORREZIONI-20261101.md). Non promuovere 7298fb6 a base confermata. Run 41329991457 fallita e pubblicazione bloccata; correzione 755f988 in run Windows 41330559676. Nessun test Linux. Prossimo passo: verificare esito Windows, poi incremento installazione e navigazione nel servizio esistente. Base b936879 preservata.

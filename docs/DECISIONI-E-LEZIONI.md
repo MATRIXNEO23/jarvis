@@ -208,3 +208,6 @@ Su richiesta cercati/aperti documenti primari Everything Options/Exclude, Syncth
 
 ## 2026-11-01 — Struttura dischi/eccezioni approvata, add-on leggibili
 Utente approva la struttura semplice dischi/cartelle con sottocartelle ed eccezioni prima delle scritture. Richiede codice delle add-on separato per responsabilità e analizzabile, evitando un solo file di migliaia di righe. Regola persistente AGENTS, scheda WINDOWS e stato aggiornati; LEGGIMI come mappa, test pertinenti e verifica import/pacchetto dopo implementazione. Nessun numero massimo righe imposto, nuovo framework o migrazione del nucleo decisi. Solo documentazione; nessun codice, nuova suite runtime o consegna.
+
+## 2026-11-01 — Riscontro PC Accesso file e correzioni in corso
+Elenco/lettura funzionano nell’uso riferito, ma emersi difetti voce, numeri, tipo file/cartella e ricerca d’installazione/chiarimenti. Richiesta navigazione nelle sottocartelle e contesto Esplora file. [Checkpoint corrente](ACCESSO-FILE-CORREZIONI-20261101.md). Non promuovere 7298fb6 a base confermata. Run 41329991457 fallita e pubblicazione bloccata; correzione 755f988 in run Windows 41330559676. Nessun test Linux. Prossimo passo: verificare esito Windows, poi incremento installazione e navigazione nel servizio esistente. Base b936879 preservata.

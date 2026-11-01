@@ -1,3 +1,7 @@
+
+## 2026-11-01 — Riscontro PC Accesso file e correzioni in corso
+Elenco/lettura funzionano nell’uso riferito, ma emersi difetti voce, numeri, tipo file/cartella e ricerca d’installazione/chiarimenti. Richiesta navigazione nelle sottocartelle e contesto Esplora file. [Checkpoint corrente](docs/ACCESSO-FILE-CORREZIONI-20261101.md) (per i documenti dentro docs usare ACCESSO-FILE-CORREZIONI-20261101.md). Non promuovere 7298fb6 a base confermata. Run 41329991457 fallita e pubblicazione bloccata; correzione 755f988 in run Windows 41330559676. Nessun test Linux. Prossimo passo: verificare esito Windows, poi incremento installazione e navigazione nel servizio esistente. Base b936879 preservata.
+
 # Recupero del lavoro Jarvis
 
 ## Ripresa verificata dopo l’interruzione — procedere per step brevi

@@ -85,3 +85,6 @@ Pubblicazione documentale chiusa e verificata; nessun consenso pendente. Passo t
 
 ## Prossimo passo precedente, subordinato alla scelta delle priorità
 Attendere il successivo via dell'utente; poi leggere questi riferimenti e completare la revisione tecnica dell'add-on sulla base b936879 preservata. La revisione tecnica resta da completare, senza implementare finché non arriva il successivo via dell'utente. Non ripetere la ricerca della base o attribuire alla ZIP i 386 test successivi. Per ripristino usare il registro, non scansionare tutti i commit/artifact.
+
+## 2026-11-01 — Riscontro PC Accesso file e correzioni in corso
+Elenco/lettura funzionano nell’uso riferito, ma emersi difetti voce, numeri, tipo file/cartella e ricerca d’installazione/chiarimenti. Richiesta navigazione nelle sottocartelle e contesto Esplora file. [Checkpoint corrente](ACCESSO-FILE-CORREZIONI-20261101.md). Non promuovere 7298fb6 a base confermata. Run 41329991457 fallita e pubblicazione bloccata; correzione 755f988 in run Windows 41330559676. Nessun test Linux. Prossimo passo: verificare esito Windows, poi incremento installazione e navigazione nel servizio esistente. Base b936879 preservata.
