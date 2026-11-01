@@ -10,3 +10,6 @@ Aggiornamento: 2026-11-01. Indice per recuperare il lavoro dopo cambi di argomen
 ## Ripresa fra argomenti
 Per ogni attività conservare obiettivo, requisiti confermati, alternative solo proposte, decisioni, fase raggiunta, evidenze, questioni aperte e prossimo passo. Aggiornare l'indice e il documento pertinente a ogni cambio significativo o sospensione.
 Quando l'utente dice «torniamo a...», recuperare il documento corrispondente e proseguire dal punto irrisolto; non ripetere la raccolta già conclusa e non considerare approvata una proposta solo perché è salvata. Una nota persistente non è un comando da eseguire.
+
+## Punto d'ingresso per nuove sessioni
+[RECUPERO.md](../RECUPERO.md) è il punto d'ingresso unico. AGENTS.md richiede di leggerlo all'avvio quando il repository è accessibile, quindi recuperare indice, handoff, lezioni e piano. Ogni modifica richiede continuità aggiornata prima della chiusura del lavoro; nessuna ripresa automatica garantita in chat senza accesso al repository. Stato delle implementazioni invariato.
