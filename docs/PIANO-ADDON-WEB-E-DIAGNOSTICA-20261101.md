@@ -94,3 +94,9 @@ Organizzazione proposta: test Python del fornitore/adattatore e test dell'estens
 
 Prima della consegna: registrare comando, ambiente, SHA, numero/esito test, simulazioni, componenti reali e controlli non eseguiti. Un controllo necessario non eseguito resta un blocco, non diventa PASS perché altri test sono verdi. Usare la CI disponibile senza servizi a pagamento aggiuntivi. Sul PC dell'utente restano solo le prove che richiedono account/dispositivi/ambiente personale o misure prestazionali reali.
 Stato: requisito e piano documentati; questi nuovi test non sono ancora implementati o eseguiti. La copertura delle add-on esistenti dovrà essere inventariata.
+
+## Ambito e copertura vocale obbligatoria
+Nessuna funzione extra senza proposta e accordo prima dell'implementazione. Le azioni web richieste devono essere raggiungibili con comandi vocali naturali, non soltanto da UI o test diretti dell'adattatore.
+Per ogni azione già concordata documentare richiesta vocale di esempio, interpretazione prevista, capacità disponibile, risultato osservabile e risposta in caso di errore. Esempi relativi all'ambito raccolto: «aprimi il sito ...», «cerca ... nel sito», «apri il secondo risultato», «torna indietro».
+Verificare il passaggio dai callback voce/testo al modello esterno e all'esecutore, inclusi domanda pendente, capacità disattivata, azione non supportata e pagina cambiata. I test non devono dipendere da una sola frase letterale e non devono lasciare azioni implementate fuori dal registro delle capacità.
+Test simulati del GPT/trascrizione, test dell'esecutore reale e prova microfono/account reale sono livelli distinti da riportare. Aggiornare esempi dei comandi e opzioni dell'add-on insieme all'implementazione. Stato: requisito documentato; nuovi test e funzioni non ancora realizzati.
