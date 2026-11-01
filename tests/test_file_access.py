@@ -307,3 +307,17 @@ class FileAccessTests(unittest.TestCase):
             preparer.main()
         self.assertEqual(load_settings(trial/'settings.json')['tts_voice'],'Voce conservata')
         self.assertEqual((previous/'settings.json').read_bytes(),before)
+
+    def test_whole_drive_scope_prioritizes_real_user_folders(self):
+        self.files.policy.configure([(self.root,True),(self.hidden,False)])
+        noise = self.root/'z-system-noise'
+        noise.mkdir()
+        for i in range(12):
+            (noise/f'empty-{i}').mkdir()
+        self.files.max_entries = 5
+        with patch('file_access.service.known_folder',return_value=self.docs):
+            report = self.files.execute('search',{'query':'preventivo'})
+        self.assertIn(self.a.name,report.message)
+        self.assertIn('parziale',report.message)
+        self.manager.remove('accesso_file')
+        self.assertNotIn('Accesso file attivo',self.engine.execute('aiuto').message)

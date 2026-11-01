@@ -8,7 +8,7 @@ import threading
 import time
 from uuid import uuid4
 from .policy import AccessPolicy, safe_path, contains
-from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations
+from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations, long_path
 
 OPERATIONS = frozenset(('list', 'search', 'read', 'open', 'locate'))
 TEXT_TYPES = frozenset(('.txt', '.md', '.json', '.log', '.csv', '.ini', '.yaml', '.yml'))
@@ -76,7 +76,7 @@ class FileAccessService:
                 and self.policy.revision == revision)
 
     def available(self):
-        return bool(self.enabled() and any(r['allow'] for r in self.policy.rules()))
+        return bool(self.enabled() and any(r['allow'] for r in self.policy.valid_roots()))
 
     def context_hint(self):
         with self._lock:
@@ -254,6 +254,17 @@ class FileAccessService:
     def _search(self, query, scope, revision, *, locate=False):
         roots = [self._target(scope)] if scope else [Path(r['path']) for r in self.policy.valid_roots() if r['allow']]
         roots = list(dict.fromkeys(roots))
+        if not scope:
+            preferred = []
+            for name in ('documenti', 'download', 'desktop'):
+                try:
+                    candidate = long_path(known_folder(name))
+                    if (any(contains(root,candidate) for root in roots)
+                            and self.policy.permits(candidate)):
+                        preferred.append(candidate)
+                except OSError:
+                    continue
+            roots = list(dict.fromkeys(preferred+roots))
         if scope and not self.policy.permits(roots[0]):
             raise PermissionError('Ambito di ricerca non consentito.')
         paths, reason, scanned, partial = [], '', 0, False
@@ -267,6 +278,7 @@ class FileAccessService:
                 if path in paths:
                     reason = why+'; cartelle candidate, ruolo da verificare. '
         started = time.monotonic()
+        visited = set()
         for root in roots:
             if not self._live(revision):
                 break
@@ -278,6 +290,9 @@ class FileAccessService:
             stack = [root]
             while stack and self._live(revision):
                 current = stack.pop()
+                if current in visited:
+                    continue
+                visited.add(current)
                 if not self.policy.permits(current):
                     continue
                 try:
@@ -332,7 +347,7 @@ class FileAccessService:
 
     def commands(self):
         if not self.available():
-            return 'Accesso file installato ma spento o da configurare; nessun accesso generale disponibile.'
+            return 'Accesso file non disponibile: installa/attiva il componente e configura le cartelle consentite.'
         actions = self.descriptors()
         return ('Accesso file attivo, sola lettura nelle cartelle selezionate:\n' +
                 '\n'.join('• '+a['description']+' Esempio: '+a['example'] for a in actions)+
