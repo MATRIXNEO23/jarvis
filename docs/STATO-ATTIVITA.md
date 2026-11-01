@@ -1,5 +1,9 @@
 # Stato attività Jarvis
 
+## Stato vigente — primo incremento Accesso file consegnato come candidato Windows
+Sorgenti esatti 7298fb632cd9b72386fd7a30f469b307ce7e6fa5; [ZIP candidato](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip), 249396 byte/78 file, SHA-256 72c6d57a9a258fe7c875cfdc8646bc4ddf5b75417aa748bb5d4d4b7ef3e96755. [CI Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41322290359): 393 test per job Python 3.11/3.12, zero skip; 20 test dal pacchetto estratto, import e avvio/chiusura/rilascio directory PASS. Pubblicazione in Download e metadati remoti verificati, collegamento HTTP 200 con dimensione corretta.
+[Rapporto](ACCESSO-FILE-RAPPORTO-20261101.md) e [metadati](evidence/accesso-file-build-20261101.json). Ramo sorgenti feature/file-access-20261101, runtime 7298fb632cd9b72386fd7a30f469b307ce7e6fa5; niente merge massivo su main e nessun cambio implicito del nucleo/microfono. Prossimo passo: l’utente configura una cartella e prova il candidato sul Pavilion, poi si registra versione e ambito verificato. Base confermata b936879 preservata; nessuna promozione senza prova PC. Indice non disponibile nel runner, fallback provato; GPT/microfono reali e consumi ancora da misurare. Le vecchie fasi in corso sotto sono cronologia.
+
 ## Attività vigente — implementazione fino alla build testabile, Windows soltanto
 Autorizzazione utente acquisita. Sorgenti in feature/file-access-20261101 dalla base b936879; recuperare docs/ACCESSO-FILE-STATO.md di quel ramo. Probe Windows avviato con commit 7955efe/run 41319370085; integrazione e pacchetto ancora in corso, nessuna consegna nuova. Niente nuovi test Linux: richiesta esplicita salvata in AGENTS. Restano invariati zero costi extra, riuso Jarvis/Windows, add-on leggibile e versione PC preservata.
 

@@ -1,5 +1,10 @@
 # Recupero del lavoro Jarvis
 
+## Ripresa vigente — build Accesso file testabile consegnata
+Sorgenti esatti 7298fb632cd9b72386fd7a30f469b307ce7e6fa5; [ZIP candidato](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip), 249396 byte/78 file, SHA-256 72c6d57a9a258fe7c875cfdc8646bc4ddf5b75417aa748bb5d4d4b7ef3e96755. [CI Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41322290359): 393 test per job Python 3.11/3.12, zero skip; 20 test dal pacchetto estratto, import e avvio/chiusura/rilascio directory PASS. Pubblicazione in Download e metadati remoti verificati, collegamento HTTP 200 con dimensione corretta.
+Codice in feature/file-access-20261101, derivato da b936879. Leggere [rapporto](docs/ACCESSO-FILE-RAPPORTO-20261101.md), [evidenze](docs/evidence/accesso-file-build-20261101.json) e docs/ACCESSO-FILE-STATO.md del ramo sorgente. Main alla radice resta storica: non implementare lì come se fosse il candidato. Nuovi test esclusivamente Windows. Prossimo passo: riscontro utente sul Pavilion per pacchetto esatto, cartella consentita/TXT, voce e GPT reali, consumi; poi registrare ambito/esito. La base PC confermata rimane Timer Audio Fix2 b936879, non promuovere automaticamente il candidato. Browser e scritture/cancellazioni ancora fuori da questa consegna.
+I precedenti arresti «prima del codice» e stati «in corso» sotto sono cronologia superata per questo incremento.
+
 ## Ripresa vigente — codice e build Accesso file
 L’utente ha autorizzato implementazione e build testabile, con tutti i nuovi test soltanto su Windows. Ramo feature/file-access-20261101 dalla base b936879: leggere il suo docs/ACCESSO-FILE-STATO.md per checkpoint/prove. Probe Windows run 41319370085 inizialmente in corso; nessuna nuova build da considerare consegnata finché non verificata e pubblicata. I precedenti arresti prima del codice sono superati per questo incremento file, non per browser o scritture/cancellazioni.
 

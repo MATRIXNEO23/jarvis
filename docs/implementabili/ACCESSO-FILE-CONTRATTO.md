@@ -1,5 +1,8 @@
 # Accesso file — proposta semplice e verifiche
 
+## Esito vigente — proposta tradotta nel candidato Windows
+Il primo percorso completo è implementato e consegnato: [rapporto/mappa](../ACCESSO-FILE-RAPPORTO-20261101.md), [ZIP](../../Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip), sorgenti 7298fb632cd9b72386fd7a30f469b307ce7e6fa5. Gestore schema 1 esteso senza framework nuovo, codice per responsabilità in file_access, servizi Windows e motore esistente. Test solo Windows: 393 per job 3.11/3.12, 20 nel pacchetto estratto e avvio/chiusura/rilascio directory PASS. Prova PC, qualità GPT reale e consumi restano da osservare; indice non disponibile nel runner, fallback verificato. La proposta sotto è la storia del progetto: le ipotesi superate non sono un blocco ancora vigente.
+
 2026-11-01. **Inventario e revisione iniziale completati; integrazione Windows e implementazione ancora da eseguire.** Requisiti nella [scheda WINDOWS](WINDOWS.md). Base [b936879](https://github.com/MATRIXNEO23/jarvis/tree/b936879a431370d206152be7b089baf587d15499); documentazione recuperata da main 95bed8c. Nessuna nuova add-on installabile o modifica della build funzionante.
 
 ## Criterio vigente dell'utente

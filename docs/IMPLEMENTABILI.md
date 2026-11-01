@@ -1,10 +1,14 @@
 # Cose implementabili — Jarvis
+
+## Aggiornamento vigente — Accesso file 0.1.0 candidato disponibile
+Primo incremento generale in sola lettura realizzato e consegnato: [Download](../Download/README.md), [rapporto](ACCESSO-FILE-RAPPORTO-20261101.md), sorgenti 7298fb632cd9b72386fd7a30f469b307ce7e6fa5. Solo test Windows: 393 per versione Python e 20 estratti, avvio/chiusura/rilascio cartella PASS. Prova PC pendente. Applicazioni classiche/Store complete, formati oltre il testo e scritture/cancellazioni restano fasi future; browser sospeso. Le proposte non diventano realizzate per il solo nome della scheda.
+
 Aggiornato: 2026-11-01. **Stato: accesso file prioritario, inventario/contratto e revisione iniziale completati; prova Windows e codice runtime ancora da eseguire.** Il browser resta sospeso. Requisiti approvati, prove e implementazione sono distinti nelle schede.
 
 ## Indice delle schede
 | ID | Funzione | Stato | Complessità preliminare | Prossimo passo |
 |---|---|---|---|---|
-| WINDOWS | [File, cartelle e programmi](implementabili/WINDOWS.md) | Accesso file generale prioritario; [proposta semplice/revisione iniziale](implementabili/ACCESSO-FILE-CONTRATTO.md) salvate; 88 regressioni della base OK | Riuso Jarvis/Windows, collegamento parametrico e policy mancanti | Prova nativa Windows circoscritta, poi percorso completo su b936879 |
+| WINDOWS | [File, cartelle e programmi](implementabili/WINDOWS.md) | Primo incremento Accesso file consegnato come candidato Windows | [Implementazione/prove](ACCESSO-FILE-RAPPORTO-20261101.md), sorgenti 7298fb6 | Collaudo del pacchetto esatto sul Pavilion; altre fasi da discutere |
 | CRONOMETRO | [Cronometro](implementabili/CRONOMETRO.md) | Proposta dell'assistente da discutere | Potenzialmente bassa; da verificare col timer esistente | Chiarire utilità e funzioni minime |
 | PROMEMORIA | [Promemoria locali](implementabili/PROMEMORIA.md) | Proposta dell'assistente da discutere | Media per persistenza, riavvio e scadenze | Concordare comportamento a PC spento |
 | WEB | [Navigazione browser](implementabili/WEB.md) | Requisiti raccolti; revisione tecnica sospesa | Alta rispetto a un modulo locale senza servizi esterni | Discutere prima le alternative; nessuna precedenza automatica |

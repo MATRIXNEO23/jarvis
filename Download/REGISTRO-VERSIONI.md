@@ -3,7 +3,7 @@ Aggiornato il 2026-11-01. Questo è l'indice diretto per recuperare una versione
 
 ## Riferimento funzionante confermato
 **BASE-UTENTE-20261101 — Jarvis-Timer-Audio-Fix2-20261031.zip.**
-L'utente identifica come funzionante la build in cima a Download/README.md. Nome e file sono stati verificati e collegati alla sua conferma. Non serve chiedere di nuovo quale ZIP.
+Il 2026-11-01 l’utente ha identificato come funzionante Timer Audio Fix2, allora in cima a Download/README.md. Nome e file sono verificati: non serve ripetere la domanda. I candidati aggiunti successivamente in cima al catalogo non ereditano quella conferma PC.
 
 | Campo | Valore verificato |
 |---|---|
@@ -94,3 +94,6 @@ Fotografia del commit bb94afa1865fe0315021f783736be3cb77c4af84. Presenza, dimens
 - Windows CI: run 41322290359, due job 3.11/3.12, pacchetto estratto e avvio UI.
 - Collaudo PC: pendente. La base confermata BASE-UTENTE-20261101 b936879 resta invariata.
 - Recupero: usare la cartella precedente Timer Audio Fix2; non cancellare profili o dati.
+
+### Esito dettagliato del candidato 7298fb6
+393 test Windows per job Python 3.11/3.12 senza skip; 20 test dall’archivio estratto, import e avvio/chiusura/rilascio directory PASS, run 41322290359. Scaricamento raggiungibile HTTP 200, 249396 byte e tipo application/zip. Git blob ZIP 09e3ef994a0ca38475844f0fd8e22334e8dba4c4. [Rapporto](../docs/ACCESSO-FILE-RAPPORTO-20261101.md). Prova PC ancora pendente; preservare BASE-UTENTE b936879.

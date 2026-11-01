@@ -1,4 +1,4 @@
-> **Recupero delle versioni:** [registro dei pacchetti e dei punti di ripristino](REGISTRO-VERSIONI.md). Distingue presenza dello ZIP, test automatici e prova sul PC. Base confermata: **Jarvis-Timer-Audio-Fix2-20261031.zip**, sorgenti **b936879**; [audit concreto completato](../docs/VERIFICA-CONCRETA-BASE-20261101.md). Nessuna nuova build. Le voci successive alla base sono storico.
+> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultimo candidato Accesso file **7298fb6**, collaudato automaticamente solo su Windows e ancora da provare sul Pavilion. Base PC confermata: **Timer Audio Fix2, b936879**, preservata. [Rapporto del candidato](../docs/ACCESSO-FILE-RAPPORTO-20261101.md).
 
 ## Accesso file 0.1.0 — build candidata Windows (7298fb6)
 

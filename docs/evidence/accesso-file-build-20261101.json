@@ -1,0 +1,66 @@
+{
+  "version": "0.1.0-candidate",
+  "source_commit": "7298fb632cd9b72386fd7a30f469b307ce7e6fa5",
+  "base_commit": "b936879a431370d206152be7b089baf587d15499",
+  "source_branch": "feature/file-access-20261101",
+  "package": {
+    "source_commit": "7298fb632cd9b72386fd7a30f469b307ce7e6fa5",
+    "archive": "Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip",
+    "files": 78,
+    "bytes": 249396,
+    "sha256": "72c6d57a9a258fe7c875cfdc8646bc4ddf5b75417aa748bb5d4d4b7ef3e96755",
+    "tested_on": "Windows CI; see workflow for extracted tests",
+    "runtime_only": true,
+    "windows_workflow_run": "41322290359",
+    "pc_test": "pending",
+    "git_blob_sha": "09e3ef994a0ca38475844f0fd8e22334e8dba4c4",
+    "download_url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip",
+    "http_status": 200,
+    "content_length": 249396
+  },
+  "verification": {
+    "platform": "Windows Server 2022 CI",
+    "workflow_run": 41322290359,
+    "python_312": {
+      "job_id": 124894870772,
+      "tests": 393,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python_311": {
+      "job_id": 124894870793,
+      "tests": 393,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "extracted": {
+      "tests": 20,
+      "imports": true,
+      "real_ui_boot": true,
+      "normal_close": true,
+      "directory_released": true
+    },
+    "publisher_job": 124895334435,
+    "windows_search_index_available": false,
+    "new_linux_tests_executed": false
+  },
+  "pc_acceptance": "pending",
+  "pavilion_resources": "not measured",
+  "real_gpt_account_and_microphone": "not exercised",
+  "regressions_preserved": [
+    {
+      "run": 41320489345,
+      "problem": "DOS short path vs long path"
+    },
+    {
+      "run": 41320795402,
+      "problem": "cancel flag inherited by fresh request"
+    },
+    {
+      "run": 41321937405,
+      "problem": "installation directory held by native helper"
+    }
+  ]
+}

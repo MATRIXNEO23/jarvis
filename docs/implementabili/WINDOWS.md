@@ -1,4 +1,9 @@
 # WINDOWS — File, cartelle e programmi scelti
+
+## Stato vigente — primo incremento Accesso file consegnato, 2026-11-01
+[Rapporto di implementazione](../ACCESSO-FILE-RAPPORTO-20261101.md), [ZIP](../../Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip) e [prove](../evidence/accesso-file-build-20261101.json). Sorgenti 7298fb632cd9b72386fd7a30f469b307ce7e6fa5; 393 test Windows per Python 3.11/3.12 e 20 estratti, avvio/chiusura/rilascio directory PASS. Accesso generale alle radici selezionate, spunte/eccezioni, ricerca/elenco/scelta, lettura testo senza modifica, apertura cartelle e interpretazione GPT integrati. Nessuna scrittura/cancellazione dei dati cercati. Il rilevamento delle cartelle app offre candidati da registro Windows, non copertura universale dei dati di ogni app.
+Prossimo passo: collaudo del candidato sul Pavilion; base confermata b936879 invariata. Store/classici completi e nuove scritture non sono parte di questa consegna. Le sezioni seguenti conservano progetto/requisiti e stati precedenti, superati per le parti realizzate descritte nel rapporto.
+
 Aggiornato: 2026-11-01. **Stato vigente: inventario/contratto e revisione iniziale completati dopo «Procediamo col prossimo passo»; prova nativa Windows e implementazione runtime ancora da eseguire.** Base b936879a431370d206152be7b089baf587d15499. Priorità confermata: accesso generale a file/cartelle in sola lettura con dischi/cartelle selezionabili ed eccezioni.
 
 ## Punto di ripresa vigente

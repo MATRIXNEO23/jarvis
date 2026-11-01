@@ -1,5 +1,8 @@
 > **Installazione e configurazione aggiornate:** parti da [Prima-installazione/README.md](Prima-installazione/README.md). Per riprendere lo sviluppo leggi [RECUPERO.md](RECUPERO.md) e [l’indice dei sorgenti](docs/INDICE-SORGENTI.md). Le sezioni sottostanti contengono anche aggiornamenti storici: non identificano tutte la versione attuale. Nessuna nuova build applicativa è pubblicata con questo aggiornamento delle istruzioni.
 
+**Nuova build candidata Windows: [Accesso file 0.1.0](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip)** — cartelle consentite, ricerca e lettura; [istruzioni/prove](docs/ACCESSO-FILE-RAPPORTO-20261101.md). La precedente Timer Audio Fix2 resta il riferimento PC confermato; questa build attende il tuo collaudo.
+
+
 # Jarvis — Windows 10 (64 bit)
 
 **Continuità del progetto:** [stato, branch e punto di ripresa (30/10/2026)](docs/CONTINUITA_JARVIS.md). Il problema del test di ricerca web è stato corretto. I test automatici della nuova versione con browser, dettatura, «Ehi Jarvis» e risposte vocali hanno superato [Windows e Linux](https://github.com/MATRIXNEO23/jarvis/actions/runs/41126671637). **Le nuove funzioni non sono ancora state provate sul Pavilion**; la versione vocale precedente resta disponibile.

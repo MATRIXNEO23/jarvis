@@ -1,5 +1,9 @@
 # Indice dei sorgenti Jarvis
 
+## Candidato Accesso file — sorgenti effettivi della nuova consegna
+**Ultimo candidato:** 7298fb632cd9b72386fd7a30f469b307ce7e6fa5, ramo feature/file-access-20261101, dalla base b936879. Pacchetto Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip. [Rapporto e mappa dell’incremento](ACCESSO-FILE-RAPPORTO-20261101.md), [prove](evidence/accesso-file-build-20261101.json). Codice file_access/windows.py, policy.py, service.py, ui.py; manifest e script indice nella stessa cartella; adattatori nei moduli esistenti indicati nel rapporto. Test propri tests/test_file_access.py, probe/build/check in tools, CI Windows.
+La radice main resta storica; non è stata sostituita con il candidato. Il nucleo successivo a86c2c9 resta separato e non è adottato automaticamente. Per riprendere lo sviluppo usare il commit/ramo del candidato, insieme alle regole correnti main. La vecchia mappa Archify rappresenta quel nucleo successivo, la mappa del rapporto rappresenta questo incremento.
+
 ## Base operativa confermata e verificata
 - Pacchetto: Jarvis-Timer-Audio-Fix2-20261031.zip in Download, confermato dall'utente come ultima build funzionante nell'uso attuale.
 - Sorgenti esatti: b936879a431370d206152be7b089baf587d15499. Tutti i 155 file del pacchetto corrispondono al tree; ZIP ricreato identico, SHA-256 c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352.

@@ -1,4 +1,13 @@
 # 5. Impostazioni dei moduli inclusi
+
+## Candidato Accesso file 0.1.0 — installazione e prima prova
+Usare lo ZIP candidato in [Download](../Download/README.md), sorgenti 7298fb632cd9b72386fd7a30f469b307ce7e6fa5; non sovrascrivere la cartella funzionante. Profilo separato LOCALAPPDATA/Jarvis-AccessoFile-Trial, dati precedenti copiati senza modificarli; launcher unico avvia_jarvis.bat. Nessuna dipendenza Python nuova per l’accesso file.
+1. Estrarre in una cartella nuova e avviare avvia_jarvis.bat.
+2. Ingranaggio → Progetti e servizi → Gestisci add-on → Accesso file → Configura. Il componente incorporato è inizialmente SPENTO; se manca la registrazione scegliere Installa e file_access/AccessoFile.jaddon.
+3. Selezionare una cartella di prova, usare Spunta/Escludi (o spazio), Salva, poi Attiva dal gestore.
+4. Con un TXT conosciuto: «cerca file PARTEDELNOME», «leggi file 1», «apri cartella 1» se il risultato è una cartella. Testo visto senza modifica; «spiega file 1» richiede GPT collegato e invia un estratto.
+Formati, limiti, errori e profilo dati nel LEGGIMI del componente incluso nel pacchetto. Se manca file_access/windows_search.ps1, reinstallare dal pacchetto completo; indice Windows assente usa fallback, non serve un altro indicizzatore. Tornare alla vecchia cartella non richiede cancellare profili o dati. [Prove e limiti](../docs/ACCESSO-FILE-RAPPORTO-20261101.md).
+
 Le etichette seguenti corrispondono al codice della base b936879; le funzioni ancora soltanto progettate sono indicate separatamente. Pacchetti di altre fasi possono avere posizioni diverse.
 
 | Modulo | Preparazione | Dove configurare | Prova breve |
