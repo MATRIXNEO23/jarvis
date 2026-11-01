@@ -1,3 +1,6 @@
+# Regola vigente — 2026-11-01, successiva al riscontro PC
+L’utente richiede: «Non fare la build in automatico, proponimi soluzioni». Sospendere nuove funzionalità runtime in corso per navigazione/contenuto e programmi finché la soluzione non è concordata. Nessuna build o pubblicazione di pacchetto senza richiesta esplicita; i vecchi automatismi e l’autorizzazione generica alla build non valgono come nuovo via. CI automatica può eseguire i test Windows, ma generazione archivio/pubblicazione richiedono workflow_dispatch con build_candidate=true e istruzione utente. Per programmi: proporre elenco rilevato e spunte separate per apertura e chiusura nelle impostazioni; chiusura normale, senza terminazione forzata o perdita di dati. Proposta, implementazione e prova devono restare distinte.
+
 # Istruzioni persistenti — Jarvis
 
 ## Lavoro per passi brevi e recuperabili — 2026-11-01

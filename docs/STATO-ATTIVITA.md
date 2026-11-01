@@ -1,3 +1,6 @@
+## Stato vigente — proposte e nessuna build automatica
+L’utente ha fermato le build automatiche e chiede prima proposte per navigazione Explorer e programmi con spunte di apertura/chiusura. Workflow sorgente corretto nel commit 87006ee4b7abf747512a54c684fff09f244d6696: su push soltanto test Windows; archivio/pubblicazione solo con workflow_dispatch e build_candidate=true dopo richiesta esplicita. Nessuna nuova funzione di navigazione, ricerca contenuto o gestione programmi consegnata. Editing preliminare navigazione conservato come patch NON TESTATA, rimosso dal runtime. Leggere [proposta](PROPOSTA-FILE-PROGRAMMI-20261101.md) e [checkpoint](ACCESSO-FILE-CORREZIONI-20261101.md). Prossimo passo: discutere la proposta e chiarire se chiusura vale solo per finestre aperte da Jarvis o anche manualmente. Nessuna build da avviare.
+
 # Stato attività Jarvis
 
 ## Ripresa verificata — nessun lavoro di build ancora in corso
