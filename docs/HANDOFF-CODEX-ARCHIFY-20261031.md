@@ -210,3 +210,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Richiesta: completare l'allineamento del metodo e dei documenti, salvare un punto di ripresa pulito e fermarsi prima di implementare la nuova add-on.
 - Controllo documentale: individuate formulazioni generiche sul passaggio GPT da precisare con la scelta ibrida finale; vecchia clausola di approvazione del nucleo superata dal piano già approvato e dalla correzione documentata. La politica di riuso/ricerca web va esplicitata.
 - Previsto: correggere queste formulazioni, rendere univoci stato delle fasi e prossimo passo in piano/STATO/RECUPERO, registrare esito. Nessun codice, pacchetto o test runtime in questo allineamento.
+
+## 2026-11-01 — In corso: catalogo persistente dei punti di ripristino
+- L'utente precisa: decisioni tecniche tracciabili, riferimento funzionante dopo test automatici e prova PC, ZIP completo persistente in repository e recupero senza cercare fra artifact/commit.
+- Verifica Download: 20 ZIP già versionati nel repository, più README. Presenza/file SHA osservati via API, non collaudo dei contenuti. Nessuno viene promosso automaticamente a versione stabile; il feedback dialogo sul PC non identifica ancora uno ZIP/SHA esatto.
+- Previsto: registro in Download collegato all'indice, con stati/prove/limiti e procedura di recupero; aggiornare metodo e punto di arresto. Rimane il fermo prima dell'implementazione web.
