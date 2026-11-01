@@ -502,3 +502,100 @@ class FileAccessTests(unittest.TestCase):
             result=self.files.execute('locate',{'query':'Jarvis Test Store App'})
         self.assertIn(str(self.docs),result.message)
         self.assertNotIn(str(self.hidden),result.message)
+
+    def _pending_folder_choice(self):
+        first=self.docs/'Foto-A'; second=self.docs/'Foto-B'
+        first.mkdir(exist_ok=True); second.mkdir(exist_ok=True)
+        result=self.engine.execute('apri cartella Foto')
+        self.assertEqual(result.status,'completed',result.message)
+        self.assertIn('Quale risultato',result.message)
+        self.assertIsNotNone(self.files._pending)
+        return first,second
+
+    def test_pending_name_through_real_callback_opens_once_without_new_search(self):
+        first,second=self._pending_folder_choice()
+        tree=ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
+        main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
+        callback=next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name=='try_file_command')
+        calls=[]
+        env={'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
+             'write_line':lambda *a:None,'submit_local':lambda **kw:calls.append(kw)}
+        exec(compile(ast.Module(body=[callback],type_ignores=[]),'real-file-choice','exec'),env)
+        self.assertIn('Richiesta in attesa: aprire',self.files.context_hint())
+        with patch.object(self.files,'index',side_effect=AssertionError('Do not search again')),patch('subprocess.Popen') as launch:
+            self.assertTrue(env['try_file_command']('foto-b'))
+            parsed=calls.pop()['file_call']
+            result=self.engine.execute_file(*parsed)
+            self.assertEqual(result.status,'completed',result.message)
+            self.assertEqual(Path(launch.call_args.args[0][1]),second)
+            self.engine.execute_file(*parsed)  # Replayed selection cannot reopen.
+            self.assertEqual(launch.call_count,1)
+        self.assertIsNone(self.files._pending)
+        self.assertIsNone(self.files.parse_command('Foto-B'))
+
+    def test_duplicate_choice_name_requires_number_and_preserves_action(self):
+        for parent in ('Profilo-A','Profilo-B'):
+            (self.docs/parent/'Foto').mkdir(parents=True)
+        self.engine.execute('apri cartella Foto')
+        with patch('subprocess.Popen') as launch:
+            result=self.engine.execute('Foto')
+            self.assertEqual(result.status,'rejected')
+            self.assertIn('scegli il numero',result.message)
+            launch.assert_not_called()
+            chosen=self.files._results[1]
+            result=self.engine.execute('due')
+            self.assertEqual(result.status,'completed',result.message)
+            self.assertEqual(Path(launch.call_args.args[0][1]),chosen)
+            self.assertEqual(launch.call_count,1)
+
+    def test_pending_choice_is_bound_to_the_original_result_list(self):
+        self._pending_folder_choice()
+        stale=self.files.parse_command('Foto-B')
+        self.files.execute('search',{'query':'Foto-A'})
+        with patch('subprocess.Popen') as launch:
+            result=self.files.execute(*stale)
+        self.assertEqual(result.status,'rejected')
+        self.assertIn('elenco è cambiato',result.message)
+        launch.assert_not_called()
+
+    def test_pending_name_expiry_cancel_context_and_revocation(self):
+        self._pending_folder_choice()
+        self.files._expires=time.monotonic()-1
+        self.assertIsNone(self.files.parse_command('Foto-B'))
+        self._pending_folder_choice()
+        self.engine.execute('annulla')
+        self.assertIsNone(self.files.parse_command('Foto-B'))
+        self._pending_folder_choice()
+        stale=self.files.parse_command('Foto-B')
+        self.files.reset('altro progetto')
+        with patch('subprocess.Popen') as launch:
+            self.assertEqual(self.files.execute(*stale).status,'rejected')
+        launch.assert_not_called()
+        self._pending_folder_choice()
+        self.files.policy.configure([(self.docs,True),(self.hidden,False)])
+        self.assertIsNone(self.files.parse_command('Foto-B'))
+        self._pending_folder_choice()
+        self.manager.set_enabled('accesso_file',False)
+        with patch('subprocess.Popen') as launch:
+            self.assertEqual(self.files.execute('select',{'target':'2'}).status,'rejected')
+        launch.assert_not_called()
+
+    def test_pending_choice_keeps_file_kind_and_does_not_guess_unknown_names(self):
+        self._pending_folder_choice()
+        self.assertIsNone(self.files.parse_command('NonPresente'))
+        self.assertIsNone(self.files.parse_command('come stai'))
+        wrong=self.docs/'Foto-C.txt'; wrong.write_text('Non leggere',encoding='utf-8')
+        self.assertIsNone(self.files.parse_command('Foto-C.txt'))
+        self.engine.execute('leggi file '+str(self.a))  # Explicit replacement.
+        self.assertIsNone(self.files._pending)
+        self.assertIsNone(self.files.parse_command('Foto-B'))
+
+    def test_pending_read_name_preserves_explanation_option(self):
+        second=self.docs/'preventivo-secondo.txt'; second.write_text('secondo',encoding='utf-8')
+        result=self.engine.execute('spiegami file preventivo')
+        self.assertIn('Quale risultato',result.message)
+        with patch.object(self.files,'index',side_effect=AssertionError('No new search')):
+            result=self.engine.execute(second.name)
+        self.assertEqual(result.preview,'secondo')
+        self.assertTrue(result.explain)
+        self.assertIsNone(self.files._pending)

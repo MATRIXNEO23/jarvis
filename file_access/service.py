@@ -86,6 +86,7 @@ class FileAccessService:
         self._pending = None
         self._pending_app = None
         self._result_revision = -1
+        self._result_token = uuid4().hex
         self.max_entries = 5000
         self.max_seconds = 10.0
 
@@ -98,6 +99,7 @@ class FileAccessService:
             self._context = context
             self._pending = None
             self._pending_app = None
+            self._result_token = uuid4().hex
 
     def _live(self, revision):
         return (self.enabled() and not self.cancelled.is_set()
@@ -112,7 +114,9 @@ class FileAccessService:
                     or self._result_revision != self.policy.revision):
                 return ''
             # No full paths/content sent in the catalog. Selection still checked locally.
-            return 'Risultati file selezionabili: '+', '.join(
+            pending = ('Richiesta in attesa: '+('aprire' if self._pending[0]=='open' else 'leggere')+
+                       ' uno dei risultati; la risposta col nome o numero completa questa richiesta. ') if self._pending else ''
+            return pending+'Risultati file selezionabili: '+', '.join(
                 str(i+1)+': '+('Cartella ' if p.is_dir() else 'File ')+p.name[:55] for i, p in enumerate(self._results[:8]))
 
     def _target(self, text):
@@ -166,7 +170,7 @@ class FileAccessService:
             return None
         clean = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+', '', text.strip(), flags=re.I).strip()
         low = clean.casefold().strip(' .!?')
-        if self._pending_app is not None and low in ('annulla','lascia perdere','non importa'):
+        if (self._pending_app is not None or self._pending is not None) and low in ('annulla','lascia perdere','non importa'):
             return ('cancel', {})
         app_answer = self._application_answer(clean)
         if app_answer is not None:
@@ -185,7 +189,10 @@ class FileAccessService:
         if number is not None:
             with self._lock:
                 if self._results:
-                    return ('select', {'target': number})
+                    args={'target':number}
+                    if self._pending is not None:
+                        args['selection_id']=self._result_token
+                    return ('select', args)
             return None
         patterns = (
             (r'^(?:cerca|cercami|trova|trovami) (?:il |la |un |una )?(?:file|cartella)\s+(.+)$', 'search'),
@@ -210,6 +217,17 @@ class FileAccessService:
                     args['explain'] = True
                 self._pending_app = None
                 return operation, args
+        # Complete an existing choice before the UI treats a bare name as new chat.
+        # Exact names only: unrelated short sentences cannot become guessed actions.
+        if self._pending is not None and self.available():
+            with self._lock:
+                if (self._pending is not None and time.monotonic()<self._expires
+                        and self._result_revision==self.policy.revision):
+                    name=' '.join(clean.strip('"').split()).casefold()
+                    if any(' '.join(p.name.split()).casefold()==name for p in self._results):
+                        return ('select',{'target':name,'by_name':True,'selection_id':self._result_token})
+                elif self._pending is not None:
+                    self._pending=None
         return None
 
     def execute(self, operation, arguments):
@@ -223,13 +241,23 @@ class FileAccessService:
             return FileResult('completed', self.commands())
         if operation == 'select':
             try:
-                path = self._target(arguments['target'])
-                if not self.policy.permits(path):
-                    raise PermissionError('La cartella non è più consentita.')
+                self.policy.ensure_current()
                 with self._lock:
+                    if arguments.get('selection_id',self._result_token)!=self._result_token:
+                        raise ValueError('L’elenco è cambiato: scegli dalla ricerca corrente.')
+                    target=arguments['target']
+                    if arguments.get('by_name'):
+                        matches=[i+1 for i,p in enumerate(self._results)
+                                 if ' '.join(p.name.split()).casefold()==target]
+                        if len(matches)!=1:
+                            raise ValueError('Il nome non identifica un solo risultato: scegli il numero nell’elenco corrente.')
+                        target=str(matches[0])
+                    path = self._target(target)
+                    if not self.policy.permits(path):
+                        raise PermissionError('La cartella non è più consentita.')
                     self._selected = path
-                pending = self._pending
-                self._pending = None
+                    pending = self._pending
+                    self._pending = None
                 if pending is not None:
                     op, opts = pending
                     return self.execute(op, {**opts, 'target': str(path)})
@@ -239,6 +267,10 @@ class FileAccessService:
             except (OSError, ValueError) as exc:
                 return FileResult('rejected', str(exc))
         try:
+            # Any explicit replacement operation supersedes an unanswered choice.
+            with self._lock:
+                self._pending=None
+                self._pending_app=None
             if not self.enabled(operation):
                 raise PermissionError("Questa azione Accesso file non è disponibile nel componente attivo.")
             args = validate_arguments(operation, arguments)
@@ -294,6 +326,7 @@ class FileAccessService:
         allowed = [p for p in paths if self.policy.permits(p)][:20]
         with self._lock:
             self._pending = None
+            self._result_token = uuid4().hex
             self._results = allowed
             self._selected = allowed[0] if len(allowed) == 1 else None
             self._expires = time.monotonic()+120
