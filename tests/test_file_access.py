@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 
 @unittest.skipUnless(os.name == 'nt', 'Windows-only user requirement')
@@ -418,7 +418,7 @@ class FileAccessTests(unittest.TestCase):
             and n.test.comparators[0].value=='local')
         writes, spoken = [], []
         result = self.engine.execute('elenca cartella '+str(self.docs))
-        env = {'data':[result],'runtime_events':None,'write_line':writes.append,
+        env = {'data':[result],'runtime_events':Mock(),'write_line':writes.append,
             'last_user_for_action':'elenca cartella documenti','observed_local_result':lambda r:False,
             'operation_ledger':None,'local_operation_id':None,'project_local_ticket':None,
             'finish_project_work':lambda *a,**kw:None,'remember_exchange':lambda *a,**kw:None,

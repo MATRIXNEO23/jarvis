@@ -156,7 +156,7 @@ class FileAccessService:
             return None
         patterns = (
             (r'^(?:cerca|cercami|trova|trovami) (?:il |la |un |una )?(?:file|cartella)\s+(.+)$', 'search'),
-            (r'^(?:elenca|mostra) (?:i file in|la cartella|il contenuto di)\s+(.+)$', 'list'),
+            (r'^(?:elenca|mostra) (?:i file in|(?:la )?cartella|il contenuto di)\s+(.+)$', 'list'),
             (r'^(?:leggi|leggimi|spiega|spiegami) (?:il |la )?(?P<kind>file|risultato)\s+(.+)$', 'read'),
             (r'^(?:apri|aprimi) (?:il |la )?(?P<kind>file|cartella|risultato)\s+(.+)$', 'open'),
             (r'^(?:trova|trovami) (?:la )?cartella (?:di installazione|dati) (?:di )?(.+)$', 'locate'),
