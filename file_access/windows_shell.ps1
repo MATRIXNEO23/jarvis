@@ -45,5 +45,5 @@ try {
     }
     @{status='ok';rows=@($rows.ToArray())} | ConvertTo-Json -Compress
 } catch {
-    @{status='unavailable';rows=@()} | ConvertTo-Json -Compress
+    @{status='unavailable';rows=@();error_id=[string]$_.FullyQualifiedErrorId} | ConvertTo-Json -Compress
 }

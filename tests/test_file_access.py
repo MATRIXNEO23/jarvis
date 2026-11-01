@@ -755,7 +755,7 @@ class FileAccessTests(unittest.TestCase):
         harness=self.root/'explorer-fixture.ps1'
         def run(request,windows):
             fixture=json.dumps(windows).replace("'","''")
-            harness.write_text("$script:views=@('"+fixture+"' | ConvertFrom-Json)\n$script:marker='"+str(marker).replace("'","''")+"'\n"+r'''
+            harness.write_text("$script:views='"+fixture+"' | ConvertFrom-Json\n$script:marker='"+str(marker).replace("'","''")+"'\n"+r'''
 function New-Object {
     param([string]$ComObject)
     if ($ComObject -ne 'Shell.Application') { throw 'Unexpected COM request' }
