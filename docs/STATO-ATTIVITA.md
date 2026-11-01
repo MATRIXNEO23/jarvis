@@ -28,6 +28,9 @@ Comando preciso locale senza GPT; interpretazione esterna quando necessaria e co
 ## Attività attuale — Windows, file e programmi
 Requisiti dell'utente in [scheda WINDOWS](implementabili/WINDOWS.md): accesso/cartelle, ricerca/apertura file e programmi selezionabili nelle impostazioni, interpretazione naturale e catalogo aggiornato. Riusare Windows/codice esistente quando sufficiente; non è un divieto assoluto di dipendenze nuove, la scelta deve essere motivata da requisiti, consumo e affidabilità. Lettura sorgenti b936879 e documentazione Microsoft svolta, nessun test Windows/benchmark o implementazione. Chiarito dall'utente: ricerca/apertura e lettura/spiegazione entrambe richieste, con nomi parziali e ricerca per indizi/scopo (esempio cartella installazione Minecraft). Non basta cercare una cartella chiamata Minecraft; verificare fonti locali e distinguere candidati. Ambito cartelle e formati iniziali ancora da definire; nessun nuovo test/implementazione. Guida semplice, un punto/domanda alla volta.
 
+## Piano Windows e vincolo contro i duplicati
+Piano per fasi salvato nella scheda WINDOWS: inventario con responsabilità → prova minima Windows → miglioramento percorso completo → estensione ricerca/lettura esistenti → verifiche/consegna/recupero. Funzioni già presenti da migliorare nel loro componente, nessun doppione o nuova add-on automatica. Piano/documentazione soltanto; prove d'integrazione, codice e pacchetto non iniziati. Prossimo passo: discussione guidata del piano con esempio concreto, poi delimitare incrementi e autorizzazione.
+
 ## Prossimo passo corrente
 Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
 
