@@ -3178,6 +3178,12 @@ def main() -> None:
                         except (ImportError,OSError,ValueError,tk.TclError) as exc:
                             write_line("ACCESSO FILE > Finestra risultati non disponibile: "+str(exc)[:140]+
                                        ". Reinstalla file_access/ui.py dal pacchetto completo.")
+                    elif result.action=='files_select' and result.status=='completed':
+                        try:
+                            from file_access.ui import sync_result_selection
+                            sync_result_selection(root,addon_manager.file_service)
+                        except (ImportError,OSError,ValueError,tk.TclError) as exc:
+                            write_line("ACCESSO FILE > Selezione visuale non aggiornata: "+str(exc)[:140])
                     write_line(f"[{result.status}] {result.message}")
                     if result.preview_path:
                         try:

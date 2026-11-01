@@ -19,6 +19,10 @@ _RESULT_WORDS = dict(zip(
      'diciotto','diciannove','venti'), map(str,range(1,21))))
 _RESULT_WORDS.update({'una':'1','il primo':'1','la prima':'1',
     'il secondo':'2','la seconda':'2','il terzo':'3','la terza':'3'})
+for _i,_ordinal in enumerate(('primo','secondo','terzo','quarto','quinto','sesto','settimo','ottavo','nono','decimo',
+        'undicesimo','dodicesimo','tredicesimo','quattordicesimo','quindicesimo','sedicesimo','diciassettesimo',
+        'diciottesimo','diciannovesimo','ventesimo'),1):
+    _RESULT_WORDS.update({_ordinal:str(_i),_ordinal[:-1]+'a':str(_i)})
 _DEICTIC_TARGETS = frozenset(('questo','quello','questa','quella','selezionato','il file','la cartella','selezionata'))
 _CURRENT_TARGETS = frozenset(('qui','qui dentro','cartella corrente','cartella aperta','cartella a schermo'))
 
@@ -29,7 +33,9 @@ def result_number(value):
     if not isinstance(value,str):
         return None
     value = ' '.join(value.casefold().strip(' .!?').split())
+    value = re.sub(r'\s+(?:risultato|file|cartella)$','',value)
     value = re.sub(r'^(?:il numero|numero|risultato)\s+', '', value)
+    value = re.sub(r'^(?:il|la)\s+','',value)
     if value.isdigit():
         return value
     return _RESULT_WORDS.get(value)
@@ -284,6 +290,23 @@ class FileAccessService:
                 return ('select',{'target':str(self._view_selection[2] or 0),
                                   'selection_id':self._view_selection[0],'open':True})
             return ('open',{'target':'selezione explorer'})
+        voice_choice=re.fullmatch(r'(apri(?:mi)?|leggi(?:mi)?|spiega(?:mi)?)\s+(.+)',clean,re.I)
+        if voice_choice and self._results:
+            verb,reference=voice_choice.group(1).casefold(),voice_choice.group(2)
+            number=result_number(reference)
+            named=re.fullmatch(r"(?:(?:il|quel) risultato|quell[oa]|il file|la cartella)\s+(?:chiamat[oa]|di nome|che si chiama)\s+(.+)",reference,re.I)
+            if number is not None or named is not None:
+                args={'target':number if number is not None else ' '.join(named.group(1).strip('"').split()).casefold(),
+                      'selection_id':self._result_token,'followup':'open' if verb.startswith('apr') else 'read'}
+                if named is not None:
+                    args['by_name']=True
+                if verb.startswith('spiega'):
+                    args['explain']=True
+                noun=(re.match(r'^(?:il|la) (file|cartella)\b',reference,re.I) if named is not None
+                      else re.search(r'\b(file|cartella)$',reference,re.I))
+                if noun:
+                    args['kind']='folder' if noun.group(1).casefold()=='cartella' else 'file'
+                return ('select',args)
         if (self._pending_app is not None or self._pending is not None) and low in ('annulla','lascia perdere','non importa'):
             return ('cancel', {})
         missing=self._missing_file_request(clean)
@@ -390,6 +413,12 @@ class FileAccessService:
         if operation == 'select':
             try:
                 self.policy.ensure_current()
+                followup=arguments.get('followup','open' if arguments.get('open') is True else None)
+                if followup is not None:
+                    if followup not in ('open','read'):
+                        raise ValueError('Azione sulla scelta non valida.')
+                    opts={k:arguments[k] for k in ('explain','kind') if k in arguments}
+                    validate_arguments(followup,{'target':'nome',**opts})
                 with self._lock:
                     if arguments.get('selection_id',self._result_token)!=self._result_token:
                         raise ValueError('L’elenco è cambiato: scegli dalla ricerca corrente.')
@@ -398,19 +427,25 @@ class FileAccessService:
                         matches=[i+1 for i,p in enumerate(self._results)
                                  if ' '.join(p.name.split()).casefold()==target]
                         if len(matches)!=1:
+                            if (followup is not None and time.monotonic()<self._expires
+                                    and self._result_revision==self.policy.revision):
+                                self._pending=self._pending or (followup,opts)
+                                return FileResult('completed','Il nome non identifica un solo risultato. Quale numero vuoi scegliere?')
                             raise ValueError('Il nome non identifica un solo risultato: scegli il numero nell’elenco corrente.')
                         target=str(matches[0])
                     path = self._target(target)
                     if not self.policy.permits(path):
                         raise PermissionError('La cartella non è più consentita.')
                     self._selected = path
+                    if self._view_selection is not None:
+                        self._view_selection=(self._result_token,self._view_selection[1],int(target))
                     pending = self._pending
                     self._pending = None
                 if pending is not None:
                     op, opts = pending
                     return self.execute(op, {**opts, 'target': str(path)})
-                if arguments.get('open') is True:
-                    return self.execute('open',{'target':str(path)})
+                if followup is not None:
+                    return self.execute(followup,{'target':str(path),**opts})
                 if path.is_dir():
                     return FileResult('completed', 'Cartella selezionata: '+str(path)+'. Puoi dire “apri cartella selezionata” o “elenca cartella selezionata”.')
                 return FileResult('completed', 'File selezionato: '+str(path)+'. Puoi dire “leggi file selezionato” o “apri file selezionato”.')

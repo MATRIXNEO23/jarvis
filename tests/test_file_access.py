@@ -920,3 +920,59 @@ function New-Object {
         view.tree.selection_set('1'); view.select(); view.open_button.invoke()
         self.assertEqual(calls,[])
         self.assertEqual(str(view.open_button.cget('state')),'disabled')
+
+    def test_result_voice_first_flow_opens_by_ordinal_and_name_without_mouse(self):
+        for name in ('Foto-A','Foto-B'):
+            (self.docs/name).mkdir()
+        self.engine.execute('cerca cartella Foto')
+        chosen=self.files._results[1]
+        with patch.object(self.files,'index',side_effect=AssertionError('Choose from existing results')),patch('subprocess.Popen') as launch:
+            result=self.engine.execute('apri il secondo risultato')
+            self.assertEqual(result.status,'completed',result.message)
+            self.assertTrue(os.path.samefile(launch.call_args.args[0][1],chosen))
+            result=self.engine.execute('apri quello chiamato Foto-A')
+            self.assertEqual(result.status,'completed',result.message)
+            self.assertTrue(os.path.samefile(launch.call_args.args[0][1],self.docs/'Foto-A'))
+            self.assertEqual(launch.call_count,2)
+        self.engine.execute('cerca file preventivo')
+        result=self.engine.execute('spiega il primo risultato')
+        self.assertEqual(result.preview,'Testo reale di esempio')
+        self.assertTrue(result.explain)
+
+    def test_result_voice_duplicate_name_keeps_action_until_spoken_number(self):
+        for parent in ('Uno','Due'):
+            (self.docs/parent/'Foto').mkdir(parents=True)
+        self.engine.execute('cerca cartella Foto')
+        chosen=self.files._results[1]
+        with patch.object(self.files,'index',side_effect=AssertionError('No repeat search')),patch('subprocess.Popen') as launch:
+            result=self.engine.execute('apri quello chiamato Foto')
+            self.assertIn('Quale numero',result.message)
+            launch.assert_not_called()
+            self.assertIsNotNone(self.files._pending)
+            result=self.engine.execute('il secondo')
+            self.assertEqual(result.status,'completed',result.message)
+            self.assertTrue(os.path.samefile(launch.call_args.args[0][1],chosen))
+
+    def test_spoken_selection_highlight_and_aprilo_work_without_clicks(self):
+        import tkinter as tk
+        from file_access.ui import show_results,sync_result_selection
+        second=self.docs/'altro.txt'; second.write_text('altro',encoding='utf-8')
+        result=self.engine.execute('elenca cartella '+str(self.docs))
+        root=tk.Tk(); root.withdraw(); self.addCleanup(root.destroy)
+        view=show_results(root,result.file_listing,lambda *a:self.fail('No mouse action'),self.files.mark_view_selection)
+        root.update()
+        chosen=self.files._results[1]
+        selection=self.engine.execute('due')
+        self.assertEqual(selection.status,'completed')
+        sync_result_selection(root,self.files)
+        self.assertEqual(view.tree.selection(),('2',))
+        with patch('file_access.service.window_is_foreground',return_value=True):
+            result=self.engine.execute('aprilo')
+        self.assertEqual(result.preview_path,str(chosen))
+
+    def test_spoken_result_kind_cannot_open_file_as_folder(self):
+        self.engine.execute('elenca cartella '+str(self.docs))
+        result=self.engine.execute('apri la prima cartella')
+        self.assertEqual(result.status,'rejected')
+        self.assertIn('è un file',result.message)
+        self.assertFalse(result.preview)

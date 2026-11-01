@@ -245,6 +245,19 @@ def show_results(parent,listing,on_open,on_select):
     return view
 
 
+def sync_result_selection(parent,service):
+    view=getattr(parent,'_jarvis_file_results',None)
+    if view is None or not view.window.winfo_exists():
+        return
+    with service._lock:
+        if view.listing['token']!=service._result_token or service._selected not in service._results:
+            return
+        number=service._results.index(service._selected)+1
+    view.tree.selection_set(str(number))
+    view.tree.see(str(number))
+    view.select()
+
+
 def show_preview(parent, path, text):
     window = tk.Toplevel(parent)
     window.title('Jarvis — lettura senza modifica: '+Path(path).name)
