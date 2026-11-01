@@ -150,3 +150,9 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 ## 2026-11-01 — In corso: ambito concordato e comandi vocali completi
 - Richiesta: nessuna funzione extra a sorpresa; proporre eventuali estensioni prima di implementarle. Ogni add-on deve comprendere il percorso vocale completo, senza consegnare funzioni presenti ma non richiamabili da Jarvis.
 - Modifica prevista solo documentale: precisare regole, piano e lezioni; verificare la presenza delle clausole, poi chiudere il checkpoint. Nessuna implementazione web o nuovo test in questa fase.
+
+## 2026-11-01 — Completata: ambito e completezza vocale
+- AGENTS.md 3e453b918283185fff4db857767cf670c8e95e00, piano 8cfe90dc5e39f91280a25360bf4dbd11e486c101, lezioni c2bf61f0f8af233d41ad885a3f6defaa4be12abc: niente nuove funzioni non concordate; proposte extra prima del codice.
+- Ogni add-on include percorso comando vocale naturale → interpretazione GPT esterna/stato → capacità registrata → esecuzione locale → verifica → risposta. UI, esempi e capacità allineati; prove delle vie voce/testo e chiarimenti contestuali.
+- Separare callback/trascrizione simulata, audio di prova e microfono/account reali. Non trasformare una prova simulata in collaudo completo.
+- Solo documentazione aggiornata. Nessun nuovo test, build o implementazione web. Prossimo passo resta la revisione tecnica del piano web prima della realizzazione autorizzata.
