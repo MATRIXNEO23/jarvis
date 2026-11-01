@@ -1,3 +1,7 @@
+## Ricerca e modello — nuovo codice verificato, nessun nuovo ZIP
+Raccordo sui sorgenti a279a4ee944c23a93545835ada740793055418fe, [prove](../docs/ACCESSO-FILE-PASSO6-MODELLO-20261101.md). Dopo una futura consegna esplicitamente richiesta, usa lo stesso Accesso file attivo con cartelle consentite e il GPT già configurato/collegato (guida [GPT](02-GPT.md)). Nessun nuovo componente, pacchetto Python o indice da installare.
+Prova prevista nel pacchetto corrispondente: una ricerca precisa trovata resta locale; un indizio senza risultati può chiedere un raffinamento al modello, con stato nella riga HUD. Rispondere alla domanda breve mantiene l'obiettivo; «annulla ricerca» invalida la proposta. Con GPT spento/scollegato resta l'esito locale e il messaggio di indisponibilità; non cambiare modalità microfono per risolverlo. File mancanti del componente: reinstallare il pacchetto completo; non scaricare file singoli da fonti inventate. Il vecchio ZIP sotto non riceve questo comportamento automaticamente. Web retrieval e account/microfono personali non sono coperti dalle risposte controllate dei test.
+
 # 5. Impostazioni dei moduli inclusi
 
 ## Candidato Accesso file 0.1.0 — installazione e prima prova

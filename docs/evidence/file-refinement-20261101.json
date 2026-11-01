@@ -1,0 +1,82 @@
+{
+  "source_commit": "a279a4ee944c23a93545835ada740793055418fe",
+  "runtime_introduction": "3f7fe6aad8638ad046f1dd3e34b2070876675694",
+  "run_id": 41345741998,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 124965038761,
+      "python": "3.12.10",
+      "tests": 455,
+      "seconds": 57.116,
+      "result": "OK"
+    },
+    {
+      "id": 124965038948,
+      "python": "3.11.9",
+      "tests": 455,
+      "seconds": 84.587,
+      "result": "OK"
+    }
+  ],
+  "new_tests": 13,
+  "syntax": [
+    "Python",
+    "Node",
+    "PowerShell"
+  ],
+  "native_windows_search": {
+    "native_index_verified": true,
+    "runtime_adapter": "indexed_candidates",
+    "scope_changes": false,
+    "global_reindex": false,
+    "personal_pc_verified": false,
+    "checks": {
+      "available_empty_query": "passed",
+      "created_file_found": "passed",
+      "other_scope_empty": "passed",
+      "rename_observed": "passed",
+      "deletion_observed": "passed"
+    },
+    "initial_service": {
+      "running": false,
+      "start_mode": "Disabled"
+    },
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "skipped": [
+    "build",
+    "extracted_package",
+    "artifact",
+    "publisher"
+  ],
+  "verified": [
+    "actual voice and text ingress with controlled transcripts",
+    "actual worker and poll callbacks with controlled model replies",
+    "real Windows filesystem and native policy",
+    "local success without model",
+    "one refinement and no automatic retry after second empty result",
+    "original operation scope type and clarification preserved",
+    "single verified folder open; replay denied",
+    "invalid stale revoked expired cancelled responses denied",
+    "model unavailable timeout and invalid JSON"
+  ],
+  "limitations": [
+    "not real microphone STT audio or model/account",
+    "not Pavilion resources or personal Explorer desktop",
+    "web retrieval not configured",
+    "candidate existence does not certify installation role",
+    "not full disk coverage or durable fallback scan continuation"
+  ],
+  "failed_run": {
+    "id": 41345558152,
+    "tests": 455,
+    "errors": [
+      "fixture compiled continue outside poll loop",
+      "fixture missing STANDBY",
+      "textual Path comparison DOS vs long alias"
+    ],
+    "correction": "tests only; preserve poll loop, provide STANDBY, assert uniqueness and os.path.samefile"
+  }
+}
