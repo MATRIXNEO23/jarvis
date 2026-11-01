@@ -31,6 +31,9 @@ Requisiti dell'utente in [scheda WINDOWS](implementabili/WINDOWS.md): accesso/ca
 ## Piano Windows e vincolo contro i duplicati
 Piano per fasi salvato nella scheda WINDOWS: inventario con responsabilità → prova minima Windows → miglioramento percorso completo → estensione ricerca/lettura esistenti → verifiche/consegna/recupero. Funzioni già presenti da migliorare nel loro componente, nessun doppione o nuova add-on automatica. Piano/documentazione soltanto; prove d'integrazione, codice e pacchetto non iniziati. Prossimo passo: discussione guidata del piano con esempio concreto, poi delimitare incrementi e autorizzazione.
 
+## Organizzazione manualmente leggibile
+Richiesta: nuove add-on/moduli con propria cartella dal nome chiaro e LEGGIMI che orienti fra codice, risorse, test, configurazione e dati reali. Pianificare/verificare compatibilità col gestore esistente; niente duplicati o spostamenti automatici dei moduli attuali. Requisito salvato in AGENTS e scheda WINDOWS; nessun file runtime riordinato.
+
 ## Prossimo passo corrente
 Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
 
