@@ -1,5 +1,14 @@
 > **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultimo candidato Accesso file **7298fb6**, collaudato automaticamente solo su Windows e ancora da provare sul Pavilion. Base PC confermata: **Timer Audio Fix2, b936879**, preservata. [Rapporto del candidato](../docs/ACCESSO-FILE-RAPPORTO-20261101.md).
 
+## Accesso file 0.1.0 — build candidata Windows (950f655)
+
+[Scarica Jarvis-Accesso-File-0.1.0-20261101-950f655.zip](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/Jarvis-Accesso-File-0.1.0-20261101-950f655.zip)
+
+Ricerca, cartelle consentite con spunte, lettura senza modifica e integrazione voce/testo/GPT. Elenchi solo in chat e conferme vocali brevi. Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Accesso file > Configura, Salva e Attiva. Profilo di prova separato, precedente installazione preservata. Test automatici solo Windows, archivio estratto e avvio UI verificati. Collaudo PC/account/microfono reali ancora da fare; indice Windows non disponibile nel runner, fallback verificato.
+
+Sorgenti: [950f655](https://github.com/MATRIXNEO23/jarvis/tree/950f655a6fc0db25f2eb4c66d47507cf9b0d3038). [Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41330921134). SHA-256: `85c7879346824198e1a54939b0b44faae7d0813b004b152e95b788e79160539f`.
+
+
 ## Accesso file 0.1.0 — build candidata Windows (755f988)
 
 [Scarica Jarvis-Accesso-File-0.1.0-20261101-755f988.zip](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/Jarvis-Accesso-File-0.1.0-20261101-755f988.zip)

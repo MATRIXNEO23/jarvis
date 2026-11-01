@@ -106,3 +106,12 @@ Fotografia del commit bb94afa1865fe0315021f783736be3cb77c4af84. Presenza, dimens
 - Windows CI: run 41330559676, due job 3.11/3.12, pacchetto estratto e avvio UI.
 - Collaudo PC: pendente. La base confermata BASE-UTENTE-20261101 b936879 resta invariata.
 - Recupero: usare la cartella precedente Timer Audio Fix2; non cancellare profili o dati.
+
+## Candidato Accesso file 950f655 — 2026-11-01
+
+- ZIP persistente: Download/Jarvis-Accesso-File-0.1.0-20261101-950f655.zip
+- Sorgenti: 950f655a6fc0db25f2eb4c66d47507cf9b0d3038
+- SHA-256: 85c7879346824198e1a54939b0b44faae7d0813b004b152e95b788e79160539f
+- Windows CI: run 41330921134, due job 3.11/3.12, pacchetto estratto e avvio UI.
+- Collaudo PC: pendente. La base confermata BASE-UTENTE-20261101 b936879 resta invariata.
+- Recupero: usare la cartella precedente Timer Audio Fix2; non cancellare profili o dati.
