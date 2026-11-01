@@ -68,3 +68,15 @@ Stato iniziale:
 
 ## Responsabilità e guida
 L'utente prende decisioni su risultato, priorità e compromessi; non deve programmare. L'assistente prepara e realizza il lavoro tecnico autorizzato, esegue le verifiche disponibili e conserva le prove. Le sole attività sul Pavilion che richiedono intervento dell'utente saranno guidate con passi brevi, uno alla volta, e un risultato da osservare. Niente domande tecniche scaricate sull'utente o ripetute conferme sui dettagli già autorizzati.
+
+## Revisione prima dell'implementazione: ciclo finito
+Prima di modificare il codice:
+1. Confrontare requisiti e progetto con gli adattatori/add-on, il modello esterno, il browser, le impostazioni e la diagnostica esistenti; consultare le lezioni pertinenti.
+2. Un'unica revisione iniziale copre incompatibilità, dati mancanti, carico aggiuntivo, errori, recupero e criteri di prova. Per ogni rilievo indicare prova, gravità e rimedio proposto; non dichiarare cause senza evidenze.
+3. Correggere il piano e fare un ricontrollo mirato delle sole parti cambiate. Se resta un blocco, fermare il percorso dipendente e proporre una scelta o una prova di fattibilità limitata, senza revisioni globali ripetute.
+4. Dopo autorizzazione, provare prima un percorso minimo completo: voce/testo → GPT esterno → lettura/azione nel browser → esito nella chat. Le risposte simulate non sostituiscono la prova reale del collegamento. Solo dopo estendere le funzioni.
+
+La revisione del piano non sostituisce test, verifica del pacchetto o misure sul PC. Ripetere controlli già superati solo quando nuovi cambiamenti, fallimenti o dubbi lo richiedono.
+Ogni difetto realmente riprodotto aggiorna DECISIONI-E-LEZIONI con sintomo, causa provata o ipotesi, rimedio verificato e prevenzione; aggiungere un test di regressione significativo quando utile. La lezione va consultata prima di attività simili, non trasformata in controlli ridondanti.
+
+Stato: procedura documentata; revisione tecnica completa del piano web e prova minima ancora da eseguire. Nessuna implementazione avviata.
