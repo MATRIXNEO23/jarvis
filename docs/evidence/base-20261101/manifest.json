@@ -1,0 +1,803 @@
+{
+  "package": "Jarvis-Timer-Audio-Fix2-20261031.zip",
+  "zip_sha256": "c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352",
+  "file_count": 155,
+  "files": {
+    ".github/workflows/gpt-smoke.yml": {
+      "bytes": 1332,
+      "git_blob_sha1": "25e811c39a34a2a16ea840ee693101893272906e",
+      "sha256": "f4084f11237f4d9dbdb831337407d9c813308d7523f5a90cef4d8f3cf183f9aa"
+    },
+    ".github/workflows/publish-audit-zip.yml": {
+      "bytes": 6555,
+      "git_blob_sha1": "428a57b98323448cbc505a2f5c79ddd462bc73c3",
+      "sha256": "0321bc46666123dcd7245718e2d2ab65f65abefe745c344ecf7547eb212f72b4"
+    },
+    ".github/workflows/tests.yml": {
+      "bytes": 1492,
+      "git_blob_sha1": "315706bf479c75425a9b0190321b27d3b73c7bca",
+      "sha256": "cef0aa9f0fb96d0edf5fd26086c32959a5d1ffb4713a7cb81eb04cfd89aafc9f"
+    },
+    "Download/README.md": {
+      "bytes": 2146,
+      "git_blob_sha1": "c39a59ce8de09651b07e06a3a9e265c871d673bc",
+      "sha256": "1869d173ccdf773fd9e449d73863ea9606a383924d04055c936c19b1dd8e64c0"
+    },
+    "LEGGIMI_PROVA_TELEGRAM_50.txt": {
+      "bytes": 4480,
+      "git_blob_sha1": "e2d0e4babcc613652360c7e5477a8f56c0f8f619",
+      "sha256": "708758fad601bc4ce4031a715a956946d39473daecafe5f8c746fd3af59a74be"
+    },
+    "README.md": {
+      "bytes": 8884,
+      "git_blob_sha1": "41815648700720ee27f1d70401dae8f1ec31e83f",
+      "sha256": "29d2b33de101408f79c9234244a88b029d8344c15838107d8af1fef089cf9982"
+    },
+    "ROADMAP.md": {
+      "bytes": 14608,
+      "git_blob_sha1": "e85563392a288cb5a8b899ea844e291be47e12d1",
+      "sha256": "a6cc953eec2841435496fff54270cfd2f894a4e7c261b298c851f51f4a4326b2"
+    },
+    "action_planner.py": {
+      "bytes": 8837,
+      "git_blob_sha1": "7546a95230adbc9656781f971fbf774324b303e0",
+      "sha256": "dc9e385ece26a8deca8a96cba0034c83aea1a3bc33377137bde92ebe6ee1f4ee"
+    },
+    "adaptive_voice.py": {
+      "bytes": 8610,
+      "git_blob_sha1": "4892f5752b81eb7097c2ee394e59a695786e77b2",
+      "sha256": "62791493d76b8269b72ab384c80e01a15f585ca37d53be002cb4367b6951f8b4"
+    },
+    "addon_manager.py": {
+      "bytes": 17291,
+      "git_blob_sha1": "357f2cee713a236707bf71f8d00c38b8257dcaa2",
+      "sha256": "6882ccd1a44821f1e16f4741954da54fa1ae08f7b2cf7fc150f13976f7dd52a5"
+    },
+    "addon_ui.py": {
+      "bytes": 6494,
+      "git_blob_sha1": "6a727e872be9ad66960e731b528c36d3ba88af81",
+      "sha256": "eef3d3b490ce8ff27d590d25ed45da112c0f9651d4703a7947eed41a57045eb9"
+    },
+    "animated_hud.py": {
+      "bytes": 20863,
+      "git_blob_sha1": "9f9ce3ac200d7d1bda3524a62c2459bdb50a0c03",
+      "sha256": "37d8dc25dbe49f2bfb49da77ca7e2ee5ca36f8ca0f4f4c0308a3c6e9bb16e41a"
+    },
+    "avvia_jarvis.bat": {
+      "bytes": 1058,
+      "git_blob_sha1": "94ccf4edda1a1f62d4e35d3890fb616d5961354f",
+      "sha256": "0352a4a4af87867cf85b650ffadeec607b96b64c513e6fcf903d9e94d9eab560"
+    },
+    "capability_registry.py": {
+      "bytes": 9817,
+      "git_blob_sha1": "d18d585ef2f940b2567485280708641eceb073f7",
+      "sha256": "377185db898aec3f8265e615e803e058f86f0a659f928b91eba012e44da97fd9"
+    },
+    "configura_telegram.bat": {
+      "bytes": 348,
+      "git_blob_sha1": "841b6de86ec137fe3f3ee213de565b0fc16a2cd6",
+      "sha256": "73d6bc2315b9f2da67e0fd54ac439fbb47b084e66936ecf5566ea2725d9fb967"
+    },
+    "configura_telegram.py": {
+      "bytes": 4654,
+      "git_blob_sha1": "42ea1011dfcbf55c48a85df4008b784dc836a72c",
+      "sha256": "bf34a6cf24094467e25332088352ed770f0a34ea4256e1f13dc376bf02a36860"
+    },
+    "conversation_memory.py": {
+      "bytes": 3461,
+      "git_blob_sha1": "eb970ceda52e697b251a613f445c6ae691a9d632",
+      "sha256": "22b9afcd7e87f7594f643c447be56c3734d000d4e8ff89458ba2af7135c46234"
+    },
+    "conversation_router.py": {
+      "bytes": 13003,
+      "git_blob_sha1": "eb73ea43f6aa8a85787eace33d67152d373a72b4",
+      "sha256": "c5a1987f1f434b1ef900d0a3bc3d31c643982e0e8b80b9debee4c58632b8def7"
+    },
+    "desktop_dictation.py": {
+      "bytes": 8775,
+      "git_blob_sha1": "b0151887ee80628f442f54a51915f2a755693473",
+      "sha256": "dda0099fb87a27c651083ca95263043064dbe2598837d19b8179cfaadde225d6"
+    },
+    "diagnostic_handoff.py": {
+      "bytes": 7475,
+      "git_blob_sha1": "9fe52dbd0c267d4dbf52ac4e4e5a5e1407d833c5",
+      "sha256": "ad3de085d92297a3f4a63d2ce7bef0b23d42f70a097090b99d9d28a77ecfcc59"
+    },
+    "diagnostic_session.py": {
+      "bytes": 3952,
+      "git_blob_sha1": "c43b36efcc20fb74ac94a9c5cc53d12af3ea3174",
+      "sha256": "78117bddfb9f44d20a2ad5f766d0207e92d26f74543deb743d0dafe300f18863"
+    },
+    "dialogue_focus.py": {
+      "bytes": 4851,
+      "git_blob_sha1": "bece773e854beca20f9ed2936aa1104931ecc57d",
+      "sha256": "f74b12d3f9125bcec6f7ef5427b1122931c08ed87b6e912d4c0ad1d100c16458"
+    },
+    "dialogue_style.py": {
+      "bytes": 3703,
+      "git_blob_sha1": "656f43753ba458ea109e3f83235e9522724dae9b",
+      "sha256": "6d61be382b85103ddd707691f7dc100ecc532b77f635ae28c942ac648ea350b4"
+    },
+    "docs/ADDON_LIFECYCLE.md": {
+      "bytes": 5802,
+      "git_blob_sha1": "2a80edb49d76daeeddfce4cb65c89fff0762a367",
+      "sha256": "686d234cb37642c4347c5ea86842bf4d90b2b9b8e2e6dc7f01d0d4d43e0d22a4"
+    },
+    "docs/AUDIT_COMPLETO_20261031.md": {
+      "bytes": 5775,
+      "git_blob_sha1": "a7d8179536c363b4c1ba81432d86289b708dc1ff",
+      "sha256": "d81a8c43ea3f9681f8c9082be448e12d04bf03d2d5c4f1324a7c4613b6709235"
+    },
+    "docs/AUTODIAGNOSI_E_CONSIGLI.md": {
+      "bytes": 3418,
+      "git_blob_sha1": "91e39c02eb20adc6aade530a00ff703badbffdf3",
+      "sha256": "8d58620dc4f4b1461e4c7bac4352acf06110f67536ae300036b9253e3140544a"
+    },
+    "docs/AUTODIAGNOSI_IBRIDA_LOCALE_GPT.md": {
+      "bytes": 2833,
+      "git_blob_sha1": "d0f77ee489b1f6b78eb1ebe6f6c7050b3b41cdeb",
+      "sha256": "02f39c9a9b0adce31c93cdb0e7e76f6a609985a80cda3cf0c464a53e9666e2e2"
+    },
+    "docs/AUTO_PROJECT_CONTINUITY.md": {
+      "bytes": 4934,
+      "git_blob_sha1": "e5bf91f5b4bf88922fda36f613981579e7d1ba2a",
+      "sha256": "40924b8ce826eca377138e28340b5a57570d8cda8ad21d4e413be33e141e0a93"
+    },
+    "docs/CATALOGO_COMANDI.md": {
+      "bytes": 4410,
+      "git_blob_sha1": "55cddf35832058b14db58103fdf8ec54a6c888b7",
+      "sha256": "7eb41e78b387af478949991060d24009ffcdf0fec068f5dedec48dd3c55e62f8"
+    },
+    "docs/CONTESTO_DIALOGO_V1.md": {
+      "bytes": 3483,
+      "git_blob_sha1": "5603e0aa23a81796ee1afdccd3f4f377c34fabc8",
+      "sha256": "d3c476e19bb427bff9a3d1fa99f8c9a0f63ad041180a6d53984679143773ca45"
+    },
+    "docs/CONVERSAZIONE_GPT_DOCUMENTI.md": {
+      "bytes": 12965,
+      "git_blob_sha1": "99b47e66aacdf373dc3fcb53d7a6573fba1c982f",
+      "sha256": "023e45352e3daa8221ca62cfaf85cecbaac63987c46dc1d6036fb2ee30574935"
+    },
+    "docs/CORREZIONE_INTENTO_AUTODIAGNOSI.md": {
+      "bytes": 3138,
+      "git_blob_sha1": "8f440605d2ef66e4bf09962fb53b22c2a9b453ca",
+      "sha256": "9c77ab98478db92a45badcf60b35d8190bbc51b8d48b50c5faa1fa47c591870b"
+    },
+    "docs/DETTATURA_BROWSER.md": {
+      "bytes": 4892,
+      "git_blob_sha1": "ee4df8dabab96b184bc71f9bf4dd823fee1296b6",
+      "sha256": "6e9e494bdc15dd6eb1e3f9792ad63fdc2e5b961d8a69d5056d157cabc84a46e6"
+    },
+    "docs/DIAGNOSTICA_RUNTIME_SIGN_IN_GPT.md": {
+      "bytes": 4714,
+      "git_blob_sha1": "165cc9c45aad3a9f15fb8cbb37285c320a3195f8",
+      "sha256": "9c8250828f5bdf3626bc7de8cf63f0e3e1e5457ee3b8b8418c67cee7d30aec52"
+    },
+    "docs/DIAGNOSTICA_VISIBILE_E_RECUPERO.md": {
+      "bytes": 4166,
+      "git_blob_sha1": "f8d265fc4afe0510df0d3d62fd20078fcffdd1e7",
+      "sha256": "ba6a121fccb7acb4ad89cd35ad86c169835741fe9dc98c14575ed993be9c1d2b"
+    },
+    "docs/DIALOGO_CONTINUO.md": {
+      "bytes": 6190,
+      "git_blob_sha1": "652cf041e6e6873343cbdad0e1e656343ebda826",
+      "sha256": "8192cf3c793d3352ea470b0cce164099673308d484b045b76413cea58294ad2c"
+    },
+    "docs/GPT_SETUP.md": {
+      "bytes": 3849,
+      "git_blob_sha1": "9afb9f89fce420609ce89b78e8251cf5b8d9c876",
+      "sha256": "8047478659985e6f42918cf37f96d868e2d2f4a0534a51837eeb2a84ad336392"
+    },
+    "docs/HUD_ANIMATO.md": {
+      "bytes": 4700,
+      "git_blob_sha1": "b8c4614a0790e9b36a868b5a6bc8d42b38d3f634",
+      "sha256": "0cb2cb43873a2e5379d71abbd36efe103ff47d193768b6c73809365808d98d48"
+    },
+    "docs/HUD_CINEMATIC_BACKGROUND.md": {
+      "bytes": 3560,
+      "git_blob_sha1": "c2b081b66e24a8064b3c28d9ef5dd1c6c2c6a5e8",
+      "sha256": "2f3139688477f56bdcbb695846d7dbc024224484e71b231e1d757d8296597c14"
+    },
+    "docs/HUD_HIGH_FIDELITY.md": {
+      "bytes": 6451,
+      "git_blob_sha1": "91ec3e4d7834d156ea17b95364470e5e32653d72",
+      "sha256": "6397fbd76e7b0137f3949d0a1c45e455191c20afd273627bedef969098a9ca6b"
+    },
+    "docs/HUD_REFERENCE_V2.md": {
+      "bytes": 5691,
+      "git_blob_sha1": "05f732abeef2aaeb81d655dcae96ccd8ffa36b64",
+      "sha256": "066724c347a07fdd8424cf3c2dda78fee3356c3e4fccde6a5cb54669a1e6e061"
+    },
+    "docs/HUD_RIFERIMENTO_20261031.md": {
+      "bytes": 2731,
+      "git_blob_sha1": "baf13f36c12e2f8e5ff2a8267805942e77f8d38c",
+      "sha256": "dd42aa3934319c76c9c323823f6f30bcc52f435e48ebb0ac8923f682405cd373"
+    },
+    "docs/HUD_VOICE_ACTIVITY.md": {
+      "bytes": 6284,
+      "git_blob_sha1": "666408416116727e9b88361d7a2452f26713f12f",
+      "sha256": "db72629fefd1aaccf3a6d4588a8c1c2f4a8ce5b4b5f73b33efc134b5ef7af188"
+    },
+    "docs/MEMORIA_AFFIDABILE_V1.md": {
+      "bytes": 4542,
+      "git_blob_sha1": "c57e2df52ff412201f999656c22fb671c7babf0c",
+      "sha256": "3b55a4625869f07444dcee28f9b94d516ed9e0000210d058e721272ae4ac8188"
+    },
+    "docs/PROJECT_MAINTENANCE_AND_SELF_AUDIT.md": {
+      "bytes": 3078,
+      "git_blob_sha1": "f04157e8a10b56faaf258d13584e2569e2486efe",
+      "sha256": "563220753bb36718bbdd080fd25575b69dd5ad45eb6f10903dfe0b90c9e08277"
+    },
+    "docs/PROJECT_MEMORY_TELEGRAM.md": {
+      "bytes": 10034,
+      "git_blob_sha1": "882412c1a3c4a697f06505c8dc7cdf60dfe0c33e",
+      "sha256": "b7238731ed09c8a6690306083ebc20ef49477d34951cde0ed982cac993c40700"
+    },
+    "docs/QUALITA_CONVERSAZIONE_V1.md": {
+      "bytes": 2637,
+      "git_blob_sha1": "d67581f2b76a4daaab924a9d8428d70d88c97758",
+      "sha256": "a62f59d9d189c752a0f3c48c1c4b5e28e5dec1ed63479abb9234179ee84d6351"
+    },
+    "docs/RECUPERO_BLOCCO_NOTE_CHIUSO.md": {
+      "bytes": 2993,
+      "git_blob_sha1": "74da123614caf990a23f0a988b4d32b7a66b0f96",
+      "sha256": "08969ec25937fef6efc7bb07d2030224fba3cea37c1aa0b729a8509c49a6b639"
+    },
+    "docs/REGISTRO_CAPACITA_LIVE_GPT.md": {
+      "bytes": 5230,
+      "git_blob_sha1": "71051c64e4ead05e1315865a0ea0c778137856fe",
+      "sha256": "230224d2427550e8c6b56a98e2230cabcc8956197aab0f33e922a8319d7767cb"
+    },
+    "docs/SECOND_BRAIN.md": {
+      "bytes": 5755,
+      "git_blob_sha1": "12720e52c7e0d9cb1ee7ef5273a764d7f0bc6256",
+      "sha256": "b63a1077514ac5504f28cc9633acd548c6e279659929d9ada9bbf67b5b3816cf"
+    },
+    "docs/TELEGRAM_CONTATTI_INVIO_VOCALI.md": {
+      "bytes": 4179,
+      "git_blob_sha1": "eb3060749ee08e662341da628744246fb6f8b5de",
+      "sha256": "e87252553e0c891a1524f6d31020c121b0b38487eadbe4d9062a7c357997b4f2"
+    },
+    "docs/TELEGRAM_CRONOLOGIA_50.md": {
+      "bytes": 3213,
+      "git_blob_sha1": "6ad00e21612c007700b6c64796fe848840635485",
+      "sha256": "cfaafd2afd3b4c1a7d478ba26ac4206e7da4139aa9cb27c3a0e2d40203f965f2"
+    },
+    "docs/TIMER_E_IMPOSTAZIONI_20261031.md": {
+      "bytes": 2144,
+      "git_blob_sha1": "6cccf35fea67405c88497521b50525f18b9f4809",
+      "sha256": "edcf67df9094b3166d60fa55d43d7e9b0c409a23bf899a083ae78b10626ae239"
+    },
+    "docs/VOCE_ADATTIVA.md": {
+      "bytes": 4302,
+      "git_blob_sha1": "9f8273702c22d208279ede456048348a229622bb",
+      "sha256": "c73f5e7f8ca7c5ff2cfb0fe98f7bf0914df98ed9f2cd7ac04b5de5980cd36bf1"
+    },
+    "docs/VOCE_OFFLINE.md": {
+      "bytes": 3362,
+      "git_blob_sha1": "9ba21d9f9f15e7299b1caa9e408a21b48d749036",
+      "sha256": "91ae24fc197a539ff42ef34cea0b1c14fff3225012fb9187df7c3b7b962ba093"
+    },
+    "docs/VOCE_RISPOSTE.md": {
+      "bytes": 3362,
+      "git_blob_sha1": "65fb50aefd9e4dfa50167aa9a6a2c250ae4c5cab",
+      "sha256": "723ac4a24c41b7432adaa65cd6f4c710c3a90be7e28279c26f2b3238395c7df1"
+    },
+    "docs/VOICE_PROJECT_DOCUMENTS.md": {
+      "bytes": 3621,
+      "git_blob_sha1": "2cdca84d309e41d396b4f1d672dd695e71cd9e3e",
+      "sha256": "426d49733d5a3801ec696021f38a7dcde66d125947a5426d5e3980922931519b"
+    },
+    "document_dialog.py": {
+      "bytes": 8140,
+      "git_blob_sha1": "7ded6aa3e3a4474a6679d6f68c0f339f1639b34c",
+      "sha256": "28f3ef0bce117cb4e67a77770d04f1c1ecb1a05c970c502e4049e9d219ec9a78"
+    },
+    "document_execution.py": {
+      "bytes": 2042,
+      "git_blob_sha1": "ae854018c05f65b91609f4c354147515637a7dd9",
+      "sha256": "7bdd3f83dec82fff29d84604bb65e314f59ae02c84c171159b7298455ae17d23"
+    },
+    "document_language.py": {
+      "bytes": 3042,
+      "git_blob_sha1": "41c625669c417353f47131469c6f547fb784649d",
+      "sha256": "28d0d920ab8307cec983f2d3876197766be7f8af0b1cea1aa672b5e4d1815d32"
+    },
+    "document_recovery.py": {
+      "bytes": 681,
+      "git_blob_sha1": "b12b6162975ab049e7cde1abd01d39cef19e1bb0",
+      "sha256": "947b3542bbf18b7eaf3656e718a2987e997d5aded9d30a440bc6ac4fab55ef99"
+    },
+    "document_store.py": {
+      "bytes": 4945,
+      "git_blob_sha1": "91d46f8531e81003021f0e2d09f7203b09217859",
+      "sha256": "b98a0020658109e8ee47a1432c3e3217d133646c6d3dfac23e499a64c3a2473b"
+    },
+    "examples/addons/DiagnosticaSistema.jaddon": {
+      "bytes": 479,
+      "git_blob_sha1": "904beb195abd5e3675daa0f510c71558837813eb",
+      "sha256": "e0cfc59602e3465b6ffebb8fdd0b5de06fb7a6ad1a09668658fd090a8230c959"
+    },
+    "gpt_bridge.mjs": {
+      "bytes": 7693,
+      "git_blob_sha1": "e63dc4dcdc4965fc9efb1c82e87d4e8eee2e5d38",
+      "sha256": "4e0630a47668675195915e74e09d1876478b334d76e793b9e77e395fdf93c8d9"
+    },
+    "gpt_client.py": {
+      "bytes": 9376,
+      "git_blob_sha1": "868a20a9e840c1944f9b0eae618cf99d4db888ae",
+      "sha256": "a4744340d5632ec4565314709017db26ecf7ebdd25691a1ac2142f90ef667e1e"
+    },
+    "hud_backdrop.py": {
+      "bytes": 7339,
+      "git_blob_sha1": "8816d298b6992f05b06c2daabb6bb699743e2cbd",
+      "sha256": "7fe1ead02765933696a9f2b35017f44484415f1baa721b42fc75961881b7312b"
+    },
+    "hud_orbits.py": {
+      "bytes": 5375,
+      "git_blob_sha1": "a001df4f1b9b95e4f44e30fc239628adea96e44a",
+      "sha256": "981a8983108ce37f911b4244ee62c66e999d814273226860f2128b0b5c1d450a"
+    },
+    "hud_raster.py": {
+      "bytes": 10403,
+      "git_blob_sha1": "c30f8e01a6a1eefd2770d490fde8b3dd6f69873a",
+      "sha256": "52da50c39bd2f4a23b395fb82d7ca8585143d901c00de14f63d1a6a78bb67366"
+    },
+    "hud_reference.py": {
+      "bytes": 23008,
+      "git_blob_sha1": "18652435dc144d2d3e1a99c8675d8e3d66b910d9",
+      "sha256": "6ac2e81818ba78c16c5432f26c4d6c3f77feaa3340cd85a4d3622d97054f12ef"
+    },
+    "installa_gpt.bat": {
+      "bytes": 326,
+      "git_blob_sha1": "d77876324d40bd8e4bcbba9c9cfc93270215ce94",
+      "sha256": "d9949d9906e905359489dda98846c65b4b8d62c3fe1d14e03e43670546af4501"
+    },
+    "installa_gpt.ps1": {
+      "bytes": 3177,
+      "git_blob_sha1": "a34111e8a50132fcf9934f82a65d8b1d20dea549",
+      "sha256": "e4c13ae2db656b6ec8747652a52a61bd019c84c8c9e6d3a7ac662a92b41056f0"
+    },
+    "installa_modello_voce.py": {
+      "bytes": 4119,
+      "git_blob_sha1": "4d7e6515d286ad787e59d8cb649a3202722caf34",
+      "sha256": "f714f745cc53b2358d1c05b91e767d117003352b5d217932efc9d9c8c94e5c36"
+    },
+    "installa_telegram.bat": {
+      "bytes": 483,
+      "git_blob_sha1": "9d2a9af3e559eddb39078a8bbb5e76e35e6a1005",
+      "sha256": "41644c3e207df719e20052fa84bf3ac94cd95ce67577796134f5e7cde9ec6239"
+    },
+    "installa_voce.bat": {
+      "bytes": 708,
+      "git_blob_sha1": "b750815348ff70a822abf40646f65333cdc02239",
+      "sha256": "d29735f075f61550bc03810031f87dabd0aaa73261058fbaae793be9776b7aca"
+    },
+    "jarvis.py": {
+      "bytes": 186321,
+      "git_blob_sha1": "2ecac7381a98633f220cfa82cee8aed3dcea69bd",
+      "sha256": "712c7667d6f7ed6fbf54e4f048cfc620d13f6d77ba0d7b0d771c92e9f4a5885f"
+    },
+    "jarvis_commands.json": {
+      "bytes": 4339,
+      "git_blob_sha1": "c17e2be5b625dbcee98f543d773f23415d158c8f",
+      "sha256": "9918484158d449dcf722e8523f621fab7f9d17b7fa3ff3c8d63e99dfd5bf1724"
+    },
+    "jarvis_persona.py": {
+      "bytes": 10173,
+      "git_blob_sha1": "c5175fe07014bc19e0ea491bc3afdfc0944166a6",
+      "sha256": "920398726bd8c9f56f2c9eb946d8ed71de56c5053220462c202b9ca65e645067"
+    },
+    "jarvis_timer.py": {
+      "bytes": 18962,
+      "git_blob_sha1": "b832a5e689cbb677ada151090b75cc14d3540948",
+      "sha256": "a43e6ff19a31467f0eff893b5837e326c35212b79464fcf57a8505255ec18cbc"
+    },
+    "live_capabilities.py": {
+      "bytes": 7608,
+      "git_blob_sha1": "6e426f4ce3eb346f89668cdfc03bddbe69bfa7bf",
+      "sha256": "5152227abda8f0a374489aced0a21489263ae7dd6e1aab4ba2c5f9ff884a1510"
+    },
+    "local_engine.py": {
+      "bytes": 11138,
+      "git_blob_sha1": "15162f8713ec871d425fb00dcde90cf711d5a4e2",
+      "sha256": "2893126541915c128868323ef6fc5381616ca4a14f933440fca9b3b4a812a1cf"
+    },
+    "managed_documents.py": {
+      "bytes": 7267,
+      "git_blob_sha1": "53be84299aecae7e42d1dc1e6d54ceb9c3d71251",
+      "sha256": "11541bf7c6047902d9f2b7279bb26dcd965da8fc5c9ccd3b0de7411bf104e9a9"
+    },
+    "memory_boundaries.py": {
+      "bytes": 10761,
+      "git_blob_sha1": "3edc66d650f164fdbb5b4c0f8589f7c3bb93d7ca",
+      "sha256": "7066d92cd5d1da9e6b27a6a85d1ba40a419d402ec9a4514a7e68e255fd962887"
+    },
+    "network_telemetry.py": {
+      "bytes": 3174,
+      "git_blob_sha1": "20b6efc593e38de3b721cb09c75d5b10d9399b26",
+      "sha256": "495f6f81dc75a59db4486bd16c1e0e62eef9809df30a1b2516f2635ba97f0858"
+    },
+    "notepad_controller.py": {
+      "bytes": 10457,
+      "git_blob_sha1": "ed67d8cdc4495dfce1cbebfdcac64e2932e98c42",
+      "sha256": "02528958bab59ec395919d2bdbcae9c99dbdb0213f88d7545a6e1180474b443e"
+    },
+    "offline_tts.py": {
+      "bytes": 6224,
+      "git_blob_sha1": "783884c90f35f9ba033ce8122a84704c80f55b47",
+      "sha256": "5f74c122739de3d6bac499855b5284e42d4edd6b7d2b9a7f96630b0d3e93cc5f"
+    },
+    "plan_runner.py": {
+      "bytes": 1338,
+      "git_blob_sha1": "196ac5adb12d127d4d4372054912a96395b70161",
+      "sha256": "c310108d50c0814a3b69fd14665ccf9a260ea0ae4137460b22341f3dbccf6404"
+    },
+    "planner_ui.py": {
+      "bytes": 11415,
+      "git_blob_sha1": "4ef173a39f20facbb4b8c172a8f6508c6f46f948",
+      "sha256": "3a6f6318048664dfeea2f6f898e0dfd4ec42197519dc48fba25c301f651baaec"
+    },
+    "preference_voice.py": {
+      "bytes": 2139,
+      "git_blob_sha1": "3ec093b100e896b71fda6ea0a3ea9a6ba59c3d3e",
+      "sha256": "cf0ef380ad523255a8d7e6afe480482b8a3d66a1bbc6be3b52da7c1d6f2b050a"
+    },
+    "prepara_test_telegram50.py": {
+      "bytes": 6436,
+      "git_blob_sha1": "cd677b83c3568037082469a3f62e36f0e32ede13",
+      "sha256": "8aa6c90d251808a7cd745b01292c288b9ddfbd48e91aab7635a9abc845d3d3b1"
+    },
+    "project_documents.py": {
+      "bytes": 3398,
+      "git_blob_sha1": "ff2e5e4c6e3aec36254b4b761e514e5456d2b7e8",
+      "sha256": "d868771b0916b8e44c74628869f2a75db6a4d07d787709437073fb29b3e433a3"
+    },
+    "project_voice.py": {
+      "bytes": 8166,
+      "git_blob_sha1": "056ed4777c7cbbdf76e5603fedd2066c4089f3b7",
+      "sha256": "95f39cc19be29232952dbd8d6b257eb1d41b388abb6758124f711bd281b6176a"
+    },
+    "runtime_diagnostics.py": {
+      "bytes": 7897,
+      "git_blob_sha1": "02c7bd3ab15f0b29944c96915378993d715f1bcf",
+      "sha256": "53f9a1da1529bb417e7a36dc66c6e9f69efefcd2a94e988c7de101a83a5e80d6"
+    },
+    "second_brain.py": {
+      "bytes": 13409,
+      "git_blob_sha1": "18c8141ae5fd34e58c1272bc2bdd91eacbd6a0fa",
+      "sha256": "642893615dca03ba2fa5dee0d16a638239536e489773356b495c6290879970b8"
+    },
+    "self_diagnostics.py": {
+      "bytes": 11277,
+      "git_blob_sha1": "f35d46a4c94915a00301d624cd892ee573e1f747",
+      "sha256": "7c5e16a2a1a321d74ffdcb41f1cf1862d2a12a7dd32c2efd087cd1a8946085ef"
+    },
+    "settings.py": {
+      "bytes": 6925,
+      "git_blob_sha1": "ba34277fdcb0d9fae4e5cc80586dc042eae4cb45",
+      "sha256": "c89c3e1dd050b506fd570a294db0d86e81a14f7a3ea30f846a4a8dbbe88d6e16"
+    },
+    "source_review.py": {
+      "bytes": 8609,
+      "git_blob_sha1": "4ee118d8a01f438fba0e4e7b9d9aaace0992a249",
+      "sha256": "e451243a5f46bfc5a3f5aebd7f0d44f2ef138b9709572ed55f1610caa108369c"
+    },
+    "speech_activity.py": {
+      "bytes": 2748,
+      "git_blob_sha1": "f885dc03ad64e0482956008fbe652509f1c3d733",
+      "sha256": "232d61ce8b197ca5b1cb93ce3ddfdc69139d70e76b1291311db0cf335c5a7a28"
+    },
+    "startup_greeting.py": {
+      "bytes": 704,
+      "git_blob_sha1": "9028576d9653624d323ae101edef7ac11ec2dfad",
+      "sha256": "276c10468f1d931749a5e960019aa4483f5ad414c1af8bb93a40f41e7f054499"
+    },
+    "telegram_bridge.py": {
+      "bytes": 14462,
+      "git_blob_sha1": "8f1715b2b654d5d00900251077de42a6c7f4f944",
+      "sha256": "e2aea11a862df082c74150964b2090ea6a8cb68cb6577fdff3e2fb57b543f7c8"
+    },
+    "telegram_commands.py": {
+      "bytes": 1442,
+      "git_blob_sha1": "28958acbb4056a7234afa7a7f4a1f02ebe446f34",
+      "sha256": "bed99bea366ec33c499629e69fd4907b80be82bf24c693713e385cf07c7a0346"
+    },
+    "telegram_directory.py": {
+      "bytes": 5604,
+      "git_blob_sha1": "ee850f41e5de41c148015226eb9d9fbfdec7b3b1",
+      "sha256": "c7d74dd74913ef4aba652b0713331806fe923deccb3b8933191e6848643e138f"
+    },
+    "telegram_outbound_flow.py": {
+      "bytes": 4447,
+      "git_blob_sha1": "36a633110697e56b4bf2194573b7396e6beeabc9",
+      "sha256": "833ccf46a2a754871daf0d17d6742bee92ce555f05d2a21b267e661d40ff0cda"
+    },
+    "telegram_secret_dialog.py": {
+      "bytes": 5359,
+      "git_blob_sha1": "7401c2a3f1e2f225eeb2c78f7dd74844570e89c3",
+      "sha256": "1d8537a94ad79e901ec7d74e2b9e8405bf754feb2dc583db2842127150735f25"
+    },
+    "telegram_security.py": {
+      "bytes": 3665,
+      "git_blob_sha1": "eef53db3cc1ef382edce4b064f291d32ebb230cb",
+      "sha256": "e8e475278f3c250921a12fd973f6d79315bbf2532ec27ff453a62e71c24fe3dd"
+    },
+    "telegram_ui.py": {
+      "bytes": 7915,
+      "git_blob_sha1": "a18355a5f3dd55d86b9f1091fb9c40157ae00013",
+      "sha256": "a85b840a09dc1ab68558023b2f53d6f9fc77a4d9a425e205f9089fcb9a1dcb3c"
+    },
+    "telegram_voice.py": {
+      "bytes": 4949,
+      "git_blob_sha1": "b3b2314fbdbd36c710133a00695bb62f3f7f7c18",
+      "sha256": "fbc6ae59dfcb8b8f9aa1942fac0d74fc33472928b9ec765752c236048858162c"
+    },
+    "tests/smoke_gpt_bridge.mjs": {
+      "bytes": 2951,
+      "git_blob_sha1": "ee85f83d6939666527082e7cde9f50c57f213433",
+      "sha256": "9472d4e6dc989422aacc198b3709b7892854e3a794d21392e1eae10ad3031ccb"
+    },
+    "tests/test_action_planner.py": {
+      "bytes": 8124,
+      "git_blob_sha1": "e4cb297d9b28ef10e02cb4fd30a924d0242c87ef",
+      "sha256": "206d2f56ab9b13c7ad05efff3de7e177a6e496adbf429c97e3f76f6f4d49c232"
+    },
+    "tests/test_adaptive_voice.py": {
+      "bytes": 5816,
+      "git_blob_sha1": "fea117b33df23608e81f6f7812c30f66c2e8996c",
+      "sha256": "9bb5e37e029d595d355572e7eb0653676e4568fad42fbb4b51383eb8794e247b"
+    },
+    "tests/test_addon_lifecycle.py": {
+      "bytes": 11838,
+      "git_blob_sha1": "b3da3c0c56b5de6eaaae05b26628f8e3dbb081c4",
+      "sha256": "4b7e817db0ba286b6132d3195970bb4e7dcc48e655595956a9c442c3ee70a80c"
+    },
+    "tests/test_animated_hud.py": {
+      "bytes": 5956,
+      "git_blob_sha1": "1f836f7c5fd06b0294cdc70337c460befdc7b99d",
+      "sha256": "ebb6befeb64493838f8a272863a46b79e924a4318ca025c8ff3f511cfccfdd17"
+    },
+    "tests/test_auto_project_continuity.py": {
+      "bytes": 7492,
+      "git_blob_sha1": "eb64f3ac085bec30366a66ae703d590659a08d78",
+      "sha256": "d1684e9d5854946f4801497a277c64b70e932430a21350dda55251e7f752b650"
+    },
+    "tests/test_capability_registry.py": {
+      "bytes": 5010,
+      "git_blob_sha1": "047a1d80c19849219c4ecaaa71e7469ae784938b",
+      "sha256": "84e5394d61d7792900f09a55fc9e5b7648fff542197c0fbf4ddadf27f280b22c"
+    },
+    "tests/test_conversation_router.py": {
+      "bytes": 10499,
+      "git_blob_sha1": "99eacf8fdf9a9b3f62c26b257167bfc69f444f85",
+      "sha256": "a60470b7b4835a19d3af66e13bc26fed65da7c76070331c71cfdcab76b4bb86c"
+    },
+    "tests/test_desktop_dictation.py": {
+      "bytes": 6587,
+      "git_blob_sha1": "72cf967bdaa29953b92f7c77808fbd38fa5c9910",
+      "sha256": "eda1e827ef0b17946754457244e5a00e67b27e6a2f78a285387b8e40c1bc68ce"
+    },
+    "tests/test_diagnostic_handoff.py": {
+      "bytes": 6702,
+      "git_blob_sha1": "38ecf2fc480bd9ba43a3f1d5133828ece2b2f78b",
+      "sha256": "5368a85ed973ff468b5808101a0baef1f6b913534864de10d696012595e0233a"
+    },
+    "tests/test_diagnostic_recovery.py": {
+      "bytes": 8450,
+      "git_blob_sha1": "b0c28a914602f4d80d4fd31ec228f9896a6b690d",
+      "sha256": "d0cb15dae7f75aad51f9ae8e20a06a31ccde946b5e23d95362fc4b97f7010caa"
+    },
+    "tests/test_dialogue_focus.py": {
+      "bytes": 6485,
+      "git_blob_sha1": "1f4e68c47ececd89f3a5fa531fcd5435b4d9da13",
+      "sha256": "4dbf8a6b02de7454d3a84e96c27ef528596a367491789386a76c1d68b0784731"
+    },
+    "tests/test_dialogue_style.py": {
+      "bytes": 7368,
+      "git_blob_sha1": "911f2dd4905efeffdc189390dc4bbd4500d36092",
+      "sha256": "84e49737668f4145e5ed8a9490ed7e70b72b9cf38a46e10ba0b9a453158142e2"
+    },
+    "tests/test_document_dialog.py": {
+      "bytes": 5907,
+      "git_blob_sha1": "2af11a06bfcd7c09c085ef5c068871569c4d15be",
+      "sha256": "6ba4e27a8ef9e70739c4c95b8da1e13237dd9f1736fca6ce58360a6d4d9375c8"
+    },
+    "tests/test_document_execution.py": {
+      "bytes": 2912,
+      "git_blob_sha1": "abf2dd0bdc0c2ec0352209a6dd7c2bfb87c2f6e8",
+      "sha256": "7eb785f17fb652756eb553300b27a17094661a1823483b59bf4cebfd1eea63e1"
+    },
+    "tests/test_document_language.py": {
+      "bytes": 1490,
+      "git_blob_sha1": "04f5b453f9bb7ffd0a99f00fd3c7a41480f74cb6",
+      "sha256": "b9152a3b707287d2f159038b8da3bbc11cd29a3fd7028eb8eb02f10051d30297"
+    },
+    "tests/test_gpt_client.py": {
+      "bytes": 3532,
+      "git_blob_sha1": "a1847a7480eca486ba7760e8cc5fb5709298a4ea",
+      "sha256": "fe33feda44c8ac9cce447213d7bc23654a07a22e545d863e99bf6d4283f7c813"
+    },
+    "tests/test_hud_backdrop.py": {
+      "bytes": 3222,
+      "git_blob_sha1": "569afb91a253bff5c34a388e488f2372d00d6635",
+      "sha256": "30710e3fb9297c1782a8ffd17ecc5420abe2d6f64d180307062946f57d0bcab8"
+    },
+    "tests/test_hud_raster.py": {
+      "bytes": 4020,
+      "git_blob_sha1": "ffbf87b9266aeadf5f3b5422a36f982a4b6f58f2",
+      "sha256": "9c09bc6c83aab849d1fd418769a2f3ccdbcb7896ab78f282ca8ab1dffc6e29c1"
+    },
+    "tests/test_hud_ui_regressions.py": {
+      "bytes": 4425,
+      "git_blob_sha1": "3a2dc6e8ce049934330a1e8afa4b56c2daea198f",
+      "sha256": "b731664ee3c8a4f551a8b2c3a48a5331f39524f6bfb95002ccc62d9db9a0c1b8"
+    },
+    "tests/test_jarvis_persona.py": {
+      "bytes": 4621,
+      "git_blob_sha1": "41ad6954868a40ded5f7500846bdae87e1d593a6",
+      "sha256": "1ae2b1915826a6d3d7f334682e2c63c21379834b026bf076f5950d4d624b867a"
+    },
+    "tests/test_jarvis_timer.py": {
+      "bytes": 5364,
+      "git_blob_sha1": "ab69bad55598a0f0472dfcbf2220e61d0d32ed79",
+      "sha256": "af1fa5941c8421adc0b2aa7f00810d8a5d980cc95f7971f24287d04f03fde885"
+    },
+    "tests/test_live_capabilities.py": {
+      "bytes": 7704,
+      "git_blob_sha1": "26776683d7922796adeb8d209ad20cf2dac7f9a6",
+      "sha256": "badde43bf8e5b1a7c90497954d394f6bb4644503a3819334f76c00956bcb3ca9"
+    },
+    "tests/test_local_engine.py": {
+      "bytes": 5030,
+      "git_blob_sha1": "d6a4439a4fc717464928a734e624dabf2b6c3d52",
+      "sha256": "775217e67ff3bb08ac358386de6b7b621d7b26fff6e024fff917aed5bb2a5bca"
+    },
+    "tests/test_managed_documents.py": {
+      "bytes": 17419,
+      "git_blob_sha1": "b4f20be9324f3fe6b7af0db795ce7613fead1377",
+      "sha256": "f0c37c8184c46ab509032deb93a9baea70198baac94e345b621b6eaaba7f9a7e"
+    },
+    "tests/test_memory_boundaries.py": {
+      "bytes": 10715,
+      "git_blob_sha1": "e07fcc16e57b019e795d756abad87d726351304a",
+      "sha256": "9b0642675cacb5f3d9561ac023fb053d243b897510e0d04a4b21b402768065ec"
+    },
+    "tests/test_network_telemetry.py": {
+      "bytes": 1680,
+      "git_blob_sha1": "a3997a0bb6d3778bb7fc51a69aba20ec9e2dfb18",
+      "sha256": "de4bcfc37bcca861a06aada1f107af5ee3bcfa23189bd4bb4bdea5f4dd8f4cea"
+    },
+    "tests/test_offline_tts.py": {
+      "bytes": 1987,
+      "git_blob_sha1": "a36d93c977e3c8a1a7964a491406b9ae68455cae",
+      "sha256": "2dc11baecdd51212fa14d35a0c8cbf41393aff6158869ab734e814e1bc33c919"
+    },
+    "tests/test_plan_runner.py": {
+      "bytes": 2590,
+      "git_blob_sha1": "3001cb6301bbadb5737b1cf4582976c0b01d0e34",
+      "sha256": "8dbb1d67a41bc137a051c19f36a9337458497039072bab9dffaba9f8ad0f5822"
+    },
+    "tests/test_project_maintenance.py": {
+      "bytes": 8977,
+      "git_blob_sha1": "aadda917d19f9ed2bdf0b64882ed20de930b01bd",
+      "sha256": "c67f8a71d81ce57023c8bae1351d6822b0c7b9cf465bb53a00e614f8d861f34c"
+    },
+    "tests/test_project_orbits_telegram.py": {
+      "bytes": 3767,
+      "git_blob_sha1": "179b21efe788d5e10c3d5b4c1ae3d092932c5f96",
+      "sha256": "953c60aaba9b61c66f5612f9b081e0109b11409ce3b26dee3e844035f3119aec"
+    },
+    "tests/test_runtime_diagnostics.py": {
+      "bytes": 5549,
+      "git_blob_sha1": "3e9f20620d0c2d34c9d0b72aa627002e9c12ee67",
+      "sha256": "3ffb1be303c41b19617a695d23df86a8efeaf9f9eda6f88918bbb3404cc2a2cc"
+    },
+    "tests/test_second_brain.py": {
+      "bytes": 6299,
+      "git_blob_sha1": "a3a6d111a122bb3dd988f4e86c1691246b16f382",
+      "sha256": "e978114eedd0a9fa33e1eda30324451a6ea6a11511d0b1ca56b1faabbc599c3e"
+    },
+    "tests/test_self_review.py": {
+      "bytes": 9240,
+      "git_blob_sha1": "f0f0237901dbef444d369d016abebadd919dd189",
+      "sha256": "333488d33288af95091fb69b8291846b5ad6340ba8c0471dda6a61c88c8cf928"
+    },
+    "tests/test_settings.py": {
+      "bytes": 5490,
+      "git_blob_sha1": "59e374078e3629bb62254a5a9639fd62851df5fb",
+      "sha256": "e694ca9d4c616f27429ca7aed02316349fe7c3d64582d1a78aa3f016cc4d248a"
+    },
+    "tests/test_speech_activity.py": {
+      "bytes": 3602,
+      "git_blob_sha1": "0322eb5eeefe82cbcb1b48a02a9e60ca7e9d2a9a",
+      "sha256": "e4bff60043a51d93f8634220a36cd06cba0b99556bddde2bef0d20317a9cf355"
+    },
+    "tests/test_telegram_bounded_history.py": {
+      "bytes": 8922,
+      "git_blob_sha1": "933e23930e78f14f82ed6040dacaea76ef8902f6",
+      "sha256": "c1475fed51fc44824644b438eea56c9210967bbd60b2c8b3a78921a0fd4bd72e"
+    },
+    "tests/test_telegram_commands.py": {
+      "bytes": 493,
+      "git_blob_sha1": "f6f48734d08d4608ee42215972cebf1c2793b503",
+      "sha256": "f94c4bc6ce40ee91b42fd28ba10c8e4e24e35562946ad287082d7cf5427b3b35"
+    },
+    "tests/test_telegram_multi_contacts.py": {
+      "bytes": 9695,
+      "git_blob_sha1": "09b0c37dc32572b4dde2d69fe7c2b10171de30c1",
+      "sha256": "26981297f869f9d97a04dd23a0c8c6b304158c96f46562ba9635c15f99260ad9"
+    },
+    "tests/test_telegram_no_network.py": {
+      "bytes": 2828,
+      "git_blob_sha1": "f888556532325521563c4fa719eb5e317612c827",
+      "sha256": "7d4e401114296c70cc5b2d9852b640a64c26db0ea53d718ba4427154a3dec5e9"
+    },
+    "tests/test_telegram_secret_dialog.py": {
+      "bytes": 3399,
+      "git_blob_sha1": "8d36bdc094df89f91c84ee7cd1626ed707a882e9",
+      "sha256": "a11daa7fd8500db947a3f6ee20ba092733a432512eb258ce39e6d006d7ad9086"
+    },
+    "tests/test_telegram_trial_launcher.py": {
+      "bytes": 6730,
+      "git_blob_sha1": "0cf602b9f1547a56c259acb5f0e77fa2a53c73d5",
+      "sha256": "8da569ee80fe93f68fbfa07a28bb45e5bae8f9ca67c08d8598a9e32335e85b40"
+    },
+    "tests/test_voice_control.py": {
+      "bytes": 9852,
+      "git_blob_sha1": "fe9f415440c83be9e8ac0894f0e1471f31b8285d",
+      "sha256": "c6ab163245b5e1a00aa11ed04bff4ffbb969c09a309030c9a5b67d02f337a477"
+    },
+    "tests/test_voice_installer.py": {
+      "bytes": 1799,
+      "git_blob_sha1": "cc807dc4bdbc42f667576960581f22a20c503b01",
+      "sha256": "ec345265d254ee2a2e2bca81645a35e6a92e3323ddf9c82e1038ea6f8d50ec66"
+    },
+    "tests/test_voice_project_documents.py": {
+      "bytes": 8081,
+      "git_blob_sha1": "bc33b82ca9b688ca754c5b8a11b077646d776d35",
+      "sha256": "227cba9602585471026abdd3967177c1119c7c4edfe8707aa0b612d843532910"
+    },
+    "tests/test_workspace_memory.py": {
+      "bytes": 5390,
+      "git_blob_sha1": "d9bf566e8a1ec6d3197e219d8a9b8315f62f8142",
+      "sha256": "b99a17f8965224382b0bdc03f8779dfef649a45cdae40270c6aba46ee20c8c61"
+    },
+    "voice_control.py": {
+      "bytes": 13552,
+      "git_blob_sha1": "3461b31736047fa65e5bb64ba04b8b30034abf7e",
+      "sha256": "c9e4287a79bccdd66daff810f85a1fa9d3cf1944b07e8daab517a034ac6ed7fa"
+    },
+    "workspace_gui.py": {
+      "bytes": 9249,
+      "git_blob_sha1": "603969ba2c73655417799fa66f2a777982bb2ed3",
+      "sha256": "32ee52cfa0ae5963efeb6572c96a8ce3ca5ee39f167828e2ea145d3d57d28970"
+    },
+    "workspace_memory.py": {
+      "bytes": 48870,
+      "git_blob_sha1": "ca3babe58b786b80d6d3060d88c5dd5b99821123",
+      "sha256": "4efd901bf07f02a8b4860f63c9ea9b6ea1400e6f0068b5ce9cb1d85aa88be9f1"
+    }
+  },
+  "comparison_ref": "5e61e53fbb58ccb5d95b85671604cc5f365d6e04",
+  "different": [
+    ".github/workflows/gpt-smoke.yml",
+    "conversation_memory.py",
+    "conversation_router.py",
+    "jarvis.py",
+    "jarvis_persona.py",
+    "prepara_test_telegram50.py",
+    "second_brain.py",
+    "tests/test_second_brain.py",
+    "tests/test_telegram_trial_launcher.py",
+    "workspace_memory.py"
+  ],
+  "only_in_source": [
+    "AGENTS.md",
+    "conversation_context.py",
+    "docs/CORREZIONE-NUCLEO-DIALOGO-20261031.md",
+    "docs/DECISIONI-E-LEZIONI.md",
+    "tests/test_conversation_pipeline.py"
+  ],
+  "only_in_zip": []
+}
