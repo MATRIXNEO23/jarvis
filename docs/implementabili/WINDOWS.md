@@ -49,3 +49,29 @@ Base e ZIP funzionanti preservati: [registro versioni](../../Download/REGISTRO-V
 
 ## Guida durante la discussione
 L'utente richiede spiegazioni semplici e orientamento, un punto e una domanda alla volta. Presentare cosa esiste, cosa proponiamo e cosa resta da verificare; non comunicare solo «ho controllato». Lasciare terminare il discorso, non trasformare piccole pause in una domanda chiusa o nell'autorizzazione a procedere.
+
+## Piano di lavoro proposto — prove prima delle dichiarazioni
+Richiesto dall'utente il 2026-11-01. Stato: **piano da discutere, non implementazione avviata**. Ordine tecnico proposto, da allineare alle priorità dell'utente.
+
+### 1. Inventario mirato e responsabilità delle funzioni
+Sulla base preservata b936879 verificare azioni, gestori, impostazioni e test pertinenti: local_engine, capability_registry, live_capabilities, action_planner, voce/testo, moduli documenti e jarvis.py. Tabella da produrre: requisito → funzione esistente → limite dimostrato → modifica minima → test. Migliorare il componente già responsabile: niente secondo cercatore, lanciatore o lettore parallelo. Un nuovo componente .jaddon è giustificato solo per capacità nuova o necessità motivata, senza duplicare percorsi utente. La ricerca estesa deve evolvere quella esistente.
+**Uscita:** punti di integrazione e lacune verificati nel codice, distinguendo presenti/da estendere/nuovi. Inventario iniziale presente sopra; moduli documenti e integrazione complessiva non ancora riesaminati per questo piano.
+
+### 2. Scegliere e provare il collegamento Windows minimo
+Dopo il via al lavoro tecnico preparare prova limitata in ambiente Windows disponibile: apertura di file/cartella nota con strumenti nativi, individuazione/avvio app di prova; per la ricerca controllare servizio Windows Search e risultati su campioni noti, inclusa cartella non indicizzata. Definire l'integrazione Python concreta solo dopo questa verifica; confronto mirato con alternative già disponibili se serve. Documentazione Microsoft già consultata, collegamento Jarvis non ancora provato.
+**Uscita:** percorso reale verificato oppure errore/dipendenza/limite registrato. Se una prova fallisce, fermare il lavoro che ne dipende. Nessuna nuova dipendenza adottata per ipotesi e nessuna indicizzazione completa del disco attivata automaticamente.
+
+### 3. Migliorare un percorso minimo completo
+Dopo autorizzazione, primo incremento circoscritto proposto: apertura programma selezionato nelle impostazioni, da voce/testo all'azione locale e alla risposta, usando il gestore esistente esteso. Ora/data dal PC come azione locale circoscritta se scelta per il primo incremento. Configurazione persistente, disponibilità e «cosa puoi fare?» alimentati dalla stessa fonte, senza aggiungere liste parallele. Comandi precisi senza modello; frase non risolta al GPT esterno consentito; chiedere se ambiguo.
+**Uscita:** app disponibile individuata correttamente, azione eseguita e riscontro con limiti dichiarati; disattivata/mancante gestita senza falso successo. La conferma di avvio Windows non è prova di tutte le funzioni interne dell'app.
+
+### 4. Estendere ricerca e lettura esistenti per incrementi
+Prima nomi parziali/prefissi in ambito concordato; poi descrizioni/indizi con candidati motivati e verifica locale, es. cartella Minecraft distinguendo installazione, dati e salvataggi. Infine lettura/spiegazione nei formati iniziali concordati, riusando prima i moduli documenti presenti. Per file senza nome esatto recuperare indizi reali: il modello non inventa percorsi e non trasforma un candidato in risultato verificato. Windows Search dove adatto, ricerca mirata dove necessario, senza scansioni continue.
+**Uscita di ogni incremento:** prova con campioni controllati più casi di ambiguità, assenza risultati, limiti indice/permessi e formato non supportato. Lettura e spiegazione provate separatamente dall'apertura. Nessuna garanzia di trovare un file senza alcun indizio.
+
+### 5. Verifica, consegna e ritorno alla versione precedente
+Test automatici significativi sui componenti modificati e regressioni pertinenti: voce/testo, GPT simulato e reale distinti, nessuna doppia esecuzione, aggiornamento catalogo, ricerca annullata/timeout, dati preservati. Verificare pacchetto estratto e CI Windows disponibile; sul Pavilion account/app reali, usabilità e misura RAM/CPU/disco comparabile (inattivo, attività, fine). Conservare comando/ambiente/esito/limiti; saltato non equivale a riuscito.
+**Uscita:** pacchetto persistente e checksum, sorgenti identificati e link Download verificato; prova PC collegata alla versione e all'ambito realmente testato prima di promuovere il nuovo riferimento funzionante. Fino ad allora mantenere la base confermata e il relativo ZIP.
+
+### Punto di arresto del piano
+Ora sono svolte soltanto letture mirate di codice/fonti e documentazione dei requisiti. Nessuna prova nuova di integrazione Windows, benchmark, implementazione o pacchetto. Prossimo passo: spiegare e discutere il piano con un esempio concreto; definire ambito cartelle e formati prima delle relative fasi. L'approvazione del criterio non equivale al via automatico a tutte le fasi.
