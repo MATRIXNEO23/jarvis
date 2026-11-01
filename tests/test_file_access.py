@@ -527,7 +527,7 @@ class FileAccessTests(unittest.TestCase):
             parsed=calls.pop()['file_call']
             result=self.engine.execute_file(*parsed)
             self.assertEqual(result.status,'completed',result.message)
-            self.assertEqual(Path(launch.call_args.args[0][1]),second)
+            self.assertTrue(os.path.samefile(launch.call_args.args[0][1],second))
             self.engine.execute_file(*parsed)  # Replayed selection cannot reopen.
             self.assertEqual(launch.call_count,1)
         self.assertIsNone(self.files._pending)
