@@ -86,3 +86,11 @@
 - Documentazione/mappa/evidenze finali su main nel commit c814ee6ae0d8b3d4d1e84782b60eea14a9b34268; risultati riportati anche nel ramo evoluto con commit solo documentale 5e61e53fbb58ccb5d95b85671604cc5f365d6e04.
 - PR #32 aggiornata per rappresentare timer e continuità; aperta, mergeable, nessun merge effettuato. I test verdi si riferiscono al codice di a86c2c9: 5e61e53 cambia soltanto documentazione.
 - Prossimo collaudo reale: avviare il codice del ramo evoluto in cartella separata, verificare standby; collegare GPT; provare 6–10 scambi con due mete nominate, domanda e risposta breve, poi richiamo della scelta iniziale. Con Second Brain attivo riavviare e rispondere al chiarimento precedente; con memoria disattiva non aspettarsi ricordi dal disco. Cambiare progetto e verificare assenza di contaminazione. Controllare selezione manuale microfono, comandi locali e salvataggi. Annotare esito osservato senza attribuirgli risultati non misurati.
+
+
+## 2026-11-01 — Riscontro pratico dell'utente sul dialogo
+- Alberto riferisce di aver appena conversato con Jarvis sul proprio PC: mantiene abbastanza il contesto ed è «molto migliorato».
+- Stato: riscontro positivo riferito dall'utente durante uso reale; non osservato direttamente dall'agente. Supera la precedente assenza di feedback pratico, senza equivalere a collaudo completo.
+- Versione/SHA installato, numero di scambi e payload non acquisiti: non attribuire causalmente il miglioramento al commit a86c2c9 senza verificarne la presenza sul PC.
+- Restano da verificare riavvio e recupero SQLite, isolamento progetti, salvataggi/comandi e modalità manuali del microfono. Nessuna nuova build, merge o distribuzione eseguiti in questa fase; le CI citate sopra rimangono prove del codice testato.
+- Richiesta successiva: valutare maggiore autonomia web con lettura pagine e browser automatico. Solo valutazione, nessuna implementazione autorizzata da questa domanda. Nuova funzionalità da progettare come .jaddon, con GPT esterno e zero costi aggiuntivi.
