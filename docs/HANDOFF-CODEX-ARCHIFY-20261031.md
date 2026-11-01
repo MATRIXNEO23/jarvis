@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## Checkpoint corrente — catalogo implementabili in corso, 2026-11-01
+L'utente richiede indice delle cose implementabili, una scheda per ogni add-on e discussione delle priorità prima del codice, privilegiando attività semplici. Questa unità modifica solo documentazione: docs/IMPLEMENTABILI.md, schede e modello in docs/implementabili/, collegamenti in AGENTS/RECUPERO/STATO e registro lezioni. Il piano web esistente rimane fonte dettagliata; nessuna nuova funzione autorizzata con questa richiesta. Prossimo controllo: verificare contenuti salvati e riferimenti, poi chiudere checkpoint e discutere le alternative. Base b936879 e pacchetti invariati.
+
 ## Checkpoint vigente — allineamento concreto completato il 2026-11-01
 **Dopo «Continua»: audit chiuso e fermo prima del web.** Base confermata Jarvis-Timer-Audio-Fix2-20261031.zip, sorgenti b936879a431370d206152be7b089baf587d15499; 155 file identici, download diretto HTTP 200, hash/CRC PASS. Suite locale: 373 raccolti, 368 eseguiti con successo, 5 skip Windows/Tk, zero fallimenti/errori; sintassi Python/Node PASS. CI storica della base e publisher verificate; riferimenti nel [rapporto](VERIFICA-CONCRETA-BASE-20261101.md) e nel [registro](../Download/REGISTRO-VERSIONI.md).
 Il nucleo successivo a86c2c9 e il suo standby non sono nello ZIP. Guide, indice, regole e piano distinguono le due versioni; mantenere la base e il comportamento scelti. Feedback PC riferito dall'utente, nessun nuovo collaudo hardware/account. La mappa Archify a86c2c9 resta riferimento del solo codice successivo, con limite browser già documentato.
