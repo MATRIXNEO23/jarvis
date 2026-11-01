@@ -121,7 +121,7 @@ def indexed_candidates(query: str, root: Path, *, timeout: float = 8) -> tuple[l
         return [], 'Manca file_access/windows_search.ps1: reinstalla il pacchetto Accesso file.'
     try:
         run = subprocess.run(
-            [str(powershell), '-NoProfile', '-NonInteractive', '-File', str(script)],
+            [str(powershell), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(script)],
             input=json.dumps({'query': query, 'root': str(root)}, ensure_ascii=True),
             capture_output=True, text=True, encoding='utf-8', errors='replace',
             timeout=timeout, shell=False, creationflags=0x08000000)

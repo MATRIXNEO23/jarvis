@@ -143,6 +143,10 @@ class FileAccessService:
             match = re.fullmatch(pattern, clean, re.I)
             if match:
                 args = {'query' if operation in ('search', 'locate') else 'target': match.group(1).strip()}
+                if operation == 'search':
+                    scoped = re.fullmatch(r'(.+?) (?:in|nella cartella) (documenti|download|desktop|profilo|appdata)', args['query'], re.I)
+                    if scoped:
+                        args = {'query':scoped.group(1), 'scope':scoped.group(2).casefold()}
                 if operation == 'read' and low.startswith(('spiega', 'spiegami')):
                     args['explain'] = True
                 return operation, args

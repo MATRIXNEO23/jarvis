@@ -39,6 +39,7 @@ class LocalEngine:
     def __init__(self, *, download_dir: Path | None = None,
                  db_path: Path | None = None, windows: bool | None = None):
         self.file_access = None
+        self.file_access_blocked = False
         self.download_dir = Path(download_dir) if download_dir else Path.home() / "Downloads"
         self.db_path = Path(db_path) if db_path else default_path().with_name("tasks.db")
         self.windows = os.name == "nt" if windows is None else windows
@@ -101,6 +102,10 @@ class LocalEngine:
         if " ".join(request.casefold().strip(" .!?").split()) in ("aiuto","comandi","help","cosa puoi fare","cosa sai fare"):
             extra = ("\n"+self.file_access.commands()) if self.file_access is not None else ""
             return self._record(TaskResult(uuid4().hex,"help","completed",self.available_commands()+extra))
+        if self.file_access_blocked and request.casefold().startswith(
+                ("cerca file ","mostra download","elenca download","apri download","apri disco locale c")):
+            return self._record(TaskResult(uuid4().hex,"files","rejected",
+                "Accesso file incompleto: reinstalla la cartella file_access dal pacchetto e riavvia Jarvis."))
         if self.file_access is not None and self.file_access.enabled():
             parsed = self.file_access.parse_command(request)
             if parsed is not None:

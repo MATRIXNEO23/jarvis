@@ -211,6 +211,13 @@ class FileAccessTests(unittest.TestCase):
         self.assertEqual(window.mark(self.docs), '◩')
         self.assertEqual(window.mark(self.hidden), '☐')
         self.assertEqual(window.mark(self.docs/'nuovo'), '☑')
+        from file_access.windows import long_path
+        row = next(k for k,v in window.paths.items() if v == long_path(self.docs))
+        window.tree.selection_set(row)
+        window.toggle()
+        self.assertEqual(window.mark(self.docs), '☐')
+        window.toggle()
+        self.assertEqual(window.mark(self.docs), '◩')
         viewer = show_preview(root, str(self.a), 'contenuto')
         self.assertEqual(next(w for w in viewer.winfo_children() if isinstance(w,tk.Text)).cget('state'), 'disabled')
         viewer.destroy()
@@ -269,3 +276,34 @@ class FileAccessTests(unittest.TestCase):
         env['send_console_input']()
         self.assertEqual(calls,[('select',{'target':'1'})])
         self.assertEqual(request.value,'')
+
+    def test_scoped_command_and_missing_component_fail_closed(self):
+        self.assertEqual(self.files.parse_command('cerca file preventivo in documenti'),
+                         ('search', {'query':'preventivo','scope':'documenti'}))
+        self.engine.file_access = None
+        self.engine.file_access_blocked = True
+        result = self.engine.execute('cerca file preventivo')
+        self.assertEqual(result.status, 'rejected')
+        self.assertIn('file_access', result.message)
+        self.assertEqual(self.engine.execute('stato sistema').status, 'completed')
+        from file_access.windows import indexed_candidates
+        with patch('file_access.windows.Path.is_file', return_value=False):
+            rows, reason = indexed_candidates('preventivo', self.docs)
+        self.assertFalse(rows)
+        self.assertIn('windows_search.ps1', reason)
+
+    def test_candidate_preparer_uses_explicit_previous_profile_without_writing_it(self):
+        import prepara_test_telegram50 as preparer
+        from settings import load_settings, save_settings
+        previous = self.root/'previous-profile'
+        trial = self.root/'candidate-profile'
+        previous.mkdir()
+        settings = load_settings(previous/'settings.json')
+        settings['tts_voice'] = 'Voce conservata'
+        save_settings(settings, previous/'settings.json')
+        before = (previous/'settings.json').read_bytes()
+        with patch.dict(os.environ, {'LOCALAPPDATA':str(self.root),
+                'JARVIS_TRIAL_SOURCE':str(previous),'JARVIS_TRIAL_HOME':str(trial)}), patch('builtins.print'):
+            preparer.main()
+        self.assertEqual(load_settings(trial/'settings.json')['tts_voice'],'Voce conservata')
+        self.assertEqual((previous/'settings.json').read_bytes(),before)

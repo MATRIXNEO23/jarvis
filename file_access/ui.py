@@ -98,8 +98,9 @@ class FolderSettings:
             return
         path = self.paths[selection[0]]
         # Toggling parent updates inherited state, preserving explicit exceptions.
-        current = self.mark(path)
-        self.rules[str(path)] = current != '☑'
+        matches = [(Path(p), allow) for p, allow in self.rules.items() if contains(Path(p), path)]
+        current = max(matches, key=lambda item: len(item[0].parts))[1] if matches else False
+        self.rules[str(path)] = not current
         self.update_labels()
 
     def remove_rule(self):

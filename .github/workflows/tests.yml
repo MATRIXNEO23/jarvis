@@ -79,3 +79,84 @@ jobs:
           name: Jarvis-Accesso-File-0.1.0-20261101
           path: dist/*
           retention-days: 30
+
+  publish-file-access:
+    name: Persist verified candidate in Download (Windows)
+    needs: unit
+    if: github.ref == 'refs/heads/feature/file-access-20261101' && github.event_name == 'push'
+    runs-on: windows-2022
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: Jarvis-Accesso-File-0.1.0-20261101
+          path: ${{ runner.temp }}/file-access-candidate
+      - name: Verify received bytes and prepare persistent Download entry
+        shell: python
+        env:
+          CANDIDATE_HOME: ${{ runner.temp }}/file-access-candidate
+          VERIFIED_SOURCE: ${{ github.sha }}
+          VERIFIED_RUN: ${{ github.run_id }}
+        run: |
+          import hashlib,json,os,shutil,zipfile
+          from pathlib import Path
+          home=Path(os.environ['CANDIDATE_HOME'])
+          details=json.loads(next(home.glob('*.json')).read_text())
+          archive=home/details['archive']
+          sha=os.environ['VERIFIED_SOURCE']
+          assert details['source_commit']==sha
+          assert hashlib.sha256(archive.read_bytes()).hexdigest()==details['sha256']
+          with zipfile.ZipFile(archive) as z:
+              assert z.testzip() is None
+          name=f'Jarvis-Accesso-File-0.1.0-20261101-{sha[:7]}.zip'
+          target=Path('Download')/name
+          if target.exists():
+              assert target.read_bytes()==archive.read_bytes(), 'Never overwrite an existing different package'
+          else:
+              shutil.copyfile(archive,target)
+          details.update(archive=name,windows_workflow_run=os.environ['VERIFIED_RUN'],pc_test='pending')
+          Path('Download',name.removesuffix('.zip')+'.json').write_text(json.dumps(details,indent=2)+'\n')
+          page=Path('Download/README.md')
+          text=page.read_text(encoding='utf-8')
+          title=f'## Accesso file 0.1.0 — build candidata Windows ({sha[:7]})'
+          entry=(title+'\n\n'+f'[Scarica {name}](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/{name})\n\n'
+                 'Ricerca, cartelle consentite con spunte, lettura senza modifica e integrazione voce/testo/GPT. '
+                 'Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Accesso file > Configura, Salva e Attiva. '
+                 'Profilo di prova separato, precedente installazione preservata. '
+                 'Test automatici solo Windows, archivio estratto e avvio UI verificati. '
+                 'Collaudo PC/account/microfono reali ancora da fare; indice Windows non disponibile nel runner, fallback verificato.\n\n'
+                 f'Sorgenti: [{sha[:7]}](https://github.com/MATRIXNEO23/jarvis/tree/{sha}). '
+                 f'[Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/{os.environ["VERIFIED_RUN"]}). '
+                 f'SHA-256: `{details["sha256"]}`.\n\n')
+          if title not in text:
+              split=text.find('\n')+1
+              page.write_text(text[:split]+'\n'+entry+text[split:],encoding='utf-8')
+          registry=Path('Download/REGISTRO-VERSIONI.md')
+          text=registry.read_text(encoding='utf-8')
+          if name not in text:
+              registry.write_text(text+'\n## Candidato Accesso file '+sha[:7]+' — 2026-11-01\n\n'+
+                  f'- ZIP persistente: Download/{name}\n- Sorgenti: {sha}\n'+
+                  f'- SHA-256: {details["sha256"]}\n- Windows CI: run {os.environ["VERIFIED_RUN"]}, due job 3.11/3.12, pacchetto estratto e avvio UI.\n'+
+                  '- Collaudo PC: pendente. La base confermata BASE-UTENTE-20261101 b936879 resta invariata.\n'+
+                  '- Recupero: usare la cartella precedente Timer Audio Fix2; non cancellare profili o dati.\n',encoding='utf-8')
+          print('PERSISTENT_CANDIDATE='+json.dumps(details))
+      - name: Commit candidate without changing main runtime
+        shell: powershell
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Download
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "Publish verified Accesso file candidate $($env:GITHUB_SHA.Substring(0,7))"
+            if ($LASTEXITCODE -ne 0) { throw 'Commit failed' }
+            git push origin HEAD:main
+            if ($LASTEXITCODE -ne 0) { throw 'Publication failed: keep artifact and inspect main, no force push' }
+          }

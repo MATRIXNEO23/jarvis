@@ -634,7 +634,8 @@ def main() -> None:
                 parsed={"breve":parsed}
             if not isinstance(parsed,dict):
                 return raw
-            if addon_manager is not None and addon_manager.files_enabled():
+            if (addon_manager is not None and addon_manager._file_service is not None
+                    and addon_manager.files_enabled()):
                 file_hint=addon_manager.file_service.context_hint()
                 if file_hint:
                     hint["file_results"]=file_hint
@@ -1464,7 +1465,7 @@ def main() -> None:
             return ()
         try:
             return addon_manager.active_actions()
-        except (AddonError,OSError,ValueError):
+        except (AddonError,OSError,ValueError,ImportError):
             # Never let a broken or modified add-on directory break GPT chat.
             for item in addon_capability_registry.available_addons():
                 addon_capability_registry.unregister(item["id"])
@@ -2170,7 +2171,12 @@ def main() -> None:
     try:
         engine = LocalEngine()
         if addon_manager is not None:
-            engine.file_access = addon_manager.file_service
+            try:
+                engine.file_access = addon_manager.file_service
+            except (ImportError,OSError,ValueError) as exc:
+                engine.file_access_blocked = True
+                write_line("ACCESSO FILE > Componente incompleto: "+str(exc)+
+                           ". Reinstalla il pacchetto completo (cartella file_access), poi riavvia Jarvis.")
     except (OSError, ValueError) as exc:
         messagebox.showerror("Motore locale non disponibile", str(exc), parent=root)
         root.destroy()
@@ -2642,7 +2648,12 @@ def main() -> None:
     def try_file_command(message: str) -> bool:
         if addon_manager is None or not addon_manager.files_enabled():
             return False
-        provider=addon_manager.file_service
+        try:
+            provider=addon_manager.file_service
+        except (ImportError,OSError,ValueError) as exc:
+            write_line("ACCESSO FILE > Componente non disponibile: "+str(exc)+
+                       ". Reinstalla la cartella file_access dal pacchetto completo e riavvia.")
+            return True
         if provider._context != active_project_id:
             provider.reset(active_project_id)
         parsed=provider.parse_command(message)
@@ -3154,8 +3165,12 @@ def main() -> None:
                     busy_local = False
                     write_line(f"[{result.status}] {result.message}")
                     if result.preview_path:
-                        from file_access.ui import show_preview
-                        show_preview(root,result.preview_path,result.preview)
+                        try:
+                            from file_access.ui import show_preview
+                            show_preview(root,result.preview_path,result.preview)
+                        except (ImportError,OSError,ValueError) as exc:
+                            write_line("ACCESSO FILE > Vista non disponibile: "+str(exc)+
+                                       ". Reinstalla file_access/ui.py dal pacchetto completo.")
                         if result.explain:
                             if gpt_enabled.get() and active_gpt and not busy_gpt:
                                 from file_access.service import explanation_prompt

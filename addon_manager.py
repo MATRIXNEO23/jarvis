@@ -118,8 +118,9 @@ class AddonManager:
     """Per-user, atomic, bounded life cycle with synchronized live registry.
 
     Installed files are descriptive only. The implementation remains limited
-    to compiled, validated existing core read-only actions. The GPT never
-    receives arbitrary system access, local paths, files or contact lists.
+    to compiled, validated existing core read-only actions. Installation never sends personal files or contacts. The reviewed file
+    adapter checks selected folders locally; an explicit explanation request
+    may send a bounded file excerpt to the already connected external GPT.
     """
 
     def __init__(self, registry: LiveCapabilityRegistry,
