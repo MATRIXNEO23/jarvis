@@ -244,3 +244,9 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - L'utente richiede di pianificare e avviare le verifiche concrete per allineare i dati, senza deduzioni inventate. Piano in docs/VERIFICA-CONCRETA-BASE-20261101.md.
 - ZIP reale acquisito: 406653 byte, blob 6aa9e6f9eb040dc7390b4edb55c9ae175bd4e512, SHA-256 c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352. CRC/percorso/estrazione: PASS, 155 voci. Baseline utente identificata; confronto sorgenti e test inclusi prossimi.
 - Nessun codice modificato né add-on iniziata; questo audit è autorizzato, la successiva implementazione resta sospesa.
+
+## 2026-11-01 — Ripresa audit concreto dopo «Continua»
+- Punto verificato: main c6f0170497f8b2c0b4511950bd722e681cef02b6; lette istruzioni e fonti di recupero correnti. Le vecchie copie locali con modifiche non salvate restano separate e non sono la base.
+- Unità in corso: confrontare i byte dello ZIP confermato con la storia sorgente; eseguire suite inclusa e sintassi disponibili; verificare guide, mappa e riferimenti. Annotare difetti senza correggere il runtime durante questo audit.
+- File previsti: rapporto VERIFICA-CONCRETA-BASE, evidenze sintetiche/log di test, registro versioni, indice sorgenti, stato, recupero, piano, lezioni e questo handoff. Nessuna nuova add-on, build, installazione o modifica dei dati utente.
+- Arresto richiesto: allineamento del metodo e dei dati reali; presentare esito e limiti, fermarsi prima del codice web. Il precedente prossimo passo generico «revisione web» è subordinato alla chiusura di questo audit.
