@@ -46,6 +46,9 @@ L'utente sceglie avvio programmi: rilevamento Windows di classici e Store, spunt
 ## Chiarimento vigente sul dialogo
 L'utente conferma dialogo naturale: Jarvis deve distinguere conversazione, richiesta d'azione e dubbio, senza interpretare ogni frase come comando, chiedere ripetutamente o richiedere nomi/formule esatti. GPT esterno per interpretazione necessaria; locale diretto per comandi precisi. Conservare domanda pendente e risposte brevi. Frase personale «Insegna comando» solo opzione discussa, non sostituisce il requisito centrale. Criteri di prova e verifica Cortana/WSR/Windows 11 salvati nella scheda WINDOWS. Nessuna nuova implementazione/test runtime; chiesto chiarimento del funzionamento, non via al codice.
 
+## Priorità vigente — accesso generale a file e cartelle
+Aggiornamento pomeridiano: l'utente vuole partire dai file, non da una sola app campione. Funzione generale su cartelle accessibili fuori dal sistema, primo incremento in sola lettura; obiettivo più ampio RW/cancellazione fuori dal sistema e sistema solo lettura da progettare. Non richiedere nome di programma come prerequisito. Applicare tutti i requisiti .jaddon/cartella/riuso/dialogo/test/consegna/recupero, non duplicare la ricerca esistente. Dettagli e limiti in WINDOWS.md; nessun codice/test runtime/pacchetto. I precedenti «primo incremento app» sono superati per priorità, restano requisiti da riprendere.
+
 ## Prossimo passo corrente
 Discutere con l'utente quali funzioni desidera; salvare nella scheda soltanto le caratteristiche concordate, distinguendo dubbi e proposte. Alla ripresa leggere indice e scheda, verificare i riferimenti; nessuna autorizzazione automatica al codice o al web.
 
