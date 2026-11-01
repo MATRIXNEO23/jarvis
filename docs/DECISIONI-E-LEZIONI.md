@@ -75,3 +75,8 @@ Precisazione dell'utente: recupero necessario anche se la sessione termina all'i
 **Decisione:** progetto basato su fonti reali, consultazione delle lezioni pertinenti, una revisione iniziale e un ricontrollo mirato delle correzioni. Una criticità bloccante residua richiede scelta o prova di fattibilità limitata; il numero di revisioni non autorizza a ignorarla. Dopo approvazione provare subito un percorso minimo completo e poi ampliare.
 **Apprendimento operativo:** errore riprodotto → evidenza/causa o ipotesi → rimedio verificato → lezione preventiva e test di regressione quando utile. Riutilizzare solo nel contesto pertinente, senza ripetere tutte le verifiche del progetto.
 **Ambito:** procedura salvata in AGENTS.md e piano web; non dimostra efficacia empirica o assenza di bug. Nessuna implementazione, nuova build o test runtime in questa fase.
+
+## 2026-11-01 — Ogni add-on con test propri nel repository
+**Decisione:** ogni nuova add-on include test automatici propri e prove d'integrazione prima della consegna, più regressioni pertinenti di Jarvis e verifica del pacchetto. I test delle parti reali non sono sostituibili da sole simulazioni; controlli obbligatori non eseguiti bloccano la dichiarazione di prontezza.
+**Motivo:** individuare in sviluppo errori riproducibili di interfaccia, collegamento, configurazione e recupero, senza farli scoprire all'utente nell'installazione. Sul PC rimangono account, dispositivi, prestazioni e ambiente reale.
+**Stato:** salvato in AGENTS.md e piano web. Nessun nuovo test implementato/eseguito in questa fase documentale. Non attribuire retroattivamente copertura alle add-on esistenti senza inventario.
