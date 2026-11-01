@@ -195,3 +195,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Regole aggiornate: mantenere istruzioni di ogni modulo, verificare l'uso prima del riordino, chiedere su dubbi sostanziali, nessuna dichiarazione di funzione installabile prima di pacchetto verificato e link Download/README.md funzionante.
 - Ulteriore requisito: ogni add-on progettata per Pavilion i3-2100/10 GB con poco consumo incrementale, caricamento a richiesta e misure comparabili; non spegnere microfono/servizi manuali. Commit regola 9a87cf1d08a387d5083b1e93acf7939394e3ea56, piano e9d3565dc233e9a7a64929eef3aafda0559b0791, lezioni fa98ef609165352baccb5843e311f15c9e024141.
 - Stato reale: documentazione salvata; nessuna nuova build o add-on scaricabile pubblicata, nessun benchmark RAM. Prossimo passo resta revisione tecnica del piano web e dei punti d'integrazione, prima del codice.
+
+## 2026-11-01 — In corso: scelta esplicita di instradamento ibrido
+- L'utente conferma che un comando locale preciso non deve interrogare GPT. Le formulazioni ambigue/non riconosciute richiedono interpretazione del GPT esterno, che restituisce l'azione al motore; se resta dubbio, domanda contestuale e conferma breve.
+- Rilettura sorgenti: jarvis.py 2894–2981 e 3038–3050, voice_control.py 45–85 nel riferimento evoluto. I gestori locali hanno precedenza; in Conversazione GPT esiste fallback, mentre altre modalità possono limitarsi a inserire il testo. Non interpretare questa preferenza come richiesta di mandare ogni comando a GPT o cambiare automaticamente modalità microfono.
+- Previsto: aggiornare regole, piano e lezioni; nessun codice modificato o test eseguito. Poi chiudere checkpoint.
