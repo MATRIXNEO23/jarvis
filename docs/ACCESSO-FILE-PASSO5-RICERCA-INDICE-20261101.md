@@ -1,5 +1,60 @@
 # Ricerca vocale, passo 5A e indice locale per ogni PC — 2026-11-01
 
+## Persistenza fra interruzioni, riavvii e aggiornamenti — requisito confermato
+L'utente richiede che l'arresto conservi ciò che è già stato catalogato e il punto raggiunto. La continuazione deve funzionare anche dopo chiusura/riavvio di Jarvis. Installare una nuova versione non deve cancellare indice o avanzamento né obbligare a rifare la scansione iniziale.
+Indice e checkpoint devono vivere nei dati persistenti del profilo Jarvis già previsto (addon-data/accesso_file), separati dalla directory del codice/distribuzione. Riutilizzare la risoluzione del profilo attivo e le regole di migrazione esistenti; non creare una cartella dati concorrente né cambiare automaticamente profilo a ogni aggiornamento.
+Salvare progressivamente con scritture coerenti/atomiche: alla pausa richiesta rendere durevole il progresso accettato; in caso di arresto improvviso riprendere dall'ultimo checkpoint valido, dichiarando che la porzione non ancora consolidata può richiedere un ricontrollo. Non promettere recupero di una scrittura mai completata o ripresa dal medesimo offset se una directory è cambiata nel frattempo. Conservare le voci già validate e riprendere il lavoro residuo senza ricatalogare tutto da zero.
+Un aggiornamento dello schema dell'indice deve avere migrazione conservativa e recupero; niente ricostruzione silenziosa integrale per il solo cambio versione. Su una macchina nuova creare invece il suo catalogo; non confondere aggiornamento del programma sullo stesso PC con trasferimento su un altro PC.
+Prove Windows richieste prima della consegna: pausa/riapertura con stesso profilo, installazione aggiornata in un'altra cartella ma medesimi dati, checkpoint interrotto/non valido con recupero, cambiamenti dei file durante la pausa e unità scollegata/ricollegata. Restano prove progettate, NON eseguite. Nessuna modifica runtime o build in questa precisazione.
+
+## Aggiornamento incrementale e unità collegate — requisito confermato
+Alberto precisa che Jarvis deve rilevare i dischi/percorsi realmente presenti (C:, D: e unità esterne collegate) e creare autonomamente il catalogo; non serve chiedere se iniziare da C/D o dalle periferiche. A una scansione successiva deve riconoscere ciò che è già catalogato e aggiornare le novità, senza ricostruire ogni volta tutto l'indice.
+
+Contratto minimo da progettare nel componente esistente:
+- Prima scansione: registrare nomi, percorsi, tipo e metadati necessari al confronto delle voci accessibili/consentite; conservare lo stato per macchina e identità dei volumi, non per la sola lettera.
+- Scansioni successive: riutilizzare le voci invariate e inserire/aggiornare quelle nuove o cambiate. Rilevare spostamenti, rinomine ed eliminazioni senza dover rileggere il contenuto di tutti i file. Modalità concreta di rilevamento cambiamenti ancora da verificare: cercare le novità può richiedere di enumerare/confrontare i metadati delle cartelle; non promettere di scansionare fisicamente soltanto file nuovi senza un meccanismo che li segnali.
+- Unità rimossa: segnare il volume non disponibile; non trattare tutti i suoi file come cancellati. Alla riconnessione confrontare la stessa identità anche se la lettera è cambiata. Un disco diverso con la vecchia lettera non eredita catalogo/consenso.
+- Eliminazioni: eliminare o invalidare una voce del catalogo solo con evidenza di assenza nel perimetro verificato; scansione interrotta, errore di lettura e disco scollegato non provano la cancellazione.
+- Prima di aprire un risultato: ricontrollare presenza e permessi attuali. Indice parziale/in aggiornamento deve dichiarare la copertura e consentire la ricerca sui dati disponibili. Nessuna modifica ai file catalogati.
+
+Il rilevatore esistente windows.drives copre unità fisse/rimovibili che Windows espone come dischi locali. Rete e telefoni/MTP non sono già collaudati: inventariare i tipi rilevati e i supporti reali prima di dichiarare supporto di qualunque periferica. Non introdurre una funzione generale di gestione periferiche estranea all'indicizzazione.
+Stato: requisito e contratto preliminare salvati; indice incrementale NON ancora implementato. Nessun nuovo codice, test runtime o pacchetto in questo aggiornamento. Ripresa/annullamento dell'indicizzazione restano necessari al contratto, non una funzione separata da far scegliere all'utente.
+
+## Controllo cronologia per evitare duplicati
+Confronto API b936879a431370d206152be7b089baf587d15499...61deabcf9cdc5ead14561c37a26e52f4e2ddb1aa: 29 commit, elenco completo non troncato. Letti diff aggregato e sorgenti correnti interessati; l'elenco dei commit da solo non prova ogni funzione. Già presenti: servizio/policy/gestore add-on, rilevamento profilo/unità, fonte Windows Search con scansione diretta, ricerca installazioni classiche/Store, scelte vocali numero/nome e tipo, richieste pendenti, contesto Explorer, finestra risultati e avanzamento/cancel. Da aggiungere nel componente esistente: catalogo persistente locale, confronto fra scansioni e continuazione/paginazione oltre i limiti; niente nuovo servizio parallelo. Build solo su richiesta.
+
+| Commit | Cambiamento registrato |
+|---|---|
+| 7955efee | feat: prepare native Windows file access feasibility checks |
+| 4f04df40 | feat: integrate scoped read-only file access and Windows regression suite |
+| 0e6c95c8 | fix: normalize Windows short names and preserve pending file choices |
+| cb28d233 | fix: accept fresh requests after activation and verify packaged Windows runtime |
+| 63bfd048 | build: finalize Windows candidate verification and persistent Download publication |
+| c20e6cf5 | fix: prioritize user folders within approved whole-drive searches |
+| 7298fb63 | fix: release installation directory when native Windows helper outlives the window |
+| c9faa11d | docs: close Windows candidate handoff with verified package, tests and rollback |
+| 83fc6d0f | fix: keep file lists silent and preserve numbered file or folder intent |
+| 755f9884 | fix: accept folder listing without article and repair callback test fixture |
+| 950f655a | fix: preserve installation search goals and query native Store identities |
+| 87006ee4 | docs: pause runtime work for proposals and require explicit manual candidate builds |
+| cf0c33c9 | fix: resume pending file actions from an exact result name |
+| dcc4aebc | test: compare real Windows directory identity in pending choice check |
+| 75b88ae1 | docs: close first continuity step with Windows results and no build |
+| cd1ebddf | fix: retain file action while asking for a missing target |
+| f66d2694 | docs: record verified missing-target step and next bounded task |
+| 2e388d7a | feat: resolve Explorer context for relative file navigation |
+| 9e4d09b5 | test: normalize Explorer fixture array and retain native error identifiers |
+| d4991313 | test: model selected Explorer items as FolderItem objects |
+| 41d132e8 | fix: route console folder navigation before implicit project requests |
+| e61346b2 | fix: retain pending project dialog priority at the console gate |
+| ba7fe5b2 | test: provide project dialog state to legacy console callback fixture |
+| fb993295 | docs: record verified Explorer navigation and next visual-results step |
+| 22c8e8d9 | feat: display file results in one selectable window with concise chat |
+| d6721801 | feat: make visual result selection fully usable by voice without clicks |
+| 26da95d9 | fix: keep incomplete requests ahead of spoken result references |
+| 07cbee04 | docs: record voice-first visual results and Windows acceptance |
+| 61deabcf | feat: show scoped search progress and precise coverage without spoken lists |
+
 ## Ripresa verificata
 La precedente sintesi su main terminava al passo 4. Il ramo effettivo feature/file-access-20261101 contiene un passo successivo: 61deabcf9cdc5ead14561c37a26e52f4e2ddb1aa. Letti il checkpoint del ramo, diff dal passo 4, service.py, policy.py, windows.py e LEGGIMI; riletti i log effettivi della CI. Nessun lavoro di questa ripresa ha modificato il runtime.
 
