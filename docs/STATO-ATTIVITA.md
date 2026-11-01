@@ -1,35 +1,26 @@
 # Stato attività Jarvis
-Punto di arresto salvato il 2026-11-01: metodo e documenti allineati; fermo prima dell'implementazione web come richiesto dall'utente.
+Aggiornato il 2026-11-01 dopo verifica concreta. Fermo prima dell'implementazione della nuova add-on.
 
-| Attività | Stato reale | Fonte e prossimo passo |
+## Punto di partenza certo
+**BASE-UTENTE-20261101:** Jarvis-Timer-Audio-Fix2-20261031.zip, sorgenti b936879a431370d206152be7b089baf587d15499. L'utente conferma la build attualmente usata; l'audit ha verificato ZIP reale, 155 file contro sorgenti, riproduzione byte-identica e test inclusi.
+[Registro con download/checksum](../Download/REGISTRO-VERSIONI.md) · [rapporto e log](VERIFICA-CONCRETA-BASE-20261101.md).
+
+| Attività | Stato reale | Prova e prossimo passo |
 |---|---|---|
-| Metodo di sviluppo | Definito e allineato documentalmente | [AGENTS](../AGENTS.md): piano per aggiunta, revisione finita, test, memoria continua, consegna scaricabile |
-| Recupero tra sessioni/argomenti | Istruzioni salvate, non testate con una nuova istanza | [RECUPERO](../RECUPERO.md), [handoff](HANDOFF-CODEX-ARCHIFY-20261031.md); richiede accesso al repository |
-| Add-on web: requisiti | Raccolti e salvati | [Piano](PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md), comprese domande/risposte brevi e ricerca interna al sito |
-| Add-on web: fase 1 tecnica | Inventario preliminare svolto; revisione completa pendente, sospesa | Alla ripresa confrontare soluzioni esistenti, contratto/adattatore, permessi e modalità; poi presentare risultato prima del codice |
-| Add-on web: fasi 2–8 | Da fare | Nessuna estensione, nuovo esecutore, suite web, misura RAM o ZIP pubblicato |
-| Continuità dialogo precedente | CI documentata; utente riferisce miglioramento sul PC | SHA installato non verificato; consultare handoff per prove e collaudi reali residui |
-| Istruzioni di installazione | Nove guide create e riferimenti controllati | [Prima-installazione](../Prima-installazione/README.md); nessuna nuova installazione Windows collaudata |
-| Diagnostica/UI/recupero add-on richiesti | Requisiti e test pianificati | Controlli passivi già presenti distinti da nuove funzioni non realizzate |
-| Riordino dei file operativi | Contraddizioni individuate, pulizia ulteriore da verificare | [Manutenzione](../Prima-installazione/08-Manutenzione.md); nessuna cancellazione di sorgenti/launcher |
+| Audit della base | Completato | 373 test locali OK, 5 skip Windows; sintassi PASS; CI storica Windows/Linux riletta e codice coincidente |
+| Identificazione sorgenti | Completata | Tutti i 155 file uguali a b936879; non al ramo successivo 5e61e53 |
+| Guide e riferimenti | Allineamento alla base b936879 | [Prima-installazione](../Prima-installazione/README.md); separati avvio auto_listen della base e standby del ramo successivo |
+| Metodo e recupero | Regole e checkpoint salvati | [AGENTS](../AGENTS.md), [RECUPERO](../RECUPERO.md), [handoff](HANDOFF-CODEX-ARCHIFY-20261031.md) |
+| Ramo successivo a86c2c9/5e61e53 | Separato, non adottato automaticamente | Correzione nucleo e 386 test documentati, assenti dalla ZIP base |
+| Add-on web: requisiti | Raccolti | [Piano](PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md), voce naturale, ricerca e azione nel sito |
+| Add-on web: progetto tecnico | Da completare sulla base b936879 | Contratto, ricerca/riuso, permessi, integrazione e revisione finita prima del codice |
+| Add-on web: codice/test nuovi/pacchetto | Non iniziati | Nessuna nuova distribuzione |
+| Diagnostica nuova/reset/ritorno versione/UI | Requisiti pianificati | Non confondere con funzioni già presenti nella base |
+| Riordino operativo | Candidati e contraddizioni individuati | Nessun sorgente, launcher, pacchetto o dato cancellato |
+| RAM/CPU target, nuovi login/audio/Windows | Non misurati/eseguiti dall'audit | Riscontro utente e CI hanno ambiti distinti |
 
-## Decisioni da preservare
-- GPT esterno e motore locale: comando preciso riconosciuto localmente senza chiamata GPT; interpretazione del modello per richieste non risolte, entro collegamento e modalità consentite; domanda solo se resta dubbio.
-- L'utente decide obiettivi e compromessi e non deve programmare. Nessuna funzione extra senza proposta; domande specifiche sui dubbi sostanziali.
-- Add-on modulari, risorse limitate per Pavilion i3-2100/10 GB/Windows 10, caricamento a richiesta dove possibile; test propri e integrazione prima della consegna.
-- Configurazione ordinata e semplice, reset del solo add-on distinto da ritorno di versione, dati preservati e controllo manuale del microfono.
-- Confrontare riuso/adattamento/sviluppo nuovo dopo ricerca web e verifica del codice esistente, con licenze/costi/dipendenze compatibili.
-- Consegna dichiarabile soltanto dopo pacchetto verificato e link scaricabile controllato in Download/README.md. Nessuna nuova build in questa sessione documentale.
-
-## Fonti del programma
-[Indice sorgenti](INDICE-SORGENTI.md): codice evoluto nel ramo feature/timer-settings-ui-20261031, riferimento esaminato 5e61e53fbb58ccb5d95b85671604cc5f365d6e04. Radice main storica distinta. [Mappa Archify](architecture-core-20261031/jarvis-core.html) del nucleo a86c2c9: limiti di verifica nell'handoff.
-Questo indice non sostituisce codice, piano e prove. Alla ripresa verificare eventuali aggiornamenti di ramo/SHA.
+## Decisioni preservate
+Comando preciso locale senza GPT; interpretazione esterna quando necessaria e consentita; chiarimenti contestuali. Nessuna funzione extra non concordata. Utente decide risultati e non programma; assistente realizza il lavoro tecnico autorizzato. Add-on per Pavilion i3-2100/10 GB/Windows 10, caricamento a richiesta e test propri. Dati, compatibilità e controllo manuale microfono preservati. Consegna soltanto con pacchetto verificato e link funzionante in Download.
 
 ## Prossimo passo unico
-Attendere la ripresa richiesta dall'utente; quindi completare la revisione tecnica della fase 1 del piano web, senza iniziare l'implementazione fino al successivo via. Nessun'altra raccolta dei requisiti da zero. Aggiornare piano/handoff prima e dopo ogni unità coerente e registrare prove/esiti nel [registro](DECISIONI-E-LEZIONI.md).
-
-## Recupero di versioni funzionanti
-[Registro versioni](../Download/REGISTRO-VERSIONI.md): 20 ZIP storici inventariati con riferimenti fissati. Nessun nuovo pacchetto. L'utente ha indicato come base funzionante la build attualmente usata; il nome ZIP esatto resta da confermare. Il dialogo migliorato resta un feedback non collegato a SHA installato. Per «riprendi da lì» usare prima scheda/indice, poi verificare solo dati necessari e condizioni cambiate.
-
-## Base funzionante confermata dall'utente
-BASE-UTENTE-20261101: Alberto conferma l'ultima build usata come funzionante e chiede di partire da quella per le aggiunte, preservandola per regressioni. Nome ZIP/SHA non ancora collegati. Candidato del catalogo: Jarvis-Timer-Audio-Fix2-20261031.zip. Alla prossima domanda confermare il nome, senza reinterpretare il feedback come prova di tutte le funzioni. Fermo prima dell'implementazione mantenuto.
+Alla ripresa leggere questi riferimenti e progettare l'add-on sulla base b936879 preservata. La revisione tecnica resta da completare, senza implementare finché non arriva il successivo via dell'utente. Non ripetere la ricerca della base o attribuire alla ZIP i 386 test successivi. Per ripristino usare il registro, non scansionare tutti i commit/artifact.
