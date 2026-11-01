@@ -160,3 +160,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 ## 2026-11-01 — In corso: linguaggio naturale ed elenco capacità aggiornato
 - Precisazione: esempi vocali non sono formule obbligatorie; GPT esterno interpreta varianti e contesto. «Cosa puoi fare?» deve riflettere capacità installate, attive e disponibili.
 - Aggiornamento solo documentale previsto in regole/piano/lezioni; nessuna implementazione o test avviati. Verifica prevista: presenza delle clausole e chiusura del checkpoint.
+
+## 2026-11-01 — Completata: comandi naturali e catalogo
+- Regole, piano e lezioni aggiornati: commit d26bb6eee24760b279b58e2c8f931e16bd5d0480, 93eadd7822dba06dd08b780fae0f9070282b017c, 828d6f401aafa98eec61ffa8e7a05aacb5c8d6eb.
+- Parafrasi interpretate dal GPT esterno, senza formule obbligatorie; chiarimenti per dati mancanti. «Cosa puoi fare?» coerente con capacità davvero disponibili dopo ogni cambiamento delle add-on. Test esplicitati, non ancora realizzati.
+- Solo documentazione. Nessun test runtime o implementazione web; prossimo passo: revisione tecnica del piano prima di realizzarlo.
