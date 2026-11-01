@@ -1,3 +1,36 @@
+## Revisione del progetto e procedura di ripresa — 2026-11-01
+**Stato reale:** progetto del primo incremento rivisto staticamente; implementazione/test non ancora iniziati. L'utente autorizza lavoro per step, ottimizzazione e test prima della consegna; build e pubblicazione pacchetto rimangono su richiesta esplicita. Nessuna ulteriore conferma per dettagli ordinari già concordati.
+
+**Punto di partenza verificato:** feature/file-access-20261101, HEAD 87006ee4b7abf747512a54c684fff09f244d6696, tree b4e300ce32dae82f008092427e6ad66fdb6a2886. Sorgenti e test del ramo effettivo letti; base PC b936879 preservata. Requisiti Pavilion i3-2100/10 GB/Windows 10 x64, zero costi aggiuntivi, GPT esterno e controllo manuale microfono restano vincoli.
+
+### Esito della review iniziale
+1. **Scelta per nome mancante:** il parser file riconosce selezioni numeriche e il servizio riprende _pending tramite select; manca equivalente per il nome fra i candidati. Correzione minima nel servizio già presente, con nome esatto/normalizzato univoco, numero o selezione; nessun nuovo motore di memoria.
+2. **Il raccordo UI è parte della correzione:** try_file_command in jarvis.py prova il parser e, se fallisce, può azzerare il contesto con un controllo su parole («file», «cartella», ecc.). Un nome come Foto non deve arrivare a questo azzeramento quando risponde alla scelta pendente. Verificare i callback reali, non solo la funzione di matching.
+3. **Domanda GPT e richiesta eseguibile non sono equivalenti:** remember_file_clarification conserva soltanto locate/installazione; context_hint descrive fino a 8 risultati su 20 e non l'azione attesa. Definire il collegamento della domanda pendente e della risposta nel contratto esistente, senza inoltrare contenuti privati né usare il testo generato come autorizzazione. Domande di apertura senza candidati e selezione da elenco sono casi distinti.
+4. **Nuovo argomento e richieste scadute:** _application_answer usa anche criteri sintattici generici; una frase breve non dimostra che si tratti del nome di un'app. Progettare revoca e priorità dei nuovi comandi; un nome deve risolvere il dubbio identificato, non riattivare vecchie richieste. _pending e risultati devono avere validità coerente con revisione permessi, scadenza, progetto e insieme dei candidati.
+5. **Una sola esecuzione:** scelta e consumo dell'azione devono riferirsi allo stesso elenco; nome duplicato in percorsi diversi richiede scelta. Un secondo comando, una ricerca sostitutiva, annullamento o disattivazione non devono lasciare un'apertura vecchia riutilizzabile. Controllare la separazione fra callback UI e worker prima di scegliere il dettaglio tecnico.
+6. **Compatibilità:** non cambiare priorità dei dialoghi documenti/salvataggio, preferenze, progetti, Telegram o modalità microfono per risolvere i file. Riusare local_engine e registro capacità; nuove dipendenze/processi residenti non necessari per il matching dei risultati.
+7. **Ricerca e desktop sono incrementi successivi:** finché il percorso minimo non passa, niente sovrapposizione con monitoraggio Explorer, finestra risultati, scansione lunga, inventario programmi e browser. I requisiti restano nel piano; API disponibili non provano l'integrazione. Per ricerca programma/impostazioni distinguere percorsi verificati e candidati, installazione/dati/cache; niente promessa di trovare tutto.
+**Semplificazione scelta:** correzione nel componente responsabile e nei raccordi strettamente necessari; nessuna nuova add-on parallela per funzioni già esistenti, nessun aumento indiscriminato della cronologia GPT. Nuove funzioni separate restano .jaddon secondo il progetto, senza migrare automaticamente ciò che funziona.
+
+### Matrice di verifica del primo incremento
+| Percorso | Prova automatica prevista su Windows | Limite residuo |
+|---|---|---|
+| Apertura → più risultati → solo nome/numero | Directory reali temporanee, servizio e LocalEngine; stesso target/tipo, nessuna ricerca da zero, singola apertura richiesta | Visibilità della finestra sul desktop utente |
+| Risposta voce/testo | Esecuzione callback effettivi con trascrizioni controllate, senza GPT quando il dato è univoco | Microfono e STT reali distinti |
+| Chiarimento attraverso GPT | Prompt/contratto e risposta simulata con azione validata; nessun cambio di obiettivo | Account/risposta del GPT reale |
+| Ambiguità, nome assente, nome duplicato, file invece di cartella | Nessuna apertura arbitraria; domanda circoscritta o errore utile | Usabilità sul Pavilion |
+| Scadenza, annulla, nuovo argomento, ricerca sostitutiva | Vecchia azione non ripresa e nessuna doppia esecuzione | Nessuna garanzia contro interruzioni durante scritture non concluse |
+| Revoca, disattivazione, cambio progetto | Nuovi controlli locali e risultati invalidati | Permessi reali del profilo personale |
+| Compatibilità | Suite regressioni esistente + catalogo coerente e sintassi Python/Node/PowerShell | Prestazioni hardware/account non simulabili |
+| Pacchetto e installazione | Verifica archivio estratto, import/avvio/chiusura e risorse solo dopo richiesta di build | Ambiente personale e installazione effettiva |
+
+Workflow esistente verificato: push/PR sul ramo pertinente eseguono test Windows 3.11/3.12; build/estrazione/pubblicazione sono protette da workflow_dispatch e build_candidate. Nessun workflow lanciato da questa review documentale, nessun test runtime, benchmark, installazione o nuovo pacchetto. Non dichiarare «conflitti assenti» o «pronto» sulla sola review.
+
+### Checkpoint obbligatori e prossimo passo esatto
+Prima di ogni unità coerente salvare obiettivo, base, file previsti, fase e prossimo controllo; dopo la modifica registrare file effettivi e verifiche pendenti; dopo i test salvare comando/ambiente/esito, errori, correzioni e limiti. Documento in corso e codice si confrontano alla ripresa: non dedurre successo da un vecchio piano. Conservare cronologia e base; niente reset distruttivi.
+**Prossimo passo:** implementare e verificare il primo percorso «apertura richiesta → elenco ambiguo → nome/numero → stessa apertura», includendo i raccordi voce/testo; prima della scrittura confrontare ref sorgente e checkpoint. Richieste GPT senza elenco, gestione della cartella attiva e gli altri incrementi restano distinti. Tutti i controlli riproducibili precedono il collaudo utente; nessuna nuova build automatica. Se l'interruzione avviene durante una scrittura, verificare diff/commit reali rispetto all'ultimo checkpoint, senza garantire recupero di operazioni non salvate.
+
 ## Aggiornamento concordato — continuità prima della navigazione, 2026-11-01
 
 Questo aggiornamento supera i dubbi già risolti e le vecchie priorità sotto. Stato: studio/progetto, nessuna nuova implementazione o build. L'utente concorda l'obiettivo, chiede ora di studiarlo bene; build/pubblicazione restano su richiesta esplicita.
