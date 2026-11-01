@@ -1,3 +1,7 @@
+## Ripresa — correzione fixture HUD, ricontrollo Windows
+La run 41344054804 sul source 8a392751c89150796783ca25655c85c5b4560a8d ha eseguito 442 test per job Windows 3.11/3.12 con un errore: il nuovo test submit_local ometteva active_project_id, stato definito nel main reale. Correzione limitata alla fixture (nessun progetto attivo); conservate tutte le asserzioni su tipo errore, chat, assenza di dettagli grezzi, silenzio TTS e ritorno idle. Nessuna modifica runtime in questo ricontrollo.
+Letti ramo effettivo, diff e log del job 124959970252; nessun test Linux. Prossimo controllo: nuova suite Windows, sintassi e probe, build/ZIP/publisher disattivati. Il precedente verde Windows Search non copre questo incremento. Dopo il verde aggiornare handoff/stato/lezioni su main; raccordo ricerca locale→modello resta distinto.
+
 ## Fasi HUD e errori chat — codice in verifica, nessuna build
 Nuovo incremento limitato richiesto: stessa riga inferiore HUD, nessuna notifica/finestra/voce aggiuntiva. Raccordo jarvis.py distingue richieste al modello da login/stato; ricerca deriva dal progresso reale del servizio, esclusa quando annullata. animated_hud.py mostra «JARVIS STA RAGIONANDO»/«RICERCA SUL PC IN CORSO», preserva precedenza parlato/voce utente e colori. Stato ritorna all'esito usando i busy esistenti; GPT disattivato non resta etichettato in ragionamento.
 Worker locale: errore inatteso riporta il tipo disponibile in chat tramite l'esito esistente, senza testo grezzo o causa inventata. Errori GPT già riportano il motivo nel callback attuale.

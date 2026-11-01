@@ -163,7 +163,7 @@ class ActivityStatusTests(unittest.TestCase):
         env.update(
             try_timer_command=lambda _: False, addon_manager=None,
             request=Value(""), begin_project_work=lambda *a: None,
-            finish_project_work=Mock(), project_local_ticket=None,
+            finish_project_work=Mock(), project_local_ticket=None, active_project_id=None,
             operation_ledger=Mock(), local_operation_id=None,
             MemoryBoundaryError=RuntimeError, sqlite3=sqlite3,
             local_execution_lock=threading.Lock(), TaskResult=TaskResult,
