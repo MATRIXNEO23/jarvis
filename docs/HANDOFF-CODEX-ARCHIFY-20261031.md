@@ -125,3 +125,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Procedura aggiunta a AGENTS.md e RECUPERO.md: prima di ogni modifica coerente salvare stato in corso e intervento previsto; subito dopo salvare risultato effettivo e verifiche pendenti; dopo i test aggiornare esito, prove e prossimo passo.
 - Se resta uno stato in corso, la nuova sessione verifica diff, commit e file reali, senza assumere successo né assenza di cambiamenti. Nessuna garanzia su modifiche non ancora salvate.
 - Stato attuale: completati questi aggiornamenti documentali; implementazione web non avviata, nessun nuovo test runtime. Prossimo passo: revisione del piano web già salvato e chiarimenti ancora aperti.
+
+## 2026-11-01 — In corso: revisione preventiva finita e apprendimento dagli errori
+- Richiesta: valutare progetto e criticità prima dell'implementazione, con controlli finiti e mirati; usare gli errori documentati per evitare ricadute.
+- Intervento previsto: aggiornare AGENTS.md, piano web e DECISIONI-E-LEZIONI con revisione iniziale, ricontrollo delle sole correzioni e uso selettivo delle lezioni. Nessun codice applicativo da modificare.
+- Verifica prevista: rilettura dei documenti aggiornati; nessun test runtime richiesto per queste sole modifiche testuali. Poi chiudere questo checkpoint con esito e prossimo passo.
