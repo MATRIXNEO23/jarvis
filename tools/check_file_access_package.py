@@ -1,4 +1,5 @@
 """Windows smoke of the extracted package, without model, mic or network."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -15,10 +16,18 @@ with tempfile.TemporaryDirectory(prefix='jarvis-package-') as temporary:
     with zipfile.ZipFile(archive) as bundle:
         bundle.extractall(temporary)
     package = next(Path(temporary).iterdir())
+    version=json.loads((package/'VERSIONE.json').read_text())
+    manifest=version['files']
+    actual={p.relative_to(package).as_posix() for p in package.rglob('*') if p.is_file()}
+    assert actual == set(manifest) | {'VERSIONE.json'}, 'Unexpected or missing operational files'
+    for relative,digest in manifest.items():
+        assert hashlib.sha256((package/relative).read_bytes()).hexdigest()==digest, relative
+    assert sorted(p.name for p in package.glob('avvia*.bat'))==['avvia_jarvis.bat']
+    print('EXTRACTED_MANIFEST_AND_SINGLE_LAUNCHER_OK')
     # Separate process and cwd: imports cannot accidentally use checkout modules.
     imports = "import jarvis,addon_manager,local_engine;from file_access.service import FileAccessService;from file_access.ui import FolderSettings;print('EXTRACTED_IMPORTS_OK')"
     subprocess.run([sys.executable,'-c',imports],cwd=package,check=True,timeout=45)
-    tests = f"import sys,unittest;sys.path.append({str(source/'tests')!r});suite=unittest.defaultTestLoader.loadTestsFromName('test_file_access');r=unittest.TextTestRunner(verbosity=2).run(suite);sys.exit(not r.wasSuccessful())"
+    tests = f"import sys,unittest;sys.path.append({str(source/'tests')!r});suite=unittest.defaultTestLoader.loadTestsFromNames(['test_file_access','test_activity_status','test_file_refinement','test_program_locations']);r=unittest.TextTestRunner(verbosity=2).run(suite);sys.exit(not r.wasSuccessful())"
     subprocess.run([sys.executable,'-c',tests],cwd=package,check=True,timeout=180)
     # Exercise the real UI startup and its normal close callback with all live
     # services switched off only in this disposable test profile.

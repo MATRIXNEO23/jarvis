@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, 'feature/file-access-20261101']
+    branches: [main, 'feature/file-access-20261101', 'build/accesso-file-20261101-pass8']
     paths:
       - '**.py'
       - '**.mjs'
@@ -80,13 +80,13 @@ jobs:
         run: python tools/probe_windows_search_live.py --ci-only
 
       - name: Build operational candidate (Windows only)
-        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
+        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/accesso-file-20261101-pass8')) && matrix.python-version == '3.12'
         run: python tools/build_file_access.py dist
       - name: Verify extracted candidate on Windows
-        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
+        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/accesso-file-20261101-pass8')) && matrix.python-version == '3.12'
         run: python tools/check_file_access_package.py dist/Jarvis-Accesso-File-0.1.0-20261101.zip
       - uses: actions/upload-artifact@v4
-        if: success() && github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
+        if: success() && ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/accesso-file-20261101-pass8')) && matrix.python-version == '3.12'
         with:
           name: Jarvis-Accesso-File-0.1.0-20261101
           path: dist/*
@@ -95,7 +95,7 @@ jobs:
   publish-file-access:
     name: Persist verified candidate in Download (Windows)
     needs: unit
-    if: github.ref == 'refs/heads/feature/file-access-20261101' && github.event_name == 'workflow_dispatch' && inputs.build_candidate
+    if: (github.ref == 'refs/heads/feature/file-access-20261101' || github.ref == 'refs/heads/build/accesso-file-20261101-pass8') && ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/accesso-file-20261101-pass8'))
     runs-on: windows-2022
     permissions:
       contents: write
@@ -139,15 +139,18 @@ jobs:
           text=page.read_text(encoding='utf-8')
           title=f'## Accesso file 0.1.0 — build candidata Windows ({sha[:7]})'
           entry=(title+'\n\n'+f'[Scarica {name}](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/{name})\n\n'
-                 'Ricerca, cartelle consentite con spunte, lettura senza modifica e integrazione voce/testo/GPT. Elenchi solo in chat e conferme vocali brevi. '
+                 'Cartelle dei programmi da registrazioni/collegamenti Windows, percorsi del profilo corrente, ricerca locale con aiuto GPT quando necessario. Risultati nella finestra dedicata e scelte vocali. '
                  'Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Accesso file > Configura, Salva e Attiva. '
                  'Profilo di prova separato, precedente installazione preservata. '
                  'Test automatici solo Windows, archivio estratto e avvio UI verificati. '
-                 'Collaudo PC/account/microfono reali ancora da fare; indice Windows non disponibile nel runner, fallback verificato.\n\n'
+                 'Collaudo Pavilion/account/microfono reali ancora da fare; indice Windows reale e fallback verificati in CI. Nessuna ricerca web attivata da questo pacchetto.\n\n'
                  f'Sorgenti: [{sha[:7]}](https://github.com/MATRIXNEO23/jarvis/tree/{sha}). '
                  f'[Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/{os.environ["VERIFIED_RUN"]}). '
                  f'SHA-256: `{details["sha256"]}`.\n\n')
           if title not in text:
+              first_end=text.find('\n')
+              if text.startswith('> **Recupero e versioni:**'):
+                  text=(f'> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultimo candidato Accesso file **{sha[:7]}**, verificato automaticamente su Windows; collaudo Pavilion pendente. Base PC confermata **Timer Audio Fix2, b936879**, preservata.'+text[first_end:])
               split=text.find('\n')+1
               page.write_text(text[:split]+'\n'+entry+text[split:],encoding='utf-8')
           registry=Path('Download/REGISTRO-VERSIONI.md')
@@ -172,3 +175,30 @@ jobs:
             git push origin HEAD:main
             if ($LASTEXITCODE -ne 0) { throw 'Publication failed: keep artifact and inspect main, no force push' }
           }
+
+      - name: Verify published download bytes and first Download entry
+        shell: python
+        env:
+          VERIFIED_SOURCE: ${{ github.sha }}
+        run: |
+          import hashlib,json,time,urllib.request
+          from pathlib import Path
+          sha = __import__('os').environ['VERIFIED_SOURCE']
+          name = f'Jarvis-Accesso-File-0.1.0-20261101-{sha[:7]}.zip'
+          details = json.loads(Path('Download',name.removesuffix('.zip')+'.json').read_text())
+          url = 'https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/'+name
+          for attempt in range(4):
+              try:
+                  with urllib.request.urlopen(url,timeout=20) as response:
+                      data=response.read()
+                  assert hashlib.sha256(data).hexdigest()==details['sha256']
+                  assert len(data)==details['bytes']
+                  readme='https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/README.md?verify='+sha
+                  with urllib.request.urlopen(readme,timeout=20) as response:
+                      text=response.read().decode('utf-8')
+                  assert text.find(name)>=0 and text.find(name)<text.find('\n## ',text.find('\n## ')+1)
+                  break
+              except Exception:
+                  if attempt==3: raise
+                  time.sleep(3)
+          print('PUBLISHED_DOWNLOAD_VERIFIED='+json.dumps(dict(archive=name,url=url,sha256=details['sha256'],bytes=len(data),source_commit=sha)))

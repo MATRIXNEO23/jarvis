@@ -20,6 +20,14 @@ Se l'add-on non compare, Installa scegliendo file_access\AccessoFile.jaddon.
 Spunta disco/cartella, escludi eventuali sottocartelle, Salva, poi Attiva.
 Nessuna cartella viene autorizzata soltanto perché l'add-on è installato.
 
+NOVITA' DI QUESTO CANDIDATO
+Risultati in finestra scorrevole, selezione/apertura per voce, fasi di lavoro
+visibili. Ricerca cartella programma da registrazioni Windows e collegamenti
+Desktop/Start, anche con nomi di directory/eseguibili diversi. Percorsi del
+profilo corrente risolti da Windows. Se la ricerca locale non risolve,
+il GPT gia' collegato puo' precisarla mantenendo obiettivo e permessi.
+Questa build non aggiunge ricerca web o un secondo indice del PC.
+
 Prova iniziale: seleziona una cartella con un TXT, poi di' o scrivi
 "cerca file PARTEDELNOME" e "leggi file 1". Per una cartella:
 "apri cartella 1". "Spiega file 1" richiede il GPT collegato e invia
