@@ -101,3 +101,8 @@ Richiesta: non dover usare parole esatte e ricevere un elenco aggiornato quando 
 
 ## 2026-11-01 — Consumi di ogni add-on sul PC target
 Richiesta: ogni add-on progettata per occupare poca RAM sul Pavilion i3-2100/10 GB. Regola: valutare dipendenze/processi e caricamento su richiesta, misurare RAM incrementale in condizioni comparabili e a fine attività, preservando affidabilità e controllo manuale. Nessun benchmark o tetto numerico dichiarato in questa fase; soltanto requisito e metodo aggiornati.
+
+## 2026-11-01 — Percorso ibrido confermato dall'utente
+**Evidenza:** nel riferimento letto, voce in Conversazione GPT prova gestori locali e speech_to_local_command prima del modello; nelle altre modalità il testo non riconosciuto può fermarsi nel campo di input. Questo è comportamento del codice, non prova di ogni errore sul PC.
+**Scelta:** mantenere comando preciso locale senza GPT. Ricorrere al modello esterno per formulazioni non risolte o ambigue, entro modalità/connessione consentite; il motore riceve l'azione validata. Chiedere quando resta dubbio e collegare «sì» all'attività pendente.
+**Lezione:** non confondere priorità locale con difetto da eliminare né trasformare interpretazione naturale in obbligo di chiamare sempre GPT. Nuove prove devono verificare entrambi i percorsi. Solo documentazione aggiornata, nessuna correzione runtime o nuovo test.
