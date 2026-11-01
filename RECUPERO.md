@@ -19,3 +19,6 @@ L'indice e gli aggiornamenti nell'handoff sono la fonte per lo stato più recent
 
 ## Ripresa dopo interruzione improvvisa
 L'handoff viene salvato durante il lavoro, prima della modifica (in corso), subito dopo (eseguita, verifiche pendenti) e dopo i test (esito osservato). Non richiede una richiesta dell'utente a fine sessione. Un checkpoint rimasto in corso può indicare un'interruzione: controllare commit, diff e file effettivi; non trattarlo come successo o assumere che nulla sia cambiato. Resta inevitabile una possibile differenza tra ultimo checkpoint salvato e operazioni interrotte prima del salvataggio.
+
+## Sorgenti e architettura esistenti
+Consultare docs/INDICE-SORGENTI.md: identifica il ramo del programma evoluto, i moduli, gli script, i test e la mappa Archify già disponibile. Non confondere la radice main storica con i sorgenti evoluti; verificare SHA e codice pertinente, senza ricreare da zero l'architettura. Aggiornare i riferimenti quando cambiano struttura o versione autorevole.
