@@ -22,3 +22,6 @@ L'handoff viene salvato durante il lavoro, prima della modifica (in corso), subi
 
 ## Sorgenti e architettura esistenti
 Consultare docs/INDICE-SORGENTI.md: identifica il ramo del programma evoluto, i moduli, gli script, i test e la mappa Archify già disponibile. Non confondere la radice main storica con i sorgenti evoluti; verificare SHA e codice pertinente, senza ricreare da zero l'architettura. Aggiornare i riferimenti quando cambiano struttura o versione autorevole.
+
+## Installazione e consegna
+Guide aggiornate in Prima-installazione/README.md; distinguono codice di riferimento, profilo Trial e dipendenze. Aggiornarle a ogni modulo nuovo. Prima di annunciare una funzione installabile verificare pacchetto e link effettivo in Download/README.md. La sola documentazione non è una nuova build. Per il riordino verificare uso reale dei file e chiedere su ambiguità che cambiano il risultato.
