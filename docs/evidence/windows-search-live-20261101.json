@@ -1,0 +1,44 @@
+{
+  "source_commit": "9bec77c31dce3bab5fb7c76d1e08d4d370893d42",
+  "workflow_run": 41343194895,
+  "conclusion": "success",
+  "environment": "GitHub-hosted windows-2022",
+  "unit_jobs": [
+    {
+      "id": 124957394230,
+      "python": "3.12",
+      "tests": 436,
+      "result": "OK"
+    },
+    {
+      "id": 124957394555,
+      "python": "3.11.9",
+      "tests": 436,
+      "result": "OK"
+    }
+  ],
+  "native_index_job": 124957394230,
+  "checks": {
+    "available_empty_query": "passed",
+    "created_file_found": "passed",
+    "other_scope_empty": "passed",
+    "rename_observed": "passed",
+    "deletion_observed": "passed"
+  },
+  "initial_service": {
+    "running": false,
+    "start_mode": "Disabled"
+  },
+  "service_restored": true,
+  "fixture_removed": true,
+  "scope_changes": false,
+  "global_reindex": false,
+  "build": "skipped",
+  "extracted_package": "skipped",
+  "artifact_upload": "skipped",
+  "publisher": "skipped",
+  "personal_pc_verified": false,
+  "microphone_or_model_verified": false,
+  "all_disks_or_removable_devices_verified": false,
+  "notes": "The unavailable-index fallback was exercised before service start. The live probe then used the existing indexed_candidates adapter; no custom index or runtime changes."
+}
