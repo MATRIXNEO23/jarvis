@@ -1,0 +1,21 @@
+{
+  "required_files_missing": [],
+  "windows_case_unique": true,
+  "direct_optional_python_imports": {
+    "telethon": [
+      "configura_telegram.py",
+      "telegram_bridge.py",
+      "telegram_directory.py"
+    ],
+    "vosk": [
+      "telegram_voice.py",
+      "voice_control.py"
+    ],
+    "sounddevice": [
+      "voice_control.py"
+    ]
+  },
+  "rebuilt_bytes": 406653,
+  "rebuilt_sha256": "c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352",
+  "rebuild_byte_identical": true
+}
