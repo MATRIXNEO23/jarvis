@@ -1,0 +1,82 @@
+{
+  "source_commit": "d06e233a98e4ea5b4e99a9d296b9570ce0c92d86",
+  "archive": "Jarvis-Accesso-File-0.1.0-20261101-d06e233.zip",
+  "files": 79,
+  "bytes": 266689,
+  "sha256": "ac130883d32518b430737f8f3d767a16a56e3cad9b3ae32f37d8f20799f42699",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "windows_workflow_run": "41350638557",
+  "pc_test": "pending",
+  "download_url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Accesso-File-0.1.0-20261101-d06e233.zip",
+  "published_main_commit": "7d155e0d07e1593574ee1c9d83b8f6663d638f93",
+  "workflow": {
+    "id": 41350638557,
+    "status": "completed",
+    "conclusion": "success",
+    "source": "d06e233a98e4ea5b4e99a9d296b9570ce0c92d86"
+  },
+  "jobs": [
+    {
+      "id": 124979824987,
+      "python": "3.11.9",
+      "tests": 466,
+      "seconds": 54.753,
+      "result": "OK"
+    },
+    {
+      "id": 124979825307,
+      "python": "3.12.10",
+      "tests": 466,
+      "seconds": 60.409,
+      "result": "OK",
+      "extracted_tests": 93,
+      "extracted_seconds": 14.053
+    }
+  ],
+  "package_checks": {
+    "manifest_hashes": true,
+    "operational_files_only": true,
+    "single_launcher": true,
+    "imports": true,
+    "extracted_file_hud_refinement_program_tests": true,
+    "ui_start_and_close": true,
+    "all_passed": true
+  },
+  "publisher_job": 124980512927,
+  "published_download_verification": {
+    "archive": "Jarvis-Accesso-File-0.1.0-20261101-d06e233.zip",
+    "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Accesso-File-0.1.0-20261101-d06e233.zip",
+    "sha256": "ac130883d32518b430737f8f3d767a16a56e3cad9b3ae32f37d8f20799f42699",
+    "bytes": 266689,
+    "source_commit": "d06e233a98e4ea5b4e99a9d296b9570ce0c92d86"
+  },
+  "native_windows_search": {
+    "native_index_verified": true,
+    "runtime_adapter": "indexed_candidates",
+    "scope_changes": false,
+    "global_reindex": false,
+    "personal_pc_verified": false,
+    "checks": {
+      "available_empty_query": "passed",
+      "created_file_found": "passed",
+      "other_scope_empty": "passed",
+      "rename_observed": "passed",
+      "deletion_observed": "passed"
+    },
+    "initial_service": {
+      "running": false,
+      "start_mode": "Disabled"
+    },
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "base_user_commit": "b936879a431370d206152be7b089baf587d15499",
+  "base_preserved": true,
+  "limitations": [
+    "controlled transcripts/model replies; microphone/account real not tested",
+    "Explorer launch intercepted in tests",
+    "Pavilion performance pending"
+  ],
+  "one_shot_branch_trigger_removed_after_publication": true
+}
