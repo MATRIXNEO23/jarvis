@@ -27,3 +27,6 @@ Questo indice non sostituisce codice, piano e prove. Alla ripresa verificare eve
 
 ## Prossimo passo unico
 Attendere la ripresa richiesta dall'utente; quindi completare la revisione tecnica della fase 1 del piano web, senza iniziare l'implementazione fino al successivo via. Nessun'altra raccolta dei requisiti da zero. Aggiornare piano/handoff prima e dopo ogni unità coerente e registrare prove/esiti nel [registro](DECISIONI-E-LEZIONI.md).
+
+## Recupero di versioni funzionanti
+[Registro versioni](../Download/REGISTRO-VERSIONI.md): 20 ZIP storici inventariati con riferimenti fissati. Nessun nuovo pacchetto e nessun punto PC promosso a stabile senza versione esatta. Il dialogo migliorato resta un feedback non collegato a SHA installato. Per «riprendi da lì» usare prima scheda/indice, poi verificare solo dati necessari e condizioni cambiate.
