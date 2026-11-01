@@ -114,6 +114,8 @@ class FileAccessService:
                     or self._result_revision != self.policy.revision):
                 return ''
             # No full paths/content sent in the catalog. Selection still checked locally.
+            if self._pending and self._pending[1].get('_missing_target'):
+                return 'Richiesta file in attesa: '+self._target_question(*self._pending)+ ' La risposta completa la richiesta originale.'
             pending = ('Richiesta in attesa: '+('aprire' if self._pending[0]=='open' else 'leggere')+
                        ' uno dei risultati; la risposta col nome o numero completa questa richiesta. ') if self._pending else ''
             return pending+'Risultati file selezionabili: '+', '.join(
@@ -141,6 +143,10 @@ class FileAccessService:
 
     def remember_file_clarification(self, original):
         """Retain one explicit read-only installation-folder goal, not arbitrary chat."""
+        missing=self._missing_file_request(original)
+        if missing is not None and self.available():
+            self._begin_target_question(*missing)
+            return True
         normalized = ' '.join(original.casefold().split())
         requested = re.match(r"^(?:(?:jarvis[, :]+)|(?:mi puoi |puoi |potresti ))*(?:trova(?:mi|re)?|cerca(?:mi|re)?)\b", normalized)
         if (self.available() and requested and 'cartella' in normalized
@@ -148,6 +154,47 @@ class FileAccessService:
             self._pending_app = (time.monotonic()+120, self.policy.revision)
             return True
         return False
+
+    @staticmethod
+    def _missing_file_request(text):
+        clean=re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+','',text.strip(),flags=re.I)
+        match=re.fullmatch(r"(?:(?:mi puoi|puoi|potresti)\s+)?(apri(?:mi)?|aprire|leggi(?:mi)?|leggere|spiega(?:mi)?|spiegare)\s+(?:(?:il|la|un|una|questo|questa|quel|quella)\s+)?(file|cartella)[ .!?]*",clean,re.I)
+        if not match:
+            return None
+        verb,noun=match.group(1).casefold(),match.group(2).casefold()
+        operation='open' if verb.startswith('apr') else 'read'
+        if operation=='read' and noun=='cartella':
+            return None
+        options={'kind':'folder' if noun=='cartella' else 'file'}
+        if verb.startswith('spieg'):
+            options['explain']=True
+        return operation,options
+
+    @staticmethod
+    def _target_question(operation,options):
+        noun='cartella' if options.get('kind')=='folder' else 'file'
+        return 'Quale '+noun+' vuoi '+('aprire' if operation=='open' else 'leggere')+'? Dimmi il nome o il percorso.'
+
+    def _begin_target_question(self,operation,options):
+        if operation not in ('open','read'):
+            raise ValueError('Richiesta file non valida.')
+        checked=validate_arguments(operation,{**options,'target':'nome'})
+        checked.pop('target')
+        with self._lock:
+            self.reset(self._context)
+            self._pending=(operation,{**checked,'_missing_target':True})
+            self._expires=time.monotonic()+120
+            self._result_revision=self.policy.revision
+        return FileResult('completed',self._target_question(operation,checked))
+
+    @staticmethod
+    def _target_answer(text):
+        clean=re.sub(r"^(?:intendo|si chiama|il nome [eè]|[eè])\s+",'',text.strip(),flags=re.I).strip(' .!?').strip('"')
+        if (not clean or len(clean)>160 or result_number(clean) is not None
+                or re.match(r"^(?:come|cosa|che|perch[eé]|quanto|quando|dove|ciao|grazie|non|s[iì]|no|ok|ho|hai|sono|voglio|oggi|ieri|domani|apri|cerca|trova|elenca|leggi|scrivi|crea|elimina|chiudi|salva|metti|imposta|avvia|attiva|disattiva|pausa|ferma|stop)\b",clean,re.I)
+                or any(ord(c)<32 for c in clean)):
+            return None
+        return clean
 
     def _application_answer(self, text):
         pending = self._pending_app
@@ -172,6 +219,10 @@ class FileAccessService:
         low = clean.casefold().strip(' .!?')
         if (self._pending_app is not None or self._pending is not None) and low in ('annulla','lascia perdere','non importa'):
             return ('cancel', {})
+        missing=self._missing_file_request(clean)
+        if missing is not None:
+            op,options=missing
+            return ('request_target',{'operation':op,**options})
         app_answer = self._application_answer(clean)
         if app_answer is not None:
             return ('locate', {'query':app_answer})
@@ -223,6 +274,9 @@ class FileAccessService:
             with self._lock:
                 if (self._pending is not None and time.monotonic()<self._expires
                         and self._result_revision==self.policy.revision):
+                    if self._pending[1].get('_missing_target'):
+                        answer=self._target_answer(clean)
+                        return ('answer_target',{'target':answer,'selection_id':self._result_token}) if answer else None
                     name=' '.join(clean.strip('"').split()).casefold()
                     if any(' '.join(p.name.split()).casefold()==name for p in self._results):
                         return ('select',{'target':name,'by_name':True,'selection_id':self._result_token})
@@ -239,6 +293,27 @@ class FileAccessService:
             return FileResult('rejected', 'Accesso file non attivo: apri Impostazioni > Add-on.')
         if operation == 'help':
             return FileResult('completed', self.commands())
+        if operation in ('request_target','answer_target'):
+            try:
+                if not self.available():
+                    raise PermissionError('Accesso file non disponibile: controlla le cartelle consentite.')
+                if operation=='request_target':
+                    return self._begin_target_question(arguments['operation'],{k:v for k,v in arguments.items() if k!='operation'})
+                with self._lock:
+                    if (self._pending is None or not self._pending[1].get('_missing_target')
+                            or arguments.get('selection_id')!=self._result_token
+                            or time.monotonic()>=self._expires or self._result_revision!=self.policy.revision):
+                        raise ValueError('La richiesta è cambiata o scaduta: dimmi di nuovo cosa vuoi aprire.')
+                    target=self._target_answer(arguments['target'])
+                    if target is None:
+                        raise ValueError('Dimmi il nome o percorso del file o della cartella.')
+                    op,options=self._pending
+                    options={k:v for k,v in options.items() if k!='_missing_target'}
+                    self._pending=None
+                    self._result_token=uuid4().hex
+                return self.execute(op,{**options,'target':target})
+            except (OSError,ValueError,KeyError) as exc:
+                return FileResult('rejected',str(exc))
         if operation == 'select':
             try:
                 self.policy.ensure_current()
@@ -482,6 +557,8 @@ class FileAccessService:
 
     def spoken_reply(self, operation, result):
         """Presentation only: file lists stay on screen, never in the TTS queue."""
+        if operation=='request_target' and result.status=='completed':
+            return result.message
         if operation=='locate' and self._pending_app is not None:
             return 'Quale applicazione intendi?'
         if operation in ('list', 'search', 'locate', 'help'):

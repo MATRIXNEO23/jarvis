@@ -599,3 +599,83 @@ class FileAccessTests(unittest.TestCase):
         self.assertEqual(result.preview,'secondo')
         self.assertTrue(result.explain)
         self.assertIsNone(self.files._pending)
+
+    def test_missing_folder_name_asks_before_search_then_opens_once(self):
+        folder=self.docs/'Foto vacanze'; folder.mkdir()
+        with patch.object(self.files,'index',side_effect=AssertionError('No name supplied yet')),patch('subprocess.Popen') as launch:
+            result=self.engine.execute('apri una cartella')
+            self.assertIn('Quale cartella',result.message)
+            self.assertEqual(result.spoken_message,result.message)
+            self.assertLess(len(result.spoken_message),100)
+            launch.assert_not_called()
+        self.assertIn('nome o il percorso',self.files.context_hint())
+        parsed=self.files.parse_command('Foto vacanze')
+        with patch('subprocess.Popen') as launch:
+            result=self.engine.execute_file(*parsed)
+            self.assertEqual(result.status,'completed',result.message)
+            self.assertTrue(os.path.samefile(launch.call_args.args[0][1],folder))
+            self.assertEqual(self.engine.execute_file(*parsed).status,'rejected')
+            self.assertEqual(launch.call_count,1)
+
+    def test_missing_target_then_multiple_matches_keeps_original_folder_action(self):
+        for name in ('Profilo-A','Profilo-B'):
+            (self.docs/name/'Foto').mkdir(parents=True)
+        self.engine.execute('aprimi la cartella')
+        with patch('subprocess.Popen') as launch:
+            result=self.engine.execute('Foto')
+            self.assertIn('Quale risultato',result.message)
+            launch.assert_not_called()
+            chosen=self.files._results[1]
+            result=self.engine.execute('due')
+            self.assertEqual(result.status,'completed',result.message)
+            self.assertTrue(os.path.samefile(launch.call_args.args[0][1],chosen))
+
+    def test_actual_gpt_clarification_callback_keeps_missing_folder_goal(self):
+        from conversation_router import parse_conversation_intent
+        folder=self.docs/'Foto'; folder.mkdir()
+        intent=parse_conversation_intent(json.dumps({'kind':'clarify','reply':'Quale cartella vuoi aprire?'}))
+        tree=ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
+        branch=next(n for n in ast.walk(tree) if isinstance(n,ast.If)
+            and isinstance(n.test,ast.Compare) and isinstance(n.test.left,ast.Attribute)
+            and n.test.left.attr=='kind' and isinstance(n.test.comparators[0],ast.Tuple)
+            and [v.value for v in n.test.comparators[0].elts if isinstance(v,ast.Constant)]==['chat','clarify'])
+        env={'intent':intent,'addon_manager':self.manager,'original_phrase':'puoi aprire una cartella?',
+             'write_line':lambda *a:None,'speak_result':lambda *a:None,'remember_exchange':lambda *a:None}
+        exec(compile(ast.Module(body=branch.body,type_ignores=[]),'real-gpt-file-clarification','exec'),env)
+        with patch('subprocess.Popen') as launch:
+            result=self.engine.execute('Foto')
+        self.assertEqual(result.status,'completed',result.message)
+        self.assertTrue(os.path.samefile(launch.call_args.args[0][1],folder))
+        self.assertFalse(self.files.remember_file_clarification('parliamo della cartella'))
+
+    def test_missing_target_request_revocation_and_new_commands(self):
+        folder=self.docs/'Foto'; folder.mkdir()
+        self.engine.execute('apri una cartella')
+        stale=self.files.parse_command('Foto')
+        self.engine.execute('elenca cartella '+str(self.docs))
+        with patch('subprocess.Popen') as launch:
+            self.assertEqual(self.files.execute(*stale).status,'rejected')
+        launch.assert_not_called()
+        self.engine.execute('apri una cartella')
+        self.files._expires=time.monotonic()-1
+        self.assertIsNone(self.files.parse_command('Foto'))
+        self.engine.execute('apri una cartella')
+        self.engine.execute('annulla')
+        self.assertIsNone(self.files.parse_command('Foto'))
+        self.engine.execute('apri una cartella')
+        for text in ('come stai','metti un timer di 2 minuti','ciao','uno'):
+            self.assertIsNone(self.files.parse_command(text))
+        stale=self.files.parse_command('Foto')
+        self.manager.set_enabled('accesso_file',False)
+        with patch('subprocess.Popen') as launch:
+            self.assertEqual(self.files.execute(*stale).status,'rejected')
+        launch.assert_not_called()
+
+    def test_missing_text_target_preserves_explanation_and_file_kind(self):
+        result=self.engine.execute('spiegami il file')
+        self.assertIn('Quale file',result.message)
+        result=self.engine.execute(self.a.name)
+        self.assertEqual(result.status,'completed',result.message)
+        self.assertEqual(result.preview,'Testo reale di esempio')
+        self.assertTrue(result.explain)
+        self.assertIsNone(self.files._pending)
