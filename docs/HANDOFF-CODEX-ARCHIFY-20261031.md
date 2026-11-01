@@ -146,3 +146,7 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Requisiti: comportamento, contratti e integrazione dei componenti, errori/timeout, configurazione e recupero, regressioni pertinenti e prova del pacchetto. Distinguere componenti reali, simulazioni e controlli non eseguiti; non consegnare come pronto quando manca una prova obbligatoria.
 - All'utente rimangono soltanto verifiche realmente dipendenti dal suo ambiente. Non delegargli debug riproducibile in sviluppo.
 - Stato: modifica documentale completata. Nuovi test/add-on web non implementati, nessun nuovo test o workflow eseguito. Inventario della copertura delle add-on esistenti ancora da fare. Prossimo passo: revisione tecnica del piano web prima della realizzazione autorizzata.
+
+## 2026-11-01 — In corso: ambito concordato e comandi vocali completi
+- Richiesta: nessuna funzione extra a sorpresa; proporre eventuali estensioni prima di implementarle. Ogni add-on deve comprendere il percorso vocale completo, senza consegnare funzioni presenti ma non richiamabili da Jarvis.
+- Modifica prevista solo documentale: precisare regole, piano e lezioni; verificare la presenza delle clausole, poi chiudere il checkpoint. Nessuna implementazione web o nuovo test in questa fase.
