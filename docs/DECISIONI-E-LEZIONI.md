@@ -149,3 +149,9 @@ Verificati anche download diretto, integrità dei 20 ZIP conservati, copertura a
 
 ## 2026-11-01 — Componenti facili da ispezionare manualmente
 **Richiesta:** ogni nuova add-on/modulo in cartella riconoscibile con i propri file. **Scelta di piano:** LEGGIMI iniziale con mappa di codice/risorse/test, manifest e percorsi reali di configurazione/dati; guide condivise collegate. Struttura da verificare con gestore/import/build; non duplicare dati né migrare automaticamente i moduli esistenti. Una cartella non implica isolamento dei guasti, nuova dipendenza o processo. **Stato:** regola e progetto aggiornati, nessuno spostamento runtime/test/pacchetto. Si applica alle aggiunte e si valuta per i componenti esistenti mantenendo il divieto di doppioni.
+
+
+## 2026-11-01 — ZIP operativo e metodo recuperato dalle istanze
+**Richiesta:** metodo persistente da recuperare in ogni istanza; ZIP con soli file necessari al programma. **Prova:** letto publisher b936879, blob 428a57b98323448cbc505a2f5c79ddd462bc73c3: git ls-files, esclusi soltanto ZIP Download e controllo len(files)>110. Non è selezione operativa.
+**Decisione di piano:** elenco inclusioni motivato da dipendenze reali, codice eseguito/risorse/launcher/installazione/istruzioni essenziali; test dell'archivio estratto. Sorgenti runtime rimangono anche nel pacchetto, strumenti/documenti di sviluppo restano repo; autoverifiche operative considerate prima di escludere test/fixture. Preservare vecchi ZIP e dati, nessuna ripacchettizzazione ora. AGENTS/RECUPERO obbligano ogni sessione con accesso repo a leggere il metodo; una regola non crea accesso in altre chat.
+**Stato:** documentazione aggiornata, nessuna modifica publisher/runtime, build, suite o prova Windows nuova. Prossimo lavoro sempre piano e ambito concordati prima del codice.
