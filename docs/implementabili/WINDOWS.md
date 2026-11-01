@@ -5,7 +5,9 @@ Aggiornato: 2026-11-01. **Stato: requisiti raccolti e fattibilità preliminare; 
 Jarvis deve essere il più leggero possibile sul Pavilion i3-2100/10 GB/Windows 10. Prima verificare cosa esiste nel programma e cosa Windows mette già a disposizione; riusare queste capacità quando soddisfano i requisiti. Non è un divieto assoluto di nuove dipendenze: aggiungerle solo quando necessarie o giustificate da un vantaggio concreto, valutando peso, affidabilità, semplicità e manutenzione. La valutazione tecnica spetta all'assistente, senza chiedere all'utente di scegliere librerie/protocolli. Modulo logico .jaddon e dipendenza esterna sono cose distinte: un'add-on può usare solo funzioni Windows e componenti già presenti.
 
 ## Risultati richiesti
-- Accedere a cartelle, navigarle, cercare un file e aprirlo.
+- Accedere a cartelle, navigarle, cercare un file e aprirlo; anche leggerne il contenuto e spiegarlo nei formati che saranno supportati e verificati.
+- Cercare con nome parziale, prefisso, indizi e contesto, anche senza nome esatto: elencare candidati pertinenti e proseguire dalla scelta. Esempio richiesto: «trovami la cartella d'installazione di Minecraft», senza limitarsi al confronto del nome della cartella.
+- Rispondere all'ora corrente leggendo l'orologio del PC; requisito espresso nella conversazione, da integrare nel catalogo e verificare.
 - Nelle impostazioni scegliere i programmi avviabili; Netflix e WhatsApp sono esempi, non app già verificate sul PC.
 - Richiesta precisa riconosciuta localmente senza GPT. Parafrasi/ambiguità interpretate dal GPT esterno se consentito e collegato, poi azione definita validata/eseguita localmente; chiarimento se necessario.
 - Le funzioni nuove e i programmi configurati devono comparire nell'elenco aggiornato «cosa puoi fare?» con descrizione; distinguere disponibili e disattivati.
@@ -26,14 +28,24 @@ Non scelto ancora il collegamento tecnico definitivo fra Python e questi servizi
 ## Proposta tecnica preliminare e ordine di difficoltà
 1. Programmi selezionati nelle impostazioni e apertura file/cartelle note: percorso più circoscritto, candidato iniziale.
 2. Ricerca per nome in cartelle concordate, scelta fra risultati e apertura: successiva, con lavoro su HDD limitato alla richiesta.
-3. Eventuale lettura/analisi del contenuto: separata; dipende dai formati e da cosa significa «verificare file».
+3. Lettura/spiegazione del contenuto richiesta: progettare per formati esplicitamente supportati; non promettere qualsiasi file. Ricerca e lettura sono attività distinte.
 Nessun nuovo modello locale richiesto per le operazioni di apertura/ricerca per nome. Evitare scanner o processi residenti senza necessità; considerare anche il peso dei programmi che l'utente apre, distinto dal costo di Jarvis. Consumo aggiuntivo non misurato, nessuna promessa numerica.
 
 ## Questioni da discutere
-«Verificare file» significa trovarli/controllare nome, presenza e proprietà oppure anche leggerne il contenuto? In quali cartelle cercare? Come scegliere fra omonimi? Definire prima questi comportamenti, poi progetto/revisione e autorizzazione al codice. Avviare un'app è distinto dal controllarne tutte le funzioni interne.
+Chiarito: entrambe le cose, ricerca/apertura e lettura/spiegazione. Non ripetere questa domanda. Restano da concordare ambito delle cartelle e formati iniziali; definire gestione degli omonimi. Avviare un'app è distinto dal controllarne tutte le funzioni interne.
 
 ## Prove da progettare prima della consegna
 Voce/testo, comando preciso senza GPT e parafrasi col modello simulato/reale distinti; app scelta/disattiva/mancante, percorso cambiato, più risultati, permessi negati, ricerca annullata e catalogo coerente dopo modifiche. Non dichiarare una finestra aperta per il solo invio di un comando; definire osservazione/limiti di verifica. Regressioni pertinenti e pacchetto estratto; prova reale Windows e consumi Pavilion separati. Nessun nuovo test runtime o benchmark svolto in questa discussione.
 
 ## Recupero e prossimo passo
-Base e ZIP funzionanti preservati: [registro versioni](../../Download/REGISTRO-VERSIONI.md). Quando esisterà una consegna collegare sorgenti, pacchetto/checksum, prove e ritorno versione senza perdita di dati. Ora discutere significato di «verificare» e comportamento desiderato; nessuna implementazione avviata.
+Base e ZIP funzionanti preservati: [registro versioni](../../Download/REGISTRO-VERSIONI.md). Quando esisterà una consegna collegare sorgenti, pacchetto/checksum, prove e ritorno versione senza perdita di dati. Ora definire percorso minimo, ambito di ricerca e formati sulla base dei requisiti chiariti; nessuna implementazione avviata.
+
+## Ricerca per significato e indizi — precisazione 2026-11-01
+**Requisito:** interpretare cosa vuole trovare l'utente, non richiedere un nome esatto. Windows Search è un candidato per recuperare risultati, non viene considerato da solo una soluzione già verificata di ricerca semantica universale.
+**Strategia proposta, da verificare:** comandi precisi al percorso locale; descrizioni non risolte interpretate da GPT esterno consentito. Il motore raccoglie prove reali con ricerca Windows dove disponibile, nomi parziali/prefissi, proprietà e contesto; ricerche mirate nelle cartelle pertinenti dove l'indice non copre. Solo per i formati supportati e quando utile esamina il contenuto richiesto, con limiti di dimensione/tempo; non manda indiscriminatamente cartelle o file interi al modello. Nessun nuovo modello locale o indice semantico residente scelto.
+**Esempio Minecraft:** verificare indizi da applicazioni/collegamenti e configurazione del launcher effettivamente presente per distinguere cartella programma, istanza/dati e salvataggi. Non fissare un percorso presunto, non assumere il launcher dalla memoria della chat. I candidati devono avere percorso esistente e motivazione osservabile; se più installazioni plausibili, chiarimento breve nel contesto.
+**Risposta utile:** nome/percorso e ragione sintetica della corrispondenza; distinguere risultato verificato da candidato. «Non trovato nell'ambito esaminato» non significa che il file non esiste sul PC. Senza nome né indizi sufficienti chiedere un dato concreto (tipo, argomento, periodo o posizione) anziché inventare. Consumo ricerca da misurare: lavoro su richiesta, limiti, avanzamento/annullamento; nessuna scansione continua promessa o introdotta.
+**Accettazione da aggiungere:** prefisso e sottostringa, descrizione senza nome, file in cartella pertinente con nome diverso, indice incompleto, launcher multipli, dati/programma distinti, nessun risultato e lettura del formato non supportato. Simulazioni e prove reali separate; nessun test eseguito in questa fase.
+
+## Guida durante la discussione
+L'utente richiede spiegazioni semplici e orientamento, un punto e una domanda alla volta. Presentare cosa esiste, cosa proponiamo e cosa resta da verificare; non comunicare solo «ho controllato». Lasciare terminare il discorso, non trasformare piccole pause in una domanda chiusa o nell'autorizzazione a procedere.
