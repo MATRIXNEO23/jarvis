@@ -1803,17 +1803,17 @@ def main() -> None:
                 timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
                 sdk_action = "ask" if structured else action
                 sdk_params = {key: value for key, value in params.items()
-                              if key not in ("epoch", "document_id", "utterance", "source")}
+                              if key not in ("epoch", "document_id", "utterance", "source", "file_refinement")}
                 result = service.call(sdk_action, timeout=timeout, **sdk_params)
                 if structured:
                     output_queue.put(("conversation_ok", epoch, doc_snapshot,
-                                      user_utterance, result, action))
+                                      user_utterance, result, action, params.get("file_refinement")))
                 else:
                     output_queue.put(("gpt_ok", action, result, typed_question))
             except Exception as exc:
                 if structured:
                     output_queue.put(("conversation_error", epoch, user_utterance,
-                                      str(exc)[:220], action))
+                                      str(exc)[:220], action, params.get("file_refinement")))
                 else:
                     output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
@@ -2648,6 +2648,50 @@ def main() -> None:
             write_line("TIMER > Tempo rimasto: " + timer.remaining_text())
         return True
 
+    def start_file_refinement(token, original, *, answer='') -> bool:
+        """One model interpretation of an unresolved, locally scoped request."""
+        if (closing or busy_gpt or not gpt_enabled.get() or not active_gpt
+                or addon_manager is None or not addon_manager.files_enabled()):
+            write_line("FILE > Nessun risultato utile; raffinamento GPT non disponibile. Puoi precisare la ricerca.")
+            return False
+        provider=addon_manager.file_service
+        feedback=provider.refinement_context(token,original,answer=answer)
+        if feedback is None:
+            return False
+        original=feedback.pop('original')
+        snapshot=documents.current.ident if documents.current else None
+        try:
+            live=current_capability_snapshot(snapshot is not None)
+            prompt=build_conversation_prompt(original,has_document=snapshot is not None,
+                runtime_info=capability_status_prompt(live),
+                addon_actions=active_addon_actions(),file_feedback=feedback)
+        except (ValueError,ConversationRejected) as exc:
+            write_line("FILE > Raffinamento non avviato: "+str(exc))
+            return False
+        write_line("FILE > Chiedo al modello di precisare la stessa ricerca.")
+        run_gpt("typed_conversation",prompt=prompt,epoch=conversation_epoch,
+                document_id=snapshot,utterance=original,file_refinement=token)
+        return True
+
+    def accept_file_refinement(token, intent) -> bool:
+        provider=addon_manager.file_service if addon_manager is not None and addon_manager.files_enabled() else None
+        if provider is None or not provider.refinement_live(token):
+            write_line("FILE > Risposta ignorata: ricerca cambiata, scaduta o revocata.")
+            return False
+        if intent.kind=='chat' or intent.kind=='clarify':
+            if intent.kind=='clarify':
+                provider.refinement_question(token,intent.reply)
+            return True
+        cap=intent.capability
+        try:
+            if intent.kind!='capability' or cap is None or cap.handler!='file_access':
+                raise ValueError('Il modello non ha proposto la stessa ricerca file.')
+            provider.refinement_arguments(token,cap.file_operation,dict(cap.file_arguments))
+        except ValueError as exc:
+            write_line("FILE > "+str(exc))
+            return False
+        return True
+
     def try_file_command(message: str) -> bool:
         if addon_manager is None or not addon_manager.files_enabled():
             return False
@@ -2662,11 +2706,14 @@ def main() -> None:
         parsed=provider.parse_command(message)
         if parsed is None:
             # A new conversation topic revokes an old numbered selection.
-            if not any(word in message.casefold() for word in
+            if getattr(provider,'_refinement',None) is not None or not any(word in message.casefold() for word in
                        ("file","cartella","quello","questo","aprilo","leggilo")):
                 provider.reset(active_project_id)
             return False
         operation,args=parsed
+        if operation=="refinement_answer":
+            start_file_refinement(args['token'],message,answer=args['answer'])
+            return True
         if operation=="cancel":
             provider.reset(active_project_id)
             write_line("FILE > Interruzione richiesta; attendo la chiusura della chiamata Windows.")
@@ -3249,6 +3296,8 @@ def main() -> None:
                                 else result.spoken_message)
                         if spoken:
                             speak_result(spoken)
+                    if result.file_listing is not None and result.file_listing.get('refinement'):
+                        start_file_refinement(result.file_listing['refinement'],source)
                 elif kind == "document_ok":
                     document_busy = False
                     operation, result, close_after = data
@@ -3362,6 +3411,7 @@ def main() -> None:
                     busy_gpt = False
                     epoch, doc_snapshot, original_phrase, result, *channels = data
                     channel=channels[0] if channels else "conversation"
+                    refinement_token=channels[1] if len(channels)>1 else None
                     if (epoch == conversation_epoch and
                             (channel=="typed_conversation" or
                              voice_mode.get() == GPT_CONVERSATION) and
@@ -3382,6 +3432,8 @@ def main() -> None:
                                 original_phrase, "Non ho capito con sicurezza. Puoi ripetere?",
                                 "clarify")
                         else:
+                            if refinement_token and not accept_file_refinement(refinement_token,intent):
+                                continue
                             if (is_ambiguous_short_reply(original_phrase)
                                     and intent.kind not in ("chat","clarify")):
                                 message=("Per eseguire un'azione, dimmi "
@@ -3391,7 +3443,7 @@ def main() -> None:
                                 remember_exchange(original_phrase,message,"clarify")
                                 continue
                             if intent.kind in ("chat", "clarify"):
-                                if (intent.kind=="clarify" and addon_manager is not None
+                                if (not refinement_token and intent.kind=="clarify" and addon_manager is not None
                                         and addon_manager.files_enabled()):
                                     addon_manager.file_service.remember_file_clarification(original_phrase)
                                 write_line("JARVIS > " + intent.reply)
@@ -3411,6 +3463,9 @@ def main() -> None:
                                         submit_local(message_override=original_phrase,
                                             source_utterance=original_phrase,addon_action_id=cap.action_id,
                                             file_call=(cap.file_operation,
+                                                addon_manager.file_service.arguments_for_utterance(
+                                                    cap.file_operation,dict(cap.file_arguments),original_phrase),
+                                                refinement_token) if refinement_token else (cap.file_operation,
                                                 addon_manager.file_service.arguments_for_utterance(
                                                     cap.file_operation,dict(cap.file_arguments),original_phrase)))
                                     else:
@@ -3510,6 +3565,11 @@ def main() -> None:
                     busy_gpt = False
                     epoch, original_phrase, reason, *channels = data
                     channel=channels[0] if channels else "conversation"
+                    failed_refinement=channels[1] if len(channels)>1 else None
+                    if failed_refinement and (addon_manager is None or
+                            not addon_manager.files_enabled() or
+                            not addon_manager.file_service.refinement_live(failed_refinement)):
+                        continue
                     if (epoch == conversation_epoch and (
                             channel=="typed_conversation" or
                             voice_mode.get() == GPT_CONVERSATION)):

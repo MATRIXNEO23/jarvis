@@ -649,7 +649,7 @@ class FileAccessTests(unittest.TestCase):
             and isinstance(n.test,ast.Compare) and isinstance(n.test.left,ast.Attribute)
             and n.test.left.attr=='kind' and isinstance(n.test.comparators[0],ast.Tuple)
             and [v.value for v in n.test.comparators[0].elts if isinstance(v,ast.Constant)]==['chat','clarify'])
-        env={'intent':intent,'addon_manager':self.manager,'original_phrase':'puoi aprire una cartella?',
+        env={'intent':intent,'refinement_token':None,'addon_manager':self.manager,'original_phrase':'puoi aprire una cartella?',
              'write_line':lambda *a:None,'speak_result':lambda *a:None,'remember_exchange':lambda *a:None}
         exec(compile(ast.Module(body=branch.body,type_ignores=[]),'real-gpt-file-clarification','exec'),env)
         with patch('subprocess.Popen') as launch:

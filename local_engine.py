@@ -148,11 +148,12 @@ class LocalEngine:
             return self._record(TaskResult(uuid4().hex, action, "failed",
                                            "Operazione non riuscita: " + str(exc)[:350]))
 
-    def execute_file(self, operation, arguments):
+    def execute_file(self, operation, arguments, refinement_token=None):
         if self.file_access is None:
             return self._record(TaskResult(uuid4().hex,"files","rejected",
                 "Accesso file non disponibile: reinstalla il pacchetto completo."))
-        result=self.file_access.execute(operation,arguments)
+        result=(self.file_access.execute(operation,arguments,refinement_token=refinement_token)
+                if refinement_token is not None else self.file_access.execute(operation,arguments))
         return self._record(TaskResult(uuid4().hex,"files_"+operation,result.status,
             result.message,result.preview,result.preview_path,result.explain,
             self.file_access.spoken_reply(operation,result),result.listing))

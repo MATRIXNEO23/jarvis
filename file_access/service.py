@@ -98,6 +98,7 @@ class FileAccessService:
         self._result_revision = -1
         self._result_token = uuid4().hex
         self._view_selection = None
+        self._refinement = None
         self.progress=None
         self._progress_id=uuid4().hex
         self._progress_active=False
@@ -116,6 +117,7 @@ class FileAccessService:
             self._pending_app = None
             self._result_token = uuid4().hex
             self._view_selection = None
+            self._refinement = None
             self._progress_id=uuid4().hex
             self._progress_active=False
 
@@ -139,6 +141,63 @@ class FileAccessService:
 
     def available(self):
         return bool(self.enabled() and any(r['allow'] for r in self.policy.valid_roots()))
+
+    def refinement_live(self, token):
+        with self._lock:
+            return bool(self._refinement and token == self._result_token == self._refinement['token']
+                        and self._live(self._result_revision) and self.available()
+                        and time.monotonic() < self._expires)
+
+    def _offer_refinement(self, result, operation, arguments, *, refining=False):
+        listing = result.listing
+        if (refining or result.status != 'completed' or listing is None
+                or listing['items'] or listing.get('coverage', {}).get('errors')
+                or not self._live(self._result_revision)):
+            return result
+        with self._lock:
+            self._refinement = dict(token=self._result_token, operation=operation,
+                                    arguments=dict(arguments), claimed=False, waiting=False,
+                                    coverage=dict(listing.get('coverage', {})))
+        return replace(result, listing={**listing, 'refinement':self._result_token})
+
+    def refinement_context(self, token, utterance, *, answer=''):
+        with self._lock:
+            if not self.refinement_live(token):
+                return None
+            state = self._refinement
+            if state['claimed'] and not (answer and state['waiting']):
+                return None
+            state['utterance'] = state.get('utterance', utterance)
+            state['claimed'], state['waiting'] = True, False
+            args = state['arguments']
+            return dict(original=state['utterance'], operation=state['operation'],
+                        clue=args.get('query',args.get('target',''))[:160],
+                        kind=args.get('kind',''), answer=answer[:160],
+                        question=state.get('question',''),
+                        partial=state['coverage'].get('stop_reason','complete')!='complete')
+
+    def refinement_question(self, token, question=''):
+        with self._lock:
+            if self.refinement_live(token):
+                self._refinement['waiting'] = True
+                self._refinement['question'] = question[:180]
+
+    def refinement_arguments(self, token, operation, arguments):
+        with self._lock:
+            if not self.refinement_live(token) or not self._refinement['claimed']:
+                raise ValueError('La ricerca da precisare è cambiata, scaduta o revocata.')
+            state = self._refinement
+            if operation != state['operation']:
+                raise ValueError('La proposta cambia l’obiettivo della ricerca: nessuna azione eseguita.')
+            checked = validate_arguments(operation, arguments)
+            original = state['arguments']
+            key = 'query' if operation in ('search','locate') else 'target'
+            for name,value in checked.items():
+                if name != key and value != original.get(name):
+                    raise ValueError('La proposta cambia ambito o tipo della richiesta.')
+            # The model refines the clue only. Scope, type and explanation
+            # remain local constraints, including when omitted in its reply.
+            return {**original,key:checked[key]}
 
     def context_hint(self):
         with self._lock:
@@ -331,7 +390,7 @@ class FileAccessService:
                 if noun:
                     args['kind']='folder' if noun.group(1).casefold()=='cartella' else 'file'
                 return ('select',args)
-        if (self._pending_app is not None or self._pending is not None) and low in ('annulla','lascia perdere','non importa'):
+        if (self._pending_app is not None or self._pending is not None or self._refinement is not None) and low in ('annulla','lascia perdere','non importa'):
             return ('cancel', {})
         app_answer = self._application_answer(clean)
         if app_answer is not None:
@@ -398,9 +457,22 @@ class FileAccessService:
                         return ('select',{'target':name,'by_name':True,'selection_id':self._result_token})
                 elif self._pending is not None:
                     self._pending=None
+        if self._refinement and self._refinement['waiting']:
+            answer=self._target_answer(clean)
+            if answer and self.refinement_live(self._refinement['token']):
+                return ('refinement_answer',{'token':self._refinement['token'],'answer':answer})
         return None
 
-    def execute(self, operation, arguments):
+    def execute(self, operation, arguments, *, refinement_token=None):
+        refining = refinement_token is not None
+        if refining:
+            try:
+                arguments = self.refinement_arguments(refinement_token, operation, arguments)
+            except ValueError as exc:
+                return FileResult('rejected',str(exc))
+        # Any actual new operation supersedes a previous model suggestion.
+        with self._lock:
+            self._refinement = None
         if operation == 'cancel':
             self.reset(self._context)
             return FileResult('completed', 'Interruzione della ricerca richiesta.')
@@ -483,10 +555,15 @@ class FileAccessService:
                 raise PermissionError(self.policy.error or 'Seleziona almeno una cartella in Impostazioni > Add-on > Accesso file > Configura.')
             # This is a fresh, locally validated request after activation.
             # Old selections were already revoked by reset on disable/cancel.
-            self.cancelled.clear()
-            revision = self.policy.revision
+            revision = self._result_revision if refining else self.policy.revision
+            if refining:
+                if refinement_token != self._result_token or not self._live(revision):
+                    raise PermissionError('Ricerca cambiata o accesso revocato prima del raffinamento.')
+            else:
+                self.cancelled.clear()
             if operation in ('search', 'locate'):
-                return self._search(args['query'], args.get('scope'), revision, locate=operation == 'locate')
+                result = self._search(args['query'], args.get('scope'), revision, locate=operation == 'locate')
+                return self._offer_refinement(result,operation,args,refining=refining)
             view=None
             name=args.get('target','profilo')
             special=name.casefold() in _CURRENT_TARGETS or name.casefold() in ('cartella superiore','selezione explorer')
@@ -503,7 +580,7 @@ class FileAccessService:
                         # With no Explorer view, preserve the existing explicit name search.
                         answer = self._search(name,None,revision,kind=args.get('kind'))
                         if answer.status!='completed' or not self._results:
-                            return answer
+                            return self._offer_refinement(answer,operation,args,refining=refining)
                         if len(self._results)==1:
                             return self.execute(operation,{**args,'target':str(self._results[0])})
                         self._pending=(operation,{k:v for k,v in args.items() if k!='target'})
