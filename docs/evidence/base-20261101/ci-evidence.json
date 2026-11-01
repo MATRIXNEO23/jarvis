@@ -20,7 +20,12 @@
         "2026-10-31T18:27:29.4684001Z SOURCE_COMMIT b936879a431370d206152be7b089baf587d15499",
         "2026-10-31T18:27:29.4685182Z FILES 155 ZIP_BYTES 406653",
         "2026-10-31T18:27:29.4685731Z SHA256 c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352"
-      ]
+      ],
+      "testResultLines": [
+        "2026-10-31T18:27:29.3109801Z Ran 373 tests in 3.276s",
+        "2026-10-31T18:27:29.3110586Z OK (skipped=5)"
+      ],
+      "historicalRun": true
     },
     {
       "job_id": 124620525560,
@@ -29,7 +34,12 @@
         "2026-10-31T18:27:28.7505629Z   python-version: 3.11",
         "2026-10-31T18:27:38.6419247Z Ran 373 tests in 3.764s",
         "2026-10-31T18:27:38.6419614Z OK (skipped=5)"
-      ]
+      ],
+      "testResultLines": [
+        "2026-10-31T18:27:38.6419247Z Ran 373 tests in 3.764s",
+        "2026-10-31T18:27:38.6419614Z OK (skipped=5)"
+      ],
+      "historicalRun": true
     },
     {
       "job_id": 124620525712,
@@ -38,7 +48,12 @@
         "2026-10-31T18:27:28.4338386Z   python-version: 3.12",
         "2026-10-31T18:27:38.8804700Z Ran 373 tests in 3.778s",
         "2026-10-31T18:27:38.8805287Z OK (skipped=5)"
-      ]
+      ],
+      "testResultLines": [
+        "2026-10-31T18:27:38.8804700Z Ran 373 tests in 3.778s",
+        "2026-10-31T18:27:38.8805287Z OK (skipped=5)"
+      ],
+      "historicalRun": true
     },
     {
       "job_id": 124620525714,
@@ -46,7 +61,12 @@
         "2026-10-31T18:27:35.7814741Z HEAD is now at 9988788 Merge b936879a431370d206152be7b089baf587d15499 into fd7d59972a45488209c79f895c9009a4eda19707\r",
         "2026-10-31T18:27:35.9376242Z   python-version: 3.12\r",
         "2026-10-31T18:28:38.6627525Z Ran 373 tests in 47.191s\r"
-      ]
+      ],
+      "testResultLines": [
+        "2026-10-31T18:28:38.6627525Z Ran 373 tests in 47.191s",
+        "2026-10-31T18:28:38.6627866Z OK"
+      ],
+      "historicalRun": true
     },
     {
       "job_id": 124620525776,
@@ -54,7 +74,12 @@
         "2026-10-31T18:27:33.4856427Z HEAD is now at 9988788 Merge b936879a431370d206152be7b089baf587d15499 into fd7d59972a45488209c79f895c9009a4eda19707\r",
         "2026-10-31T18:27:33.6366784Z   python-version: 3.11\r",
         "2026-10-31T18:28:19.3528110Z Ran 373 tests in 30.211s\r"
-      ]
+      ],
+      "testResultLines": [
+        "2026-10-31T18:28:19.3528110Z Ran 373 tests in 30.211s",
+        "2026-10-31T18:28:19.3528418Z OK"
+      ],
+      "historicalRun": true
     }
   ]
 }
