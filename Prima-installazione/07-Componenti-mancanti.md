@@ -22,7 +22,7 @@ Oggi questi segnali sono distribuiti fra console di avvio, stato del pannello, f
 Se Python/Tkinter non permette l'avvio dell'interfaccia, Jarvis non può mostrare una chat: l'errore deve rimanere leggibile nel launcher.
 
 ## Comportamento richiesto da completare
-Quando attivi/usI una funzione, la chat deve indicare componente assente, funzione bloccata e passo utile, senza inventare la causa. Le funzioni non interessate devono restare disponibili. Un modulo facoltativo disattivato non è un errore.
+Quando attivi/usi una funzione, la chat deve indicare componente assente, funzione bloccata e passo utile, senza inventare la causa. Le funzioni non interessate devono restare disponibili. Un modulo facoltativo disattivato non è un errore.
 
 Formato proposto:
 «Telegram: manca FFmpeg. Le note vocali non sono disponibili. Segui Prima-installazione/04-Telegram.md.»
