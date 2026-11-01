@@ -187,3 +187,11 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Create nove guide in Prima-installazione su main, da verificare nei riferimenti; nessuna build applicativa nuova. Ultimo commit guide 238be19be7ee0f1036b42aa7863219fc7962c71b.
 - Nuova richiesta: non annunciare una funzione/add-on come implementata e installabile finché il pacchetto verificato non è pubblicato e linkato in Download/README.md con download funzionante. Prima riportare soltanto lo stato intermedio reale.
 - Previsto: collegare le guide dall'ingresso principale, salvare regole su manutenzione/riordino/domande e consegna, verificare i file e chiudere il checkpoint. Nessun pacchetto o link Download fittizio da creare.
+
+## 2026-11-01 — Completate guide e regole di consegna/risorse
+- Nove guide in Prima-installazione: base, requisiti, GPT, voce, Telegram, moduli/add-on, reinstallazione, componenti mancanti e manutenzione. Fonti: script/codice del riferimento 5e61e53 e documentazione esterna indicata. README principale ora rimanda alla guida aggiornata.
+- Verifica documentale: riletti tutti e nove i file, presenti e non vuoti; collegamenti locali fra guide risolti. Nessuna installazione Windows o test runtime svolti per queste modifiche; non equivalgono a certificazione della procedura sul Pavilion.
+- Contraddizioni storiche inventariate; nessun sorgente/launcher/pacchetto eliminato. Unificazione messaggi componenti mancanti in chat resta da implementare, distinta dai controlli già presenti.
+- Regole aggiornate: mantenere istruzioni di ogni modulo, verificare l'uso prima del riordino, chiedere su dubbi sostanziali, nessuna dichiarazione di funzione installabile prima di pacchetto verificato e link Download/README.md funzionante.
+- Ulteriore requisito: ogni add-on progettata per Pavilion i3-2100/10 GB con poco consumo incrementale, caricamento a richiesta e misure comparabili; non spegnere microfono/servizi manuali. Commit regola 9a87cf1d08a387d5083b1e93acf7939394e3ea56, piano e9d3565dc233e9a7a64929eef3aafda0559b0791, lezioni fa98ef609165352baccb5843e311f15c9e024141.
+- Stato reale: documentazione salvata; nessuna nuova build o add-on scaricabile pubblicata, nessun benchmark RAM. Prossimo passo resta revisione tecnica del piano web e dei punti d'integrazione, prima del codice.
