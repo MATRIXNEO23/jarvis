@@ -7,12 +7,13 @@ L'utente identifica come funzionante la build in cima a Download/README.md. Nome
 
 | Campo | Valore verificato |
 |---|---|
-| Pacchetto completo | [Jarvis-Timer-Audio-Fix2-20261031.zip](https://github.com/MATRIXNEO23/jarvis/raw/bb94afa1865fe0315021f783736be3cb77c4af84/Download/Jarvis-Timer-Audio-Fix2-20261031.zip) |
+| Pacchetto completo | [Jarvis-Timer-Audio-Fix2-20261031.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/bb94afa1865fe0315021f783736be3cb77c4af84/Download/Jarvis-Timer-Audio-Fix2-20261031.zip) |
 | Commit sorgente esatto | [b936879a431370d206152be7b089baf587d15499](https://github.com/MATRIXNEO23/jarvis/tree/b936879a431370d206152be7b089baf587d15499) |
 | Dimensione e integrità | 406653 byte; Git blob SHA-1 6aa9e6f9eb040dc7390b4edb55c9ae175bd4e512 |
 | SHA-256 | c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352 |
 | Provenienza | Tutti i 155 file identici al tree sorgente; ZIP ricostruito byte-identico; log publisher coerente |
-| Test locali audit | 373 test OK, 5 Windows-only saltati, Python 3.12.14 Linux; sintassi Python/Node PASS |
+| Test locali audit | 373 raccolti: 368 eseguiti con successo, 5 Windows/Tk saltati; zero fallimenti/errori. Python 3.12.14 Linux; sintassi Python/Node PASS |
+| Download diretto | HTTP 200, 406653 byte, confronto integrale con il pacchetto versionato PASS |
 | CI storica | Run 41229501460 Windows/Linux 3.11/3.12: 373 per job; file identici al merge testato |
 | Pubblicazione | Run 41229495866, log con sorgente/hash uguali alla copia scaricata |
 | Prova PC | Conferma esplicita di Alberto del 2026-11-01: build attualmente usata funziona bene; ambito riferito, non prova diretta dell'agente di tutte le funzioni |

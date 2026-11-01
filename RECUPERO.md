@@ -2,7 +2,7 @@
 
 ## Punto di arresto vigente — 2026-11-01
 Audit concreto completato: base funzionante Jarvis-Timer-Audio-Fix2-20261031.zip, sorgenti esatti b936879a431370d206152be7b089baf587d15499; 155 file corrispondenti e ZIP riprodotto identico. Test locali 373 OK, 5 Windows-only saltati; CI storica verificata. Leggere per primo docs/VERIFICA-CONCRETA-BASE-20261101.md e Download/REGISTRO-VERSIONI.md per prove e limiti. Il ramo 5e61e53 è successivo e separato, non la base PC. Prima di eventuale sviluppo recuperare il commit b936879, non confondere i due comportamenti del microfono.
-Metodo e documenti allineati. Nuova add-on web non implementata, nessun pacchetto pubblicato. L'utente ha chiesto di fermarsi prima del codice. Alla ripresa verificare docs/STATO-ATTIVITA.md, poi completare la revisione tecnica della fase 1 del piano web; non ripetere domande già risolte e non dedurre autorizzazione al codice da una semplice richiesta di recupero.
+Metodo e documenti allineati. Nuova add-on web non implementata, nessun pacchetto pubblicato. L'utente ha chiesto di fermarsi prima del codice. Attendere il successivo via dell’utente; poi verificare docs/STATO-ATTIVITA.md e completare la revisione tecnica della fase 1 del piano web; non ripetere domande già risolte e non dedurre autorizzazione al codice da una semplice richiesta di recupero.
 Questo è il punto d'ingresso per una nuova sessione di sviluppo con accesso al repository MATRIXNEO23/jarvis. Non è memoria runtime di Jarvis e non concede autorizzazioni nuove.
 
 ## Procedura di avvio
@@ -16,7 +16,7 @@ Questo è il punto d'ingresso per una nuova sessione di sviluppo con accesso al 
 
 ## Stato orientativo al 2026-11-01
 - Navigazione web: piano docs/PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md salvato; implementazione non avviata, da discutere prima di creare.
-- Continuità dialogo: CI precedente documentata e riscontro positivo dell'utente; versione installata e collaudi rimanenti da verificare.
+- Continuità dialogo: feedback positivo riferito sulla base identificata b936879; la correzione successiva a86c2c9 non è nel suo ZIP. Non ripetere la domanda identificativa né trasferire i 386 test al pacchetto precedente.
 - Metodo di sviluppo: memoria nel repository, lavoro per fasi, prove osservabili, UI semplice e recupero delle add-on. L'utente decide risultati e compromessi, non deve programmare.
 
 L'indice e gli aggiornamenti nell'handoff sono la fonte per lo stato più recente: questa sintesi non li sostituisce. Le istruzioni hanno effetto solo quando la nuova istanza ha accesso al repository e le legge; nessun meccanismo di questa documentazione può attribuire accesso automatico a una chat esterna.

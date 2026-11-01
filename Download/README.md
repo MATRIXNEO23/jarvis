@@ -1,8 +1,8 @@
-> **Recupero delle versioni:** [registro dei pacchetti e dei punti di ripristino](REGISTRO-VERSIONI.md). Distingue presenza dello ZIP, test automatici e prova sul PC. Questo aggiornamento aggiunge documentazione, non una nuova build.
+> **Recupero delle versioni:** [registro dei pacchetti e dei punti di ripristino](REGISTRO-VERSIONI.md). Distingue presenza dello ZIP, test automatici e prova sul PC. Base confermata: **Jarvis-Timer-Audio-Fix2-20261031.zip**, sorgenti **b936879**; [audit concreto completato](../docs/VERIFICA-CONCRETA-BASE-20261101.md). Nessuna nuova build. Le voci successive alla base sono storico.
 
 # Jarvis: Timer audio Fix 2 - 31/10/2026
 
-**[SCARICA JARVIS COMPLETO CON FIX AUDIO TIMER](./Jarvis-Timer-Audio-Fix2-20261031.zip)**
+**[SCARICA JARVIS COMPLETO CON FIX AUDIO TIMER](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/bb94afa1865fe0315021f783736be3cb77c4af84/Download/Jarvis-Timer-Audio-Fix2-20261031.zip)**
 
 Versione completa per Windows 10 con un solo launcher `avvia_jarvis.bat`. Il timer e' una finestra indipendente con cifre digitali, START, PAUSA, STOP, RESET e durata modificabile. Comandi locali e vocali: 'timer 10 minuti', 'pausa timer', 'riprendi timer', 'stop timer' e 'quanto manca al timer'. Cinque suonerie offline con anteprima, volume e ripetizione nelle impostazioni gia' esistenti, ora organizzate per categorie. **Fix 2 audio:** corretta costante SND_SYNC inesistente; riproduzione WAV da file con ripiego in memoria, bip alternativo Windows selezionabile e messaggi di stato visibili sia nel tasto Prova che alla scadenza del timer. I comandi originali, Telegram, memoria, progetti, microfono, add-on e GPT esterno non sono stati rimossi.
 

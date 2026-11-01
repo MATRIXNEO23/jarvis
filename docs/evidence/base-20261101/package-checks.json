@@ -17,5 +17,42 @@
   },
   "rebuilt_bytes": 406653,
   "rebuilt_sha256": "c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352",
-  "rebuild_byte_identical": true
+  "rebuild_byte_identical": true,
+  "direct_download": {
+    "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/bb94afa1865fe0315021f783736be3cb77c4af84/Download/Jarvis-Timer-Audio-Fix2-20261031.zip",
+    "http_status": 200,
+    "bytes": 406653,
+    "byte_equal_to_versioned_zip": true,
+    "sha256": "c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352"
+  },
+  "historical_packages": {
+    "count": 20,
+    "size_and_git_blob_match": true,
+    "changed": 0
+  },
+  "addon_existing_tests": {
+    "test_addon_lifecycle.py": 12,
+    "test_live_capabilities.py": 9,
+    "test_capability_registry.py": 7,
+    "new_web_tests": 0
+  },
+  "ddl_comparison": {
+    "base": "b936879a431370d206152be7b089baf587d15499",
+    "later": "5e61e53fbb58ccb5d95b85671604cc5f365d6e04",
+    "files": [
+      "second_brain.py",
+      "workspace_memory.py"
+    ],
+    "ddl_strings_identical": true,
+    "personal_data_downgrade_test": false
+  },
+  "final_document_checks": {
+    "markdown_files": 19,
+    "relative_links_checked": 47,
+    "missing_links": [],
+    "json_parse": "pass",
+    "runtime_zip_changes": 0,
+    "scope": "changed docs, source index, web plan and all installation guides; historical external URLs not globally revalidated",
+    "ci_merge_file_match_independent_recheck": 155
+  }
 }

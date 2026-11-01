@@ -37,3 +37,6 @@ Chiudi quella nuova. Riusa il vecchio pacchetto con un profilo/database compatib
 | runtime\siwc, models | SDK e modello vocale |
 
 Per un archivio SQLite copia il profilo a programma chiuso, oppure usa una procedura di backup SQLite coerente. Non mischiare file casuali tra profili per «riparare» un errore non identificato.
+
+## Riferimento verificato per il ritorno
+Base confermata Timer-Audio-Fix2 / b936879: [registro](../Download/REGISTRO-VERSIONI.md). L'audit confronta il DDL di second_brain.py e workspace_memory.py col successivo 5e61e53 e non rileva variazioni di schema in quel diff; non ha provato il ritorno su database personali. Conservare sempre una copia coerente del profilo della versione scelta. Riavviare la vecchia cartella non annulla automaticamente dati scritti dalla nuova.

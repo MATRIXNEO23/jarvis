@@ -1,5 +1,5 @@
 # Verifica concreta della base Jarvis — 2026-11-01
-**Esito:** identità e provenienza dello ZIP verificate, test inclusi superati, differenze dal ramo successivo accertate. Documentazione da allineare alla base corretta; nessuna modifica del programma o add-on nuova.
+**Esito:** identità e provenienza dello ZIP verificate, test inclusi superati, differenze dal ramo successivo accertate. Documentazione, metodo e recupero allineati alla base corretta; audit chiuso. Nessuna modifica del programma o add-on nuova.
 
 ## Base funzionante identificata
 L'utente conferma il primo ZIP nel catalogo Download come build attualmente usata e funzionante per il momento.
@@ -57,4 +57,14 @@ Non eseguiti nuovi login/inferenza GPT, Telegram reale, GUI/audio/microfono Wind
 
 ## Punto di ripresa
 Preservare questa ZIP e usare b936879 come base delle prossime aggiunte, come richiesto dall'utente. Il ramo 5e61e53 resta un candidato separato con modifiche da valutare, non un sostituto automatico.
-L'audit non autorizza la nuova add-on: completare il progetto tecnico partendo dalla base verificata e presentare eventuali modifiche necessarie prima del codice. Correggere gli indici e le guide con questi fatti, chiudere l'handoff e fermarsi.
+L'audit non autorizza la nuova add-on. Indici, guide e handoff aggiornati; fermarsi qui e attendere il successivo via. Poi completare la revisione tecnica della fase 1 sulla base identificata e presentare eventuali modifiche necessarie prima del codice. Fasi 2–8 non avviate.
+
+## Controlli finali e integrazione delle evidenze
+- Download diretto realmente eseguito: [ZIP](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/bb94afa1865fe0315021f783736be3cb77c4af84/Download/Jarvis-Timer-Audio-Fix2-20261031.zip), HTTP 200, 406653 byte e byte identici al pacchetto versionato. Nessuna sostituzione del file funzionante.
+- Suite inclusa ripetuta durante la ripresa: 373 raccolti, 368 eseguiti con successo, 5 skip Windows/Tk; nessun fallimento/errore, stessi Python/Node. I test simulano i servizi esterni e non coprono hardware/account reali. Esito nel test-summary esistente; conservato un unico log completo canonico.
+- Tutti i 20 ZIP inventariati ancora presenti con dimensioni e Git blob identici. Nessun file storico, launcher, dato o pacchetto cancellato.
+- Copertura gestore già presente: 12 test in test_addon_lifecycle.py, 9 in test_live_capabilities.py, 7 in test_capability_registry.py, inclusi nella suite. Installazione/disattivazione, consensi, catalogo e dispatcher coperti; nessun test del nuovo web, reset o ritorno versione ancora da realizzare.
+- DDL di second_brain.py e workspace_memory.py identico fra base b936879 e successivo 5e61e53. Non è una prova di downgrade su dati personali o con altre versioni; nessun database personale usato.
+- Confermata anche la CI 41229389644 su a3b2ad8: quattro job SUCCESS. Da a3b2ad8 a b936879 cambia solo publish-audit-zip.yml; runtime e test identici. La CI del merge b936879 già registrata resta la prova principale del pacchetto.
+- Recupero applicato in questa ripresa: checkpoint incompleto riconosciuto e completato usando repository, file e prove. Non garantisce accesso automatico a ogni chat né copertura di scritture interrotte.
+- Controllo finale dei collegamenti locali e dello scope documentale in package-checks.json; nessun nuovo workflow lanciato. Gli aggiornamenti documentali concorrenti sono stati conservati e riconciliati, senza sovrascrivere sorgenti o evidenze precedenti.

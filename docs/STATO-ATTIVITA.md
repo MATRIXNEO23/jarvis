@@ -1,5 +1,5 @@
 # Stato attività Jarvis
-Aggiornato il 2026-11-01 dopo verifica concreta. Fermo prima dell'implementazione della nuova add-on.
+Aggiornato il 2026-11-01 dopo «Continua»: audit concreto chiuso, metodo e riferimenti allineati; fermo prima dell'implementazione della nuova add-on. Download diretto e integrità dei 20 ZIP confermati; prove nel rapporto.
 
 ## Punto di partenza certo
 **BASE-UTENTE-20261101:** Jarvis-Timer-Audio-Fix2-20261031.zip, sorgenti b936879a431370d206152be7b089baf587d15499. L'utente conferma la build attualmente usata; l'audit ha verificato ZIP reale, 155 file contro sorgenti, riproduzione byte-identica e test inclusi.
@@ -23,4 +23,4 @@ Aggiornato il 2026-11-01 dopo verifica concreta. Fermo prima dell'implementazion
 Comando preciso locale senza GPT; interpretazione esterna quando necessaria e consentita; chiarimenti contestuali. Nessuna funzione extra non concordata. Utente decide risultati e non programma; assistente realizza il lavoro tecnico autorizzato. Add-on per Pavilion i3-2100/10 GB/Windows 10, caricamento a richiesta e test propri. Dati, compatibilità e controllo manuale microfono preservati. Consegna soltanto con pacchetto verificato e link funzionante in Download.
 
 ## Prossimo passo unico
-Alla ripresa leggere questi riferimenti e progettare l'add-on sulla base b936879 preservata. La revisione tecnica resta da completare, senza implementare finché non arriva il successivo via dell'utente. Non ripetere la ricerca della base o attribuire alla ZIP i 386 test successivi. Per ripristino usare il registro, non scansionare tutti i commit/artifact.
+Attendere il successivo via dell'utente; poi leggere questi riferimenti e completare la revisione tecnica dell'add-on sulla base b936879 preservata. La revisione tecnica resta da completare, senza implementare finché non arriva il successivo via dell'utente. Non ripetere la ricerca della base o attribuire alla ZIP i 386 test successivi. Per ripristino usare il registro, non scansionare tutti i commit/artifact.

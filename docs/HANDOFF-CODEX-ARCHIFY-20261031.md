@@ -1,5 +1,12 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## Checkpoint vigente — allineamento concreto completato il 2026-11-01
+**Dopo «Continua»: audit chiuso e fermo prima del web.** Base confermata Jarvis-Timer-Audio-Fix2-20261031.zip, sorgenti b936879a431370d206152be7b089baf587d15499; 155 file identici, download diretto HTTP 200, hash/CRC PASS. Suite locale: 373 raccolti, 368 eseguiti con successo, 5 skip Windows/Tk, zero fallimenti/errori; sintassi Python/Node PASS. CI storica della base e publisher verificate; riferimenti nel [rapporto](VERIFICA-CONCRETA-BASE-20261101.md) e nel [registro](../Download/REGISTRO-VERSIONI.md).
+Il nucleo successivo a86c2c9 e il suo standby non sono nello ZIP. Guide, indice, regole e piano distinguono le due versioni; mantenere la base e il comportamento scelti. Feedback PC riferito dall'utente, nessun nuovo collaudo hardware/account. La mappa Archify a86c2c9 resta riferimento del solo codice successivo, con limite browser già documentato.
+Conservati aggiornamenti documentali concorrenti ed evidenze canoniche in docs/evidence/base-20261101; nessun duplicato di manifest o log. Controllati anche 20 ZIP, copertura gestore esistente e DDL dei due archivi. Nessuna modifica runtime/ZIP, installazione, migrazione, invio, cancellazione, merge di rami funzionali o nuova distribuzione.
+File aggiornati in questa chiusura: istruzioni/recupero/stato, handoff/lezioni, rapporto, catalogo/registro Download, guida dati e JSON delle verifiche. Controlli finali dei collegamenti e dello scope registrati in package-checks.json. I vecchi stati «in corso» o «nome ZIP da confermare» sotto sono cronologia superata da questo checkpoint.
+**Prossimo passo unico:** attendere il successivo via; poi completare fase 1 tecnica web sulla base b936879 (ricerca di soluzioni, confronto riuso/adattamento, contratto e test di accettazione), presentare il risultato prima del codice. Fasi 2–8 non avviate. Non chiedere nuovamente quale ZIP usa l'utente.
+
 ## Stato verificato
 - Repository: MATRIXNEO23/jarvis, branch di distribuzione `main`.
 - Archify v3.2.0 installato per Codex, solo come strumento di sviluppo in `.agents/skills/archify/`. La workflow `Install Archify skill for Codex (repository only)` run 41232507968 è PASS; verificato che `.agents/skills/archify/SKILL.md` è presente su `main`.

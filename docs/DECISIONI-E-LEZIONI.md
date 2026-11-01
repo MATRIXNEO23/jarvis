@@ -122,3 +122,6 @@ Riscontro esplicito: l'ultima build usata funziona bene per il momento; conserva
 **Errore documentale corretto:** la prima guida aveva preso come riferimento il ramo successivo, quindi classificava come superati testi ON che sono coerenti con la base pubblicata. Corretto il riferimento, mantenendo entrambe le versioni esplicite.
 **Scelta:** preservare b936879 e lo ZIP confermato come base delle aggiunte; valutare separatamente eventuali correzioni successive. Registro con sorgente, checksum, log e dati di recupero. Rapporto docs/VERIFICA-CONCRETA-BASE-20261101.md.
 **Lezione:** verificare il contenuto consegnato, non dedurre versione dalla punta del ramo o da una CI più recente. Una suite diversa non è copertura del pacchetto installato. L'audit non prova dispositivi/account reali o prestazioni del Pavilion.
+
+## 2026-11-01 — Chiusura della ripresa concreta
+Verificati anche download diretto, integrità dei 20 ZIP conservati, copertura add-on esistente e DDL dei due archivi. Checkpoint incompleto chiuso con indice/handoff aggiornati; modifiche documentali arrivate nel frattempo riconciliate preservandole, senza duplicare manifest e log. Dettagli nel rapporto e package-checks.json. La prova del metodo è questa ripresa con accesso al repository, non una garanzia per ogni chat. Nessuna funzione aggiunta e nessuna dichiarazione di nuova build pronta.

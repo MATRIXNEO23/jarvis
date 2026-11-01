@@ -13,5 +13,17 @@
     "GPT real sign-in/inference",
     "Telegram real network",
     "Pavilion RAM/CPU"
-  ]
+  ],
+  "passed_excluding_skips": 368,
+  "independent_recheck": {
+    "command": "python -m unittest discover -s tests -v",
+    "tests_collected": 373,
+    "passed": 368,
+    "skipped": 5,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 3.829,
+    "source": "same extracted ZIP fingerprint",
+    "note": "Same suite rerun during resumed audit; canonical full log above retained without a duplicate log artifact."
+  }
 }
