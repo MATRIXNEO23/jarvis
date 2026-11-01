@@ -13,3 +13,9 @@ Quando l'utente dice «torniamo a...», recuperare il documento corrispondente e
 
 ## Punto d'ingresso per nuove sessioni
 [RECUPERO.md](../RECUPERO.md) è il punto d'ingresso unico. AGENTS.md richiede di leggerlo all'avvio quando il repository è accessibile, quindi recuperare indice, handoff, lezioni e piano. Ogni modifica richiede continuità aggiornata prima della chiusura del lavoro; nessuna ripresa automatica garantita in chat senza accesso al repository. Stato delle implementazioni invariato.
+
+## Installazione, riordino e stato di consegna — 2026-11-01
+- Cartella [Prima-installazione](../Prima-installazione/README.md): create guide per base, GPT, voce, Telegram, moduli/add-on, reinstallazione e componenti mancanti; ricavate dal riferimento 5e61e53. Documentazione, non installazione Windows collaudata o nuova build.
+- Contraddizioni storiche identificate in README, guida voce, LEGGIMI ed echo launcher: elenco in Prima-installazione/08-Manutenzione.md. Nessun file sorgente cancellato; pulizia operativa ulteriore da verificare.
+- Diagnostica componenti: controlli esistenti inventariati; unificazione in chat e nuovi test ancora da progettare/realizzare.
+- Consegna futura: pacchetto testato, pubblicato e scaricabile dal link verificato in Download/README.md prima dell'annuncio di funzione installabile. Nessun nuovo pacchetto prodotto in questa fase.
