@@ -176,3 +176,9 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Confermati ramo evoluto e presenza dei moduli/test/bridge/workflow; non verificata in questa fase la build completa o la copertura di ogni dipendenza. Radice main storica distinta dal ramo evoluto.
 - Regola: sorgenti completi versionati e associati ai pacchetti; riuso dei moduli e mappa esistenti, aggiornati quando cambiano. Nessun merge, spostamento massivo di sorgenti o modifica runtime.
 - Prossimo passo: revisione tecnica del piano web sui sorgenti evoluti, implementazione non avviata.
+
+## 2026-11-01 — In corso: prima installazione completa e riordino verificato
+- Richiesta: cartella unica per installazione da zero, componenti esterni, configurazione di ciascun modulo e reinstallazione; aggiornamento a ogni modulo nuovo. Jarvis deve indicare i componenti mancanti. Successive precisazioni: valutare a ogni aggiunta cosa è ancora necessario, non mantenere materiale superato confondibile; chiedere su ambiguità rilevanti senza inventare.
+- Evidenze: letti script GPT/voce/Telegram, configurazione Telegram, percorsi dati e diagnostica; raccolti import di 60 moduli Python non-test del riferimento evoluto 5e61e53. Dipendenze dirette facoltative individuate: Vosk, sounddevice e Telethon; FFmpeg eseguibile per OGG/Opus, Node/npm e SDK fissato per GPT, SAPI/PowerShell Windows per TTS. Nessuna installazione eseguita.
+- Contraddizioni reali: README/guida voce/LEGGIMI/echo launcher citano microfono ON, mentre codice corretto e preparatore avviano in standby; documentazione vecchia non va seguita alla cieca. Launcher usa profilo Trial, SDK/modello possono restare condivisi nel profilo base.
+- Previsto: cartella Prima-installazione con guida iniziale, moduli, ripristino e diagnostica, più regole manutenzione/riordino; nessuna cancellazione di sorgenti o aggiunta di funzioni runtime durante questa fase.
