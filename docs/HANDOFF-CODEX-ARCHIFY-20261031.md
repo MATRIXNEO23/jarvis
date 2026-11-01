@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## In corso — proposta semplice delle cartelle consentite
+2026-11-01 pomeriggio: l'utente propone spunte per unità/cartelle/sottocartelle e chiede all'assistente di studiare la soluzione più semplice. Letti addon_ui.py b936879 e fonti Microsoft permessi/UAC: pannello add-on già presente ma configurazione cartelle non disponibile; spunte non concedono permessi Windows. Previsti proposta nella scheda WINDOWS, STATO e lezioni, poi rilettura. Nessun codice/UI/pacchetto o permesso del PC modificati.
+
 ## Checkpoint vigente — accesso generale e profilo Windows automatico, 2026-11-01 pomeriggio
 La priorità precedente «app classiche/Store» è superata dall'utente: partire dall'accesso file/cartelle generale, non limitato a una sola app o Download. Esempi di programma sono campioni di collaudo, non prerequisiti: non chiedere ancora quale app per iniziare. Primo incremento accettato in sola lettura fuori dall'area di sistema; obiettivo futuro lettura/scrittura/cancellazione fuori dal sistema e sistema solo lettura. Confine e permessi reali da verificare; il «sì» al primo passo non approva Cestino o modifiche a dati concreti.
 Nuova capacità come .jaddon nell'organizzazione add-on prevista, propria cartella/LEGGIMI e tutti i requisiti già raccolti: riuso senza doppioni, dialogo e catalogo, basso consumo, test, pacchetto essenziale, configurazione/recupero e console dipendenze. Non ridurre l'aderenza ai requisiti alla sola collocazione del file manifest.
