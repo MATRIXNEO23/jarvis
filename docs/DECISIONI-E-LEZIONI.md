@@ -115,3 +115,10 @@ Creato Download/REGISTRO-VERSIONI.md con schema delle prove e inventario di 20 Z
 
 ## 2026-11-01 — L'utente sceglie la build attuale come base funzionante
 Riscontro esplicito: l'ultima build usata funziona bene per il momento; conservarla e partire da quella per le prossime aggiunte. Creato riferimento BASE-UTENTE-20261101 nel registro. Nome ZIP/commit installato ancora da confermare; candidato in cima a Download è Jarvis-Timer-Audio-Fix2-20261031.zip, non automaticamente associato al PC. Preservare pacchetto e codice identificati prima di intervenire. Nessuna nuova build, prova runtime o ripristino.
+
+## 2026-11-01 — Audit reale: il pacchetto confermato precede la correzione nucleo
+**Prova:** ZIP prelevato e hash calcolato sui byte; 155 file coincidono con b936879a431370d206152be7b089baf587d15499 e ZIP ricreato identico. Log publisher e merge CI coincidono. Sullo ZIP estratto 373 test OK (5 Windows saltati), compileall e sintassi Node PASS; log remoti Windows/Linux 373 per job riletti.
+**Scostamento:** rispetto a 5e61e53 ci sono 10 file diversi e 5 aggiunti. Il pacchetto non contiene il nucleo a86c2c9 né la sua nuova suite; il suo avvio segue auto_listen, il ramo successivo impone standby.
+**Errore documentale corretto:** la prima guida aveva preso come riferimento il ramo successivo, quindi classificava come superati testi ON che sono coerenti con la base pubblicata. Corretto il riferimento, mantenendo entrambe le versioni esplicite.
+**Scelta:** preservare b936879 e lo ZIP confermato come base delle aggiunte; valutare separatamente eventuali correzioni successive. Registro con sorgente, checksum, log e dati di recupero. Rapporto docs/VERIFICA-CONCRETA-BASE-20261101.md.
+**Lezione:** verificare il contenuto consegnato, non dedurre versione dalla punta del ramo o da una CI più recente. Una suite diversa non è copertura del pacchetto installato. L'audit non prova dispositivi/account reali o prestazioni del Pavilion.
