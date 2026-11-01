@@ -760,7 +760,7 @@ function New-Object {
     param([string]$ComObject)
     if ($ComObject -ne 'Shell.Application') { throw 'Unexpected COM request' }
     $items = @(foreach ($row in $script:views) {
-        $doc=[pscustomobject]@{Folder=[pscustomobject]@{Self=[pscustomobject]@{Path=$row.path;IsFileSystem=$row.filesystem}};Items=@($row.selected)}
+        $doc=[pscustomobject]@{Folder=[pscustomobject]@{Self=[pscustomobject]@{Path=$row.path;IsFileSystem=$row.filesystem}};Items=@($row.selected | ForEach-Object { [pscustomobject]@{Path=[string]$_} })}
         $doc | Add-Member ScriptMethod SelectedItems { $this.Items }
         $win=[pscustomobject]@{HWND=$row.hwnd;FullName='C:\Windows\explorer.exe';Document=$doc;Marker=$script:marker}
         $win | Add-Member ScriptMethod Navigate2 { param($target) [IO.File]::WriteAllText($this.Marker,$target) }
