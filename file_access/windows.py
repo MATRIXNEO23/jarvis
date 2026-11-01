@@ -173,7 +173,37 @@ def installed_locations(query: str) -> list[tuple[Path, str]]:
                             continue
             except OSError:
                 continue
-    return found[:50]
+    # Store identities supplement classic uninstall registrations. Current user only.
+    reply = shell_query({'operation':'installed', 'query':query})
+    for row in reply.get('rows', []):
+        if not isinstance(row,dict) or not isinstance(row.get('path'),str) or not isinstance(row.get('name'),str):
+            continue
+        path = Path(row['path'])
+        if path.is_absolute() and path.is_dir():
+            found.append((path, 'Registrazione Windows: '+row['name'][:100]))
+    return list(dict.fromkeys(found))[:50]
+
+
+def shell_query(request: dict, *, timeout=6) -> dict:
+    """Bounded native query. Values are stdin JSON, never PowerShell source."""
+    require_windows()
+    script = Path(__file__).with_name('windows_shell.ps1')
+    powershell = Path(os.environ.get('SystemRoot', r'C:\Windows'))/'System32/WindowsPowerShell/v1.0/powershell.exe'
+    try:
+        run = subprocess.run([str(powershell), '-NoProfile', '-NonInteractive',
+            '-ExecutionPolicy', 'Bypass', '-File', str(script)],
+            input=json.dumps(request,ensure_ascii=True), capture_output=True,
+            text=True,encoding='utf-8',errors='replace',timeout=timeout,shell=False,
+            creationflags=0x08000000,cwd=os.environ.get('SystemRoot', r'C:\Windows'))
+        if run.returncode or len(run.stdout)>64000:
+            raise ValueError('Native query failed')
+        result=json.loads(run.stdout.lstrip('\ufeff'))
+        if (not isinstance(result,dict) or result.get('status') not in ('ok','unavailable','ambiguous')
+                or not isinstance(result.get('rows',[]),list) or len(result.get('rows',[]))>50):
+            raise ValueError('Invalid native reply')
+        return result
+    except (OSError,ValueError,subprocess.TimeoutExpired):
+        return {'status':'unavailable','rows':[]}
 
 
 def long_path(path: Path) -> Path:

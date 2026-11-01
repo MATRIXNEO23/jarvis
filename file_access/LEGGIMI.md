@@ -25,3 +25,5 @@ Se manca file_access/windows_search.ps1 o la cartella del componente, reinstalla
 
 ## Verifiche
 Solo Windows: suite progetto, tests/test_file_access.py e probe tools/probe_file_access_windows.py. Fase nativa iniziale run 41319370085: API note/percorsi/volumi PASS, indice non disponibile nel runner (non collaudo positivo dell'indice). Aggiornamenti e prove successive in docs/ACCESSO-FILE-STATO.md. Microfono/account GPT reali, prestazioni Pavilion e qualità semantica non sono coperti da simulazioni.
+
+Localizzazione: registrazioni classiche e pacchetti Store dell’utente corrente (Get-AppxPackage, nome Start da Get-StartApps). windows_shell.ps1 è un helper finito con JSON su stdin e timeout, non un servizio residente. Installazione registrata resta distinta da cartelle trovate per nome e dati del programma; nessuna garanzia per installazioni portabili o launcher non registrati.

@@ -431,3 +431,74 @@ class FileAccessTests(unittest.TestCase):
         env['data']=[TaskResult('a'*32,'system_status','completed','CPU e RAM disponibili.')]
         exec(code,env)
         self.assertEqual(spoken,['CPU e RAM disponibili.'])
+
+    def test_installation_request_and_clarification_keep_the_same_goal(self):
+        for phrase in ('cerca la cartella di installazione di Minecraft',
+                "trovami cartella d'installazione Minecraft", 'trovami cartella installazione Firefox'):
+            operation,args=self.files.parse_command(phrase)
+            self.assertEqual(operation,'locate')
+            self.assertIn(args['query'],('Minecraft','Firefox'))
+        minecraft=self.docs/'Installazione-A'; minecraft.mkdir()
+        other=self.docs/'Installazione-B'; other.mkdir()
+        def registrations(query):
+            if query=='Microsoft':
+                return [(minecraft,'Registrazione Windows: Microsoft Minecraft'),
+                    (other,'Registrazione Windows: Microsoft Altra App')]
+            self.assertEqual(query,'Minecraft')
+            return [(minecraft,'Registrazione Windows: Microsoft Minecraft')]
+        with patch('file_access.service.installed_locations',side_effect=registrations), patch.object(self.files,'index',side_effect=AssertionError('Registered path needs no recursive search')):
+            result=self.engine.execute('cerca la cartella di installazione di Microsoft')
+            self.assertIn('Quale applicazione',result.message)
+            self.assertEqual(result.spoken_message,'Quale applicazione intendi?')
+            result=self.engine.execute('Minecraft')
+        self.assertEqual(result.status,'completed',result.message)
+        self.assertIn(str(minecraft),result.message)
+        self.assertIsNone(self.files._pending_app)
+        self.assertEqual(self.files._results,[minecraft])
+
+    def test_gpt_clarification_is_scoped_and_revoked(self):
+        phrase='puoi cercare la cartella di installazione di Microsoft?'
+        self.assertTrue(self.files.remember_file_clarification(phrase))
+        self.assertEqual(self.files.parse_command('intendo Minecraft'),('locate',{'query':'Minecraft'}))
+        self.assertIsNone(self.files.parse_command('Minecraft'))
+        self.assertFalse(self.files.remember_file_clarification('parliamo di Minecraft'))
+        self.files.remember_file_clarification(phrase)
+        self.files._pending_app=(time.monotonic()-1,self.files.policy.revision)
+        self.assertIsNone(self.files.parse_command('Minecraft'))
+        self.files.remember_file_clarification(phrase)
+        self.files.execute(*self.files.parse_command('annulla'))
+        self.assertIsNone(self.files.parse_command('Minecraft'))
+        self.files.remember_file_clarification(phrase)
+        self.files.reset('altro progetto')
+        self.assertIsNone(self.files.parse_command('Minecraft'))
+        self.files.remember_file_clarification(phrase)
+        self.manager.set_enabled('accesso_file',False)
+        self.assertIsNone(self.files.parse_command('Minecraft'))
+
+    def test_store_native_script_matches_start_identity_without_name_guess(self):
+        import subprocess
+        script=Path('file_access/windows_shell.ps1').resolve()
+        harness=self.root/'store-fixture.ps1'
+        location=str(self.docs).replace("'","''")
+        harness.write_text("function Get-StartApps { [pscustomobject]@{Name='Minecraft Launcher';AppID='Vendor.Opaque_123!App'} }\n"+
+            "function Get-AppxPackage { [pscustomobject]@{Name='Vendor.Opaque';PackageFamilyName='Vendor.Opaque_123';InstallLocation='"+location+"'} }\n"+
+            ". '"+str(script).replace("'","''")+"'\n",encoding='utf-8-sig')
+        powershell=Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe'
+        run=subprocess.run([str(powershell),'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',str(harness)],
+            input=json.dumps({'operation':'installed','query':'Minecraft'}),capture_output=True,text=True,encoding='utf-8',timeout=15,cwd=os.environ['SystemRoot'])
+        self.assertEqual(run.returncode,0,run.stderr)
+        reply=json.loads(run.stdout.lstrip('\ufeff'))
+        self.assertEqual(reply['status'],'ok',reply)
+        self.assertEqual(reply['rows'],[{'path':str(self.docs),'name':'Minecraft Launcher'}])
+
+    def test_store_rows_still_obey_local_policy(self):
+        from file_access.windows import installed_locations
+        with patch('file_access.windows.shell_query',return_value={'status':'ok','rows':[
+                {'path':str(self.docs),'name':'Jarvis Test Store App'},
+                {'path':str(self.hidden),'name':'Jarvis Test Store App'}]}):
+            rows=installed_locations('Jarvis Test Store App')
+        self.assertIn((self.docs,'Registrazione Windows: Jarvis Test Store App'),rows)
+        with patch('file_access.service.installed_locations',return_value=rows),patch.object(self.files,'index',side_effect=AssertionError('No scan')):
+            result=self.files.execute('locate',{'query':'Jarvis Test Store App'})
+        self.assertIn(str(self.docs),result.message)
+        self.assertNotIn(str(self.hidden),result.message)

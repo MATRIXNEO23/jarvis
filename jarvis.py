@@ -3353,6 +3353,9 @@ def main() -> None:
                                 remember_exchange(original_phrase,message,"clarify")
                                 continue
                             if intent.kind in ("chat", "clarify"):
+                                if (intent.kind=="clarify" and addon_manager is not None
+                                        and addon_manager.files_enabled()):
+                                    addon_manager.file_service.remember_file_clarification(original_phrase)
                                 write_line("JARVIS > " + intent.reply)
                                 speak_result(intent.reply)
                                 remember_exchange(original_phrase, intent.reply,

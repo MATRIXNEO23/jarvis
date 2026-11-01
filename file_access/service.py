@@ -84,6 +84,7 @@ class FileAccessService:
         self._expires = 0.0
         self._context = None
         self._pending = None
+        self._pending_app = None
         self._result_revision = -1
         self.max_entries = 5000
         self.max_seconds = 10.0
@@ -96,6 +97,7 @@ class FileAccessService:
             self._expires = 0
             self._context = context
             self._pending = None
+            self._pending_app = None
 
     def _live(self, revision):
         return (self.enabled() and not self.cancelled.is_set()
@@ -133,11 +135,42 @@ class FileAccessService:
                 return self._results[int(number)-1]
         return safe_path(value)
 
+    def remember_file_clarification(self, original):
+        """Retain one explicit read-only installation-folder goal, not arbitrary chat."""
+        normalized = ' '.join(original.casefold().split())
+        requested = re.match(r"^(?:(?:jarvis[, :]+)|(?:mi puoi |puoi |potresti ))*(?:trova(?:mi|re)?|cerca(?:mi|re)?)\b", normalized)
+        if (self.available() and requested and 'cartella' in normalized
+                and ('installazion' in normalized or 'installat' in normalized)):
+            self._pending_app = (time.monotonic()+120, self.policy.revision)
+            return True
+        return False
+
+    def _application_answer(self, text):
+        pending = self._pending_app
+        if pending is None:
+            return None
+        if (time.monotonic()>pending[0] or self.policy.revision!=pending[1]
+                or not self.available()):
+            self._pending_app = None
+            return None
+        clean = re.sub(r"^(?:intendo(?: il programma| l’applicazione| l'applicazione)?|il programma [eè]|l'applicazione [eè]|si chiama|[eè])\s+", '', text.strip(), flags=re.I).strip(' .!?')
+        if (len(clean)<=90 and re.fullmatch(r"[\wÀ-ÿ][\wÀ-ÿ .+'-]*",clean)
+                and len(clean.split())<=6
+                and not re.match(r"^(?:s[iì]|no|ok|annulla|lascia|non|ho|hai|ha|sono|siamo|sto|stiamo|voglio|penso|oggi|ieri|domani|apri|cerca|trova|elenca|leggi|scrivi|crea|elimina|chiudi|salva)\b",clean,re.I)):
+            self._pending_app = None
+            return clean
+        return None
+
     def parse_command(self, text):
         if not isinstance(text, str):
             return None
         clean = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+', '', text.strip(), flags=re.I).strip()
         low = clean.casefold().strip(' .!?')
+        if self._pending_app is not None and low in ('annulla','lascia perdere','non importa'):
+            return ('cancel', {})
+        app_answer = self._application_answer(clean)
+        if app_answer is not None:
+            return ('locate', {'query':app_answer})
         if low in ('annulla ricerca', 'ferma ricerca', 'interrompi ricerca'):
             return ('cancel', {})
         if low in ('mostra download', 'elenca download', 'lista download'):
@@ -159,7 +192,7 @@ class FileAccessService:
             (r'^(?:elenca|mostra) (?:i file in|(?:la )?cartella|il contenuto di)\s+(.+)$', 'list'),
             (r'^(?:leggi|leggimi|spiega|spiegami) (?:il |la )?(?P<kind>file|risultato)\s+(.+)$', 'read'),
             (r'^(?:apri|aprimi) (?:il |la )?(?P<kind>file|cartella|risultato)\s+(.+)$', 'open'),
-            (r'^(?:trova|trovami) (?:la )?cartella (?:di installazione|dati) (?:di )?(.+)$', 'locate'),
+            (r"^(?:trova|trovami|cerca|cercami) (?:la )?cartella (?:di installazione|d['’]installazione|installazione|dati) (?:di )?(.+)$", 'locate'),
         )
         # Program-identity query is more specific than the general search pattern.
         for pattern, operation in (patterns[-1],)+patterns[:-1]:
@@ -175,6 +208,7 @@ class FileAccessService:
                         args = {'query':scoped.group(1), 'scope':scoped.group(2).casefold()}
                 if operation == 'read' and low.startswith(('spiega', 'spiegami')):
                     args['explain'] = True
+                self._pending_app = None
                 return operation, args
         return None
 
@@ -293,11 +327,15 @@ class FileAccessService:
         return self._report(paths, revision, 'Ambito: '+str(root))
 
     def _search(self, query, scope, revision, *, locate=False, kind=None):
+        if locate:
+            kind = 'folder'
+            self._pending_app = None
         roots = [self._target(scope)] if scope else [Path(r['path']) for r in self.policy.valid_roots() if r['allow']]
         roots = list(dict.fromkeys(roots))
         if not scope:
             preferred = []
-            for name in ('documenti', 'download', 'desktop'):
+            names = ('appdata', 'appdata locale', 'documenti', 'download', 'desktop') if locate else ('documenti', 'download', 'desktop')
+            for name in names:
                 try:
                     candidate = long_path(known_folder(name))
                     if (any(contains(root,candidate) for root in roots)
@@ -318,10 +356,19 @@ class FileAccessService:
             if path not in paths and self.policy.permits(path):
                 paths.append(path)
         if locate:
-            for path, why in installed_locations(query):
+            locations = [(path,why) for path,why in installed_locations(query) if self.policy.permits(path)]
+            applications = list(dict.fromkeys(why.removeprefix('Registrazione Windows: ') for _,why in locations))
+            if len(applications)>1 and not any(query.casefold()==name.casefold() for name in applications):
+                self._pending_app = (time.monotonic()+120, revision)
+                return FileResult('completed', 'Più applicazioni corrispondono a “'+query+'”: '+
+                    '; '.join(applications[:5])+'. Quale applicazione intendi?')
+            for path, why in locations:
                 add(path)
                 if path in paths:
                     reason = why+'; cartelle candidate, ruolo da verificare. '
+            if paths:
+                return self._report(paths,revision,reason+'Percorsi registrati; nessuna scansione generale necessaria.')
+            reason = 'Installazione non risolta dalle registrazioni classiche/Store accessibili; seguono eventuali cartelle con nome corrispondente, ruolo non verificato. '
         started = time.monotonic()
         visited = set()
         for root in roots:
@@ -402,6 +449,8 @@ class FileAccessService:
 
     def spoken_reply(self, operation, result):
         """Presentation only: file lists stay on screen, never in the TTS queue."""
+        if operation=='locate' and self._pending_app is not None:
+            return 'Quale applicazione intendi?'
         if operation in ('list', 'search', 'locate', 'help'):
             return ''
         if result.status != 'completed':
