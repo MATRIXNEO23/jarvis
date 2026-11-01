@@ -1,5 +1,9 @@
 # Istruzioni persistenti — Jarvis
 
+## Lavoro per passi brevi e recuperabili — 2026-11-01
+Richiesta dell’utente dopo un’interruzione percepita: evitare sessioni monolitiche molto lunghe. Per un lavoro articolato indicare pochi step ordinati; ciascuno ha un obiettivo limitato, un risultato osservabile e un criterio di chiusura. Completare/verificare lo step, pubblicare un checkpoint sintetico nella repository con esito e prossimo passo, poi continuare quello già autorizzato. Non accorpare analisi, intera implementazione, molte correzioni e pubblicazione in un solo blocco senza punti recuperabili. Non promettere che un blocco sia impossibile.
+Se un controllo fallisce, separare diagnosi/correzione e fermare le attività che dipendono dal suo successo. Se una CI esterna impiega tempo, salvare SHA/run/stato in attesa e comunicare il punto; non ripetere lavoro già verificato solo per riempire l’attesa. Le operazioni sul PC dell’utente si guidano una alla volta. Non trasformare lo sviluppo per step in richieste di consenso per ogni dettaglio già autorizzato; chiedere solo per dubbi sostanziali o autorizzazioni davvero mancanti. Alla ripresa partire dal checkpoint corrente, senza ricompilare una build già consegnata se non emerge un motivo concreto.
+
 ## Collaudi soltanto Windows — 2026-11-01
 Richiesta esplicita dell’utente: niente nuovi test su Linux. Eseguire test funzionali, regressioni, collaudi nativi e verifica del pacchetto soltanto su Windows/CI Windows. Risultati Linux precedenti restano storici e non vanno presentati come verifiche di questa implementazione. L’editing nell’ambiente di sviluppo non costituisce un test runtime.
 

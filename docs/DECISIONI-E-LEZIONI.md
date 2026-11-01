@@ -1,5 +1,9 @@
 # Decisioni e lezioni — Jarvis
 
+## 2026-11-01 — Evitare blocchi di lavoro lunghi senza checkpoint
+**Richiesta:** l’utente segnala un’interruzione e chiede step brevi e ben organizzati. **Verifica:** documenti e pacchetto recuperati; run 41322290359 con tre job completed/success, consegna 7298fb6 presente. La causa del blocco percepito dell’interfaccia non è accertata; non attribuirla a un guasto di compilazione che non risulta dai controlli.
+**Metodo:** obiettivo limitato → risultato verificato → checkpoint pubblicato con prossimo passo, poi step successivo autorizzato; attese CI identificate con SHA/run, fallimenti con diagnosi separata. Nessuna conferma ripetuta per dettagli ordinari. **Ripresa:** il prossimo passo è il collaudo PC della build già consegnata, non ripetere l’implementazione. Solo documentazione aggiornata; nessun nuovo test o modifica del programma.
+
 ## 2026-11-01 — Accesso file: soluzione verificata automaticamente su Windows
 **Scelta:** riusare gestore/schema 1, motore e UI di Jarvis; codice nuovo suddiviso in windows/policy/service/ui (193/165/366/183 righe al candidato), servizi Windows e libreria standard, nessun nuovo pacchetto Python o processo residente. Dati cercati in sola lettura; GPT esterno solo per interpretazione/spiegazione richiesta.
 **Prove:** Sorgenti esatti 7298fb632cd9b72386fd7a30f469b307ce7e6fa5; [ZIP candidato](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip), 249396 byte/78 file, SHA-256 72c6d57a9a258fe7c875cfdc8646bc4ddf5b75417aa748bb5d4d4b7ef3e96755. [CI Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41322290359): 393 test per job Python 3.11/3.12, zero skip; 20 test dal pacchetto estratto, import e avvio/chiusura/rilascio directory PASS. Pubblicazione in Download e metadati remoti verificati, collegamento HTTP 200 con dimensione corretta.
