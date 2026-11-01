@@ -12,7 +12,8 @@ Sono due funzioni separate: riconoscere ciò che dici e leggere la risposta a vo
 7. Per parlare al GPT esterno, collega prima GPT e scegli Conversazione continua GPT. Standby spegne il microfono.
 
 Il modello è usato localmente; la conversazione con GPT invia al modello esterno il testo riconosciuto.
-Il codice corretto parte in standby. Alcuni vecchi testi ed echo dicono ancora ON: non descrivono il comportamento del riferimento 5e61e53.
+**Versione base b936879:** l'avvio segue auto_listen; il preparatore del profilo Trial la imposta inizialmente attiva. Per spegnere l'ascolto scegli Standby; per non riattivarlo al prossimo avvio disabilita la preferenza di ascolto automatico nelle impostazioni. La migrazione una tantum del vecchio Trial è distinta dalla scelta manuale successiva.
+**Ramo successivo a86c2c9/5e61e53:** impone invece standby all'avvio. Non confondere i comportamenti e non cambiare versione per questa differenza senza una scelta esplicita.
 Il profilo Trial può riusare in sola lettura il modello del profilo base: non duplicarlo se è già completo.
 
 Se il modello non si scarica, la [fonte del modello](https://alphacephei.com/vosk/models/vosk-model-small-it-0.22.zip) è quella usata dallo script. L'archivio va estratto mantenendo la cartella del modello nel percorso sopra. Una cartella incompleta non va sovrascritta senza averla identificata.
