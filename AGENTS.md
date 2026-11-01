@@ -1,3 +1,7 @@
+## Ricerca portabile e checkpoint 5A — 2026-11-01
+Requisito confermato: Jarvis deve crearsi sul PC corrente un indice locale dei file/cartelle, adattandosi autonomamente a profilo, unità e percorsi diversi; rilevare l'intero ambito accessibile/consentito, rispettando spunte/esclusioni. Non confondere l'indice autonomo ancora da realizzare con la fonte Windows Search già interrogata. Niente percorsi fissi o consensi importati automaticamente da un altro PC. Riutilizzare il componente file_access esistente; review 5B prima del nuovo codice e nessuna nuova dipendenza esterna presunta.
+Ultimo codice 61deabcf9cdc5ead14561c37a26e52f4e2ddb1aa, run Windows 41341801789 SUCCESS, 436 test per job 3.11/3.12. Passo 5A avanzamento/copertura verificato nei limiti dichiarati; build/ZIP/publisher SKIPPED. [Rapporto corrente](docs/ACCESSO-FILE-PASSO5-RICERCA-INDICE-20261101.md) supera i prossimi passi storici sotto.
+
 ## Interazione prioritaria a voce — 2026-11-01
 Precisazione utente: deve poter gestire Jarvis e il PC principalmente con la voce, evitando mouse/tastiera quando possibile. Finestre/elenchi sono supporti visuali, non passaggi che obbligano al clic. Per ogni funzione verificare prima il percorso senza clic: richiesta, risultati, scelta per numero/nome, eventuale precisazione e azione con contesto mantenuto. Mouse/tastiera restano alternative facoltative. Non promettere automazione universale o capacità non presenti; distinguere callback con trascrizione simulata da microfono/account reali. Elenchi mai recitati, build sempre su richiesta.
 

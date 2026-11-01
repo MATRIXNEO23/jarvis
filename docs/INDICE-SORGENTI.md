@@ -1,3 +1,6 @@
+## Riferimento corrente di sviluppo — passo 5A
+Sorgenti effettivi feature/file-access-20261101, commit 61deabcf9cdc5ead14561c37a26e52f4e2ddb1aa. CI Windows 41341801789: 436 test OK per Python 3.11/3.12; nessuna build. Il candidato 7298fb6 sotto resta una distribuzione precedente, non HEAD di sviluppo. [Ripresa, prove e review dell'indice per PC](ACCESSO-FILE-PASSO5-RICERCA-INDICE-20261101.md). Componenti da riusare: file_access/service.py, policy.py, windows.py, ui.py e queue/poll in jarvis.py. Nuovo indice persistente non ancora implementato.
+
 # Indice dei sorgenti Jarvis
 
 ## Candidato Accesso file — sorgenti effettivi della nuova consegna
