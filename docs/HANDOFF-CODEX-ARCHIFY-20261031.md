@@ -165,3 +165,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Regole, piano e lezioni aggiornati: commit d26bb6eee24760b279b58e2c8f931e16bd5d0480, 93eadd7822dba06dd08b780fae0f9070282b017c, 828d6f401aafa98eec61ffa8e7a05aacb5c8d6eb.
 - Parafrasi interpretate dal GPT esterno, senza formule obbligatorie; chiarimenti per dati mancanti. «Cosa puoi fare?» coerente con capacità davvero disponibili dopo ogni cambiamento delle add-on. Test esplicitati, non ancora realizzati.
 - Solo documentazione. Nessun test runtime o implementazione web; prossimo passo: revisione tecnica del piano prima di realizzarlo.
+
+## 2026-11-01 — In corso: sorgenti autorevoli e riuso della struttura
+- Richiesta: codice completo sempre disponibile nel repository; nuove add-on integrate sul sistema esistente, senza ricostruirlo dalla chat.
+- Verifica: ramo feature/timer-settings-ui-20261031 presente; inventario Git ricorsivo restituisce 167 voci, non troncato, con moduli Python, bridge, test e workflow. Riferimento evoluto 5e61e53fbb58ccb5d95b85671604cc5f365d6e04, coerente con handoff; non è una prova di build completa.
+- Previsto: salvare un indice dei sorgenti e dei riferimenti architetturali, aggiungere regola a AGENTS/RECUPERO e lezioni. Nessun trasferimento massivo di sorgenti su main, merge o modifica runtime.
