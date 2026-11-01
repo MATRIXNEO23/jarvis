@@ -1,7 +1,16 @@
 # Indice dei sorgenti Jarvis
+
+## Base operativa confermata e verificata
+- Pacchetto: Jarvis-Timer-Audio-Fix2-20261031.zip in Download, confermato dall'utente come ultima build funzionante nell'uso attuale.
+- Sorgenti esatti: b936879a431370d206152be7b089baf587d15499. Tutti i 155 file del pacchetto corrispondono al tree; ZIP ricreato identico, SHA-256 c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352.
+- Test dello ZIP: 373 OK, 5 skip Windows su Linux; CI Windows/Linux storica riletta e file coincidenti col merge testato.
+- [Rapporto/prove](VERIFICA-CONCRETA-BASE-20261101.md), [registro e ripristino](../Download/REGISTRO-VERSIONI.md).
+- Le prossime aggiunte partono da questa base. Il codice successivo qui sotto è distinto: conversation_context.py e la nuova suite pipeline sono soltanto nel ramo successivo, non nella base.
+
+## Fotografia separata del ramo successivo
 Verificato il 2026-11-01 con inventario Git ricorsivo non troncato: 167 voci, 160 file versionati. Questo è un indice di disponibilità dei file, non una prova di build o di completezza di tutte le dipendenze.
 
-## Riferimento del programma evoluto
+## Riferimento del ramo successivo, non del pacchetto PC
 - Repository: MATRIXNEO23/jarvis.
 - Ramo sorgenti evoluti: feature/timer-settings-ui-20261031.
 - Riferimento verificato coerente con l'handoff: 5e61e53fbb58ccb5d95b85671604cc5f365d6e04; contiene le modifiche del nucleo a86c2c9 e successiva documentazione.
@@ -13,7 +22,7 @@ Verificato il 2026-11-01 con inventario Git ricorsivo non troncato: 167 voci, 16
 |---|---|
 | Applicazione e integrazione UI | jarvis.py, settings.py |
 | GPT esterno e protocollo | gpt_client.py, gpt_bridge.mjs, conversation_router.py |
-| Contesto e memoria | conversation_context.py, conversation_memory.py, second_brain.py, workspace_memory.py |
+| Contesto e memoria | conversation_memory.py, second_brain.py, workspace_memory.py; conversation_context.py solo nel ramo successivo |
 | Voce e risposta | voice_control.py, offline_tts.py, adaptive_voice.py |
 | Capacità ed esecuzione locale | capability_registry.py, live_capabilities.py, local_engine.py |
 | Add-on e impostazioni | addon_manager.py, addon_ui.py, docs/ADDON_LIFECYCLE.md |
