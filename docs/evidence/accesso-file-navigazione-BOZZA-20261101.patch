@@ -1,0 +1,326 @@
+diff --git a/file_access/service.py b/file_access/service.py
+index 2f42555..07a578a 100644
+--- a/file_access/service.py
++++ b/file_access/service.py
+@@ -8,7 +8,7 @@ import threading
+ import time
+ from uuid import uuid4
+ from .policy import AccessPolicy, safe_path, contains
+-from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations, long_path
++from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations, long_path, explorer_view, navigate_explorer
+ 
+ OPERATIONS = frozenset(('list', 'search', 'read', 'open', 'locate'))
+ TEXT_TYPES = frozenset(('.txt', '.md', '.json', '.log', '.csv', '.ini', '.yaml', '.yml'))
+@@ -20,6 +20,7 @@ _RESULT_WORDS = dict(zip(
+ _RESULT_WORDS.update({'una':'1','il primo':'1','la prima':'1',
+     'il secondo':'2','la seconda':'2','il terzo':'3','la terza':'3'})
+ _DEICTIC_TARGETS = frozenset(('questo','quello','questa','quella','selezionato','il file','la cartella','selezionata'))
++_CURRENT_TARGETS = frozenset(('qui','qui dentro','cartella corrente','cartella aperta','questa cartella','cartella a schermo'))
+ 
+ 
+ def result_number(value):
+@@ -47,7 +48,7 @@ class FileResult:
+ def validate_arguments(operation, arguments):
+     if operation not in OPERATIONS or not isinstance(arguments, dict):
+         raise ValueError('Azione file non riconosciuta.')
+-    permitted = {'query', 'scope'} if operation == 'search' else {'query'} if operation == 'locate' else {'target', 'explain', 'kind'} if operation == 'read' else {'target', 'kind'} if operation == 'open' else {'target'}
++    permitted = {'query', 'scope'} if operation == 'search' else {'query'} if operation == 'locate' else {'target', 'explain', 'kind', 'scope'} if operation == 'read' else {'target', 'kind', 'scope'} if operation == 'open' else {'target'}
+     if set(arguments) - permitted:
+         raise ValueError('Parametri file non consentiti.')
+     if operation in ('search', 'locate') and not arguments.get('query'):
+@@ -59,6 +60,8 @@ def validate_arguments(operation, arguments):
+         arguments["target"] = str(arguments["target"])
+     if "kind" in arguments and arguments["kind"] not in ("file", "folder"):
+         raise ValueError("Tipo richiesto non valido: file oppure folder.")
++    if operation in ('open','read') and arguments.get('scope','current') != 'current':
++        raise ValueError('Ambito di navigazione non valido.')
+     for key, value in arguments.items():
+         if key == 'explain':
+             if type(value) is not bool:
+@@ -85,6 +88,8 @@ class FileAccessService:
+         self._context = None
+         self._pending = None
+         self._pending_app = None
++        self._navigation = None
++        self._view = None
+         self._result_revision = -1
+         self.max_entries = 5000
+         self.max_seconds = 10.0
+@@ -98,6 +103,8 @@ class FileAccessService:
+             self._context = context
+             self._pending = None
+             self._pending_app = None
++            self._navigation = None
++            self._view = None
+ 
+     def _live(self, revision):
+         return (self.enabled() and not self.cancelled.is_set()
+@@ -118,6 +125,10 @@ class FileAccessService:
+     def _target(self, text):
+         value = str(text).strip().strip('"')
+         number = result_number(value)
++        if value.casefold() in _CURRENT_TARGETS:
++            return self._current_folder(screen=value.casefold()=='cartella a schermo')
++        if value.casefold()=='cartella superiore':
++            return self._current_folder().parent
+         aliases = {'documenti': 'documenti', 'download': 'download', 'desktop': 'desktop',
+                    'appdata': 'appdata', 'profilo': 'profilo', 'cartella utente': 'profilo'}
+         if value.casefold() in aliases:
+@@ -126,8 +137,11 @@ class FileAccessService:
+             valid = (time.monotonic() < self._expires and
+                      self._result_revision == self.policy.revision)
+             if value.casefold() in _DEICTIC_TARGETS:
++                view=explorer_view()
++                if view.get('status') in ('ok','ambiguous'):
++                    return self._explorer_selection()
+                 if not valid or self._selected is None:
+-                    raise ValueError('Prima scegli un risultato della ricerca corrente.')
++                    raise ValueError('Prima scegli un risultato della ricerca corrente o seleziona un elemento in Esplora file.')
+                 return self._selected
+             if number is not None:
+                 if not valid or not 1 <= int(number) <= len(self._results):
+@@ -135,6 +149,35 @@ class FileAccessService:
+                 return self._results[int(number)-1]
+         return safe_path(value)
+ 
++    def _current_folder(self, *, screen=False):
++        view = explorer_view()
++        self._view = view if view.get('status')=='ok' else None
++        if view.get('status')=='ambiguous':
++            raise ValueError('Più finestre o schede Esplora file: porta in primo piano quella desiderata e ripeti, oppure indica il percorso.')
++        if self._view is not None:
++            path=safe_path(view['path'])
++            if not self.policy.permits(path):
++                raise PermissionError('La cartella mostrata in Esplora file non è consentita: controlla Configura.')
++            self._navigation=(path,self.policy.revision)
++            return path
++        if screen:
++            raise ValueError('Non riesco a leggere la cartella di Esplora file. Porta la finestra in primo piano o indica il percorso.')
++        if self._navigation is not None:
++            path,revision=self._navigation
++            if revision==self.policy.revision and self.policy.permits(path):
++                return path
++        raise ValueError('Prima apri/elenca una cartella con Jarvis oppure porta Esplora file in primo piano.')
++
++    def _explorer_selection(self):
++        self._current_folder(screen=True)
++        selected=self._view.get('selected',[])
++        if len(selected)!=1:
++            raise ValueError('Seleziona un solo elemento in Esplora file oppure indica il numero del risultato in chat.')
++        path=safe_path(selected[0])
++        if not self.policy.permits(path):
++            raise PermissionError('L’elemento selezionato non è consentito.')
++        return path
++
+     def remember_file_clarification(self, original):
+         """Retain one explicit read-only installation-folder goal, not arbitrary chat."""
+         normalized = ' '.join(original.casefold().split())
+@@ -166,6 +209,12 @@ class FileAccessService:
+             return None
+         clean = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+', '', text.strip(), flags=re.I).strip()
+         low = clean.casefold().strip(' .!?')
++        if low in ('vai indietro','indietro','vai indietro di una cartella','torna indietro di una cartella','cartella superiore'):
++            return ('open',{'target':'cartella superiore','kind':'folder'})
++        if low in ('elenca qui','elenca cosa c’è qui dentro','elenca cosa c\'è qui dentro','mostra cosa c’è qui dentro','mostra cosa c\'è qui dentro','elenca qui dentro','mostra qui dentro'):
++            return ('list',{'target':'qui'})
++        if low in ('apri questo','apri questa','aprimi questo','aprimi questa','aprilo','aprila'):
++            return ('open',{'target':'questo'})
+         if self._pending_app is not None and low in ('annulla','lascia perdere','non importa'):
+             return ('cancel', {})
+         app_answer = self._application_answer(clean)
+@@ -202,6 +251,11 @@ class FileAccessService:
+                 noun = match.groupdict().get('kind')
+                 if noun in ('file', 'cartella'):
+                     args['kind'] = 'folder' if noun=='cartella' else 'file'
++                if operation in ('open','read'):
++                    relative = re.fullmatch(r'(.+?) (?:qui dentro|qui|in questa cartella)',args['target'],re.I)
++                    if relative:
++                        args['target']=relative.group(1)
++                        args['scope']='current'
+                 if operation == 'search':
+                     scoped = re.fullmatch(r'(.+?) (?:in|nella cartella) (documenti|download|desktop|profilo|appdata)', args['query'], re.I)
+                     if scoped:
+@@ -247,14 +301,24 @@ class FileAccessService:
+             # This is a fresh, locally validated request after activation.
+             # Old selections were already revoked by reset on disable/cancel.
+             self.cancelled.clear()
++            self._view = None
+             revision = self.policy.revision
+             if operation in ('search', 'locate'):
+                 return self._search(args['query'], args.get('scope'), revision, locate=operation == 'locate')
+             try:
+-                target = self._target(args.get('target', 'profilo'))
++                if args.get('scope')=='current':
++                    root=self._current_folder()
++                    name=args['target']
++                    if Path(name).name!=name or name in ('.','..'):
++                        raise ValueError('Indica il nome di un elemento dentro la cartella corrente.')
++                    target=root/name
++                    if not target.exists():
++                        raise ValueError('Nessun elemento con questo nome nella cartella corrente. Chiedi “elenca qui dentro”.')
++                else:
++                    target = self._target(args.get('target', 'profilo'))
+             except ValueError:
+                 name = args.get('target', '')
+-                if operation not in ('read', 'open') or not name or Path(name).is_absolute() or result_number(name) is not None or name.casefold() in _DEICTIC_TARGETS:
++                if operation not in ('read', 'open') or not name or Path(name).is_absolute() or result_number(name) is not None or name.casefold() in _DEICTIC_TARGETS or name.casefold() in _CURRENT_TARGETS or name=='cartella superiore' or args.get('scope'):
+                     raise
+                 # A requested action with a partial name reuses the same search.
+                 self.cancelled.clear()
+@@ -280,9 +344,17 @@ class FileAccessService:
+                     return self._list(target, revision)
+                 # Fixed executable, argument is a verified local folder, no shell.
+                 import subprocess
+-                subprocess.Popen([str(Path(os.environ['SystemRoot'])/'explorer.exe'), str(target)],
+-                                 shell=False, cwd=os.environ['SystemRoot'])
+-                return FileResult('completed', 'Apertura richiesta a Esplora file: '+str(target)+'. Verifica la finestra; non posso confermarne la visibilità.')
++                view = self._view or explorer_view()
++                navigated = (view.get('status')=='ok' and self.policy.permits(safe_path(view['path']))
++                             and navigate_explorer(view['hwnd'],target))
++                self._view = None
++                if not navigated:
++                    subprocess.Popen([str(Path(os.environ['SystemRoot'])/'explorer.exe'), str(target)],
++                                     shell=False, cwd=os.environ['SystemRoot'])
++                self._navigation=(target,revision)
++                contents=self._list(target,revision)
++                return FileResult(contents.status,'Apertura richiesta a Esplora file: '+str(target)+
++                    '. Visibilità non confermata. Contenuto della destinazione:\n'+contents.message)
+             return self._read(target, revision, args.get('explain', False))
+         except (OSError, ValueError, KeyError, UnicodeError) as exc:
+             return FileResult('rejected', str(exc)[:500])
+@@ -308,11 +380,14 @@ class FileAccessService:
+         if text_number is not None:
+             suggestions.append('leggi file '+str(text_number))
+         guidance = ('\nScegli il numero. Esempi per questo elenco: '+ ' / '.join(suggestions)+'.') if suggestions else ''
++        if len(allowed)>1:
++            guidance+='\nQuale risultato vuoi aprire?'
+         return FileResult('completed', message+'\n'+note+guidance)
+ 
+     def _list(self, root, revision):
+         if not root.is_dir():
+             raise ValueError('Il percorso non è una cartella.')
++        self._navigation=(root,revision)
+         paths, seen = [], 0
+         start = time.monotonic()
+         with os.scandir(root) as entries:
+@@ -377,8 +452,7 @@ class FileAccessService:
+             indexed, note = self.index(query, root)
+             reason = reason or note
+             for path in indexed:
+-                if query.casefold() in path.name.casefold():
+-                    add(path)
++                add(path)  # Windows Search may match indexed content, not only name.
+             stack = [root]
+             while stack and self._live(revision):
+                 current = stack.pop()
+@@ -451,6 +525,8 @@ class FileAccessService:
+         """Presentation only: file lists stay on screen, never in the TTS queue."""
+         if operation=='locate' and self._pending_app is not None:
+             return 'Quale applicazione intendi?'
++        if operation in ('search','locate') and len(self._results)>1 and result.status=='completed':
++            return 'Quale risultato vuoi aprire?'
+         if operation in ('list', 'search', 'locate', 'help'):
+             return ''
+         if result.status != 'completed':
+@@ -474,7 +550,9 @@ class FileAccessService:
+         return ('Accesso file attivo, sola lettura nelle cartelle selezionate:\n' +
+                 '\n'.join('• '+a['description']+' Esempio: '+a['example'] for a in actions)+
+                 '\nPuoi scegliere un risultato per numero, chiedere la spiegazione del testo letto, '
+-                'oppure annullare la ricerca. Le varianti naturali usano il GPT esterno quando collegato.')
++                'elencare “qui dentro”, aprire una sottocartella per nome qui dentro, dire “vai indietro di una cartella” '
++                'oppure annullare la ricerca. “Apri questo” usa la selezione Explorer o il risultato selezionato. '
++                'Ricerca per nomi e contenuti indicizzati da Windows; le varianti naturali usano il GPT esterno quando collegato.')
+ 
+ 
+ 
+diff --git a/file_access/windows.py b/file_access/windows.py
+index 9a1e601..a7d69d5 100644
+--- a/file_access/windows.py
++++ b/file_access/windows.py
+@@ -198,7 +198,7 @@ def shell_query(request: dict, *, timeout=6) -> dict:
+         if run.returncode or len(run.stdout)>64000:
+             raise ValueError('Native query failed')
+         result=json.loads(run.stdout.lstrip('\ufeff'))
+-        if (not isinstance(result,dict) or result.get('status') not in ('ok','unavailable','ambiguous')
++        if (not isinstance(result,dict) or result.get('status') not in ('ok','unavailable','ambiguous','none')
+                 or not isinstance(result.get('rows',[]),list) or len(result.get('rows',[]))>50):
+             raise ValueError('Invalid native reply')
+         return result
+@@ -206,6 +206,25 @@ def shell_query(request: dict, *, timeout=6) -> dict:
+         return {'status':'unavailable','rows':[]}
+ 
+ 
++def explorer_view() -> dict:
++    """Active Explorer view, or the sole open view when Jarvis has keyboard focus."""
++    require_windows()
++    user = ctypes.WinDLL('user32',use_last_error=True)
++    user.GetForegroundWindow.restype = wintypes.HWND
++    result = shell_query({'operation':'view','hwnd':int(user.GetForegroundWindow() or 0)})
++    if result.get('status')=='ok':
++        if (not isinstance(result.get('path'),str) or len(result['path'])>32767
++                or type(result.get('hwnd')) is not int or result['hwnd']<=0
++                or not isinstance(result.get('selected'),list) or len(result['selected'])>20
++                or any(not isinstance(p,str) or len(p)>32767 for p in result['selected'])):
++            return {'status':'unavailable'}
++    return result
++
++
++def navigate_explorer(hwnd: int, target: Path) -> bool:
++    return shell_query({'operation':'navigate','hwnd':hwnd,'target':str(target)}).get('status')=='ok'
++
++
+ def long_path(path: Path) -> Path:
+     """Expand DOS 8.3 aliases without following a junction to another location."""
+     kernel = native_kernel()
+diff --git a/file_access/windows_search.ps1 b/file_access/windows_search.ps1
+index 50f03a5..cc40111 100644
+--- a/file_access/windows_search.ps1
++++ b/file_access/windows_search.ps1
+@@ -8,11 +8,12 @@ try {
+     # Values are SQL literals only; wildcard characters are escaped for LIKE.
+     $name = ([string]$inputData.query).Replace("'", "''").Replace('[', '[[]').Replace('%', '[%]').Replace('_', '[_]')
+     $scope = ([string]$inputData.root).Replace("'", "''")
++    $words = ([string]$inputData.query).Replace("'", "''")
+     $connection = New-Object -ComObject ADODB.Connection
+     $connection.ConnectionTimeout = 3
+     $connection.CommandTimeout = 4
+     $connection.Open("Provider=Search.CollatorDSO;Extended Properties='Application=Windows';")
+-    $sql = "SELECT TOP 50 System.ItemPathDisplay FROM SYSTEMINDEX WHERE SCOPE='file:$scope' AND System.FileName LIKE '%$name%'"
++    $sql = "SELECT TOP 50 System.ItemPathDisplay FROM SYSTEMINDEX WHERE SCOPE='file:$scope' AND (System.FileName LIKE '%$name%' OR FREETEXT(System.Search.Contents,'$words')) ORDER BY System.Search.Rank DESC"
+     $record = $connection.Execute($sql)
+     $paths = [System.Collections.Generic.List[string]]::new()
+     while (-not $record.EOF -and $paths.Count -lt 50) {
+diff --git a/file_access/windows_shell.ps1 b/file_access/windows_shell.ps1
+index b9f51ed..43c7204 100644
+--- a/file_access/windows_shell.ps1
++++ b/file_access/windows_shell.ps1
+@@ -2,6 +2,29 @@ $ErrorActionPreference = 'Stop'
+ [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+ try {
+     $data = [Console]::In.ReadToEnd() | ConvertFrom-Json
++    if ($data.operation -in @('view','navigate')) {
++        $shell = New-Object -ComObject Shell.Application
++        $windows = @($shell.Windows() | Where-Object {
++            [IO.Path]::GetFileName([string]$_.FullName) -ieq 'explorer.exe'
++        } | Select-Object -First 50)
++        $matches = @($windows | Where-Object { [long]$_.HWND -eq [long]$data.hwnd })
++        if ($matches.Count -eq 0 -and $data.operation -eq 'view') { $matches = $windows }
++        if ($matches.Count -eq 0) { @{status='none';rows=@()} | ConvertTo-Json -Compress; exit }
++        if ($matches.Count -ne 1) { @{status='ambiguous';rows=@()} | ConvertTo-Json -Compress; exit }
++        $window = $matches[0]
++        $folder = $window.Document.Folder.Self
++        if (-not $folder.IsFileSystem -or -not [IO.Path]::IsPathRooted([string]$folder.Path)) { throw 'Not a filesystem folder' }
++        if ($data.operation -eq 'navigate') {
++            if (-not ($data.target -is [string]) -or $data.target.Length -gt 32767 -or
++                -not [IO.Path]::IsPathRooted($data.target) -or $data.target.StartsWith('\\') -or
++                -not [IO.Directory]::Exists($data.target)) { throw 'Invalid folder' }
++            $window.Navigate2([string]$data.target)
++            @{status='ok';rows=@()} | ConvertTo-Json -Compress; exit
++        }
++        $selected = @($window.Document.SelectedItems() | Select-Object -First 20 | ForEach-Object { [string]$_.Path })
++        @{status='ok';path=[string]$folder.Path;hwnd=[long]$window.HWND;selected=$selected;rows=@()} | ConvertTo-Json -Compress
++        exit
++    }
+     if ($data.operation -ne 'installed' -or -not ($data.query -is [string]) -or
+         $data.query.Length -lt 1 -or $data.query.Length -gt 160) { throw 'Invalid request' }
+     $query = $data.query

@@ -1,6 +1,13 @@
 name: Jarvis unit and GPT protocol checks
 
 on:
+  workflow_dispatch:
+    inputs:
+      build_candidate:
+        description: 'Build e pubblicazione candidato: usare solo dopo richiesta esplicita dell’utente'
+        required: true
+        type: boolean
+        default: false
   push:
     branches: [main, 'feature/file-access-20261101']
     paths:
@@ -68,13 +75,13 @@ jobs:
           }
 
       - name: Build operational candidate (Windows only)
-        if: matrix.python-version == '3.12'
+        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
         run: python tools/build_file_access.py dist
       - name: Verify extracted candidate on Windows
-        if: matrix.python-version == '3.12'
+        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
         run: python tools/check_file_access_package.py dist/Jarvis-Accesso-File-0.1.0-20261101.zip
       - uses: actions/upload-artifact@v4
-        if: success() && matrix.python-version == '3.12'
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
         with:
           name: Jarvis-Accesso-File-0.1.0-20261101
           path: dist/*
@@ -83,7 +90,7 @@ jobs:
   publish-file-access:
     name: Persist verified candidate in Download (Windows)
     needs: unit
-    if: github.ref == 'refs/heads/feature/file-access-20261101' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/feature/file-access-20261101' && github.event_name == 'workflow_dispatch' && inputs.build_candidate
     runs-on: windows-2022
     permissions:
       contents: write

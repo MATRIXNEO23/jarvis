@@ -1,3 +1,9 @@
+# Punto di arresto vigente — proposte prima di altre build
+Utente: «Non fare la build in automatico, proponimi soluzioni». I candidati 755f988 (run 41330559676) e 950f655 (run 41330921134) hanno già concluso test/pubblicazione prima di questa istruzione; non sono nuove consegne richieste ora. Da questo punto nessuna build automatica. Workflow aggiornato: solo test Windows su push/PR; build, verifica archivio e pubblicazione soltanto con avvio manuale e build_candidate=true dopo richiesta utente.
+Navigazione/contenuto: editing preliminare non testato conservato come docs/evidence/accesso-file-navigazione-BOZZA-20261101.patch, rimosso dai file runtime prima di questo checkpoint. NON applicarlo automaticamente: manca revisione e test, contiene ipotesi ancora da verificare. Nessuna navigazione Explorer o ricerca contenuto dichiarata consegnata.
+Nuovi requisiti: risultati visuali silenziosi, scelta solo se più risultati, indizi/contenuto oltre al nome; navigazione Explorer con sottocartelle e cartella superiore; elenco programmi rilevati e spunte nelle impostazioni per permettere apertura/chiusura. Prima concordare comportamento e confini; niente moduli complessi o visione continua senza necessità. Programmi e UI permessi non implementati.
+Prossimo passo: presentare proposta semplice e raccogliere il solo dubbio sostanziale sulla chiusura (solo finestre aperte da Jarvis, oppure anche finestre dell’app già aperte dall’utente). Base b936879 e archivi precedenti preservati.
+
 # Accesso file — checkpoint di sviluppo
 
 ## In corso — riscontro PC e correzione voce elenchi, 2026-11-01
