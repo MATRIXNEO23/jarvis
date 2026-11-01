@@ -1,0 +1,22 @@
+[
+  {
+    "command": [
+      "python",
+      "-m",
+      "compileall",
+      "-q",
+      "."
+    ],
+    "exit_code": 0,
+    "output": ""
+  },
+  {
+    "command": [
+      "node",
+      "--check",
+      "gpt_bridge.mjs"
+    ],
+    "exit_code": 0,
+    "output": ""
+  }
+]
