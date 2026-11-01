@@ -462,6 +462,8 @@ class JarvisHUD:
         speaking=bool(state.get("speaking",False))
         listening=bool(state.get("listening",False))
         thinking=bool(state.get("thinking",False))
+        reasoning=bool(state.get("reasoning",False))
+        searching=bool(state.get("searching",False))
         connected=bool(state.get("connected",False))
         memory=bool(state.get("memory",False))
         mic_enabled=bool(state.get("mic_enabled",listening))
@@ -472,11 +474,15 @@ class JarvisHUD:
             f"MEMORIA  {'ON' if memory else 'OFF'}")
         status=("JARVIS // TRASMISSIONE VOCALE" if speaking else
                 "JARVIS // VOCE RILEVATA" if listening else
+                "JARVIS // STA RAGIONANDO" if reasoning else
+                "JARVIS // RICERCA SUL PC" if searching else
                 "JARVIS // ELABORAZIONE" if thinking else
                 "JARVIS // MICROFONO ATTIVO - IN ATTESA" if mic_enabled else
                 "JARVIS // STANDBY")
         info=("JARVIS STA PARLANDO" if speaking else
               "LA TUA VOCE È RILEVATA" if listening else
+              "JARVIS STA RAGIONANDO" if reasoning else
+              "RICERCA SUL PC IN CORSO" if searching else
               "ELABORAZIONE IN CORSO" if thinking else
               "MICROFONO ATTIVO  •  ATTESA VOCE" if mic_enabled else
               "MICROFONO SPENTO  •  CONTROLLO MANUALE")

@@ -427,6 +427,7 @@ def main() -> None:
     gpt_status = tk.StringVar(value="GPT: inizializzazione" if gpt_enabled.get() else "GPT: disattivato")
     busy_local = False
     busy_gpt = False
+    gpt_request_action = ""
     local_execution_lock = threading.Lock()
     planner_abort_event = threading.Event()
     closing = False
@@ -1777,9 +1778,10 @@ def main() -> None:
         local_button.configure(state="disabled" if busy_local or closing else "normal")
 
     def run_gpt(action: str, **params) -> None:
-        nonlocal busy_gpt
+        nonlocal busy_gpt, gpt_request_action
         if busy_gpt or not gpt_enabled.get() or closing:
             return
+        gpt_request_action = action
         busy_gpt = True
         refresh_buttons()
         if action == "sign_in":
@@ -2737,9 +2739,9 @@ def main() -> None:
                         result = (engine.execute_file(*file_call) if file_call is not None
                                   else engine.execute(message))
                 output_queue.put(("local", result))
-            except Exception:
+            except Exception as exc:
                 output_queue.put(("local", TaskResult("-", "internal", "failed",
-                    "Errore interno: controlla i dati di Jarvis.")))
+                    "Errore locale ("+type(exc).__name__+"): operazione non completata.")))
         threading.Thread(target=worker, daemon=True).start()
 
     def submit_gpt() -> None:
@@ -3742,7 +3744,12 @@ def main() -> None:
         # Push-to-talk selected but not pressed must remain cyan.
         "listening": voice.is_user_speaking(),
         "mic_enabled": voice.is_listening(),
-        "thinking": busy_gpt or busy_local or document_busy,
+        "reasoning": (busy_gpt and gpt_enabled.get() and
+                      gpt_request_action in ("ask", "conversation", "typed_conversation")),
+        "searching": (busy_local and engine.file_access is not None and
+                      engine.file_access._progress_active and
+                      not engine.file_access.cancelled.is_set()),
+        "thinking": (busy_gpt and gpt_enabled.get()) or busy_local or document_busy,
         "connected": active_gpt,
         "memory": memory_enabled.get(),
         "orbit_nodes": orbit_nodes_cache,
