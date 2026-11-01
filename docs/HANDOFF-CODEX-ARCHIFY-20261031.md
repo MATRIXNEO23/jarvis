@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## In corso — fattibilità cartelle/file e programmi scelti, 2026-11-01
+Richiesta discussa, non implementazione: riusare funzioni Windows e codice Jarvis prima di aggiungere dipendenze; cercare/aprire file e cartelle; selezionare programmi nelle impostazioni; interpretazione naturale GPT quando serve; catalogo aggiornato. Letti local_engine.py, capability_registry.py, live_capabilities.py, settings.py e punti pertinenti jarvis.py della base b936879; consultate fonti Microsoft. Previsti scheda dedicata, indice, stato e lezioni; nessun codice/pacchetto. Prossimo controllo: rilettura documenti salvati e distinzione fra capacità presenti e proposte.
+
 ## Checkpoint corrente — schede progetto salvate, discussione prima del codice
 2026-11-01: creati [indice implementabili](IMPLEMENTABILI.md), [modello](implementabili/MODELLO.md) e schede web, cronometro e promemoria. Le ultime due sono suggerimenti dell'assistente, non funzioni approvate. Browser resta sospeso senza priorità automatica: l'utente vuole prima discutere altre funzioni e definire ogni progetto.
 Chiarimento esplicito: «prendere appunti» significa documentare caratteristiche e decisioni nella repository per il recupero dell'assistente, non sviluppare appunti vocali in Jarvis. Proposta errata ritirata, file APPUNTI.md eliminato nel commit 6fa1690b2041215c9e7076e9ff8d5ff05f6a4524 e riferimento tolto dall'indice. Cronologia Git conservata.
