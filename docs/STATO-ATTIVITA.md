@@ -1,5 +1,8 @@
 # Stato attività Jarvis
 
+## Attività vigente — implementazione fino alla build testabile, Windows soltanto
+Autorizzazione utente acquisita. Sorgenti in feature/file-access-20261101 dalla base b936879; recuperare docs/ACCESSO-FILE-STATO.md di quel ramo. Probe Windows avviato con commit 7955efe/run 41319370085; integrazione e pacchetto ancora in corso, nessuna consegna nuova. Niente nuovi test Linux: richiesta esplicita salvata in AGENTS. Restano invariati zero costi extra, riuso Jarvis/Windows, add-on leggibile e versione PC preservata.
+
 ## Metodo vigente — documentazione sempre recuperabile dalla repository
 Precisazione dell’utente incorporata in AGENTS/RECUPERO/handoff/lezioni: copie temporanee non sostituiscono conservazione remota di scelte, motivazioni, errori, prove, correzioni e prossimo passo. Nessuna fase dichiarata conclusa senza pubblicazione e verifica della relativa documentazione. Solo chiarimento del metodo; priorità accesso file e prova nativa Windows immutate.
 

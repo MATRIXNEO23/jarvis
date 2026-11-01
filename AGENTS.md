@@ -1,5 +1,8 @@
 # Istruzioni persistenti — Jarvis
 
+## Collaudi soltanto Windows — 2026-11-01
+Richiesta esplicita dell’utente: niente nuovi test su Linux. Eseguire test funzionali, regressioni, collaudi nativi e verifica del pacchetto soltanto su Windows/CI Windows. Risultati Linux precedenti restano storici e non vanno presentati come verifiche di questa implementazione. L’editing nell’ambiente di sviluppo non costituisce un test runtime.
+
 ## Documentazione persistente del lavoro — 2026-11-01
 L’utente richiede che il lavoro sia recuperabile dalla repository, senza dipendere dalla chat o dall’ambiente temporaneo di sessione. Conservare nei documenti di progetto obiettivo/requisiti, scelte e motivazioni tecniche sintetiche, alternative scartate con motivo, errori/riproduzione/causa dimostrata o ipotesi, correzione, prove/esito/limiti, riferimenti a file/commit/versione e prossimo passo. Non ripetere tentativi già falliti perché la spiegazione è rimasta soltanto locale.
 Gli intermedi riproducibili possono essere temporanei; decisioni, risultati ed evidenze necessari a capire e correggere il progetto devono essere pubblicati nella repository in checkpoint coerenti durante il lavoro e prima di sospendere. Un commit solo locale non è una consegna persistente: prima di dichiarare concluso il passaggio verificare presenza e contenuto remoto. Se la pubblicazione fallisce dichiarare il punto non ancora conservato, senza presentarlo come completato. Le copie temporanee non sono una scelta equivalente alla documentazione in repo per questo progetto. Preservare cronologia, versioni funzionanti e dati; non registrare segreti o conversazioni personali. Le autorizzazioni documentali non autorizzano nuove modifiche runtime.

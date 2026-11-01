@@ -1,5 +1,8 @@
 # Recupero del lavoro Jarvis
 
+## Ripresa vigente — codice e build Accesso file
+L’utente ha autorizzato implementazione e build testabile, con tutti i nuovi test soltanto su Windows. Ramo feature/file-access-20261101 dalla base b936879: leggere il suo docs/ACCESSO-FILE-STATO.md per checkpoint/prove. Probe Windows run 41319370085 inizialmente in corso; nessuna nuova build da considerare consegnata finché non verificata e pubblicata. I precedenti arresti prima del codice sono superati per questo incremento file, non per browser o scritture/cancellazioni.
+
 ## Regola vigente di conservazione e ripresa
 La repository è la fonte persistente del progetto. Le sole copie dell’ambiente temporaneo non bastano: leggere AGENTS, handoff e registro decisioni/lezioni per scelte, motivazioni tecniche, errori, correzioni e prove. Ogni passaggio si chiude solo dopo pubblicazione e verifica remota della documentazione necessaria a riprenderlo. Non chiedere all’utente di ricostruire ciò che è già documentato; verificare le fonti e proseguire dal prossimo passo registrato. Nessun codice nuovo da questo chiarimento.
 
