@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## In corso — metodo recuperabile e ZIP operativo essenziale, 2026-11-01
+L'utente richiede metodo recuperato da ogni istanza con accesso repo e pacchetto contenente solo file necessari all'uso/installazione/configurazione del programma. Letto publish-audit-zip.yml della base b936879: include tutti i file Git salvo ZIP storici Download e verifica anche un conteggio minimo; non è ancora una selezione runtime. Previsti aggiornamenti AGENTS/RECUPERO/scheda/STATO/lezioni. Nessuna modifica al publisher o alla base funzionante; verificare documenti salvati prima della chiusura.
+
 ## Checkpoint corrente — piano Windows e organizzazione concordati, 2026-11-01
 Requisiti precisati nella [scheda WINDOWS](implementabili/WINDOWS.md): ricerca/apertura e lettura/spiegazione entrambe richieste; nome parziale/prefisso o indizi/scopo, esempio cartella installazione Minecraft. Cercare evidenze locali e distinguere programma/dati/salvataggi; nessun percorso inventato o garanzia con zero indizi. Ambito cartelle/formati ancora da definire, non ripetere la domanda «anche lettura?».
 Piano proposto in cinque fasi salvato: inventario responsabilità/limite/modifica/test, prova Windows minima, miglioramento percorso completo, ricerca/lettura per incrementi e verifiche/consegna/ritorno versione. Migliorare funzioni esistenti senza doppioni; add-on soltanto dove nuova o motivata, non per ricreare un'azione esistente. Riuso Windows/codice prima delle dipendenze nuove, valutazione tecnica a carico dell'assistente.
