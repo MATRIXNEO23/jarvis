@@ -69,3 +69,9 @@ L'utente richiede recupero dei progetti precedenti anche dopo un cambio di argom
 
 ## 2026-11-01 — Handoff continuo, non a richiesta
 Precisazione dell'utente: recupero necessario anche se la sessione termina all'improvviso. Regola in AGENTS.md e RECUPERO.md: checkpoint prima di ogni modifica coerente, subito dopo e dopo le verifiche. Stato «in corso» recuperabile confrontando codice/diff/commit. Non limitarsi al salvataggio di fine turno e non promettere che scritture interrotte siano persistite. Modifica solo documentale, nessun test runtime.
+
+## 2026-11-01 — Prevenzione degli errori con revisione limitata
+**Problema:** individuare incompatibilità solo alla build finale, oppure ripetere controlli senza un criterio di arresto.
+**Decisione:** progetto basato su fonti reali, consultazione delle lezioni pertinenti, una revisione iniziale e un ricontrollo mirato delle correzioni. Una criticità bloccante residua richiede scelta o prova di fattibilità limitata; il numero di revisioni non autorizza a ignorarla. Dopo approvazione provare subito un percorso minimo completo e poi ampliare.
+**Apprendimento operativo:** errore riprodotto → evidenza/causa o ipotesi → rimedio verificato → lezione preventiva e test di regressione quando utile. Riutilizzare solo nel contesto pertinente, senza ripetere tutte le verifiche del progetto.
+**Ambito:** procedura salvata in AGENTS.md e piano web; non dimostra efficacia empirica o assenza di bug. Nessuna implementazione, nuova build o test runtime in questa fase.
