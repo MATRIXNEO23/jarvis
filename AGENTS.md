@@ -1,5 +1,12 @@
 # Istruzioni persistenti — Jarvis
 
+## Avvio e recupero automatico del contesto di sviluppo
+All'avvio di una sessione con accesso a questo repository, prima di proporre o implementare lavoro leggere RECUPERO.md e seguirne l'ordine di lettura. Recuperare autonomamente handoff, indice, lezioni e piano pertinente senza chiedere all'utente di ricostruire la storia. Verificare lo stato con il codice corrente; non dichiarare recupero completo se le fonti non sono accessibili.
+
+## Continuità a ogni modifica
+Ogni modifica di codice/configurazione e ogni decisione che cambia il lavoro deve essere accompagnata da aggiornamento di handoff e stato attività prima di considerare il lavoro concluso. Raggruppare edit correlati in un checkpoint coerente prima del commit e aggiornare dopo test, fallimenti e prima di ogni pausa. Documentare le motivazioni tecniche e le lezioni pertinenti nel registro. Per scritture via API con commit per file, completare gli aggiornamenti in sequenza. Non serve un commit ricorsivo per annotare il proprio SHA: è recuperabile da Git.
+Se una richiesta è incompatibile con il sistema, non eseguirla alla cieca: spiegare il conflitto dimostrato e proporre alternative concrete, distinguendo fatti da ipotesi. Non aggiungere funzionalità non richieste; lasciare all'utente obiettivi e compromessi.
+
 ## Decisioni, risultati ed errori
 Dopo ogni fase significativa aggiornare docs/DECISIONI-E-LEZIONI.md e il documento di handoff con problema, decisione, motivazione tecnica sintetica, prove osservabili, commit, workflow, risultato e questioni aperte.
 
