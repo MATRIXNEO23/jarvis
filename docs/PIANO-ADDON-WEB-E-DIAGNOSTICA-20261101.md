@@ -65,3 +65,6 @@ Stato iniziale:
 - Fasi 1–8: pianificate, non completate. La lettura preliminare non equivale a verifica completa di integrazione.
 - Implementazione web, autoverifiche, prova Edge/Jarvis, misure RAM e pacchetto: non eseguiti.
 - Prossimo passo: rivedere con l'utente il piano e le questioni aperte; dopo autorizzazione passare all'inventario tecnico completo della fase 1.
+
+## Responsabilità e guida
+L'utente prende decisioni su risultato, priorità e compromessi; non deve programmare. L'assistente prepara e realizza il lavoro tecnico autorizzato, esegue le verifiche disponibili e conserva le prove. Le sole attività sul Pavilion che richiedono intervento dell'utente saranno guidate con passi brevi, uno alla volta, e un risultato da osservare. Niente domande tecniche scaricate sull'utente o ripetute conferme sui dettagli già autorizzati.
