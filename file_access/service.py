@@ -290,6 +290,10 @@ class FileAccessService:
                 return ('select',{'target':str(self._view_selection[2] or 0),
                                   'selection_id':self._view_selection[0],'open':True})
             return ('open',{'target':'selezione explorer'})
+        missing=self._missing_file_request(clean)
+        if missing is not None:
+            op,options=missing
+            return ('request_target',{'operation':op,**options})
         voice_choice=re.fullmatch(r'(apri(?:mi)?|leggi(?:mi)?|spiega(?:mi)?)\s+(.+)',clean,re.I)
         if voice_choice and self._results:
             verb,reference=voice_choice.group(1).casefold(),voice_choice.group(2)
@@ -309,10 +313,6 @@ class FileAccessService:
                 return ('select',args)
         if (self._pending_app is not None or self._pending is not None) and low in ('annulla','lascia perdere','non importa'):
             return ('cancel', {})
-        missing=self._missing_file_request(clean)
-        if missing is not None:
-            op,options=missing
-            return ('request_target',{'operation':op,**options})
         app_answer = self._application_answer(clean)
         if app_answer is not None:
             return ('locate', {'query':app_answer})

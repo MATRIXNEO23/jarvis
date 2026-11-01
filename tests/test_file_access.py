@@ -976,3 +976,11 @@ function New-Object {
         self.assertEqual(result.status,'rejected')
         self.assertIn('è un file',result.message)
         self.assertFalse(result.preview)
+
+    def test_incomplete_folder_request_still_asks_name_after_a_result_list(self):
+        self.engine.execute('elenca cartella '+str(self.docs))
+        with patch('subprocess.Popen') as launch:
+            result=self.engine.execute('apri una cartella')
+        self.assertIn('Quale cartella',result.message)
+        self.assertTrue(self.files._pending[1]['_missing_target'])
+        launch.assert_not_called()
