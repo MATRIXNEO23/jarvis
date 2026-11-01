@@ -20,11 +20,12 @@ Non limitarsi a un elenco di comandi: spiegare il nesso tecnico tra problema, sc
 - Zero costi aggiuntivi e nessuna API a consumo.
 - Archify è uno strumento di sviluppo, mai componente di Jarvis.
 - Continuità conversazionale nel nucleo; nuove funzionalità come add-on salvo necessità motivate.
-- Preservare impostazioni, salvataggi e controllo manuale microfono; standby all'avvio secondo handoff.
+- Preservare impostazioni, salvataggi e controllo manuale microfono; non modificare il comportamento di avvio della base confermata durante una nuova add-on. Distinguere auto_listen della base b936879 dallo standby della successiva correzione a86c2c9.
 - Non pubblicare pacchetti difettosi o dichiarare test senza prove.
 - Il piano del nucleo conversazionale del 31 ottobre è stato approvato e la correzione a86c2c9 ha le verifiche documentate nell'handoff. Questo non autorizza l'implementazione dell'add-on web: l'utente richiede ora l'arresto dopo l'allineamento del metodo.
 
 ## Sorgenti e continuità
+Base utente verificata: ZIP Jarvis-Timer-Audio-Fix2-20261031.zip, sorgenti esatti b936879a431370d206152be7b089baf587d15499. Tutti i 155 file e la ricostruzione ZIP coincidono; rapporto docs/VERIFICA-CONCRETA-BASE-20261101.md. Le nuove aggiunte partono da questa base e non automaticamente dal ramo successivo 5e61e53/a86c2c9. Valutare separatamente l'eventuale adozione delle correzioni successive; non attribuire al pacchetto i loro 386 test.
 Main contiene il catalogo Download e sorgenti storici alla radice. Il ramo feature/timer-settings-ui-20261031 contiene l'app evoluta: verificare sempre SHA, ramo, diff e workflow prima di intervenire. Non sostituire in blocco la radice main per correggere un test.
 
 Handoff autorevole: docs/HANDOFF-CODEX-ARCHIFY-20261031.md su main. Rapporto: docs/DIAGNOSI-ARCHIFY-DIALOGO-20261031.md su main.
