@@ -36,4 +36,4 @@ Solo per GPT. Scarica l'installatore Windows x64 della linea 22.x dal [sito uffi
 La presenza dei comandi non prova ancora il login GPT.
 
 ## Riferimenti locali
-installa_gpt.ps1, installa_voce.bat, installa_telegram.bat, voice_control.py, telegram_voice.py e i workflow del riferimento 5e61e53. Le istruzioni non installano nulla automaticamente.
+installa_gpt.ps1, installa_voce.bat, installa_telegram.bat, voice_control.py, telegram_voice.py e i workflow della base b936879; questi script di installazione sono identici anche nel riferimento successivo 5e61e53. Le istruzioni non installano nulla automaticamente.
