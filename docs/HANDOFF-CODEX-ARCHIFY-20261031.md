@@ -200,3 +200,8 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - L'utente conferma che un comando locale preciso non deve interrogare GPT. Le formulazioni ambigue/non riconosciute richiedono interpretazione del GPT esterno, che restituisce l'azione al motore; se resta dubbio, domanda contestuale e conferma breve.
 - Rilettura sorgenti: jarvis.py 2894–2981 e 3038–3050, voice_control.py 45–85 nel riferimento evoluto. I gestori locali hanno precedenza; in Conversazione GPT esiste fallback, mentre altre modalità possono limitarsi a inserire il testo. Non interpretare questa preferenza come richiesta di mandare ogni comando a GPT o cambiare automaticamente modalità microfono.
 - Previsto: aggiornare regole, piano e lezioni; nessun codice modificato o test eseguito. Poi chiudere checkpoint.
+
+## 2026-11-01 — Completata: decisione ibrida locale/GPT
+- Regola in AGENTS.md fed120f5abeeb1c2e039d92fc4f57482f2f34595, piano 38a25509e2badeb87273a68275a1e3fd7c65e339, lezioni edd9126892b89beb86a7a568b8fe9d1a2acf72cc.
+- Comando preciso riconosciuto localmente senza modello; richieste non risolte interpretate da GPT esterno con motore esecutore e chiarimenti contestuali. Nessun obbligo di interrogare GPT per ogni frase; preservare modalità manuali e connessione consentita.
+- Nessun codice, nuovo test o pacchetto. Prossimo passo: revisione tecnica del piano e comportamento nelle modalità prima dell'implementazione autorizzata.
