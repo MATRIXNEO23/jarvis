@@ -2,7 +2,7 @@ name: Jarvis unit and GPT protocol checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feature/file-access-20261101']
     paths:
       - '**.py'
       - '**.mjs'
@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-2022]
         python-version: ['3.11', '3.12']
     steps:
       - uses: actions/checkout@v4
@@ -54,3 +54,6 @@ jobs:
             $errors | Out-String | Write-Host
             exit 1
           }
+
+      - name: Native Windows file access probe
+        run: python tools/probe_file_access_windows.py
