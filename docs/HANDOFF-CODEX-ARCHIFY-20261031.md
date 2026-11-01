@@ -136,3 +136,7 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Regola: una revisione iniziale prima del codice, correzione e ricontrollo mirato; blocchi residui espliciti, niente cicli globali infiniti. Dopo autorizzazione provare presto il percorso minimo completo.
 - Errori da trasformare in lezioni pertinenti con evidenze e rimedi verificati; test di regressione solo quando significativo. Non promettere di trovare ogni errore prima dell'esecuzione.
 - Solo documentazione modificata. Nessuna build o prova runtime. La revisione tecnica completa del piano web resta da eseguire; implementazione non avviata.
+
+## 2026-11-01 — In corso: verifiche obbligatorie prima dell'installazione
+- Precisazione dell'utente: tutto ciò che è verificabile nel repository deve essere controllato prima della consegna; sul PC restano solo prove dipendenti dall'ambiente reale. Non delegare all'utente il debug dei collegamenti di base.
+- Modifica documentale prevista: esplicitare in AGENTS.md e piano web i controlli automatici e le condizioni per consegnare; aggiornare lezioni e chiudere il checkpoint. Nessuna implementazione web o nuovo test funzionale avviati.
