@@ -1,3 +1,5 @@
+> **Recupero delle versioni:** [registro dei pacchetti e dei punti di ripristino](REGISTRO-VERSIONI.md). Distingue presenza dello ZIP, test automatici e prova sul PC. Questo aggiornamento aggiunge documentazione, non una nuova build.
+
 # Jarvis: Timer audio Fix 2 - 31/10/2026
 
 **[SCARICA JARVIS COMPLETO CON FIX AUDIO TIMER](./Jarvis-Timer-Audio-Fix2-20261031.zip)**
