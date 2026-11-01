@@ -1,4 +1,9 @@
 
+## Diagnosi e ricontrollo del primo passo
+Prima esecuzione cf0c33c, run 41333821126: 409 test Windows, un solo fallimento nella nuova asserzione che confrontava forma lunga e alias DOS dello stesso percorso; il target della richiesta era corretto. Job 124929307811, AssertionError sul profilo lungo vs RUNNER~1. Correzione limitata al test: os.path.samefile verifica la directory effettiva invece del testo del percorso; nessuna modifica al runtime della correzione. Sorgenti successivi dcc4aebcee02bfb19862b2e215ee6be42aab6982, run 41333993279 ancora in attesa. Nessuna build. La verifica della run fallita non è presentata come successo.
+Prossimo controllo unico: leggere l’esito della run del commit dcc4aeb; se verde registrare conteggi, zero errori e build/publisher skipped, poi chiudere questo passo senza passare automaticamente alla navigazione. Nessun nuovo test Linux.
+
+
 Requisito obbligatorio ribadito: nessun elenco di file/cartelle/finestre/programmi/processi viene inviato alla sintesi vocale, indipendentemente dal numero di elementi. Voce per spiegazioni e domande brevi; risultati in finestra dedicata scorrevole/selezionabile (da implementare), con caricamento progressivo per elenchi grandi. La correzione già presente separa messaggio chat da spoken_message e non legge liste file; non dichiarare già presente la nuova finestra. Accettazione futura: lista molto grande non accoda nomi/percorsi TTS e lascia disponibili i comandi; spiegazioni richieste restano vocali.
 
 ## Checkpoint corrente — primo passo continuità, test Windows in attesa
