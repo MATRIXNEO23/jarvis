@@ -1,0 +1,58 @@
+{
+  "source_commit": "851458cbc02e4f741ae31cc645d4d48c1c86b5a0",
+  "run_id": 41344405778,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 124961033449,
+      "python": "3.11.9",
+      "tests": 442,
+      "seconds": 62.923,
+      "result": "OK"
+    },
+    {
+      "id": 124961033688,
+      "python": "3.12.10",
+      "tests": 442,
+      "seconds": 64.453,
+      "result": "OK"
+    }
+  ],
+  "syntax": [
+    "Python",
+    "Node",
+    "PowerShell"
+  ],
+  "native_file_probe": "pass; Explorer observation none; initial index unavailable; fallback verified",
+  "native_windows_search": {
+    "python": "3.12.10",
+    "checks": [
+      "available_empty_query",
+      "created_file_found",
+      "other_scope_empty",
+      "rename_observed",
+      "deletion_observed"
+    ],
+    "service_restored": true,
+    "fixture_removed": true,
+    "scope_changes": false,
+    "global_reindex": false
+  },
+  "skipped": [
+    "build",
+    "extracted_package",
+    "artifact",
+    "publisher"
+  ],
+  "limitations": [
+    "controlled workers and transcripts, not personal model/account/microphone",
+    "not Pavilion resource measurement",
+    "not full disk coverage"
+  ],
+  "previous_failure": {
+    "run": 41344054804,
+    "error": "NameError active_project_id in extracted submit_local fixture",
+    "correction": "initialize no active project in fixture",
+    "runtime_changed": false
+  }
+}
