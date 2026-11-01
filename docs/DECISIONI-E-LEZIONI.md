@@ -44,3 +44,14 @@ Conservare le soluzioni riuscite come riferimenti entro il loro ambito verificat
 **Decisione e motivo:** registrare un miglioramento percepito nell'uso reale, distinguendolo dai test automatici e da un collaudo completo. Il feedback aggiorna la precedente mancanza di riscontri pratici; non prova da solo tutte le regressioni.
 
 **Limiti:** versione/SHA sul PC non verificato, nessuna misura del numero di turni o ispezione dei prompt. Non attribuire automaticamente il risultato al commit a86c2c9; riavvio, progetti, salvataggi e microfono restano da collaudare. Nessun nuovo test o pacchetto in questa fase. Dettagli nel handoff, sezione 2026-11-01.
+
+## 2026-11-01 — Add-on web e memoria di sviluppo: piano, non implementazione
+**Richieste:** navigazione vocale autonoma con GPT esterno e motore locale, solo su richiesta, minimo carico sul Pavilion; add-on separate, UI semplice, reset configurazione e ritorno di versione; diagnostica leggibile e verifiche integrate. Prima di creare, discutere e pianificare per fasi.
+
+**Prove:** letti addon_manager.py, addon_ui.py, self_diagnostics.py, diagnostic_session.py, runtime_diagnostics.py, diagnostic_handoff.py e punti diagnostici di jarvis.py nel ramo evoluto. Il gestore .jaddon ammette azioni descrittive limitate: l'esecuzione web richiede un adattatore revisionato. La diagnostica runtime attuale è passiva e non esegue test funzionali. Blob e limiti sono nel piano.
+
+**Decisione e motivo:** proposta estensione Edge + add-on, per usare il browser esistente; non è ancora provata come soluzione più leggera o affidabile. Separare osservazioni passive, test locali con pagina controllata e collaudo reale GPT/browser. Non riutilizzare il precedente budget 1–2 GB come misura reale.
+
+**Memoria persistente:** AGENTS.md ora impone lettura di handoff, registro e piano più verifica del codice prima delle modifiche; checkpoint di fase con fatti, motivazioni tecniche sintetiche, test/esiti e prossimo passo. Regola commit cf19eff734c7b85e81fa296f73b7b258d3aafc1c. Gli approcci falliti restano esclusi dai riferimenti raccomandati, con causa/lezione conservate.
+
+**Risultato:** piano docs/PIANO-ADDON-WEB-E-DIAGNOSTICA-20261101.md creato nel commit 04c8bf86c3f39158f6dd14b8cd9cb1125a541d3a e aggiornato con checkpoint. Nessuna implementazione, nuovo workflow, prova funzionale o misura prestazionale. Conservare distinzione tra proposta e verifica.
