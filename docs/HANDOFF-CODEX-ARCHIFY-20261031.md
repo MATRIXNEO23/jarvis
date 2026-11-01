@@ -170,3 +170,9 @@ Indice docs/STATO-ATTIVITA.md creato nel commit d074634e96b584c1a1f339176ea22962
 - Richiesta: codice completo sempre disponibile nel repository; nuove add-on integrate sul sistema esistente, senza ricostruirlo dalla chat.
 - Verifica: ramo feature/timer-settings-ui-20261031 presente; inventario Git ricorsivo restituisce 167 voci, non troncato, con moduli Python, bridge, test e workflow. Riferimento evoluto 5e61e53fbb58ccb5d95b85671604cc5f365d6e04, coerente con handoff; non è una prova di build completa.
 - Previsto: salvare un indice dei sorgenti e dei riferimenti architetturali, aggiungere regola a AGENTS/RECUPERO e lezioni. Nessun trasferimento massivo di sorgenti su main, merge o modifica runtime.
+
+## 2026-11-01 — Completato: indice dei sorgenti e riferimenti
+- Creato docs/INDICE-SORGENTI.md con inventario e punti di ingresso; riferimenti in AGENTS e RECUPERO aggiornati, lezioni registrate. Commit istruzioni 247757670b5b6146bffcdc4919fec6564017a5e1.
+- Confermati ramo evoluto e presenza dei moduli/test/bridge/workflow; non verificata in questa fase la build completa o la copertura di ogni dipendenza. Radice main storica distinta dal ramo evoluto.
+- Regola: sorgenti completi versionati e associati ai pacchetti; riuso dei moduli e mappa esistenti, aggiornati quando cambiano. Nessun merge, spostamento massivo di sorgenti o modifica runtime.
+- Prossimo passo: revisione tecnica del piano web sui sorgenti evoluti, implementazione non avviata.
