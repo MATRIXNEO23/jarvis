@@ -1,6 +1,6 @@
 """One read-only service used by UI, typed commands, voice and GPT actions."""
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import os
 from pathlib import Path
 import re
@@ -8,7 +8,7 @@ import threading
 import time
 from uuid import uuid4
 from .policy import AccessPolicy, safe_path, contains
-from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations, long_path, explorer_view, navigate_explorer
+from .windows import known_folder, resolved_path, final_path, indexed_candidates, installed_locations, long_path, explorer_view, navigate_explorer, window_is_foreground
 
 OPERATIONS = frozenset(('list', 'search', 'read', 'open', 'locate'))
 TEXT_TYPES = frozenset(('.txt', '.md', '.json', '.log', '.csv', '.ini', '.yaml', '.yml'))
@@ -43,6 +43,7 @@ class FileResult:
     preview: str = ''
     preview_path: str = ''
     explain: bool = False
+    listing: dict | None = None
 
 
 def validate_arguments(operation, arguments):
@@ -90,6 +91,7 @@ class FileAccessService:
         self._pending_app = None
         self._result_revision = -1
         self._result_token = uuid4().hex
+        self._view_selection = None
         self.max_entries = 5000
         self.max_seconds = 10.0
 
@@ -103,6 +105,7 @@ class FileAccessService:
             self._pending = None
             self._pending_app = None
             self._result_token = uuid4().hex
+            self._view_selection = None
 
     def _live(self, revision):
         return (self.enabled() and not self.cancelled.is_set()
@@ -143,6 +146,18 @@ class FileAccessService:
                     raise ValueError('Quel risultato non è più disponibile: aggiorna l’elenco o ripeti la ricerca.')
                 return self._results[int(number)-1]
         return safe_path(value)
+
+    def mark_view_selection(self, number, token, hwnd):
+        """UI selection only, no file access or action; execution checks policy again."""
+        with self._lock:
+            if (token!=self._result_token or not self.enabled()
+                    or time.monotonic()>=self._expires or self._result_revision!=self.policy.revision):
+                return False
+            if number is not None and not (type(number) is int and 1<=number<=len(self._results)):
+                return False
+            self._selected=self._results[number-1] if number is not None else None
+            self._view_selection=(token,hwnd,number)
+            return True
 
     def _explorer_context(self, *, required=True):
         view=explorer_view()
@@ -265,6 +280,9 @@ class FileAccessService:
         if low in ('vai indietro','vai indietro di una cartella','torna indietro di una cartella','sali di una cartella'):
             return ('open',{'target':'cartella superiore','kind':'folder'})
         if low in ('apri questo','apri questa','aprilo','aprila'):
+            if self._view_selection is not None and window_is_foreground(self._view_selection[1]):
+                return ('select',{'target':str(self._view_selection[2] or 0),
+                                  'selection_id':self._view_selection[0],'open':True})
             return ('open',{'target':'selezione explorer'})
         if (self._pending_app is not None or self._pending is not None) and low in ('annulla','lascia perdere','non importa'):
             return ('cancel', {})
@@ -391,6 +409,8 @@ class FileAccessService:
                 if pending is not None:
                     op, opts = pending
                     return self.execute(op, {**opts, 'target': str(path)})
+                if arguments.get('open') is True:
+                    return self.execute('open',{'target':str(path)})
                 if path.is_dir():
                     return FileResult('completed', 'Cartella selezionata: '+str(path)+'. Puoi dire “apri cartella selezionata” o “elenca cartella selezionata”.')
                 return FileResult('completed', 'File selezionato: '+str(path)+'. Puoi dire “leggi file selezionato” o “apri file selezionato”.')
@@ -432,7 +452,9 @@ class FileAccessService:
                         if len(self._results)==1:
                             return self.execute(operation,{**args,'target':str(self._results[0])})
                         self._pending=(operation,{k:v for k,v in args.items() if k!='target'})
-                        return FileResult('completed',answer.message+'\nQuale risultato vuoi '+('leggere' if operation=='read' else 'aprire')+'?')
+                        question='Quale risultato vuoi '+('leggere' if operation=='read' else 'aprire')+'?'
+                        listing={**answer.listing,'summary':answer.listing['summary']+' '+question} if answer.listing is not None else None
+                        return replace(answer,message=answer.message+'\n'+question,listing=listing)
             if not self.policy.permits(target):
                 raise PermissionError('Accesso non consentito o percorso/volume cambiato: '+str(target))
             if args.get('kind')=='folder' and not target.is_dir():
@@ -467,10 +489,12 @@ class FileAccessService:
         with self._lock:
             self._pending = None
             self._result_token = uuid4().hex
+            self._view_selection = None
             self._results = allowed
             self._selected = allowed[0] if len(allowed) == 1 else None
             self._expires = time.monotonic()+120
             self._result_revision = revision
+            token=self._result_token
         lines = [f'{i+1}. {"Cartella" if p.is_dir() else "File"}: {p}' for i, p in enumerate(allowed)]
         message = '\n'.join(lines) if lines else 'Nessun risultato nell’ambito effettivamente esaminato.'
         suggestions = []
@@ -481,7 +505,10 @@ class FileAccessService:
         if text_number is not None:
             suggestions.append('leggi file '+str(text_number))
         guidance = ('\nScegli il numero. Esempi per questo elenco: '+ ' / '.join(suggestions)+'.') if suggestions else ''
-        return FileResult('completed', message+'\n'+note+guidance)
+        listing={'token':token,
+                 'items':tuple(('Cartella' if p.is_dir() else 'File',p.name,str(p)) for p in allowed),
+                 'summary':('Mostrati '+str(len(allowed))+' risultati nella finestra dedicata. ' if allowed else message+' ')+note}
+        return FileResult('completed', message+'\n'+note+guidance,listing=listing)
 
     def _list(self, root, revision):
         if not root.is_dir():

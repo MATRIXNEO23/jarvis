@@ -170,6 +170,81 @@ class FolderSettings:
         self.window.destroy()
 
 
+class ResultWindow:
+    """One bounded, nonmodal result view; all actions return to the existing worker."""
+    def __init__(self,parent,listing,on_open,on_select):
+        self.window=tk.Toplevel(parent)
+        self.window.title('Jarvis — risultati file e cartelle')
+        self.window.geometry('900x460')
+        box=ttk.Frame(self.window,padding=10)
+        box.pack(fill='both',expand=True)
+        self.status=tk.StringVar()
+        ttk.Label(box,textvariable=self.status,wraplength=860).pack(fill='x',pady=(0,8))
+        table=ttk.Frame(box)
+        table.pack(fill='both',expand=True)
+        self.tree=ttk.Treeview(table,columns=('number','kind','name','path'),show='headings',selectmode='browse')
+        for key,label,width in (('number','N.',45),('kind','Tipo',80),('name','Nome',210),('path','Percorso',500)):
+            self.tree.heading(key,text=label)
+            self.tree.column(key,width=width,minwidth=40,stretch=key=='path')
+        vertical=ttk.Scrollbar(table,orient='vertical',command=self.tree.yview)
+        horizontal=ttk.Scrollbar(table,orient='horizontal',command=self.tree.xview)
+        self.tree.configure(yscrollcommand=vertical.set,xscrollcommand=horizontal.set)
+        self.tree.grid(row=0,column=0,sticky='nsew')
+        vertical.grid(row=0,column=1,sticky='ns')
+        horizontal.grid(row=1,column=0,sticky='ew')
+        table.rowconfigure(0,weight=1); table.columnconfigure(0,weight=1)
+        ttk.Label(box,text='Scegli una riga o indica il numero a voce. Doppio clic / Invio: apri o continua la richiesta.',wraplength=860).pack(fill='x',pady=8)
+        self.open_button=ttk.Button(box,text='Apri / continua',command=self.open_selected)
+        self.open_button.pack(side='left')
+        ttk.Button(box,text='Chiudi',command=self.window.destroy).pack(side='right')
+        self.tree.bind('<<TreeviewSelect>>',self.select)
+        self.tree.bind('<Double-1>',self.open_selected)
+        self.tree.bind('<Return>',self.open_selected)
+        self.update(listing,on_open,on_select)
+
+    def update(self,listing,on_open,on_select):
+        self.listing=listing
+        self.on_open=on_open; self.on_select=on_select
+        self.tree.delete(*self.tree.get_children())
+        for number,item in enumerate(listing['items'],1):
+            self.tree.insert('', 'end',iid=str(number),values=(number,*item))
+        self.status.set(listing['summary'])
+        self.open_button.configure(state='disabled')
+        self.window.update_idletasks()
+        if not self.on_select(None,listing['token'],self.window.winfo_id()):
+            self.status.set('Elenco scaduto o sostituito: ripeti la ricerca o aggiorna l’elenco.')
+        elif len(listing['items'])==1:
+            self.tree.selection_set('1')
+            self.select()
+
+    def select(self,_event=None):
+        selected=self.tree.selection()
+        number=int(selected[0]) if selected else None
+        valid=self.on_select(number,self.listing['token'],self.window.winfo_id())
+        self.open_button.configure(state='normal' if selected and valid else 'disabled')
+        if not valid:
+            self.status.set('Elenco scaduto o sostituito: ripeti la ricerca o aggiorna l’elenco.')
+
+    def open_selected(self,_event=None):
+        self.select()
+        selected=self.tree.selection()
+        if selected and str(self.open_button.cget('state'))!='disabled':
+            self.on_open(int(selected[0]),self.listing['token'])
+        return 'break'
+
+
+def show_results(parent,listing,on_open,on_select):
+    view=getattr(parent,'_jarvis_file_results',None)
+    if view is None or not view.window.winfo_exists():
+        view=ResultWindow(parent,listing,on_open,on_select)
+        parent._jarvis_file_results=view
+    else:
+        view.update(listing,on_open,on_select)
+    view.window.deiconify()
+    view.window.lift()
+    return view
+
+
 def show_preview(parent, path, text):
     window = tk.Toplevel(parent)
     window.title('Jarvis — lettura senza modifica: '+Path(path).name)

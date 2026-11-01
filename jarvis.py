@@ -3163,6 +3163,21 @@ def main() -> None:
                     if result.status in ("failed", "rejected"):
                         runtime_events.record("local_failure")
                     busy_local = False
+                    if result.file_listing is not None:
+                        from dataclasses import replace
+                        listing=result.file_listing
+                        result=replace(result,message=listing['summary'])
+                        try:
+                            from file_access.ui import show_results
+                            show_results(root,listing,
+                                on_open=lambda number,token:submit_local(
+                                    message_override='Apri risultato '+str(number),
+                                    source_utterance='Risultato scelto nella finestra file',
+                                    file_call=('select',{'target':str(number),'selection_id':token,'open':True})),
+                                on_select=lambda number,token,hwnd:addon_manager.file_service.mark_view_selection(number,token,hwnd))
+                        except (ImportError,OSError,ValueError,tk.TclError) as exc:
+                            write_line("ACCESSO FILE > Finestra risultati non disponibile: "+str(exc)[:140]+
+                                       ". Reinstalla file_access/ui.py dal pacchetto completo.")
                     write_line(f"[{result.status}] {result.message}")
                     if result.preview_path:
                         try:

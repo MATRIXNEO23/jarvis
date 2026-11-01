@@ -409,7 +409,7 @@ class FileAccessTests(unittest.TestCase):
         self.assertLess(len(result.spoken_message),100)
         self.assertNotIn(str(self.docs),result.spoken_message)
 
-    def test_actual_result_callback_keeps_file_list_in_chat_without_speech(self):
+    def test_actual_result_callback_shows_list_in_window_with_short_chat_and_no_speech(self):
         from local_engine import TaskResult
         tree = ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
         main = next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
@@ -421,13 +421,21 @@ class FileAccessTests(unittest.TestCase):
         writes, spoken = [], []
         result = self.engine.execute('elenca cartella '+str(self.docs))
         env = {'data':[result],'runtime_events':Mock(),'write_line':writes.append,
+            'root':object(),'addon_manager':self.manager,'submit_local':Mock(),
             'last_user_for_action':'elenca cartella documenti','observed_local_result':lambda r:False,
             'operation_ledger':None,'local_operation_id':None,'project_local_ticket':None,
             'finish_project_work':lambda *a,**kw:None,'remember_exchange':lambda *a,**kw:None,
             'remember_completed_action':lambda *a,**kw:None,'speak_result':spoken.append}
         code = compile(ast.Module(body=branch.body,type_ignores=[]),'real-local-result-callback','exec')
-        exec(code,env)
-        self.assertTrue(any(self.a.name in line for line in writes))
+        with patch('file_access.ui.show_results') as show:
+            exec(code,env)
+        self.assertEqual(show.call_count,1)
+        self.assertIn(self.a.name,str(show.call_args.args[1]['items']))
+        self.assertFalse(any(self.a.name in line for line in writes))
+        self.assertTrue(any('finestra dedicata' in line for line in writes))
+        show.call_args.kwargs['on_open'](1,result.file_listing['token'])
+        self.assertEqual(env['submit_local'].call_args.kwargs['file_call'],
+            ('select',{'target':'1','selection_id':result.file_listing['token'],'open':True}))
         self.assertFalse(spoken)
         # Ordinary speech keeps the old behavior; the fix is scoped to file output.
         env['data']=[TaskResult('a'*32,'system_status','completed','CPU e RAM disponibili.')]
@@ -818,6 +826,7 @@ function New-Object {
         env['send_console_input']()
         self.assertEqual(projects,['apri progetto Romanzo'])
         self.assertEqual(len(calls),1)
+
         confirmations=[]
         env['doc_dialog'].phase='awaiting_save'
         env['handle_document_confirmation']=confirmations.append
@@ -830,3 +839,84 @@ function New-Object {
         env['send_console_input']()
         self.assertEqual(projects,['apri progetto Romanzo','apri Foto'])
         self.assertEqual(len(calls),1)
+
+    def test_result_payload_is_bounded_typed_and_empty_results_still_have_a_view(self):
+        for i in range(30):
+            (self.docs/f'campione-{i}.txt').write_text('test',encoding='utf-8')
+        result=self.engine.execute('elenca cartella '+str(self.docs))
+        self.assertEqual(len(result.file_listing['items']),20)
+        self.assertIn('parziale',result.file_listing['summary'])
+        self.assertEqual(result.spoken_message,'')
+        self.assertNotIn('campione-',result.file_listing['summary'])
+        self.assertTrue(all(item[0]=='File' for item in result.file_listing['items']))
+        result=self.engine.execute('cerca file inesistente')
+        self.assertEqual(result.file_listing['items'],())
+        self.assertIn('Nessun risultato',result.file_listing['summary'])
+
+    def test_real_result_window_reuses_widgets_selects_without_opening_and_dispatches(self):
+        import tkinter as tk
+        from file_access.ui import show_results
+        root=tk.Tk(); root.withdraw(); self.addCleanup(root.destroy)
+        result=self.engine.execute('elenca cartella '+str(self.docs))
+        calls=[]
+        view=show_results(root,result.file_listing,
+            lambda number,token:calls.append((number,token)),self.files.mark_view_selection)
+        root.update()
+        self.assertEqual(len(view.tree.get_children()),1)
+        self.assertIn(self.a.name,str(view.tree.item('1','values')))
+        self.assertIsNone(view.window.grab_current())
+        view.tree.selection_set('1'); view.select()
+        self.assertEqual(calls,[])
+        view.open_button.invoke()
+        self.assertEqual(calls,[(1,result.file_listing['token'])])
+        opened=self.engine.execute_file('select',{'target':'1','selection_id':calls[0][1],'open':True})
+        self.assertEqual(opened.preview,'Testo reale di esempio')
+        empty=self.engine.execute('cerca file inesistente')
+        again=show_results(root,empty.file_listing,
+            lambda number,token:calls.append((number,token)),self.files.mark_view_selection)
+        root.update()
+        self.assertIs(again,view)
+        self.assertEqual(view.tree.get_children(),())
+        self.assertEqual(str(view.open_button.cget('state')),'disabled')
+        self.assertEqual(len(root.winfo_children()),1)
+
+    def test_result_view_voice_choice_respects_foreground_expiry_and_new_search(self):
+        report=self.engine.execute('elenca cartella '+str(self.docs))
+        token=report.file_listing['token']
+        self.assertTrue(self.files.mark_view_selection(1,token,123))
+        with patch('file_access.service.window_is_foreground',return_value=True),patch.object(self.files,'index',side_effect=AssertionError('No new search')):
+            parsed=self.files.parse_command('apri questo')
+            result=self.engine.execute_file(*parsed)
+            self.assertEqual(result.preview,'Testo reale di esempio')
+            self.files._expires=time.monotonic()-1
+            self.assertEqual(self.engine.execute('apri questo').status,'rejected')
+        report=self.engine.execute('elenca cartella '+str(self.docs))
+        self.assertTrue(self.files.mark_view_selection(1,report.file_listing['token'],123))
+        with patch('file_access.service.window_is_foreground',return_value=False):
+            self.assertEqual(self.files.parse_command('apri questo'),('open',{'target':'selezione explorer'}))
+        stale={'target':'1','selection_id':report.file_listing['token'],'open':True}
+        self.engine.execute('cerca file inesistente')
+        self.assertFalse(self.files.mark_view_selection(1,token,123))
+        self.assertEqual(self.engine.execute_file('select',stale).status,'rejected')
+
+    def test_result_window_selection_resumes_pending_action_and_disable_revokes_buttons(self):
+        import tkinter as tk
+        from file_access.ui import show_results
+        second=self.docs/'preventivo-due.txt'; second.write_text('secondo',encoding='utf-8')
+        result=self.engine.execute('spiegami file preventivo')
+        self.assertIsNotNone(result.file_listing)
+        root=tk.Tk(); root.withdraw(); self.addCleanup(root.destroy)
+        calls=[]
+        view=show_results(root,result.file_listing,
+            lambda n,t:calls.append((n,t)),self.files.mark_view_selection)
+        root.update()
+        self.assertTrue(self.files.mark_view_selection(2,result.file_listing['token'],view.window.winfo_id()))
+        self.assertIsNotNone(self.files._pending)  # A single selection does not execute.
+        choice=self.engine.execute_file('select',{'target':'2','selection_id':result.file_listing['token'],'open':True})
+        self.assertTrue(choice.explain)
+        self.assertTrue(choice.preview)
+        self.assertIsNone(self.files._pending)
+        self.manager.set_enabled('accesso_file',False)
+        view.tree.selection_set('1'); view.select(); view.open_button.invoke()
+        self.assertEqual(calls,[])
+        self.assertEqual(str(view.open_button.cget('state')),'disabled')

@@ -226,6 +226,17 @@ def navigate_explorer(view: dict, target: Path) -> bool:
         'source':view['path'],'target':str(target)}).get('status')=='ok'
 
 
+def window_is_foreground(hwnd: int) -> bool:
+    """Constant-time focus check for a Tk result view; no Shell query or polling."""
+    require_windows()
+    user=ctypes.WinDLL('user32',use_last_error=True)
+    user.GetAncestor.argtypes=[wintypes.HWND,wintypes.UINT]
+    user.GetAncestor.restype=wintypes.HWND
+    user.GetForegroundWindow.restype=wintypes.HWND
+    root=user.GetAncestor(hwnd,2)
+    return bool(root and root==user.GetForegroundWindow())
+
+
 def long_path(path: Path) -> Path:
     """Expand DOS 8.3 aliases without following a junction to another location."""
     kernel = native_kernel()
