@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## In corso — accesso generale alle cartelle, non a una sola app
+2026-11-01: ripresa alle 15:19, l'utente vuole partire dall'accesso file e chiarisce che il comportamento deve valere per tutte le cartelle accessibili fuori dal sistema, non un solo programma d'esempio. Primo incremento concordato in sola lettura; obiettivo successivo lettura/scrittura/cancellazione fuori dal sistema e sistema solo lettura nei limiti Windows. Tutti i requisiti add-on precedenti si applicano. Aggiornare scheda/stato/lezioni e controllare salvataggi. Nessun codice o accesso al PC eseguito.
+
 ## Checkpoint vigente — proposta dialogo/Windows pronta, 2026-11-01
 Chiarimento dell'obiettivo salvato nella scheda WINDOWS, STATO e lezioni; tre file riletti e coincidenti ai salvataggi. Jarvis deve distinguere conversazione/azione/chiarimento col contesto, locale diretto per comandi precisi e GPT esterno per interpretazione necessaria, senza ripetere domande risolte. Risposta breve riprende attività pendente; niente azioni da semplici menzioni. Frasi personali «Insegna comando» sono opzione discussa, non il requisito centrale o una funzione già approvata. Requisiti di immediatezza e prove su dialoghi completi documentati.
 Primo incremento scelto: app classiche/Store rilevate con Windows e selezionate nelle impostazioni, apertura corretta da voce/testo; ricerca file e lettura estese per fasi riusando gestori esistenti. Piano, cartelle chiare, ZIP operativo essenziale e console con rimedi precisi già salvati. Fonti Microsoft Cortana/WSR/Accesso vocale Windows 11 registrate, nessuna sostituzione automatica del riconoscimento esistente.
