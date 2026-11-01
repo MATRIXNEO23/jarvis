@@ -1,5 +1,8 @@
 # Handoff Jarvis → Codex — 2026-10-31
 
+## In corso — chiarimento sul dialogo naturale, 2026-11-01
+Registrare l'obiettivo esplicitamente ribadito dall'utente: è Jarvis, col GPT esterno già collegato quando serve, a distinguere conversazione/azione/chiarimento prima di eseguire Windows. Non ogni frase è comando; non imporre formule o apprendimento di ogni variante. Aggiornare requisiti, stato e lezioni; nessun nuovo progetto tecnico/codice/test runtime. Prossimo controllo: rilettura dei salvataggi e chiusura checkpoint.
+
 ## Checkpoint attuale — primo incremento programmi classici/Store, 2026-11-01
 Utente sceglie di partire dall'apertura programmi con rilevamento classici/Store, spunte nelle impostazioni e app corretta da voce (esempio Netflix). Comportamento/piano e fonti Microsoft aggiunti in WINDOWS, stato e lezioni; tre file riletti, contenuti coincidenti. Documentazione Get-StartApps/AppsFolder, AUMID e ActivateApplication consultata: meccanismi nativi disponibili, non prova di integrazione Jarvis o delle app reali sul PC.
 Elenco selezionabile unico con identità/avvio reale, stato rilevata distinto da prova apertura, catalogo coerente e interpretazione naturale. Proposta «Prova apertura» della voce selezionata; non aprire tutte le app durante inventario. Nessun ID/percorso Netflix hardcoded o sostituzione implicita con sito. Chiarire se ambigua; non promettere inventario universale di programmi non registrati.
