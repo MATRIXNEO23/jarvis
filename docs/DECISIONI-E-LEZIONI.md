@@ -172,3 +172,7 @@ Utente sceglie il primo incremento: elenco app installate classiche/Store con sp
 
 ## 2026-11-01 pomeriggio — Un campione di test non restringe l'accesso generale
 L'utente vuole partire dall'accesso file generale su tutte le cartelle accessibili fuori dal sistema. La domanda dell'assistente su un programma campione è stata interpretata come limite del prodotto: chiarire che i campioni servono ai test, non all'ambito della funzione; non insistere sul nome di un'app. Primo incremento accettato in sola lettura, obiettivo futuro RW/cancellazione fuori dal sistema e sistema solo lettura. Confine e diritti effettivi da verificare; Cestino solo proposto. Tutti i requisiti add-on precedenti restano applicabili, ampliando/riusando componenti presenti senza doppioni. Priorità/stato aggiornati, nessuna implementazione o prova sul PC. Il consenso al primo passo non è autorizzazione a modificare/cancellare dati concreti.
+
+
+## 2026-11-01 pomeriggio — Profilo Windows reale, non nome ricostruito
+Richiesta: riconoscere utente/profilo e cercare automaticamente con Windows, senza far indicare cartelle all'utente. Microsoft documenta profilo e Known Folders/reindirizzamenti; fonti in WINDOWS.md. Non dedurre C:\Users dal nome della chat; distinguere identità e percorso effettivo. Windows Search va verificato per copertura/servizio e integrato con ricerca mirata dove necessario; niente falso «non esiste». Solo requisiti/documentazione, nessuna lettura del PC utente o prova runtime. Priorità accesso file generale e requisiti add-on confermati.
