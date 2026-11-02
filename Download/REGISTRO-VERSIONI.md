@@ -1,3 +1,6 @@
+## Riscontro successivo — correzioni nei sorgenti, 2 novembre 2026
+Dopo il candidato d06e233 proposto in chat: foto ricerca parziale e blocco locale del contesto GPT; segnalati apertura browser su ricerca senza ambito, risposta solo Download e perdita di azione al chiarimento. La foto non identifica autonomamente nome ZIP/richiesta iniziale; nessuna promozione a base PC. Source correttivo 806685275947cea4b933d20aa0317658d13b853c, ramo feature/fix-file-search-20261102, 471 test per job Windows PASS (run 41367835278). [Scheda](../docs/RICERCA-DIALOGO-CORREZIONI-20261102.md). Non pubblicato un nuovo pacchetto: i file Download e la base b936879 sono preservati, d06e233 non contiene queste correzioni. Nuova build solo su richiesta esplicita.
+
 # Registro versioni e punti di ripristino Jarvis
 Aggiornato il 2026-11-01. Questo è l'indice diretto per recuperare una versione senza analizzare tutta la cronologia o cercare artifact.
 

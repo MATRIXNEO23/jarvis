@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-02",
+  "repository": "MATRIXNEO23/jarvis",
+  "source_commit": "806685275947cea4b933d20aa0317658d13b853c",
+  "branch": "feature/fix-file-search-20261102",
+  "run_id": 41367835278,
+  "run_url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/41367835278",
+  "conclusion": "success",
+  "environment": "windows-2022",
+  "jobs": [
+    {
+      "id": 125031700243,
+      "conclusion": "success",
+      "tests": 471,
+      "test_summary": "Ran 471 tests in 49.911s",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Python syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "GPT JavaScript syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unit tests (no external login)",
+          "conclusion": "success"
+        },
+        {
+          "name": "PowerShell setup syntax (Windows)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native Windows file access probe",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows Search service observation (CI only)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Live Windows Search integration (isolated CI only)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build operational candidate (Windows only)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify extracted candidate on Windows",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 125031700513,
+      "conclusion": "success",
+      "tests": 471,
+      "test_summary": "Ran 471 tests in 47.395s",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Python syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "GPT JavaScript syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unit tests (no external login)",
+          "conclusion": "success"
+        },
+        {
+          "name": "PowerShell setup syntax (Windows)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native Windows file access probe",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows Search service observation (CI only)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Live Windows Search integration (isolated CI only)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build operational candidate (Windows only)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify extracted candidate on Windows",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "previous_failed_run": {
+    "id": 41367413297,
+    "source_commit": "3d6a2be874edfa5bdbf4b3a89dae60a93b556281",
+    "tests_per_job": 470,
+    "failures": [
+      "real dialogue memory and locate catalog omitted",
+      "fixture assumed runtime status length above 350, contrary to real bounded snapshot"
+    ]
+  },
+  "new_package": false,
+  "linux_tests": false,
+  "physical_microphone": false,
+  "live_personal_model": false,
+  "pavilion_performance": false,
+  "scan_time_limit_unchanged": true,
+  "previous_download_preserved": "Jarvis-Accesso-File-0.1.0-20261101-d06e233.zip"
+}
