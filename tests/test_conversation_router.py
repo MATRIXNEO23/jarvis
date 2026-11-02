@@ -55,6 +55,37 @@ class ConversationRouterTests(unittest.TestCase):
                 with self.assertRaises(ConversationRejected):
                     build_conversation_prompt(utterance)
 
+    def test_refinement_keeps_goal_and_catalog_with_full_bounded_inputs(self):
+        actions=tuple({'id':'addon.accesso_file.'+name,'example':example} for name,example in (
+            ('cerca','cerca file preventivo'),('localizza','trovami cartella installazione Firefox'),
+            ('apri','apri cartella 1'),('leggi','leggi file 1'),('elenca','elenca cartella documenti')))
+        feedback={'operation':'locate','clue':'n'*160,'kind':'folder',
+            'question':'q'*180,'answer':'a'*160,'partial':True}
+        original='dove è installato '+'n'*160
+        prompt=build_conversation_prompt(original,has_document=True,runtime_info='r'*850,
+            addon_actions=actions,file_feedback=feedback)
+        self.assertLessEqual(len(prompt.encode('utf-16-le'))//2,5000)
+        self.assertIn(json.dumps(feedback,ensure_ascii=False,separators=(',',':')),prompt)
+        self.assertIn('addon.accesso_file.localizza',prompt)
+        self.assertTrue(prompt.endswith(json.dumps(original,ensure_ascii=False)))
+        self.assertNotIn('notepad.write',prompt)
+
+    def test_unspecified_search_never_becomes_a_browser_action(self):
+        for kind,aid,args in (('capability','browser.search',{'query':'Netflix'}),
+                              ('capability','browser.open',{}),
+                              ('tool','web_search',{'query':'Netflix'}),
+                              ('tool','open_browser',{})):
+            key='action_id' if kind=='capability' else 'tool_id'
+            response=encode({'kind':kind,key:aid,'arguments':args})
+            for text in ('cerca Netflix','Jarvis, cercami Netflix','trova Google Chrome'):
+                with self.subTest(action=aid,text=text):
+                    intent=parse_conversation_intent(response,utterance=text)
+                    self.assertEqual(intent.kind,'clarify')
+                    self.assertIsNone(intent.capability)
+                    self.assertIsNone(intent.plan)
+            intent=parse_conversation_intent(response,utterance='cerca Netflix su internet')
+            self.assertEqual(intent.kind,kind)
+
     def test_exact_json_fence_is_supported_without_embedded_commands(self):
         raw = '```json\n{"kind":"chat","reply":"Ciao."}\n```'
         self.assertEqual(parse_conversation_intent(raw).reply, "Ciao.")

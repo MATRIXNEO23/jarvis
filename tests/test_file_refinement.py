@@ -17,6 +17,7 @@ from conversation_router import build_conversation_prompt, parse_conversation_in
 from dialogue_focus import is_ambiguous_short_reply
 from local_engine import TaskResult
 from voice_control import GPT_CONVERSATION, STANDBY
+from live_capabilities import snapshot_capabilities, capability_status_prompt
 
 
 @unittest.skipUnless(os.name == 'nt', 'Windows-only user requirement')
@@ -163,6 +164,11 @@ class FileRefinementTests(unittest.TestCase):
         with patch('file_access.service.installed_locations',return_value=[]):
             token=self.empty('locate',query='Minecraft')
         env,workers=self.environment()
+        live=snapshot_capabilities(settings={},has_document=False,telegram_credentials=False,
+            telegram_voice_dependencies=False,registry=self.manager.registry,telethon_installed=False)
+        status=capability_status_prompt(live)
+        self.assertGreater(len(status),350)
+        env['capability_status_prompt']=lambda _:status
         self.response(env,token,kind='clarify',reply='Java oppure Bedrock?')
         # Only chat/clarify fields are permitted in the real protocol.
         env['service'].call.return_value={'text':json.dumps(dict(kind='clarify',reply='Java oppure Bedrock?'))}
@@ -176,6 +182,56 @@ class FileRefinementTests(unittest.TestCase):
         self.assertIn('Java oppure Bedrock',prompt)
         self.assertIn('"operation":"locate"',prompt)
         self.assertLessEqual(len(prompt),5000)
+        self.assertIn('addon.accesso_file.localizza',prompt)
+
+    def test_real_runtime_snapshot_empty_lookup_reaches_model_and_verified_result(self):
+        env,workers=self.environment()
+        live=snapshot_capabilities(settings={},has_document=False,telegram_credentials=False,
+            telegram_voice_dependencies=False,registry=self.manager.registry,telethon_installed=False)
+        env['capability_status_prompt']=lambda _:capability_status_prompt(live)
+        env['service'].call.return_value={'text':json.dumps(dict(kind='capability',
+            action_id='addon.accesso_file.cerca',arguments={'query':'preventivo'}))}
+        env['try_file_command']('cerca file nome pronunciato')
+        workers.pop(0)()
+        with patch('file_access.ui.show_results'):
+            self.receive('local',env)
+        self.assertTrue(env['busy_gpt'],str(env['write_line'].call_args_list))
+        workers.pop(0)()
+        prompt=env['service'].call.call_args.kwargs['prompt']
+        self.assertLessEqual(len(prompt.encode('utf-16-le'))//2,5000)
+        self.assertIn('addon.accesso_file.cerca',prompt)
+        self.receive('conversation_ok',env)
+        workers.pop(0)()
+        with patch('file_access.ui.show_results'):
+            self.receive('local',env)
+        self.assertEqual(env['service'].call.call_count,1)
+        self.assertTrue(os.path.samefile(self.a,self.files._results[0]))
+        self.assertFalse(workers)
+
+    def test_bare_search_browser_proposal_asks_scope_in_voice_and_text_poll(self):
+        for channel in ('conversation','typed_conversation'):
+            env,workers=self.environment()
+            env['output_queue'].put(('conversation_ok',7,None,'cerca Netflix',
+                {'text':json.dumps(dict(kind='capability',action_id='browser.search',
+                    arguments={'query':'Netflix'}))},channel))
+            with patch('webbrowser.open') as browser:
+                self.receive('conversation_ok',env)
+            browser.assert_not_called()
+            self.assertFalse(workers)
+            said=env['speak_result'].call_args.args[0]
+            self.assertIn('PC',said)
+            env['remember_exchange'].assert_called_once_with('cerca Netflix',said,'clarify')
+            # The existing dialogue memory carries the original request and
+            # question into the user's next natural-language clarification.
+            history=json.dumps({'breve':[{'utente':'cerca Netflix','jarvis':said}]})
+            live=snapshot_capabilities(settings={},has_document=False,telegram_credentials=False,
+                telegram_voice_dependencies=False,registry=self.manager.registry,telethon_installed=False)
+            prompt=build_conversation_prompt('sul PC',memory_context=history,
+                runtime_info=capability_status_prompt(live),addon_actions=self.manager.active_actions())
+            self.assertIn('Netflix',prompt)
+            self.assertIn(said,prompt)
+            self.assertIn('addon.accesso_file.localizza',prompt)
+            self.assertLessEqual(len(prompt.encode('utf-16-le'))//2,5000)
 
     def test_model_cannot_turn_locate_into_open_search_or_browser(self):
         with patch('file_access.service.installed_locations',return_value=[]):

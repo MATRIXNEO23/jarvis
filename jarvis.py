@@ -3420,6 +3420,7 @@ def main() -> None:
                             latest=current_capability_snapshot(documents.current is not None)
                             intent = parse_conversation_intent(
                                 result.get("text", ""),
+                                utterance=original_phrase,
                                 has_document=doc_snapshot is not None,
                                 telegram_send_ready=latest["telegram_voice_send"],
                                 addon_resolver=(addon_manager.resolve
