@@ -167,7 +167,8 @@ class FileRefinementTests(unittest.TestCase):
         live=snapshot_capabilities(settings={},has_document=False,telegram_credentials=False,
             telegram_voice_dependencies=False,registry=self.manager.registry,telethon_installed=False)
         status=capability_status_prompt(live)
-        self.assertGreater(len(status),350)
+        self.assertIn('telegram_vocale',status)
+        self.assertLessEqual(len(status),850)
         env['capability_status_prompt']=lambda _:status
         self.response(env,token,kind='clarify',reply='Java oppure Bedrock?')
         # Only chat/clarify fields are permitted in the real protocol.
@@ -207,6 +208,34 @@ class FileRefinementTests(unittest.TestCase):
         self.assertEqual(env['service'].call.call_count,1)
         self.assertTrue(os.path.samefile(self.a,self.files._results[0]))
         self.assertFalse(workers)
+
+    def test_missing_search_name_asks_then_searches_authorized_folder_without_gpt(self):
+        self.engine.download_dir=self.root/'Downloads'
+        self.engine.download_dir.mkdir()
+        for channel in ('voice','text'):
+            env,workers=self.environment()
+            if channel=='voice':
+                env['output_queue'].put(('voice_text','cercami un file'))
+                self.receive('voice_text',env)
+            else:
+                env['request'].set('cercami un file')
+                env['submit_gpt']()
+            workers.pop(0)()
+            self.receive('local',env)
+            self.assertIn('Quale file',str(env['write_line'].call_args_list))
+            self.assertFalse(workers)
+            env['try_file_command']('preventivo')
+            workers.pop(0)()
+            with patch('file_access.ui.show_results'):
+                self.receive('local',env)
+            self.assertTrue(os.path.samefile(self.a,self.files._results[0]))
+            self.assertFalse(workers)
+            env['service'].call.assert_not_called()
+        help_text=self.engine.execute('aiuto').message
+        self.assertIn('nelle cartelle autorizzate',help_text)
+        self.assertNotIn('solo nella cartella Download',help_text)
+        self.manager.set_enabled('accesso_file',False)
+        self.assertIn('solo nella cartella Download',self.engine.execute('aiuto').message)
 
     def test_bare_search_browser_proposal_asks_scope_in_voice_and_text_poll(self):
         for channel in ('conversation','typed_conversation'):

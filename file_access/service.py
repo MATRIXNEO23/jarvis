@@ -301,10 +301,14 @@ class FileAccessService:
     @staticmethod
     def _missing_file_request(text):
         clean=re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+','',text.strip(),flags=re.I)
-        match=re.fullmatch(r"(?:(?:mi puoi|puoi|potresti)\s+)?(apri(?:mi)?|aprire|leggi(?:mi)?|leggere|spiega(?:mi)?|spiegare)\s+(?:(?:il|la|un|una|questo|questa|quel|quella)\s+)?(file|cartella)[ .!?]*",clean,re.I)
+        match=re.fullmatch(r"(?:(?:mi puoi|puoi|potresti)\s+)?(apri(?:mi)?|aprire|leggi(?:mi)?|leggere|spiega(?:mi)?|spiegare|cerca(?:mi|re)?|trova(?:mi|re)?)\s+(?:(?:il|la|un|una|questo|questa|quel|quella)\s+)?(file|cartella)(?: (?:in|nella cartella) (documenti|download|desktop|profilo|appdata))?[ .!?]*",clean,re.I)
         if not match:
             return None
         verb,noun=match.group(1).casefold(),match.group(2).casefold()
+        if verb.startswith(('cerc','trov')):
+            return 'search',({'scope':match.group(3).casefold()} if match.group(3) else {})
+        if match.group(3):
+            return None
         operation='open' if verb.startswith('apr') else 'read'
         if operation=='read' and noun=='cartella':
             return None
@@ -315,14 +319,17 @@ class FileAccessService:
 
     @staticmethod
     def _target_question(operation,options):
+        if operation=='search':
+            return 'Quale file o cartella vuoi cercare? Dimmi il nome o parte del nome.'
         noun='cartella' if options.get('kind')=='folder' else 'file'
         return 'Quale '+noun+' vuoi '+('aprire' if operation=='open' else 'leggere')+'? Dimmi il nome o il percorso.'
 
     def _begin_target_question(self,operation,options):
-        if operation not in ('open','read'):
+        if operation not in ('open','read','search'):
             raise ValueError('Richiesta file non valida.')
-        checked=validate_arguments(operation,{**options,'target':'nome'})
-        checked.pop('target')
+        key='query' if operation=='search' else 'target'
+        checked=validate_arguments(operation,{**options,key:'nome'})
+        checked.pop(key)
         with self._lock:
             self.reset(self._context)
             self._pending=(operation,{**checked,'_missing_target':True})
@@ -508,7 +515,7 @@ class FileAccessService:
                     options={k:v for k,v in options.items() if k!='_missing_target'}
                     self._pending=None
                     self._result_token=uuid4().hex
-                return self.execute(op,{**options,'target':target})
+                return self.execute(op,{**options,('query' if op=='search' else 'target'):target})
             except (OSError,ValueError,KeyError) as exc:
                 return FileResult('rejected',str(exc))
         if operation == 'select':

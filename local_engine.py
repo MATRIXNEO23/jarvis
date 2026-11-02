@@ -70,13 +70,14 @@ class LocalEngine:
             db.close()
 
     @staticmethod
-    def available_commands() -> str:
+    def available_commands(*, files_enabled: bool = False) -> str:
         return (
             "Comandi disponibili:\n"
             "• aiuto\n"
             "• stato sistema\n"
             "• mostra download\n"
-            "• cerca file NOME (solo nella cartella Download)\n"
+            + ("• cerca file NOME (nelle cartelle autorizzate)\n" if files_enabled else
+               "• cerca file NOME (solo nella cartella Download)\n") +
             "• apri blocco note\n"
             "• apri calcolatrice\n"
             "• apri esplora file\n"
@@ -103,7 +104,8 @@ class LocalEngine:
                                            "Comando troppo lungo (massimo 300 caratteri)."))
         if " ".join(request.casefold().strip(" .!?").split()) in ("aiuto","comandi","help","cosa puoi fare","cosa sai fare"):
             extra = ("\n"+self.file_access.commands()) if self.file_access is not None else ""
-            return self._record(TaskResult(uuid4().hex,"help","completed",self.available_commands()+extra))
+            return self._record(TaskResult(uuid4().hex,"help","completed",self.available_commands(
+                files_enabled=bool(self.file_access is not None and self.file_access.available()))+extra))
         if self.file_access_blocked and request.casefold().startswith(
                 ("cerca file ","mostra download","elenca download","apri download","apri disco locale c")):
             return self._record(TaskResult(uuid4().hex,"files","rejected",

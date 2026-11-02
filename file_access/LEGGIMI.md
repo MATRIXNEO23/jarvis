@@ -52,3 +52,5 @@ Il modello può usare target/scope portabili come %APPDATA%\Nome, %LOCALAPPDATA%
 
 ## Correzione in verifica — 2 novembre 2026
 Il raffinamento usa un contesto dedicato alla ricerca file; la proposta resta soggetta agli stessi permessi e vincoli locali. Una proposta GPT di aprire/cercare nel browser dopo «cerca Netflix» o un’altra ricerca senza ambito produce invece la domanda «Vuoi cercare sul PC oppure su Internet?». La richiesta e la domanda restano nel dialogo; si può rispondere «sul PC» o esplicitare «cerca Netflix su internet». Nessun trattamento speciale per Netflix e nessuna garanzia che tutte le app installate siano riconoscibili. Modifica nei sorgenti, non ancora nello ZIP pubblicato.
+
+Richiesta incompleta: «cercami un file» → domanda del nome → «preventivo» riprende la ricerca nelle cartelle autorizzate, senza chiedere di nuovo l’azione e senza limitarsi ai Download. Eventuale ambito «in documenti» rimane nella richiesta pendente; annullamento, scadenza e revoca delle spunte restano validi. Se Accesso file è spento, la ricerca precedente del nucleo resta limitata ai Download.
