@@ -1,3 +1,9 @@
+## 2026-11-02 — percorso concreto della ricerca generica Netflix
+Richiesta utente: capire perché «cerca Netflix» ha aperto il browser invece di cercare nel PC. Verificato il source del pacchetto pubblicato d06e233: file_access.parse_command riconosce ricerche con file/cartella o localizzazione installazione, non la frase generica. try_file_command, su parse None e senza parole file/cartella/deittici, chiama provider.reset(active_project_id) e ritorna False: può perdere lo stato strutturato della ricerca precedente prima dell'interpretazione. La modalità Conversazione GPT inoltra la frase al modello. Il validatore del vecchio source accetta browser.search/browser.open consentiti senza controllare se l'utente intendesse web; il dispatcher locale esegue. Nessuna query indice fa parte di quel ramo browser.
+Il percorso è dimostrato dal codice per la frase esatta; trascrizione STT e risposta modello reali di quel tentativo non sono disponibili, quindi la specifica scelta del modello resta inferenza compatibile col riscontro, non log personale. Non attribuire l'apertura browser a Windows Search o al limite della scansione: questi riguardano un altro ramo.
+Source correttivo 8066852 aggiunge già il guard sul browser con frase originale e domanda PC/Internet, verificato nei callback voce/testo in run 41367835278. Non basta a dichiarare conservazione universale del contesto di ricerca: va verificato il reset delle parafrasi e il raccordo a una richiesta locale già pendente, evitando sia reset prematuro sia riuso di permessi scaduti. Lacuna indice-prima separata e ancora non implementata; diagnosi INDICE-WINDOWS-PRIORITA-20261102.md.
+Download/README riletto: ultimo ZIP ancora d06e233, non contiene correzioni 8066852. Nuova analisi statica, nessun test Windows ripetuto, nessuna modifica runtime o build da questa diagnosi.
+
 # Ricerca file e continuità del dialogo — 2 novembre 2026
 
 ## Problemi osservati e limiti del riscontro
