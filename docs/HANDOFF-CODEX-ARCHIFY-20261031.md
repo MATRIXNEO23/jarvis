@@ -1,3 +1,6 @@
+## In corso — aggiunta verifica trascrizione e correzioni personali, 3 novembre 2026
+L'utente autorizza l'aggiunta alla review della verifica STT italiano e correzioni personali già presenti, inclusa persistenza al riavvio. Unità solo documentale: aggiornare BUILD-REVIEW-COMPLETA-20261103.md, STATO-ATTIVITA.md, questo handoff e DECISIONI-E-LEZIONI.md; poi rileggere i contenuti remoti. Nessun fine-tuning, registrazione audio, sostituzione Vosk, modifica runtime o build autorizzati da questa aggiunta. Priorità continuità invariata; controlli funzionali ancora da eseguire.
+
 ## Review completa conclusa — 3 novembre 2026
 La review dei sorgenti e del pacchetto di tutte le aree esistenti è conclusa: [rapporto definitivo](BUILD-REVIEW-COMPLETA-20261103.md). Dieci rilievi documentati; priorità continuità GPT–motore locale, con prove Windows ancora da svolgere. Rilevati anche rischi su salvataggio/chiusura documenti, voce, timeout, ricerca e copertura diagnostica. Verificati byte/manifest/sorgenti e riletti i test Windows storici; nessun nuovo collaudo funzionale o nuova build. Sorgenti correttivi 8066852 non nello ZIP d06e233: preservarli. Apertura generale desktop/Store resta differita. Ripresa: prove mirate Windows, poi correzioni; non dichiarare tutti i rilievi riprodotti o già risolti.
 
