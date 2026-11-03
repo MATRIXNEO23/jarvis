@@ -1,6 +1,6 @@
 > **Installazione e configurazione aggiornate:** parti da [Prima-installazione/README.md](Prima-installazione/README.md). Per riprendere lo sviluppo leggi [RECUPERO.md](RECUPERO.md) e [l’indice dei sorgenti](docs/INDICE-SORGENTI.md). Le sezioni sottostanti contengono anche aggiornamenti storici: non identificano tutte la versione attuale. 
 
-**Nuova build candidata Windows: [Jarvis 002](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-002.zip)** — correzione del contesto della cartella; collaudo PC pendente. [Versioni precedenti](Download/REGISTRO-VERSIONI.md).
+**Nuova build candidata Windows: [Jarvis 003](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-003.zip)** — interruttori rapidi MIC, GPT e MEMORIA; collaudo PC pendente. [Versioni precedenti](Download/REGISTRO-VERSIONI.md).
 
 
 # Jarvis — Windows 10 (64 bit)

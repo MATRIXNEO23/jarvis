@@ -1,4 +1,13 @@
-> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **002**, verificata su Windows; collaudo PC pendente. Build001 e base PC b936879 conservate.
+> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **003**, verificata su Windows; collaudo PC pendente. Build001/002 e base PC b936879 conservate.
+
+## Build 003 — Interruttori rapidi
+
+[Scarica Jarvis-003.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-003.zip)
+
+MIC, GPT e MEMORIA in alto a destra sono ora cliccabili e sincronizzati con le impostazioni. Estrai in una cartella nuova e avvia avvia_jarvis.bat; profilo di prova e impostazioni esistenti conservati. Test Windows, pacchetto estratto e avvio/chiusura UI verificati; GPT/account/microfono/Pavilion da collaudare. Limite20 risultati e altri rilievi ancora aperti; nessuna nuova capacità di apertura file.
+
+Sorgenti: [2d52ba5](https://github.com/MATRIXNEO23/jarvis/tree/2d52ba540aad1f9989f588e45b7a0b0973d49e67). [Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41675960102). SHA-256: `9554fd5bdde7b9f8c387bfa2fed66167abb90c5c98e691f74ad5ffb6bcf119fb`.
+
 
 ## Build 002 — Contesto nella conversazione
 
