@@ -4,7 +4,7 @@ Richiesta di Alberto del 3 novembre 2026: ogni candidata pubblicata deve avere u
 
 - Nomi pubblici: Jarvis-001.zip, Jarvis-002.zip, Jarvis-003.zip e così via. Tre cifre come minimo, senza azzerare il contatore dopo999.
 - Registro autorevole: Download/BUILD-NUMBERS.json. Prima di confezionare/pubblicare, leggere latest_build e next_build correnti da main.
-- Prima build numerata:001, alias con byte identici della candidata Continuità cec4536. Prossima pubblicazione:004;003 è pubblicata.
+- Prima build numerata:001, alias con byte identici della candidata Continuità cec4536. Prossima pubblicazione:005;004 è pubblicata.
 - Una build pubblicata non si sovrascrive, non si rinumera e il numero non si riutilizza, nemmeno se viene ritirata per un problema.
 - Per ogni build registrare numero, nome ZIP/JSON, precedente, sorgenti, SHA256, dimensione, prove e stato del collaudo PC. La più recente resta in cima a Download e nel README principale; le precedenti restano scaricabili.
 - Fonte/commit/data restano nei metadati. I nomi pubblici devono privilegiare il numero, evitando lunghe combinazioni di nomi/data/hash.

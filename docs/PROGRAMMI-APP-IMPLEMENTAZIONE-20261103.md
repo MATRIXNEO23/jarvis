@@ -1,6 +1,6 @@
-# Programmi e app — sorgenti verificati, 3 novembre 2026
+# Programmi e app — consegna004, 3 novembre 2026
 
-**Stato:** codice e prove conservati; nessun nuovo ZIP pubblicato. La003 rimane l'ultima candidata scaricabile. L'utente ha autorizzato progettazione e implementazione, non un nuovo rilascio automatico.
+**Stato corrente:** inclusa nella [build004 pubblicata](CONSEGNA-BUILD-004-20261103.md), source di confezione a1b93f3, run41694455705:542 test per versione Python e167 dal pacchetto estratto. Download pubblico e001/002/003 preservate verificati. Alla ripresa l’utente ha richiesto di continuare dal punto prima della build; eseguita una consegna una tantum, senza futuri automatismi. Le prove di implementazione sotto rimangono riferite al source67ca39c precedente alla confezione. Collaudo PC004 pendente.
 
 [Source completo67ca39c4af21c91a12a6306b1ed967f6d83bbedd](https://github.com/MATRIXNEO23/jarvis/tree/67ca39c4af21c91a12a6306b1ed967f6d83bbedd) · [ramo feature/program-apps-20261103](https://github.com/MATRIXNEO23/jarvis/tree/feature/program-apps-20261103) · [run Windows41690560916](https://github.com/MATRIXNEO23/jarvis/actions/runs/41690560916).
 
@@ -55,4 +55,4 @@ Provati persistenza/rollback, app nuova/disattivata/non scelta, oltre20 risultat
 
 Qualità STT/microfono/account/GPT reali, app Store terze (Netflix ecc.), layout/DPI e prestazioni Pavilion richiedono collaudo PC del pacchetto esatto. Le identità di launcher diverse non sono fuse per il solo nome: collegamenti/eseguibili registrati separatamente possono apparire come scelte distinte. Nessuna promessa di inventario universale o di equivalenza fra tutti i launcher.
 Avvio di un'app non ne controlla le funzioni interne. Chiusura app, installazione/disinstallazione, limite20 della ricerca file, caso Programmi Explorer e rischio salva/chiudi precedente restano attività separate.
-Prossimo passo di consegna, quando richiesto: candidata004 da questo source, adeguare numero/registro, includere nuove suite nei controlli ZIP estratto, verificare UI/manifest/download e preservare001/002/003. Nessun bisogno di ripetere progettazione o test verdi senza modifica o dubbio concreto.
+Passaggio di consegna004 completato: numero/registro aggiornati, nuove suite incluse nei167 test dello ZIP estratto, UI/manifest/download verificati e001/002/003 preservate. Prossimo passo: collaudo PC004, una app consentita e una frase personale. Nessun bisogno di ripetere progettazione o test verdi senza modifica o dubbio concreto.

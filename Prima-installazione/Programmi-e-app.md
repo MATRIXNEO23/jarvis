@@ -1,6 +1,6 @@
-# Programmi e app — guida del componente nei sorgenti
+# Programmi e app — dalla build004
 
-Questa aggiunta non è ancora nella003 scaricabile. Codice e test Windows verificati nel ramo feature/program-apps-20261103; [rapporto](../docs/PROGRAMMI-APP-IMPLEMENTAZIONE-20261103.md). Nessun nuovo ZIP generato. I passi seguenti descrivono il componente e saranno applicabili al pacchetto che lo includerà.
+Inclusa nella [build004](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-004.zip), con suite e pacchetto estratto verificati su Windows. Estrai tutto in una cartella nuova, chiudi la precedente istanza di Jarvis e avvia avvia_jarvis.bat. [Consegna e prove](../docs/CONSEGNA-BUILD-004-20261103.md).
 
 Dipendenze: stessi Python3.11/3.12 x64 con Tk e Windows PowerShell5.1 del progetto; API Windows, nessun nuovo account o pagamento. Copiare l'intera cartella program_apps insieme al runtime corrispondente: il solo manifest .jaddon non aggiunge il nuovo codice alla003.
 
@@ -14,4 +14,4 @@ Dati nel profilo Jarvis attivo, addon-data/programmi_app/programs.json, separati
 
 App non consentita: spunta e salva nelle impostazioni. App non disponibile/cambiata: aggiorna elenco e ricontrolla la selezione; non cambiare ACL di WindowsApps. Componente mancante: reinstallare pacchetto completo e cartella program_apps. Il controllo interno delle app, la loro chiusura e l'installazione/disinstallazione non fanno parte del componente.
 
-Verifiche riproducibili Windows PASS; audio/account/app terze e consumi sul Pavilion restano prova PC del futuro pacchetto esatto. Nessuna promessa che l'elenco di questo PC o ogni launcher coincida con quello del runner.
+Verifiche riproducibili Windows PASS; audio/account/app terze e consumi sul Pavilion restano prova PC del pacchetto004 esatto. Nessuna promessa che l'elenco di questo PC o ogni launcher coincida con quello del runner.

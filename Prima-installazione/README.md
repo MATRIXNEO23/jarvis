@@ -1,5 +1,5 @@
-## Nuovo componente nei sorgenti — Programmi e app
-[Guida del componente](Programmi-e-app.md) e [rapporto Windows](../docs/PROGRAMMI-APP-IMPLEMENTAZIONE-20261103.md). Codice verificato, non ancora incluso nel download003; attendere un pacchetto che lo contenga. La guida storica sotto non implica che003 abbia già l'add-on.
+## Programmi e app — disponibile dalla004
+[Guida del componente](Programmi-e-app.md) e [consegna Windows004](../docs/CONSEGNA-BUILD-004-20261103.md). Inclusa nella004 pubblicata; estrarre il pacchetto completo in cartella nuova. La guida storica sotto riguarda la base precedente; la003 non contiene l’add-on.
 
 # Prima installazione di Jarvis
 Guida aggiornata il 1 novembre 2026 per Windows 10 x64 e HP Pavilion i3-2100, 10 GB RAM. Il modello GPT è esterno; il PC esegue interfaccia, voce, memoria e azioni.

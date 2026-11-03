@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "source_verified_not_packaged",
+  "status": "source_verified_packaged_as_004",
   "source_commit": "67ca39c4af21c91a12a6306b1ed967f6d83bbedd",
   "runtime_commit": "3c06c7172693add405a250bc9879aaef2abf59e1",
   "base_commit": "ae4eca2822e79407c3230367fba31af7bb08c4e8",
@@ -55,16 +55,19 @@
     "execution": "read-only static; Windows CI verified independently"
   },
   "build": {
-    "created": false,
-    "published": false,
-    "next_number": 4,
-    "current_download": 3
+    "created": true,
+    "published": true,
+    "number": 4,
+    "current_download": 4,
+    "next_number": 5,
+    "release_source": "a1b93f34ff25bd9a972ed971a432af4984366f28",
+    "release_evidence": "build-004-20261103.json",
+    "run_id": 41694455705
   },
   "not_verified": [
     "live microphone/STT/account/model",
     "third-party Store apps on PC",
     "Pavilion resources",
-    "DPI/layout",
-    "extracted release package"
+    "DPI/layout"
   ]
 }
