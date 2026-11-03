@@ -1,0 +1,61 @@
+{
+  "date": "2026-11-03",
+  "reported_pc_build": "001",
+  "scope": "conversational folder/subject context without local file_results",
+  "pc_prompt_captured": false,
+  "base": "f2e76c46312f5edfb38fdb79c12dcc1569b61851",
+  "red": {
+    "source": "04b295d0a57d53fdb7913858c5cd7a09b69e2865",
+    "run": 41619941313,
+    "jobs": [
+      125862812213,
+      125862812693
+    ],
+    "tests_per_job": 508,
+    "failures_per_job": 4,
+    "errors_per_job": 0,
+    "new_methods": 3
+  },
+  "green": {
+    "source": "dc78bb9e7fd835f93a8cb8d65e50f7c9848b7d16",
+    "run": 41620441158,
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 125864485582,
+        "python": "3.11.9",
+        "tests": 508,
+        "seconds": 79.111
+      },
+      {
+        "id": 125864486111,
+        "python": "3.12.10",
+        "tests": 508,
+        "seconds": 68.254
+      }
+    ],
+    "syntax_probe": "passed",
+    "native_index": "passed",
+    "build": "skipped"
+  },
+  "review": {
+    "independent": true,
+    "read_only": true,
+    "base": "f2e76c46312f5edfb38fdb79c12dcc1569b61851",
+    "head": "dc78bb9e7fd835f93a8cb8d65e50f7c9848b7d16",
+    "blockers": [],
+    "remaining_limit": "pre-existing prefix truncation can remove long paths or late references; new fixtures are short"
+  },
+  "not_tested": [
+    "real model response",
+    "personal account",
+    "microphone",
+    "Pavilion performance",
+    "arbitrary long-context dialogue"
+  ],
+  "release": {
+    "current": "001 unchanged",
+    "next": "002 not built or published"
+  },
+  "search_limit20": "unchanged; separate issue"
+}
