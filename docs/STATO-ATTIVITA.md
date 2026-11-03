@@ -1,3 +1,11 @@
+## PC004 — catalogo aggiornato, app Microsoft Store segnalate assenti, 3 novembre2026
+
+L’utente corregge il riscontro iniziale: Aggiorna elenco ha popolato il catalogo con parecchi programmi. La conclusione precedente «rilevamento non funzionante/0 app» è superata; non ripetere la prova del pulsante né trattare il primo0 come errore riprodotto. Il tempo necessario non è stato misurato. Il problema riferito ora riguarda le app installate tramite Microsoft Store che non compaiono.
+
+Riletto windows_apps.ps1 della004/source a1b93f3: supporto già previsto tramite Get-StartApps e Get-AppxPackage/Get-AppxPackageManifest,con filtro framework/risorse/voci nascoste e fallback del nome a Package.Name per ms-resource. Quindi l’assenza di tutte le app Store non è dimostrata dal codice e non richiede un secondo componente. La causa personale resta da accertare: nome visualizzato tecnico,filtro,errore fonte o altra esclusione sono ipotesi. AppsFolder diretto rimane una fonte proposta,non un fix già dimostrato.
+
+Prossimo dato minimo: nome di una app Store effettivamente installata e assente dall’elenco Jarvis,da confrontare con la sua voce Windows. Non chiedere log/programmazione/eseguibili come primo passo. Nessuna modifica runtime,test o build;004 conservata e feedback PC limitato al catalogo dei programmi. Indagare e correggere il componente esistente soltanto sulla base di una riproduzione o evidenza mirata.
+
 ## PC004 — Aggiorna elenco provato, nessuna app trovata, 3 novembre2026
 
 L’utente conferma di aver premuto Aggiorna elenco senza trovare alcuna applicazione. La domanda precedente sull’uso del pulsante è risolta: non ripeterla. Restano da acquisire il messaggio finale sotto i pulsanti (elenco0,errore o attività in corso) e l’esito tecnico del provider; non attribuire ancora la causa alla sola mancanza di AppsFolder.
