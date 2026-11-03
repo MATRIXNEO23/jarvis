@@ -1,0 +1,22 @@
+name: Quota Codex read-only feasibility (Windows)
+on:
+  push:
+    branches: ['feature/codex-quota-20261103']
+    paths: ['codex_quota/**', 'tests/test_codex_quota_provider.py', 'tools/probe_codex_quota.py', '.github/workflows/quota-probe.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  boundary:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Read-only quota boundary, no account or model
+        run: python -m unittest discover -s tests -p test_codex_quota_provider.py -v
