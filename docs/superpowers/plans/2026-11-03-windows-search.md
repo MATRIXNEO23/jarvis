@@ -35,8 +35,8 @@
 
 - [x] Red: letti i log della run Windows 41604955975/source e714e4d: 494 test, quattro failure sui tre nuovi test; query catturata 'di Minecraft', non problemi di import o fixture.
 - [x] Modifica minima: eliminare solo la preposizione iniziale di dalle richieste search dopo l'estrazione dello scope; nomi quotati preservati.
-- [ ] Green: python -m unittest discover -s tests -v su CI Windows; zero failure/errori, incluse varianti/scopo/ricerca su filesystem temporaneo.
-- [ ] Review indipendente mirata della modifica e checkpoint remoto con esito e limiti.
+- [x] Green: run41606786155, 494 test per Python3.11/3.12 PASS. Comando: python -m unittest discover -s tests -v su CI Windows; zero failure/errori, incluse varianti/scopo/ricerca su filesystem temporaneo.
+- [x] Review indipendente mirata: nessun blocco statico; evidenza CI letta. Checkpoint remoto in questo commit.
 
 ### Task 2: indice prima delle scansioni
 
