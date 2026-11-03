@@ -4,7 +4,7 @@ Aggiornamento: 3 novembre 2026.
 
 Queste skill guidano l'assistente durante lo sviluppo. Non sono add-on di Jarvis, non modificano il modello e non sono componenti da includere nello ZIP dell'applicazione. Sono installate come skill personali e conservate qui anche come copie versionate riutilizzabili.
 
-## Le quattro skill
+## Le quattro skill iniziali
 
 | Skill | Quando usarla | Risultato cercato |
 |---|---|---|
@@ -27,7 +27,7 @@ Fonte: [obra/superpowers](https://github.com/obra/superpowers), revisione fissat
 
 ## Come riutilizzarle
 
-Le cartelle complete sono in `.agents/skills/`, una per skill. Per un altro progetto copiarvi la cartella della skill desiderata, mantenendo SKILL.md, risorse collegate e LICENSE. Per il flusso comprensione/pianificazione conservare insieme Brainstorming e Writing Plans; per il flusso diagnosi/verifica conservare insieme Systematic Debugging e Verification Before Completion.
+Le cartelle complete delle quattro skill iniziali sono in `.agents/skills/`, una per skill. Per un altro progetto copiarvi la cartella della skill desiderata, mantenendo SKILL.md, risorse collegate e LICENSE. Per il flusso comprensione/pianificazione conservare insieme Brainstorming e Writing Plans; per il flusso diagnosi/verifica conservare insieme Systematic Debugging e Verification Before Completion.
 
 Negli ambienti Codex che supportano la scoperta delle skill di repository, `.agents/skills/` è una posizione riconosciuta. La presenza nella repository non equivale all'installazione personale in ogni applicazione o account. In ChatGPT una skill personale disponibile può essere richiamata con `@nome-skill`; nei client Codex compatibili usare il selettore delle skill o `$nome-skill`. Se il client non scopre le cartelle, chiedere all'assistente di leggere lo SKILL.md e i riferimenti pertinenti: non dichiarare che sia stata caricata senza verificarlo.
 
@@ -69,3 +69,16 @@ Questa ricerca è **una selezione di candidate, non un'autorizzazione all'instal
 - Le candidate sono strumenti di sviluppo, non modelli da eseguire dentro Jarvis. Non promettono accuratezza STT, assenza di allucinazioni o miglioramenti prestazionali senza prove.
 - **Non eseguiti:** installazione di queste tre candidate, forward test di eventuali adattamenti Work, nuove prove runtime Jarvis, benchmark Pavilion o build.
 - **Raccomandazione:** valutare l'installazione delle prime due come adattamenti proporzionati a Work e al repository; mantenere la terza per una successiva fase di misurazione. Nessun bisogno di aggiungere molte altre skill prima di applicare quelle già disponibili.
+
+## Due skill prioritarie installate — 3 novembre 2026
+
+Installate e verificate come skill personali **Test-Driven Development for Work** e **Requesting Code Review for Work**, dopo richiesta esplicita dell'utente. Sono adattamenti MIT da obra/superpowers, revisione 2ce8aa15d05bd57213e6f746f953aafb7ded7a8b; la fonte originale resta distinta dall'edizione Work.
+
+- **TDD:** ciclo prova fallita → correzione minima → prova riuscita usando il linguaggio, la suite e l'ambiente del progetto. Preservazione del codice esistente, dati e versioni; nessun obbligo di riscrittura o cambio framework. Inclusa la guida writing-good-tests.md.
+- **Revisione:** revisore indipendente con contesto circoscritto, requisiti e riferimenti esatti; sola lettura e nessun ampliamento automatico dell'ambito. Inclusa la traccia code-reviewer.md. Uso degli agenti disponibili in Work, senza presumere un altro strumento Task.
+- **Prove delle skill:** validazione strutturale nelle directory personali prima e dopo il salvataggio; installazioni persistenti entrambe verificate. TDD su fixture isolata: difetto iniziale riprodotto, API preservata, cinque test Python finali riusciti e ricontrollati. Revisore su un'altra fixture Git isolata: difetto individuato con riga/esempio, limiti della sola lettura dichiarati; checkout rimasto immutato.
+- **Limiti:** queste sono prove del metodo su esempi temporanei, non nuovi test funzionali di Jarvis, collaudi Windows o garanzia di assenza di difetti.
+- **Copie:** le due nuove edizioni sono conservate nelle skill personali; le copie in .agents/skills documentate nella sezione iniziale riguardano le quattro installazioni precedenti.
+- **Non installata:** Python Performance Optimization resta proposta per una fase successiva.
+- **Jarvis:** nessun runtime, dipendenza, modello o ZIP modificato. Ripresa prioritaria sempre R01–R04 dalla review; non ripetere la verifica voce V01 già conclusa.
+
