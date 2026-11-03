@@ -1,3 +1,11 @@
+## Riscontro PC004 — Applications presente, catalogo Jarvis vuoto, 3 novembre2026
+
+L’utente mostra Applications aperta con shell:AppsFolder:162 elementi; la configurazione Jarvis sotto indica0 applicazioni e invita ad Aggiorna elenco. Non è ancora noto se quel pulsante sia stato premuto né l’esito: non diagnosticare il rilevamento fallito dalla sola schermata.
+
+Verificati sorgenti004/a1b93f3: ProgramSettings.add seleziona solo .exe/.lnk fisici; refresh legge il catalogo. windows_apps.ps1 usa Get-StartApps,manifest,collegamenti e App Paths,non enumera direttamente Shell.Application.NameSpace(AppsFolder). native.launch usa già shell:AppsFolder per identità shell. Avvio e lettura del relativo elenco sono distinti; la fonte diretta manca,ma la causa delle0 app sul PC non è dimostrata.
+
+Fonte Microsoft: https://learn.microsoft.com/en-us/windows/configuration/store/find-aumid (enumerazione Shell.Application e AppsFolder); https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid (cartella virtuale). Proposta minima: integrare questa fonte nel catalogo esistente conservando spunte/consensi,senza selettore parallelo. Prima verificare l’esito di Aggiorna elenco. Nessuna modifica runtime,test o nuova build;004 immutabile,collaudo PC parziale.
+
 ## CONSEGNATO — Jarvis004, Programmi e app, 3 novembre2026
 
 [Scarica Jarvis-004.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-004.zip). Sorgenti esatti a1b93f34ff25bd9a972ed971a432af4984366f28, ramo build/jarvis-004; avvio programmi classici/Store consentiti, elenco filtrabile, aggiunta manuale, frase personale e varianti apri/avvia/lancia. Add-on installata OFF: configurare le app e attivarla dal gestore. Runtime precedente e dati del profilo conservati; nessun merge dei sorgenti storici main.
