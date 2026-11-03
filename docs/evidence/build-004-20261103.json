@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "status": "published_candidate_pc_test_pending",
+  "build_number": 4,
+  "build_label": "004",
+  "previous_build": 3,
+  "source_commit": "a1b93f34ff25bd9a972ed971a432af4984366f28",
+  "archive": "Jarvis-004.zip",
+  "files": 86,
+  "bytes": 282968,
+  "sha256": "8589a789fecafd7918bdcf85cb81534ebd079b3531321a3e66042c0ff0a3c980",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "base_commit": "b936879a431370d206152be7b089baf587d15499",
+  "runtime_commit": "3c06c7172693add405a250bc9879aaef2abf59e1",
+  "branch": "build/jarvis-004",
+  "publication_commit": "bd1905fbb83590111869704bf32086bf457c7127",
+  "git_blob_sha": "5199bba974492f1c92d4f96d6c64043cb5aba747",
+  "windows": {
+    "run_id": 41694455705,
+    "run_attempt": 2,
+    "conclusion": "success",
+    "python311": {
+      "job": 126123443591,
+      "tests": 542,
+      "seconds": 65.683,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "python312": {
+      "original_job": 126121209198,
+      "reused_job": 126123445108,
+      "tests": 542,
+      "seconds": 91.793,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "extracted": {
+      "tests": 167,
+      "seconds": 35.306,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "manifest_hash_single_launcher": true,
+      "imports": true,
+      "ui_boot_close": true,
+      "bundled_apps_off": true,
+      "reproducible_different_clock": true
+    },
+    "publisher_job": 126124432192,
+    "public_download_hash_size_and_first_links": true,
+    "previous_builds_001_002_003_preserved": true
+  },
+  "retry": {
+    "first_job": 126121208961,
+    "error": "TimeoutExpired15s in pre-existing Explorer PowerShell harness",
+    "unchanged_source": true,
+    "timeout_or_assertions_changed": false,
+    "internal_cause": "not_observed",
+    "retry_result": "542 PASS"
+  },
+  "not_verified": [
+    "real microphone/STT/account/model",
+    "third-party Store apps on PC",
+    "DPI/layout",
+    "Pavilion resources"
+  ],
+  "pc_test": "pending"
+}
