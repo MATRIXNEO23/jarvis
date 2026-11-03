@@ -1,3 +1,6 @@
+## 3 novembre 2026 — avviso limite riprodotto e corretto, ultimo Green pendente
+Run41608700590/sourceef08731: 500 test, un solo fallimento nuovo True invece di False per index_limited su20 nomi e radici sovrapposte. Nessun altro fallimento; probe Windows nativo ancora PASS. Correzione minima: aggiunta/deduplica/filtro permessi-tipo prima di contare un21esimo risultato utile; solo l'elemento effettivamente escluso dal limite attiva l'avviso. Test invariato e nuovo Green/recheck mirato del revisore pendenti. Nessuna build.
+
 ## 3 novembre 2026 — indice-prima Green, rilievo minore del revisore
 Source3c44ef4/run41608054433 SUCCESS: 499 test per Python3.11/3.12, controlli/probe PASS e nessuna build. Revisore indipendente: nessun difetto critico/importante nel nuovo ordine; un rilievo minore confermato: oltre 20 righe, duplicati o esclusi possono impostare erroneamente index_limited. Aggiunta una prova su radici sovrapposte con 20 nomi reali, esclusi e un 21esimo nome utile: eseguire Red prima della modifica puntuale. Restano distinti R02/R03, qualità voce, copertura indice sul Pavilion e apertura associata non scelta. Nessuna modifica runtime in questo checkpoint test.
 

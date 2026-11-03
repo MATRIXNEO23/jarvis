@@ -765,9 +765,9 @@ class FileAccessService:
                 try:
                     actual = resolved_path(path)
                     if contains(root, actual) and query.casefold() in actual.name.casefold():
-                        if len(paths) < 20:
-                            add(actual)
-                        else:
+                        add(actual)
+                        if len(paths) > 20:
+                            paths.pop()
                             index_limited = True
                 except OSError:
                     excluded += 1
