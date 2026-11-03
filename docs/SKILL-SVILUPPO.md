@@ -46,3 +46,26 @@ Le skill riducono errori di metodo soltanto se applicate bene. Restano necessari
 ## Stato di Jarvis
 
 Questa aggiunta riguarda soltanto strumenti e documentazione di sviluppo: nessuna modifica al runtime, nuova build o pubblicazione ZIP. Resta valido il [punto di ripresa della ricerca](HANDOFF-RIPRESA-RICERCA-20261102.md): correzioni dialogo 8066852 già verificate, reset del contesto e priorità Windows Search ancora da completare, poi verifiche Windows e prossimo candidato secondo le autorizzazioni correnti. Non promuovere lo ZIP d06e233 a versione corretta.
+
+## Ricerca mirata per Jarvis — Find Skills for Work, 3 novembre 2026
+
+Find Skills for Work è stata installata come skill personale adattata da Vercel e verificata nel salvataggio persistente. Usa strumenti di ricerca e gestione skill disponibili in Work; non è il file upstream inalterato. La sua installazione non ha ripreso né modificato Jarvis.
+
+Questa ricerca è **una selezione di candidate, non un'autorizzazione all'installazione**. Le quattro skill di sviluppo già presenti e Archify restano utilizzabili. Il punto di ripresa runtime resta continuità R01–R04 nella review completa.
+
+| Priorità | Candidata e fonte originale | Utilità concreta per Jarvis | Limiti e adattamenti prima dell'uso in Work |
+|---|---|---|---|
+| Prima | [Test-Driven Development](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/test-driven-development/SKILL.md), obra/superpowers | Riprodurre perdita del contesto, falsa conferma o rischio di salvataggio con una prova che fallisce, poi verificare la correzione minima | Esempi TypeScript/npm da tradurre alla suite unittest e CI Windows esistenti. Applicare alle modifiche concordate; non cancellare o riscrivere il codice esistente sulla base delle prescrizioni generiche dell'originale |
+| Prima | [Requesting Code Review](https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/requesting-code-review/SKILL.md), obra/superpowers | Revisione indipendente di una modifica confrontata con requisiti e intervallo sorgenti, con rilievi precisi per gravità | Collegare la richiesta di revisore agli strumenti Work disponibili. Template di sola lettura; proposte su requisiti non concordati restano proposte e non autorizzano funzioni nuove |
+| Dopo l'affidabilità | [Python Performance Optimization](https://github.com/wshobson/agents/blob/7e2fb559cf4b824b27f1fec49fe88f7511066d26/plugins/python-development/skills/python-performance-optimization/SKILL.md), wshobson/agents | Misurare CPU, RAM e tempi di UI, ricerca e voce per il Pavilion, poi intervenire sui colli di bottiglia dimostrati | Partire dagli strumenti standard Python quando sufficienti. line_profiler, memory_profiler e py-spy sono opzioni esterne da verificare separatamente; nessuna installazione automatica, NumPy o processo aggiuntivo imposto al prodotto |
+
+### Fonti e valutazione
+
+- Originali letti: TDD e guida writing-good-tests.md; Requesting Code Review e template code-reviewer.md; Python Performance Optimization e references/details.md per strumenti e dipendenze. Le tecniche avanzate restano condizionali e non sono state collaudate qui.
+- Revisioni: obra/superpowers 2ce8aa15d05bd57213e6f746f953aafb7ded7a8b; wshobson/agents 7e2fb559cf4b824b27f1fec49fe88f7511066d26. Licenze MIT lette nelle due fonti.
+- Gli esempi di TDD rafforzano il percorso già previsto da Systematic Debugging e Verification Before Completion; il beneficio aggiuntivo è rendere esplicita la prova fallita prima della correzione e la qualità delle asserzioni.
+- Il metodo Requesting Code Review era già stato usato come riferimento nella review di Jarvis: qui è candidato a skill personale stabile, non una funzione nuova del programma.
+- Python Testing Patterns è stata individuata nel catalogo, ma non è prioritaria: è orientata a pytest e si sovrappone ai controlli già presenti. Non serve cambiare framework per aggiungere prove utili.
+- Le candidate sono strumenti di sviluppo, non modelli da eseguire dentro Jarvis. Non promettono accuratezza STT, assenza di allucinazioni o miglioramenti prestazionali senza prove.
+- **Non eseguiti:** installazione di queste tre candidate, forward test di eventuali adattamenti Work, nuove prove runtime Jarvis, benchmark Pavilion o build.
+- **Raccomandazione:** valutare l'installazione delle prime due come adattamenti proporzionati a Work e al repository; mantenere la terza per una successiva fase di misurazione. Nessun bisogno di aggiungere molte altre skill prima di applicare quelle già disponibili.
