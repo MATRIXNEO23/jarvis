@@ -117,3 +117,15 @@ class GPTVoiceAddressingTests(unittest.TestCase):
         self.receive('garbis apri browser')
         self.env['speech_lexicon'].correct.assert_not_called()
         self.env['submit_local'].assert_not_called()
+
+    def test_manual_dictation_still_inserts_free_text_without_commands(self):
+        self.fixture.voice_environment(CONTINUOUS)
+        self.env['dictation'].enabled = True
+        self.env['dictation'].insert = Mock(return_value='inserito')
+        self.env['sync_dictation_ui'] = Mock()
+        self.receive('questo testo viene dettato intenzionalmente')
+        self.env['dictation'].insert.assert_called_once_with(
+            'questo testo viene dettato intenzionalmente')
+        self.env['try_file_command'].assert_not_called()
+        self.env['submit_local'].assert_not_called()
+        self.env['start_conversation_gpt'].assert_not_called()

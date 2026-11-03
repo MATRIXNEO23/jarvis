@@ -20,6 +20,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from adaptive_voice import SpeechCorrections, SpeechCorrectionError
+from desktop_dictation import dictation_voice_action
 from second_brain import SecondBrain
 from settings import default_path, load_settings, save_settings
 from voice_control import (CONTINUOUS, GPT_CONVERSATION, PUSH_TO_TALK,
@@ -219,6 +220,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             STANDBY=STANDBY, GPT_CONVERSATION=GPT_CONVERSATION,
             CONTINUOUS=CONTINUOUS, speaker=SimpleNamespace(is_audible=lambda: False),
             wake_gate=WakeWordGate(), dictation=SimpleNamespace(enabled=False),
+            dictation_voice_action=dictation_voice_action,
             telegram_voice_dialog=SimpleNamespace(pending=False), addon_manager=None,
             try_file_command=Mock(return_value=False),
             try_timer_command=Mock(return_value=False),
