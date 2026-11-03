@@ -745,17 +745,51 @@ class FileAccessService:
             if paths:
                 return self._report(paths,revision,reason+'Percorsi da fonti locali; nessuna scansione generale necessaria. Non è un inventario completo delle installazioni.')
             reason = 'Installazione non risolta dalle registrazioni/collegamenti Windows accessibili; seguono eventuali cartelle con nome corrispondente, ruolo non verificato. '
-        started = time.monotonic()
-        visited = set()
+        # Query every authorized root before a bounded directory walk can
+        # consume the budget. An indexed hit need not trigger a disk scan.
+        index_notes = []
+        index_queried = 0
+        index_limited = False
         for root in roots:
             if not self._live(revision):
                 break
             self._notify_progress('Interrogo indice Windows',root,scanned,directories,errors,excluded,force=True)
             indexed, note = self.index(query, root)
-            reason = reason or note
+            index_queried += 1
+            if note and note not in index_notes:
+                index_notes.append(note)
+            index_limited = index_limited or len(indexed) >= 50
+            if not self._live(revision):
+                break
             for path in indexed:
-                if query.casefold() in path.name.casefold():
-                    add(path)
+                try:
+                    actual = resolved_path(path)
+                    if contains(root, actual) and query.casefold() in actual.name.casefold():
+                        if len(paths) < 20:
+                            add(actual)
+                        else:
+                            index_limited = True
+                except OSError:
+                    excluded += 1
+        reason += ' '.join(index_notes) + ' '
+        if not self._live(revision):
+            return self._report([], revision, reason)
+        if paths:
+            coverage = {'scanned':0, 'directories':0, 'errors':0, 'excluded':excluded,
+                        'stop_reason':'index_coverage', 'subfolders':True, 'roots':len(roots),
+                        'index_queried':index_queried, 'index_results_only':True,
+                        'index_limited':index_limited}
+            note = (reason + 'Risultati dall’indice Windows; copertura non necessariamente completa. '
+                    'Nessuna scansione diretta eseguita.')
+            if index_limited:
+                note += ' Raggiunto un limite dei risultati dell’indice.'
+            return self._report(paths, revision, note, coverage)
+
+        started = time.monotonic()
+        visited = set()
+        for root in roots:
+            if not self._live(revision):
+                break
             stack = [root]
             while stack and self._live(revision):
                 current = stack.pop()
@@ -804,7 +838,8 @@ class FileAccessService:
         suffix=(' Ricerca parziale: '+labels[stop_reason]+'.' if partial else
                 ' Ricerca conclusa nelle radici selezionate.')
         coverage={'scanned':scanned,'directories':directories,'errors':errors,'excluded':excluded,
-                  'stop_reason':stop_reason,'subfolders':True,'roots':len(roots)}
+                  'stop_reason':stop_reason,'subfolders':True,'roots':len(roots),
+                  'index_queried':index_queried,'index_results_only':False}
         return self._report(paths, revision, reason+suffix+' Elementi esaminati: '+str(scanned)+
             f' (voci nella scansione diretta, non contenuti letti). Cartelle lette: {directories}; errori lettura: {errors}; fuori ambito/non verificabili: {excluded}. Sottocartelle incluse. Radici selezionate: {len(roots)}.',coverage)
 

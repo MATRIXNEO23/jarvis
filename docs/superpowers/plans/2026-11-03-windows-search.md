@@ -44,8 +44,8 @@
 
 **Interfaces:** indexed_candidates(query, root) resta compatibile (paths, note); _search_impl usa lo stesso provider sostituibile nelle prove e la policy finale. coverage registra quante radici sono state interrogate e se i risultati provengono solo dall'indice o dal fallback.
 
-- [ ] Red Windows: due radici reali, risultato nella seconda, budget scansione minimo; dimostrare indice saltato. Prova positiva con os.scandir proibito; revoca/cancel e nota locate separati.
-- [ ] Correzione minima: fase indice per tutte le radici autorizzate prima di qualunque scansione. Se ci sono risultati utili, mostrarli dichiarando copertura indice non necessariamente completa; se nessuno, fallback finito esistente. Conservare note provider, policy, deduplica e 20 risultati.
+- [x] Red Windows: run41607523991/sourcec558900, tre fallimenti di comportamento su 499 test. due radici reali, risultato nella seconda, budget scansione minimo; dimostrare indice saltato. Prova positiva con os.scandir proibito; revoca/cancel e nota locate separati.
+- [x] Correzione minima: fase indice per tutte le radici autorizzate prima di qualunque scansione. Se ci sono risultati utili, mostrarli dichiarando copertura indice non necessariamente completa; se nessuno, fallback finito esistente. Conservare note provider, policy, deduplica e 20 risultati.
 - [ ] Green Windows dei casi mirati e suite, più probe nativo esistente; nessuna installazione o modifica dell'indice sul PC utente.
 - [ ] Review del diff esatto, checkpoint di codice/evidenze e documentazione, nessuna consegna ZIP implicita.
 
