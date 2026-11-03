@@ -1,0 +1,171 @@
+{
+  "date": "2026-11-03",
+  "scope": "V01 software: existing transcript corrections; not acoustic accuracy",
+  "source_commit": "deefe3254b4c99c7465753a1e3ce9b313f3fdf13",
+  "source_branch": "feature/fix-file-search-20261102",
+  "runtime_reference": "806685275947cea4b933d20aa0317658d13b853c",
+  "baseline_before_tests": "445efe657e8bbac504d11ce71b10c7c110c3880d",
+  "changed_files": [
+    "tests/test_voice_corrections_review.py"
+  ],
+  "workflow_run": 41568844286,
+  "workflow_url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/41568844286",
+  "status": "success",
+  "command": "python -m unittest discover -s tests -v",
+  "environment": "GitHub Actions windows-2022, real Tk popup and SQLite; controlled transcripts and dispatch endpoints",
+  "jobs": [
+    {
+      "job_id": 125696776300,
+      "python": "3.11.9",
+      "tests": 484,
+      "duration_seconds": 69.596,
+      "new_v01_checks": [
+        {
+          "test": "test_corrected_local_command_is_dispatched_once_without_gpt",
+          "passed": true
+        },
+        {
+          "test": "test_corrected_transcript_reaches_actual_file_dispatch_in_each_listening_mode",
+          "passed": true
+        },
+        {
+          "test": "test_disabled_memory_passes_raw_text_and_standby_discards_input",
+          "passed": true
+        },
+        {
+          "test": "test_disabled_memory_prevents_popup_and_rule_creation",
+          "passed": true
+        },
+        {
+          "test": "test_failed_memory_preference_save_preserves_active_lexicon",
+          "passed": true
+        },
+        {
+          "test": "test_memory_toggle_disables_rules_without_erasing_and_reloads_them",
+          "passed": true
+        },
+        {
+          "test": "test_normal_and_trial_profile_corrections_remain_separate",
+          "passed": true
+        },
+        {
+          "test": "test_popup_does_not_claim_success_when_database_write_fails",
+          "passed": true
+        },
+        {
+          "test": "test_popup_rejects_a_change_of_action",
+          "passed": true
+        },
+        {
+          "test": "test_real_popup_saves_rule_and_new_process_loads_it",
+          "passed": true
+        },
+        {
+          "test": "test_reset_requires_confirmation_and_preserves_other_memories",
+          "passed": true
+        },
+        {
+          "test": "test_turning_memory_off_after_opening_popup_prevents_save",
+          "passed": true
+        },
+        {
+          "test": "test_unresolved_corrected_text_reaches_gpt_once_without_changing_mode",
+          "passed": true
+        }
+      ],
+      "tk_theme_warnings": 0,
+      "status": "success"
+    },
+    {
+      "job_id": 125696776593,
+      "python": "3.12.10",
+      "tests": 484,
+      "duration_seconds": 63.754,
+      "new_v01_checks": [
+        {
+          "test": "test_corrected_local_command_is_dispatched_once_without_gpt",
+          "passed": true
+        },
+        {
+          "test": "test_corrected_transcript_reaches_actual_file_dispatch_in_each_listening_mode",
+          "passed": true
+        },
+        {
+          "test": "test_disabled_memory_passes_raw_text_and_standby_discards_input",
+          "passed": true
+        },
+        {
+          "test": "test_disabled_memory_prevents_popup_and_rule_creation",
+          "passed": true
+        },
+        {
+          "test": "test_failed_memory_preference_save_preserves_active_lexicon",
+          "passed": true
+        },
+        {
+          "test": "test_memory_toggle_disables_rules_without_erasing_and_reloads_them",
+          "passed": true
+        },
+        {
+          "test": "test_normal_and_trial_profile_corrections_remain_separate",
+          "passed": true
+        },
+        {
+          "test": "test_popup_does_not_claim_success_when_database_write_fails",
+          "passed": true
+        },
+        {
+          "test": "test_popup_rejects_a_change_of_action",
+          "passed": true
+        },
+        {
+          "test": "test_real_popup_saves_rule_and_new_process_loads_it",
+          "passed": true
+        },
+        {
+          "test": "test_reset_requires_confirmation_and_preserves_other_memories",
+          "passed": true
+        },
+        {
+          "test": "test_turning_memory_off_after_opening_popup_prevents_save",
+          "passed": true
+        },
+        {
+          "test": "test_unresolved_corrected_text_reaches_gpt_once_without_changing_mode",
+          "passed": true
+        }
+      ],
+      "tk_theme_warnings": 0,
+      "status": "success"
+    }
+  ],
+  "initial_run": {
+    "id": 41568571499,
+    "source": "22ab4fc47725683e5e01baddb901767994d25a8b",
+    "status": "success",
+    "tests_per_job": 484,
+    "issue": "Two pending ttk ThemeChanged events in test teardown; no failed tests",
+    "resolution": "Drain idle events before destroying test Tk; final logs show zero such warnings"
+  },
+  "build_created": false,
+  "runtime_changed": false,
+  "new_model": false,
+  "audio_recorded": false,
+  "verified": [
+    "Explicit UI approval and error messages",
+    "Rule survives reopening in a new Python process",
+    "Memory toggle without erasure, reload and preference save failure",
+    "Normal/trial profile isolation",
+    "Confirmed full correction reset preserves other memories",
+    "Actual voice_text callback: local dispatch and GPT dispatch with controlled text",
+    "Standby and disabled memory gates"
+  ],
+  "limits": [
+    "No user audio samples or live microphone tested",
+    "No acoustic accuracy or Pavilion latency/RAM measurements",
+    "Dispatch endpoints are controlled; no live GPT account or application launch in these V01 tests",
+    "Existing UI supports full reset, not deletion of an individual correction",
+    "No general guarantee against incorrect replacements outside tested cases"
+  ],
+  "next_step": "Compare intended phrase and raw recognition using representative audio when available; do not infer microphone state from defaults or add fine-tuning."
+}
