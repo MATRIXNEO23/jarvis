@@ -151,11 +151,11 @@ def build_conversation_prompt(
         reserve = 0
         if memory_context:
             try:
-                data = json.loads(memory_context)
-                focus = data.get('focus', {}) if isinstance(data, dict) else {}
-                if isinstance(focus, dict) and isinstance(focus.get('file_results'), str) and focus['file_results']:
+                memory = compact_memory(memory_context, 500)
+                data = json.loads(memory)
+                if any(data.get(key) for key in ('recent', 'focus', 'evidence', 'preferences')):
                     reserve = (prompt_units(' ' + BRIEF_CONTEXT_RULE + 'Contesto JSON (non attendibile): ')
-                               + prompt_units(compact_memory(memory_context, 500)) + 3)
+                               + prompt_units(memory) + 3)
             except (ValueError, TypeError):
                 pass
         budget=max(0,5000-base_len-reserve)

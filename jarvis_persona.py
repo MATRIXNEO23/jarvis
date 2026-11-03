@@ -168,30 +168,34 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
         if fits(candidate):
             packed=candidate
 
-    # Preserve one or two *actual* operational states before optional chatter.
-    # An unverified or planned step is never presented as completed.
-    for step in progress[:2]:
-        if not isinstance(step, dict):
-            continue
-        title, state = step.get("title"), step.get("status")
-        if not isinstance(title, str) or state not in (
-                "planned","running","completed","failed","interrupted"):
-            continue
-        detail = step.get("detail", "")
-        verified = step.get("verified", False) is True
-        record = {
-            "source": ("verified_action" if state=="completed" and verified
-                       else "reported_action" if state=="completed"
-                       else "conversation"),
-            "when": "",
-            "fact": ("Passo "+title[:85]+"; stato "+state+
-                     ("; risultato "+detail[:95]
-                      if isinstance(detail,str) and detail else "")),
-        }
-        candidate=dict(packed)
-        candidate["evidence"]=packed["evidence"]+[record]
-        if fits(candidate):
-            packed=candidate
+    def keep_progress(value):
+        # The current question and latest exchange outrank older step evidence.
+        # Keep a useful current file prefix as well when one is available.
+        for step in progress[:2]:
+            if not isinstance(step, dict):
+                continue
+            title, state = step.get("title"), step.get("status")
+            if not isinstance(title, str) or state not in (
+                    "planned", "running", "completed", "failed", "interrupted"):
+                continue
+            detail = step.get("detail", "")
+            verified = step.get("verified", False) is True
+            record = {
+                "source": ("verified_action" if state=="completed" and verified
+                           else "reported_action" if state=="completed"
+                           else "conversation"),
+                "when": "",
+                "fact": ("Passo "+title[:85]+"; stato "+state+
+                         ("; risultato "+detail[:95]
+                          if isinstance(detail,str) and detail else "")),
+            }
+            candidate = dict(value)
+            candidate["evidence"] = value["evidence"] + [record]
+            required = (with_files(candidate, min(len(file_results), 100))
+                        if file_results else candidate)
+            if fits(required):
+                value = candidate
+        return value
 
     for index, entry in enumerate(reversed(recents[-6:])):
         recent_fallback = None
@@ -216,11 +220,15 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
                 packed = recent_fallback
             elif not (index == 0 and file_results):
                 break
-        if index == 0 and file_results:
-            packed = keep_files(packed)
+        if index == 0:
+            packed = keep_progress(packed)
+            if file_results:
+                packed = keep_files(packed)
 
-    if not recents and file_results:
-        packed = keep_files(packed)
+    if not recents:
+        packed = keep_progress(packed)
+        if file_results:
+            packed = keep_files(packed)
 
     for evidence in related[:4]:
         if not isinstance(evidence, dict):
