@@ -55,7 +55,7 @@ ancora da effettuare. Evita comandi salva/chiudi su documenti importanti:
 restano rilievi aperti nella review del progetto.
 
 MICROFONO E RICHIAMO JARVIS
-Con il normale tasto MIC attivo, inizia OGNI richiesta con Jarvis:
+Con il normale tasto MIC attivo o Ascolto continuo, inizia OGNI richiesta con Jarvis:
 «Jarvis, apri Netflix» oppure «Jarvis, raccontami qualcosa».
 Anche le risposte ai chiarimenti devono iniziare con Jarvis.
 Il solo «Jarvis» non abilita la frase seguente. Parlato senza richiamo

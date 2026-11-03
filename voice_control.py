@@ -101,7 +101,7 @@ class WakeWordGate:
 
     def route(self, speech: str, *, dictation_active: bool = False,
               require_name: bool = False) -> tuple[str, str]:
-        # GPT microphone mode requires a name in EVERY utterance. A bare
+        # Passive microphone modes require a name in EVERY command. A bare
         # wake name must not open a window for subsequent room conversation.
         if require_name:
             self.reset()

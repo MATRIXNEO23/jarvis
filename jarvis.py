@@ -2579,7 +2579,8 @@ def main() -> None:
             if not gpt_enabled.get() or not active_gpt:
                 write_line("Conversazione GPT: per le richieste non locali collega ChatGPT.")
         else:
-            mic_status.set("Ascolto continuo con Ehi Jarvis selezionato.")
+            mic_status.set("Ascolto continuo: inizia ogni comando con Jarvis. "
+                           "La dettatura richiede l’attivazione manuale.")
 
     def ptt_press(event=None) -> None:
         if voice.press():
@@ -3094,16 +3095,20 @@ def main() -> None:
                 elif kind == "voice_text":
                     raw_spoken = str(data[0]).strip()
                     spoken = raw_spoken
-                    if voice_mode.get() == GPT_CONVERSATION:
+                    route_type = "command"  # Push-to-talk is already intentional.
+                    if (voice_mode.get() == GPT_CONVERSATION
+                            or voice_mode.get() == CONTINUOUS):
                         if not raw_spoken or speaker.is_audible():
                             continue
                         # Check the RAW local transcript before learned
                         # corrections, logging, local actions or GPT queuing.
                         route_type, spoken = wake_gate.route(
-                            raw_spoken, require_name=True)
+                            raw_spoken, require_name=True,
+                            dictation_active=(voice_mode.get() != GPT_CONVERSATION
+                                              and dictation.enabled))
                         if route_type == "wake":
                             mic_status.set("Dì Jarvis seguito dalla richiesta nella stessa frase.")
-                        if route_type != "command":
+                        if route_type not in ("command", "dictation"):
                             continue
                     if raw_spoken and voice_mode.get() != STANDBY:
                         # No new acoustic model or background training:
@@ -3204,23 +3209,6 @@ def main() -> None:
                             else:
                                 write_line("GPT sta rispondendo: attendi prima di parlare.")
                             continue
-                        route_type = "command"  # Push-to-talk already requires a manual press.
-                        if voice_mode.get() == CONTINUOUS:
-                            if (telegram_voice_dialog.pending or (getattr(engine,'program_apps',None) is not None
-                                    and engine.program_apps.is_pending_answer(spoken)) or (addon_manager is not None
-                                    and addon_manager.files_enabled()
-                                    and addon_manager.file_service.parse_command(spoken) is not None
-                                    and addon_manager.file_service.parse_command(spoken)[0]=="select")):
-                                # The user already addressed Jarvis and is answering
-                                # a bounded question. Confirmation is still required.
-                                route_type="command"
-                            else:
-                                route_type, spoken = wake_gate.route(
-                                    spoken, dictation_active=dictation.enabled)
-                            if route_type == "wake":
-                                mic_status.set("Ehi Jarvis riconosciuto: ascolto il prossimo comando.")
-                            if route_type not in ("command", "dictation"):
-                                continue
                         if route_type == "dictation":
                             # Only manual dictation may insert free speech.
                             sync_dictation_ui(dictation.insert(spoken))
