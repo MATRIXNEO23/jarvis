@@ -55,7 +55,13 @@ class ProcessRPC:
         self.process.stdin.flush()
         end = time.monotonic()+timeout
         while True:
-            message = self.messages.get(timeout=max(.01, end-time.monotonic()))
+            remaining = end-time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError('Quota RPC deadline expired')
+            try:
+                message = self.messages.get(timeout=remaining)
+            except queue.Empty:
+                raise TimeoutError('Quota RPC deadline expired') from None
             if message is None:
                 raise RuntimeError('App-server ended before RPC reply')
             if message.get('id') == ident:

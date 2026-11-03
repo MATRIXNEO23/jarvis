@@ -2,6 +2,10 @@
 import copy
 import os
 import unittest
+import io
+import queue
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from codex_quota.provider import Provider, QuotaUnavailable, ReadOnlyRPC
 
@@ -80,3 +84,25 @@ class QuotaProviderTests(unittest.TestCase):
             with self.subTest(timeout=timeout), self.assertRaises(ValueError):
                 provider.read_limits(timeout=timeout)
         self.assertFalse(transport.calls)
+
+    def test_real_rpc_reader_deadline_expires_despite_unrelated_events(self):
+        from tools.probe_codex_quota import ProcessRPC
+        rpc = ProcessRPC.__new__(ProcessRPC)
+        rpc.methods = []; rpc.next_id = 0
+        rpc.process = SimpleNamespace(stdin=io.StringIO())
+        rpc.messages = queue.Queue()
+        rpc.messages.put({'method':'account/updated','params':{}})
+        with patch('tools.probe_codex_quota.time.monotonic', side_effect=[0, 1, 3]):
+            with self.assertRaises(TimeoutError):
+                rpc.call('account/rateLimits/read', {}, timeout=2)
+        self.assertEqual(rpc.methods, ['account/rateLimits/read'])
+
+    def test_real_rpc_reader_translates_empty_queue_to_bounded_timeout(self):
+        from tools.probe_codex_quota import ProcessRPC
+        rpc = ProcessRPC.__new__(ProcessRPC)
+        rpc.methods = []; rpc.next_id = 0
+        rpc.process = SimpleNamespace(stdin=io.StringIO())
+        rpc.messages = Mock(); rpc.messages.get.side_effect = queue.Empty
+        with self.assertRaises(TimeoutError):
+            rpc.call('account/rateLimits/read', {}, timeout=2)
+        rpc.messages.get.assert_called_once()

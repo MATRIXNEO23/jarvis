@@ -1,3 +1,9 @@
+## Quota Task1 — primo Green e ricontrollo del timeout del probe
+
+Source238f9c5f/run41727784400 SUCCESS:7test per Python3.11/3.12 e probeRPC realeWindows con0turni. Senza login e con provider della formaSiwC:auth-required;loopback0richieste. WorkingSet circa33–35MiB,privati circa15MiB nel runner;binario283894064byte. Nessunaquota personale letta.
+
+Nel ricontrollo statico del probe trovato deadline non controllato esplicitamente tra notifiche: ora scade anche se arrivano eventi estranei e queue.Empty diventaTimeoutError. Due prove aggiunte senza attese reali. Inviare solo leRPC consentite e non aumentare iltimeout. Ricontrollo9test+probeWindows pendente;nessuna UI/build o collegamento account. Le misure precedenti non sono prestazioniPavilion né misura autenticata.
+
 ## Quota Task1 — Red Windows osservato, Green/probe in preparazione
 
 Source3293a8b024b008936da2b878eb2be5e79406000c,run41727385004: entrambi i jobWindows falliti come previsto per il provider non collegato. Logjob126235625936:7test,1fallimento e6errori comportamentali sul read placeholder/timeout,nessun import mancante. ReadOnlyRPC rifiuta già metodi diversi dalla letturaquota prima del trasporto. Implementata la sola lettura validata con timeout≤10s,errori sanitizzati,nessun retry/login e risposta limitata ai campi quota.
