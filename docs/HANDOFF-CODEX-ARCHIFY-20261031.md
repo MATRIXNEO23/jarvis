@@ -1,3 +1,6 @@
+## In corso — selezione skill per Jarvis, 3 novembre 2026
+Richiesta dell'utente: usare Find Skills per trovare skill adatte al progetto, mantenendo il punto salvato. Ricerca nelle fonti originali e confronto con quanto già disponibile; nessuna installazione di candidate o ripresa runtime. Aggiornamento previsto: SKILL-SVILUPPO.md con fonti, priorità e limiti, STATO-ATTIVITA e questo handoff; poi verifica dei contenuti remoti. Candidate TDD, Requesting Code Review e, dopo l'affidabilità, Python Performance Optimization. Punto runtime R01–R04 invariato.
+
 ## Fine sessione — pausa salvata, 3 novembre 2026
 **Ripresa soltanto al prossimo via dell'utente.** Verifica software V01 chiusa; nessuna nuova attività di implementazione o build da avviare in questa pausa.
 
