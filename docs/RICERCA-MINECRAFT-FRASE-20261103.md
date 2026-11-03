@@ -1,0 +1,5 @@
+# Ricerca Minecraft — frase esatta, 3 novembre 2026
+
+Base c2964c7ce3e68f2aaef77fa5eb25e99ff24d5851; correzione contesto R01 già verificata e preservata. L'utente chiede di proseguire senza pause. Durante l'analisi della ricerca parziale rilevato nel parser che «Cercami la cartella di Minecraft» cattura «di Minecraft» come query nominale; il servizio confronta quella stringa con il nome del percorso. Questo può escludere una cartella chiamata semplicemente Minecraft, indipendentemente dal limite della scansione.
+
+Prima prova Windows, nessuna modifica runtime: tre test nuovi in tests/test_file_search_phrase.py con parser/servizio/policy/filesystem reali. Esito in attesa; non attribuire tutti i problemi del PC al parser. Nessun nuovo indice, servizio, modello o build; difetto indice-prima e ricerca parziale restano separati. Dopo riproduzione, minima correzione della preposizione sintattica, mantenendo nomi letterali tra virgolette e ambito autorizzato, poi suite Windows e review indipendente mirata.
