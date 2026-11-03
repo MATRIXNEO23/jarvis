@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102']
+    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'feature/program-apps-20261103']
     paths:
       - '**.py'
       - '**.mjs'
