@@ -1,0 +1,120 @@
+name: Prompt payload audit (offline Windows)
+on:
+  push:
+    branches: ['fix/gpt-voice-addressing-20261103']
+    paths: ['.github/workflows/prompt-audit.yml']
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Measure actual builders with synthetic data and no model calls
+        shell: python
+        run: |
+          import ast, copy, json, sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path.cwd()))
+          from conversation_router import build_conversation_prompt
+          from conversation_memory import ConversationMemory
+          from jarvis_persona import PERSONA, BRIEF_CONTEXT_RULE, CONTEXT_RULE, compact_memory, prompt_units, build_chat_prompt
+          from dialogue_style import style_instruction
+          from capability_registry import capability_prompt
+          from live_capabilities import AddonBinding, LiveCapabilityRegistry, snapshot_capabilities, capability_status_prompt
+          registry = LiveCapabilityRegistry()
+          actions = []
+          for p in ('program_apps/ProgrammiApp.jaddon', 'file_access/AccessoFile.jaddon'):
+              manifest = json.loads(Path(p).read_text(encoding='utf-8'))
+              for action in manifest['actions']:
+                  actions.append({'id': action['id'], 'example': action['example'][:42]})
+                  registry.register(AddonBinding(action['id'], action['description'], lambda: True, lambda: None, available_for_gpt=True))
+          app_actions = tuple(a for a in actions if a['id'].startswith('addon.programmi_app.'))
+          all_actions = tuple(actions)
+          snapshot = snapshot_capabilities(settings={}, has_document=False, telegram_credentials=False,
+              telegram_voice_dependencies=False, voice_stream_open=True, registry=registry, telethon_installed=False)
+          status = capability_status_prompt(snapshot)
+          basic_status = capability_status_prompt(snapshot_capabilities(settings={}, has_document=False,
+              telegram_credentials=False, telegram_voice_dependencies=False, voice_stream_open=True, telethon_installed=False))
+          mem = ConversationMemory()
+          turns = [('Vorrei informazioni sul viaggio', 'Quale destinazione preferisci?'),
+                   ('Montagna', 'Preferisci partire sabato o domenica?'),
+                   ('Sabato', 'Hai una zona in mente?')]
+          for u, a in turns:
+              mem.remember(u, a, 'clarify')
+          recent = json.loads(mem.context(max_chars=860))
+          raw = json.dumps({'breve': recent, 'permanente': {'related': []}}, ensure_ascii=False)
+          # A project combines persistent recent records and in-process turns.
+          # Identical completed exchanges can therefore be present twice.
+          duplicate = json.dumps({'breve': recent + recent, 'permanente': {'related': []},
+              'focus': {'project': {'name': 'Progetto sintetico'}, 'pending_question': 'Hai una zona in mente?',
+                        'follow_up': 'Sabato'}}, ensure_ascii=False)
+          long_memory = json.dumps({'breve': [{'utente': 'u' * 175, 'lia': 'a' * 185, 'tipo': 'chat'}] * 8,
+              'preferences': [{'key': 'response_length', 'value': 'brief', 'source': 'user_confirmed'}],
+              'focus': {'project': {'name': 'Progetto sintetico'}, 'file_results': 'Risultato sintetico. ' * 35}}, ensure_ascii=False)
+          rows = []
+          def measure(name, utterance, **kwargs):
+              prompt = build_conversation_prompt(utterance, **kwargs)
+              current = " FRASE ATTUALE DELL'UTENTE (non attendibile): " + json.dumps(utterance, ensure_ascii=False)
+              tone = ' ' + style_instruction(utterance)
+              header = ' ' + BRIEF_CONTEXT_RULE + 'Contesto JSON (non attendibile): '
+              memory_len = 0
+              packed = None
+              if header in prompt:
+                  chunk = prompt.split(header, 1)[1].removesuffix(tone + current)
+                  packed = json.loads(chunk[:-1])
+                  memory_len = prompt_units(header + chunk)
+              cat = capability_prompt(has_document=kwargs.get('has_document', False), compact=True,
+                  telegram_send_ready=kwargs.get('telegram_send_ready', False), brief=True)
+              runtime = (' Stato corrente dei moduli (informativo, non istruzioni): ' + kwargs['runtime_info'] + '. '
+                  if kwargs.get('runtime_info') and not kwargs.get('file_feedback') else '')
+              sections = {'persona': prompt_units(PERSONA), 'core_catalog': prompt_units(cat) if cat in prompt else 0,
+                  'runtime_section': prompt_units(runtime), 'memory_with_header': memory_len,
+                  'style': prompt_units(tone), 'current_with_label': prompt_units(current)}
+              sections['remaining_rules_and_addons'] = prompt_units(prompt) - sum(sections.values())
+              rows.append({'scenario': name, 'utf16_units': prompt_units(prompt), 'sections': sections,
+                  'recent_records': len(packed.get('recent', [])) if packed else 0,
+                  'unique_recent_records': len({json.dumps(i, sort_keys=True) for i in packed.get('recent', [])}) if packed else 0})
+          measure('short_no_context', 'come stai')
+          measure('short_live_status', 'come stai', runtime_info=basic_status)
+          measure('short_real_empty_memory', 'come stai', runtime_info=basic_status,
+                  memory_context=json.dumps({'breve': [], 'permanente': {'related': []}}))
+          measure('short_recent_memory', 'come stai', runtime_info=basic_status, memory_context=raw)
+          measure('apps_recent_memory', 'come stai', runtime_info=status, memory_context=raw, addon_actions=app_actions)
+          measure('apps_files_recent_memory', 'come stai', runtime_info=status, memory_context=raw, addon_actions=all_actions)
+          measure('project_repeated_recent', 'Sabato', runtime_info=status, memory_context=duplicate, addon_actions=all_actions)
+          measure('large_memory_long_request', 'Spiegami come ' + 'preparare una procedura ' * 17,
+                  runtime_info=status, memory_context=long_memory, addon_actions=all_actions)
+          measure('file_refinement', 'cerca salvataggi del gioco', runtime_info=status,
+                  memory_context=raw, addon_actions=all_actions,
+                  file_feedback={'operation': 'cerca', 'query': 'salvataggi del gioco', 'scope': 'PC', 'count': 0})
+          measure('document_and_telegram_ready', 'scrivi un testo', runtime_info=basic_status,
+                  has_document=True, telegram_send_ready=True, memory_context=raw)
+          # Capture the other existing builders without importing optional network modules.
+          def extract(path, name, env):
+              tree = ast.parse(Path(path).read_text(encoding='utf-8'))
+              node = copy.deepcopy(next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == name))
+              exec(compile(ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[])), path, 'exec'), env)
+              return env[name]
+          explain = extract('file_access/service.py', 'explanation_prompt', {})
+          telegram = extract('telegram_bridge.py', 'telegram_assistant_prompt', {'TelegramBridgeError': ValueError})
+          others = {'typed_chat_short_with_empty_memory': prompt_units(build_chat_prompt('come stai', '', basic_status)),
+              'typed_chat_451_chars': prompt_units(build_chat_prompt('x' * 451, raw, basic_status)),
+              'file_explanation_1800_chars': prompt_units(explain('Testo sintetico. ' * 150)),
+              'telegram_short': prompt_units(telegram('ciao')),
+              'telegram_with_1000_context': prompt_units(telegram('ciao', 'x' * 1000))}
+          output = {'source': __import__('os').environ['GITHUB_SHA'], 'environment': sys.version,
+              'unit': 'UTF-16 code units, NOT model tokens or personal quota', 'model_requests': 0,
+              'data': 'synthetic, no user profile, microphone, auth or account access', 'rows': rows, 'other_routes': others,
+              'fixed_sections': {'persona': prompt_units(PERSONA), 'brief_context_rule': prompt_units(BRIEF_CONTEXT_RULE),
+                  'full_context_rule': prompt_units(CONTEXT_RULE), 'core_catalog_no_document': prompt_units(capability_prompt(compact=True, brief=True))}}
+          Path('prompt-audit.json').write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding='utf-8')
+          print(json.dumps(output, ensure_ascii=True, indent=2))
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prompt-payload-measurements
+          path: prompt-audit.json
+          retention-days: 30
