@@ -166,6 +166,7 @@ def _activate_store(aumid):
         result = activate(instance, aumid, None, 0, ctypes.byref(pid))
         if result < 0:
             raise OSError(f'Windows non ha attivato questa app Store (HRESULT {result & 0xffffffff:08x}).')
+        return pid.value
     finally:
         if instance:
             table = ctypes.cast(instance, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents

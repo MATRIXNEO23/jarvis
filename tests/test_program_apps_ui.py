@@ -1,5 +1,6 @@
 """Actual Tk settings with real temporary service, no personal app launches."""
 import os
+import copy
 import time
 import unittest
 import test_program_apps_service as service_tests
@@ -54,9 +55,12 @@ class ProgramUITests(unittest.TestCase):
         self.ui.refresh();self.ui.cancelled.set()
         self.assertEqual(str(self.ui.phrase_entry.cget('state')),'disabled')
         selected=self.ui._selected
-        before=dict(self.ui.rows)
+        before=copy.deepcopy(self.ui.rows)
         self.ui.toggle_selected()
         self.assertEqual(self.ui.rows,before)
+        phrase=self.ui.phrase.get()
+        self.ui.phrase_entry.insert(0,'modifica durante aggiornamento')
+        self.assertEqual(self.ui.phrase.get(),phrase)
         self.assertFalse(self.ui.save())
         end=time.monotonic()+3
         while self.ui._working and time.monotonic()<end:

@@ -27,7 +27,8 @@ class ProgramSettings:
         body.pack(fill='both', expand=True)
         ttk.Label(body,text='Spunta le app da consentire; Salva prima di provarne l’avvio.').pack(anchor='w')
         ttk.Label(body,text='Cerca nell’elenco:').pack(anchor='w',pady=(8,0))
-        ttk.Entry(body,textvariable=self.filter).pack(fill='x')
+        self.filter_entry=ttk.Entry(body,textvariable=self.filter)
+        self.filter_entry.pack(fill='x')
         table_frame = ttk.Frame(body)
         table_frame.pack(fill='both',expand=True,pady=8)
         self.table = ttk.Treeview(table_frame,columns=('enabled','name','kind','state'),show='headings',selectmode='browse')
@@ -52,9 +53,12 @@ class ProgramSettings:
         self.refresh_button = ttk.Button(controls,text='Aggiorna elenco',command=self.refresh)
         self.refresh_button.pack(side='left')
         ttk.Button(controls,text='Annulla aggiornamento',command=self.cancelled.set).pack(side='left',padx=4)
-        ttk.Button(controls,text='Aggiungi programma',command=self.add).pack(side='left',padx=4)
-        ttk.Button(controls,text='Prova avvio',command=self.try_launch).pack(side='left',padx=4)
-        ttk.Button(controls,text='Salva',command=self.save).pack(side='right')
+        self.add_button=ttk.Button(controls,text='Aggiungi programma',command=self.add)
+        self.add_button.pack(side='left',padx=4)
+        self.try_button=ttk.Button(controls,text='Prova avvio',command=self.try_launch)
+        self.try_button.pack(side='left',padx=4)
+        self.save_button=ttk.Button(controls,text='Salva',command=self.save)
+        self.save_button.pack(side='right')
         ttk.Button(controls,text='Chiudi',command=self.close).pack(side='right',padx=4)
         ttk.Label(body,textvariable=self.status,wraplength=800).pack(anchor='w')
         self.filter.trace_add('write',lambda *args:self.render())
@@ -94,6 +98,8 @@ class ProgramSettings:
             self.table.selection_set(selected)
 
     def select(self,event=None):
+        if self._working:
+            return 'break'
         self.capture()
         selected = self.table.selection()
         self._selected = selected[0] if selected else None
@@ -102,6 +108,8 @@ class ProgramSettings:
         self.detail.set(row['target'] if row else '')
 
     def click(self,event):
+        if self._working:
+            return 'break'
         if self.table.identify_column(event.x)=='#1':
             ident = self.table.identify_row(event.y)
             if ident:
@@ -111,6 +119,8 @@ class ProgramSettings:
                 return 'break'
 
     def toggle_selected(self,event=None):
+        if self._working:
+            return 'break'
         if self._selected in self.rows:
             self.rows[self._selected]['enabled'] = not self.rows[self._selected]['enabled']
             self._dirty = True
@@ -118,6 +128,9 @@ class ProgramSettings:
         return 'break'
 
     def save(self):
+        if self._working:
+            self.status.set('Attendi il completamento o annulla l’aggiornamento.')
+            return False
         self.capture()
         try:
             self.service.save_preferences({key:dict(enabled=row['enabled'],phrase=row['phrase'])
@@ -140,7 +153,7 @@ class ProgramSettings:
             return
         self.cancelled.clear()
         self._working = True
-        self.refresh_button.configure(state='disabled')
+        self._controls_state('disabled')
         self.status.set('Operazione in corso…')
         def worker():
             try:
@@ -158,13 +171,18 @@ class ProgramSettings:
             self._after = self.window.after(50,self._poll)
             return
         self._working = False
-        self.refresh_button.configure(state='normal')
+        self._controls_state('normal')
         if kind=='ok':
             self.reload()
             if isinstance(value,str):
                 self.status.set(value)
         else:
             self.status.set('Operazione non completata: '+value)
+
+    def _controls_state(self,state):
+        for control in (self.refresh_button,self.add_button,self.try_button,self.save_button,
+                        self.phrase_entry,self.filter_entry):
+            control.configure(state=state)
 
     def refresh(self):
         self._start(lambda:self.service.refresh_catalog(self.cancelled))

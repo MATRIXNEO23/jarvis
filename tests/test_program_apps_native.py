@@ -19,6 +19,7 @@ class NativeProgramTests(unittest.TestCase):
         self.assertTrue(all(app.kind in ('exe','lnk','shell','store') for app in apps))
         print('PROGRAM_APPS_NATIVE_PROBE='+json.dumps(dict(apps=len(apps),
             store_entries=sum(app.kind=='store' for app in apps),warnings=warnings,
+            store_targets=[app.target for app in apps if app.kind=='store'],
             successful_store_activation_verified=False,personal_desktop_verified=False)))
 
     def test_cancelled_native_inventory_returns_without_replacing_data(self):
@@ -53,3 +54,20 @@ class NativeProgramTests(unittest.TestCase):
         # Exercise the actual COM boundary without launching a personal app.
         with self.assertRaises(OSError):
             launch(entry('Jarvis missing app','store','JarvisMissingPackage_123456!NoApp'))
+
+    @unittest.skipUnless(os.environ.get('CI')=='true','Live activation restricted to isolated CI')
+    def test_available_known_store_app_activation_in_isolated_runner(self):
+        from program_apps.native import discover,_activate_store
+        apps,warnings=discover()
+        candidates=[app for app in apps if app.kind=='store' and app.target.startswith(
+            ('Microsoft.WindowsCalculator_','Microsoft.WindowsTerminal_','Microsoft.WindowsNotepad_'))]
+        if not candidates:
+            self.skipTest('Runner has no known disposable Store app; successful Store activation remains unverified')
+        app=candidates[0]
+        pid=_activate_store(app.target)
+        self.assertGreater(pid,0)
+        print('PROGRAM_APPS_STORE_ACTIVATION='+json.dumps(dict(aumid=app.target,
+            process_id=pid,api_accepted=True,window_visible_verified=False)))
+        # Close only the process returned for this explicit activation in the
+        # disposable runner; no discovery/termination of personal app processes.
+        subprocess.run(['taskkill','/PID',str(pid),'/T'],capture_output=True,timeout=15)

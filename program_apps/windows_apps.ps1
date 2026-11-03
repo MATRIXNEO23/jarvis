@@ -17,7 +17,8 @@ try {
         try {
             $manifest=Get-AppxPackageManifest -Package $package.PackageFullName -ErrorAction Stop
             foreach ($application in @($manifest.Package.Applications.Application)) {
-                if (-not $application.Id -or $application.VisualElements.AppListEntry -eq 'none') { continue }
+                if (-not $application.Id -or -not $application.VisualElements -or
+                    $application.VisualElements.AppListEntry -eq 'none') { continue }
                 $id=[string]$package.PackageFamilyName+'!'+[string]$application.Id
                 $name=[string]$application.VisualElements.DisplayName
                 if (-not $name -or $name.StartsWith('ms-resource:')) { $name=[string]$package.Name }

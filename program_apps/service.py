@@ -38,11 +38,22 @@ def launch_query(text):
 
 def protected(text):
     from voice_control import speech_to_local_command
+    from desktop_dictation import dictation_voice_action
+    from project_voice import parse_project_voice
+    from preference_voice import parse_preference_intent
+    from self_diagnostics import diagnostic_request
+    from telegram_outbound_flow import parse_telegram_send_intent
+    from project_documents import parse_simple_save
+    from document_language import classify_document_choice
     query = launch_query(text)
-    return bool(speech_to_local_command(text) or
+    return bool(speech_to_local_command(text) or dictation_voice_action(text)
+        or parse_project_voice(text) or parse_preference_intent(text)
+        or diagnostic_request(text) or parse_telegram_send_intent(text) or
+        parse_simple_save(text) is not None or
+        classify_document_choice(text,pending=False) in ('save','discard') or
         re.search(r'\b(file|cartella|cartelle|documento|documenti|blocco note|notepad|'
                   r'calcolatrice|calc|esplora risorse|esplora file|browser|download|'
-                  r'disco locale|unità|unita|progetto|timer|promemoria|telegram)\b', normalized(text)) or
+                  r'disco locale|unità|unita|progetto|timer|promemoria|telegram|dettatura)\b', normalized(text)) or
         normalized(text) in ('annulla', 'stop', 'basta', 'aiuto', 'comandi', 'stato sistema'))
 
 
@@ -253,7 +264,8 @@ class ProgramService:
             query = launch_query(text)
             if query:
                 self.reset(self._context)
-                if self._matches(query):
+                matches = self._matches(query)
+                if any(self._preferences.get(key,{}).get('enabled') or self._exact(query,key) for key in matches):
                     return 'launch', {'query':query}
                 return None
             exact = [app.id for app in self._apps.values() if

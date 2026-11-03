@@ -159,3 +159,17 @@ class ProgramServiceTests(unittest.TestCase):
         token=result.program_listing['token']
         self.assertEqual(self.engine.execute_program('select',{'query':'1','token':token}).status,'completed')
         self.assertEqual(self.launched,[self.game])
+
+    def test_unselected_exact_name_does_not_launch_another_similar_selected_app(self):
+        other=self.add('Posta')
+        self.save({self.mail:'',other:''},enabled=False)
+        self.apps.save_preferences({self.mail:dict(enabled=True,phrase=''),
+                                   other:dict(enabled=False,phrase='')})
+        result=self.engine.execute('avvia Posta')
+        self.assertEqual(result.status,'rejected')
+        self.assertFalse(self.launched)
+
+    def test_partial_unselected_inventory_entry_does_not_steal_other_open_requests(self):
+        self.add('Finestra secondaria')
+        self.assertIsNone(self.apps.parse_command('apri Finestra'))
+        self.assertFalse(self.launched)
