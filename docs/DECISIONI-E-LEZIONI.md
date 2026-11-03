@@ -1,3 +1,11 @@
+## Quota Codex — prova Windows conclusa, scelta sul collegamento dedicato
+
+Source897b95b98fba166957cb17c4ebcd911969925d0f,ramo feature/codex-quota-20261103;run41728307013 SUCCESS:9test per Python3.11/3.12 e probeRPC realeWindows,0turni modello. Senza account e con provider della formaSiwC fittizio:autenticazione richiesta,mai quota0/100inventata. Il SDKSiwC della004 non espone la lettura; configurare soltanto un provider inferenza non crea l’accountCodex.
+
+[Rapporto,misure e limiti](QUOTA-CODEX-FATTIBILITA-20261103.md),[evidenza](evidence/quota-feasibility-20261103.json). Soluzione ufficiale provata:componenteCodex circa283.9MBsu disco/download92.23MB;campioniWorkingSet34.3–35.0MB nel runner senza account,non misurePavilion o autenticata. Nessun binario installato nel prodotto,nessuna credenziale personale letta. Il probe non verifica un tokenSiwC autentico né dimostra l’impossibilità di ogni altra integrazione.
+
+Prossima decisione sostanziale: accettare componente e accessoCodex dedicati (prima riuso eventuale installazione compatibile) per leggere il saldo personale,oppure collegamento alla paginaUso senza barra automatica. Non assumere tale collegamento dalla connessioneGPT esistente. Gate autenticazione reale NON superato:non proseguire alHUD con valori campione. Provider/probe/test salvati;004 e backendconversazione conservati,nessuna nuova build. Progetto autorizzato all’implementazione,ma fontepersonale resta da collegare.
+
 ## Barra quota Codex — progetto definito, 3 novembre2026
 
 Autorizzazione utente: «Ok, progettala così senza l’utilizzo di token». Definiti lettura alla connessione,automatico ogni60s e clic manuale;un solo aggiornamento in corso,timeout10s,ultimo successo visibile,dati oltre75s segnati non aggiornati. Nessun prompt/streamResponse/turn/start per controllare quota,nessun acquisto/riscatto. Il normale consumo delle conversazioni resta distinto.

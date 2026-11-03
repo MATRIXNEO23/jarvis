@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "status": "read_boundary_and_no_account_rpc_verified_personal_quota_not_verified",
+  "source_commit": "897b95b98fba166957cb17c4ebcd911969925d0f",
+  "branch": "feature/codex-quota-20261103",
+  "windows_run": 41728307013,
+  "windows_jobs": [
+    {
+      "id": 126238767242,
+      "name": "boundary (3.12)",
+      "conclusion": "success"
+    },
+    {
+      "id": 126238767708,
+      "name": "boundary (3.11)",
+      "conclusion": "success"
+    },
+    {
+      "id": 126238910473,
+      "name": "native",
+      "conclusion": "success"
+    }
+  ],
+  "tests_per_python": 9,
+  "red": {
+    "source": "3293a8b024b008936da2b878eb2be5e79406000c",
+    "run": 41727385004,
+    "observed_job": 126235625936,
+    "tests": 7,
+    "failures": 1,
+    "errors": 6
+  },
+  "previous_green": {
+    "source": "238f9c5f9870fb642ff0a889d90049745dc0e53c",
+    "run": 41727784400,
+    "tests_per_python": 7
+  },
+  "native_probe": {
+    "native": true,
+    "results": [
+      {
+        "mode": "no_auth",
+        "quota_state": "authentication_required",
+        "real_account_quota": false,
+        "methods": [
+          "initialize",
+          "account/read",
+          "account/rateLimits/read",
+          "account/rateLimits/read"
+        ],
+        "model_turns": 0,
+        "memory": {
+          "working_set_bytes": 35020800,
+          "private_bytes": 14950400
+        },
+        "elapsed_seconds": 1.172
+      },
+      {
+        "mode": "siwc_provider_shape",
+        "quota_state": "authentication_required",
+        "real_account_quota": false,
+        "methods": [
+          "initialize",
+          "account/read",
+          "account/rateLimits/read",
+          "account/rateLimits/read"
+        ],
+        "model_turns": 0,
+        "memory": {
+          "working_set_bytes": 34263040,
+          "private_bytes": 14667776
+        },
+        "elapsed_seconds": 0.047
+      }
+    ],
+    "loopback_requests": [],
+    "binary_bytes": 283894064,
+    "real_account_quota": false
+  },
+  "official_binary": {
+    "version": "rust-v0.166.0",
+    "archive_bytes": 92228613,
+    "archive_sha256": "edbdd3d5c74ea5437eb13254131de56d855a95a6bc18c139ecce7e95338e4d63",
+    "installed_in_product": false
+  },
+  "upstream": {
+    "codex": "3abe09d017c0f68df363bcbd19d49fa0278c3588",
+    "siwc": "0a36fefeb913055c8c7a1a29b63d82b96b2e841a",
+    "siwc_public_quota_method": false
+  },
+  "not_verified": [
+    "personal account quota",
+    "real SiwC token compatibility with Codex quota backend",
+    "Windows10/Pavilion resource usage",
+    "authenticated process memory",
+    "HUD integration and extracted release package"
+  ],
+  "next_decision": "dedicated Codex component and explicit connection vs official Usage link",
+  "build_created": false
+}

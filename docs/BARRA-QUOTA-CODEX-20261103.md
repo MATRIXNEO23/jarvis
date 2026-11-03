@@ -1,6 +1,6 @@
 # Barra quota Codex — progetto concordato, 3 novembre 2026
 
-**Stato:** progettazione autorizzata con «Ok, progettala così senza l’utilizzo di token». Progetto e piano pronti; codice, autenticazione reale, collaudi e nuova build non eseguiti.
+**Stato corrente:** implementazione autorizzata nel turno seguente. Prima fase di fattibilità verificata suWindows:9test per Python e probeRPC con0turni;quota personale non letta. [Rapporto e scelta necessaria](QUOTA-CODEX-FATTIBILITA-20261103.md). Nessuna barra o nuova build.
 **Piano:** [passi di attuazione](superpowers/plans/2026-11-03-barra-quota-codex.md).
 **Base:** candidata004/source a1b93f34ff25bd9a972ed971a432af4984366f28, ramo operativo build/jarvis-004; non usare la radice storica main come runtime.
 
