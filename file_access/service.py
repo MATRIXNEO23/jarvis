@@ -449,6 +449,10 @@ class FileAccessService:
                     scoped = re.fullmatch(r'(.+?) (?:in|nella cartella) (documenti|download|desktop|profilo|appdata)', args['query'], re.I)
                     if scoped:
                         args = {'query':scoped.group(1), 'scope':scoped.group(2).casefold()}
+                    # In natural requests "la cartella di Nome", di is a
+                    # preposition, not part of the filename. Quoted names
+                    # remain literal; the location lookup has its own rule.
+                    args['query'] = re.sub(r'^di\s+(?=\S)', '', args['query'], flags=re.I)
                 if operation == 'read' and low.startswith(('spiega', 'spiegami')):
                     args['explain'] = True
                 self._pending_app = None
