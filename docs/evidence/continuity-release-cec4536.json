@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-03",
+  "release": "Jarvis-Continuita-20261103",
+  "source_commit": "cec4536b0f5991cb900680ed05295245f4e04acb",
+  "archive": "Jarvis-Continuita-20261103-cec4536.zip",
+  "files": 79,
+  "bytes": 268298,
+  "sha256": "d96e90657ad67399893ef5d89a7e250da5369b64a833fd596e4d718ad3687f07",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "windows_workflow_run": "41614085149",
+  "pc_test": "pending",
+  "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Continuita-20261103-cec4536.zip",
+  "workflow_result": "success",
+  "jobs": {
+    "python312": 125843036353,
+    "python311": 125843036593,
+    "publisher": 125844260648
+  },
+  "checks": {
+    "tests_per_python": 505,
+    "extracted_tests": 130,
+    "manifest": "passed",
+    "single_launcher": "passed",
+    "extracted_imports": "passed",
+    "extracted_ui_boot_close": "passed",
+    "native_probe": "passed",
+    "windows_search_live": "passed",
+    "published_http_hash_bytes": "passed",
+    "download_first_entry": "passed",
+    "root_readme_link": "passed",
+    "remote_metadata_match": "passed"
+  },
+  "limits": [
+    "candidate not PC-confirmed",
+    "real GPT/account/microphone/Pavilion untested",
+    "R03 free-form confirmations open",
+    "R07 save-close static risk open; operational readme explains restricted trial"
+  ],
+  "previous_packages_preserved": true
+}
