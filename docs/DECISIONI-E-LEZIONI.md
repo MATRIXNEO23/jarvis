@@ -1,10 +1,14 @@
+## Build004 — timeout isolato di un test preesistente, 3 novembre2026
+
+Run41694455705/source a1b93f34ff25bd9a972ed971a432af4984366f28: job3.11/126121208961,542 test in117.622s,un errore TimeoutExpired15s nella prima invocazione PowerShell del test Explorer test_real_powershell_explorer_selection_and_navigation_contract (test_file_access.py:792/786). Nessun fallimento di asserzione; prove Programmi e app PASS. File del test e helper runtime invariati rispetto al source verde67ca39c.
+
+Job3.12/126121209198 SUCCESS, inclusi test completo e pacchetto estratto; publisher correttamente SKIPPED perché3.11 fallito. La causa interna del timeout non è osservata; ipotesi: avvio PowerShell transitorio nel runner, compatibile con stessa prova PASS su3.12 e nei due job precedenti. Prossima prova minima: rieseguire soltanto il job3.11 sullo stesso identico source, senza allungare timeout, togliere asserzioni o modificare runtime. Se fallisce ancora acquisire ulteriori dati; nessuna pubblicazione finché i controlli obbligatori non sono verdi. Conservare questo primo esito anche in caso di retry riuscito.
+
 ## Ripresa autorizzata — confezione004, 3 novembre2026
 
 L’utente riferisce l’interruzione prima della build e chiede di verificare e continuare da quel punto. Ripresa dalla feature c245cce17fbddc4dc0c8d91ddcbfa8b84a6971be, codice/prove67ca39c; run41690560916 e log job126107699773 riletti:542 test OK, confezione/publisher skipped. Questa richiesta avvia la consegna004, senza nuove funzioni runtime.
 
 Piano breve: adeguare numero/versione in tools/build_file_access.py e controllo ZIP; aggiungere tutte le suite Programmi e app ai test estratti e verificare manifest OFF/configurazione/import UI; attivare una sola run sul ramo build/jarvis-004, suite Windows3.11/3.12 e pubblicazione solo dopo controlli verdi. Verificare download pubblico/hash e preservazione001/002/003; poi disabilitare trigger/publisher e aggiornare stato, handoff, registro/evidenza. Nessun test Linux, dati/profilo e runtime main conservati. In caso di fallimento non pubblicare: correggere soltanto la causa dimostrata sul ramo. PC/microfono/account/Store terze/DPI/risorse Pavilion restano prove personali distinte.
-
-Adeguamento completato nei soli tre file di confezione/CI: numero004/versione0.1.4, suite apps nel cwd estratto, manifest/import obbligatori, budget finito300s per le prove estratte. Revisione statica del diff/YAML/Python eseguita, nessuna esecuzione Jarvis Linux. Il collegamento GitHub non espone workflow_dispatch: come per002/003 attivazione una tantum sul solo ramo build/jarvis-004; main/feature ordinari non generano archivi. Stato attuale: suite/build/ZIP/HTTP della004 ancora DA VERIFICARE. Non scrivere su main durante il publisher.
 
 ## Contesto dialogo senza risultati locali — correzione verificata, 3 novembre 2026
 Riscontro PC001: cartella fornita manualmente, domanda apertura/elenco, risposta «elenca il contenuto», nuova domanda della cartella. Riprodotti difetti della consegna al modello anche senza risultati di ricerca e con progetto selezionato; il prompt effettivo del PC e la risposta di un modello reale non sono stati acquisiti.
