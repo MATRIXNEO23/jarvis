@@ -1,3 +1,9 @@
+## Quota Task1 — Red Windows osservato, Green/probe in preparazione
+
+Source3293a8b024b008936da2b878eb2be5e79406000c,run41727385004: entrambi i jobWindows falliti come previsto per il provider non collegato. Logjob126235625936:7test,1fallimento e6errori comportamentali sul read placeholder/timeout,nessun import mancante. ReadOnlyRPC rifiuta già metodi diversi dalla letturaquota prima del trasporto. Implementata la sola lettura validata con timeout≤10s,errori sanitizzati,nessun retry/login e risposta limitata ai campi quota.
+
+Aggiunto probe di sviluppo con initialize/accountRead/rateLimitsRead,senza thread/turni e con auth inRAM; credenzialiambiente escluse e account personale non letto. WindowsCI scarica binario ufficiale0.166.0 verificatoSHA256,non lo inserisce nel pacchetto. Prova no-auth e providerResponses della formaSiwC con valore fittizio e destinazione loopback,trappolaHTTPPOST. Atteso rifiuto auth in entrambi: la quota dell’utente resta non provata. Green e risultati nativi ancora pendenti;UI/add-on completo/build non iniziati.
+
 ## Quota Codex — Task1 autorizzato e in corso, 3 novembre2026
 
 L’utente autorizza a procedere autonomamente e chiedere solo risposte necessarie. Si parte dalla004/runtime a1b93f3,ramo operativo765b502; nessuna build o modificaHUD. SDKSiwC fissato e main coincidono a0a36fef e non espongono rateLimits. SorgenteCodex ufficiale3abe09d: get_account_rate_limits_response richiede auth.uses_codex_backend; configurare soltanto un providerResponsesSiwC non soddisfa quel requisito.

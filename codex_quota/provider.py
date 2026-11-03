@@ -28,6 +28,21 @@ class Provider:
         return self._rpc is not None and isinstance(self.session_key, str) and bool(self.session_key)
 
     def read_limits(self, *, timeout=10.0):
-        # Initial contract checkpoint: the following Windows test must reproduce
-        # the missing read before this boundary is implemented.
-        raise QuotaUnavailable('Quota provider not connected.')
+        if not 0 < timeout <= 10:
+            raise ValueError('Quota timeout must be within ten seconds.')
+        if not self.available():
+            raise QuotaUnavailable('Quota provider not connected.')
+        try:
+            reply = self._rpc.call('account/rateLimits/read', {}, timeout=timeout)
+        except (OSError, TimeoutError, ValueError) as exc:
+            raise QuotaUnavailable('Quota read unavailable; no model request sent.') from None
+        if not isinstance(reply, dict) or 'error' in reply:
+            raise QuotaUnavailable('Quota read not authorized or unavailable.')
+        result = reply.get('result')
+        if not isinstance(result, dict):
+            raise QuotaUnavailable('Quota snapshot unavailable.')
+        snapshot = {key:result[key] for key in ('rateLimits', 'rateLimitsByLimitId')
+                    if isinstance(result.get(key), dict) and result[key]}
+        if not snapshot:
+            raise QuotaUnavailable('Quota snapshot unavailable.')
+        return snapshot

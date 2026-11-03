@@ -20,3 +20,36 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Read-only quota boundary, no account or model
         run: python -m unittest discover -s tests -p test_codex_quota_provider.py -v
+      - name: Controlled protocol fixture, not account quota
+        shell: pwsh
+        run: python tools/probe_codex_quota.py --protocol-only --output "$env:RUNNER_TEMP/quota-fixture.json"
+  native:
+    needs: boundary
+    runs-on: windows-2022
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download pinned official binary for disposable CI only
+        shell: pwsh
+        run: |
+          $quotaProbeDir = Join-Path $env:RUNNER_TEMP 'jarvis-quota-probe'
+          New-Item -ItemType Directory -Path $quotaProbeDir -Force | Out-Null
+          $quotaProbeZip = Join-Path $quotaProbeDir 'official.zip'
+          Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-app-server-x86_64-pc-windows-msvc.exe.zip' -OutFile $quotaProbeZip
+          if ((Get-Item $quotaProbeZip).Length -ne 92228613) { throw 'Unexpected binary archive size' }
+          if ((Get-FileHash $quotaProbeZip -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'edbdd3d5c74ea5437eb13254131de56d855a95a6bc18c139ecce7e95338e4d63') { throw 'Unexpected binary archive hash' }
+          Expand-Archive -LiteralPath $quotaProbeZip -DestinationPath (Join-Path $quotaProbeDir 'binary')
+          $quotaProbeExe = @(Get-ChildItem (Join-Path $quotaProbeDir 'binary') -Recurse -Filter 'codex-app-server*.exe')
+          if ($quotaProbeExe.Count -ne 1) { throw 'Unexpected binary layout' }
+          "JARVIS_QUOTA_PROBE_EXE=$($quotaProbeExe[0].FullName)" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Real Windows RPC, no login and no inference
+        shell: pwsh
+        run: python tools/probe_codex_quota.py --codex "$env:JARVIS_QUOTA_PROBE_EXE" --output "$env:RUNNER_TEMP/jarvis-quota-probe/native.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quota-feasibility-no-account
+          path: ${{ runner.temp }}/jarvis-quota-probe/native.json
+          retention-days: 14
