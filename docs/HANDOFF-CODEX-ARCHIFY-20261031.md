@@ -1,3 +1,5 @@
+Prova R01 salvata nel source c03920eb71a1b1bee8a880153bfb1530c8fd9097; cinque test nuovi, runtime invariato. Run Windows 41601963559 avviata su Python 3.11/3.12, esito ancora in attesa. Nessuna build. Prossimo controllo: leggere i fallimenti prima di modificare il codice.
+
 ## Ripresa autorizzata — diagnosi e prova R01, 3 novembre 2026
 L'utente chiede di proseguire con correzioni concrete, usando le skill e senza attribuzioni inventate. Riscontro live riferito: voce «Cercami la cartella di Minecraft» → trascrizione «cerca me la cartella di Macking Craft»; richiesta scritta → nessun risultato nella porzione esaminata, limite tempo, 779 elementi/77 cartelle/0 errori, 3 fuori ambito o non verificabili, 9 radici selezionate; raffinamento non avviato per limite di contesto GPT. Nome/SHA del pacchetto in esecuzione non identificato: non attribuire automaticamente al PC il pacchetto pubblicato.
 La correzione del budget è già nel runtime 8066852, non nello ZIP pubblicato d06e233; preservarla. Non basta per risolvere continuità, ricerca parziale o riconoscimento audio.
