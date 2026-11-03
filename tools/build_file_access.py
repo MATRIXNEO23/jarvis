@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 import zipfile
 
-BUILD_NUMBER = 3
+BUILD_NUMBER = 4
 NAME = f'Jarvis-{BUILD_NUMBER:03d}'
 
 
@@ -43,7 +43,7 @@ def build(source: Path, destination: Path) -> Path:
         version_entry.compress_type = zipfile.ZIP_DEFLATED
         version_entry.external_attr = 0o100644 << 16
         target.writestr(version_entry,json.dumps({
-            'version':'0.1.3-candidate','build_number':BUILD_NUMBER,'build_label':f'{BUILD_NUMBER:03d}','source_commit':commit,'base_commit':
+            'version':'0.1.4-candidate','build_number':BUILD_NUMBER,'build_label':f'{BUILD_NUMBER:03d}','source_commit':commit,'base_commit':
             'b936879a431370d206152be7b089baf587d15499','files':manifest},indent=2),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
     with zipfile.ZipFile(archive) as target:
         assert target.testzip() is None
@@ -60,4 +60,3 @@ def build(source: Path, destination: Path) -> Path:
 if __name__ == '__main__':
     import sys
     build(Path(__file__).resolve().parents[1],Path(sys.argv[1]))
-

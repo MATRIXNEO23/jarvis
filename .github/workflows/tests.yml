@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'feature/program-apps-20261103']
+    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'feature/program-apps-20261103', 'build/jarvis-004']
     paths:
       - '**.py'
       - '**.mjs'
@@ -84,22 +84,22 @@ jobs:
         run: python tools/probe_windows_search_live.py --ci-only
 
       - name: Build operational candidate (Windows only)
-        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
+        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-004')) && matrix.python-version == '3.12'
         run: python tools/build_file_access.py dist
       - name: Verify extracted candidate on Windows
-        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
-        run: python tools/check_file_access_package.py dist/Jarvis-003.zip
+        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-004')) && matrix.python-version == '3.12'
+        run: python tools/check_file_access_package.py dist/Jarvis-004.zip
       - uses: actions/upload-artifact@v4
-        if: success() && github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
+        if: success() && ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-004')) && matrix.python-version == '3.12'
         with:
-          name: Jarvis-003
+          name: Jarvis-004
           path: dist/*
           retention-days: 30
 
   publish-file-access:
-    name: Publish immutable numbered candidate 003 (Windows)
+    name: Publish immutable numbered candidate 004 (Windows)
     needs: unit
-    if: ${{ false }} # Build003 delivered; one-time publisher disabled.
+    if: ${{ success() && ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-004')) }} # One-time authorized delivery004; disable after verified publication.
     runs-on: windows-2022
     permissions:
       contents: write
@@ -112,9 +112,9 @@ jobs:
           python-version: '3.12'
       - uses: actions/download-artifact@v4
         with:
-          name: Jarvis-003
+          name: Jarvis-004
           path: ${{ runner.temp }}/numbered-candidate
-      - name: Verify and register immutable build 003
+      - name: Verify and register immutable build 004
         shell: python
         env:
           CANDIDATE_HOME: ${{ runner.temp }}/numbered-candidate
@@ -123,7 +123,7 @@ jobs:
         run: |
           import hashlib,json,os,shutil,subprocess,zipfile
           from pathlib import Path
-          number=3
+          number=4
           label=f'{number:03d}'
           name=f'Jarvis-{label}.zip'
           home=Path(os.environ['CANDIDATE_HOME'])
@@ -162,7 +162,7 @@ jobs:
           if existing is None:
               registry['releases'].append(dict(build_number=number,label=label,archive=name,
                   metadata=metadata_path.name,date='2026-11-03',
-                  description='Interruttori rapidi MIC, GPT e MEMORIA',
+                  description='Avvio programmi e app con comandi personali',
                   status='candidate_pc_test_pending',source_commit=sha,
                   sha256=details['sha256'],bytes=details['bytes'],previous_build=number-1,
                   git_blob_sha=subprocess.check_output(['git','hash-object',str(target)],text=True).strip()))
@@ -172,11 +172,11 @@ jobs:
           page=Path('Download/README.md')
           text=page.read_text(encoding='utf-8')
           first_end=text.find('\n')
-          text=(f'> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **{label}**, verificata su Windows; collaudo PC pendente. Build001/002 e base PC b936879 conservate.'+text[first_end:])
-          title=f'## Build {label} — Interruttori rapidi'
+          text=(f'> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **{label}**, verificata su Windows; collaudo PC pendente. Build001/002/003 e base PC b936879 conservate.'+text[first_end:])
+          title=f'## Build {label} — Programmi e app'
           entry=(title+'\n\n'+f'[Scarica {name}]({url})\n\n'
-              'MIC, GPT e MEMORIA in alto a destra sono ora cliccabili e sincronizzati con le impostazioni. '
-              'Estrai in una cartella nuova e avvia avvia_jarvis.bat; profilo di prova e impostazioni esistenti conservati. '
+              'Nuova add-on Programmi e app: scegli le app consentite e un comando vocale personale; apri/avvia/lancia usano la stessa selezione. '
+              'Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Programmi e app > Configura. Aggiorna elenco, spunta Consenti avvio, Salva e attiva l’add-on. Profilo e impostazioni esistenti conservati. '
               'Test Windows, pacchetto estratto e avvio/chiusura UI verificati; GPT/account/microfono/Pavilion da collaudare. '
               'Limite20 risultati e altri rilievi ancora aperti; nessuna nuova capacità di apertura file.\n\n'
               f'Sorgenti: [{sha[:7]}](https://github.com/MATRIXNEO23/jarvis/tree/{sha}). '
@@ -188,7 +188,7 @@ jobs:
           page.write_text(text,encoding='utf-8')
           root=Path('README.md')
           lines=root.read_text(encoding='utf-8').splitlines()
-          link=(f'**Nuova build candidata Windows: [Jarvis {label}]({url})** — interruttori rapidi MIC, GPT e MEMORIA; collaudo PC pendente. [Versioni precedenti](Download/REGISTRO-VERSIONI.md).')
+          link=(f'**Nuova build candidata Windows: [Jarvis {label}]({url})** — avvio programmi e app con comandi personali; collaudo PC pendente. [Versioni precedenti](Download/REGISTRO-VERSIONI.md).')
           found=next((i for i,line in enumerate(lines) if line.startswith('**Nuova build candidata Windows:')),None)
           if found is None:
               lines.insert(0,link)
@@ -197,12 +197,12 @@ jobs:
           root.write_text('\n'.join(lines)+'\n',encoding='utf-8')
           history=Path('Download/REGISTRO-VERSIONI.md')
           text=history.read_text(encoding='utf-8')
-          row=f'| {label} | [{name}]({url}) | Candidata, collaudo PC pendente | Interruttori rapidi MIC, GPT e MEMORIA |'
+          row=f'| {label} | [{name}]({url}) | Candidata, collaudo PC pendente | Avvio programmi e app con comandi personali |'
           if row not in text:
-              marker='\n| 002 |'
+              marker='\n| 003 |'
               assert marker in text
               text=text.replace(marker,'\n'+row+marker,1)
-          text=text.replace('la prossima sarà003.','la prossima sarà004.')
+          text=text.replace('la prossima sarà004.','la prossima sarà005.')
           history.write_text(text,encoding='utf-8')
           print('PERSISTENT_CANDIDATE='+json.dumps(details))
       - name: Publish Download and links without changing application sources on main
@@ -213,12 +213,12 @@ jobs:
           git add Download README.md
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
-            git commit -m "Publish immutable Jarvis build 003"
+            git commit -m "Publish immutable Jarvis build 004"
             if ($LASTEXITCODE -ne 0) { throw 'Commit failed' }
             git push origin HEAD:main
             if ($LASTEXITCODE -ne 0) { throw 'Publication failed; inspect main without force push' }
           }
-      - name: Verify public build 003 and preserved builds 001/002
+      - name: Verify public build 004 and preserved builds 001/002/003
         shell: python
         env:
           VERIFIED_SOURCE: ${{ github.sha }}
@@ -226,10 +226,10 @@ jobs:
           import hashlib,json,os,time,urllib.request
           from pathlib import Path
           sha=os.environ['VERIFIED_SOURCE']
-          name='Jarvis-003.zip'
-          details=json.loads(Path('Download/Jarvis-003.json').read_text(encoding='utf-8'))
+          name='Jarvis-004.zip'
+          details=json.loads(Path('Download/Jarvis-004.json').read_text(encoding='utf-8'))
           registry=json.loads(Path('Download/BUILD-NUMBERS.json').read_text(encoding='utf-8'))
-          previous=[r for r in registry['releases'] if r['build_number']<3]
+          previous=[r for r in registry['releases'] if r['build_number']<4]
           prefix='https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/'
           def get(path):
               with urllib.request.urlopen(prefix+path,timeout=25) as response:
@@ -239,10 +239,10 @@ jobs:
                   data=get('Download/'+name)
                   assert len(data)==details['bytes'] and hashlib.sha256(data).hexdigest()==details['sha256']
                   text=get('Download/README.md?verify='+sha).decode('utf-8')
-                  assert text.index(name)<text.index('## Build 002')
+                  assert text.index(name)<text.index('## Build 003')
                   assert name in get('README.md?verify='+sha).decode('utf-8')[:2000]
                   public_registry=json.loads(get('Download/BUILD-NUMBERS.json?verify='+sha))
-                  assert public_registry['latest_build']==3 and public_registry['next_build']==4
+                  assert public_registry['latest_build']==4 and public_registry['next_build']==5
                   for release in previous:
                       old=get('Download/'+release['archive'])
                       assert hashlib.sha256(old).hexdigest()==release['sha256']
@@ -252,4 +252,4 @@ jobs:
                       raise
                   time.sleep(3)
           print('PUBLISHED_DOWNLOAD_VERIFIED='+json.dumps(dict(archive=name,url=prefix+'Download/'+name,
-              source_commit=sha,sha256=details['sha256'],bytes=len(data),build_number=3,previous_build_preserved=True)))
+              source_commit=sha,sha256=details['sha256'],bytes=len(data),build_number=4,previous_build_preserved=True)))

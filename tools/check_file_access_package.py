@@ -19,8 +19,8 @@ with tempfile.TemporaryDirectory(prefix='jarvis-package-') as temporary:
         bundle.extractall(temporary)
     package = next(Path(temporary).iterdir())
     version=json.loads((package/'VERSIONE.json').read_text())
-    assert version['build_number'] == 3 and version['build_label'] == '003'
-    assert package.name == 'Jarvis-003' and archive.name == 'Jarvis-003.zip'
+    assert version['build_number'] == 4 and version['build_label'] == '004'
+    assert package.name == 'Jarvis-004' and archive.name == 'Jarvis-004.zip'
     if os.environ.get('GITHUB_SHA'):
         assert version['source_commit'] == os.environ['GITHUB_SHA']
     manifest=version['files']
@@ -29,12 +29,18 @@ with tempfile.TemporaryDirectory(prefix='jarvis-package-') as temporary:
     for relative,digest in manifest.items():
         assert hashlib.sha256((package/relative).read_bytes()).hexdigest()==digest, relative
     assert sorted(p.name for p in package.glob('avvia*.bat'))==['avvia_jarvis.bat']
+    app_files={'program_apps/'+name for name in ('__init__.py','native.py','service.py',
+        'ui.py','windows_apps.ps1','ProgrammiApp.jaddon','LEGGIMI.md')}
+    assert app_files <= actual, 'Incomplete Programmi e app add-on'
+    app_manifest=json.loads((package/'program_apps/ProgrammiApp.jaddon').read_text(encoding='utf-8'))
+    assert app_manifest['id']=='programmi_app'
+    assert any(action['core_action']=='apps.launch' for action in app_manifest['actions'])
     print('EXTRACTED_MANIFEST_AND_SINGLE_LAUNCHER_OK')
     # Separate process and cwd: imports cannot accidentally use checkout modules.
-    imports = "import jarvis,addon_manager,local_engine;from file_access.service import FileAccessService;from file_access.ui import FolderSettings;print('EXTRACTED_IMPORTS_OK')"
+    imports = "import jarvis,addon_manager,local_engine;from file_access.service import FileAccessService;from file_access.ui import FolderSettings;from program_apps.service import ProgramService;from program_apps.ui import ProgramSettings;print('EXTRACTED_IMPORTS_OK')"
     subprocess.run([sys.executable,'-c',imports],cwd=package,check=True,timeout=45)
-    tests = f"import sys,unittest;sys.path.append({str(source/'tests')!r});suite=unittest.defaultTestLoader.loadTestsFromNames(['test_file_access','test_activity_status','test_file_refinement','test_program_locations','test_file_context_delivery','test_pending_file_context','test_file_index_priority','test_file_search_phrase','test_voice_corrections_review','test_hud_quick_toggles']);r=unittest.TextTestRunner(verbosity=2).run(suite);sys.exit(not r.wasSuccessful())"
-    subprocess.run([sys.executable,'-c',tests],cwd=package,check=True,timeout=180)
+    tests = f"import sys,unittest;sys.path.append({str(source/'tests')!r});suite=unittest.defaultTestLoader.loadTestsFromNames(['test_file_access','test_activity_status','test_file_refinement','test_program_locations','test_file_context_delivery','test_pending_file_context','test_file_index_priority','test_file_search_phrase','test_voice_corrections_review','test_hud_quick_toggles','test_program_apps','test_program_apps_native','test_program_apps_service','test_program_apps_ui','test_program_apps_integration']);r=unittest.TextTestRunner(verbosity=2).run(suite);sys.exit(not r.wasSuccessful())"
+    subprocess.run([sys.executable,'-c',tests],cwd=package,check=True,timeout=300)
     # Exercise the real UI startup and its normal close callback with all live
     # services switched off only in this disposable test profile.
     boot = '''import tempfile,os,tkinter as tk
