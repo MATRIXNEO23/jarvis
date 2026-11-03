@@ -193,6 +193,10 @@ def main() -> None:
             bundled=Path(__file__).parent/"file_access"/"AccessoFile.jaddon"
             if bundled.is_file():
                 addon_manager.install(bundled)  # Descriptive only, remains OFF.
+        if not any(item['id']=='programmi_app' for item in addon_manager.list_installed()):
+            bundled=Path(__file__).parent/'program_apps'/'ProgrammiApp.jaddon'
+            if bundled.is_file():
+                addon_manager.install(bundled)  # No application is enabled by installation.
 
     except (AddonError,OSError,ValueError) as exc:
         addon_setup_error=str(exc)[:150]
@@ -635,6 +639,11 @@ def main() -> None:
                 parsed={"breve":parsed}
             if not isinstance(parsed,dict):
                 return raw
+            if (addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None
+                    and addon_manager.programs_enabled()):
+                program_hint=addon_manager.program_service.context_hint()
+                if program_hint:
+                    hint['program_request']=program_hint
             if (addon_manager is not None and addon_manager._file_service is not None
                     and addon_manager.files_enabled()):
                 file_hint=addon_manager.file_service.context_hint()
@@ -758,6 +767,8 @@ def main() -> None:
         active_project_id=project_id
         if addon_manager is not None and addon_manager._file_service is not None:
             addon_manager.file_service.reset(project_id)
+        if addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None:
+            addon_manager.program_service.reset(project_id)
         conversation_epoch+=1
         conversation_memory.clear()
         pending_conversation.clear()
@@ -2175,6 +2186,11 @@ def main() -> None:
         engine = LocalEngine()
         if addon_manager is not None:
             try:
+                engine.program_apps = addon_manager.program_service
+            except (ImportError,OSError,ValueError) as exc:
+                write_line('PROGRAMMI > Componente incompleto: '+str(exc)+
+                           '. Reinstalla la cartella program_apps dal pacchetto completo.')
+            try:
                 engine.file_access = addon_manager.file_service
                 engine.file_access.progress=lambda snapshot:output_queue.put(('file_progress',snapshot))
             except (ImportError,OSError,ValueError) as exc:
@@ -2693,7 +2709,33 @@ def main() -> None:
             return False
         return True
 
+    def try_program_command(message: str) -> bool:
+        provider=getattr(engine,'program_apps',None)
+        if provider is None or not provider.available():
+            return False
+        # Document/project decisions retain their original routing and context.
+        if (save_only_waiting or document_busy or doc_dialog.phase.startswith('awaiting_')
+                or doc_dialog.phase=='executing' or pending_project_name
+                or pending_project_rename_id is not None or pending_project_trash_id is not None):
+            provider.reset(active_project_id)
+            return False
+        if provider._context != active_project_id:
+            provider.reset(active_project_id)
+        parsed=provider.parse_command(message)
+        if parsed is None:
+            return False
+        if busy_local:
+            write_line('PROGRAMMI > Operazione in corso: riprova fra poco.')
+            return True
+        if addon_manager is not None and addon_manager._file_service is not None:
+            addon_manager.file_service.reset(active_project_id)
+        submit_local(message_override=message,source_utterance=message,
+                     addon_action_id='addon.programmi_app.avvia',program_call=parsed)
+        return True
+
     def try_file_command(message: str) -> bool:
+        if getattr(engine,'program_apps',None) is not None and try_program_command(message):
+            return True
         if addon_manager is None or not addon_manager.files_enabled():
             return False
         try:
@@ -2737,7 +2779,7 @@ def main() -> None:
     def submit_local(event=None, message_override: str | None = None,
                      source_utterance: str = "",
                      addon_action_id: str = "",
-                     file_call=None) -> None:
+                     file_call=None, program_call=None) -> None:
         nonlocal busy_local, last_user_for_action, project_local_ticket
         nonlocal local_operation_id
         if closing:
@@ -2793,7 +2835,8 @@ def main() -> None:
                         result=TaskResult("-","addon","rejected",
                                           "Add-on disattivato prima dell'esecuzione.")
                     else:
-                        result = (engine.execute_file(*file_call) if file_call is not None
+                        result = (engine.execute_program(*program_call) if program_call is not None
+                                  else engine.execute_file(*file_call) if file_call is not None
                                   else engine.execute(message))
                 output_queue.put(("local", result))
             except Exception as exc:
@@ -3151,7 +3194,8 @@ def main() -> None:
                             continue
                         route_type = "command"  # Push-to-talk already requires a manual press.
                         if voice_mode.get() == CONTINUOUS:
-                            if (telegram_voice_dialog.pending or (addon_manager is not None
+                            if (telegram_voice_dialog.pending or (getattr(engine,'program_apps',None) is not None
+                                    and engine.program_apps.is_pending_answer(spoken)) or (addon_manager is not None
                                     and addon_manager.files_enabled()
                                     and addon_manager.file_service.parse_command(spoken) is not None
                                     and addon_manager.file_service.parse_command(spoken)[0]=="select")):
@@ -3231,6 +3275,17 @@ def main() -> None:
                     if result.status in ("failed", "rejected"):
                         runtime_events.record("local_failure")
                     busy_local = False
+                    if getattr(result,'program_listing',None) is not None:
+                        try:
+                            from program_apps.ui import show_choices
+                            show_choices(root,result.program_listing,
+                                lambda number,token:submit_local(
+                                    message_override='Avvia programma scelto',
+                                    source_utterance='Programma scelto nella finestra risultati',
+                                    addon_action_id='addon.programmi_app.avvia',
+                                    program_call=('select',{'query':number,'token':token})))
+                        except (ImportError,OSError,ValueError,tk.TclError) as exc:
+                            write_line('PROGRAMMI > Finestra scelte non disponibile: '+str(exc)[:150])
                     if result.action.startswith('files_') and result.file_listing is None:
                         try:
                             from file_access.ui import finish_result_progress
@@ -3467,6 +3522,21 @@ def main() -> None:
                                               if documents.current else None)
                                 if cap is None:
                                     announce_document("Azione non disponibile.")
+                                elif cap.handler == 'program_apps':
+                                    from program_apps.service import blocked, protected
+                                    if (blocked(original_phrase) or protected(original_phrase)
+                                            or save_only_waiting or document_busy
+                                            or doc_dialog.phase.startswith('awaiting_')
+                                            or doc_dialog.phase=='executing'):
+                                        speak_result('Nessuna app avviata: richiesta negata o altro dialogo in corso.')
+                                    elif addon_manager is None or not addon_manager.is_active(cap.action_id):
+                                        speak_result('Programmi e app non è più attivo.')
+                                    elif not busy_local:
+                                        submit_local(message_override=original_phrase,
+                                            source_utterance=original_phrase,addon_action_id=cap.action_id,
+                                            program_call=('launch',{'query':cap.target}))
+                                    else:
+                                        speak_result('Operazione locale in corso, riprova.')
                                 elif cap.handler == "file_access":
                                     if (addon_manager is None or not addon_manager.is_active(cap.action_id)):
                                         speak_result("Accesso file non è più attivo.")
@@ -3794,6 +3864,8 @@ def main() -> None:
         closing = True
         if addon_manager is not None and addon_manager._file_service is not None:
             addon_manager.file_service.reset()
+        if addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None:
+            addon_manager.program_service.reset()
         planner_abort_event.set()
         doc_dialog.revoke_pending()
         dictation.disable()
@@ -3864,3 +3936,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

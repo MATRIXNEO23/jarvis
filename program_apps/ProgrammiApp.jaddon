@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "programmi_app",
+  "name": "Programmi e app",
+  "version": "0.1.0",
+  "description": "Avvia programmi classici e app Store scelti nelle impostazioni.",
+  "actions": [{
+    "id": "addon.programmi_app.avvia",
+    "description": "Avvia una app consentita usando il nome o comando personalizzato.",
+    "example": "avvia Netflix",
+    "core_action": "apps.launch"
+  }]
+}

@@ -56,10 +56,12 @@ jobs:
         run: |
           $tokens = $null
           $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'installa_gpt.ps1'), [ref]$tokens, [ref]$errors) | Out-Null
+          foreach ($script in @('installa_gpt.ps1','program_apps/windows_apps.ps1')) {
+          [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD $script), [ref]$tokens, [ref]$errors) | Out-Null
           if ($errors.Count -gt 0) {
             $errors | Out-String | Write-Host
             exit 1
+          }
           }
 
       - name: Native Windows file access probe

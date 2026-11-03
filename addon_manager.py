@@ -29,6 +29,7 @@ _VERSION = re.compile(r"^(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]{0,3})\.(0|[1-9][0-9]
 _SAFE_TARGETS = frozenset(("system.status", "downloads.list", "history.list"))
 _FILE_TARGETS = {"files.list": "elenca", "files.search": "cerca", "files.read": "leggi",
                  "files.open": "apri", "files.locate": "localizza"}
+_APP_TARGETS = {"apps.launch": "avvia"}
 MAX_ADDONS = 20
 MAX_ACTIONS = 5
 MAX_FILE_BYTES = 12_000
@@ -72,11 +73,14 @@ def validate_manifest(value: object) -> dict:
                 or name in seen):
             raise AddonError("ID azione duplicato o non appartenente all'add-on.")
         if (not isinstance(item["core_action"],str)
-                or item["core_action"] not in (_SAFE_TARGETS | _FILE_TARGETS.keys())):
+                or item["core_action"] not in (_SAFE_TARGETS | _FILE_TARGETS.keys() | _APP_TARGETS.keys())):
             raise AddonError("Funzione add-on non approvata: nessun codice viene eseguito.")
         if item["core_action"] in _FILE_TARGETS and (addon_id != "accesso_file" or
                 name != "addon.accesso_file."+_FILE_TARGETS[item["core_action"]]):
             raise AddonError("Identità del componente Accesso file non valida.")
+        if item["core_action"] in _APP_TARGETS and (addon_id != "programmi_app" or
+                name != "addon.programmi_app.avvia"):
+            raise AddonError("Identità del componente Programmi e app non valida.")
         if not _safe_text(item["description"], 125) or not _safe_text(
                 item["example"], 85):
             raise AddonError("Testo dell'azione non valido.")
@@ -132,6 +136,7 @@ class AddonManager:
                      default_path().parent/"addons")
         self._lock=threading.RLock()
         self._file_service = None
+        self._program_service = None
         self._records: dict[str,dict] = {}
         self._registered: set[str] = set()
         self._invalid: list[str] = []
@@ -141,6 +146,20 @@ class AddonManager:
         if self.folder.is_symlink():
             raise AddonError("Cartella add-on non sicura.")
         self.refresh()
+
+    @property
+    def program_service(self):
+        if self._program_service is None:
+            from program_apps.service import ProgramService
+            self._program_service = ProgramService(
+                self.folder.parent/"addon-data"/"programmi_app",
+                lambda:self.is_active('addon.programmi_app.avvia'))
+        return self._program_service
+
+    def programs_enabled(self):
+        with self._lock:
+            return any(r['enabled'] and any(a['core_action'] in _APP_TARGETS
+                       for a in r['manifest']['actions']) for r in self._records.values())
 
     @property
     def file_service(self):
@@ -278,6 +297,8 @@ class AddonManager:
             self._invalid=invalid
             if self._file_service is not None and not self.files_enabled():
                 self._file_service.reset()
+            if self._program_service is not None and not self.programs_enabled():
+                self._program_service.reset()
 
     def _available(self, addon_id: str, action_id: str, digest: str) -> bool:
         # Never perform disk I/O here; refresh() is called by the app per turn.
@@ -389,6 +410,14 @@ class AddonManager:
                     continue
                 for action in record["manifest"]["actions"]:
                     if action["id"]==action_id:
+                        if action['core_action'] in _APP_TARGETS:
+                            query=arguments.get('query')
+                            if (set(arguments)!={'query'} or not isinstance(query,str)
+                                    or not 1 <= len(query.strip()) <= 160
+                                    or any(ord(c)<32 for c in query)):
+                                raise CapabilityRejected('Indica solo il nome del programma richiesto.')
+                            return ResolvedCapability(action_id=action_id,
+                                handler='program_apps',target=query.strip())
                         if action["core_action"] in _FILE_TARGETS:
                             from file_access.service import validate_arguments
                             operation=action["core_action"].split(".")[1]
@@ -417,3 +446,4 @@ class AddonManager:
                 if any(a["id"]==action_id for a in record["manifest"]["actions"]):
                     return True
             return False
+

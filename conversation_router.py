@@ -97,6 +97,11 @@ def build_conversation_prompt(
                                 telegram_send_ready=telegram_send_ready, brief=True)
             + ". "
         )
+    if any(a.get('id')=='addon.programmi_app.avvia' for a in addon_actions):
+        prompt += (' Programmi e app: avvia una app scelta localmente con '
+                   'addon.programmi_app.avvia e arguments.query=nome o richiamo richiesto. '
+                   'Il locale risolve nomi e permessi; mai percorsi, script o AUMID. '
+                   'Negazioni o domande informative non chiedono avvio. ')
     if any(str(a.get("id","")).startswith("addon.accesso_file.") for a in addon_actions):
         prompt += (" Accesso file attivo: cerca nelle cartelle autorizzate del PC, non solo Download. "
                    "cerca/localizza usano arguments.query; cerca accetta scope facoltativo; "
@@ -312,3 +317,4 @@ def _search_scope_question(utterance: str) -> str:
     if not search or re.search(r"\b(?:(?:nel|con il|usando il) browser|su internet|sul web|online|in rete|su google|su bing)\b", text, re.I):
         return ""
     return "Vuoi cercare sul PC oppure su Internet?"
+

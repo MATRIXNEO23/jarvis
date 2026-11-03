@@ -30,3 +30,4 @@ class ProgramGatewayAcceptance(unittest.TestCase):
    self.assertEqual((result.handler,result.target),('program_apps','Netflix'))
    with self.assertRaises(ValueError):
     manager.resolve('addon.programmi_app.avvia',{'query':'Netflix','path':'cmd.exe'})
+

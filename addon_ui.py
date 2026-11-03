@@ -142,8 +142,16 @@ class AddonSettingsWindow:
             self._error(exc)
 
     def configure(self):
+        if self._selected() == 'programmi_app':
+            try:
+                from program_apps.ui import ProgramSettings
+                ProgramSettings(self.window,self.manager.program_service,on_change=self.on_change)
+            except (ImportError,OSError,ValueError) as exc:
+                self._error('Programmi e app non disponibile: '+str(exc)+
+                            '. Reinstalla la cartella program_apps dal pacchetto completo.')
+            return
         if self._selected() != "accesso_file":
-            self.status.set("Seleziona Accesso file; le altre add-on non hanno opzioni cartelle.")
+            self.status.set("Seleziona un’add-on con configurazione disponibile.")
             return
         try:
             from file_access.ui import FolderSettings
@@ -169,3 +177,4 @@ class AddonSettingsWindow:
             self.on_change()
         except (AddonError,OSError,ValueError) as exc:
             self._error(exc)
+

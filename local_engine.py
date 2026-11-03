@@ -33,6 +33,7 @@ class TaskResult:
     explain: bool = False
     spoken_message: str | None = None
     file_listing: dict | None = None
+    program_listing: dict | None = None
 
 
 class LocalEngine:
@@ -41,6 +42,7 @@ class LocalEngine:
     def __init__(self, *, download_dir: Path | None = None,
                  db_path: Path | None = None, windows: bool | None = None):
         self.file_access = None
+        self.program_apps = None
         self.file_access_blocked = False
         self.download_dir = Path(download_dir) if download_dir else Path.home() / "Downloads"
         self.db_path = Path(db_path) if db_path else default_path().with_name("tasks.db")
@@ -104,12 +106,18 @@ class LocalEngine:
                                            "Comando troppo lungo (massimo 300 caratteri)."))
         if " ".join(request.casefold().strip(" .!?").split()) in ("aiuto","comandi","help","cosa puoi fare","cosa sai fare"):
             extra = ("\n"+self.file_access.commands()) if self.file_access is not None else ""
+            if self.program_apps is not None:
+                extra += '\n'+self.program_apps.commands()
             return self._record(TaskResult(uuid4().hex,"help","completed",self.available_commands(
                 files_enabled=bool(self.file_access is not None and self.file_access.available()))+extra))
         if self.file_access_blocked and request.casefold().startswith(
                 ("cerca file ","mostra download","elenca download","apri download","apri disco locale c")):
             return self._record(TaskResult(uuid4().hex,"files","rejected",
                 "Accesso file incompleto: reinstalla la cartella file_access dal pacchetto e riavvia Jarvis."))
+        if self.program_apps is not None:
+            parsed = self.program_apps.parse_command(request)
+            if parsed is not None:
+                return self.execute_program(*parsed)
         if self.file_access is not None and self.file_access.enabled():
             parsed = self.file_access.parse_command(request)
             if parsed is not None:
@@ -149,6 +157,14 @@ class LocalEngine:
         except (OSError, ValueError, sqlite3.Error) as exc:
             return self._record(TaskResult(uuid4().hex, action, "failed",
                                            "Operazione non riuscita: " + str(exc)[:350]))
+
+    def execute_program(self, operation, arguments):
+        if self.program_apps is None:
+            return self._record(TaskResult(uuid4().hex,'program_apps','rejected',
+                'Programmi e app non disponibile: reinstalla program_apps dal pacchetto completo.'))
+        result = self.program_apps.execute(operation,arguments)
+        return self._record(TaskResult(uuid4().hex,'program_apps',result.status,
+            result.message,spoken_message=result.message,program_listing=result.listing))
 
     def execute_file(self, operation, arguments, refinement_token=None):
         if self.file_access is None:
@@ -264,3 +280,4 @@ class LocalEngine:
         with self._connection() as db:
             rows = db.execute("SELECT action, status FROM tasks ORDER BY rowid DESC LIMIT 10").fetchall()
         return "Ultime attività:\n" + ("\n".join(f"{action}: {status}" for action, status in rows) if rows else "Nessuna")
+

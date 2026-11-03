@@ -22,6 +22,8 @@ def build(source: Path, destination: Path) -> Path:
                     source/'LEGGIMI-ACCESSO-FILE.txt',
                     *[p for p in (source/'file_access').iterdir()
                       if p.is_file() and p.suffix in ('.py','.ps1','.jaddon','.md')],
+                    *[p for p in (source/'program_apps').iterdir()
+                      if p.is_file() and p.suffix in ('.py','.ps1','.jaddon','.md')],
                     source/'examples/addons/DiagnosticaSistema.jaddon'})
     commit = os.environ.get('JARVIS_SOURCE_COMMIT') or subprocess.check_output(
         ['git','rev-parse','HEAD'], cwd=source, text=True).strip()
@@ -58,3 +60,4 @@ def build(source: Path, destination: Path) -> Path:
 if __name__ == '__main__':
     import sys
     build(Path(__file__).resolve().parents[1],Path(sys.argv[1]))
+
