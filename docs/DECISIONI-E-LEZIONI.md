@@ -1,3 +1,11 @@
+## PC004 — Aggiorna elenco provato, nessuna app trovata, 3 novembre2026
+
+L’utente conferma di aver premuto Aggiorna elenco senza trovare alcuna applicazione. La domanda precedente sull’uso del pulsante è risolta: non ripeterla. Restano da acquisire il messaggio finale sotto i pulsanti (elenco0,errore o attività in corso) e l’esito tecnico del provider; non attribuire ancora la causa alla sola mancanza di AppsFolder.
+
+Tracciato il codice004: refresh→_start→service.refresh_catalog→native.discover→windows_apps.ps1→JSON→persist→reload. Il rilevamento non è bloccato dall’add-onOFF. _start mostra gli OSError/ValueError in basso come «Operazione non completata:…»; native.discover ha timeout60s e vari errori generici. Servono quelle parole esatte per distinguere errore del processo,timeout,payload o catalogo vuoto; non chiedere all’utente di cercare eseguibili né di scegliere un algoritmo. La fonte diretta AppsFolder resta un’integrazione minima proposta e ancora non implementata.
+
+Nessun runtime cambiato,nessun test o nuova build. Prossimo riscontro PC: testo esatto della riga sotto Aggiorna elenco dopo il tentativo,oppure foto completa della finestra Jarvis. Poi riproduzione mirata Windows e correzione nel componente esistente. Le162 voci Explorer osservate non sono una misura del catalogo letto dal provider004.
+
 ## Riscontro PC004 — Applications presente, catalogo Jarvis vuoto, 3 novembre2026
 
 L’utente mostra Applications aperta con shell:AppsFolder:162 elementi; la configurazione Jarvis sotto indica0 applicazioni e invita ad Aggiorna elenco. Non è ancora noto se quel pulsante sia stato premuto né l’esito: non diagnosticare il rilevamento fallito dalla sola schermata.
