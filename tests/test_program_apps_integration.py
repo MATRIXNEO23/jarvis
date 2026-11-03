@@ -18,6 +18,7 @@ class ProgramIntegrationTests(unittest.TestCase):
     save=service_tests.ProgramServiceTests.save
 
     def environment(self):
+        from desktop_dictation import dictation_voice_action
         tree=ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
         main=next(node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name=='main')
         self.received=[]
@@ -32,7 +33,8 @@ class ProgramIntegrationTests(unittest.TestCase):
             pending_project_name=False,pending_project_rename_id=None,pending_project_trash_id=None,
             active_project_id=None,busy_local=False,write_line=lambda text:None,submit_local=submit,
             request=request,reconcile_document_session=lambda **kw:None,
-            try_telegram_voice_send=lambda text:False,parse_simple_save=lambda text:None)
+            try_telegram_voice_send=lambda text:False,parse_simple_save=lambda text:None,
+            dictation_voice_action=dictation_voice_action)
         for name in ('try_program_command','try_file_command','send_console_input'):
             node=copy.deepcopy(next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name==name))
             node=GlobalCallbacks().visit(node)

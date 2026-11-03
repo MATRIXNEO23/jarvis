@@ -58,7 +58,7 @@ def protected(text):
         or project_reserved or parse_preference_intent(text)
         or diagnostic_request(text) or parse_telegram_send_intent(text) or
         parse_simple_save(text) is not None or
-        classify_document_choice(text,pending=False) in ('save','discard') or
+        classify_document_choice(text,pending=True) in ('save','discard','cancel') or
         re.search(r'\b(file|cartella|cartelle|documento|documenti|blocco note|notepad|'
                   r'calcolatrice|calc|esplora risorse|esplora file|browser|download|'
                   r'disco locale|unità|unita|progett[oi]|timer|promemoria|telegram|dettatura)\b', normalized(text)) or

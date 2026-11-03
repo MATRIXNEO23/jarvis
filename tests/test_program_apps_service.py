@@ -57,8 +57,9 @@ class ProgramServiceTests(unittest.TestCase):
         for phrase in ['apri blocco note','avvia calcolatrice','non avviare Netflix',
                        'attiva dettatura','disattiva dettatura','manda un messaggio a Mario',
                        'salva','salva e chiudi','scarta le modifiche']:
-            with self.assertRaises(ValueError):
-                self.save({self.mail:phrase})
+            with self.subTest(phrase=phrase):
+                with self.assertRaises(ValueError):
+                    self.save({self.mail:phrase})
 
     def test_conflicting_alias_or_existing_name_is_rejected_without_losing_saved_preferences(self):
         before=self.apps.path.read_bytes()
