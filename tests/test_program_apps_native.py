@@ -60,7 +60,8 @@ class NativeProgramTests(unittest.TestCase):
         from program_apps.native import discover,_activate_store
         apps,warnings=discover()
         candidates=[app for app in apps if app.kind=='store' and app.target.startswith(
-            ('Microsoft.WindowsCalculator_','Microsoft.WindowsTerminal_','Microsoft.WindowsNotepad_'))]
+            ('Microsoft.WindowsCalculator_','Microsoft.WindowsTerminal_','Microsoft.WindowsNotepad_',
+             'windows.immersivecontrolpanel_'))]
         if not candidates:
             self.skipTest('Runner has no known disposable Store app; successful Store activation remains unverified')
         app=candidates[0]
