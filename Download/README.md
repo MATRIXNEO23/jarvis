@@ -1,4 +1,13 @@
-> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **001**, verificato automaticamente su Windows; collaudo Pavilion pendente. Base PC confermata **Timer Audio Fix2, b936879**, preservata.
+> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **002**, verificata su Windows; collaudo PC pendente. Build001 e base PC b936879 conservate.
+
+## Build 002 — Contesto nella conversazione
+
+[Scarica Jarvis-002.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-002.zip)
+
+Include la correzione del contesto quando indichi una cartella nel dialogo e rispondi alla domanda successiva. Estrai in una cartella nuova e avvia avvia_jarvis.bat; profilo di prova e impostazioni esistenti conservati. Test Windows, pacchetto estratto e avvio/chiusura UI verificati; GPT/account/microfono/Pavilion da collaudare. Limite20 risultati e altri rilievi ancora aperti; nessuna nuova capacità di apertura file.
+
+Sorgenti: [6f48ad1](https://github.com/MATRIXNEO23/jarvis/tree/6f48ad1c0c2d0d55363fb8ec5b7b1ced2ad37e5f). [Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41650952370). SHA-256: `43cc2258c684c8b6470263ffa43c13b5111e938ffbcbcffc59ef3c9f23617cb6`.
+
 
 ## Build 001 — Continuità e ricerca
 
