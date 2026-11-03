@@ -1,3 +1,6 @@
+## Riscontro PC — 3 novembre 2026
+L'utente conferma: «i tasti funzionano», riferito ai nuovi pulsanti MIC/GPT/MEMORIA della003 appena consegnata. È un riscontro positivo su questi controlli; non verifica tutte le funzioni della build, account/audio in ogni modalità, DPI o prestazioni Pavilion. Base storica e pacchetti precedenti conservati.
+
 # Consegna Jarvis003 — interruttori rapidi
 
 [Scarica Jarvis-003.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-003.zip).
