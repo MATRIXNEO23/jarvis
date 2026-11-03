@@ -1,3 +1,6 @@
+## Stato aggiornato — 3 novembre 2026
+Progettazione e implementazione autorizzate dall'utente; codice nel ramo feature/program-apps-20261103, source67ca39c4af21c91a12a6306b1ed967f6d83bbedd,542 test Windows per Python3.11/3.12. [Rapporto di verifica](PROGRAMMI-APP-IMPLEMENTAZIONE-20261103.md). Nessun nuovo ZIP o rilascio004;003 resta il download corrente. I requisiti e gli stati di discussione sotto restano la specifica e la cronologia, non lo stato esecutivo attuale.
+
 # Proposta — add-on Programmi e app, 3 novembre 2026
 
 Stato: soluzione proposta in risposta alla richiesta dell'utente; nessun codice prodotto, test Windows o build nuova. La003 resta il download corrente. L'utente riferisce «i tasti funzionano»: conferma limitata ai nuovi pulsanti della003, non a tutte le funzioni o prestazioni.
