@@ -85,3 +85,27 @@ class IndexPriorityTests(unittest.TestCase):
         self.assertEqual(result.status, 'rejected')
         self.assertEqual(len(queried), 1)
         self.assertFalse(self.files._results)
+
+    def test_overlapping_roots_do_not_report_a_limit_for_duplicate_or_excluded_hits(self):
+        nested = self.docs / 'Archivio'
+        nested.mkdir()
+        self.files.policy.configure([(self.docs, True), (nested, True), (self.hidden, False)])
+        hits = []
+        for number in range(20):
+            path = nested / ('cercato-'+str(number)+'.txt')
+            path.write_text('fixture', encoding='utf-8')
+            hits.append(path)
+        excluded = self.hidden / 'cercato-nascosto.txt'
+        excluded.write_text('private fixture', encoding='utf-8')
+        self.files.index = lambda *args: (hits+[excluded], 'Indice controllato')
+        result = self.engine.execute_file('search', {'query':'cercato'})
+        self.assertEqual(result.status, 'completed', result.message)
+        self.assertEqual(len(self.files._results), 20)
+        self.assertEqual(result.file_listing['coverage']['index_queried'], 2)
+        self.assertFalse(result.file_listing['coverage']['index_limited'])
+        extra = nested / 'cercato-extra.txt'
+        extra.write_text('fixture', encoding='utf-8')
+        hits.append(extra)
+        result = self.engine.execute_file('search', {'query':'cercato'})
+        self.assertEqual(len(self.files._results), 20)
+        self.assertTrue(result.file_listing['coverage']['index_limited'])
