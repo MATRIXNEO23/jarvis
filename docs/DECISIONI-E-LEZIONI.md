@@ -1,3 +1,9 @@
+## 3 novembre 2026 — V01: prove software e riconoscimento acustico separati
+**Fatti:** 13 nuove prove Windows nel file tests/test_voice_corrections_review.py, source deefe325; run 41568844286 SUCCESS con 484 test per Python 3.11/3.12. Pannello Tk, SQLite e caricamento da processo nuovo reali; ingressi trascritti e destinatari GPT/locali controllati. Nessun difetto runtime dimostrato nei casi di correzione provati.
+**Errore di collaudo e soluzione verificata:** prima run 41568571499 verde con due avvisi ttk ThemeChanged dopo distruzione Tk; svuotamento eventi idle nel teardown del solo test. Log finali senza gli avvisi; nessun cambio runtime.
+**Lezione:** il default memory_enabled=false non prova la configurazione personale e non va presentato come causa. Correzioni testuali provate non dimostrano miglioramento acustico. UI attuale resetta tutte le regole e non ne elimina una singola; nessuna nuova funzione autorizzata implicitamente.
+**Prossima verifica:** audio rappresentativo e riferimento testuale per la precisione STT, poi microfono/risorse target; niente fine-tuning o nuovo riconoscitore senza scelta concordata. [Esiti completi](BUILD-REVIEW-COMPLETA-20261103.md) e [evidenza](evidence/voice-corrections-v01-20261103.json).
+
 ## 3 novembre 2026 — distinguere correzioni vocali personali e fine-tuning
 **Problema:** l'utente riferisce trascrizioni diverse dal parlato; la discussione sulle correzioni durante l'uso è stata estesa impropriamente a un addestramento acustico. L'utente esclude il fine-tuning, dato il PC disponibile.
 **Decisione:** aggiungere V01 alla review esistente per controllare riconoscimento italiano e correzioni personali già presenti, inclusa persistenza al riavvio; nessun nuovo modello o sistema parallelo.
