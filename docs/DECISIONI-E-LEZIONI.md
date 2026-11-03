@@ -1,3 +1,12 @@
+## R01 riprodotto, correzione in verifica Windows — 3 novembre 2026
+Il test-only c03920eb71a1b1bee8a880153bfb1530c8fd9097 ha riprodotto la perdita di file_results nel prompt: run41601963559, Windows3.11/3.12 falliti; log job125802582365 con489test,3fallimenti/2errori nei nuovi casi, chiave e nomi assenti. Nessun import/fixture fallito; revoca/disattivazione già passa. Non è diagnosi universale del PC.
+Candidato c2964c7ce3e68f2aaef77fa5eb25e99ff24d5851, feature/fix-file-search-20261102; [run41603248458](https://github.com/MATRIXNEO23/jarvis/actions/runs/41603248458) in corso. Modificati jarvis_persona.py e conversation_router.py, sette nuovi test in tests/test_file_context_delivery.py; [scheda nel source](https://github.com/MATRIXNEO23/jarvis/blob/c2964c7ce3e68f2aaef77fa5eb25e99ff24d5851/docs/CONTINUITA-R01-20261103.md).
+Review indipendente iniziale ha rifiutato il candidato parziale: ora corretti prenotazione memoria rispetto agli esempi catalogo, priorità ultimo scambio/preferenze/progressi, unità UTF16. Ricontrollo mirato del revisore in corso; NON dichiarare ancora riuscita la correzione. Callback/servizio/prompt reali con filesystem temporaneo Windows, modello/microfono/account non provati. R02/reset, R03 e resto R04 separati; scansione parziale e STT restano aperti. Nessuna build/pacchetto/nuovo modello o add-on.
+Prossimo controllo: esito e log della run41603248458 e recheck indipendente; correggere eventuali difetti, poi aggiornare evidenze. Non ripetere installazione skill o V01.
+
+
+Lezione: verificare il payload al consumo, non soltanto che il produttore aggiunga un campo; confrontare unità del budget con il bridge. Un catalogo valido non deve consumare prima tutto lo spazio destinato alla richiesta/contesto. Verificare che una correzione del compattatore non elimini l'ultimo scambio o preferenze/progressi, e non attribuire al pacchetto PC codice non distribuito.
+
 ## 3 novembre 2026 — V01: prove software e riconoscimento acustico separati
 **Fatti:** 13 nuove prove Windows nel file tests/test_voice_corrections_review.py, source deefe325; run 41568844286 SUCCESS con 484 test per Python 3.11/3.12. Pannello Tk, SQLite e caricamento da processo nuovo reali; ingressi trascritti e destinatari GPT/locali controllati. Nessun difetto runtime dimostrato nei casi di correzione provati.
 **Errore di collaudo e soluzione verificata:** prima run 41568571499 verde con due avvisi ttk ThemeChanged dopo distruzione Tk; svuotamento eventi idle nel teardown del solo test. Log finali senza gli avvisi; nessun cambio runtime.
