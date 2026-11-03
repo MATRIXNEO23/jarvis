@@ -191,8 +191,9 @@ def build_conversation_prompt(
     tone = " " + style_instruction(utterance)
     available = 5000 - prompt_units(prompt) - prompt_units(current) - prompt_units(memory_header) - prompt_units(tone) - 3
     if memory_context and available >= 85:
-        prompt += memory_header + compact_memory(
-            memory_context, min(available, 850)) + "."
+        memory = compact_memory(memory_context, min(available, 850))
+        if any(json.loads(memory).values()):
+            prompt += memory_header + memory + "."
     prompt += tone + current
     if prompt_units(prompt) > 5000:
         raise ConversationRejected("La richiesta supera il limite di contesto GPT.")
@@ -317,4 +318,5 @@ def _search_scope_question(utterance: str) -> str:
     if not search or re.search(r"\b(?:(?:nel|con il|usando il) browser|su internet|sul web|online|in rete|su google|su bing)\b", text, re.I):
         return ""
     return "Vuoi cercare sul PC oppure su Internet?"
+
 

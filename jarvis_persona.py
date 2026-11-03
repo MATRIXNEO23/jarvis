@@ -281,6 +281,7 @@ def build_chat_prompt(message: str, memory_context: str = "",
     if room >= 100:
         context = compact_memory(memory_context, min(room, 850))
         candidate = PERSONA + status + CONTEXT_RULE + "Contesto (JSON): " + context + ". " + instruction
-        if prompt_units(candidate) <= MAX_GPT_PROMPT:
+        if any(json.loads(context).values()) and prompt_units(candidate) <= MAX_GPT_PROMPT:
             return candidate
     return primary
+

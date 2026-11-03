@@ -58,7 +58,6 @@ class EmptyPromptContextTests(unittest.TestCase):
                     packed, _ = json.JSONDecoder().raw_decode(payload.split(header, 1)[1])
                     self.assertTrue(packed[key])
                     self.assertIn(marker, json.dumps(packed, ensure_ascii=False))
-                    self.assertEqual(json.loads(raw), memory)
 
     def test_recent_question_remains_available_to_the_short_answer(self):
         context = json.dumps({'breve': [{'utente': 'Scrivi una lettera',

@@ -89,7 +89,8 @@ class DialogueContinuityTests(unittest.TestCase):
     def test_explicit_persona_cannot_fake_memories_or_tool_execution(self):
         self.assertIn("Non fingere ricordi",PERSONA)
         typed=build_chat_prompt("Ti ricordi la mail inviata?",
-                                memory_context="{}")
+            memory_context=json.dumps({'permanente': {'related': [
+                {'source': 'reported_action', 'fact': 'Email inviata secondo la conversazione'}]}}))
         self.assertIn("non dimostra che un'email",typed)
 
     def test_large_typed_message_is_rejected_not_silently_shortened(self):
@@ -99,3 +100,4 @@ class DialogueContinuityTests(unittest.TestCase):
 
 if __name__=="__main__":
     unittest.main()
+

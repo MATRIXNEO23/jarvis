@@ -2,7 +2,7 @@ name: Empty prompt context regression (Windows)
 on:
   push:
     branches: ['fix/empty-prompt-context-20261104']
-    paths: ['tests/test_empty_prompt_context.py', '.github/workflows/empty-context.yml']
+    paths: ['tests/test_empty_prompt_context.py', 'jarvis_persona.py', 'conversation_router.py', '.github/workflows/empty-context.yml']
 permissions:
   contents: read
 jobs:
@@ -10,7 +10,80 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 3
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m unittest discover -s tests -p test_empty_prompt_context.py -v
+      - name: Compare actual pre-change and current payloads without inference
+        shell: python
+        run: |
+          import json, subprocess, sys, types
+          from pathlib import Path
+          sys.path.insert(0, str(Path.cwd()))
+          import jarvis_persona as current_persona
+          import conversation_router as current_router
+          from live_capabilities import snapshot_capabilities, capability_status_prompt
+          base = 'c08317da300adfbfc7b5896ce1f8706e374b33aa'
+          def baseline_module(name, path):
+              module = types.ModuleType(name)
+              module.__file__ = str(Path(path).resolve())
+              sys.modules[name] = module
+              source = subprocess.check_output(['git', 'show', base + ':' + path], text=True, encoding='utf-8')
+              exec(compile(source, 'baseline-' + path, 'exec'), module.__dict__)
+              return module
+          old_persona = baseline_module('_baseline_persona', 'jarvis_persona.py')
+          sys.modules['jarvis_persona'] = old_persona
+          try:
+              old_router = baseline_module('_baseline_router', 'conversation_router.py')
+          finally:
+              sys.modules['jarvis_persona'] = current_persona
+          status = capability_status_prompt(snapshot_capabilities(settings={}, has_document=False,
+              telegram_credentials=False, telegram_voice_dependencies=False, voice_stream_open=True,
+              telethon_installed=False))
+          actions = []
+          for path in ('program_apps/ProgrammiApp.jaddon', 'file_access/AccessoFile.jaddon'):
+              for action in json.loads(Path(path).read_text(encoding='utf-8'))['actions']:
+                  actions.append({'id': action['id'], 'example': action['example'][:42]})
+          rows = []
+          raw_empty = json.dumps({'breve': [], 'permanente': {'related': []}})
+          chat = json.dumps({'breve': [{'utente': 'Scrivi una lettera', 'lia': 'Quale destinatario?', 'tipo': 'clarify'}]})
+          useful = [('recent_chat', chat),
+              ('preference_only', json.dumps({'preferences': [{'key': 'response_length', 'value': 'brief', 'source': 'user_confirmed'}]})),
+              ('project_only', json.dumps({'focus': {'project': {'name': 'Progetto sintetico'}}})),
+              ('file_results_only', json.dumps({'focus': {'file_results': 'Risultati sintetici, non permessi.'}})),
+              ('evidence_only', json.dumps({'permanente': {'related': [{'source': 'verified_action', 'fact': 'File di prova salvato'}]}})),
+              ('progress_only', json.dumps({'progress': [{'title': 'Passo sintetico', 'status': 'completed', 'verified': True}]})),
+              ('question_only', json.dumps({'focus': {'pending_question': 'Quale destinatario?', 'follow_up': 'Mario'}}))]
+          for name, before_builder, after_builder in (
+                  ('voice', old_router.build_conversation_prompt, current_router.build_conversation_prompt),
+                  ('chat', old_persona.build_chat_prompt, current_persona.build_chat_prompt)):
+              for label, memory in [('no_raw_context', ''), ('empty_profile_context', raw_empty), *useful]:
+                  kwargs = dict(memory_context=memory, runtime_info=status)
+                  before = before_builder('come stai', **kwargs)
+                  after = after_builder('come stai', **kwargs)
+                  if label not in ('no_raw_context', 'empty_profile_context'):
+                      assert before == after, (name, label, 'Useful payload changed')
+                  rows.append(dict(route=name, scenario=label, before=current_persona.prompt_units(before),
+                      after=current_persona.prompt_units(after), saved=current_persona.prompt_units(before)-current_persona.prompt_units(after),
+                      identical=before == after))
+          for label, memory in [('empty', raw_empty), ('recent', chat)]:
+              kwargs = dict(memory_context=memory, runtime_info=status, addon_actions=tuple(actions))
+              before = old_router.build_conversation_prompt('come stai', **kwargs)
+              after = current_router.build_conversation_prompt('come stai', **kwargs)
+              if label == 'recent':
+                  assert before == after
+              rows.append(dict(route='voice_apps_files', scenario=label,
+                  before=current_persona.prompt_units(before), after=current_persona.prompt_units(after),
+                  saved=current_persona.prompt_units(before)-current_persona.prompt_units(after), identical=before == after))
+          result = dict(source=__import__('os').environ['GITHUB_SHA'], baseline=base,
+              platform='Windows Python 3.12', unit='UTF-16 text units, NOT model tokens or personal quota',
+              model_requests=0, user_data_access=False, rows=rows)
+          Path('empty-context-measurements.json').write_text(json.dumps(result, indent=2), encoding='utf-8')
+          print('EMPTY_CONTEXT_MEASUREMENTS=' + json.dumps(result))
+      - uses: actions/upload-artifact@v4
+        with:
+          name: empty-context-measurements
+          path: empty-context-measurements.json
+          retention-days: 30

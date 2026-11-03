@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'feature/program-apps-20261103', 'fix/gpt-voice-addressing-20261103']
+    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'feature/program-apps-20261103', 'fix/gpt-voice-addressing-20261103', 'fix/empty-prompt-context-20261104']
     paths:
       - '**.py'
       - '**.mjs'
@@ -253,4 +253,5 @@ jobs:
                   time.sleep(3)
           print('PUBLISHED_DOWNLOAD_VERIFIED='+json.dumps(dict(archive=name,url=prefix+'Download/'+name,
               source_commit=sha,sha256=details['sha256'],bytes=len(data),build_number=4,previous_build_preserved=True)))
+
 
