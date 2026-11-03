@@ -46,8 +46,8 @@
 
 - [x] Red Windows: run41607523991/sourcec558900, tre fallimenti di comportamento su 499 test. due radici reali, risultato nella seconda, budget scansione minimo; dimostrare indice saltato. Prova positiva con os.scandir proibito; revoca/cancel e nota locate separati.
 - [x] Correzione minima: fase indice per tutte le radici autorizzate prima di qualunque scansione. Se ci sono risultati utili, mostrarli dichiarando copertura indice non necessariamente completa; se nessuno, fallback finito esistente. Conservare note provider, policy, deduplica e 20 risultati.
-- [ ] Green Windows dei casi mirati e suite, più probe nativo esistente; nessuna installazione o modifica dell'indice sul PC utente.
-- [ ] Review del diff esatto, checkpoint di codice/evidenze e documentazione, nessuna consegna ZIP implicita.
+- [x] Green finale: run41609193500/source9df2229,500 test per Python3.11/3.12 e probe nativo PASS, nessuna modifica sul PC utente.
+- [x] Review indipendente e recheck mirato del rilievo sui duplicati: nessun blocco statico residuo. Evidenze/checkpoint remoto conservati, nessuna consegna ZIP.
 
 ## Limiti e recupero
 

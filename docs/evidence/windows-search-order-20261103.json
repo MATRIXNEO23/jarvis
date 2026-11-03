@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-03",
+  "repository": "MATRIXNEO23/jarvis",
+  "branch": "feature/fix-file-search-20261102",
+  "source_commit": "9df2229f05b94dbefd099f228151d042046f2701",
+  "run": {
+    "id": 41609193500,
+    "url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/41609193500",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "jobs": [
+    {
+      "id": 125826514187,
+      "python": "3.12.10",
+      "tests": 500,
+      "summary": "Ran 500 tests in 134.659s",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Python syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "GPT JavaScript syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unit tests (no external login)",
+          "conclusion": "success"
+        },
+        {
+          "name": "PowerShell setup syntax (Windows)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native Windows file access probe",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows Search service observation (CI only)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Live Windows Search integration (isolated CI only)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build operational candidate (Windows only)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify extracted candidate on Windows",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "native_probe": {
+        "native_index_verified": true,
+        "runtime_adapter": "indexed_candidates",
+        "scope_changes": false,
+        "global_reindex": false,
+        "personal_pc_verified": false,
+        "checks": {
+          "available_empty_query": "passed",
+          "created_file_found": "passed",
+          "other_scope_empty": "passed",
+          "rename_observed": "passed",
+          "deletion_observed": "passed",
+          "created_folder_found": "passed",
+          "folder_other_scope_empty": "passed",
+          "folder_deletion_observed": "passed"
+        },
+        "initial_service": {
+          "running": false,
+          "start_mode": "Disabled"
+        },
+        "service_restored": true,
+        "fixture_removed": true
+      }
+    },
+    {
+      "id": 125826514658,
+      "python": "3.11.9",
+      "tests": 500,
+      "summary": "Ran 500 tests in 87.462s",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Python syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "GPT JavaScript syntax",
+          "conclusion": "success"
+        },
+        {
+          "name": "Unit tests (no external login)",
+          "conclusion": "success"
+        },
+        {
+          "name": "PowerShell setup syntax (Windows)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Native Windows file access probe",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows Search service observation (CI only)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Live Windows Search integration (isolated CI only)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build operational candidate (Windows only)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify extracted candidate on Windows",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "native_probe": null
+    }
+  ],
+  "cycles": [
+    {
+      "change": "search phrase normalization",
+      "red_source": "e714e4dc20b28546d531306afed22754877eb2b3",
+      "red_run": 41604955975,
+      "tests": 494,
+      "failures": 4,
+      "green_source": "93a7a82e0c7a0b875a3a76be1ec54735abed6650",
+      "green_run": 41606786155,
+      "green_tests": 494
+    },
+    {
+      "change": "index priority and feedback",
+      "red_source": "c55890031a4598bf02eaf541c1a45590a02efb03",
+      "red_run": 41607523991,
+      "tests": 499,
+      "failures": 3,
+      "green_source": "3c44ef4eb794671b692fcc5445708d5d6a556b14",
+      "green_run": 41608054433,
+      "green_tests": 499
+    },
+    {
+      "change": "duplicate index result limit",
+      "red_source": "ef08731268effdc79efce83100f87ca3d944ce56",
+      "red_run": 41608700590,
+      "tests": 500,
+      "failures": 1,
+      "green_source": "9df2229f05b94dbefd099f228151d042046f2701",
+      "green_run": 41609193500,
+      "green_tests": 500
+    }
+  ],
+  "reviews": {
+    "parser": "Independent read-only review of parser diff against e714e4d: no blocking static defect. Scope: preposition normalization, scope extraction, quoted literals and other command precedence. No Linux execution. Minor additional phrase coverage suggestions were non-blocking.",
+    "index": "Independent read-only review of index priority diff: no critical/important static defect; found minor false index_limited on duplicate/excluded hits after20. Regression reproduced in run41608700590 and corrected in9df2229. Targeted recheck confirmed filtering/dedup before overflow,20-result bound and test sufficiency; no remaining static block. Reviewer did not execute app/tests."
+  },
+  "runtime_files_changed": [
+    "file_access/service.py"
+  ],
+  "new_runtime_dependencies": false,
+  "linux_execution": false,
+  "personal_pc": false,
+  "live_microphone": false,
+  "live_model": false,
+  "packaging": false,
+  "published_zip_unchanged": "Jarvis-Accesso-File-0.1.0-20261101-d06e233.zip",
+  "open_issues": [
+    "R02 premature context reset before GPT",
+    "R03 unverified operation claims",
+    "Vosk transcription and wake names",
+    "personal Windows index coverage/performance",
+    "associated-app file opening choice unanswered"
+  ]
+}
