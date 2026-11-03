@@ -1,20 +1,33 @@
 # Richiamo vocale e controllo consumi — 3 novembre 2026
 
-L’utente conferma parlato ambientale raccolto involontariamente durante la notte con microfono lasciato acceso e quota esaurita. Richiede il nome all’inizio di ogni richiesta: «Jarvis, attivami questo». Non è autorizzata una finestra di conversazione libera dopo il solo richiamo. Richiede inoltre un controllo approfondito dei prompt per individuare risparmi; NON autorizza ancora a snellirli.
+L’utente conferma che Jarvis raccoglieva discorsi ambientali non rivolti a lui, con cuffie appoggiate e microfono dimenticato acceso; riferisce quota esaurita durante la notte. Richiede «Jarvis» all’inizio di ogni richiesta, senza necessità di «Ehi». Richiede inoltre un controllo approfondito dei prompt: NON chiede ancora di snellirli.
 
-Base corretta: build 004, ramo build/jarvis-004, checkpoint 765b5024650bf763f3869e222e14e38ae346f43a. Correzione isolata in fix/gpt-voice-addressing-20261103, senza esperimento quota/App Server.
+## Modifica e confini
 
-Causa nel codice: il tasto MIC seleziona GPT_CONVERSATION, il cui ingresso voice_text non usa WakeWordGate. Ogni frase irrisolta passa al modello o alla coda, anche senza comandi. Il filtro locale esiste in CONTINUOUS ma non protegge il normale MIC GPT. Non sono disponibili log/contatori dell’episodio: causa del percorso verificata, consumo personale non misurato.
+Base build004, checkpoint 765b5024650bf763f3869e222e14e38ae346f43a. Ramo correttivo fix/gpt-voice-addressing-20261103; source finale d76efd46d233f914b4a8a8f69535c9f82ace053d. Nessun esperimento quota/App Server incluso.
 
-Piano autorizzato: riproduzione Windows con trascrizioni controllate; richiamo sul testo grezzo prima di correzioni, log, azioni e coda; nome in ogni richiesta sia in conversazione GPT sia in Ascolto continuo; nessun cambio automatico microfono né cancellazione memoria. Il solo «Jarvis» non autorizza la frase seguente. Testo digitato e pressione manuale restano intenzionali. Riutilizzare WakeWordGate senza servizi/modelli aggiuntivi. Aggiornare istruzioni UI; regressione Windows 3.11/3.12. Nessuna build/pubblicazione automatica.
+Il normale MIC selezionava GPT_CONVERSATION, che ignorava il WakeWordGate. Ogni frase non risolta localmente poteva partire verso GPT o riempire la coda di tre frasi. Correzione nel componente esistente: WakeWordGate con require_name, applicato alla trascrizione grezza prima di correzioni apprese, log, campione voce, azioni locali e coda. Regola identica anche in CONTINUOUS, eliminando le eccezioni per risposte a dialoghi Telegram/app/file.
 
-Audit prompt separato: seguire voce→router→client→bridge, misurare sezioni con dati sintetici e senza chiamate modello; distinguere unità UTF-16/token reali/quota; controllare memoria, catalogo, richieste successive, output e retry. Documentare risparmi possibili, rischi e priorità prima di qualunque riduzione runtime.
+«Jarvis, apri Netflix» e «Jarvis, dimmi…» sono richieste; «Ehi Jarvis» resta facoltativo. Il solo nome non autorizza una frase successiva. Anche «Jarvis, sì», «Jarvis, confermo» e «Jarvis, il secondo» richiedono il nome. Il nome citato nel mezzo di una conversazione non attiva comandi. Testo digitato, pressione per parlare e dettatura intenzionalmente attivata mantengono i loro usi. Nessun cambio automatico di modalità microfono, cancellazione memoria, nuovo processo, dipendenza o modello per il filtro.
 
-Red Windows osservato: source 6c0b1a6, run 41732555641, 8 test eseguiti, 11 asserzioni fallite per il comportamento atteso (nessun errore di fixture). 50 frasi ambientali avviano 50 richieste al confine GPT; altre frasi entrano nella coda. Trasporto modello sostituito, nessuna inferenza reale. Correzione minima applicata nei sorgenti: require_name=True nel gate esistente, controllo sul grezzo, feedback e guida aggiornati. Vecchie prove intenzionali ora pronunciano esplicitamente Jarvis. Prossimo passo: Green completo Windows 3.11/3.12; non dichiarare ancora verificata la correzione. Barra quota/App Server in pausa, nessun componente installato.
+La trascrizione Vosk resta locale; il filtro non chiama un modello. Una frase indirizzata che richiede GPT continua naturalmente a consumare quota. Un riconoscimento acustico errato come «Jarvis…» può ancora essere accettato: le prove sintetiche non certificano falsi risvegli o prestazioni Pavilion.
 
+## Prove e limiti
 
-## Regola estesa a ogni modalità di ascolto passivo
+Red iniziale: 6c0b1a6/run41732555641, 8 test, 11 asserzioni fallite, zero errori di fixture. Cinquanta frasi ambientali raggiungevano cinquanta volte il confine GPT; altre riempivano la coda. Trasporto sostituito: zero inferenze reali. Prima correzione MIC: a91aff9/run41733308463 SUCCESS, 550 test per Python3.11/3.12.
 
-Il requisito utente vale anche per Ascolto continuo: rimosse le eccezioni per risposte a dialoghi Telegram, app e selezioni file; anche queste richiedono Jarvis iniziale. Dettatura avviata manualmente e pressione per parlare restano intenzionali. Nuova riproduzione valida Windows f35a970/run41733931696: 12 test, 3 fallimenti comportamentali per vecchio Ascolto continuo (richiamo isolato arma la frase seguente, dialogo pendente scavalca richiamo, correzione agisce prima del filtro); nessun errore. La prima estensione del fixture in72bf818 mancava di dictation_voice_action, corretta prima della riproduzione valida.
+Estensione CONTINUOUS: il primo fixture72bf818 mancava del callback dictation_voice_action; corretto, senza considerare quegli errori una riproduzione. Red valido f35a970/run41733931696: 12 test, 3 fallimenti comportamentali attesi (finestra dopo solo nome, dialogo pendente senza richiamo, correzioni prima del controllo grezzo).
 
-Prima correzione normale MIC: a91aff9/run41733308463 SUCCESS, 550 test per Python3.11/3.12, sintassi/probe nativi e indice Windows live verificati; nessuna build. Ora in verifica la regola comune a entrambe le modalità. Prompt invariati: audit offline Windows41733308539 SUCCESS, zero inferenze, rapporto AUDIT-PROMPT-CONSUMI-20261103.md e misure docs/evidence/prompt-payload-audit-20261103.json. Non promettere quota risparmiata dalle misure di caratteri.
+Green finale: d76efd46d233f914b4a8a8f69535c9f82ace053d, [run41734087987](https://github.com/MATRIXNEO23/jarvis/actions/runs/41734087987) SUCCESS. Python3.11.9/job126258644816: 554 test OK in68.883s; Python3.12.10/job126258645656: 554 test OK in72.519s. Sintassi Python/Node/PowerShell, probe file nativo e indiceWindows live PASS (servizio/fixture ripristinati). Build, controlloZIP, artifact installabile e publisher SKIPPED.
+
+Dodici prove mirate: cento frasi ambientali con GPT libero/occupato, richiamo iniziale per ogni richiesta, nome isolato, correzioni che non possono inventare autorizzazione, coda, comandi locali, audio TTS, varianti/punteggiatura, vecchio ascolto continuo e dettatura intenzionale. Usati callback Jarvis reali, Tk e memoria temporanea; confine modello/azioni esterne controllato. Non usati microfono, accountGPT o desktop personali. Nessun test funzionale Linux.
+
+## Audit prompt separato
+
+[Rapporto](AUDIT-PROMPT-CONSUMI-20261103.md), [misure](evidence/prompt-payload-audit-20261103.json). Source a91aff9/run41733308539 SUCCESS: costruttori reali, Windows3.12, dati sintetici, zero inferenze. Prompt e memoria runtime NON modificati. Dimensioni UTF-16, non token o quota: domanda breve 3815; con recenti4077; programmi4595; programmi+file4913. Memoria semanticamente vuota226; sovrapposizioni stile, duplicati progetto e limiti post-generazione documentati. Nessuna promessa percentuale sulla quota, nessun cambio modello o nuovo contatore.
+
+## Consegna e ripresa
+
+Solo sorgenti corretti e prove; nessuna nuova build, ZIP o pubblicazione. La 004 installata non è aggiornata automaticamente: finché non sarà distribuita una nuova versione, spegnere MIC o GPT quando non serve per evitare il vecchio comportamento. Build soltanto su nuova richiesta esplicita e verifica del pacchetto estratto.
+
+Prossimo passo: eventuale build autorizzata con collaudo acustico sul PC; eventuale proposta di riduzione prompt da approvare separatamente partendo da blocco vuoto/stile, senza tagliare i ricordi. Barra quota/App Server restano in pausa; nessun componente installato.

@@ -1,0 +1,68 @@
+{
+  "source": "d76efd46d233f914b4a8a8f69535c9f82ace053d",
+  "branch": "fix/gpt-voice-addressing-20261103",
+  "windows_run": 41734087987,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 126258644816,
+      "python": "3.11.9",
+      "tests": 554,
+      "seconds": 68.883,
+      "conclusion": "success"
+    },
+    {
+      "id": 126258645656,
+      "python": "3.12.10",
+      "tests": 554,
+      "seconds": 72.519,
+      "conclusion": "success"
+    }
+  ],
+  "focused_tests": 12,
+  "red": {
+    "source": "6c0b1a6208c87b8b4be04944693aa3f381ba9ee4",
+    "run": 41732555641,
+    "tests": 8,
+    "assertion_failures": 11,
+    "errors": 0
+  },
+  "continuous_red": {
+    "source": "f35a970d720b6913ec69f1cab1f5f46c2b634254",
+    "run": 41733931696,
+    "tests": 12,
+    "assertion_failures": 3,
+    "errors": 0
+  },
+  "boundaries": {
+    "model": "controlled; no inference",
+    "transcripts": "synthetic",
+    "microphone": false,
+    "personal_desktop": false,
+    "personal_quota": false,
+    "pavilion_performance": false
+  },
+  "behavior": {
+    "name_required_in_each_request": [
+      "GPT_CONVERSATION",
+      "CONTINUOUS"
+    ],
+    "raw_before_corrections": true,
+    "standalone_name_opens_window": false,
+    "pending_dialog_bypass": false,
+    "manual_dictation_preserved": true,
+    "microphone_modes_unchanged": true
+  },
+  "checks": {
+    "python_syntax": "passed",
+    "node_syntax": "passed",
+    "powershell_syntax": "passed",
+    "native_file_probe": "passed",
+    "windows_search_live": "passed",
+    "windows_search_fixture_and_service_restored": true
+  },
+  "runtime_prompt_changes": false,
+  "build_created": false,
+  "publisher": "skipped",
+  "installed_004_changed": false
+}
