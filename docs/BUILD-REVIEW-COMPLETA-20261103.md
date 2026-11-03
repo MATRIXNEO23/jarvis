@@ -165,6 +165,10 @@ Il primo source test 22ab4fc/run 41568571499 aveva già 484 test riusciti per jo
 
 **Ancora da fare:** audio rappresentativo e testo atteso per misurare il riconoscimento, prova microfono e prestazioni Pavilion. Nessuna registrazione audio personale disponibile in questa verifica. Non dichiarare risolto l'errore di trascrizione o completata la precisione STT sulla base di callback simulati.
 
+### Caso vocale aggiunto prima della pausa — nome di richiamo
+L'utente riferisce «Jarvis» trascritto come «Harris» o «Garris». Nel percorso letto il WakeWordGate accetta jarvis/ehi jarvis/hey jarvis; le correzioni personali escludono i nomi di richiamo. Distinguere errore acustico a monte dal conseguente mancato abbinamento testuale; l'effetto dipende anche dalla modalità selezionata. Non è stato eseguito un nuovo test audio o modificato il gate.
+Gestire varianti nel solo richiamo è una proposta da verificare contro attivazioni indebite, non una correzione approvata o implementata. Nessuna sostituzione globale di Harris/Garris. Conservare il caso per la prossima verifica voce. Pausa richiesta; priorità di ripresa complessiva resta R01–R04.
+
 ## Correzioni già presenti nei sorgenti successivi, ma assenti dallo ZIP
 
 Il commit 8066852 contiene già interventi per ridurre il prompt/catalogo che superava il limite, conservare nome e azione nel chiarimento della ricerca, correggere l'aiuto sugli ambiti e impedire che una ricerca generica venga trattata subito come ricerca nel browser.
