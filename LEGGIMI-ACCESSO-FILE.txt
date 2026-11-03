@@ -1,4 +1,4 @@
-JARVIS — ACCESSO FILE 0.1.0 / BUILD CANDIDATA PER WINDOWS 10 x64
+JARVIS — BUILD 003 / CANDIDATA PER WINDOWS 10 x64
 
 Estrai questo ZIP in una cartella NUOVA. Avvia soltanto avvia_jarvis.bat.
 La precedente cartella di Jarvis resta disponibile per tornare alla base.
@@ -20,7 +20,15 @@ Se l'add-on non compare, Installa scegliendo file_access\AccessoFile.jaddon.
 Spunta disco/cartella, escludi eventuali sottocartelle, Salva, poi Attiva.
 Nessuna cartella viene autorizzata soltanto perché l'add-on è installato.
 
-NOVITA' DI QUESTO CANDIDATO
+NOVITA' BUILD 003 — INTERRUTTORI RAPIDI
+In alto a destra clicca MIC, GPT o MEMORIA per attivare/disattivare la
+singola funzione. Sono gli stessi controlli delle impostazioni.
+GPT NON CONNESSO: abilitato ma non ancora collegato. MIC NON ATTIVO o
+MIC PTT: selezionato senza ascolto continuo. Memoria OFF non cancella
+archivi, progetti o conversazione corrente. Nessuna migrazione dati.
+Per prima prova spegni e riaccendi MIC con un clic alla volta.
+
+FUNZIONI FILE GIA' PRESENTI
 Risultati in finestra scorrevole, selezione/apertura per voce, fasi di lavoro
 visibili. Ricerca cartella programma da registrazioni Windows e collegamenti
 Desktop/Start, anche con nomi di directory/eseguibili diversi. Percorsi del
@@ -39,3 +47,9 @@ sola lettura e apre cartelle in Explorer. L'indice Windows puo' mancare:
 in quel caso cerca direttamente nelle cartelle autorizzate con limiti.
 Per tornare indietro chiudi questa build e usa la vecchia cartella;
 non cancellare nessuno dei profili dati. Nessun add-on abilita UAC/ACL.
+
+LIMITI NOTI
+Ricerca ancora limitata a 20 risultati; caso nome Explorer "Programmi"
+non corretto in questa build. Collaudo microfono/account e layout sul PC
+ancora da effettuare. Evita comandi salva/chiudi su documenti importanti:
+restano rilievi aperti nella review del progetto.
