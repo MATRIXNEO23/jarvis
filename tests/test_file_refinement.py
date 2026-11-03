@@ -16,7 +16,7 @@ from test_activity_status import Value, GlobalCallbacks
 from conversation_router import build_conversation_prompt, parse_conversation_intent, ConversationRejected
 from dialogue_focus import is_ambiguous_short_reply
 from local_engine import TaskResult
-from voice_control import GPT_CONVERSATION, STANDBY
+from voice_control import GPT_CONVERSATION, STANDBY, WakeWordGate
 from live_capabilities import snapshot_capabilities, capability_status_prompt
 
 
@@ -61,7 +61,7 @@ class FileRefinementTests(unittest.TestCase):
             documents=SimpleNamespace(current=None),conversation_epoch=7,
             voice_mode=Value(GPT_CONVERSATION),GPT_CONVERSATION=GPT_CONVERSATION,STANDBY=STANDBY,
             speaker=SimpleNamespace(is_audible=lambda:False),speech_lexicon=None,
-            memory_enabled=Value(True),last_voice_sample=Value(''),
+            memory_enabled=Value(True),last_voice_sample=Value(''),wake_gate=WakeWordGate(),
             refresh_buttons=Mock(),write_line=Mock(),speak_result=Mock(),
             remember_exchange=Mock(),remember_completed_action=Mock(),
             observed_local_result=lambda r:False,runtime_events=Mock(),
@@ -101,7 +101,7 @@ class FileRefinementTests(unittest.TestCase):
             with self.subTest(channel=channel):
                 env,workers=self.environment()
                 if channel=='voice':
-                    env['output_queue'].put(('voice_text','cerca file preventivo'))
+                    env['output_queue'].put(('voice_text','Jarvis cerca file preventivo'))
                     self.receive('voice_text',env)
                 else:
                     env['request'].set('cerca file preventivo')
@@ -215,7 +215,7 @@ class FileRefinementTests(unittest.TestCase):
         for channel in ('voice','text'):
             env,workers=self.environment()
             if channel=='voice':
-                env['output_queue'].put(('voice_text','cercami un file'))
+                env['output_queue'].put(('voice_text','Jarvis cercami un file'))
                 self.receive('voice_text',env)
             else:
                 env['request'].set('cercami un file')
@@ -377,3 +377,4 @@ class FileRefinementTests(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
+

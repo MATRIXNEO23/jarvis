@@ -37,6 +37,13 @@ jobs:
           snapshot = snapshot_capabilities(settings={}, has_document=False, telegram_credentials=False,
               telegram_voice_dependencies=False, voice_stream_open=True, registry=registry, telethon_installed=False)
           status = capability_status_prompt(snapshot)
+          app_registry = LiveCapabilityRegistry()
+          for binding in registry._addon.values():
+              if binding.action_id.startswith('addon.programmi_app.'):
+                  app_registry.register(binding)
+          app_status = capability_status_prompt(snapshot_capabilities(settings={}, has_document=False,
+              telegram_credentials=False, telegram_voice_dependencies=False, voice_stream_open=True,
+              registry=app_registry, telethon_installed=False))
           basic_status = capability_status_prompt(snapshot_capabilities(settings={}, has_document=False,
               telegram_credentials=False, telegram_voice_dependencies=False, voice_stream_open=True, telethon_installed=False))
           mem = ConversationMemory()
@@ -83,14 +90,16 @@ jobs:
           measure('short_real_empty_memory', 'come stai', runtime_info=basic_status,
                   memory_context=json.dumps({'breve': [], 'permanente': {'related': []}}))
           measure('short_recent_memory', 'come stai', runtime_info=basic_status, memory_context=raw)
-          measure('apps_recent_memory', 'come stai', runtime_info=status, memory_context=raw, addon_actions=app_actions)
+          measure('apps_recent_memory', 'come stai', runtime_info=app_status, memory_context=raw, addon_actions=app_actions)
           measure('apps_files_recent_memory', 'come stai', runtime_info=status, memory_context=raw, addon_actions=all_actions)
           measure('project_repeated_recent', 'Sabato', runtime_info=status, memory_context=duplicate, addon_actions=all_actions)
+          measure('project_repeated_recent_no_addons', 'Sabato', runtime_info=basic_status, memory_context=duplicate)
           measure('large_memory_long_request', 'Spiegami come ' + 'preparare una procedura ' * 17,
                   runtime_info=status, memory_context=long_memory, addon_actions=all_actions)
           measure('file_refinement', 'cerca salvataggi del gioco', runtime_info=status,
                   memory_context=raw, addon_actions=all_actions,
-                  file_feedback={'operation': 'cerca', 'query': 'salvataggi del gioco', 'scope': 'PC', 'count': 0})
+                  file_feedback={'operation': 'cerca', 'clue': 'salvataggi del gioco', 'kind': '',
+                      'answer': '', 'question': '', 'partial': False})
           measure('document_and_telegram_ready', 'scrivi un testo', runtime_info=basic_status,
                   has_document=True, telegram_send_ready=True, memory_context=raw)
           # Capture the other existing builders without importing optional network modules.
