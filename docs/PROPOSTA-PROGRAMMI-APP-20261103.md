@@ -2,6 +2,18 @@
 
 Stato: soluzione proposta in risposta alla richiesta dell'utente; nessun codice prodotto, test Windows o build nuova. La003 resta il download corrente. L'utente riferisce «i tasti funzionano»: conferma limitata ai nuovi pulsanti della003, non a tutte le funzioni o prestazioni.
 
+## Requisito confermato — comando vocale personalizzato, 3 novembre 2026
+
+L'utente richiede di selezionare un programma e personalizzarne il comando di attivazione, perché il nome originale può essere difficile da pronunciare o riconoscere. Questo estende il precedente nome personale facoltativo a una frase di avvio completa scelta dall'utente.
+
+Nella configurazione della singola app, oltre a Nome programma e Consenti avvio, aggiungere il campo «Comando vocale personalizzato». Esempi: Thunderbird → «apri la posta»; gioco dal nome difficile → «avvia il mio gioco». Il nome originale rimane visibile per identificare l'app. La frase salvata vale sia per voce trascritta sia per testo e avvia esclusivamente l'app selezionata/autorizzata, senza richiedere GPT quando riconosciuta in modo univoco.
+
+Scelte tecniche proposte dall'assistente: un solo campo frase per app nel primo incremento; normalizzazione di maiuscole, spazi e punteggiatura ordinaria. Prima di salvare segnalare collisioni con frasi di altre app o comandi esistenti, indicando il conflitto senza sostituire o deviare un comando in silenzio. Non eseguire la frase per il solo salvataggio. Se la trascrizione è ambigua, chiedere un chiarimento; il testo personalizzato non garantisce che il riconoscitore senta sempre le parole corrette.
+Conservare frase e associazione nel profilo al riavvio/aggiornamento; rinomina, revoca, disattivazione e rimozione invalidano le richieste pendenti coerentemente con i permessi. Salvataggio atomico e rollback come per le selezioni.
+
+Prove da includere nel piano Windows: frase personalizzata voce/testo → stessa app una volta; app non autorizzata/add-on spenta; duplicati fra app e conflitti con comandi esistenti; persistenza e fallimento salvataggio; cambio frase e richiesta vecchia; trascrizione ambigua. Campioni/test di trascrizione controllata distinti dal microfono personale.
+Stato: requisito/proposta aggiornati; nessuna nuova implementazione, suite o build. La revisione indipendente precedente riguarda il documento prima di questa estensione; ricontrollo mirato di frase e precedenze da integrare nel successivo piano, senza ripetere la review globale.
+
 ## Obiettivo e soluzione consigliata
 
 Avviare dalla voce o dal testo le applicazioni Windows scelte nelle impostazioni: programmi classici ovunque installati e app Store dell'utente corrente. L'utente delega la scelta tecnica all'assistente e richiede review. Riutilizzare l'architettura Jarvis, cartella autonoma `program_apps`, manifest .jaddon descrittivo e adattatore locale verificato; nessuna dipendenza a pagamento, modello locale o processo residente aggiuntivo.
