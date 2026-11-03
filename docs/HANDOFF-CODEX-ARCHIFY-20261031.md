@@ -1,3 +1,54 @@
+## Quota Codex — Task1 autorizzato e in corso, 3 novembre2026
+
+L’utente autorizza a procedere autonomamente e chiedere solo risposte necessarie. Si parte dalla004/runtime a1b93f3,ramo operativo765b502; nessuna build o modificaHUD. SDKSiwC fissato e main coincidono a0a36fef e non espongono rateLimits. SorgenteCodex ufficiale3abe09d: get_account_rate_limits_response richiede auth.uses_codex_backend; configurare soltanto un providerResponsesSiwC non soddisfa quel requisito.
+
+Prova minima in preparazione sul ramo feature/codex-quota-20261103: provider con trasporto limitato a letturaquota,testWindows con trappole sulle richieste al modello e probe isolato del binarioCodex ufficiale0.166.0. Nessuna credenziale personale o login; verificare il rifiuto senza autenticazione e la forma dei risultati con dati controllati. Download soloCI,non installazione nel prodotto: archivioWindowsx64 ufficiale92228613byte,SHA256edbdd3d5c74ea5437eb13254131de56d855a95a6bc18c139ecce7e95338e4d63. Misurare anche risorse del processo nel runner prima di proporre qualsiasi componente all’utente.
+
+Gate account reale ancora non superato. Non scambiare probe senza login/simulazioni per lettura live,non procedere all’HUD con numeri finti. Nessun testLinux,account/profilo004 invariati. SalvareRed/Green/probe ed eventuali blocchi prima delle fasi dipendenti.
+
+## Barra quota Codex — progetto definito, 3 novembre2026
+
+Autorizzazione utente: «Ok, progettala così senza l’utilizzo di token». Definiti lettura alla connessione,automatico ogni60s e clic manuale;un solo aggiornamento in corso,timeout10s,ultimo successo visibile,dati oltre75s segnati non aggiornati. Nessun prompt/streamResponse/turn/start per controllare quota,nessun acquisto/riscatto. Il normale consumo delle conversazioni resta distinto.
+
+[Progetto](BARRA-QUOTA-CODEX-20261103.md) e [piano](superpowers/plans/2026-11-03-barra-quota-codex.md) salvati dopo lettura del header animated_hud.py,jarvis.py e gestore .jaddon. Modulo quota separato proposto,riuso di gestore/IPC e HUD. Review del piano completata; nessuna implementazione,test funzionale,prova account o build. Gate iniziale: dimostrare lettura ufficiale compatibile su Windows con0 turni del modello; SDKSiwC della004 non espone tale metodo,quindi non presumere accessoCodex dalla sola connessioneGPT. Nessun nuovo runtime/login deciso prima di quella prova. Nessuna005 autorizzata.
+
+La004 conserva il riscontro PC di avvioNetflix a voce; prove nomi difficili/frasi personali ancora da riferire. Prossimo passo tecnico,eventualmente autorizzato,è soltanto Task1 del piano,non una barra con valori simulati.
+
+## Richiesta barra quota Codex e prova vocale Netflix004 — 3 novembre2026
+
+L’utente conferma «apri Netflix» a voce→Netflix aperto nella004; prove su nomi difficili/frasi personali ancora da riferire. Il vecchio prossimo passo vocale è superato per questo caso.
+Nuova richiesta: barra consumo/residuo Codex nello spazio superiore vicino a Interfaccia neurale. Fattibilità UI sì; fonte dati ancora da verificare sul collegamento reale. [Proposta e fonti](BARRA-QUOTA-CODEX-20261103.md): Codex documenta account/rateLimits/read e percentuale/reset; bridge/SDKSiwC fissato della004 non espongono quella lettura. Nessuna equivalenza automatica tra quoteCodex/SiwC; niente percentuali derivate dal conteggio locale. Prossima fase è prova di compatibilità Windows limitata, prima di scegliere componenti/HUD; zero costi aggiuntivi e peso Pavilion da rispettare. Nessuna implementazione o build da questa richiesta di fattibilità.
+
+## PC004 — app Store rilevata e Prova avvio riuscita, 3 novembre2026
+
+L’utente corregge anche il riscontro sulle app Store: l’app cercata è presente. Alla prova indicata (Consenti avvio→Salva→Prova avvio),risponde «Sì» alla domanda se si apre. Riscontro riferito sull’effettiva apertura della app scelta nella004,non osservazione diretta dell’assistente; nome dell’app non fornito. Catalogo popolato e avvio tramite pulsante confermati per questo caso.
+
+Le precedenti ipotesi di catalogo vuoto o appStore mancante sono superate per la segnalazione corrente: non avviare correzioni o aggiungere AppsFolder come presunto fix. Nessun bug riprodotto,nessuna modifica runtime,test automatico o nuova build. Non estendere il riscontro a tutte le app,alla voce,alle frasi personalizzate o alle prestazioni;004 resta candidata con collaudo parziale. Prossimo passo PC: una richiesta vocale «avvia NOME» per la stessa app consentita. Non ripetere rilevamento e Prova avvio già riusciti senza motivo nuovo.
+
+## PC004 — catalogo aggiornato, app Microsoft Store segnalate assenti, 3 novembre2026
+
+L’utente corregge il riscontro iniziale: Aggiorna elenco ha popolato il catalogo con parecchi programmi. La conclusione precedente «rilevamento non funzionante/0 app» è superata; non ripetere la prova del pulsante né trattare il primo0 come errore riprodotto. Il tempo necessario non è stato misurato. Il problema riferito ora riguarda le app installate tramite Microsoft Store che non compaiono.
+
+Riletto windows_apps.ps1 della004/source a1b93f3: supporto già previsto tramite Get-StartApps e Get-AppxPackage/Get-AppxPackageManifest,con filtro framework/risorse/voci nascoste e fallback del nome a Package.Name per ms-resource. Quindi l’assenza di tutte le app Store non è dimostrata dal codice e non richiede un secondo componente. La causa personale resta da accertare: nome visualizzato tecnico,filtro,errore fonte o altra esclusione sono ipotesi. AppsFolder diretto rimane una fonte proposta,non un fix già dimostrato.
+
+Prossimo dato minimo: nome di una app Store effettivamente installata e assente dall’elenco Jarvis,da confrontare con la sua voce Windows. Non chiedere log/programmazione/eseguibili come primo passo. Nessuna modifica runtime,test o build;004 conservata e feedback PC limitato al catalogo dei programmi. Indagare e correggere il componente esistente soltanto sulla base di una riproduzione o evidenza mirata.
+
+## PC004 — Aggiorna elenco provato, nessuna app trovata, 3 novembre2026
+
+L’utente conferma di aver premuto Aggiorna elenco senza trovare alcuna applicazione. La domanda precedente sull’uso del pulsante è risolta: non ripeterla. Restano da acquisire il messaggio finale sotto i pulsanti (elenco0,errore o attività in corso) e l’esito tecnico del provider; non attribuire ancora la causa alla sola mancanza di AppsFolder.
+
+Tracciato il codice004: refresh→_start→service.refresh_catalog→native.discover→windows_apps.ps1→JSON→persist→reload. Il rilevamento non è bloccato dall’add-onOFF. _start mostra gli OSError/ValueError in basso come «Operazione non completata:…»; native.discover ha timeout60s e vari errori generici. Servono quelle parole esatte per distinguere errore del processo,timeout,payload o catalogo vuoto; non chiedere all’utente di cercare eseguibili né di scegliere un algoritmo. La fonte diretta AppsFolder resta un’integrazione minima proposta e ancora non implementata.
+
+Nessun runtime cambiato,nessun test o nuova build. Prossimo riscontro PC: testo esatto della riga sotto Aggiorna elenco dopo il tentativo,oppure foto completa della finestra Jarvis. Poi riproduzione mirata Windows e correzione nel componente esistente. Le162 voci Explorer osservate non sono una misura del catalogo letto dal provider004.
+
+## Riscontro PC004 — Applications presente, catalogo Jarvis vuoto, 3 novembre2026
+
+L’utente mostra Applications aperta con shell:AppsFolder:162 elementi; la configurazione Jarvis sotto indica0 applicazioni e invita ad Aggiorna elenco. Non è ancora noto se quel pulsante sia stato premuto né l’esito: non diagnosticare il rilevamento fallito dalla sola schermata.
+
+Verificati sorgenti004/a1b93f3: ProgramSettings.add seleziona solo .exe/.lnk fisici; refresh legge il catalogo. windows_apps.ps1 usa Get-StartApps,manifest,collegamenti e App Paths,non enumera direttamente Shell.Application.NameSpace(AppsFolder). native.launch usa già shell:AppsFolder per identità shell. Avvio e lettura del relativo elenco sono distinti; la fonte diretta manca,ma la causa delle0 app sul PC non è dimostrata.
+
+Fonte Microsoft: https://learn.microsoft.com/en-us/windows/configuration/store/find-aumid (enumerazione Shell.Application e AppsFolder); https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid (cartella virtuale). Proposta minima: integrare questa fonte nel catalogo esistente conservando spunte/consensi,senza selettore parallelo. Prima verificare l’esito di Aggiorna elenco. Nessuna modifica runtime,test o nuova build;004 immutabile,collaudo PC parziale.
+
 ## CONSEGNATO — Jarvis004, Programmi e app, 3 novembre2026
 
 [Scarica Jarvis-004.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-004.zip). Sorgenti esatti a1b93f34ff25bd9a972ed971a432af4984366f28, ramo build/jarvis-004; avvio programmi classici/Store consentiti, elenco filtrabile, aggiunta manuale, frase personale e varianti apri/avvia/lancia. Add-on installata OFF: configurare le app e attivarla dal gestore. Runtime precedente e dati del profilo conservati; nessun merge dei sorgenti storici main.
@@ -8,16 +59,20 @@ Publisher126124432192/main bd1905fbb83590111869704bf32086bf457c7127 ha verificat
 
 Prossimo passo PC:chiudere003,estrarre004 in cartella nuova,avviare avvia_jarvis.bat; Impostazioni > Gestisci add-on > Programmi e app > Configura > Aggiorna elenco; scegliere app,Consenti avvio,frase facoltativa,Salva; attivare add-on e provare avvio. [Guida](../Prima-installazione/Programmi-e-app.md),[scheda consegna](CONSEGNA-BUILD-004-20261103.md),[evidenza](evidence/build-004-20261103.json). Microfono/STT/account/GPT reali,appStore terze,DPI/Pavilion restano collaudo del pacchetto esatto. Chiusura programmi/controllo interno app e difetti ricerca/salva/chiudi precedenti restano separati. Nessun test Linux.
 
-## Build004 — timeout isolato di un test preesistente, 3 novembre2026
-
-Run41694455705/source a1b93f34ff25bd9a972ed971a432af4984366f28: job3.11/126121208961,542 test in117.622s,un errore TimeoutExpired15s nella prima invocazione PowerShell del test Explorer test_real_powershell_explorer_selection_and_navigation_contract (test_file_access.py:792/786). Nessun fallimento di asserzione; prove Programmi e app PASS. File del test e helper runtime invariati rispetto al source verde67ca39c.
-
-Job3.12/126121209198 SUCCESS, inclusi test completo e pacchetto estratto; publisher correttamente SKIPPED perché3.11 fallito. La causa interna del timeout non è osservata; ipotesi: avvio PowerShell transitorio nel runner, compatibile con stessa prova PASS su3.12 e nei due job precedenti. Prossima prova minima: rieseguire soltanto il job3.11 sullo stesso identico source, senza allungare timeout, togliere asserzioni o modificare runtime. Se fallisce ancora acquisire ulteriori dati; nessuna pubblicazione finché i controlli obbligatori non sono verdi. Conservare questo primo esito anche in caso di retry riuscito.
-
 ## Programmi e app — sorgenti verificati, nessuna nuova build, 3 novembre 2026
 Source67ca39c4af21c91a12a6306b1ed967f6d83bbedd, runtime3c06c7172693add405a250bc9879aaef2abf59e1, ramo feature/program-apps-20261103. [Run41690560916](https://github.com/MATRIXNEO23/jarvis/actions/runs/41690560916) SUCCESS:542 test Python3.11.9/job126107699337 (115.061s) e542 Python3.12.10/job126107699773 (86.623s),zero skip/errori/fallimenti. Sintassi/probe WindowsSearch PASS; avvio/chiusura UI completa e add-on bundled OFF PASS. Nativo reale:389 voci/2app pacchettizzate senza avvisi, .lnk con argomenti→marker, attivazione Impostazioni con API/PID3600/4396; visibilità finestra non osservata.
 Menu app/consenso/frase personale, varianti locali, fallbackGPT esistente e scelte contestuali nei sorgenti; dati separati e rollback/revoca verificati. Review indipendente e ricontrolli mirati senza blocchi residui. [Rapporto, errori e limiti](PROGRAMMI-APP-IMPLEMENTAZIONE-20261103.md), [prove](evidence/programmi-app-20261103.json), [piano](superpowers/plans/2026-11-03-programmi-app.md).
 Nessun ZIP004 generato/pubblicato:003 resta l'ultima consegna e i suoi tasti sono confermati dall'utente. Audio/account/appStore terze/DPI/Pavilion e ZIP estratto pendenti. Prossima consegna solo quando richiesta:004 da questo source con nuove suite estratte, numero/manifest/UI/HTTP verificati e001/002/003 conservate. Non ricominciare da vecchie run fallite né rigenerare003.
+
+## Programmi e app — ripresa dopo interruzione, Green corrente da leggere
+Source completo87a7d0c6005b742a07aaef7b8ee826bb5da36d14, ramo feature/program-apps-20261103. Run Windows41689631152 in corso (job126104495647/126104496345); NON ricominciare da5723db2 o rilanciare build. Implementazione approvata per classiche/Store, comandi personali/varianti locali e fallbackGPT esistente; nessuna004 autorizzata.
+Red iniziale1fd8f4d/run41685538437:512test/un fallimento gateway atteso. PrimoGreen5723/run41687523191:556test,5 errori engine nelle fixture storiche; fixture aggiornate senza indebolire asserzioni. Review rileva collisione salva/dettatura e perdita editUI durante worker. Red87e82e4/run41688626086/job126100966340:535test,5 fallimenti attesi,0errori. FixUI e parser riservati; controllo progetti troppo ampio in7e0f25f ha causato21errori di setup/run41689112486, corretto in413c26d. Ricontrollo indipendente413c26d senza blocchi statici. Ultimo87a7d0c estende solo prova CI all'app pacchettizzata Impostazioni disponibile nel runner: i2AUMID sono Impostazioni e SicurezzaWindows, non Calculator/Terminal. Leggere successo effettivo API/PID e suite completa prima di dichiarare verificato.
+Nativo:inventario389 voci senza avvisi, lancio reale .lnk temporaneo con argomenti e marker PASS nelle run precedenti; Store positivo ancora da leggere. Audio/account/Pavilion e pacchetto installabile non collaudati. Prossimo passo esito41689631152, eventuale correzione mirata, evidenze e checkpoint finali;003 resta download immutabile.
+
+## Programmi e app — primo candidato sorgenti in verifica Windows, 3 novembre 2026
+Red1fd8f4d/run41685538437:512 test,un fallimento atteso del nuovo gateway («Funzione add-on non approvata»), resto suite passa nel job126090164314. Implementati provider nativo, servizio/catalogo/permessi/frasi, UI e raccordi reali console/voce/GPT; nessuna build004. Test Windows per servizio reale/Tk/callback reali/API nativa, solo trasporto/account/audio controllati. Verifiche Green e review ancora pendenti; non dichiarare completato o consegnato. Ramo feature/program-apps-20261103, riprendere dalla run del suo head prima di editare. Limite: attivazione Store positiva e microfono/account personali non ancora provati; test COM con identità assente verifica errore nativo e non equivale a una app Store aperta.
+
+Source5723db24cd199065082598d3d9f679823c401d15; run41687523191 in attesa. Revisione indipendente runtime in corso. Progettazione e implementazione autorizzate, consegna ZIP futura su richiesta. Piano salvato in docs/superpowers/plans/2026-11-03-programmi-app.md.
 
 ## Programmi e app — varianti naturali, locale prima del GPT, 3 novembre 2026
 L'utente conferma: comandi interni e varianti come «apri Netflix»/«avvia Netflix», senza formule rigide; GPT soltanto per interpretazione quando il motore non arriva. Soluzione tecnica delegata all'assistente: separare intenzione avvio e app, grammatica locale con verbi equivalenti + nomi/alias/frasi personali; frase «apri la posta» fornisce anche il richiamo «posta» per «avvia la posta», senza impostare ogni variante. Stessa azione/permessi, nessun target eseguibile inventato dal modello, domanda se ambiguo e prosecuzione contestuale una sola volta. Negazione/annulla e dialoghi esistenti hanno precedenza anche sulle scorciatoie e prima del fallback.
