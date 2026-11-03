@@ -1,3 +1,11 @@
+## Barra quota Codex — progetto definito, 3 novembre2026
+
+Autorizzazione utente: «Ok, progettala così senza l’utilizzo di token». Definiti lettura alla connessione,automatico ogni60s e clic manuale;un solo aggiornamento in corso,timeout10s,ultimo successo visibile,dati oltre75s segnati non aggiornati. Nessun prompt/streamResponse/turn/start per controllare quota,nessun acquisto/riscatto. Il normale consumo delle conversazioni resta distinto.
+
+[Progetto](docs/BARRA-QUOTA-CODEX-20261103.md) e [piano](docs/superpowers/plans/2026-11-03-barra-quota-codex.md) salvati dopo lettura del header animated_hud.py,jarvis.py e gestore .jaddon. Modulo quota separato proposto,riuso di gestore/IPC e HUD. Review del piano completata; nessuna implementazione,test funzionale,prova account o build. Gate iniziale: dimostrare lettura ufficiale compatibile su Windows con0 turni del modello; SDKSiwC della004 non espone tale metodo,quindi non presumere accessoCodex dalla sola connessioneGPT. Nessun nuovo runtime/login deciso prima di quella prova. Nessuna005 autorizzata.
+
+La004 conserva il riscontro PC di avvioNetflix a voce; prove nomi difficili/frasi personali ancora da riferire. Prossimo passo tecnico,eventualmente autorizzato,è soltanto Task1 del piano,non una barra con valori simulati.
+
 ## Richiesta barra quota Codex e prova vocale Netflix004 — 3 novembre2026
 
 L’utente conferma «apri Netflix» a voce→Netflix aperto nella004; prove su nomi difficili/frasi personali ancora da riferire. Il vecchio prossimo passo vocale è superato per questo caso.
