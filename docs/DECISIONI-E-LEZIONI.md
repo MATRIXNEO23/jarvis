@@ -1,3 +1,13 @@
+## Priorità consumo quota GPT — episodio notturno e percorso voce004, 3 novembre2026
+
+L’utente vuole ridurre il consumo e riferisce quota esaurita in una notte con microfonoJarvis lasciato sul tavolo e conversazione senza azioni sulPC. Non è ancora chiarito se dialogasse intenzionalmente conJarvis oppure se venisse acquisito anche parlato ambientale: non equiparare automaticamente queste due situazioni. Proposta di ampliamentoAppServer in pausa,nessun componente installato per questo riscontro.
+
+Riletti sorgenti esatti004/a1b93f3. In jarvis.py toggle_hud_microphone (circa3752) attivaGPT_CONVERSATION passando daStandby; change_voice_mode indica espressamente «Parla senza dire Ehi Jarvis». Nel poll voce (circa3109–3191) i gestori locali hanno precedenza,ma ogni frase restante può avviare start_conversation_gpt; durante risposta vengono accodate fino a3frasi,poi inviate dal poll finale. WakeWordGate si applica aCONTINUOUS,non aGPT_CONVERSATION. La semplice chat avvia quindi inferenza pur senza eseguire comandi. Il percorso è dimostrato dal codice,non sono stati acquisiti trascrizioni/log o contatoriquota dell’episodio.
+
+Mitigazione immediata disponibile: tastoGPT→OFF blocca il fallbackonline; le azioni locali già consentite mantengono precedenza anche conMICacceso. Non cambiare automaticamente modalitàmicrofono,non cancellare memoria e non aggiungere servizi/modelli per questa diagnosi. Da chiarire con una sola domanda se gli invii fossero intenzionali o ambientali: nel primo caso analizzare volume/ripetizionecontesto/lunghezza risposte e modelli effettivamente disponibili; nel secondo progettare un gate locale di chiamataesplicita/GPT e una conversazione delimitata. Non promettere risparmio da un wakeword se l’utente desiderava proprio conversare.
+
+Nessuna correzione runtime,test o nuova build in questa analisi. Prossimo passo: risposta alla distinzione sopra,poi soluzione minima e prova Windows mirata. La barra della quota resta solo monitoraggio e non riduce il consumo di per sé.
+
 ## Quota Codex — prova Windows conclusa, scelta sul collegamento dedicato
 
 Source897b95b98fba166957cb17c4ebcd911969925d0f,ramo feature/codex-quota-20261103;run41728307013 SUCCESS:9test per Python3.11/3.12 e probeRPC realeWindows,0turni modello. Senza account e con provider della formaSiwC fittizio:autenticazione richiesta,mai quota0/100inventata. Il SDKSiwC della004 non espone la lettura; configurare soltanto un provider inferenza non crea l’accountCodex.
