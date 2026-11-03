@@ -1,3 +1,8 @@
+## Apertura normale dei file confermata — 3 novembre 2026
+L'utente conferma che «apri quel file» deve aprire il file nel programma abituale di Windows, come con un doppio clic. È un risultato richiesto e confermato; non chiedere di nuovo questa distinzione. «Leggi/spiega il file» resta la lettura del contenuto da parte di Jarvis. File/cartelle e nomi sono generali, non una funzione dedicata a Minecraft.
+Verifica statica del ramo feature/fix-file-search-20261102, source 870fa27a68bc95c6e30944ecc93e144e454290e7: l'apertura associata dei file non è ancora implementata dal servizio; non confonderla con l'anteprima dei formati testuali. Questo checkpoint registra requisito e piano, senza modifiche runtime, nuove prove Windows o build.
+Incremento da realizzare nel componente Accesso file esistente: distinguere open/read nei percorsi diretti e di selezione; riusare le autorizzazioni e la risoluzione canonica correnti prima dell'apertura nativa Windows; gestire file scomparso, ambiguità, revoca/scadenza e assenza di associazione senza false conferme. Aggiornare catalogo, descrizioni ed esito vocale. Verificare su Windows una richiesta a più turni e una reale associazione controllata; distinguere richiesta di apertura accettata da contenuto effettivamente visualizzato e dalle modifiche eventualmente fatte dall'app esterna. Nessun nuovo gestore o indice parallelo. Le altre correzioni aperte (R02 e ordine indice/scansione) restano da completare; nessuna nuova build automatica autorizzata.
+
 # WINDOWS — File, cartelle e programmi scelti
 
 ## Stato vigente — primo incremento Accesso file consegnato, 2026-11-01
