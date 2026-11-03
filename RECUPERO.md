@@ -1,3 +1,13 @@
+## Riduzione prudente dei prompt verificata — 4 novembre 2026
+
+L’utente autorizza a procedere dopo l’audit. Implementato soltanto il primo intervento chiaro: omettere il blocco memoria DOPO compattazione/validazione se non contiene dati utili, nei builder voce/router e chat. Nessun taglio a personalità, catalogo, contesto utile o dati salvati; nessun nuovo SDK/processo/add-on. Le altre proposte dell’audit restano da valutare separatamente.
+
+Source **ace23025780e1af1c42907e95ecadca706ecbe73**, ramo **fix/empty-prompt-context-20261104**, checkpoint **14eeffc44055eb1a9dba936c57e10b6be155aa1f**, derivato da c08317d: conserva il filtro «Jarvis» per ogni richiesta. [Run completo41737540692](https://github.com/MATRIXNEO23/jarvis/actions/runs/41737540692) SUCCESS: **558 test per Python3.11/3.12**, sintassi/probe nativo/indiceWindows live PASS, servizio e fixture ripristinati. Red41737236373:4 test/25 asserzioni fallite/0 errori; Green mirato41737540613:4 test PASS e confronto con la base reale. Quindici casi con contesto utile hanno payload identico alla base.
+
+[Correzione e misure](docs/PROMPT-MEMORIA-VUOTA-20261104.md), [evidenza](docs/evidence/empty-prompt-context-20261104.json). In dati sintetici: voce con profilo vuoto3815→3589 (226 unità UTF-16 in meno); chat pura2268/2293→1814 (454/479). Con catalogo programmi+file pieno4889→4889: il vecchio codice escludeva già il blocco. Non promettere risparmio su ogni richiesta o convertire caratteri in token/quota personale. Zero inferenze di prova/account/dati personali; nessun test funzionale Linux o collaudo microfono/Pavilion.
+
+**Solo sorgenti e documentazione: nessuna nuova build, ZIP o pubblicazione. La004 installata non è aggiornata automaticamente.** Eventuale build soltanto su richiesta esplicita e verifica del pacchetto estratto, usando questa base evoluta con entrambi i fix, non il root storico main. Preservare004, profilo e impostazioni. Barra quota/App Server rimangono in pausa; non introdurre nuove riduzioni speculative. Prossimo passo: eventuale build autorizzata e collaudo PC, oppure una nuova proposta specifica sui prompt.
+
 ## Voce protetta e audit consumi conclusi — 3 novembre 2026
 
 Richiesta chiarita: discorsi ambientali non rivolti a Jarvis hanno alimentato il modello col MIC dimenticato acceso. L’utente richiede «Jarvis» iniziale in OGNI richiesta, senza «Ehi» obbligatorio. Correzione nel componente esistente, stesso filtro sul grezzo per GPT_CONVERSATION e CONTINUOUS prima di correzioni/log/azioni/coda; nessuna finestra dopo il solo nome, nessuna eccezione per dialoghi pendenti. Testo digitato, pressione per parlare e dettatura intenzionale conservati; nessun cambio automatico MIC o cancellazione memoria.

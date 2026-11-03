@@ -1,0 +1,212 @@
+{
+  "source": "ace23025780e1af1c42907e95ecadca706ecbe73",
+  "baseline": "c08317da300adfbfc7b5896ce1f8706e374b33aa",
+  "platform": "Windows Python 3.12",
+  "unit": "UTF-16 text units, NOT model tokens or personal quota",
+  "model_requests": 0,
+  "user_data_access": false,
+  "rows": [
+    {
+      "route": "voice",
+      "scenario": "no_raw_context",
+      "before": 3589,
+      "after": 3589,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "voice",
+      "scenario": "empty_profile_context",
+      "before": 3815,
+      "after": 3589,
+      "saved": 226,
+      "identical": false
+    },
+    {
+      "route": "voice",
+      "scenario": "recent_chat",
+      "before": 3894,
+      "after": 3894,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "voice",
+      "scenario": "preference_only",
+      "before": 3899,
+      "after": 3899,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "voice",
+      "scenario": "project_only",
+      "before": 3865,
+      "after": 3865,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "voice",
+      "scenario": "file_results_only",
+      "before": 3877,
+      "after": 3877,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "voice",
+      "scenario": "evidence_only",
+      "before": 3884,
+      "after": 3884,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "voice",
+      "scenario": "progress_only",
+      "before": 3901,
+      "after": 3901,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "voice",
+      "scenario": "question_only",
+      "before": 3891,
+      "after": 3891,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "chat",
+      "scenario": "no_raw_context",
+      "before": 2268,
+      "after": 1814,
+      "saved": 454,
+      "identical": false
+    },
+    {
+      "route": "chat",
+      "scenario": "empty_profile_context",
+      "before": 2293,
+      "after": 1814,
+      "saved": 479,
+      "identical": false
+    },
+    {
+      "route": "chat",
+      "scenario": "recent_chat",
+      "before": 2372,
+      "after": 2372,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "chat",
+      "scenario": "preference_only",
+      "before": 2377,
+      "after": 2377,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "chat",
+      "scenario": "project_only",
+      "before": 2343,
+      "after": 2343,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "chat",
+      "scenario": "file_results_only",
+      "before": 2355,
+      "after": 2355,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "chat",
+      "scenario": "evidence_only",
+      "before": 2362,
+      "after": 2362,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "chat",
+      "scenario": "progress_only",
+      "before": 2379,
+      "after": 2379,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "chat",
+      "scenario": "question_only",
+      "before": 2369,
+      "after": 2369,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "voice_apps_files",
+      "scenario": "empty",
+      "before": 4889,
+      "after": 4889,
+      "saved": 0,
+      "identical": true
+    },
+    {
+      "route": "voice_apps_files",
+      "scenario": "recent",
+      "before": 4957,
+      "after": 4957,
+      "saved": 0,
+      "identical": true
+    }
+  ],
+  "red": {
+    "source": "e3365c153a86282ac923e8bbaed6488992ea70fe",
+    "run": 41737236373,
+    "tests": 4,
+    "assertion_failures": 25,
+    "errors": 0
+  },
+  "focused_run": 41737540613,
+  "focused_tests": 4,
+  "useful_context_comparisons_identical": 15,
+  "build_created": false,
+  "full_run": 41737540692,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 126270490071,
+      "python": "3.11",
+      "tests": 558,
+      "seconds": 91.796,
+      "conclusion": "success"
+    },
+    {
+      "id": 126270490229,
+      "python": "3.12",
+      "tests": 558,
+      "seconds": 123.422,
+      "conclusion": "success"
+    }
+  ],
+  "checks": {
+    "python_node_powershell_syntax": "passed",
+    "native_probe": "passed",
+    "windows_search_live": "passed",
+    "windows_search_service_and_fixture_restored": true
+  },
+  "wake_name_fix_preserved": true,
+  "useful_recall_changed": false,
+  "persona_changed": false,
+  "catalog_changed": false,
+  "persisted_memory_changed": false,
+  "publisher": "skipped",
+  "installed_004_changed": false
+}

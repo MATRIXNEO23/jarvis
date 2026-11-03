@@ -1,3 +1,5 @@
+> Aggiornamento 4 novembre 2026: autorizzata l’omissione del solo contesto semanticamente vuoto; implementazione, misure e prove in [correzione memoria vuota](PROMPT-MEMORIA-VUOTA-20261104.md). Le sezioni seguenti conservano l’audit della base del 3 novembre. Gli altri interventi restano proposte.
+
 # Prompt e consumi Jarvis — controllo senza modificare i prompt
 
 Richiesta: controllare approfonditamente che cosa si può ridurre, senza snellire ancora. Analizzati i sorgenti della 004 e la correzione voce in `fix/gpt-voice-addressing-20261103`. **Nessuna modifica ai prompt, alla memoria, al modello o al SDK. Nessuna inferenza durante l’audit.**
