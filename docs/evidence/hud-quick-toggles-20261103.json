@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-03",
+  "branch": "feature/hud-quick-toggles-20261103",
+  "base": "066e7d97e3b43c981ed933d4f6478e379799421b",
+  "runtime": "2dba1d36d5e019db2e3bc91b03713315ed752d22",
+  "verified_source": "0eafb12c143f0a90d64c91b9fc6c38ab34301945",
+  "red": {
+    "source": "1d54841bd99359bd596938cba9f1c005fc3c3d6b",
+    "run": 41668984791,
+    "tests": 511,
+    "new_failures": 3
+  },
+  "first_candidate": {
+    "source": "2dba1d36d5e019db2e3bc91b03713315ed752d22",
+    "run": 41669378541,
+    "new_cases": "passed",
+    "regression_errors": 10,
+    "cause": "ActivityStatusTests fixture missing actual voice mode constants"
+  },
+  "green": {
+    "run": 41669810415,
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 126034842798,
+        "python": "3.11.9",
+        "tests": 511,
+        "seconds": 86.351
+      },
+      {
+        "id": 126034842324,
+        "python": "3.12.10",
+        "tests": 511,
+        "seconds": 74.465
+      }
+    ],
+    "syntax_native_index": "passed",
+    "build": "skipped"
+  },
+  "review": {
+    "independent": true,
+    "identified_blocker": "fixture constants",
+    "targeted_recheck": "addressed statically",
+    "remaining_blockers": []
+  },
+  "real_components": [
+    "Tk widgets",
+    "application callbacks/provider/bindings",
+    "temporary JSON settings",
+    "temporary SecondBrain SQLite"
+  ],
+  "controlled_boundaries": [
+    "GPT transport",
+    "microphone hardware",
+    "thread scheduling"
+  ],
+  "not_verified": [
+    "real account/audio",
+    "rapid asynchronous stop/re-enable",
+    "visible layout/DPI",
+    "Pavilion resources",
+    "extracted package"
+  ],
+  "release": "002 unchanged;003 not published"
+}
