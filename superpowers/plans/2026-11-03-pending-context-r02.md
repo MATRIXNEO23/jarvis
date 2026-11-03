@@ -1,3 +1,5 @@
+Stato: Red osservato e correzione verificata in Windows. Runtime1265360/run41612658412;505 test per Python3.11/3.12. Rapporto: docs/CONTINUITA-R02-20261103.md. Nuove capacità differite; mantenere priorità contesto.
+
 # R02 — domanda file pendente, 3 novembre 2026
 
 Obiettivo: conservare il compito locale durante un chiarimento non riconosciuto, prima dell'interpretazione GPT. Nessun lavoro su nuove funzioni di ricerca/apertura.
