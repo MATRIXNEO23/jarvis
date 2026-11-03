@@ -1,3 +1,21 @@
+JARVIS — CONTINUITÀ E RICERCA / BUILD CANDIDATA 3 NOVEMBRE 2026
+
+Questa versione raccoglie le correzioni già verificate del contesto e della
+ricerca Windows. Serve a provarle sul tuo PC prima di aggiungere altre funzioni.
+Apri una cartella NUOVA e avvia avvia_jarvis.bat; conserva quella precedente.
+Il profilo di prova esistente e le cartelle autorizzate vengono mantenuti.
+
+Collegamento al modello, microfono e prestazioni del tuo PC restano da provare.
+Non sono state aggiunte l'apertura dei file nel programma associato o nuove
+funzioni web. La ricerca può essere parziale: leggi ambito e limiti in chat.
+I messaggi liberi del modello non certificano da soli un'azione sul computer.
+La review ha inoltre segnalato un possibile rischio nel salvataggio seguito
+da chiusura di documenti, ancora da riprodurre e correggere: in questo collaudo
+evita tale operazione su documenti importanti. Le prove iniziali sono sul dialogo
+e sulla ricerca in sola lettura, con file di esempio.
+
+Di seguito le istruzioni dell'Accesso file e del profilo conservato.
+
 JARVIS — ACCESSO FILE 0.1.0 / BUILD CANDIDATA PER WINDOWS 10 x64
 
 Estrai questo ZIP in una cartella NUOVA. Avvia soltanto avvia_jarvis.bat.

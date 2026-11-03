@@ -27,7 +27,7 @@ with tempfile.TemporaryDirectory(prefix='jarvis-package-') as temporary:
     # Separate process and cwd: imports cannot accidentally use checkout modules.
     imports = "import jarvis,addon_manager,local_engine;from file_access.service import FileAccessService;from file_access.ui import FolderSettings;print('EXTRACTED_IMPORTS_OK')"
     subprocess.run([sys.executable,'-c',imports],cwd=package,check=True,timeout=45)
-    tests = f"import sys,unittest;sys.path.append({str(source/'tests')!r});suite=unittest.defaultTestLoader.loadTestsFromNames(['test_file_access','test_activity_status','test_file_refinement','test_program_locations']);r=unittest.TextTestRunner(verbosity=2).run(suite);sys.exit(not r.wasSuccessful())"
+    tests = f"import sys,unittest;sys.path.append({str(source/'tests')!r});suite=unittest.defaultTestLoader.loadTestsFromNames(['test_file_access','test_activity_status','test_file_refinement','test_program_locations','test_file_context_delivery','test_pending_file_context','test_file_index_priority','test_file_search_phrase','test_voice_corrections_review']);r=unittest.TextTestRunner(verbosity=2).run(suite);sys.exit(not r.wasSuccessful())"
     subprocess.run([sys.executable,'-c',tests],cwd=package,check=True,timeout=180)
     # Exercise the real UI startup and its normal close callback with all live
     # services switched off only in this disposable test profile.

@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102']
+    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'build/continuita-20261103']
     paths:
       - '**.py'
       - '**.mjs'
@@ -82,22 +82,22 @@ jobs:
         run: python tools/probe_windows_search_live.py --ci-only
 
       - name: Build operational candidate (Windows only)
-        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
+        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/continuita-20261103')) && matrix.python-version == '3.12'
         run: python tools/build_file_access.py dist
       - name: Verify extracted candidate on Windows
-        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
-        run: python tools/check_file_access_package.py dist/Jarvis-Accesso-File-0.1.0-20261101.zip
+        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/continuita-20261103')) && matrix.python-version == '3.12'
+        run: python tools/check_file_access_package.py dist/Jarvis-Continuita-20261103.zip
       - uses: actions/upload-artifact@v4
-        if: success() && github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
+        if: success() && ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/continuita-20261103')) && matrix.python-version == '3.12'
         with:
-          name: Jarvis-Accesso-File-0.1.0-20261101
+          name: Jarvis-Continuita-20261103
           path: dist/*
           retention-days: 30
 
   publish-file-access:
     name: Persist verified candidate in Download (Windows)
     needs: unit
-    if: github.ref == 'refs/heads/feature/file-access-20261101' && github.event_name == 'workflow_dispatch' && inputs.build_candidate
+    if: (github.ref == 'refs/heads/feature/file-access-20261101' && github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/continuita-20261103')
     runs-on: windows-2022
     permissions:
       contents: write
@@ -110,7 +110,7 @@ jobs:
           python-version: '3.12'
       - uses: actions/download-artifact@v4
         with:
-          name: Jarvis-Accesso-File-0.1.0-20261101
+          name: Jarvis-Continuita-20261103
           path: ${{ runner.temp }}/file-access-candidate
       - name: Verify received bytes and prepare persistent Download entry
         shell: python
@@ -129,7 +129,7 @@ jobs:
           assert hashlib.sha256(archive.read_bytes()).hexdigest()==details['sha256']
           with zipfile.ZipFile(archive) as z:
               assert z.testzip() is None
-          name=f'Jarvis-Accesso-File-0.1.0-20261101-{sha[:7]}.zip'
+          name=f'Jarvis-Continuita-20261103-{sha[:7]}.zip'
           target=Path('Download')/name
           if target.exists():
               assert target.read_bytes()==archive.read_bytes(), 'Never overwrite an existing different package'
@@ -139,9 +139,9 @@ jobs:
           Path('Download',name.removesuffix('.zip')+'.json').write_text(json.dumps(details,indent=2)+'\n')
           page=Path('Download/README.md')
           text=page.read_text(encoding='utf-8')
-          title=f'## Accesso file 0.1.0 — build candidata Windows ({sha[:7]})'
+          title=f'## Continuità — build candidata Windows ({sha[:7]})'
           entry=(title+'\n\n'+f'[Scarica {name}](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/{name})\n\n'
-                 'Cartelle dei programmi da registrazioni/collegamenti Windows, percorsi del profilo corrente, ricerca locale con aiuto GPT quando necessario. Risultati nella finestra dedicata e scelte vocali. '
+                 'Correzioni di continuità della domanda e dei risultati nel passaggio a GPT; ricerca Windows prima del fallback e nomi naturali. Candidata per il collaudo del dialogo e della ricerca, senza nuove capacità di apertura file. '
                  'Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Accesso file > Configura, Salva e Attiva. '
                  'Profilo di prova separato, precedente installazione preservata. '
                  'Test automatici solo Windows, archivio estratto e avvio UI verificati. '
@@ -152,13 +152,24 @@ jobs:
           if title not in text:
               first_end=text.find('\n')
               if text.startswith('> **Recupero e versioni:**'):
-                  text=(f'> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultimo candidato Accesso file **{sha[:7]}**, verificato automaticamente su Windows; collaudo Pavilion pendente. Base PC confermata **Timer Audio Fix2, b936879**, preservata.'+text[first_end:])
+                  text=(f'> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultimo candidato Continuità **{sha[:7]}**, verificato automaticamente su Windows; collaudo Pavilion pendente. Base PC confermata **Timer Audio Fix2, b936879**, preservata.'+text[first_end:])
               split=text.find('\n')+1
               page.write_text(text[:split]+'\n'+entry+text[split:],encoding='utf-8')
+          root_page=Path('README.md')
+          root_text=root_page.read_text(encoding='utf-8')
+          root_text=root_text.replace('Nessuna nuova build applicativa è pubblicata con questo aggiornamento delle istruzioni.', '')
+          root_lines=root_text.splitlines()
+          root_link=('**Nuova build candidata Windows: [Jarvis — Continuità e ricerca](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/'+name+')** — correzioni del contesto e ricerca Windows; collaudo PC pendente. [Istruzioni e versioni](Download/README.md).')
+          existing=next((i for i,line in enumerate(root_lines) if line.startswith('**Nuova build candidata Windows:')),None)
+          if existing is None:
+              root_lines.insert(0,root_link)
+          else:
+              root_lines[existing]=root_link
+          root_page.write_text('\n'.join(root_lines)+'\n',encoding='utf-8')
           registry=Path('Download/REGISTRO-VERSIONI.md')
           text=registry.read_text(encoding='utf-8')
           if name not in text:
-              registry.write_text(text+'\n## Candidato Accesso file '+sha[:7]+' — 2026-11-01\n\n'+
+              registry.write_text(text+'\n## Candidato Continuità '+sha[:7]+' — 2026-11-03\n\n'+
                   f'- ZIP persistente: Download/{name}\n- Sorgenti: {sha}\n'+
                   f'- SHA-256: {details["sha256"]}\n- Windows CI: run {os.environ["VERIFIED_RUN"]}, due job 3.11/3.12, pacchetto estratto e avvio UI.\n'+
                   '- Collaudo PC: pendente. La base confermata BASE-UTENTE-20261101 b936879 resta invariata.\n'+
@@ -169,10 +180,10 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Download
+          git add Download README.md
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
-            git commit -m "Publish verified Accesso file candidate $($env:GITHUB_SHA.Substring(0,7))"
+            git commit -m "Publish verified continuity candidate $($env:GITHUB_SHA.Substring(0,7))"
             if ($LASTEXITCODE -ne 0) { throw 'Commit failed' }
             git push origin HEAD:main
             if ($LASTEXITCODE -ne 0) { throw 'Publication failed: keep artifact and inspect main, no force push' }
@@ -186,7 +197,7 @@ jobs:
           import hashlib,json,time,urllib.request
           from pathlib import Path
           sha = __import__('os').environ['VERIFIED_SOURCE']
-          name = f'Jarvis-Accesso-File-0.1.0-20261101-{sha[:7]}.zip'
+          name = f'Jarvis-Continuita-20261103-{sha[:7]}.zip'
           details = json.loads(Path('Download',name.removesuffix('.zip')+'.json').read_text())
           url = 'https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/'+name
           for attempt in range(4):
@@ -199,6 +210,10 @@ jobs:
                   with urllib.request.urlopen(readme,timeout=20) as response:
                       text=response.read().decode('utf-8')
                   assert text.find(name)>=0 and text.find(name)<text.find('\n## ',text.find('\n## ')+1)
+                  root_url='https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/README.md?verify='+sha
+                  with urllib.request.urlopen(root_url,timeout=20) as response:
+                      assert name in response.read().decode('utf-8')[:2000]
+
                   break
               except Exception:
                   if attempt==3: raise
