@@ -22,10 +22,10 @@ Metodo: Brainstorming per chiarire obiettivo e vincoli; Systematic Debugging per
 | Confronto sorgenti | 78/78 file operativi corrispondono dopo normalizzazione CRLF→LF; le differenze grezze di fine riga non sono difetti di contenuto |
 | Sintassi | Parsing statico AST dei 64 moduli riuscito; non è un avvio dell'app |
 | Correzioni successive | 806685275947cea4b933d20aa0317658d13b853c; non incluse nello ZIP |
-| Ramo di lavoro verificato | feature/fix-file-search-20261102, testa 445efe657e8bbac504d11ce71b10c7c110c3880d; rispetto a 8066852 cambiano documentazione e LEGGIMI, non codice eseguibile |
+| Ramo di lavoro alla review iniziale | feature/fix-file-search-20261102, testa 445efe657e8bbac504d11ce71b10c7c110c3880d; rispetto a 8066852 cambiano documentazione e LEGGIMI, non codice eseguibile |
 | Base stabile da preservare | b936879a431370d206152be7b089baf587d15499, Timer Audio Fix2 confermata dall'utente |
 
-Sono stati riletti i log Windows esistenti, non rilanciate le suite in questa review:
+Nella review iniziale sono stati riletti i log Windows esistenti, senza rilanciare le suite. Il successivo collaudo V01 è documentato separatamente sotto:
 
 - [Run 41350638557](https://github.com/MATRIXNEO23/jarvis/actions/runs/41350638557), versione pubblicata: 466 test su ciascuna versione Python 3.11/3.12, 93 test sullo ZIP estratto, controlli manifest, probe, Windows Search e avvio/chiusura UI riusciti nei rispettivi job.
 - [Run 41367835278](https://github.com/MATRIXNEO23/jarvis/actions/runs/41367835278), correzioni successive: 471 test per Python 3.11/3.12, senza fallimenti nei log esaminati. Questo risultato non aggiorna automaticamente il pacchetto distribuito.
@@ -138,7 +138,7 @@ Tutti i rilievi sotto derivano dalla lettura statica dei sorgenti. Le riproduzio
 
 ## Verifica aggiunta su richiesta — V01: trascrizione italiana e correzioni personali
 
-**Stato:** da eseguire; è un'estensione della review, non un undicesimo difetto già dimostrato. L'utente riferisce parole visualizzate diverse da quelle pronunciate. La causa specifica non è ancora riprodotta.
+**Stato aggiornato:** verifica software eseguita su Windows, con esito positivo nei casi sotto; precisione STT e microfono reale ancora da verificare. È un'estensione della review, non un undicesimo difetto già dimostrato. L'utente riferisce parole visualizzate diverse da quelle pronunciate; la causa specifica di questi episodi non è ancora riprodotta.
 
 **Percorso già individuato nella lettura dei sorgenti 8066852:** [voice_control.py](https://github.com/MATRIXNEO23/jarvis/blob/806685275947cea4b933d20aa0317658d13b853c/voice_control.py) usa Vosk con modello italiano piccolo; il callback voice_text in [jarvis.py](https://github.com/MATRIXNEO23/jarvis/blob/806685275947cea4b933d20aa0317658d13b853c/jarvis.py) applica le correzioni personali quando la memoria è abilitata, prima dei gestori locali o dell'eventuale invio testuale a GPT. Nel codice è presente un pannello per approvare e salvare le correzioni. Questa lettura non dimostra precisione del microfono, persistenza o correttezza del pannello sul PC.
 
@@ -154,6 +154,17 @@ Tutti i rilievi sotto derivano dalla lettura statica dei sorgenti. Le riproduzio
 
 **Accettazione:** correzione approvata applicata e persistente nei casi previsti, nessuna sostituzione indebita nei casi di controllo, disattivazione/rimozione rispettate, testo effettivo tracciabile fino al gestore, limiti delle prove dichiarati. Prossimo passo: inventario mirato di implementazione e test già presenti, poi sole prove mancanti Windows; continuità R01–R04 resta prioritaria.
 
+### Esito V01 — software verificato, audio ancora da provare
+Source test [deefe325](https://github.com/MATRIXNEO23/jarvis/commit/deefe3254b4c99c7465753a1e3ce9b313f3fdf13), ramo feature/fix-file-search-20261102, dopo 445efe6. Diff limitato a [tests/test_voice_corrections_review.py](https://github.com/MATRIXNEO23/jarvis/blob/deefe3254b4c99c7465753a1e3ce9b313f3fdf13/tests/test_voice_corrections_review.py): 13 nuove prove, nessun file runtime modificato. [Run Windows 41568844286](https://github.com/MATRIXNEO23/jarvis/actions/runs/41568844286) SUCCESS: 484 test per Python 3.11.9 e 3.12.10, zero fallimenti; controlli sintassi/probe e Windows Search live nei job previsti riusciti. Build, pacchetto e pubblicazione saltati come previsto. [Evidenza sintetica](evidence/voice-corrections-v01-20261103.json).
+
+Il pannello Tk e SQLite sono reali: conferma, rifiuto di cambi d'azione, errore di scrittura senza falso successo, riapertura delle regole da un nuovo processo, disattivazione/riattivazione e persistenza, profili normale/trial, azzeramento confermato senza cancellare altri ricordi. Il callback voice_text effettivo è eseguito con trascrizioni controllate: frasi corrette instradate una sola volta al gestore locale o a quello GPT previsto, modalità manuale invariata. Gli endpoint di esecuzione/GPT sono controllati: non è un test di account o azione reale sul desktop.
+
+Il primo source test 22ab4fc/run 41568571499 aveva già 484 test riusciti per job, ma due avvisi Tcl da eventi ttk pendenti nel teardown. Corretto solo il test svuotando gli eventi idle prima di distruggere Tk; ricontrollo finale senza quei messaggi. Nessuna correzione del prodotto è stata necessaria nei casi provati.
+
+**Limiti pratici:** le regole sono attive soltanto con Second Brain abilitato; memory_enabled=false è il default, non la configurazione osservata sul PC dell'utente e non una causa dimostrata. Il pannello esistente offre azzeramento completo, non eliminazione di una singola regola. I test unitari esistenti sulle sostituzioni completano le nuove prove UI; non garantiscono correttezza per ogni frase possibile.
+
+**Ancora da fare:** audio rappresentativo e testo atteso per misurare il riconoscimento, prova microfono e prestazioni Pavilion. Nessuna registrazione audio personale disponibile in questa verifica. Non dichiarare risolto l'errore di trascrizione o completata la precisione STT sulla base di callback simulati.
+
 ## Correzioni già presenti nei sorgenti successivi, ma assenti dallo ZIP
 
 Il commit 8066852 contiene già interventi per ridurre il prompt/catalogo che superava il limite, conservare nome e azione nel chiarimento della ricerca, correggere l'aiuto sugli ambiti e impedire che una ricerca generica venga trattata subito come ricerca nel browser.
@@ -165,7 +176,7 @@ Questi interventi hanno test Windows storici riusciti, ma **non** risolvono auto
 1. **Continuità e attendibilità (R01–R04):** preparare prove di regressione Windows per frasi consecutive, chiarimenti, selezioni, budget e falsi successi; poi correggere i punti separatamente. Tracciare richiesta, stato prima/dopo, esito locale e resoconto, senza registrare credenziali.
 2. **Ricerca (R05):** provare indice su più radici e fallback parziale; correggere ordine e stato dei risultati senza cambiare i permessi.
 3. **Affidabilità delle altre funzioni (R06–R10):** verificare per primo il rischio di salvataggio R07; poi timeout, arresto TTS, fallback vocale e copertura diagnostica. Ogni difetto richiede una prova mirata, non soltanto una modifica che sembra plausibile.
-4. **Trascrizione e correzioni personali (V01):** verificare il percorso già presente, applicazione delle regole e persistenza al riavvio; distinguere testo simulato, campioni audio e microfono reale. Nessun fine-tuning o cambio riconoscitore da questa aggiunta.
+4. **Trascrizione e correzioni personali (V01):** verifica software conclusa nei casi documentati; restano campioni audio e microfono reale per la precisione STT. Nessun fine-tuning o cambio riconoscitore.
 5. **Consolidamento:** suite Windows 3.11/3.12, controlli delle integrazioni e regressioni su timer, Telegram, progetti, documenti e add-on; successivamente controlli sullo ZIP estratto e prova reale sul PC per voce, dispositivi, account e prestazioni. Preparazione/pubblicazione della build resta un passaggio successivo, senza pubblicazione automatica.
 
 Criteri minimi: nessuna azione dichiarata riuscita senza esito locale; contesto operativo conservato nei casi riprodotti e correttamente revocato; ricerche parziali esplicite; nessuna perdita nella prova di salvataggio; chiusura e timeout coerenti; assenza di regressioni nelle funzioni esistenti. Questi criteri riducono errori concreti: non sono una garanzia di assenza assoluta di allucinazioni.
