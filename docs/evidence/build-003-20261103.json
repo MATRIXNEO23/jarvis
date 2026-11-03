@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "build_number": 3,
+  "build_label": "003",
+  "previous_build": 2,
+  "source_commit": "2d52ba540aad1f9989f588e45b7a0b0973d49e67",
+  "archive": "Jarvis-003.zip",
+  "files": 79,
+  "bytes": 266469,
+  "sha256": "9554fd5bdde7b9f8c387bfa2fed66167abb90c5c98e691f74ad5ffb6bcf119fb",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "windows_workflow_run": "41675960102",
+  "pc_test": "pending",
+  "publication_commit": "b7e1e0d612d5ca338ec6359a099968051bb5daea",
+  "source_branch": "build/jarvis-003",
+  "disable_commit": "ae4eca2822e79407c3230367fba31af7bb08c4e8",
+  "run_id": 41675960102,
+  "run_url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/41675960102",
+  "windows": {
+    "python311": {
+      "job": 126056505277,
+      "tests": 511,
+      "seconds": 72.029,
+      "result": "success"
+    },
+    "python312": {
+      "job": 126056503832,
+      "tests": 511,
+      "seconds": 87.707,
+      "result": "success"
+    },
+    "extracted": {
+      "tests": 136,
+      "seconds": 27.748,
+      "ui_boot_close": true,
+      "manifest": true,
+      "crc": true,
+      "reproducible_different_clock": true
+    },
+    "publisher": {
+      "job": 126058351370,
+      "http_sha256_verified": true,
+      "old_001_002_hashes_verified": true
+    }
+  },
+  "registry": {
+    "latest": 3,
+    "next": 4,
+    "old_entries_unchanged": true
+  },
+  "review": {
+    "base": "9a4b77f2185c0749a38c4da9633b5296b74700c3",
+    "head": "111983d8beaaa71496f609367094a564864cb4e7",
+    "blocking_findings": 0,
+    "minor": "publisher display name corrected in final source"
+  },
+  "not_verified": [
+    "live microphone/account",
+    "rapid asynchronous restart",
+    "layout/DPI",
+    "Pavilion resources"
+  ],
+  "open_issues": [
+    "search result cap20",
+    "Explorer localized Programmi",
+    "long references/free confirmations",
+    "document save/close risk"
+  ]
+}

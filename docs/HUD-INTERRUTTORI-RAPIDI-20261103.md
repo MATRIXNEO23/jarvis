@@ -29,4 +29,4 @@ Trasporto GPT, dispositivo microfono e scheduling sono controllati. Non sono pro
 ## Revisione e consegna
 Revisione indipendente in sola lettura sul diff066e7d9…2dba1d3: un blocco di verifica sulla fixture, risolto in0eafb12 e ricontrollato; nessun altro blocco runtime concreto. Il revisore non ha eseguito test, Green Windows letto separatamente.
 
-002 resta il download corrente e non contiene gli interruttori. Nessuna003 generata. Per la prossima candidata autorizzata usare questo source, verificare anche dallo ZIP il nuovo test e le regressioni attività, e seguire numerazione/cautele della confezione002. Il collaudo del contesto002 e il caso dei nomi Programmi restano separati.
+003 pubblicata e verificata: [consegna e download](CONSEGNA-BUILD-003-20261103.md), source2d52ba540aad1f9989f588e45b7a0b0973d49e67, run41675960102.511 test per Python3.11/3.12,136 estratti, avvio/chiusura UI e download HTTP verificati.001/002 conservate, collaudo PC pendente. Il contesto002 e il caso dei nomi Programmi restano filoni separati.
