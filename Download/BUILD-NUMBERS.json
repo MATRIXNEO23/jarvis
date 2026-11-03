@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "latest_build": 1,
+  "next_build": 2,
+  "filename_template": "Jarvis-{build_number:03d}.zip",
+  "immutable": true,
+  "releases": [
+    {
+      "build_number": 1,
+      "label": "001",
+      "archive": "Jarvis-001.zip",
+      "metadata": "Jarvis-001.json",
+      "date": "2026-11-03",
+      "description": "Continuità e ricerca",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "cec4536b0f5991cb900680ed05295245f4e04acb",
+      "sha256": "d96e90657ad67399893ef5d89a7e250da5369b64a833fd596e4d718ad3687f07",
+      "bytes": 268298,
+      "git_blob_sha": "9f15d5512d82f3604b1aee771c767ef28fe4f383",
+      "previous_build": null,
+      "legacy_archive": "Jarvis-Continuita-20261103-cec4536.zip"
+    }
+  ],
+  "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"
+}

@@ -1,0 +1,17 @@
+{
+  "source_commit": "cec4536b0f5991cb900680ed05295245f4e04acb",
+  "archive": "Jarvis-001.zip",
+  "files": 79,
+  "bytes": 268298,
+  "sha256": "d96e90657ad67399893ef5d89a7e250da5369b64a833fd596e4d718ad3687f07",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "windows_workflow_run": "41614085149",
+  "pc_test": "pending",
+  "build_number": 1,
+  "build_label": "001",
+  "previous_build": null,
+  "legacy_archive": "Jarvis-Continuita-20261103-cec4536.zip",
+  "git_blob_sha": "9f15d5512d82f3604b1aee771c767ef28fe4f383",
+  "numbering": "progressive immutable public build number; embedded software version unchanged"
+}

@@ -1,8 +1,8 @@
-> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultimo candidato Continuità **cec4536**, verificato automaticamente su Windows; collaudo Pavilion pendente. Base PC confermata **Timer Audio Fix2, b936879**, preservata.
+> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **001**, verificato automaticamente su Windows; collaudo Pavilion pendente. Base PC confermata **Timer Audio Fix2, b936879**, preservata.
 
-## Continuità — build candidata Windows (cec4536)
+## Build 001 — Continuità e ricerca
 
-[Scarica Jarvis-Continuita-20261103-cec4536.zip](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/Jarvis-Continuita-20261103-cec4536.zip)
+[Scarica Jarvis-001.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-001.zip)
 
 Correzioni di continuità della domanda e dei risultati nel passaggio a GPT; ricerca Windows prima del fallback e nomi naturali. Candidata per il collaudo del dialogo e della ricerca, senza nuove capacità di apertura file. Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Accesso file > Configura, Salva e Attiva. Profilo di prova separato, precedente installazione preservata. Test automatici solo Windows, archivio estratto e avvio UI verificati. Collaudo Pavilion/account/microfono reali ancora da fare; indice Windows reale e fallback verificati in CI. Nessuna ricerca web attivata da questo pacchetto.
 
