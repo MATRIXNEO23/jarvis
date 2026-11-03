@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "status": "source_verified_not_packaged",
+  "source_commit": "67ca39c4af21c91a12a6306b1ed967f6d83bbedd",
+  "runtime_commit": "3c06c7172693add405a250bc9879aaef2abf59e1",
+  "base_commit": "ae4eca2822e79407c3230367fba31af7bb08c4e8",
+  "branch": "feature/program-apps-20261103",
+  "run_id": 41690560916,
+  "run_url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/41690560916",
+  "windows": {
+    "python311": {
+      "version": "3.11.9",
+      "job": 126107699337,
+      "tests": 542,
+      "seconds": 115.061,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "python312": {
+      "version": "3.12.10",
+      "job": 126107699773,
+      "tests": 542,
+      "seconds": 86.623,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "native_inventory": {
+      "entries": 389,
+      "store_aumids": 2,
+      "warnings": []
+    },
+    "classic_shortcut_marker": true,
+    "packaged_activation": {
+      "aumid": "windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel",
+      "process_ids": [
+        3600,
+        4396
+      ],
+      "api_accepted": true,
+      "visible_window_verified": false
+    },
+    "full_ui_boot_close_and_bundled_off": true,
+    "syntax_and_probes": "success"
+  },
+  "reviews": {
+    "initial_head": "5723db24cd199065082598d3d9f679823c401d15",
+    "findings": [
+      "voice command precedence",
+      "async edits lost"
+    ],
+    "final_runtime_head": "3c06c7172693add405a250bc9879aaef2abf59e1",
+    "remaining_blockers": 0,
+    "execution": "read-only static; Windows CI verified independently"
+  },
+  "build": {
+    "created": false,
+    "published": false,
+    "next_number": 4,
+    "current_download": 3
+  },
+  "not_verified": [
+    "live microphone/STT/account/model",
+    "third-party Store apps on PC",
+    "Pavilion resources",
+    "DPI/layout",
+    "extracted release package"
+  ]
+}
