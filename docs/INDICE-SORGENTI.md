@@ -1,3 +1,6 @@
+## Verifica V01 — correzioni personali, 3 novembre 2026
+Source test deefe3254b4c99c7465753a1e3ce9b313f3fdf13, ramo feature/fix-file-search-20261102, da 445efe6. Unica aggiunta tests/test_voice_corrections_review.py: 13 prove; runtime 8066852 invariato. Run Windows 41568844286 SUCCESS, 484 test per Python 3.11/3.12. [Review V01](BUILD-REVIEW-COMPLETA-20261103.md), [evidenza](evidence/voice-corrections-v01-20261103.json). UI/SQLite reali, trascrizioni e destinatari controllati; audio/microfono/prestazioni Pavilion non provati. Nessuna nuova build; ZIP d06e233 invariato.
+
 ## Ultimo sorgente corretto — ricerca/dialogo, 2 novembre 2026
 Runtime 806685275947cea4b933d20aa0317658d13b853c; checkpoint documentale b4ef5f036b0a03aca9316542a8ba9db6fe923781; ramo feature/fix-file-search-20261102, derivato dalla confezione e9b87b/d06e233. Run 41367835278 SUCCESS: 471 test Windows per job 3.11/3.12, sintassi/probe/indice live PASS. [Scheda](RICERCA-DIALOGO-CORREZIONI-20261102.md). Correzioni router/poll/LocalEngine/dialogo file, nessun nuovo modulo. ZIP d06e233 precedente e invariato; nuova build solo su richiesta. Main radice storica non aggiornata in blocco.
 
