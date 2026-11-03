@@ -40,7 +40,7 @@ Non sono stati eseguiti test funzionali su Linux. I risultati storici non provan
 | Ricerca file, cartelle, lettura, Explorer | Ambiti autorizzati, risultati, raffinamento, cancellazione, indice e scansione | R02 e R05; distinguere ricerca parziale e assenza verificata |
 | Programmi e browser | Catalogo attuale limitato, apertura prevista e ricerca nel browser | Apertura generale desktop/Store differita; aprire una pagina di ricerca non equivale a leggerne i risultati |
 | Documenti e dettatura | Blocco Note gestito da Jarvis, creazione, append, versioni, salvataggio, chiusura e recupero | R07; non promettere controllo di qualsiasi documento già aperto |
-| Microfono, PTT, ascolto continuo | Flussi di registrazione, riconoscimento, attivazione e worker | Prove reali Windows con dispositivo e cambio modalità ancora necessarie |
+| Microfono, PTT, ascolto continuo | Flussi di registrazione, riconoscimento, attivazione e worker | V01 aggiunta: trascrizione italiana, correzioni personali e persistenza; prove Windows e dispositivo reale pendenti |
 | Voce e TTS | Coda, sintesi, subprocess, chiusura, messaggi pronunciati | R08 e R09; provare interruzione e uscita durante parlato |
 | Timer e allarmi | Stato, avvio/annullamento, persistenza e percorsi audio | Test storici disponibili; suono e interazione con voce da provare sul PC |
 | Telegram | Selezione contatti, conferma, invio, controlli, risposte automatiche e storico | Nessun ulteriore difetto ad alta confidenza emerso da questa lettura; consegna reale non provata qui |
@@ -136,6 +136,24 @@ Tutti i rilievi sotto derivano dalla lettura statica dei sorgenti. Le riproduzio
 
 **Prova:** un errore controllato in un modulo file_access deve comparire; verificare anche limiti, esclusioni e file non accessibili.
 
+## Verifica aggiunta su richiesta — V01: trascrizione italiana e correzioni personali
+
+**Stato:** da eseguire; è un'estensione della review, non un undicesimo difetto già dimostrato. L'utente riferisce parole visualizzate diverse da quelle pronunciate. La causa specifica non è ancora riprodotta.
+
+**Percorso già individuato nella lettura dei sorgenti 8066852:** [voice_control.py](https://github.com/MATRIXNEO23/jarvis/blob/806685275947cea4b933d20aa0317658d13b853c/voice_control.py) usa Vosk con modello italiano piccolo; il callback voice_text in [jarvis.py](https://github.com/MATRIXNEO23/jarvis/blob/806685275947cea4b933d20aa0317658d13b853c/jarvis.py) applica le correzioni personali quando la memoria è abilitata, prima dei gestori locali o dell'eventuale invio testuale a GPT. Nel codice è presente un pannello per approvare e salvare le correzioni. Questa lettura non dimostra precisione del microfono, persistenza o correttezza del pannello sul PC.
+
+**Verifiche da aggiungere:**
+
+1. Confrontare la stessa richiesta scritta e pronunciata, distinguendo testo grezzo Vosk, eventuale testo corretto, interpretazione e risultato locale. Non attribuire un errore al modello, al microfono o al contesto senza isolare il passaggio.
+2. Verificare il pannello esistente: salvare una correzione approvata, applicarla al caso previsto e conservarla dopo chiusura/riavvio nello stesso profilo; verificare separazione fra profilo normale e trial.
+3. Controllare che frasi simili ma corrette non vengano cambiate indebitamente; verificare disattivazione della memoria/correzioni e rimozione della regola tramite i controlli disponibili. Un salvataggio fallito non deve essere annunciato come riuscito.
+4. Verificare che il testo corretto raggiunga il percorso locale/GPT previsto dalla modalità selezionata una sola volta, preservando richiesta pendente e contesto. Nessun cambiamento automatico della modalità microfono.
+5. Separare test riproducibili Windows con testo simulato (regole, persistenza e instradamento), prove STT con campioni audio disponibili e collaudo del microfono reale sul Pavilion. In assenza di campioni audio non dichiarare verificata la precisione STT.
+
+**Ambito concordato:** controllare e riusare la funzione esistente. Fine-tuning escluso su indicazione dell'utente; raccolta/registrazione audio e sostituzione di Vosk con Whisper o altri modelli non sono autorizzate da questa richiesta. Restano zero costi aggiuntivi e compatibilità col Pavilion. Le correzioni testuali non addestrano il modello alla pronuncia e non garantiscono di correggere errori sempre diversi.
+
+**Accettazione:** correzione approvata applicata e persistente nei casi previsti, nessuna sostituzione indebita nei casi di controllo, disattivazione/rimozione rispettate, testo effettivo tracciabile fino al gestore, limiti delle prove dichiarati. Prossimo passo: inventario mirato di implementazione e test già presenti, poi sole prove mancanti Windows; continuità R01–R04 resta prioritaria.
+
 ## Correzioni già presenti nei sorgenti successivi, ma assenti dallo ZIP
 
 Il commit 8066852 contiene già interventi per ridurre il prompt/catalogo che superava il limite, conservare nome e azione nel chiarimento della ricerca, correggere l'aiuto sugli ambiti e impedire che una ricerca generica venga trattata subito come ricerca nel browser.
@@ -147,7 +165,8 @@ Questi interventi hanno test Windows storici riusciti, ma **non** risolvono auto
 1. **Continuità e attendibilità (R01–R04):** preparare prove di regressione Windows per frasi consecutive, chiarimenti, selezioni, budget e falsi successi; poi correggere i punti separatamente. Tracciare richiesta, stato prima/dopo, esito locale e resoconto, senza registrare credenziali.
 2. **Ricerca (R05):** provare indice su più radici e fallback parziale; correggere ordine e stato dei risultati senza cambiare i permessi.
 3. **Affidabilità delle altre funzioni (R06–R10):** verificare per primo il rischio di salvataggio R07; poi timeout, arresto TTS, fallback vocale e copertura diagnostica. Ogni difetto richiede una prova mirata, non soltanto una modifica che sembra plausibile.
-4. **Consolidamento:** suite Windows 3.11/3.12, controlli delle integrazioni e regressioni su timer, Telegram, progetti, documenti e add-on; successivamente controlli sullo ZIP estratto e prova reale sul PC per voce, dispositivi, account e prestazioni. Preparazione/pubblicazione della build resta un passaggio successivo, senza pubblicazione automatica.
+4. **Trascrizione e correzioni personali (V01):** verificare il percorso già presente, applicazione delle regole e persistenza al riavvio; distinguere testo simulato, campioni audio e microfono reale. Nessun fine-tuning o cambio riconoscitore da questa aggiunta.
+5. **Consolidamento:** suite Windows 3.11/3.12, controlli delle integrazioni e regressioni su timer, Telegram, progetti, documenti e add-on; successivamente controlli sullo ZIP estratto e prova reale sul PC per voce, dispositivi, account e prestazioni. Preparazione/pubblicazione della build resta un passaggio successivo, senza pubblicazione automatica.
 
 Criteri minimi: nessuna azione dichiarata riuscita senza esito locale; contesto operativo conservato nei casi riprodotti e correttamente revocato; ricerche parziali esplicite; nessuna perdita nella prova di salvataggio; chiusura e timeout coerenti; assenza di regressioni nelle funzioni esistenti. Questi criteri riducono errori concreti: non sono una garanzia di assenza assoluta di allucinazioni.
 
