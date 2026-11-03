@@ -1,6 +1,6 @@
 # Barra quota Codex Implementation Plan
 
-> **For agentic workers:** Execute this plan task-by-task using the user's authorized project workflow. Steps use checkbox syntax. Implementation authorized in the following user turn; start with Task1. No release authorized.
+> **For agentic workers:** Execute this plan task-by-task using the user's authorized project workflow. Steps use checkbox syntax. Implementation authorized in the following user turn. Task1 boundary/no-account protocol verified; personal-account gate remains open. No release authorized.
 
 **Goal:** Mostrare il residuo Codex reale vicino a Interfaccia neurale,con lettura alla connessione,ogni60s e al clic,senza turni del modello.
 **Architecture:** Add-on codex_quota con provider di sola lettura e snapshot inRAM; riuso di gestore,bridge/IPC e header esistenti. Il collegamento alla fonte reale è un gate di fattibilità: la004 non espone quote. Non migrare la conversazione per ottenere una barra.
@@ -27,12 +27,12 @@
 ### Task1 — dimostrare la fonte senza inferenza
 **Files:** Create tools/probe_codex_quota.py,tests/test_codex_quota_provider.py,codex_quota/provider.py.
 **Interfaces:** Provider.read_limits(*,timeout:float)->dict; Provider.available()->bool; QuotaUnavailable come errore distinto. Il provider è associato a una session_key opaca,niente segreti restituiti.
-- [ ] Preparare test del trasporto con sola richiesta account/rateLimits/read e trappole su turn/start,/responses,streamResponse e login automatico:0 chiamate a questi percorsi.
-- [ ] Eseguire Red su Windows: python -m unittest discover -s tests -p test_codex_quota_provider.py -v; il test deve fallire per lettura non collegata,non per import casuale.
-- [ ] Implementare il probe --protocol-only senza account e validare la richiesta/snapshot campione. Non usare il campione per dichiarare quota live.
+- [x] Preparare test del trasporto con sola richiesta account/rateLimits/read e trappole su turn/start,/responses,streamResponse e login automatico:0 chiamate a questi percorsi.
+- [x] Eseguire Red su Windows: python -m unittest discover -s tests -p test_codex_quota_provider.py -v; il test deve fallire per lettura non collegata,non per import casuale.
+- [x] Implementare il probe --protocol-only senza account e validare la richiesta/snapshot campione. Non usare il campione per dichiarare quota live.
 - [ ] Verificare il protocollo disponibile su Windows; se esiste una sessione esplicitamente collegata al modulo,una lettura autenticata --read-account può produrre soltanto stato,metodo,bucket,finestre e tempi. Niente token,headers,email o contenuti chat nei log.
 - [ ] **Gate:** provare autenticazione appropriata e bucketcodex reale. Se SDKSiwC attuale non lo consente,documentare accesso non disponibile e confronto della soluzione minima con costo/processi/RAM; non installare app-server o introdurre login diversi senza aver reso concreta quella scelta. Non procedere alla presentazione come quota live.
-- [ ] Green delle trappole e checkpoint con ambiente,fonte,risultato e limiti; nessun tempo/consumo inventato.
+- [x] Green delle trappole e checkpoint con ambiente,fonte,risultato e limiti; nessun tempo/consumo inventato.
 
 ### Task2 — normalizzare gli snapshot reali
 **Files:** Create codex_quota/service.py,tests/test_codex_quota_service.py.
@@ -73,3 +73,6 @@
 ## Self-review del progetto
 Coperti tempi60/75/10,clic concorrenti,quota reale,più finestre,revoca/account,accessibilità e prove0inferenza. Nessuna API quota del SDKSiwC inventata; IPC e API del modulo sopra sono proposte,non funzioni esistenti. Task1 condiziona la scelta del trasporto prima dei raccordi. Protocollo/account reale non verificati e nessuna garanzia di quota disponibile al solo termine del progetto.
 Prossimo passo: eventuale implementazione autorizzata comincia esclusivamente dal Task1; non iniziare una barra con percentuali simulate per poi cercare la fonte.
+
+## Esito Task1 — prima fase,3novembre2026
+9test per Python3.11/3.12 e probe ufficialeWindows PASS,run41728307013/source897b95b. Nessun turno del modello; nessunaquota autentica ottenuta. Passo protocollo senza account verificato,passo con sessione personale non eseguito; il gate resta aperto. [Misure,limiti e scelta del collegamento dedicato](../../QUOTA-CODEX-FATTIBILITA-20261103.md). Non spuntare gli altri task o iniziareHUD finché la fonte personale non è dimostrata.

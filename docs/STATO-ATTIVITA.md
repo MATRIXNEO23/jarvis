@@ -1,22 +1,10 @@
-## Quota Task1 — primo Green e ricontrollo del timeout del probe
+## Quota Codex — prova Windows conclusa, scelta sul collegamento dedicato
 
-Source238f9c5f/run41727784400 SUCCESS:7test per Python3.11/3.12 e probeRPC realeWindows con0turni. Senza login e con provider della formaSiwC:auth-required;loopback0richieste. WorkingSet circa33–35MiB,privati circa15MiB nel runner;binario283894064byte. Nessunaquota personale letta.
+Source897b95b98fba166957cb17c4ebcd911969925d0f,ramo feature/codex-quota-20261103;run41728307013 SUCCESS:9test per Python3.11/3.12 e probeRPC realeWindows,0turni modello. Senza account e con provider della formaSiwC fittizio:autenticazione richiesta,mai quota0/100inventata. Il SDKSiwC della004 non espone la lettura; configurare soltanto un provider inferenza non crea l’accountCodex.
 
-Nel ricontrollo statico del probe trovato deadline non controllato esplicitamente tra notifiche: ora scade anche se arrivano eventi estranei e queue.Empty diventaTimeoutError. Due prove aggiunte senza attese reali. Inviare solo leRPC consentite e non aumentare iltimeout. Ricontrollo9test+probeWindows pendente;nessuna UI/build o collegamento account. Le misure precedenti non sono prestazioniPavilion né misura autenticata.
+[Rapporto,misure e limiti](QUOTA-CODEX-FATTIBILITA-20261103.md),[evidenza](evidence/quota-feasibility-20261103.json). Soluzione ufficiale provata:componenteCodex circa283.9MBsu disco/download92.23MB;campioniWorkingSet34.3–35.0MB nel runner senza account,non misurePavilion o autenticata. Nessun binario installato nel prodotto,nessuna credenziale personale letta. Il probe non verifica un tokenSiwC autentico né dimostra l’impossibilità di ogni altra integrazione.
 
-## Quota Task1 — Red Windows osservato, Green/probe in preparazione
-
-Source3293a8b024b008936da2b878eb2be5e79406000c,run41727385004: entrambi i jobWindows falliti come previsto per il provider non collegato. Logjob126235625936:7test,1fallimento e6errori comportamentali sul read placeholder/timeout,nessun import mancante. ReadOnlyRPC rifiuta già metodi diversi dalla letturaquota prima del trasporto. Implementata la sola lettura validata con timeout≤10s,errori sanitizzati,nessun retry/login e risposta limitata ai campi quota.
-
-Aggiunto probe di sviluppo con initialize/accountRead/rateLimitsRead,senza thread/turni e con auth inRAM; credenzialiambiente escluse e account personale non letto. WindowsCI scarica binario ufficiale0.166.0 verificatoSHA256,non lo inserisce nel pacchetto. Prova no-auth e providerResponses della formaSiwC con valore fittizio e destinazione loopback,trappolaHTTPPOST. Atteso rifiuto auth in entrambi: la quota dell’utente resta non provata. Green e risultati nativi ancora pendenti;UI/add-on completo/build non iniziati.
-
-## Quota Codex — Task1 autorizzato e in corso, 3 novembre2026
-
-L’utente autorizza a procedere autonomamente e chiedere solo risposte necessarie. Si parte dalla004/runtime a1b93f3,ramo operativo765b502; nessuna build o modificaHUD. SDKSiwC fissato e main coincidono a0a36fef e non espongono rateLimits. SorgenteCodex ufficiale3abe09d: get_account_rate_limits_response richiede auth.uses_codex_backend; configurare soltanto un providerResponsesSiwC non soddisfa quel requisito.
-
-Prova minima in preparazione sul ramo feature/codex-quota-20261103: provider con trasporto limitato a letturaquota,testWindows con trappole sulle richieste al modello e probe isolato del binarioCodex ufficiale0.166.0. Nessuna credenziale personale o login; verificare il rifiuto senza autenticazione e la forma dei risultati con dati controllati. Download soloCI,non installazione nel prodotto: archivioWindowsx64 ufficiale92228613byte,SHA256edbdd3d5c74ea5437eb13254131de56d855a95a6bc18c139ecce7e95338e4d63. Misurare anche risorse del processo nel runner prima di proporre qualsiasi componente all’utente.
-
-Gate account reale ancora non superato. Non scambiare probe senza login/simulazioni per lettura live,non procedere all’HUD con numeri finti. Nessun testLinux,account/profilo004 invariati. SalvareRed/Green/probe ed eventuali blocchi prima delle fasi dipendenti.
+Prossima decisione sostanziale: accettare componente e accessoCodex dedicati (prima riuso eventuale installazione compatibile) per leggere il saldo personale,oppure collegamento alla paginaUso senza barra automatica. Non assumere tale collegamento dalla connessioneGPT esistente. Gate autenticazione reale NON superato:non proseguire alHUD con valori campione. Provider/probe/test salvati;004 e backendconversazione conservati,nessuna nuova build. Progetto autorizzato all’implementazione,ma fontepersonale resta da collegare.
 
 ## Barra quota Codex — progetto definito, 3 novembre2026
 
