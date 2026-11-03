@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-03",
+  "source": "e714e4dc20b28546d531306afed22754877eb2b3",
+  "run": 41604955975,
+  "job": 125812377879,
+  "native_step": "success",
+  "overall_run": "failure",
+  "overall_failure_reason": "four intentionally added parser regression failures; parser runtime unchanged",
+  "report": {
+    "native_index_verified": true,
+    "runtime_adapter": "indexed_candidates",
+    "scope_changes": false,
+    "global_reindex": false,
+    "personal_pc_verified": false,
+    "checks": {
+      "available_empty_query": "passed",
+      "created_file_found": "passed",
+      "other_scope_empty": "passed",
+      "rename_observed": "passed",
+      "deletion_observed": "passed",
+      "created_folder_found": "passed",
+      "folder_other_scope_empty": "passed",
+      "folder_deletion_observed": "passed"
+    },
+    "initial_service": {
+      "running": false,
+      "start_mode": "Disabled"
+    },
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "interpretation": "actual Jarvis indexed_candidates adapter finds directories through SYSTEMINDEX inside an indexed scope; personal PC coverage is not established",
+  "remaining": [
+    "index-before-scan orchestration",
+    "partial scan time limit",
+    "R02 context reset",
+    "file opening semantics: existing service previews supported text files rather than invoking arbitrary associated applications"
+  ]
+}

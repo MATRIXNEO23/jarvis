@@ -1,0 +1,14 @@
+# Verifica Windows e risultato richiesto
+
+## Windows: cartelle trovate dall'indice reale; obiettivo generale file/cartelle — 3 novembre 2026
+Prova nativa conclusa: source e714e4dc20b28546d531306afed22754877eb2b3, run41604955975, job125812377879. Lo stesso adapter indexed_candidates di Jarvis ha trovato una cartella reale temporanea tramite SYSTEMINDEX; creazione, altro scope vuoto ed eliminazione osservata PASS. Servizio e fixture ripristinati. La precedente frase vocale «l'indice Windows non restituisce le cartelle» è falsa/prematura e va rettificata: questa prova la contraddice. Non dimostra copertura dell'indice sul PC personale.
+Run complessiva FAILURE per le4 asserzioni dei3 nuovi test parser (query «di Minecraft»), runtime parser invariato. Il passo nativo distinto è SUCCESS, non dichiarare verde l'intera suite di494 test. Ultimo runtime con suite interamente verde resta c2964c7,491 test per Python3.11/3.12. Nessuna nuova build.
+L'utente chiarisce che Minecraft è solo un esempio: risultato generale cercare, scegliere e aprire file/cartelle con dialogo contestuale, anche cambiando nomi/percorsi/PC. Chiede comprensione dell'obiettivo e domande soltanto sui risultati sostanziali mancanti, non opzioni di pausa. Distinguere la sua intenzione dalla traduzione letterale degli esempi.
+Ulteriore verifica statica pertinente: file_access/service.py esegue Explorer per cartelle; per un file, anche operation open termina in _read (anteprima testo e formati consentiti). Apertura nel programma associato Windows non è dimostrata né già implementata da quel ramo. Da chiarire con l'utente se «aprire file» deve significare aprire nel programma abituale, prima di aggiungere capacità diversa. Restano orchestrazione indice/scansione e R02; non introdurre indice parallelo o correzioni dedicate a Minecraft.
+[Rapporto](VERIFICA-RICERCA-WINDOWS-20261103.md), [evidenza](evidence/windows-index-folders-20261103.json).
+
+
+## Fonti e limiti
+Sorgenti file_access/windows.py:116 e windows_search.ps1; query SYSTEMINDEX con SCOPE e System.FileName. Fonti Microsoft: https://learn.microsoft.com/en-us/windows/win32/search/-search-indexing-process-overview , https://learn.microsoft.com/en-us/windows/win32/search/-search-sql-folderdepth , https://learn.microsoft.com/en-us/windows/win32/properties/props-system-itemtype .
+Il provider effettivo è stato eseguito sul runner Windows, non sul Pavilion. Nessun fallback usato per il successo nativo. WSearch inizialmente disabilitato nel runner è stato ripristinato; non è lo stato osservato sul PC personale. Non deriva un guasto di Windows dal limite di scansione Jarvis.
+Per l'ordine indice/scansione resta la diagnosi INDICE-WINDOWS-PRIORITA-20261102.md: query indice e scansione si alternano per radice, quindi un budget esaurito può impedire query alle radici successive. Il riscontro sul PC prova solo scansione parziale, non che la cartella mancasse o che fosse indicizzata.
