@@ -275,9 +275,25 @@ class JarvisHUD:
         self.gear.pack(side="right",padx=(8,12))
         self.state_text=tk.StringVar(
             value="MIC  OFF    /    GPT  OFF    /    MEMORIA  OFF")
-        tk.Label(header,textvariable=self.state_text,
-                 bg=BG,fg="#8ab5ca",
-                 font=("Consolas",9)).pack(side="right",padx=(0,12))
+        self._quick_toggle_handlers = {}
+        self._quick_state_cache = None
+        quick_controls = tk.Frame(header, bg=BG)
+        quick_controls.pack(side="right", padx=(0, 12))
+        for index, (key, label) in enumerate((
+                ("mic", "MIC OFF"), ("gpt", "GPT OFF"), ("memory", "MEMORIA OFF"))):
+            if index:
+                tk.Label(quick_controls, text="/", bg=BG, fg=MUTED,
+                         font=("Consolas", 9)).pack(side="left", padx=3)
+            button = tk.Button(quick_controls, text=label,
+                command=lambda name=key: self._invoke_quick_toggle(name),
+                state="disabled", bg=BG, fg=MUTED,
+                activebackground="#092238", activeforeground=CYAN,
+                disabledforeground=MUTED, font=("Consolas", 9),
+                bd=0, relief="flat", highlightthickness=1,
+                highlightbackground="#164257", highlightcolor=CYAN,
+                padx=5, pady=4, cursor="hand2", takefocus=True)
+            button.pack(side="left")
+            setattr(self, key + "_toggle_button", button)
 
         # Reference's full-height console. Fixed min to preserve readability.
         layout=tk.Frame(self.frame,bg=BG)
@@ -397,6 +413,20 @@ class JarvisHUD:
     def set_state_provider(self,callback):
         self.state_provider=callback
 
+    def set_quick_toggle_handlers(self, *, microphone, gpt, memory):
+        """Bind trusted existing controls; this HUD owns no setting state."""
+        handlers = {"mic": microphone, "gpt": gpt, "memory": memory}
+        if not all(callable(callback) for callback in handlers.values()):
+            raise TypeError("Quick controls require callable handlers.")
+        self._quick_toggle_handlers = handlers
+        for key in handlers:
+            getattr(self, key + "_toggle_button").configure(state="normal")
+
+    def _invoke_quick_toggle(self, name):
+        callback = self._quick_toggle_handlers.get(name)
+        if callback is not None:
+            callback()
+
     def set_orbit_open_handler(self,callback):
         """Open a known project or Telegram activity by its trusted ID."""
         self._orbit_click=callback
@@ -488,6 +518,21 @@ class JarvisHUD:
               "MICROFONO SPENTO  •  CONTROLLO MANUALE")
         if self.state_text.get()!=title:
             self.state_text.set(title)
+        mic_selected = bool(state.get("mic_selected", mic_enabled))
+        gpt_enabled = bool(state.get("gpt_enabled", connected))
+        mic_label = ("MIC ATTIVO" if mic_enabled else
+                     "MIC PTT" if state.get("mic_push_to_talk") else
+                     "MIC NON ATTIVO" if mic_selected else "MIC OFF")
+        gpt_label = ("GPT ON" if connected and gpt_enabled else
+                     "GPT NON CONNESSO" if gpt_enabled else "GPT OFF")
+        controls = (("mic", mic_label, mic_enabled or mic_selected),
+                    ("gpt", gpt_label, gpt_enabled),
+                    ("memory", "MEMORIA ON" if memory else "MEMORIA OFF", memory))
+        if controls != self._quick_state_cache:
+            for key, label, enabled in controls:
+                getattr(self, key + "_toggle_button").configure(
+                    text=label, fg=CYAN if enabled else MUTED)
+            self._quick_state_cache = controls
         if self.visual_status.get()!=status:
             self.visual_status.set(status)
         if self.chat_info.get()!=info:

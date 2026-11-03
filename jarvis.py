@@ -2001,10 +2001,11 @@ def main() -> None:
     gpt_panel = ttk.LabelFrame(assistant_settings_frame,
                                 text="Connessione ChatGPT", padding=12)
     gpt_panel.pack(fill="x", pady=(0, 10))
-    ttk.Checkbutton(
+    gpt_toggle = ttk.Checkbutton(
         gpt_panel, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
         variable=gpt_enabled, command=toggle_gpt
-    ).pack(anchor="w")
+    )
+    gpt_toggle.pack(anchor="w")
     ttk.Label(gpt_panel, textvariable=gpt_status, wraplength=630).pack(anchor="w", pady=(5, 6))
 
     gpt_buttons = ttk.Frame(gpt_panel)
@@ -3755,6 +3756,10 @@ def main() -> None:
     hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
     hud_mic_button.configure(command=toggle_hud_microphone)
+    hud.set_quick_toggle_handlers(
+        microphone=hud_mic_button.invoke,
+        gpt=gpt_toggle.invoke,
+        memory=memory_toggle.invoke)
     tools_button.configure(command=toggle_console_tools)
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
@@ -3814,6 +3819,9 @@ def main() -> None:
         # Push-to-talk selected but not pressed must remain cyan.
         "listening": voice.is_user_speaking(),
         "mic_enabled": voice.is_listening(),
+        "mic_selected": voice_mode.get() != STANDBY,
+        "mic_push_to_talk": voice_mode.get() == PUSH_TO_TALK,
+        "gpt_enabled": gpt_enabled.get(),
         "reasoning": (busy_gpt and gpt_enabled.get() and
                       gpt_request_action in ("ask", "conversation", "typed_conversation")),
         "searching": (busy_local and engine.file_access is not None and
