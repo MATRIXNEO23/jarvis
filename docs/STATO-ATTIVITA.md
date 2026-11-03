@@ -1,3 +1,7 @@
+## Skill di test e revisione installate — 3 novembre 2026
+Su richiesta esplicita installate e verificate Test-Driven Development for Work e Requesting Code Review for Work, adattate da Superpowers. [Adattamenti, risorse, prove e limiti](SKILL-SVILUPPO.md). Salvataggio persistente e validazione conclusi per entrambe; prove isolate del metodo, non nuovi test Jarvis. TDD: cinque test finali riusciti; revisore: difetto individuato in sola lettura e checkout immutato. La skill prestazioni resta differita.
+Punto runtime invariato: R01–R04 della review al successivo via per lo sviluppo; V01 voce già verificata nei limiti documentati. Nessuna nuova build, modifica runtime o modello. Non ripetere installazioni già verificate.
+
 ## Skill adatte a Jarvis — ricerca conclusa, 3 novembre 2026
 Usata Find Skills for Work, installata e verificata come adattamento personale da Vercel. [Selezione, fonti e limiti](SKILL-SVILUPPO.md): prioritarie Test-Driven Development e Requesting Code Review di obra/superpowers; Python Performance Optimization di wshobson/agents utile dopo le correzioni di affidabilità. Originali e risorse pertinenti letti, MIT verificata; adattamento e collaudo Work delle candidate ancora da svolgere. Nessuna delle tre installata da questa ricerca.
 Le skill già presenti restano la base; non cambiare suite unittest o ambiente Windows, non riscrivere il progetto per prescrizioni generiche. Pausa runtime invariata: ripresa R01–R04 al via dell'utente; nessuna nuova build, modello o modifica a Jarvis.
