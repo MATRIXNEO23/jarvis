@@ -49,7 +49,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
         self.addCleanup(self.environ.stop)
         self.root = tk.Tk()
         self.root.withdraw()
-        self.addCleanup(self.root.destroy)
+        self.addCleanup(self.close_root)
         self.words = SpeechCorrections()
         self.env = dict(
             root=self.root, tk=tk, ttk=ttk, messagebox=Mock(),
@@ -63,6 +63,12 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             settings={**load_settings(), "memory_enabled": True},
             save_settings=save_settings,
         )
+
+    def close_root(self):
+        # Drain pending ttk theme events before destroying their interpreter.
+        # Otherwise the next test's Tk instance can receive stale events.
+        self.root.update_idletasks()
+        self.root.destroy()
 
     def callback(self, name):
         node = copy.deepcopy(next(n for n in self.main.body
