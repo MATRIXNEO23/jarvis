@@ -146,8 +146,8 @@ class FileContextDeliveryTests(unittest.TestCase):
                     'Vuoi aprire questa cartella oppure elencarne il contenuto?', 'clarify')
                 self.assertFalse(self.files._results)
                 raw, prompt = self.prompt_for('elenca il contenuto', memory)
-                self.assertIn(folder, raw)
-                self.assertIn(folder, prompt)
+                self.assertIn(folder, json.loads(raw)['breve'][-1]['utente'])
+                self.assertIn(json.dumps(folder, ensure_ascii=False)[1:-1], prompt)
                 self.assertIn('elencarne il contenuto', prompt)
                 self.assertIn('addon.accesso_file.elenca', prompt)
 
@@ -172,7 +172,7 @@ class FileContextDeliveryTests(unittest.TestCase):
         self.callback('remember_exchange', env)('La cartella è ' + folder,
             'Vuoi aprire questa cartella oppure elencarne il contenuto?', 'clarify')
         raw = self.callback('recent_memory_for_gpt', env)('elenca il contenuto')
-        self.assertIn(folder, raw)
+        self.assertIn(folder, json.loads(raw)['breve'][-1]['utente'])
         self.assertEqual(json.loads(raw)['focus']['project']['name'], 'Prova contesto cartelle')
         live = snapshot_capabilities(settings={}, has_document=False,
             telegram_credentials=False, telegram_voice_dependencies=False,
@@ -181,7 +181,7 @@ class FileContextDeliveryTests(unittest.TestCase):
             runtime_info=capability_status_prompt(live),
             addon_actions=self.manager.active_actions())
         self.assertLessEqual(len(prompt.encode('utf-16-le')) // 2, 5000)
-        self.assertIn(folder, prompt)
+        self.assertIn(json.dumps(folder, ensure_ascii=False)[1:-1], prompt)
         self.assertIn('elencarne il contenuto', prompt)
         self.assertIn('Prova contesto cartelle', prompt)
 
