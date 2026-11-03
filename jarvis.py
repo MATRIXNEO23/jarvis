@@ -2705,7 +2705,16 @@ def main() -> None:
             provider.reset(active_project_id)
         parsed=provider.parse_command(message)
         if parsed is None:
-            # A new conversation topic revokes an old numbered selection.
+            pending=provider.pending_clarification()
+            if pending is not None:
+                # Parser failure is not evidence of a new task. Keep the live
+                # local question available to the model without executing it.
+                mode,token=pending
+                if mode=="refinement":
+                    start_file_refinement(token,message,answer=message)
+                    return True
+                return False
+            # Without a live question, revoke an old unrelated selection.
             if getattr(provider,'_refinement',None) is not None or not any(word in message.casefold() for word in
                        ("file","cartella","quello","questo","aprilo","leggilo")):
                 provider.reset(active_project_id)

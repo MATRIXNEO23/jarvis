@@ -199,6 +199,19 @@ class FileAccessService:
             # remain local constraints, including when omitted in its reply.
             return {**original,key:checked[key]}
 
+    def pending_clarification(self):
+        """Return a live unanswered goal, never authorization for an action."""
+        with self._lock:
+            if (not self.available() or time.monotonic() >= self._expires
+                    or self._result_revision != self.policy.revision):
+                return None
+            if self._pending is not None:
+                return ('request', None)
+            if (self._refinement is not None and self._refinement['waiting']
+                    and self.refinement_live(self._refinement['token'])):
+                return ('refinement', self._refinement['token'])
+            return None
+
     def context_hint(self):
         with self._lock:
             if (not self.available() or time.monotonic() > self._expires

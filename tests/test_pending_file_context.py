@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import test_file_access as access_tests
 import test_file_refinement as refinement_tests
-from test_file_context_delivery import FileContextDeliveryTests as ContextCases
+import test_file_context_delivery as context_tests
 
 
 @unittest.skipUnless(os.name == 'nt', 'Windows-only user requirement')
@@ -21,8 +21,8 @@ class PendingFileContextTests(unittest.TestCase):
     callback = refinement_tests.FileRefinementTests.callback
     environment = refinement_tests.FileRefinementTests.environment
     receive = refinement_tests.FileRefinementTests.receive
-    memory_for = ContextCases.memory_for
-    prompt_for = ContextCases.prompt_for
+    memory_for = context_tests.FileContextDeliveryTests.memory_for
+    prompt_for = context_tests.FileContextDeliveryTests.prompt_for
 
     def missing_name(self):
         operation, args = self.files.parse_command('cercami un file')
