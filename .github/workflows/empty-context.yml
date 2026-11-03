@@ -1,0 +1,16 @@
+name: Empty prompt context regression (Windows)
+on:
+  push:
+    branches: ['fix/empty-prompt-context-20261104']
+    paths: ['tests/test_empty_prompt_context.py', '.github/workflows/empty-context.yml']
+permissions:
+  contents: read
+jobs:
+  focused:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -p test_empty_prompt_context.py -v
