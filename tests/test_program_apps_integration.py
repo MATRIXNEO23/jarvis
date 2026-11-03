@@ -118,7 +118,7 @@ print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
                     # Simulate a legacy/in-memory conflicting phrase to exercise
                     # runtime precedence independently of save-time validation.
                     self.apps._preferences[self.mail]=dict(enabled=True,phrase='salva')
-                    phrase='ehi jarvis salva' if mode==CONTINUOUS else 'salva'
+                    phrase='ehi jarvis salva' if mode in (CONTINUOUS,GPT_CONVERSATION) else 'salva'
                     fixture.receive_voice(phrase)
                     self.assertEqual(saved,['salva'])
                     self.assertFalse(self.launched)
@@ -137,7 +137,7 @@ print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
                 main,env=self.environment()
                 fixture.env.update(env)
                 before=len(self.launched)
-                phrase='ehi jarvis avvia la posta' if mode==CONTINUOUS else 'avvia la posta'
+                phrase='ehi jarvis avvia la posta' if mode in (CONTINUOUS,GPT_CONVERSATION) else 'avvia la posta'
                 fixture.receive_voice(phrase)
                 self.assertEqual(self.launched[before:],[self.mail])
                 fixture.env['start_conversation_gpt'].assert_not_called()
@@ -154,7 +154,7 @@ print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
             main,env=self.environment()
             fixture.env.update(env)
             phrase='metti in moto la posta'
-            fixture.receive_voice(phrase)
+            fixture.receive_voice('Jarvis '+phrase)
             fixture.env['start_conversation_gpt'].assert_called_once_with(phrase)
             self.assertFalse(self.launched)
         finally:
@@ -185,3 +185,4 @@ print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
         with self.assertRaises(ValueError):
             parse_conversation_intent(json.dumps(dict(kind='capability',action_id='addon.programmi_app.avvia',
                 arguments={'query':'posta','target':'cmd.exe'})),addon_resolver=self.manager.resolve)
+

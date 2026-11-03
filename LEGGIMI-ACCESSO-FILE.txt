@@ -53,3 +53,13 @@ Ricerca ancora limitata a 20 risultati; caso nome Explorer "Programmi"
 non corretto in questa build. Collaudo microfono/account e layout sul PC
 ancora da effettuare. Evita comandi salva/chiudi su documenti importanti:
 restano rilievi aperti nella review del progetto.
+
+MICROFONO E RICHIAMO JARVIS
+Con il normale tasto MIC attivo, inizia OGNI richiesta con Jarvis:
+«Jarvis, apri Netflix» oppure «Jarvis, raccontami qualcosa».
+Anche le risposte ai chiarimenti devono iniziare con Jarvis.
+Il solo «Jarvis» non abilita la frase seguente. Parlato senza richiamo
+iniziale ignorato localmente prima di azioni, correzioni, log e GPT.
+Il riconoscimento Vosk resta locale: nessuna chiamata modello per il filtro.
+Testo digitato, pressione manuale e modalità dettatura conservano i loro usi.
+

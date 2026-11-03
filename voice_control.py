@@ -99,13 +99,19 @@ class WakeWordGate:
     def reset(self) -> None:
         self.armed_until = 0.0
 
-    def route(self, speech: str, *, dictation_active: bool = False) -> tuple[str, str]:
+    def route(self, speech: str, *, dictation_active: bool = False,
+              require_name: bool = False) -> tuple[str, str]:
+        # GPT microphone mode requires a name in EVERY utterance. A bare
+        # wake name must not open a window for subsequent room conversation.
+        if require_name:
+            self.reset()
         if not isinstance(speech, str) or not speech.strip():
             return "ignored", ""
         spoken = " ".join(speech.casefold().replace(",", " ").replace(":", " ").strip(" .!?").split())
         for name in ("ehi jarvis", "hey jarvis", "jarvis"):
             if spoken == name:
-                self.armed_until = self.clock() + self.timeout
+                if not require_name:
+                    self.armed_until = self.clock() + self.timeout
                 return "wake", ""
             if spoken.startswith(name + " "):
                 self.reset()
@@ -319,3 +325,4 @@ class VoiceController:
                            and self._generation != generation)
             if restart:
                 self._start_continuous()
+

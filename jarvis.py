@@ -2571,8 +2571,8 @@ def main() -> None:
         elif selected == PUSH_TO_TALK:
             mic_status.set("Premi per parlare: microfono spento finché non tieni premuto.")
         elif selected == GPT_CONVERSATION:
-            mic_status.set("Conversazione GPT selezionata: frasi trascritte e inviate a GPT. "
-                           "Parla senza dire Ehi Jarvis.")
+            mic_status.set("Microfono attivo: inizia ogni richiesta con Jarvis, "
+                           "per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato.")
             if not spoken_enabled.get():
                 spoken_enabled.set(True)
                 save_speech_preferences()
@@ -3094,13 +3094,25 @@ def main() -> None:
                 elif kind == "voice_text":
                     raw_spoken = str(data[0]).strip()
                     spoken = raw_spoken
+                    if voice_mode.get() == GPT_CONVERSATION:
+                        if not raw_spoken or speaker.is_audible():
+                            continue
+                        # Check the RAW local transcript before learned
+                        # corrections, logging, local actions or GPT queuing.
+                        route_type, spoken = wake_gate.route(
+                            raw_spoken, require_name=True)
+                        if route_type == "wake":
+                            mic_status.set("Dì Jarvis seguito dalla richiesta nella stessa frase.")
+                        if route_type != "command":
+                            continue
                     if raw_spoken and voice_mode.get() != STANDBY:
                         # No new acoustic model or background training:
                         # correct approved app names in a single cached pass.
                         last_voice_sample.set(raw_spoken)
                         if speech_lexicon is not None and memory_enabled.get():
-                            spoken = speech_lexicon.correct(raw_spoken)
-                            if spoken != raw_spoken:
+                            uncorrected = spoken
+                            spoken = speech_lexicon.correct(uncorrected)
+                            if spoken != uncorrected:
                                 write_line("VOCABOLARIO LIA > " + spoken)
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if voice_mode.get() == GPT_CONVERSATION:
@@ -3936,4 +3948,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
