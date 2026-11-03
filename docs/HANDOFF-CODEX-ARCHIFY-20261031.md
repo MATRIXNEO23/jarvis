@@ -1,3 +1,9 @@
+## PC004 — app Store rilevata e Prova avvio riuscita, 3 novembre2026
+
+L’utente corregge anche il riscontro sulle app Store: l’app cercata è presente. Alla prova indicata (Consenti avvio→Salva→Prova avvio),risponde «Sì» alla domanda se si apre. Riscontro riferito sull’effettiva apertura della app scelta nella004,non osservazione diretta dell’assistente; nome dell’app non fornito. Catalogo popolato e avvio tramite pulsante confermati per questo caso.
+
+Le precedenti ipotesi di catalogo vuoto o appStore mancante sono superate per la segnalazione corrente: non avviare correzioni o aggiungere AppsFolder come presunto fix. Nessun bug riprodotto,nessuna modifica runtime,test automatico o nuova build. Non estendere il riscontro a tutte le app,alla voce,alle frasi personalizzate o alle prestazioni;004 resta candidata con collaudo parziale. Prossimo passo PC: una richiesta vocale «avvia NOME» per la stessa app consentita. Non ripetere rilevamento e Prova avvio già riusciti senza motivo nuovo.
+
 ## PC004 — catalogo aggiornato, app Microsoft Store segnalate assenti, 3 novembre2026
 
 L’utente corregge il riscontro iniziale: Aggiorna elenco ha popolato il catalogo con parecchi programmi. La conclusione precedente «rilevamento non funzionante/0 app» è superata; non ripetere la prova del pulsante né trattare il primo0 come errore riprodotto. Il tempo necessario non è stato misurato. Il problema riferito ora riguarda le app installate tramite Microsoft Store che non compaiono.
