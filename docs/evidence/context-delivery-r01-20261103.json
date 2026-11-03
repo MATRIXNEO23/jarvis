@@ -1,0 +1,73 @@
+{
+  "date": "2026-11-03",
+  "scope": "R01: live file context delivery from app callback through memory compaction to GPT prompt",
+  "repository": "MATRIXNEO23/jarvis",
+  "base": "deefe3254b4c99c7465753a1e3ce9b313f3fdf13",
+  "source": "c2964c7ce3e68f2aaef77fa5eb25e99ff24d5851",
+  "branch": "feature/fix-file-search-20261102",
+  "red": {
+    "source": "c03920eb71a1b1bee8a880153bfb1530c8fd9097",
+    "run": 41601963559,
+    "job": 125802582365,
+    "total_tests": 489,
+    "failures": 3,
+    "errors": 2,
+    "cause": "file_results dropped; result names missing from final prompt; two missing-key subcases",
+    "runtime_changed": false
+  },
+  "green": {
+    "run": 41603248458,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 125806763439,
+        "total_tests": 491,
+        "new_tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "conclusion": "success"
+      },
+      {
+        "id": 125806763925,
+        "total_tests": 491,
+        "new_tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "conclusion": "success"
+      }
+    ],
+    "syntax_and_native_probe": "success",
+    "windows_search_live": "success",
+    "build": "skipped",
+    "publish": "skipped"
+  },
+  "review": {
+    "independent": true,
+    "first_candidate": "not ready; not promoted",
+    "targeted_recheck": "no new blocking finding; Windows verification required, subsequently passed",
+    "reviewed_blobs": {
+      "persona": "015050fa0ab93764b622457947490bed015dd55e",
+      "router": "b48269a4023f3a2284b4dab1b3f1aadf10a3e72d",
+      "tests": "bde25a27ed662c0b31d0af90d966a90a81fcf11c"
+    }
+  },
+  "real_components": [
+    "temporary Windows filesystem",
+    "file service and policy",
+    "actual recent_memory_for_gpt callback",
+    "conversation memory",
+    "prompt builders"
+  ],
+  "not_tested": [
+    "real GPT model/account",
+    "microphone or speech recognition accuracy",
+    "personal desktop",
+    "Pavilion performance",
+    "universal context retention under combined long project/question/preferences/progress load",
+    "R02 reset before GPT fallback"
+  ],
+  "linux_runtime_tests": false,
+  "new_build": false,
+  "installed_pc_changed": false
+}

@@ -1,3 +1,9 @@
+## R01 — primo difetto di continuità verificato nei sorgenti, 3 novembre 2026
+Source c2964c7ce3e68f2aaef77fa5eb25e99ff24d5851, ramo feature/fix-file-search-20261102. [Run Windows 41603248458](https://github.com/MATRIXNEO23/jarvis/actions/runs/41603248458) SUCCESS: 491 test per Python 3.11/3.12, incluse 7 nuove prove, zero fallimenti/errori; sintassi, probe nativo e Windows Search live PASS. Build/ZIP/publisher SKIPPED.
+Corretta perdita del riepilogo file tra callback e prompt, con spazio riservato prima degli esempi catalogo, ultimo scambio/priorità conservati e budget UTF16 coerente col bridge. Review indipendente iniziale ha trovato 3 problemi nel candidato parziale; ricontrollo mirato degli stessi blob non ha trovato altri blocchi. [Scheda](CONTINUITA-R01-20261103.md), [evidenza](evidence/context-delivery-r01-20261103.json).
+Verifica limitata ai casi provati: servizio/policy/callback/prompt reali su filesystem temporaneo Windows, nessuna chiamata al modello reale. Insieme di progetto/domanda/preferenze/progressi molto lunghi può ancora abbreviare i nomi; consegna callback con progetto attivo e conservazione universale non provate. R02 reset prima del fallback, R03 false conferme e restante R04 restano da svolgere. Scansione parziale e precisione Vosk separati. Il pacchetto pubblicato d06e233 resta precedente; nessun cambiamento al PC e nessuna nuova build.
+Prossimo passo autorizzato: R02, prova Windows del chiarimento non riconosciuto che azzera la ricerca prima di GPT, poi minima correzione con revoca/scadenza/nuova richiesta rispettate. Non rifare V01, skill installate o R01 senza nuovi motivi.
+
 # Jarvis — review completa della build, 3 novembre 2026
 
 ## Esito e ambito
