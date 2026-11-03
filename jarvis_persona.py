@@ -11,6 +11,11 @@ from dialogue_style import style_instruction
 
 MAX_GPT_PROMPT = 5000
 
+
+def prompt_units(text: str) -> int:
+    """Use the JavaScript bridge's UTF-16 string length, including emoji."""
+    return len(text.encode('utf-16-le', errors='surrogatepass')) // 2
+
 PERSONA = (
     "Sei JARVIS, assistente personale Windows: competente, discreto, "
     "cortese ma con carattere. Parla in italiano naturale e scorrevole, "
@@ -106,8 +111,27 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
     packed: dict = {"recent": [], "evidence": []}
 
     def fits(value: dict) -> bool:
-        return len(json.dumps(value, ensure_ascii=False,
-                              separators=(",", ":"))) <= max_chars
+        return prompt_units(json.dumps(value, ensure_ascii=False,
+                                       separators=(",", ":"))) <= max_chars
+
+    file_results = focus.get('file_results') if isinstance(focus, dict) else None
+    if not isinstance(file_results, str):
+        file_results = ''
+
+    def with_files(value, size):
+        return {**value, 'focus': {**value.get('focus', {}),
+                                  'file_results': file_results[:size]}}
+
+    def keep_files(value):
+        # Fit only current descriptive evidence, never paths or permissions.
+        low, high = 0, min(len(file_results), 650)
+        while low < high:
+            middle = (low + high + 1) // 2
+            if fits(with_files(value, middle)):
+                low = middle
+            else:
+                high = middle - 1
+        return with_files(value, low) if low else value
 
     # Explicit selected-project identity and a real pending question outrank
     # older chat history, but are never executable permissions.
@@ -169,7 +193,8 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
         if fits(candidate):
             packed=candidate
 
-    for entry in reversed(recents[-6:]):
+    for index, entry in enumerate(reversed(recents[-6:])):
+        recent_fallback = None
         for cap_user, cap_reply in ((135, 145), (95, 100),
                                     (65, 65), (38, 42)):
             cleaned = _recent_item(entry, cap_user, cap_reply)
@@ -177,11 +202,25 @@ def compact_memory(raw: str, max_chars: int = 780) -> str:
                 break
             candidate = dict(packed)
             candidate["recent"]=[cleaned]+packed["recent"]
-            if fits(candidate):
+            if recent_fallback is None and fits(candidate):
+                recent_fallback = candidate
+            # Keep the latest exchange alongside a useful file-context prefix.
+            # Preferences/progress/project/question retain their priorities.
+            required = (with_files(candidate, min(len(file_results), 100))
+                        if index == 0 and file_results else candidate)
+            if fits(required):
                 packed = candidate
                 break
         else:
-            break
+            if index == 0 and file_results and recent_fallback is not None:
+                packed = recent_fallback
+            elif not (index == 0 and file_results):
+                break
+        if index == 0 and file_results:
+            packed = keep_files(packed)
+
+    if not recents and file_results:
+        packed = keep_files(packed)
 
     for evidence in related[:4]:
         if not isinstance(evidence, dict):
@@ -228,12 +267,12 @@ def build_chat_prompt(message: str, memory_context: str = "",
         + json.dumps(message, ensure_ascii=False)
     )
     primary = PERSONA + status + instruction
-    if len(primary) > MAX_GPT_PROMPT:
+    if prompt_units(primary) > MAX_GPT_PROMPT:
         raise ValueError("Domanda troppo lunga per mantenere il contesto GPT.")
-    room = MAX_GPT_PROMPT - len(primary) - len(CONTEXT_RULE) - 28
+    room = MAX_GPT_PROMPT - prompt_units(primary) - prompt_units(CONTEXT_RULE) - 28
     if room >= 100:
         context = compact_memory(memory_context, min(room, 850))
         candidate = PERSONA + status + CONTEXT_RULE + "Contesto (JSON): " + context + ". " + instruction
-        if len(candidate) <= MAX_GPT_PROMPT:
+        if prompt_units(candidate) <= MAX_GPT_PROMPT:
             return candidate
     return primary

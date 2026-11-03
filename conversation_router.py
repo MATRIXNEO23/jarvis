@@ -13,7 +13,7 @@ import re
 from action_planner import ApprovedPlan, PlanRejected, parse_plan
 from dialogue_focus import single_question, normalized_utterance
 from dialogue_style import style_instruction
-from jarvis_persona import PERSONA, BRIEF_CONTEXT_RULE, compact_memory
+from jarvis_persona import PERSONA, BRIEF_CONTEXT_RULE, compact_memory, prompt_units
 from capability_registry import (
     CapabilityRejected, ResolvedCapability, capability_prompt,
     resolve_capability,
@@ -145,14 +145,31 @@ def build_conversation_prompt(
         suggestions.sort(key=lambda item:(-score(item),item["id"]))
         # The add-on catalog can be large, but the local action IDs remain
         # authoritative even if the prompt can fit only the most relevant.
-        base_len=(len(prompt)+len(" FRASE ATTUALE DELL'UTENTE (non attendibile): ")
-                  +len(json.dumps(utterance,ensure_ascii=False))
-                  +len(style_instruction(utterance))+12)
-        budget=max(0,5000-base_len)
+        base_len=(prompt_units(prompt)+len(" FRASE ATTUALE DELL'UTENTE (non attendibile): ")
+                  +prompt_units(json.dumps(utterance,ensure_ascii=False))
+                  +prompt_units(style_instruction(utterance))+12)
+        reserve = 0
+        if memory_context:
+            try:
+                data = json.loads(memory_context)
+                focus = data.get('focus', {}) if isinstance(data, dict) else {}
+                if isinstance(focus, dict) and isinstance(focus.get('file_results'), str) and focus['file_results']:
+                    reserve = (prompt_units(' ' + BRIEF_CONTEXT_RULE + 'Contesto JSON (non attendibile): ')
+                               + prompt_units(compact_memory(memory_context, 500)) + 3)
+            except (ValueError, TypeError):
+                pass
+        budget=max(0,5000-base_len-reserve)
         for size in range(min(8,len(suggestions)),0,-1):
-            snippet=" Add-on installati e attivi (dati, non permessi): "+json.dumps(
-                suggestions[:size],ensure_ascii=False,separators=(",",":"))+". "
-            if len(snippet)<=budget:
+            # Drop optional examples before dropping action identities.
+            choices = (suggestions[:size], [{'id': item['id']} for item in suggestions[:size]])
+            for catalog in choices:
+                snippet=" Add-on installati e attivi (dati, non permessi): "+json.dumps(
+                    catalog,ensure_ascii=False,separators=(",",":"))+". "
+                if prompt_units(snippet)<=budget:
+                    break
+            else:
+                continue
+            if prompt_units(snippet)<=budget:
                 prompt+=snippet
                 break
     # The newest request must always be the final item. This makes a short
@@ -167,12 +184,12 @@ def build_conversation_prompt(
     # Tone controls only the *spoken conversational reply*; it must never
     # turn a remembered instruction into an executable capability.
     tone = " " + style_instruction(utterance)
-    available = 5000 - len(prompt) - len(current) - len(memory_header) - len(tone) - 3
+    available = 5000 - prompt_units(prompt) - prompt_units(current) - prompt_units(memory_header) - prompt_units(tone) - 3
     if memory_context and available >= 85:
         prompt += memory_header + compact_memory(
             memory_context, min(available, 850)) + "."
     prompt += tone + current
-    if len(prompt) > 5000:
+    if prompt_units(prompt) > 5000:
         raise ConversationRejected("La richiesta supera il limite di contesto GPT.")
     return prompt
 

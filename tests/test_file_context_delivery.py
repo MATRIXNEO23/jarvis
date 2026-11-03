@@ -115,6 +115,28 @@ class FileContextDeliveryTests(unittest.TestCase):
                 self.assertEqual(focus['question_to_answer'], 'Quale cartella vuoi aprire?')
                 self.assertIn('Minecraft Bedrock', focus['file_results'])
 
+    def test_live_results_do_not_evict_the_latest_clarification_or_preferences(self):
+        raw = json.dumps({'focus': {'file_results': 'Minecraft Java, ' * 100},
+            'breve': [{'utente': 'Prepariamo una lettera',
+                       'jarvis': 'Vuoi un tono formale?', 'tipo': 'clarify'}],
+            'preferences': [{'key': 'language', 'value': 'it', 'source': 'user_confirmed'}]})
+        packed = json.loads(compact_memory(raw, 400))
+        self.assertEqual(packed['recent'][-1]['jarvis'], 'Vuoi un tono formale?')
+        self.assertEqual(packed['preferences'][0]['value'], 'it')
+
+    def test_supplementary_file_names_use_the_bridge_budget(self):
+        names = ['Minecraft ' + '\U0001f9f1' * 30 + suffix for suffix in (' Java', ' Bedrock')]
+        for name in names:
+            (self.docs / name).mkdir()
+        self.engine.execute_file('search', {'query': 'Minecraft'})
+        _, prompt = self.prompt_for('Quale contiene Java? ' + '\U0001f642' * 25)
+        for name in names:
+            self.assertIn(name, prompt)
+        self.assertIn('addon.accesso_file.apri', prompt)
+        raw = json.dumps({'focus': {'file_results': '\U0001f9f1' * 650}})
+        packed = compact_memory(raw, 400)
+        self.assertLessEqual(len(packed.encode('utf-16-le')) // 2, 400)
+
 
 if __name__ == '__main__':
     unittest.main()
