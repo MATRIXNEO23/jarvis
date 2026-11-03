@@ -1,3 +1,6 @@
+## Review completa conclusa — 3 novembre 2026
+La review dei sorgenti e del pacchetto di tutte le aree esistenti è conclusa: [rapporto definitivo](BUILD-REVIEW-COMPLETA-20261103.md). Dieci rilievi documentati; priorità continuità GPT–motore locale, con prove Windows ancora da svolgere. Rilevati anche rischi su salvataggio/chiusura documenti, voce, timeout, ricerca e copertura diagnostica. Verificati byte/manifest/sorgenti e riletti i test Windows storici; nessun nuovo collaudo funzionale o nuova build. Sorgenti correttivi 8066852 non nello ZIP d06e233: preservarli. Apertura generale desktop/Store resta differita. Ripresa: prove mirate Windows, poi correzioni; non dichiarare tutti i rilievi riprodotti o già risolti.
+
 ## Priorità 3 novembre 2026 — review completa prima delle nuove funzioni
 L'utente richiede review completa di TUTTE le funzioni già presenti, usando le quattro skill installate; non soltanto ricerca file. [Rapporto e punto corrente](BUILD-REVIEW-COMPLETA-20261103.md). Apertura generale di programmi desktop e app Store confermata come aggiunta FUTURA e differita; mantenere il requisito in WINDOWS.md, senza implementarlo ora. Review prodotto in sola lettura, nessuna nuova build; prima byte/sorgenti, integrazioni e prove, poi rilievi e piano. Il vecchio prossimo passo limitato ai due difetti ricerca è subordinato alla chiusura di questa review.
 

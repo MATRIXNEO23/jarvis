@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-03",
+  "scope": "all_existing_jarvis_capability_areas",
+  "status": "source_and_package_review_complete_windows_reproduction_pending",
+  "published_source": "d06e233a98e4ea5b4e99a9d296b9570ce0c92d86",
+  "corrective_source": "806685275947cea4b933d20aa0317658d13b853c",
+  "corrective_branch_head": "445efe657e8bbac504d11ce71b10c7c110c3880d",
+  "stable_base": "b936879a431370d206152be7b089baf587d15499",
+  "archive": {
+    "bytes": 266689,
+    "sha256": "ac130883d32518b430737f8f3d767a16a56e3cad9b3ae32f37d8f20799f42699",
+    "files": 79,
+    "python_modules": 64,
+    "manifest_hashes_verified": 78,
+    "source_matches_after_line_ending_normalization": 78,
+    "crc_and_extraction": "pass",
+    "ast_parse": "pass"
+  },
+  "historical_windows_runs": [
+    {
+      "id": 41350638557,
+      "tests_per_python": 466,
+      "extracted_zip_tests": 93
+    },
+    {
+      "id": 41367835278,
+      "tests_per_python": 471,
+      "in_published_zip": false
+    }
+  ],
+  "new_functional_tests_executed": false,
+  "windows_reproductions_performed_during_review": false,
+  "findings": [
+    "R01_file_focus_omitted",
+    "R02_premature_search_reset",
+    "R03_success_claim_without_local_receipt",
+    "R04_operational_context_truncated",
+    "R05_index_priority_per_root",
+    "R06_timeout_and_cancellation_mismatch",
+    "R07_save_close_edit_race",
+    "R08_active_tts_not_cancelled_on_close",
+    "R09_legacy_file_lists_spoken",
+    "R10_diagnostics_package_coverage"
+  ],
+  "finding_evidence_type": "static_source_inspection",
+  "independent_review_areas": [
+    "voice",
+    "documents",
+    "Telegram",
+    "timers",
+    "projects_and_persistence",
+    "diagnostics",
+    "worker_and_ui_lifecycle"
+  ],
+  "deferred_features": [
+    "general_desktop_and_microsoft_store_app_launch",
+    "manual_application_registration"
+  ],
+  "product_changes": false,
+  "new_release_created": false
+}
