@@ -130,3 +130,12 @@ Fotografia del commit bb94afa1865fe0315021f783736be3cb77c4af84. Presenza, dimens
 - Windows CI: run 41350638557, due job 3.11/3.12, pacchetto estratto e avvio UI.
 - Collaudo PC: pendente. La base confermata BASE-UTENTE-20261101 b936879 resta invariata.
 - Recupero: usare la cartella precedente Timer Audio Fix2; non cancellare profili o dati.
+
+## Candidato Continuità cec4536 — 2026-11-03
+
+- ZIP persistente: Download/Jarvis-Continuita-20261103-cec4536.zip
+- Sorgenti: cec4536b0f5991cb900680ed05295245f4e04acb
+- SHA-256: d96e90657ad67399893ef5d89a7e250da5369b64a833fd596e4d718ad3687f07
+- Windows CI: run 41614085149, due job 3.11/3.12, pacchetto estratto e avvio UI.
+- Collaudo PC: pendente. La base confermata BASE-UTENTE-20261101 b936879 resta invariata.
+- Recupero: usare la cartella precedente Timer Audio Fix2; non cancellare profili o dati.

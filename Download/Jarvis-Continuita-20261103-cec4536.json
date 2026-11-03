@@ -1,0 +1,11 @@
+{
+  "source_commit": "cec4536b0f5991cb900680ed05295245f4e04acb",
+  "archive": "Jarvis-Continuita-20261103-cec4536.zip",
+  "files": 79,
+  "bytes": 268298,
+  "sha256": "d96e90657ad67399893ef5d89a7e250da5369b64a833fd596e4d718ad3687f07",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "windows_workflow_run": "41614085149",
+  "pc_test": "pending"
+}

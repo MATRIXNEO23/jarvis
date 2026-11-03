@@ -1,4 +1,13 @@
-> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultimo candidato Accesso file **d06e233**, verificato automaticamente su Windows; collaudo Pavilion pendente. Base PC confermata **Timer Audio Fix2, b936879**, preservata.
+> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultimo candidato Continuità **cec4536**, verificato automaticamente su Windows; collaudo Pavilion pendente. Base PC confermata **Timer Audio Fix2, b936879**, preservata.
+
+## Continuità — build candidata Windows (cec4536)
+
+[Scarica Jarvis-Continuita-20261103-cec4536.zip](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/Jarvis-Continuita-20261103-cec4536.zip)
+
+Correzioni di continuità della domanda e dei risultati nel passaggio a GPT; ricerca Windows prima del fallback e nomi naturali. Candidata per il collaudo del dialogo e della ricerca, senza nuove capacità di apertura file. Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Accesso file > Configura, Salva e Attiva. Profilo di prova separato, precedente installazione preservata. Test automatici solo Windows, archivio estratto e avvio UI verificati. Collaudo Pavilion/account/microfono reali ancora da fare; indice Windows reale e fallback verificati in CI. Nessuna ricerca web attivata da questo pacchetto.
+
+Sorgenti: [cec4536](https://github.com/MATRIXNEO23/jarvis/tree/cec4536b0f5991cb900680ed05295245f4e04acb). [Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41614085149). SHA-256: `d96e90657ad67399893ef5d89a7e250da5369b64a833fd596e4d718ad3687f07`.
+
 
 ## Accesso file 0.1.0 — build candidata Windows (d06e233)
 

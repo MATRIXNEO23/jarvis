@@ -1,6 +1,6 @@
-> **Installazione e configurazione aggiornate:** parti da [Prima-installazione/README.md](Prima-installazione/README.md). Per riprendere lo sviluppo leggi [RECUPERO.md](RECUPERO.md) e [l’indice dei sorgenti](docs/INDICE-SORGENTI.md). Le sezioni sottostanti contengono anche aggiornamenti storici: non identificano tutte la versione attuale. Nessuna nuova build applicativa è pubblicata con questo aggiornamento delle istruzioni.
+> **Installazione e configurazione aggiornate:** parti da [Prima-installazione/README.md](Prima-installazione/README.md). Per riprendere lo sviluppo leggi [RECUPERO.md](RECUPERO.md) e [l’indice dei sorgenti](docs/INDICE-SORGENTI.md). Le sezioni sottostanti contengono anche aggiornamenti storici: non identificano tutte la versione attuale. 
 
-**Nuova build candidata Windows: [Accesso file 0.1.0](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Accesso-File-0.1.0-20261101-7298fb6.zip)** — cartelle consentite, ricerca e lettura; [istruzioni/prove](docs/ACCESSO-FILE-RAPPORTO-20261101.md). La precedente Timer Audio Fix2 resta il riferimento PC confermato; questa build attende il tuo collaudo.
+**Nuova build candidata Windows: [Jarvis — Continuità e ricerca](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Continuita-20261103-cec4536.zip)** — correzioni del contesto e ricerca Windows; collaudo PC pendente. [Istruzioni e versioni](Download/README.md).
 
 
 # Jarvis — Windows 10 (64 bit)
