@@ -138,5 +138,62 @@ class FileContextDeliveryTests(unittest.TestCase):
         self.assertLessEqual(len(packed.encode('utf-16-le')) // 2, 400)
 
 
+    def test_manually_supplied_folder_reaches_prompt_without_search_results(self):
+        for folder in (r'%APPDATA%\.minecraft', r'%USERPROFILE%\Documenti\Archivio'):
+            with self.subTest(folder=folder):
+                memory = ConversationMemory()
+                memory.remember('La cartella è ' + folder,
+                    'Vuoi aprire questa cartella oppure elencarne il contenuto?', 'clarify')
+                self.assertFalse(self.files._results)
+                raw, prompt = self.prompt_for('elenca il contenuto', memory)
+                self.assertIn(folder, raw)
+                self.assertIn(folder, prompt)
+                self.assertIn('elencarne il contenuto', prompt)
+                self.assertIn('addon.accesso_file.elenca', prompt)
+
+    def test_active_project_keeps_latest_supplied_folder_ahead_of_old_steps(self):
+        import re
+        import sqlite3
+        from test_activity_status import Value
+        from workspace_memory import WorkspaceMemory, WorkspaceError
+        workspace = WorkspaceMemory(self.root / 'workspace.sqlite3')
+        ident = workspace.create_project('Prova contesto cartelle')
+        workspace.set_summary(ident, 'Stato precedente del progetto. ' * 8)
+        for label in ('Prima operazione precedente ', 'Seconda operazione precedente '):
+            ticket = workspace.begin_step(ident, label + 'di verifica ' * 8, source='local')
+            workspace.finish_step(ident, ticket, 'failed', 'Dettaglio precedente. ' * 12)
+        folder = r'%APPDATA%\.minecraft'
+        memory = ConversationMemory()
+        env = dict(conversation_memory=memory, focus_hint=focus_hint, json=json,
+            active_project_id=ident, addon_manager=self.manager, workspace=workspace,
+            preference_store=None, memory_enabled=Value(False), durable_brain=None,
+            re=re, sqlite3=sqlite3, WorkspaceError=WorkspaceError,
+            workspace_status=Value(''))
+        self.callback('remember_exchange', env)('La cartella è ' + folder,
+            'Vuoi aprire questa cartella oppure elencarne il contenuto?', 'clarify')
+        raw = self.callback('recent_memory_for_gpt', env)('elenca il contenuto')
+        self.assertIn(folder, raw)
+        self.assertEqual(json.loads(raw)['focus']['project']['name'], 'Prova contesto cartelle')
+        live = snapshot_capabilities(settings={}, has_document=False,
+            telegram_credentials=False, telegram_voice_dependencies=False,
+            registry=self.manager.registry, telethon_installed=False)
+        prompt = build_conversation_prompt('elenca il contenuto', memory_context=raw,
+            runtime_info=capability_status_prompt(live),
+            addon_actions=self.manager.active_actions())
+        self.assertLessEqual(len(prompt.encode('utf-16-le')) // 2, 5000)
+        self.assertIn(folder, prompt)
+        self.assertIn('elencarne il contenuto', prompt)
+        self.assertIn('Prova contesto cartelle', prompt)
+
+    def test_latest_discussion_subject_reaches_prompt_without_local_results(self):
+        memory = ConversationMemory()
+        memory.remember('Parliamo del preventivo per il tetto verde.',
+            'Preferisci rivedere il costo o i materiali?', 'clarify')
+        _, prompt = self.prompt_for('Rivediamo i materiali', memory)
+        self.assertIn('tetto verde', prompt)
+        self.assertIn('Preferisci rivedere il costo o i materiali?', prompt)
+
+
+
 if __name__ == '__main__':
     unittest.main()
