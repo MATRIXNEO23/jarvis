@@ -75,7 +75,9 @@ jobs:
           }
 
       - name: Live Windows Search integration (isolated CI only)
-        if: matrix.python-version == '3.12'
+        # Independent native evidence remains useful when a unit regression
+        # has intentionally reproduced a different application defect.
+        if: ${{ !cancelled() && matrix.python-version == '3.12' }}
         timeout-minutes: 5
         run: python tools/probe_windows_search_live.py --ci-only
 

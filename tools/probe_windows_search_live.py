@@ -130,6 +130,19 @@ def main():
         wait_for('rename_observed', rename_visible)
         renamed.unlink()
         wait_for('deletion_observed', lambda: query(second, root) == [])
+
+        # Exercise the same SQL/provider with an actual directory, not a file
+        # or a mocked index result. This distinguishes folder support from
+        # application orchestration and the scope on the user's own PC.
+        folder_name = token+'-folder'
+        folder = root/folder_name
+        folder.mkdir()
+        wait_for('created_folder_found', lambda: has_path(query(folder_name, root), folder))
+        if query(folder_name, other) != []:
+            raise AssertionError('Folder query escaped the requested scope')
+        report['checks']['folder_other_scope_empty'] = 'passed'
+        folder.rmdir()
+        wait_for('folder_deletion_observed', lambda: query(folder_name, root) == [])
         report['native_index_verified'] = True
     except Exception as exc:
         report['failure_stage'] = stage
