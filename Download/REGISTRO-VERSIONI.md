@@ -1,9 +1,10 @@
 # Build numerate Jarvis
 
-Da questa consegna i file hanno numeri progressivi. Ogni versione pubblicata resta disponibile; la prossima sarà004.
+Da questa consegna i file hanno numeri progressivi. Ogni versione pubblicata resta disponibile; la prossima sarà005.
 
 | Build | Pacchetto | Stato | Descrizione |
 | --- | --- | --- | --- |
+| 004 | [Jarvis-004.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-004.zip) | Candidata, collaudo PC pendente | Avvio programmi e app con comandi personali |
 | 003 | [Jarvis-003.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-003.zip) | Candidata, collaudo PC pendente | Interruttori rapidi MIC, GPT e MEMORIA |
 | 002 | [Jarvis-002.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-002.zip) | Candidata, collaudo PC pendente | Contesto della cartella indicata in conversazione |
 | 001 | [Jarvis-001.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-001.zip) | Candidata, collaudo PC pendente | Continuità e ricerca; stessi byte della precedente candidata cec4536 |

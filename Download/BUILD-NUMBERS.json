@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 3,
-  "next_build": 4,
+  "latest_build": 4,
+  "next_build": 5,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -47,6 +47,20 @@
       "bytes": 266469,
       "previous_build": 2,
       "git_blob_sha": "b6da905e69821efa54efe723caeb05ab5099d687"
+    },
+    {
+      "build_number": 4,
+      "label": "004",
+      "archive": "Jarvis-004.zip",
+      "metadata": "Jarvis-004.json",
+      "date": "2026-11-03",
+      "description": "Avvio programmi e app con comandi personali",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "a1b93f34ff25bd9a972ed971a432af4984366f28",
+      "sha256": "8589a789fecafd7918bdcf85cb81534ebd079b3531321a3e66042c0ff0a3c980",
+      "bytes": 282968,
+      "previous_build": 3,
+      "git_blob_sha": "5199bba974492f1c92d4f96d6c64043cb5aba747"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"

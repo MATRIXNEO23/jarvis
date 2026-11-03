@@ -1,0 +1,14 @@
+{
+  "build_number": 4,
+  "build_label": "004",
+  "previous_build": 3,
+  "source_commit": "a1b93f34ff25bd9a972ed971a432af4984366f28",
+  "archive": "Jarvis-004.zip",
+  "files": 86,
+  "bytes": 282968,
+  "sha256": "8589a789fecafd7918bdcf85cb81534ebd079b3531321a3e66042c0ff0a3c980",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "windows_workflow_run": "41694455705",
+  "pc_test": "pending"
+}

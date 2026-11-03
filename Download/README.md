@@ -1,4 +1,13 @@
-> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **003**, verificata su Windows; collaudo PC pendente. Build001/002 e base PC b936879 conservate.
+> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **004**, verificata su Windows; collaudo PC pendente. Build001/002/003 e base PC b936879 conservate.
+
+## Build 004 — Programmi e app
+
+[Scarica Jarvis-004.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-004.zip)
+
+Nuova add-on Programmi e app: scegli le app consentite e un comando vocale personale; apri/avvia/lancia usano la stessa selezione. Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Programmi e app > Configura. Aggiorna elenco, spunta Consenti avvio, Salva e attiva l’add-on. Profilo e impostazioni esistenti conservati. Test Windows, pacchetto estratto e avvio/chiusura UI verificati; GPT/account/microfono/Pavilion da collaudare. Limite20 risultati e altri rilievi ancora aperti; nessuna nuova capacità di apertura file.
+
+Sorgenti: [a1b93f3](https://github.com/MATRIXNEO23/jarvis/tree/a1b93f34ff25bd9a972ed971a432af4984366f28). [Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41694455705). SHA-256: `8589a789fecafd7918bdcf85cb81534ebd079b3531321a3e66042c0ff0a3c980`.
+
 
 ## Build 003 — Interruttori rapidi
 
