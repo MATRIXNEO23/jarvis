@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-03",
+  "scope": "R02 live pending file clarification",
+  "runtime": "126536015968429b8c71d14497731b448050bb67",
+  "branch": "feature/fix-file-search-20261102",
+  "red": {
+    "source": "3a8d368168491a69e13a2e980cdde4fc01a12b52",
+    "run": 41612249231,
+    "jobs": [
+      125836779004,
+      125836778566
+    ],
+    "failures_per_job": 3,
+    "errors_per_job": 0,
+    "executions_per_job": 512,
+    "duplicate_discovery": "7 pre-existing tests discovered twice by imported TestCase; fixed test import only"
+  },
+  "green": {
+    "run": 41612658412,
+    "status": "success",
+    "jobs": [
+      {
+        "id": 125838180245,
+        "python": "3.11.9",
+        "tests": 505,
+        "seconds": 56.642
+      },
+      {
+        "id": 125838180871,
+        "python": "3.12.10",
+        "tests": 505,
+        "seconds": 79.073
+      }
+    ],
+    "new_tests": 5
+  },
+  "boundaries": {
+    "real": [
+      "Windows temporary filesystem",
+      "policy",
+      "file service",
+      "application callbacks",
+      "prompt builder"
+    ],
+    "controlled": [
+      "external-model transport",
+      "worker scheduling"
+    ],
+    "not_tested": [
+      "personal microphone",
+      "real model/account",
+      "Pavilion performance",
+      "arbitrary dialogue without pending local question"
+    ]
+  },
+  "build": "not requested; skipped",
+  "published_package": "d06e233 unchanged",
+  "next": "Continue conversation-context review and local result consistency; no new search/open capabilities"
+}
