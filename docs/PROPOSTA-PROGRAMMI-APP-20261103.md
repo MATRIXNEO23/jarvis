@@ -2,6 +2,30 @@
 
 Stato: soluzione proposta in risposta alla richiesta dell'utente; nessun codice prodotto, test Windows o build nuova. La003 resta il download corrente. L'utente riferisce «i tasti funzionano»: conferma limitata ai nuovi pulsanti della003, non a tutte le funzioni o prestazioni.
 
+## Dialogo naturale confermato — locale prima, modello se serve, 3 novembre 2026
+
+L'utente precisa che l'avvio è un comando interno e non deve dipendere dalla ripetizione esatta della frase configurata. Esempio richiesto: «apri Netflix» e «avvia Netflix» devono esprimere la stessa azione. Delega all'assistente la soluzione tecnica, senza chiedere di scegliere sinonimi o formule. Il modello aiuta soltanto quando il motore locale non comprende abbastanza.
+
+### Soluzione tecnica scelta per il progetto
+
+Separare intenzione di avvio e identità dell'app. Un unico risolutore locale usa il catalogo salvato di nomi ufficiali, nomi personali e frasi personalizzate; tutti i percorsi confluiscono nella stessa azione autorizzata. La frase personale aggiunge una scorciatoia e non disabilita l'avvio naturale per nome.
+
+0. Applicare prima di ogni matching e fallback i controlli di negazione, annullamento e appartenenza ai dialoghi esistenti; una scorciatoia non deve superarli.
+1. Riconoscere poi le frasi personalizzate salvate e i comandi di avvio con verbi equivalenti (apri/avvia/lancia e relative forme comuni), articoli e formule di cortesia previste dal parser; confronto normalizzato, senza distinguere maiuscole/punteggiatura ordinaria. Non memorizzare ogni combinazione come comando separato. «apri Netflix», «avvia Netflix», «lancia Netflix», «puoi aprire Netflix?» → stessa intenzione e app.
+Se la frase personalizzata è della forma «apri/avvia/lancia X», ricavare automaticamente anche X come richiamo locale dell'app, segnalando collisioni al salvataggio: «apri la posta» permette anche «avvia la posta» senza una seconda configurazione. Per frasi libere non decomponibili il matching locale usa la frase salvata; parafrasi ulteriori seguono il normale fallback GPT.
+2. Risolvere il nome fra le app selezionate usando prima identità esatta/alias; nomi parziali o simili producono candidati, non avvii automatici. Frase personale libera, ad es. «controlliamo la posta», può richiamare l'app scelta anche senza verbo standard, se configurata esplicitamente.
+3. App/intento univoci e permesso valido → avvio locale senza chiamata al modello. Citare un'app in una domanda o conversazione («Netflix funziona?», «non aprire Netflix») non autorizza l'avvio. Preservare negazioni, annullamento e precedenza dei dialoghi esistenti.
+4. Se l'intenzione o il riferimento non sono risolti localmente, usare il GPT già abilitato/collegato per interpretare nel contesto corrente, riusando router e gateway esistenti. Il modello propone soltanto la capacità definita e il nome/riferimento dell'app; risoluzione dell'identità, consenso attuale ed esecuzione restano locali. Nessun percorso, script o comando eseguibile inventato dal modello.
+5. Se rimangono due app o la trascrizione è dubbia, domanda breve e elenco visivo; risposta nome/numero completa quella stessa richiesta una volta sola. Se GPT non è disponibile e il locale non risolve, chiarimento utile senza avvio casuale. Nessuna nuova richiesta di autorizzazione a ogni avvio di un'app già consentita.
+
+Conflitti: normalizzare le frasi/alias prima di salvarli e segnalare conflitti sia letterali sia riconosciuti dalla grammatica di avvio; non sottrarre comandi esistenti (file/documenti/sistema) o instradare silenziosamente verso altra app. L'algoritmo di dettaglio e i casi di collisione verranno verificati nel piano e nei test, senza promettere riconoscimento di ogni possibile parafrasi o correzione certa di errori STT.
+
+### Accettazione da integrare nei test Windows
+
+Stessa app con apri/avvia/lancia/formula cortese, nome ufficiale e personale; frase completa personalizzata; nessuna chiamata GPT se univoca; parafrasi non locale → un passaggio GPT simulato → identità consentita → un solo avvio; modello inventa app/percorso → rifiuto; GPT spento → chiarimento; omonimi/trascrizioni simili → scelta nel contesto; negazione/domanda/nuovo argomento → nessun avvio; revoca fra interpretazione ed esecuzione → blocco. Collaudi voce con trascrizioni controllate e microfono reale rimangono distinti.
+
+Stato: requisito e soluzione progettuale aggiornati, nessun codice applicativo o build nuova in questa precisazione. Non chiedere all'utente di elencare sinonimi o di scegliere l'algoritmo. La003 resta immutabile.
+
 ## Requisito confermato — comando vocale personalizzato, 3 novembre 2026
 
 L'utente richiede di selezionare un programma e personalizzarne il comando di attivazione, perché il nome originale può essere difficile da pronunciare o riconoscere. Questo estende il precedente nome personale facoltativo a una frase di avvio completa scelta dall'utente.
@@ -82,3 +106,6 @@ Misure consumo: niente polling/scansione residente; rilevamento on-demand, proce
 ## Esito della revisione preventiva
 
 Review indipendente in sola lettura del documento45b15baa092d7ae74c67d1fcf43fc7c031f3c332: nessuna questione sostanziale mancante per preparare il piano. Confermata distinzione inventario/launcher, fallback manuale, integrazione fidata e revoca delle richieste pendenti. Precedenza dialoghi, validazione launcher e copertura nativa Windows sono verifiche già richieste, non prove eseguite. Scelta tecnica rimane proposta dell'assistente; nessuna implementazione o nuova build avviata.
+
+## Ricontrollo mirato — frasi e varianti naturali
+Review indipendente in sola lettura dell'estensione ef3e955a79217d75572a9343cb9c91c3a732e1ba: nessuna questione sostanziale mancante su locale/GPT, consenso, conflitti e contesto. Precisazione recepita: negazione e annullamento precedono matching delle scorciatoie e fallback, non soltanto l'esecuzione finale. Chiarita come scelta tecnica anche la derivazione automatica del richiamo X da una frase personale con verbo di avvio; test di collisione e varianti richiesti. Si tratta di review del progetto, non di test di una funzione implementata.
