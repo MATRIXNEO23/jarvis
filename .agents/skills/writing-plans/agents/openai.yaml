@@ -1,0 +1,13 @@
+interface:
+  display_name: writing plans
+  short_description: Use when you have a spec or requirements for a multi-step task,
+    before touching code
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

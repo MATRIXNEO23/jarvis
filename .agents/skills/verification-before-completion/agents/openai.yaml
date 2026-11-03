@@ -1,0 +1,15 @@
+interface:
+  display_name: verification before completion
+  short_description: Use when about to claim work is complete, fixed, or passing,
+    before committing or creating PRs - requires running verification commands and
+    confirming output before making any success claims; evidence before assertions
+    always
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

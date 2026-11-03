@@ -1,0 +1,13 @@
+interface:
+  display_name: systematic debugging
+  short_description: Use when encountering any bug, test failure, or unexpected behavior,
+    before proposing fixes
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
