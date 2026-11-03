@@ -95,6 +95,41 @@ class ProgramIntegrationTests(unittest.TestCase):
                 finally:
                     fixture.doCleanups()
 
+    def test_actual_voice_dispatch_launches_same_app_in_all_listening_modes(self):
+        import test_voice_corrections_review as voice_tests
+        from voice_control import GPT_CONVERSATION,PUSH_TO_TALK,CONTINUOUS
+        voice_tests.VoiceCorrectionReviewTests.setUpClass()
+        for mode in (GPT_CONVERSATION,PUSH_TO_TALK,CONTINUOUS):
+            fixture=voice_tests.VoiceCorrectionReviewTests()
+            fixture.setUp()
+            try:
+                fixture.voice_environment(mode)
+                main,env=self.environment()
+                fixture.env.update(env)
+                before=len(self.launched)
+                phrase='ehi jarvis avvia la posta' if mode==CONTINUOUS else 'avvia la posta'
+                fixture.receive_voice(phrase)
+                self.assertEqual(self.launched[before:],[self.mail])
+                fixture.env['start_conversation_gpt'].assert_not_called()
+            finally:
+                fixture.doCleanups()
+
+    def test_unresolved_voice_in_conversation_mode_reaches_existing_model_once(self):
+        import test_voice_corrections_review as voice_tests
+        voice_tests.VoiceCorrectionReviewTests.setUpClass()
+        fixture=voice_tests.VoiceCorrectionReviewTests()
+        fixture.setUp()
+        try:
+            fixture.voice_environment()
+            main,env=self.environment()
+            fixture.env.update(env)
+            phrase='metti in moto la posta'
+            fixture.receive_voice(phrase)
+            fixture.env['start_conversation_gpt'].assert_called_once_with(phrase)
+            self.assertFalse(self.launched)
+        finally:
+            fixture.doCleanups()
+
     def test_model_fallback_uses_actual_router_manager_and_dispatch_branch(self):
         from conversation_router import build_conversation_prompt,parse_conversation_intent
         from jarvis_persona import prompt_units

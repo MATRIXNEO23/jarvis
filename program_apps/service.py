@@ -46,14 +46,22 @@ def protected(text):
     from project_documents import parse_simple_save
     from document_language import classify_document_choice
     query = launch_query(text)
+    try:
+        project = parse_project_voice(text)
+    except ValueError:
+        project = None
+    # Project's generic "apri X" grammar also accepts application names.
+    # Only explicit project requests and non-launch project verbs are reserved.
+    project_reserved = bool(project and (project.action!='open' or query is None
+                            or re.search(r'\bprogett[oi]\b',normalized(text))))
     return bool(speech_to_local_command(text) or dictation_voice_action(text)
-        or parse_project_voice(text) or parse_preference_intent(text)
+        or project_reserved or parse_preference_intent(text)
         or diagnostic_request(text) or parse_telegram_send_intent(text) or
         parse_simple_save(text) is not None or
         classify_document_choice(text,pending=False) in ('save','discard') or
         re.search(r'\b(file|cartella|cartelle|documento|documenti|blocco note|notepad|'
                   r'calcolatrice|calc|esplora risorse|esplora file|browser|download|'
-                  r'disco locale|unità|unita|progetto|timer|promemoria|telegram|dettatura)\b', normalized(text)) or
+                  r'disco locale|unità|unita|progett[oi]|timer|promemoria|telegram|dettatura)\b', normalized(text)) or
         normalized(text) in ('annulla', 'stop', 'basta', 'aiuto', 'comandi', 'stato sistema'))
 
 

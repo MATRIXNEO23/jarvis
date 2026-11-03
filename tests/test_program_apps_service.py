@@ -173,3 +173,12 @@ class ProgramServiceTests(unittest.TestCase):
         self.add('Finestra secondaria')
         self.assertIsNone(self.apps.parse_command('apri Finestra'))
         self.assertFalse(self.launched)
+
+    def test_project_parser_does_not_reserve_normal_app_launch_or_raise_on_paths(self):
+        from program_apps.service import protected
+        self.assertFalse(protected('apri Netflix'))
+        self.assertFalse(protected('apri la posta'))
+        self.assertTrue(protected('apri il progetto Netflix'))
+        self.assertTrue(protected('riprendi Netflix'))
+        self.assertIsNone(self.apps.parse_command('apri C:\\Cartella con spazi'))
+        self.assertIsNone(self.apps.parse_command('apri '+'parola '*40))
