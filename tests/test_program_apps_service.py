@@ -54,7 +54,9 @@ class ProgramServiceTests(unittest.TestCase):
                        'Netflix funziona?','apri cartella posta','apri blocco note']:
             self.assertIsNone(self.apps.parse_command(phrase))
         self.assertFalse(self.launched)
-        for phrase in ['apri blocco note','avvia calcolatrice','non avviare Netflix']:
+        for phrase in ['apri blocco note','avvia calcolatrice','non avviare Netflix',
+                       'attiva dettatura','disattiva dettatura','manda un messaggio a Mario',
+                       'salva','salva e chiudi','scarta le modifiche']:
             with self.assertRaises(ValueError):
                 self.save({self.mail:phrase})
 

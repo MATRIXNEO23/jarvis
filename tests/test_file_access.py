@@ -229,7 +229,7 @@ class FileAccessTests(unittest.TestCase):
         main = next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
         callback = next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name=='try_file_command')
         calls = []
-        env = {'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
+        env = {'engine':self.engine,'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
                'write_line':lambda *args:None,'submit_local':lambda **kw:calls.append(kw)}
         exec(compile(ast.Module(body=[callback],type_ignores=[]),'jarvis-real-callback','exec'),env)
         self.assertTrue(env['try_file_command']('cerca file preventivo'))
@@ -530,7 +530,7 @@ class FileAccessTests(unittest.TestCase):
         main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
         callback=next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name=='try_file_command')
         calls=[]
-        env={'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
+        env={'engine':self.engine,'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
              'write_line':lambda *a:None,'submit_local':lambda **kw:calls.append(kw)}
         exec(compile(ast.Module(body=[callback],type_ignores=[]),'real-file-choice','exec'),env)
         self.assertIn('Richiesta in attesa: aprire',self.files.context_hint())
@@ -811,7 +811,7 @@ function New-Object {
         callbacks=[next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name==name)
                    for name in ('try_file_command','send_console_input')]
         calls=[]; projects=[]; request=Mock(); request.get.return_value='apri Foto'
-        env={'request':request,'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
+        env={'engine':self.engine,'request':request,'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
              'write_line':lambda *a:None,'submit_local':lambda **kw:calls.append(kw),
              'reconcile_document_session':lambda **kw:None,'try_telegram_voice_send':lambda s:False,
              'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,
@@ -1050,7 +1050,7 @@ function New-Object {
             and isinstance(n.test.left,ast.Name) and n.test.left.id=='kind'
             and isinstance(n.test.comparators[0],ast.Constant) and n.test.comparators[0].value=='file_progress')
         code=compile(ast.Module(body=branch.body,type_ignores=[]),'real-file-progress-callback','exec')
-        env={'addon_manager':self.manager,'root':object(),
+        env={'engine':self.engine,'addon_manager':self.manager,'root':object(),
              'write_line':lambda *a:self.fail('Progress must not flood chat'),
              'speak_result':lambda *a:self.fail('Progress must not be spoken')}
         seen=[]
@@ -1087,7 +1087,7 @@ function New-Object {
         main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
         callback=next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name=='try_file_command')
         calls=[]
-        env={'addon_manager':self.manager,'active_project_id':None,'busy_local':True,
+        env={'engine':self.engine,'addon_manager':self.manager,'active_project_id':None,'busy_local':True,
              'write_line':lambda *a:None,'submit_local':lambda **kw:calls.append(kw)}
         exec(compile(ast.Module(body=[callback],type_ignores=[]),'real-busy-search-cancel','exec'),env)
         def index(*args):
@@ -1098,3 +1098,4 @@ function New-Object {
         self.assertEqual(result.status,'rejected')
         self.assertTrue(self.files.cancelled.is_set())
         self.assertEqual(calls,[])
+

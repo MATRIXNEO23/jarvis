@@ -214,6 +214,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
 
     def voice_environment(self, mode=GPT_CONVERSATION, memory=True):
         self.env.update(
+            engine=SimpleNamespace(program_apps=None),
             voice_mode=Value(mode), memory_enabled=Value(memory),
             STANDBY=STANDBY, GPT_CONVERSATION=GPT_CONVERSATION,
             CONTINUOUS=CONTINUOUS, speaker=SimpleNamespace(is_audible=lambda: False),
@@ -280,3 +281,4 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

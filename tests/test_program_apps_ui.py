@@ -2,16 +2,16 @@
 import os
 import time
 import unittest
-from test_program_apps_service import ProgramServiceTests
+import test_program_apps_service as service_tests
 
 
 @unittest.skipUnless(os.name=='nt','Windows-only user requirement')
 class ProgramUITests(unittest.TestCase):
-    add=ProgramServiceTests.add
-    save=ProgramServiceTests.save
+    add=service_tests.ProgramServiceTests.add
+    save=service_tests.ProgramServiceTests.save
 
     def setUp(self):
-        ProgramServiceTests.setUp(self)
+        service_tests.ProgramServiceTests.setUp(self)
         import tkinter as tk
         from program_apps.ui import ProgramSettings
         self.root_ui=tk.Tk();self.root_ui.withdraw()
@@ -52,6 +52,12 @@ class ProgramUITests(unittest.TestCase):
             raise OSError('Aggiornamento annullato')
         self.apps.discoverer=wait
         self.ui.refresh();self.ui.cancelled.set()
+        self.assertEqual(str(self.ui.phrase_entry.cget('state')),'disabled')
+        selected=self.ui._selected
+        before=dict(self.ui.rows)
+        self.ui.toggle_selected()
+        self.assertEqual(self.ui.rows,before)
+        self.assertFalse(self.ui.save())
         end=time.monotonic()+3
         while self.ui._working and time.monotonic()<end:
             self.root_ui.update();time.sleep(.02)

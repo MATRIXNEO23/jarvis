@@ -7,15 +7,15 @@ from pathlib import Path
 from types import SimpleNamespace
 import unittest
 
-from test_program_apps_service import ProgramServiceTests
+import test_program_apps_service as service_tests
 from test_activity_status import GlobalCallbacks
 
 
 @unittest.skipUnless(os.name=='nt','Windows-only user requirement')
 class ProgramIntegrationTests(unittest.TestCase):
-    setUp=ProgramServiceTests.setUp
-    add=ProgramServiceTests.add
-    save=ProgramServiceTests.save
+    setUp=service_tests.ProgramServiceTests.setUp
+    add=service_tests.ProgramServiceTests.add
+    save=service_tests.ProgramServiceTests.save
 
     def environment(self):
         tree=ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
@@ -67,6 +67,33 @@ class ProgramIntegrationTests(unittest.TestCase):
         env['doc_dialog'].phase='awaiting_close'
         self.assertFalse(env['try_program_command']('apri la posta'))
         self.assertFalse(self.launched)
+
+    def test_actual_voice_dispatch_keeps_save_ahead_of_conflicting_legacy_shortcut(self):
+        import test_voice_corrections_review as voice_tests
+        from project_documents import parse_simple_save
+        from voice_control import GPT_CONVERSATION,PUSH_TO_TALK,CONTINUOUS
+        voice_tests.VoiceCorrectionReviewTests.setUpClass()
+        for mode in (GPT_CONVERSATION,PUSH_TO_TALK,CONTINUOUS):
+            with self.subTest(mode=mode):
+                fixture=voice_tests.VoiceCorrectionReviewTests()
+                fixture.setUp()
+                try:
+                    fixture.voice_environment(mode)
+                    main,env=self.environment()
+                    fixture.env.update(env)
+                    fixture.env['doc_dialog'].phase='editing'
+                    fixture.env['parse_simple_save']=parse_simple_save
+                    saved=[]
+                    fixture.env['save_document_now']=lambda *args,**kw:saved.append(args[0])
+                    # Simulate a legacy/in-memory conflicting phrase to exercise
+                    # runtime precedence independently of save-time validation.
+                    self.apps._preferences[self.mail]=dict(enabled=True,phrase='salva')
+                    phrase='ehi jarvis salva' if mode==CONTINUOUS else 'salva'
+                    fixture.receive_voice(phrase)
+                    self.assertEqual(saved,['salva'])
+                    self.assertFalse(self.launched)
+                finally:
+                    fixture.doCleanups()
 
     def test_model_fallback_uses_actual_router_manager_and_dispatch_branch(self):
         from conversation_router import build_conversation_prompt,parse_conversation_intent
