@@ -95,7 +95,7 @@ jobs:
           retention-days: 30
 
   publish-file-access:
-    name: Publish immutable numbered candidate 002 (Windows)
+    name: Publish immutable numbered candidate 003 (Windows)
     needs: unit
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-003' }} # Authorized one-time build003.
     runs-on: windows-2022
