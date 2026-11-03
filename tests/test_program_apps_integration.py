@@ -3,6 +3,8 @@ import ast
 import copy
 import json
 import os
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -16,6 +18,32 @@ class ProgramIntegrationTests(unittest.TestCase):
     setUp=service_tests.ProgramServiceTests.setUp
     add=service_tests.ProgramServiceTests.add
     save=service_tests.ProgramServiceTests.save
+
+    def test_application_boot_installs_bundled_apps_off_without_live_services(self):
+        profile=self.root/'fresh-boot-profile'
+        code="""import os,sys,tkinter as tk
+os.environ['JARVIS_TRIAL_HOME']=sys.argv[1]
+from settings import load_settings,save_settings
+settings=load_settings();settings.update(auto_listen=False,gpt_enabled=False,telegram_enabled=False,tts_enabled=False)
+save_settings(settings)
+original=tk.Tk
+def create(*args,**kwargs):
+ root=original(*args,**kwargs)
+ root.after(1500,lambda:root.tk.call(root.protocol('WM_DELETE_WINDOW')))
+ return root
+tk.Tk=create
+import jarvis
+jarvis.main()
+from addon_manager import AddonManager
+from live_capabilities import LiveCapabilityRegistry
+manager=AddonManager(LiveCapabilityRegistry())
+app=next(item for item in manager.list_installed() if item['id']=='programmi_app')
+assert app['enabled'] is False
+print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
+"""
+        result=subprocess.run([sys.executable,'-c',code,str(profile)],capture_output=True,
+                              text=True,timeout=45,check=True)
+        self.assertIn('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK',result.stdout)
 
     def environment(self):
         from desktop_dictation import dictation_voice_action
