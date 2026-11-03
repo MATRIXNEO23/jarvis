@@ -1,0 +1,53 @@
+{
+  "build_number": 2,
+  "build_label": "002",
+  "previous_build": 1,
+  "source_commit": "6f48ad1c0c2d0d55363fb8ec5b7b1ced2ad37e5f",
+  "archive": "Jarvis-002.zip",
+  "files": 79,
+  "bytes": 265117,
+  "sha256": "43cc2258c684c8b6470263ffa43c13b5111e938ffbcbcffc59ef3c9f23617cb6",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "windows_workflow_run": "41650952370",
+  "pc_test": "pending",
+  "date": "2026-11-03",
+  "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-002.zip",
+  "workflow_conclusion": "success",
+  "jobs": {
+    "python311": 125968639588,
+    "python312": 125968640155,
+    "publisher": 125970197587
+  },
+  "tests_per_python": 508,
+  "extracted_tests": 133,
+  "checks": {
+    "number_folder_version": "passed",
+    "manifest_launcher": "passed",
+    "imports_ui_boot_close": "passed",
+    "syntax_native_probe_windows_search": "passed",
+    "download_002": "hash_bytes_verified",
+    "download_001": "hash_verified",
+    "registry": {
+      "latest_build": 2,
+      "next_build": 3,
+      "entry001_unchanged": true
+    }
+  },
+  "packaging_review": {
+    "independent": true,
+    "blockers": [],
+    "retry_limits": [
+      "VERSIONE ZIP wall-clock timestamp",
+      "old publisher retry after registry advancement must be rejected before link updates"
+    ]
+  },
+  "limits": [
+    "real model/account/microphone/Pavilion untested",
+    "long late references",
+    "result cap20 unchanged",
+    "free-form confirmations",
+    "save-close review risk"
+  ],
+  "one_time_release_disabled": true
+}

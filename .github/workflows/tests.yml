@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'build/jarvis-002']
+    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102']
     paths:
       - '**.py'
       - '**.mjs'
@@ -82,13 +82,13 @@ jobs:
         run: python tools/probe_windows_search_live.py --ci-only
 
       - name: Build operational candidate (Windows only)
-        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-002')) && matrix.python-version == '3.12'
+        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
         run: python tools/build_file_access.py dist
       - name: Verify extracted candidate on Windows
-        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-002')) && matrix.python-version == '3.12'
+        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
         run: python tools/check_file_access_package.py dist/Jarvis-002.zip
       - uses: actions/upload-artifact@v4
-        if: success() && ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-002')) && matrix.python-version == '3.12'
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
         with:
           name: Jarvis-002
           path: dist/*
@@ -97,7 +97,7 @@ jobs:
   publish-file-access:
     name: Publish immutable numbered candidate 002 (Windows)
     needs: unit
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-002')
+    if: ${{ false }} # Build002 delivered; one-time publisher disabled.
     runs-on: windows-2022
     permissions:
       contents: write
