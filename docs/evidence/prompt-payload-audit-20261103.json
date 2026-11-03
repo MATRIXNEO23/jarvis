@@ -1,0 +1,190 @@
+{
+  "source": "a91aff9ef2013fd3fae0e9e87c41fa80843f7783",
+  "environment": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "unit": "UTF-16 code units, NOT model tokens or personal quota",
+  "model_requests": 0,
+  "data": "synthetic, no user profile, microphone, auth or account access",
+  "rows": [
+    {
+      "scenario": "short_no_context",
+      "utf16_units": 3336,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 737,
+        "runtime_section": 0,
+        "memory_with_header": 0,
+        "style": 144,
+        "current_with_label": 57,
+        "remaining_rules_and_addons": 1446
+      },
+      "recent_records": 0,
+      "unique_recent_records": 0
+    },
+    {
+      "scenario": "short_live_status",
+      "utf16_units": 3589,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 737,
+        "runtime_section": 253,
+        "memory_with_header": 0,
+        "style": 144,
+        "current_with_label": 57,
+        "remaining_rules_and_addons": 1446
+      },
+      "recent_records": 0,
+      "unique_recent_records": 0
+    },
+    {
+      "scenario": "short_real_empty_memory",
+      "utf16_units": 3815,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 737,
+        "runtime_section": 253,
+        "memory_with_header": 226,
+        "style": 144,
+        "current_with_label": 57,
+        "remaining_rules_and_addons": 1446
+      },
+      "recent_records": 0,
+      "unique_recent_records": 0
+    },
+    {
+      "scenario": "short_recent_memory",
+      "utf16_units": 4077,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 737,
+        "runtime_section": 253,
+        "memory_with_header": 488,
+        "style": 144,
+        "current_with_label": 57,
+        "remaining_rules_and_addons": 1446
+      },
+      "recent_records": 3,
+      "unique_recent_records": 3
+    },
+    {
+      "scenario": "apps_recent_memory",
+      "utf16_units": 4595,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 737,
+        "runtime_section": 415,
+        "memory_with_header": 488,
+        "style": 144,
+        "current_with_label": 57,
+        "remaining_rules_and_addons": 1802
+      },
+      "recent_records": 3,
+      "unique_recent_records": 3
+    },
+    {
+      "scenario": "apps_files_recent_memory",
+      "utf16_units": 4913,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 737,
+        "runtime_section": 253,
+        "memory_with_header": 488,
+        "style": 144,
+        "current_with_label": 57,
+        "remaining_rules_and_addons": 2282
+      },
+      "recent_records": 3,
+      "unique_recent_records": 3
+    },
+    {
+      "scenario": "project_repeated_recent",
+      "utf16_units": 4926,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 737,
+        "runtime_section": 253,
+        "memory_with_header": 504,
+        "style": 144,
+        "current_with_label": 54,
+        "remaining_rules_and_addons": 2282
+      },
+      "recent_records": 2,
+      "unique_recent_records": 2
+    },
+    {
+      "scenario": "project_repeated_recent_no_addons",
+      "utf16_units": 4457,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 737,
+        "runtime_section": 253,
+        "memory_with_header": 871,
+        "style": 144,
+        "current_with_label": 54,
+        "remaining_rules_and_addons": 1446
+      },
+      "recent_records": 6,
+      "unique_recent_records": 3
+    },
+    {
+      "scenario": "large_memory_long_request",
+      "utf16_units": 4849,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 737,
+        "runtime_section": 253,
+        "memory_with_header": 0,
+        "style": 155,
+        "current_with_label": 470,
+        "remaining_rules_and_addons": 2282
+      },
+      "recent_records": 0,
+      "unique_recent_records": 0
+    },
+    {
+      "scenario": "file_refinement",
+      "utf16_units": 3807,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 0,
+        "runtime_section": 0,
+        "memory_with_header": 488,
+        "style": 144,
+        "current_with_label": 74,
+        "remaining_rules_and_addons": 2149
+      },
+      "recent_records": 3,
+      "unique_recent_records": 3
+    },
+    {
+      "scenario": "document_and_telegram_ready",
+      "utf16_units": 4175,
+      "sections": {
+        "persona": 952,
+        "core_catalog": 861,
+        "runtime_section": 253,
+        "memory_with_header": 488,
+        "style": 112,
+        "current_with_label": 63,
+        "remaining_rules_and_addons": 1446
+      },
+      "recent_records": 3,
+      "unique_recent_records": 3
+    }
+  ],
+  "other_routes": {
+    "typed_chat_short_with_empty_memory": 2268,
+    "typed_chat_451_chars": 2997,
+    "file_explanation_1800_chars": 1952,
+    "telegram_short": 1164,
+    "telegram_with_1000_context": 2164
+  },
+  "fixed_sections": {
+    "persona": 952,
+    "brief_context_rule": 164,
+    "full_context_rule": 433,
+    "core_catalog_no_document": 737
+  },
+  "windows_run": 41733308539,
+  "sdk_revision": "0a36fefeb913055c8c7a1a29b63d82b96b2e841a",
+  "runtime_prompt_changes": false
+}
