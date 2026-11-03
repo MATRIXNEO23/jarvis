@@ -1,3 +1,8 @@
+## Richiesta barra quota Codex e prova vocale Netflix004 — 3 novembre2026
+
+L’utente conferma «apri Netflix» a voce→Netflix aperto nella004; prove su nomi difficili/frasi personali ancora da riferire. Il vecchio prossimo passo vocale è superato per questo caso.
+Nuova richiesta: barra consumo/residuo Codex nello spazio superiore vicino a Interfaccia neurale. Fattibilità UI sì; fonte dati ancora da verificare sul collegamento reale. [Proposta e fonti](docs/BARRA-QUOTA-CODEX-20261103.md): Codex documenta account/rateLimits/read e percentuale/reset; bridge/SDKSiwC fissato della004 non espongono quella lettura. Nessuna equivalenza automatica tra quoteCodex/SiwC; niente percentuali derivate dal conteggio locale. Prossima fase è prova di compatibilità Windows limitata, prima di scegliere componenti/HUD; zero costi aggiuntivi e peso Pavilion da rispettare. Nessuna implementazione o build da questa richiesta di fattibilità.
+
 ## PC004 — app Store rilevata e Prova avvio riuscita, 3 novembre2026
 
 L’utente corregge anche il riscontro sulle app Store: l’app cercata è presente. Alla prova indicata (Consenti avvio→Salva→Prova avvio),risponde «Sì» alla domanda se si apre. Riscontro riferito sull’effettiva apertura della app scelta nella004,non osservazione diretta dell’assistente; nome dell’app non fornito. Catalogo popolato e avvio tramite pulsante confermati per questo caso.
