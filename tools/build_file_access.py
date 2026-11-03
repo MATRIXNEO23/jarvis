@@ -7,7 +7,8 @@ from pathlib import Path
 import subprocess
 import zipfile
 
-NAME = 'Jarvis-Accesso-File-0.1.0-20261101'
+BUILD_NUMBER = 2
+NAME = f'Jarvis-{BUILD_NUMBER:03d}'
 
 
 def build(source: Path, destination: Path) -> Path:
@@ -32,18 +33,18 @@ def build(source: Path, destination: Path) -> Path:
             if path.is_symlink() or not path.is_file():
                 raise RuntimeError('Operational file missing: '+str(path))
             relative = path.relative_to(source).as_posix()
-            entry = zipfile.ZipInfo(NAME+'/'+relative,(2026,11,1,0,0,0))
+            entry = zipfile.ZipInfo(NAME+'/'+relative,(2026,11,3,0,0,0))
             entry.compress_type = zipfile.ZIP_DEFLATED
             entry.external_attr = 0o100644 << 16
             target.writestr(entry,path.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
         target.writestr(NAME+'/VERSIONE.json',json.dumps({
-            'version':'0.1.0-candidate','source_commit':commit,'base_commit':
+            'version':'0.1.2-candidate','build_number':BUILD_NUMBER,'build_label':f'{BUILD_NUMBER:03d}','source_commit':commit,'base_commit':
             'b936879a431370d206152be7b089baf587d15499','files':manifest},indent=2))
     with zipfile.ZipFile(archive) as target:
         assert target.testzip() is None
         assert not any('/tests/' in n or '/.github/' in n or '/docs/' in n or '/AGENTS.md' in n
                        or '/Download/' in n or '__pycache__' in n for n in target.namelist())
-    details = {'source_commit':commit,'archive':archive.name,'files':len(files)+1,
+    details = {'build_number':BUILD_NUMBER,'build_label':f'{BUILD_NUMBER:03d}','previous_build':BUILD_NUMBER-1,'source_commit':commit,'archive':archive.name,'files':len(files)+1,
                'bytes':archive.stat().st_size,'sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),
                'tested_on':'Windows CI; see workflow for extracted tests', 'runtime_only':True}
     (destination/(NAME+'.json')).write_text(json.dumps(details,indent=2)+'\n',encoding='utf-8')

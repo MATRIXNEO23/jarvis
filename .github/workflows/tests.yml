@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102']
+    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'build/jarvis-002']
     paths:
       - '**.py'
       - '**.mjs'
@@ -82,22 +82,22 @@ jobs:
         run: python tools/probe_windows_search_live.py --ci-only
 
       - name: Build operational candidate (Windows only)
-        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
+        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-002')) && matrix.python-version == '3.12'
         run: python tools/build_file_access.py dist
       - name: Verify extracted candidate on Windows
-        if: github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
-        run: python tools/check_file_access_package.py dist/Jarvis-Accesso-File-0.1.0-20261101.zip
+        if: ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-002')) && matrix.python-version == '3.12'
+        run: python tools/check_file_access_package.py dist/Jarvis-002.zip
       - uses: actions/upload-artifact@v4
-        if: success() && github.event_name == 'workflow_dispatch' && inputs.build_candidate && matrix.python-version == '3.12'
+        if: success() && ((github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-002')) && matrix.python-version == '3.12'
         with:
-          name: Jarvis-Accesso-File-0.1.0-20261101
+          name: Jarvis-002
           path: dist/*
           retention-days: 30
 
   publish-file-access:
-    name: Persist verified candidate in Download (Windows)
+    name: Publish immutable numbered candidate 002 (Windows)
     needs: unit
-    if: github.ref == 'refs/heads/feature/file-access-20261101' && github.event_name == 'workflow_dispatch' && inputs.build_candidate
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-002')
     runs-on: windows-2022
     permissions:
       contents: write
@@ -110,97 +110,142 @@ jobs:
           python-version: '3.12'
       - uses: actions/download-artifact@v4
         with:
-          name: Jarvis-Accesso-File-0.1.0-20261101
-          path: ${{ runner.temp }}/file-access-candidate
-      - name: Verify received bytes and prepare persistent Download entry
+          name: Jarvis-002
+          path: ${{ runner.temp }}/numbered-candidate
+      - name: Verify and register immutable build 002
         shell: python
         env:
-          CANDIDATE_HOME: ${{ runner.temp }}/file-access-candidate
+          CANDIDATE_HOME: ${{ runner.temp }}/numbered-candidate
           VERIFIED_SOURCE: ${{ github.sha }}
           VERIFIED_RUN: ${{ github.run_id }}
         run: |
-          import hashlib,json,os,shutil,zipfile
+          import hashlib,json,os,shutil,subprocess,zipfile
           from pathlib import Path
+          number=2
+          label=f'{number:03d}'
+          name=f'Jarvis-{label}.zip'
           home=Path(os.environ['CANDIDATE_HOME'])
-          details=json.loads(next(home.glob('*.json')).read_text())
-          archive=home/details['archive']
+          details=json.loads((home/f'Jarvis-{label}.json').read_text(encoding='utf-8'))
           sha=os.environ['VERIFIED_SOURCE']
-          assert details['source_commit']==sha
+          archive=home/name
+          assert details['source_commit']==sha and details['build_number']==number
+          assert details['archive']==name and details['build_label']==label
           assert hashlib.sha256(archive.read_bytes()).hexdigest()==details['sha256']
+          assert archive.stat().st_size==details['bytes']
           with zipfile.ZipFile(archive) as z:
               assert z.testzip() is None
-          name=f'Jarvis-Accesso-File-0.1.0-20261101-{sha[:7]}.zip'
+              version=json.loads(z.read(f'Jarvis-{label}/VERSIONE.json'))
+              assert version['build_number']==number and version['source_commit']==sha
+          registry_path=Path('Download/BUILD-NUMBERS.json')
+          registry=json.loads(registry_path.read_text(encoding='utf-8'))
+          previous=next(r for r in registry['releases'] if r['build_number']==number-1)
+          assert hashlib.sha256(Path('Download',previous['archive']).read_bytes()).hexdigest()==previous['sha256']
+          existing=next((r for r in registry['releases'] if r['build_number']==number),None)
+          if existing is None:
+              assert registry['next_build']==number and registry['latest_build']==number-1
+          else:
+              assert existing['source_commit']==sha and existing['sha256']==details['sha256']
           target=Path('Download')/name
           if target.exists():
-              assert target.read_bytes()==archive.read_bytes(), 'Never overwrite an existing different package'
+              assert target.read_bytes()==archive.read_bytes(), 'Published numbered builds are immutable'
           else:
               shutil.copyfile(archive,target)
-          details.update(archive=name,windows_workflow_run=os.environ['VERIFIED_RUN'],pc_test='pending')
-          Path('Download',name.removesuffix('.zip')+'.json').write_text(json.dumps(details,indent=2)+'\n')
+          details.update(windows_workflow_run=os.environ['VERIFIED_RUN'],pc_test='pending')
+          metadata_path=Path('Download',f'Jarvis-{label}.json')
+          if metadata_path.exists():
+              old=json.loads(metadata_path.read_text(encoding='utf-8'))
+              assert old['source_commit']==sha and old['sha256']==details['sha256']
+          metadata_path.write_text(json.dumps(details,indent=2)+'\n',encoding='utf-8')
+          if existing is None:
+              registry['releases'].append(dict(build_number=number,label=label,archive=name,
+                  metadata=metadata_path.name,date='2026-11-03',
+                  description='Contesto della cartella fornita in conversazione',
+                  status='candidate_pc_test_pending',source_commit=sha,
+                  sha256=details['sha256'],bytes=details['bytes'],previous_build=number-1,
+                  git_blob_sha=subprocess.check_output(['git','hash-object',str(target)],text=True).strip()))
+              registry.update(latest_build=number,next_build=number+1)
+              registry_path.write_text(json.dumps(registry,indent=2)+'\n',encoding='utf-8')
+          url='https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/'+name
           page=Path('Download/README.md')
           text=page.read_text(encoding='utf-8')
-          title=f'## Accesso file 0.1.0 — build candidata Windows ({sha[:7]})'
-          entry=(title+'\n\n'+f'[Scarica {name}](https://github.com/MATRIXNEO23/jarvis/raw/main/Download/{name})\n\n'
-                 'Cartelle dei programmi da registrazioni/collegamenti Windows, percorsi del profilo corrente, ricerca locale con aiuto GPT quando necessario. Risultati nella finestra dedicata e scelte vocali. '
-                 'Estrai in una cartella nuova e avvia avvia_jarvis.bat; poi Impostazioni > Gestisci add-on > Accesso file > Configura, Salva e Attiva. '
-                 'Profilo di prova separato, precedente installazione preservata. '
-                 'Test automatici solo Windows, archivio estratto e avvio UI verificati. '
-                 'Collaudo Pavilion/account/microfono reali ancora da fare; indice Windows reale e fallback verificati in CI. Nessuna ricerca web attivata da questo pacchetto.\n\n'
-                 f'Sorgenti: [{sha[:7]}](https://github.com/MATRIXNEO23/jarvis/tree/{sha}). '
-                 f'[Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/{os.environ["VERIFIED_RUN"]}). '
-                 f'SHA-256: `{details["sha256"]}`.\n\n')
+          first_end=text.find('\n')
+          text=(f'> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **{label}**, verificata su Windows; collaudo PC pendente. Build001 e base PC b936879 conservate.'+text[first_end:])
+          title=f'## Build {label} — Contesto nella conversazione'
+          entry=(title+'\n\n'+f'[Scarica {name}]({url})\n\n'
+              'Include la correzione del contesto quando indichi una cartella nel dialogo e rispondi alla domanda successiva. '
+              'Estrai in una cartella nuova e avvia avvia_jarvis.bat; profilo di prova e impostazioni esistenti conservati. '
+              'Test Windows, pacchetto estratto e avvio/chiusura UI verificati; GPT/account/microfono/Pavilion da collaudare. '
+              'Limite20 risultati e altri rilievi ancora aperti; nessuna nuova capacità di apertura file.\n\n'
+              f'Sorgenti: [{sha[:7]}](https://github.com/MATRIXNEO23/jarvis/tree/{sha}). '
+              f'[Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/{os.environ["VERIFIED_RUN"]}). '
+              f'SHA-256: `{details["sha256"]}`.\n\n')
           if title not in text:
-              first_end=text.find('\n')
-              if text.startswith('> **Recupero e versioni:**'):
-                  text=(f'> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultimo candidato Accesso file **{sha[:7]}**, verificato automaticamente su Windows; collaudo Pavilion pendente. Base PC confermata **Timer Audio Fix2, b936879**, preservata.'+text[first_end:])
               split=text.find('\n')+1
-              page.write_text(text[:split]+'\n'+entry+text[split:],encoding='utf-8')
-          registry=Path('Download/REGISTRO-VERSIONI.md')
-          text=registry.read_text(encoding='utf-8')
-          if name not in text:
-              registry.write_text(text+'\n## Candidato Accesso file '+sha[:7]+' — 2026-11-01\n\n'+
-                  f'- ZIP persistente: Download/{name}\n- Sorgenti: {sha}\n'+
-                  f'- SHA-256: {details["sha256"]}\n- Windows CI: run {os.environ["VERIFIED_RUN"]}, due job 3.11/3.12, pacchetto estratto e avvio UI.\n'+
-                  '- Collaudo PC: pendente. La base confermata BASE-UTENTE-20261101 b936879 resta invariata.\n'+
-                  '- Recupero: usare la cartella precedente Timer Audio Fix2; non cancellare profili o dati.\n',encoding='utf-8')
+              text=text[:split]+'\n'+entry+text[split:]
+          page.write_text(text,encoding='utf-8')
+          root=Path('README.md')
+          lines=root.read_text(encoding='utf-8').splitlines()
+          link=(f'**Nuova build candidata Windows: [Jarvis {label}]({url})** — correzione del contesto della cartella; collaudo PC pendente. [Versioni precedenti](Download/REGISTRO-VERSIONI.md).')
+          found=next((i for i,line in enumerate(lines) if line.startswith('**Nuova build candidata Windows:')),None)
+          if found is None:
+              lines.insert(0,link)
+          else:
+              lines[found]=link
+          root.write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          history=Path('Download/REGISTRO-VERSIONI.md')
+          text=history.read_text(encoding='utf-8')
+          row=f'| {label} | [{name}]({url}) | Candidata, collaudo PC pendente | Contesto della cartella indicata in conversazione |'
+          if row not in text:
+              marker='\n| 001 |'
+              assert marker in text
+              text=text.replace(marker,'\n'+row+marker,1)
+          text=text.replace('la prossima sarà002.','la prossima sarà003.')
+          history.write_text(text,encoding='utf-8')
           print('PERSISTENT_CANDIDATE='+json.dumps(details))
-      - name: Commit candidate without changing main runtime
+      - name: Publish Download and links without changing application sources on main
         shell: powershell
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Download
+          git add Download README.md
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
-            git commit -m "Publish verified Accesso file candidate $($env:GITHUB_SHA.Substring(0,7))"
+            git commit -m "Publish immutable Jarvis build 002"
             if ($LASTEXITCODE -ne 0) { throw 'Commit failed' }
             git push origin HEAD:main
-            if ($LASTEXITCODE -ne 0) { throw 'Publication failed: keep artifact and inspect main, no force push' }
+            if ($LASTEXITCODE -ne 0) { throw 'Publication failed; inspect main without force push' }
           }
-
-      - name: Verify published download bytes and first Download entry
+      - name: Verify public build 002 and preserved build 001
         shell: python
         env:
           VERIFIED_SOURCE: ${{ github.sha }}
         run: |
-          import hashlib,json,time,urllib.request
+          import hashlib,json,os,time,urllib.request
           from pathlib import Path
-          sha = __import__('os').environ['VERIFIED_SOURCE']
-          name = f'Jarvis-Accesso-File-0.1.0-20261101-{sha[:7]}.zip'
-          details = json.loads(Path('Download',name.removesuffix('.zip')+'.json').read_text())
-          url = 'https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/'+name
+          sha=os.environ['VERIFIED_SOURCE']
+          name='Jarvis-002.zip'
+          details=json.loads(Path('Download/Jarvis-002.json').read_text(encoding='utf-8'))
+          registry=json.loads(Path('Download/BUILD-NUMBERS.json').read_text(encoding='utf-8'))
+          previous=next(r for r in registry['releases'] if r['build_number']==1)
+          prefix='https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/'
+          def get(path):
+              with urllib.request.urlopen(prefix+path,timeout=25) as response:
+                  return response.read()
           for attempt in range(4):
               try:
-                  with urllib.request.urlopen(url,timeout=20) as response:
-                      data=response.read()
-                  assert hashlib.sha256(data).hexdigest()==details['sha256']
-                  assert len(data)==details['bytes']
-                  readme='https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/README.md?verify='+sha
-                  with urllib.request.urlopen(readme,timeout=20) as response:
-                      text=response.read().decode('utf-8')
-                  assert text.find(name)>=0 and text.find(name)<text.find('\n## ',text.find('\n## ')+1)
+                  data=get('Download/'+name)
+                  assert len(data)==details['bytes'] and hashlib.sha256(data).hexdigest()==details['sha256']
+                  text=get('Download/README.md?verify='+sha).decode('utf-8')
+                  assert text.index(name)<text.index('## Build 001')
+                  assert name in get('README.md?verify='+sha).decode('utf-8')[:2000]
+                  public_registry=json.loads(get('Download/BUILD-NUMBERS.json?verify='+sha))
+                  assert public_registry['latest_build']==2 and public_registry['next_build']==3
+                  old=get('Download/'+previous['archive'])
+                  assert hashlib.sha256(old).hexdigest()==previous['sha256']
                   break
               except Exception:
-                  if attempt==3: raise
+                  if attempt==3:
+                      raise
                   time.sleep(3)
-          print('PUBLISHED_DOWNLOAD_VERIFIED='+json.dumps(dict(archive=name,url=url,sha256=details['sha256'],bytes=len(data),source_commit=sha)))
+          print('PUBLISHED_DOWNLOAD_VERIFIED='+json.dumps(dict(archive=name,url=prefix+'Download/'+name,
+              source_commit=sha,sha256=details['sha256'],bytes=len(data),build_number=2,previous_build_preserved=True)))

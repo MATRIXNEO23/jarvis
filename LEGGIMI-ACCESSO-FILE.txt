@@ -1,41 +1,36 @@
-JARVIS — ACCESSO FILE 0.1.0 / BUILD CANDIDATA PER WINDOWS 10 x64
+JARVIS — BUILD 002 / CANDIDATA WINDOWS 10 x64
 
-Estrai questo ZIP in una cartella NUOVA. Avvia soltanto avvia_jarvis.bat.
-La precedente cartella di Jarvis resta disponibile per tornare alla base.
-Serve Python 3.11/3.12 x64 con Tk (incluso nell'installer ufficiale).
-GPT esterno: stessa connessione/account, installa_gpt.bat se ancora assente.
-Voce: installa_voce.bat se non già predisposta. Telegram: installa_telegram.bat
-solo se usato. Le funzioni locali file non richiedono GPT o nuove librerie.
+Questa candidata include la correzione del contesto della cartella indicata
+nella conversazione. La domanda e l'ultimo scambio ricevono precedenza
+rispetto agli esempi dei comandi e ai vecchi progressi del progetto.
+Le prove software non garantiscono ogni risposta del modello reale.
 
-Questa build usa il profilo separato LOCALAPPDATA\Jarvis-AccessoFile-Trial.
-Al primo avvio copia in modo consistente i dati del precedente profilo di
-prova Telegram50, se presente; altrimenti usa il profilo Jarvis normale.
-Non sovrascrive dati nella sorgente. Gli avvii seguenti conservano il profilo
-AccessoFile esistente. Telegram automatico inizialmente spento, microfono
-secondo il comportamento della base; controlla l'interruttore in impostazioni.
-Non avviare due istanze Telegram contemporaneamente.
+INSTALLAZIONE
+Chiudi la precedente istanza di Jarvis. Estrai questo ZIP in una cartella
+nuova: Jarvis-002. Avvia soltanto avvia_jarvis.bat.
+Conserva la cartella della001 per tornare alla versione precedente.
+Serve Python3.11/3.12 x64 con Tk. Usa installa_gpt.bat / installa_voce.bat
+solo se i componenti non sono già predisposti.
 
-Impostazioni > Gestisci add-on: seleziona Accesso file > Configura.
-Se l'add-on non compare, Installa scegliendo file_access\AccessoFile.jaddon.
-Spunta disco/cartella, escludi eventuali sottocartelle, Salva, poi Attiva.
-Nessuna cartella viene autorizzata soltanto perché l'add-on è installato.
+DATI E IMPOSTAZIONI
+Resta il profilo LOCALAPPDATA\Jarvis-AccessoFile-Trial già esistente:
+dati, progetto e cartelle autorizzate vengono conservati. Non cancellarlo.
+Controlla GPT collegato e Accesso file attivo per il collaudo della cartella.
+Non avviare contemporaneamente due istanze con Telegram.
 
-NOVITA' DI QUESTO CANDIDATO
-Risultati in finestra scorrevole, selezione/apertura per voce, fasi di lavoro
-visibili. Ricerca cartella programma da registrazioni Windows e collegamenti
-Desktop/Start, anche con nomi di directory/eseguibili diversi. Percorsi del
-profilo corrente risolti da Windows. Se la ricerca locale non risolve,
-il GPT gia' collegato puo' precisarla mantenendo obiettivo e permessi.
-Questa build non aggiunge ricerca web o un secondo indice del PC.
+COLLAUDO INIZIALE
+Riprendere la sequenza della cartella fornita in dialogo e della risposta
+"elenca il contenuto". Prima prova scritta, poi voce per isolare la trascrizione.
+Il modello interpreta; il motore verifica percorso, esistenza e permessi.
 
-Prova iniziale: seleziona una cartella con un TXT, poi di' o scrivi
-"cerca file PARTEDELNOME" e "leggi file 1". Per una cartella:
-"apri cartella 1". "Spiega file 1" richiede il GPT collegato e invia
-un estratto del file; la semplice lettura resta locale sul tuo computer.
-Dettagli, limiti e comandi: file_access\LEGGIMI.md.
-
-La build non modifica/cancella i file trovati. Mostra testo supportato in
-sola lettura e apre cartelle in Explorer. L'indice Windows puo' mancare:
-in quel caso cerca direttamente nelle cartelle autorizzate con limiti.
-Per tornare indietro chiudi questa build e usa la vecchia cartella;
-non cancellare nessuno dei profili dati. Nessun add-on abilita UAC/ACL.
+LIMITI ANCORA APERTI
+Percorsi molto lunghi o riferimenti tardivi possono ancora essere troncati.
+Il limite20 dei risultati di ricerca resta invariato e separato da questa
+correzione del contesto. Nessuna nuova funzione web o apertura di file nel
+programma associato. I messaggi liberi del modello non provano da soli
+l'avvenuta esecuzione di un'azione sul PC.
+La review segnala un possibile rischio nel salvataggio seguito da chiusura
+documenti, ancora da riprodurre/correggere: evitarlo con documenti importanti
+durante questo collaudo. Iniziare con dialogo e ricerca in sola lettura.
+Dettagli Accesso file: file_access\LEGGIMI.md.
+Il file VERSIONE.json identifica build002 e i sorgenti esatti.
