@@ -1,3 +1,7 @@
+## Skill adatte a Jarvis — ricerca conclusa, 3 novembre 2026
+Usata Find Skills for Work, installata e verificata come adattamento personale da Vercel. [Selezione, fonti e limiti](SKILL-SVILUPPO.md): prioritarie Test-Driven Development e Requesting Code Review di obra/superpowers; Python Performance Optimization di wshobson/agents utile dopo le correzioni di affidabilità. Originali e risorse pertinenti letti, MIT verificata; adattamento e collaudo Work delle candidate ancora da svolgere. Nessuna delle tre installata da questa ricerca.
+Le skill già presenti restano la base; non cambiare suite unittest o ambiente Windows, non riscrivere il progetto per prescrizioni generiche. Pausa runtime invariata: ripresa R01–R04 al via dell'utente; nessuna nuova build, modello o modifica a Jarvis.
+
 ## Fine sessione — pausa salvata, 3 novembre 2026
 **Ripresa soltanto al prossimo via dell'utente.** Verifica software V01 chiusa; nessuna nuova attività di implementazione o build da avviare in questa pausa.
 
