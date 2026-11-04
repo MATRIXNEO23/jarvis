@@ -129,3 +129,10 @@
 - Commit ffc39583: pulsante «Prova Gemma locale» nel pannello strumenti; domanda dalla console, selezione manuale koboldcpp.py, NativeChatAdapter.prepare() e ask() in thread dedicato, risposta/errore via queue + polling Tk. Nessuna chiamata online, nessuna azione desktop da testo generato. Si tratta di smoke test esplicito, non del routing conversazionale predefinito.
 - Il codice non impacchetta GGUF, DLL o koboldcpp.py e non garantisce prestazioni i3-2100. Selezione sorgente per sessione; modello e DLL dal pannello configurazione.
 - Verificare workflow native-chat-routing, native settings UI e memory preferences lanciati dal commit. Ancora necessari: test reale GUI su hardware, timeout/abort affidabile, connessione completa a conversazione e memoria in idle, distribuzione ZIP.
+
+## Sessione locale riutilizzabile
+- 90194b0b: NativeConversationSession con singolo adapter caricato alla prima domanda, lock, ultimi messaggi limitati, controllo conservativo budget, nessun fallback online.
+- 4e254d7e: test fake provider su riuso, cronologia, errore e budget.
+- 4964240a: pulsante «Prova Gemma locale» ora riusa sessione tra domande (non ricarica il modello a ogni turno), evitando overhead ripetuto.
+- 33aa12a1: workflow Windows esteso ai nuovi test, run 41919153537 da verificare.
+- Limiti ancora aperti: memoria della sessione solo RAM e non persiste al riavvio; non integrata nel normale percorso voce/chat e non collega idle scheduler; salvataggio modifiche impostazioni durante sessione non forza ricarica; sorgente koboldcpp.py va selezionata manualmente. Prima di distribuire ZIP serve risolvere questi punti e collaudo reale sul PC.
