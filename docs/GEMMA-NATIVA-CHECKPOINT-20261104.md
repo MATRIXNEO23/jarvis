@@ -16,3 +16,8 @@
 - Implementare un adattatore DLL isolato e arrestabile, con timeout, errori sicuri e controllo della concorrenza; prima ispezionare API native e lifetime reali della libreria fissata.
 - Collegare al ModelService solo dopo prova Windows di almeno due turni, regressioni e verifica delle impostazioni.
 - Prestazioni e stabilità sul Pavilion: NON VERIFICATE. Nessuna build installabile pubblicata.
+
+## Diagnosi CI e correzione 2026-11-04
+- Run 41868898297 FAILED: 3/4 test superati; test_reject_bad_parameters falliva perché il test forniva la sequenza letterale \\x00 anziché un vero carattere NUL. Corretto il fixture con chr(0), commit b511486.
+- Run 41868856559 FAILED: workflow preesistente local-model, 8 fallimenti nel contratto legacy di local_model/runtime.py ancora incompleto. Non è una regressione dimostrata della configurazione nativa e non è stato disabilitato o modificato.
+- Attendere esito della nuova CI Windows prima di dichiarare verificata la configurazione; poi affrontare il contratto legacy separatamente, decidendo se mantenerlo o migrare con test.
