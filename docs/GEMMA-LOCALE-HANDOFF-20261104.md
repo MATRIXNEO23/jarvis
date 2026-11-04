@@ -1,3 +1,7 @@
+## Prosecuzione autorizzata — criterio di confronto fissato
+
+L’utente richiede ancora prosecuzione autonoma con skill e domande solo necessarie. Stato run41862178113/job126686686231 ricontrollato: QUEUED, nessuno step avviato. Non è un fallimento del modello; causa della coda non accertata. Nessuna nuova compilazione o inferenza sostitutiva avviata. [Protocollo confronto Kobo](GEMMA-CONFRONTO-KOBO-20261104.md): GGUF/impostazioni identici, misure separate cold/warm/TTFT/token-s, cache e output comparabili, incertezza non promossa a PASS. Nessuna misura Pavilion acquisita. Prossima dipendenza resta esito prova Gemma reale; non pubblicare la006.
+
 ## Prova Gemma reale in coda — prossimo controllo
 
 Run41862178113/job126686686231 sul source220241d07041c12a055295b11a71adc4aba08645, ultimo stato QUEUED (nessuna generazione osservata). Non ricompilare la DLL già verde; il workflow scarica artifact13339099748 della run41860087656 e verifica SHA256. Esito ABI130 PASS resta distinto da inferenza. Leggere log di questo job, correggere solo cause dimostrate, poi implementare binding/add-on e raccordo console. Non richiedere di nuovo approvazione ai passi autorizzati.
