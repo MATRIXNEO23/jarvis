@@ -28,3 +28,9 @@
 - Aggiunti test con upstream fittizio e workflow native-bridge.yml. Questi test NON verificano la DLL reale.
 - Limitazione bloccante: il modulo upstream KoboldCpp richiede inizializzazione ABI, argomenti e libreria prima di load_model; la prova tools/probe_native_gemma.py la esegue, il bridge attuale non la riproduce. NON collegare il bridge a Jarvis o distribuirlo prima di completare e verificare l'inizializzazione reale.
 - Il timeout del bridge non interrompe ancora una chiamata C bloccante. Non dichiarare capacità di annullamento o equivalenza di prestazioni. Il runtime legacy continua a fallire i test separati.
+
+## Checkpoint inizializzazione (2026-11-04)
+- Run 41870600838 SUCCESS: test del bridge con ABI simulata. Run 41870562360 FAILED: contratto runtime legacy ancora incompleto.
+- Il bridge ora richiede una callback esplicita di inizializzazione ABI prima di load_model: senza callback rifiuta il caricamento, evitando false inizializzazioni.
+- Creato native_initializer.py che replica la preparazione argomenti CPU/noAVX2 della prova pinned upstream, ma il caricamento della DLL esatta e la compatibilità dell'intero ciclo di vita NON sono ancora verificati in un workflow di inferenza reale integrata.
+- Workflow native-initializer.yml testa il contratto con fake, non la DLL reale. Non pubblicare build né dichiarare integrazione Jarvis completata.
