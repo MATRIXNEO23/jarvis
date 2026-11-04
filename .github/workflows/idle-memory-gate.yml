@@ -1,0 +1,21 @@
+name: Idle memory gate (Windows)
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths:
+      - 'local_model/idle_memory_gate.py'
+      - 'local_model/memory_preferences.py'
+      - 'tests/test_idle_memory_gate.py'
+      - '.github/workflows/idle-memory-gate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  idle-memory:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -p test_idle_memory_gate.py -v
