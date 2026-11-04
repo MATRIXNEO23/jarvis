@@ -1898,6 +1898,26 @@ def main() -> None:
         except ConversationRejected as exc:
             write_line("JARVIS > " + str(exc))
             return
+        # Voice requests must not silently reach GPT when local-only is selected.
+        from local_model.online_permissions import (
+            OnlinePermissionPolicy, default_online_permissions_path)
+        try:
+            permission = OnlinePermissionPolicy.load(default_online_permissions_path())
+            decision = permission.decide("chat.conversation")
+        except (OSError, ValueError, RuntimeError) as exc:
+            write_line("GPT > Permessi non disponibili: " + str(exc)[:150])
+            return
+        if decision == "local_only":
+            write_line("JARVIS > GPT vocale non autorizzato. Usa Gemma locale "
+                       "oppure modifica i permessi della conversazione.")
+            return
+        if decision == "request_consent":
+            if not messagebox.askyesno(
+                "Autorizzazione GPT online",
+                "Questa conversazione verra inviata a GPT online. "
+                "Autorizzi questa singola richiesta?", parent=root):
+                write_line("JARVIS > Richiesta GPT online annullata.")
+                return
         write_line("JARVIS > Elaboro la tua richiesta...")
         run_gpt("conversation", prompt=prompt,
                 epoch=conversation_epoch,
