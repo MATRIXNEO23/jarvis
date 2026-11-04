@@ -62,6 +62,22 @@ class OnlinePermissionsTests(unittest.TestCase):
         self.assertEqual(len(native.calls), 1)
         self.assertEqual(len(online.calls), 1)
 
+    def test_local_first_never_falls_back_on_gemma_failure(self):
+        class Online:
+            def __init__(self):
+                self.calls = 0
+            def call(self, *args, **kwargs):
+                self.calls += 1
+                raise AssertionError("Online must never be called")
+        class FailingGemma:
+            def ask(self, prompt, *, timeout):
+                raise RuntimeError("Gemma not ready")
+        online = Online()
+        transport = ChatTransport(online, object())
+        with self.assertRaisesRegex(RuntimeError, "Gemma not ready"):
+            transport.ask_local_first("ciao", session=FailingGemma())
+        self.assertEqual(online.calls, 0)
+
     def test_invalid_capability_and_mode_rejected(self):
         p = OnlinePermissionPolicy()
         for name in ("", "../foo", "web search", "__proto__"):
