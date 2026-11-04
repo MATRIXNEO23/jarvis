@@ -1,0 +1,26 @@
+name: Native Gemma bridge contract (Windows)
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths:
+      - 'local_model/native_bridge.py'
+      - 'local_model/native_config.py'
+      - 'tests/test_native_model_bridge.py'
+      - '.github/workflows/native-bridge.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bridge:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test native bridge with fake ABI
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: '1'
+        run: python -m unittest discover -s tests -p test_native_model_bridge.py -v
