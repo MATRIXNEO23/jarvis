@@ -124,3 +124,8 @@
 - Commit 5a1d8064: NativeChatAdapter ora verifica MemoryPreferences.available_prompt_tokens prima della generazione quando riceve prompt testuale. Limite caratteri volutamente conservativo, non tokenizzazione GGUF. Prompt fuori budget rifiutato, non troncato silenziosamente.
 - Test con provider fittizio test_native_adapter_budget.py, commit 6dd6cd63; workflow native-chat-routing aggiornato commit d25bee13; run 41916822847 inizialmente queued, esito da controllare.
 - Attenzione: percorso conversazione principale jarvis.py usa ancora ChatTransport con _UnavailableNative e use_native=False. Non dichiarare Gemma collegato alla UI finche selezione locale e caricamento sono reali. Non consegnare ZIP.
+
+## Prova UI nativa isolata
+- Commit ffc39583: pulsante «Prova Gemma locale» nel pannello strumenti; domanda dalla console, selezione manuale koboldcpp.py, NativeChatAdapter.prepare() e ask() in thread dedicato, risposta/errore via queue + polling Tk. Nessuna chiamata online, nessuna azione desktop da testo generato. Si tratta di smoke test esplicito, non del routing conversazionale predefinito.
+- Il codice non impacchetta GGUF, DLL o koboldcpp.py e non garantisce prestazioni i3-2100. Selezione sorgente per sessione; modello e DLL dal pannello configurazione.
+- Verificare workflow native-chat-routing, native settings UI e memory preferences lanciati dal commit. Ancora necessari: test reale GUI su hardware, timeout/abort affidabile, connessione completa a conversazione e memoria in idle, distribuzione ZIP.
