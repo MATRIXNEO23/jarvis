@@ -13,6 +13,7 @@ class FakeUpstream:
         self.started = threading.Event()
         self.released = threading.Event()
         self.aborted = 0
+        self.handle = self
     def generate(self, args):
         self.started.set()
         self.released.wait(3)
