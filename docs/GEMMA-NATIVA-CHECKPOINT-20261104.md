@@ -150,3 +150,11 @@
 - 4900b4cc: start_conversation_gpt controlla chat.conversation prima di run_gpt: Mai blocca, Chiedi usa messagebox.askyesno, Autorizzato passa. Se configurazione corrotta blocca.
 - b9d14ef0: workflow Windows compila jarvis.py e editor permessi, test policy; run 41928734053 da verificare.
 - NOTA: questo NON costituisce protezione globale di ogni chiamata GPT. submit_gpt, richieste legacy, Telegram e altre invocazioni non ancora migrate. La voce locale Gemma non e ancora il percorso predefinito; con GPT vocale su Mai la richiesta puo essere bloccata finche il routing locale non e implementato. Mantenere branch separato e non pubblicare ZIP finale.
+
+## 05 novembre - verifiche senza dichiarazioni premature
+- Windows permissions CI 41928734053: SUCCESS.
+- b78bd6e e d828280: correzione sessione Gemma del conteggio caratteri includendo il prefisso Utente:, test regressione.
+- f64e7c3 e 71173b0: ChatTransport.ask_local_first usa esclusivamente session.ask, senza fallback a GPT anche in caso di errore; test mock.
+- Workflow in corso: 41930697286 (native), 41930708973 (permissions). Verificare prima di dire SUCCESS.
+- Le skill installate consultate non includono skill di programmazione/Archify pertinenti; sviluppo eseguito mediante repository e test CI.
+- BLOCCO NON RISOLTO: routing voce Jarvis -> Gemma locale non ancora collegato alla UI standard; solo test Gemma manuale disponibile. Permessi GPT non ancora applicati a ogni invocazione legacy. Niente ZIP finale o benchmark i3-2100 certificato.
