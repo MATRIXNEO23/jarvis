@@ -21,3 +21,10 @@
 - Run 41868898297 FAILED: 3/4 test superati; test_reject_bad_parameters falliva perché il test forniva la sequenza letterale \\x00 anziché un vero carattere NUL. Corretto il fixture con chr(0), commit b511486.
 - Run 41868856559 FAILED: workflow preesistente local-model, 8 fallimenti nel contratto legacy di local_model/runtime.py ancora incompleto. Non è una regressione dimostrata della configurazione nativa e non è stato disabilitato o modificato.
 - Attendere esito della nuova CI Windows prima di dichiarare verificata la configurazione; poi affrontare il contratto legacy separatamente, decidendo se mantenerlo o migrare con test.
+
+## Checkpoint successivo — bridge isolato
+- Run 41869848924 SUCCESS: test Windows della configurazione nativa.
+- Aggiunto local_model/native_bridge.py: contratto di caricamento singolo e generazione con impostazioni configurate; non lancia server o processi.
+- Aggiunti test con upstream fittizio e workflow native-bridge.yml. Questi test NON verificano la DLL reale.
+- Limitazione bloccante: il modulo upstream KoboldCpp richiede inizializzazione ABI, argomenti e libreria prima di load_model; la prova tools/probe_native_gemma.py la esegue, il bridge attuale non la riproduce. NON collegare il bridge a Jarvis o distribuirlo prima di completare e verificare l'inizializzazione reale.
+- Il timeout del bridge non interrompe ancora una chiamata C bloccante. Non dichiarare capacità di annullamento o equivalenza di prestazioni. Il runtime legacy continua a fallire i test separati.
