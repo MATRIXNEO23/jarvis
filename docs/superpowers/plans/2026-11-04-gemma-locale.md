@@ -1,3 +1,13 @@
+## Correzione architetturale dell’utente — 4 novembre 2026
+
+Requisito prevalente: incorporare nell’add-on di Jarvis il motore e le funzioni utili che consentono a KoboldCpp di eseguire Gemma, senza installazione/configurazione esterna di KoboldCpp. Stessa console, controllo CPU/RAM/thread/contesto, modello residente. L’utente descrive il lavoro come reverse engineering: prima analisi e riuso dei sorgenti pubblici e delle librerie, non reimplementazione cieca degli algoritmi. Prestazioni pari a Kobo sono un obiettivo da misurare sul Pavilion, non un risultato garantito.
+
+L’adattatore subprocess che richiede un koboldcpp.exe scelto dall’utente NON soddisfa questo requisito e non va distribuito come soluzione finale. local_model/runtime.py e client.py operativi sono bozze locali non pubblicate né verificate; remoto a83f533 contiene soltanto lo stub del contratto configurazione. Broker con nove test Windows rimane riutilizzabile; i test command-line sul vecchio approccio non attestano il nuovo motore incorporato.
+
+Fonti primarie consultate: https://github.com/LostRuins/koboldcpp (sorgenti e componenti/licenze), https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md e ggml/CMakeLists.txt (librerie native e configurazione CPU). Valutare libreria interna KoboldCpp contro llama.cpp nativo riusabile tramite binding, preservando formato Gemma2, cache e opzioni effettive. Non scegliere dal solo nome della libreria. Verificare AVX senza AVX2/FMA/F16C e altre istruzioni non disponibili sullo i3-2100; compilazione Windows e prova di caricamento/inferenza necessarie. Non affermare parità di prestazioni dal riuso dello stesso antenato del motore.
+
+Prossimo passo: inventario funzioni necessarie e confronto tecnico dei due riusi, versione sorgente e licenze fissate, piccola prova Windows del backend incorporabile prima del raccordo GUI. Non proseguire il wrapper HTTP/Kobold esterno come consegna finale. Nessun motore nuovo già integrato, nessuna006. Le sezioni precedenti sono storia e sono superate dove incompatibili.
+
 # Gemma locale principale Implementation Plan
 
 > **For agentic workers:** Execute task-by-task through the authorized native project workflow. No delegation requested. Steps use checkboxes.
