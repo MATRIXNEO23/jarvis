@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 import zipfile
 
-BUILD_NUMBER = 4
+BUILD_NUMBER = 5
 NAME = f'Jarvis-{BUILD_NUMBER:03d}'
 
 
@@ -35,15 +35,15 @@ def build(source: Path, destination: Path) -> Path:
             if path.is_symlink() or not path.is_file():
                 raise RuntimeError('Operational file missing: '+str(path))
             relative = path.relative_to(source).as_posix()
-            entry = zipfile.ZipInfo(NAME+'/'+relative,(2026,11,3,0,0,0))
+            entry = zipfile.ZipInfo(NAME+'/'+relative,(2026,11,4,0,0,0))
             entry.compress_type = zipfile.ZIP_DEFLATED
             entry.external_attr = 0o100644 << 16
             target.writestr(entry,path.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
-        version_entry = zipfile.ZipInfo(NAME+'/VERSIONE.json',(2026,11,3,0,0,0))
+        version_entry = zipfile.ZipInfo(NAME+'/VERSIONE.json',(2026,11,4,0,0,0))
         version_entry.compress_type = zipfile.ZIP_DEFLATED
         version_entry.external_attr = 0o100644 << 16
         target.writestr(version_entry,json.dumps({
-            'version':'0.1.4-candidate','build_number':BUILD_NUMBER,'build_label':f'{BUILD_NUMBER:03d}','source_commit':commit,'base_commit':
+            'version':'0.1.5-candidate','build_number':BUILD_NUMBER,'build_label':f'{BUILD_NUMBER:03d}','source_commit':commit,'base_commit':
             'b936879a431370d206152be7b089baf587d15499','files':manifest},indent=2),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
     with zipfile.ZipFile(archive) as target:
         assert target.testzip() is None
@@ -60,3 +60,4 @@ def build(source: Path, destination: Path) -> Path:
 if __name__ == '__main__':
     import sys
     build(Path(__file__).resolve().parents[1],Path(sys.argv[1]))
+

@@ -15,12 +15,12 @@ source = Path(__file__).resolve().parents[1]
 with tempfile.TemporaryDirectory(prefix='jarvis-package-') as temporary:
     with zipfile.ZipFile(archive) as bundle:
         assert bundle.testzip() is None
-        assert all(entry.date_time == (2026,11,3,0,0,0) for entry in bundle.infolist())
+        assert all(entry.date_time == (2026,11,4,0,0,0) for entry in bundle.infolist())
         bundle.extractall(temporary)
     package = next(Path(temporary).iterdir())
     version=json.loads((package/'VERSIONE.json').read_text())
-    assert version['build_number'] == 4 and version['build_label'] == '004'
-    assert package.name == 'Jarvis-004' and archive.name == 'Jarvis-004.zip'
+    assert version['build_number'] == 5 and version['build_label'] == '005'
+    assert package.name == 'Jarvis-005' and archive.name == 'Jarvis-005.zip'
     if os.environ.get('GITHUB_SHA'):
         assert version['source_commit'] == os.environ['GITHUB_SHA']
     manifest=version['files']
@@ -39,7 +39,7 @@ with tempfile.TemporaryDirectory(prefix='jarvis-package-') as temporary:
     # Separate process and cwd: imports cannot accidentally use checkout modules.
     imports = "import jarvis,addon_manager,local_engine;from file_access.service import FileAccessService;from file_access.ui import FolderSettings;from program_apps.service import ProgramService;from program_apps.ui import ProgramSettings;print('EXTRACTED_IMPORTS_OK')"
     subprocess.run([sys.executable,'-c',imports],cwd=package,check=True,timeout=45)
-    tests = f"import sys,unittest;sys.path.append({str(source/'tests')!r});suite=unittest.defaultTestLoader.loadTestsFromNames(['test_file_access','test_activity_status','test_file_refinement','test_program_locations','test_file_context_delivery','test_pending_file_context','test_file_index_priority','test_file_search_phrase','test_voice_corrections_review','test_hud_quick_toggles','test_program_apps','test_program_apps_native','test_program_apps_service','test_program_apps_ui','test_program_apps_integration']);r=unittest.TextTestRunner(verbosity=2).run(suite);sys.exit(not r.wasSuccessful())"
+    tests = f"import sys,unittest;sys.path.append({str(source/'tests')!r});suite=unittest.defaultTestLoader.loadTestsFromNames(['test_file_access','test_activity_status','test_file_refinement','test_program_locations','test_file_context_delivery','test_pending_file_context','test_file_index_priority','test_file_search_phrase','test_voice_corrections_review','test_hud_quick_toggles','test_program_apps','test_program_apps_native','test_program_apps_service','test_program_apps_ui','test_program_apps_integration','test_gpt_voice_addressing','test_empty_prompt_context','test_jarvis_persona','test_conversation_router']);r=unittest.TextTestRunner(verbosity=2).run(suite);sys.exit(not r.wasSuccessful())"
     subprocess.run([sys.executable,'-c',tests],cwd=package,check=True,timeout=300)
     # Exercise the real UI startup and its normal close callback with all live
     # services switched off only in this disposable test profile.
@@ -70,3 +70,4 @@ with tempfile.TemporaryDirectory(prefix='jarvis-rebuild-') as rebuilt:
         second=build(source,Path(rebuilt))
     assert second.read_bytes()==archive.read_bytes(), 'Rebuilding the same source changed archive bytes'
 print('REPRODUCIBLE_PACKAGE_DIFFERENT_CLOCK_OK')
+

@@ -1,4 +1,4 @@
-JARVIS — BUILD 003 / CANDIDATA PER WINDOWS 10 x64
+JARVIS — BUILD 005 / CANDIDATA PER WINDOWS 10 x64
 
 Estrai questo ZIP in una cartella NUOVA. Avvia soltanto avvia_jarvis.bat.
 La precedente cartella di Jarvis resta disponibile per tornare alla base.
@@ -20,7 +20,16 @@ Se l'add-on non compare, Installa scegliendo file_access\AccessoFile.jaddon.
 Spunta disco/cartella, escludi eventuali sottocartelle, Salva, poi Attiva.
 Nessuna cartella viene autorizzata soltanto perché l'add-on è installato.
 
-NOVITA' BUILD 003 — INTERRUTTORI RAPIDI
+NOVITA' BUILD 005 — RICHIAMO JARVIS E CONSUMI
+Con MIC attivo o Ascolto continuo, ogni richiesta deve iniziare con Jarvis:
+‘Jarvis, apri Netflix’, ‘Jarvis, dimmi ...’, ‘Jarvis, confermo’.
+Il solo ‘Jarvis’ non abilita la frase seguente. Il parlato senza richiamo
+iniziale viene ignorato localmente prima di azioni, log, correzioni e GPT.
+Pressione per parlare e dettatura attivata intenzionalmente restano disponibili.
+I prompt omettono la memoria quando è vuota, senza cancellare i ricordi utili.
+Il risparmio non vale per ogni richiesta. Nessun nuovo modello o App Server.
+
+CONTROLLI GIA' PRESENTI — INTERRUTTORI RAPIDI
 In alto a destra clicca MIC, GPT o MEMORIA per attivare/disattivare la
 singola funzione. Sono gli stessi controlli delle impostazioni.
 GPT NON CONNESSO: abilitato ma non ancora collegato. MIC NON ATTIVO o
@@ -36,10 +45,11 @@ profilo corrente risolti da Windows. Se la ricerca locale non risolve,
 il GPT gia' collegato puo' precisarla mantenendo obiettivo e permessi.
 Questa build non aggiunge ricerca web o un secondo indice del PC.
 
-Prova iniziale: seleziona una cartella con un TXT, poi di' o scrivi
+Prova iniziale: seleziona una cartella con un TXT, poi scrivi
 "cerca file PARTEDELNOME" e "leggi file 1". Per una cartella:
 "apri cartella 1". "Spiega file 1" richiede il GPT collegato e invia
 un estratto del file; la semplice lettura resta locale sul tuo computer.
+Per gli esempi a voce anteponi sempre Jarvis: ‘Jarvis, cerca file ...’.
 Dettagli, limiti e comandi: file_access\LEGGIMI.md.
 
 La build non modifica/cancella i file trovati. Mostra testo supportato in
@@ -62,4 +72,5 @@ Il solo «Jarvis» non abilita la frase seguente. Parlato senza richiamo
 iniziale ignorato localmente prima di azioni, correzioni, log e GPT.
 Il riconoscimento Vosk resta locale: nessuna chiamata modello per il filtro.
 Testo digitato, pressione manuale e modalità dettatura conservano i loro usi.
+
 
