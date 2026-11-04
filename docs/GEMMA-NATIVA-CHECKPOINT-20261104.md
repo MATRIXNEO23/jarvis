@@ -81,3 +81,9 @@
 - Creato local_model/native_ui.py: pannello Tk opt-in per GGUF, Context Size, Max Output, thread, temperatura, Top-K/P, seed; Salva, Sfoglia, ripristina campi, messaggi ricaricamento. Non carica/attiva la DLL, non modifica la UI principale né settings.json.
 - Test Tk Windows tests/test_native_ui.py e workflow native-ui.yml aggiunti; esito da verificare.
 - GATE BUILD: non pubblicare una build finché il pannello non è raggiungibile dall'interfaccia reale, il provider non è cablato al ModelService nel programma, il runtime legacy rosso non è chiarito, e non sono superate regressioni Windows. Prestazioni KoboldCpp sul Pavilion ancora non misurate. L'utente ha autorizzato l'obiettivo di arrivare a una build, non la distribuzione di un prototipo difettoso.
+
+## Integrazione pulsante impostazioni nella UI Jarvis
+- Run 41884682083 SUCCESS: pannello Tk separato testato Windows.
+- Modificato jarvis.py: nella scheda esistente «GPT e memoria» aggiunto pulsante «Configura Gemma locale...» che apre NativeSettingsWindow solo su richiesta, senza caricare DLL né cambiare instradamento GPT.
+- Aggiunto tests/test_native_settings_entry.py e aggiornato workflow native-ui.yml per verificare l'entrypoint; nuovo run da verificare.
+- La configurazione NON rende Gemma utilizzabile nella chat: provider reale non ancora collegato al percorso di chiamata Jarvis. Il contratto legacy executable/server resta incompatibile e workflow rosso; non mascherare la regressione. Non creare build pubblica prima di risolvere entrambi.
