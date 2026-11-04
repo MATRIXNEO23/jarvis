@@ -51,6 +51,18 @@ class MemoryPreferences:
         except (OSError, UnicodeError, TypeError, json.JSONDecodeError) as exc:
             raise ValueError("Impostazioni memoria danneggiate.") from exc
 
+    def available_prompt_tokens(self, context_size, max_output, reserve=128):
+        """Limit memory prompt to the model window after output reservation."""
+        self.validate()
+        if any(type(x) is not int for x in (context_size, max_output, reserve)):
+            raise ValueError("Dimensioni contesto non valide.")
+        if context_size < 256 or max_output < 1 or reserve < 0:
+            raise ValueError("Dimensioni contesto non valide.")
+        available = context_size - max_output - reserve
+        if available < 1:
+            raise ValueError("Contesto insufficiente per risposta e margine.")
+        return min(self.prompt_max_tokens, available)
+
     def save(self, path):
         self.validate()
         path = Path(path)
