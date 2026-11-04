@@ -1,3 +1,7 @@
+## Nuova richiesta — vista Scambi GPT, 4 novembre 2026
+
+L’utente chiede una sezione selezionabile a sinistra per vedere invio completo e risposta grezza del modello. Fattibilità UI e punto comune del trasporto verificati sulla005. [Proposta](docs/SCAMBI-GPT-PROPOSTA-20261104.md): scheda SCAMBI GPT, add-on .jaddon, osservazione delle chiamate esistenti senza inferenze aggiuntive né credenziali. Da scegliere sola sessione o storico fra avvii; default proposto RAM/sessione. Solo proposta, nessun runtime/test/build nuovo. La005 e il suo collaudo PC restano invariati.
+
 ## CONSEGNATA Jarvis005 — 4 novembre 2026
 
 [Scarica Jarvis-005.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-005.zip), pubblicata in cima a Download. Source **b202181d435cf4ee13ffb355265e1f1a9f995963**, ramo **build/jarvis-005**, checkpoint finale **7203fef3357cb880161d20dd5304ccee92a0c0bb**. [RunWindows41749364482](https://github.com/MATRIXNEO23/jarvis/actions/runs/41749364482) SUCCESS: **558 test per Python3.11/3.12**, **213 dal pacchetto estratto**, sintassi/probe/indiceWindows live, manifest/hash/soli operativi/launcher unico/import/avvio e chiusura UI/riproducibilità PASS. Publisher126311593976 ha pubblicato e riscaricato005 verificando hash/byte/posizione in cima e pacchetti001–004. Pubblicazione maina9520b3e2d0ec680746710821a7adbbefcd1cd19; metadata riletti e coincidenti. ZIP283598byte,86file, SHA-256 **583bd55d1ef416b3781f6183d8ea6365f0b8761c6cf1fd614d652db832285728**.
