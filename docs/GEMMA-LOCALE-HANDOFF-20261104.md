@@ -1,3 +1,7 @@
+## Diagnosi coda — runner alternativo anch’esso in coda
+
+Run minima41863698315 su windows-2025 e prova Gemma41862178113 su windows-2022 risultano entrambe QUEUED agli ultimi controlli, nessun nuovo esito runtime. Il problema osservato non è limitato alla singola etichetta2022; non dimostrata causa generale/billing/outage. Consultato stato pubblico GitHub ma dati non sufficienti ad attribuire la coda a un incidente. Non avviare ulteriori job o cambiare motore per tentativi. Prossima verifica: esito di queste due run già inviate. Compilazione DLL e ABI verdi restano prove valide nel loro ambito; inferenza, UI e prestazioni non verificate.
+
 ## Diagnosi finita della coda Windows
 
 Dopo nuovo «procedi», run41862178113 resta QUEUED/job126686686231 senza step; nessuna causa dimostrata. Nuovo esperimento minimo windows-runner-probe.yml su windows-2025: stampa OS, nessun checkout/modello/compilazione. Scopo distinguere disponibilità pool2022 da un problema più ampio, non considerare un esito runner come test motore. Non cambiare backend o aggirare gate di verifica per la coda.
