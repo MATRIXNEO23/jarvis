@@ -3849,7 +3849,10 @@ def main() -> None:
     # Manual, isolated native test. No automatic online fallback or PC actions.
     gemma_trial_queue = queue.Queue()
     gemma_trial_busy = [False]
-    gemma_source = [None]
+    # Prefer the pinned native source packaged beside Jarvis.
+    gemma_source = [str(Path(__file__).resolve().parent / "native_engine" / "koboldcpp.py")
+                    if (Path(__file__).resolve().parent / "native_engine" / "koboldcpp.py").is_file()
+                    else None]
     gemma_session = [None]
 
     def submit_gemma_voice(spoken):
