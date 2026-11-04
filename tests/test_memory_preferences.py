@@ -35,6 +35,15 @@ class MemoryPreferencesTests(unittest.TestCase):
                     replace(original, **changes).save(path)
                 self.assertEqual(path.read_bytes(), before)
 
+    def test_model_window_reservation(self):
+        prefs = MemoryPreferences()
+        self.assertEqual(prefs.available_prompt_tokens(2048, 128), 600)
+        self.assertEqual(prefs.available_prompt_tokens(512, 128), 256)
+        with self.assertRaises(ValueError):
+            prefs.available_prompt_tokens(256, 200)
+        with self.assertRaises(ValueError):
+            prefs.available_prompt_tokens(1024, True)
+
     def test_corrupt_preferences_preserved(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "memory.json"
