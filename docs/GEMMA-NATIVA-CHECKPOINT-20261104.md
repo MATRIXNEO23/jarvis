@@ -68,3 +68,9 @@
 - Nuovo script tools/probe_native_abort_real.py: avvia una generazione lunga in thread, richiede abort mentre è attiva, verifica completamento entro 15 s e assenza di risposta restituita. Il test fallisce se la generazione termina prima dell'abort (inconcludente).
 - Nuovo workflow .github/workflows/native-abort-real.yml, run 41878329249 in coda al checkpoint. L'esito deve essere verificato prima di dichiarare cancellazione reale funzionante.
 - Nessuna build, nessuna modifica alla UI; test isolato Windows CI. Benchmark Pavilion e hard timeout non verificati.
+
+## Impostazioni native isolate
+- Run 41878329249 SUCCESS: cancellazione durante generazione reale Windows CI, entro la finestra del test. Non è benchmark Pavilion né garanzia di hard timeout.
+- Aggiunto local_model/native_settings.py con campi editabili e indicazione di reload per modello/context/threads, senza applicare modifiche a generazione in corso. Percorso separato: %LOCALAPPDATA%/Jarvis/addon-data/modello_locale/native.json; prova isolata JARVIS_TRIAL_HOME.
+- Aggiunti tests/test_native_settings.py e .github/workflows/native-settings.yml (esito da verificare); corretto rifiuto di NaN/inf nella configurazione nativa.
+- ATTENZIONE: questo è il contratto delle impostazioni, NON ancora pannello UI integrato; i parametri avanzati KoboldCpp inventariati in docs/GEMMA-IMPOSTAZIONI-20261104.md non sono ancora tutti collegati alla DLL. Nessuna build.
