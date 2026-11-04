@@ -136,3 +136,10 @@
 - 4964240a: pulsante «Prova Gemma locale» ora riusa sessione tra domande (non ricarica il modello a ogni turno), evitando overhead ripetuto.
 - 33aa12a1: workflow Windows esteso ai nuovi test, run 41919153537 da verificare.
 - Limiti ancora aperti: memoria della sessione solo RAM e non persiste al riavvio; non integrata nel normale percorso voce/chat e non collega idle scheduler; salvataggio modifiche impostazioni durante sessione non forza ricarica; sorgente koboldcpp.py va selezionata manualmente. Prima di distribuire ZIP serve risolvere questi punti e collaudo reale sul PC.
+
+## Permessi GPT per funzione (4 novembre)
+- local_model/online_permissions.py (36be347c): policy fail-closed, mai/chiedi/autorizzato (never/ask/allowed), autorizzazione scoped per capability, salvataggio JSON atomico. Le funzioni sconosciute sono negate anche con confirmed=True.
+- local_model/chat_transport.py (2b48d84f): nuovo call_feature(capability,...policy...) blocca online senza permesso; call() legacy resta invariato per compatibilita, quindi NON dichiarare ancora enforcement globale nella GUI o su tutti gli add-on.
+- tests/test_online_permissions.py (ee36fa57 e c6c82613): default deny, consenso per richiesta, isolamento capability, persistenza corrotta e blocco prima del trasporto.
+- CI Windows workflow online-permissions.yml: prima run 41926067086 SUCCESS; run aggiornata 41926107439 da verificare.
+- Prossimo: interfaccia per add-on, migrazione graduale di ogni invocazione online al percorso protetto, test no-leak e conferma per azioni sensibili. Nessuna build finale ancora.
