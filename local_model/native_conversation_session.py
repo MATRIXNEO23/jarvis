@@ -35,14 +35,17 @@ class NativeConversationSession:
                 raise ValueError("Domanda troppo lunga per il contesto configurato.")
             turns = list(self.history)[-memory.recent_messages:]
             prefix = ""
+            suffix = "Utente: " + latest
+            # Keep the newest complete messages first. Budget for the actual
+            # prompt, not only the question; do not silently lose its role tag.
+            if len(suffix) > budget:
+                raise ValueError("Domanda troppo lunga per il contesto configurato.")
             for role, text in reversed(turns):
                 candidate = ("Utente: " if role == "user" else "Jarvis: ") + text + "\n"
-                if len(prefix) + len(candidate) + len(latest) + 10 > budget:
+                if len(prefix) + len(candidate) + len(suffix) > budget:
                     break
                 prefix = candidate + prefix
-            prompt = prefix + "Utente: " + latest
-            if len(prompt) > budget:
-                prompt = latest
+            prompt = prefix + suffix
             if not self.prepared:
                 self.adapter.prepare()
                 self.prepared = True
