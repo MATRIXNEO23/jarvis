@@ -39,5 +39,7 @@ class NativeLocalProvider:
 
     def stop(self):
         # Does not interrupt a currently blocking native C call.
-        with self._lock:
-            self._stopped = True
+        self._stopped = True
+        abort = getattr(self.bridge, "abort", None)
+        if callable(abort):
+            abort()
