@@ -1,3 +1,13 @@
+# Jarvis Gemma - test Windows (05/11/2026)
+
+**[SCARICA ZIP GEMMA WINDOWS DI PROVA](./Jarvis-Gemma-Windows-TEST-cc52c20.zip)**
+
+Versione sperimentale isolata, con DLL nativa KoboldCpp no-AVX2 verificata.
+Modello GGUF non incluso: selezionarlo nelle impostazioni Gemma insieme alla DLL.
+Non sostituire la versione stabile; test prestazioni su Pavilion non ancora eseguito.
+Pacchetto compilato e testato su Windows CI.
+
+---
 > **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **005**, verificata su Windows; collaudo PC pendente. Build001/002/003/004 e base PC b936879 conservate.
 
 ## Build 005 — Richiamo Jarvis e consumi
