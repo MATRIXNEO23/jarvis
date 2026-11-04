@@ -1882,6 +1882,12 @@ def main() -> None:
         """
         if not closing and try_self_diagnostic(spoken):
             return
+        if closing or voice_mode.get() != GPT_CONVERSATION:
+            return
+        # Voice dialogue defaults to local Gemma, never to GPT. Existing
+        # deterministic voice commands have already been handled upstream.
+        submit_gemma_voice(spoken)
+        return
         if (busy_gpt or closing or voice_mode.get() != GPT_CONVERSATION
                 or not gpt_enabled.get() or not active_gpt):
             return
@@ -3256,8 +3262,8 @@ def main() -> None:
                                                  source_utterance=spoken)
                                 else:
                                     write_line("Motore locale occupato: riprova.")
-                            elif gpt_enabled.get() and active_gpt:
-                                if busy_gpt:
+                            elif True:  # Local Gemma dialogue does not require GPT login.
+                                if gemma_trial_busy[0]:
                                     if len(pending_conversation) < 3:
                                         pending_conversation.append(
                                             (conversation_epoch, spoken))
@@ -3270,9 +3276,8 @@ def main() -> None:
                                             "Ripeti quest'ultima tra poco.")
                                 else:
                                     start_conversation_gpt(spoken)
-                            elif not active_gpt or not gpt_enabled.get():
-                                speak_result("GPT non è connesso. Puoi ancora usare i comandi locali.")
-                                write_line("GPT non connesso: frase non inviata.")
+                            elif False:
+                                pass
                             else:
                                 write_line("GPT sta rispondendo: attendi prima di parlare.")
                             continue
@@ -3906,6 +3911,37 @@ def main() -> None:
     gemma_source = [None]
     gemma_session = [None]
 
+    def submit_gemma_voice(spoken):
+        if closing or gemma_trial_busy[0]:
+            return
+        if gemma_source[0] is None or not Path(gemma_source[0]).is_file():
+            source = filedialog.askopenfilename(
+                parent=root, title="Configura Gemma: seleziona koboldcpp.py",
+                filetypes=[("Sorgente KoboldCpp", "koboldcpp.py"), ("Python", "*.py")])
+            if not source:
+                write_line("GEMMA > Configurazione locale mancante. Nessun invio online.")
+                return
+            if Path(source).name.lower() != "koboldcpp.py":
+                write_line("GEMMA > File sorgente non valido. Nessun invio online.")
+                return
+            gemma_source[0] = source
+        gemma_trial_busy[0] = True
+        write_line("UTENTE / VOCE > " + spoken)
+        def voice_worker():
+            try:
+                from local_model.native_chat_adapter import NativeChatAdapter
+                from local_model.native_conversation_session import NativeConversationSession
+                if gemma_session[0] is None:
+                    gemma_session[0] = NativeConversationSession(
+                        NativeChatAdapter(gemma_source[0]))
+                answer = chat_transport.ask_local_first(
+                    spoken, session=gemma_session[0], timeout=180)
+                gemma_trial_queue.put(("voice_ok", answer))
+            except Exception as exc:
+                gemma_trial_queue.put(("voice_error", str(exc)[:350]))
+        threading.Thread(target=voice_worker, daemon=True,
+                         name="jarvis-gemma-voice").start()
+
     def submit_gemma_trial():
         if closing or gemma_trial_busy[0]:
             return
@@ -3949,7 +3985,14 @@ def main() -> None:
                 kind, value = gemma_trial_queue.get_nowait()
                 gemma_trial_busy[0] = False
                 gemma_button.configure(state="normal")
-                write_line(("GEMMA > " if kind == "ok" else "GEMMA / ERRORE > ") + value)
+                if kind == "voice_ok":
+                    write_line("GEMMA > " + value)
+                    speak_result(value)
+                elif kind == "voice_error":
+                    write_line("GEMMA / ERRORE > " + value)
+                    speak_result("Gemma locale non disponibile. Controlla la configurazione.")
+                else:
+                    write_line(("GEMMA > " if kind == "ok" else "GEMMA / ERRORE > ") + value)
         except queue.Empty:
             pass
         if not closing:
