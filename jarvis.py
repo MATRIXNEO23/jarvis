@@ -444,6 +444,13 @@ def main() -> None:
     doc_cancel_button.pack(side="left")
 
     service = GPTClient()
+    # Native inference is not enabled until a separate explicit model-selection
+    # control is implemented and approved. Account actions remain on GPTClient.
+    from local_model.chat_transport import ChatTransport
+    class _UnavailableNative:
+        def call(self, action, **arguments):
+            raise RuntimeError("Gemma locale non ancora attivato.")
+    chat_transport = ChatTransport(service, _UnavailableNative())
     output_queue: queue.Queue[tuple] = queue.Queue()
     gpt_enabled = tk.BooleanVar(value=settings["gpt_enabled"])
     gpt_status = tk.StringVar(value="GPT: inizializzazione" if gpt_enabled.get() else "GPT: disattivato")
@@ -1833,7 +1840,7 @@ def main() -> None:
                 sdk_action = "ask" if structured else action
                 sdk_params = {key: value for key, value in params.items()
                               if key not in ("epoch", "document_id", "utterance", "source", "file_refinement")}
-                result = service.call(sdk_action, timeout=timeout, **sdk_params)
+                result = chat_transport.call(sdk_action, timeout=timeout, **sdk_params)
                 if structured:
                     output_queue.put(("conversation_ok", epoch, doc_snapshot,
                                       user_utterance, result, action, params.get("file_refinement")))
