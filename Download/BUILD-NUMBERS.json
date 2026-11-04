@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 4,
-  "next_build": 5,
+  "latest_build": 5,
+  "next_build": 6,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -61,6 +61,20 @@
       "bytes": 282968,
       "previous_build": 3,
       "git_blob_sha": "5199bba974492f1c92d4f96d6c64043cb5aba747"
+    },
+    {
+      "build_number": 5,
+      "label": "005",
+      "archive": "Jarvis-005.zip",
+      "metadata": "Jarvis-005.json",
+      "date": "2026-11-04",
+      "description": "Richiamo Jarvis obbligatorio e prompt senza memoria vuota",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "b202181d435cf4ee13ffb355265e1f1a9f995963",
+      "sha256": "583bd55d1ef416b3781f6183d8ea6365f0b8761c6cf1fd614d652db832285728",
+      "bytes": 283598,
+      "previous_build": 4,
+      "git_blob_sha": "7095838dc8fd26f5424d3dcbd79ee0b184a21c41"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"

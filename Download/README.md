@@ -1,4 +1,13 @@
-> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **004**, verificata su Windows; collaudo PC pendente. Build001/002/003 e base PC b936879 conservate.
+> **Recupero e versioni:** [registro](REGISTRO-VERSIONI.md). Ultima candidata **005**, verificata su Windows; collaudo PC pendente. Build001/002/003/004 e base PC b936879 conservate.
+
+## Build 005 — Richiamo Jarvis e consumi
+
+[Scarica Jarvis-005.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-005.zip)
+
+Ogni richiesta vocale inizia con Jarvis: il parlato senza richiamo iniziale viene ignorato prima di azioni e GPT. Il solo nome non abilita la frase seguente. Estrai in una cartella nuova e avvia avvia_jarvis.bat. Omissione della memoria vuota nei prompt, dati e impostazioni conservati. Nessun nuovo componente quota. Test Windows, pacchetto estratto e avvio/chiusura UI verificati; GPT/account/microfono/Pavilion da collaudare. Limite20 risultati e altri rilievi ancora aperti; nessuna nuova capacità di apertura file.
+
+Sorgenti: [b202181](https://github.com/MATRIXNEO23/jarvis/tree/b202181d435cf4ee13ffb355265e1f1a9f995963). [Prove Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/41749364482). SHA-256: `583bd55d1ef416b3781f6183d8ea6365f0b8761c6cf1fd614d652db832285728`.
+
 
 ## Build 004 — Programmi e app
 
