@@ -151,6 +151,24 @@ def main() -> None:
     integrations_settings_frame = settings_page("Progetti e servizi")
     timer_settings_frame = settings_page("Timer e allarmi")
 
+    # Optional native settings editor. No model initialization or provider switch.
+    def open_native_model_settings():
+        try:
+            from local_model.native_ui import NativeSettingsWindow
+            NativeSettingsWindow(settings_window)
+        except (OSError, ValueError, RuntimeError, ImportError) as exc:
+            messagebox.showerror("Jarvis / Gemma", str(exc), parent=settings_window)
+
+    native_settings_box = ttk.LabelFrame(assistant_settings_frame,
+                                         text="Modello locale Gemma (sperimentale)")
+    native_settings_box.pack(fill="x", padx=8, pady=8)
+    ttk.Label(native_settings_box,
+              text="Configurazione separata; non attiva il modello e non cambia GPT.",
+              wraplength=540).pack(anchor="w", padx=8, pady=5)
+    ttk.Button(native_settings_box, text="Configura Gemma locale...",
+               command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
+
+
     def show_settings() -> None:
         settings_window.deiconify()
         settings_window.lift()
