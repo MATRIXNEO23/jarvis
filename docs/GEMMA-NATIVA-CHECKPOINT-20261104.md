@@ -40,3 +40,10 @@
 - Nuovo script tools/probe_native_bridge_real.py e workflow native-bridge-real.yml: eseguono su Windows 2022 la DLL pinned con SHA256 verificato e GGUF verificato, chiamando NativeGemmaBridge.load/generate per due prompt. Report JSON pubblicato come artifact se disponibile.
 - Run iniziale 41872170746: in coda al momento del checkpoint. In caso di errore leggere log e correggere la causa, non dichiarare passaggio completato.
 - Restano da fare: timeout/cancellazione reali, eventuale compatibilità dell'ABI, instradamento verso ModelService e UI, impostazioni utente, benchmark su Pavilion, test regressione; non generare ZIP automaticamente.
+
+## Integrazione servizio locale (checkpoint)
+- Run 41873044370 SUCCESS: DLL reale + GGUF hanno generato due risposte attraverso NativeGemmaBridge su Windows CI. Non è un benchmark sul Pavilion.
+- Run 41873759981 SUCCESS: contratto NativeLocalProvider con prompt singolo/multi-turno.
+- Aggiunta native_factory.py: costruzione esplicita del provider in-process (senza attivazione automatica).
+- Aggiunto test_native_service_routing.py e workflow native-service-routing.yml: verifica che ModelService instradi localmente e non usi GPT online senza consenso. Run 41874409746 avviata, esito da controllare.
+- Restano non verificati: cablaggio UI/app principale, distribuzione DLL/modello, timeout/cancel robusti, prestazioni CPU AVX del PC reale e vecchio runtime legacy (workflow rosso). Non pubblicare ZIP.
