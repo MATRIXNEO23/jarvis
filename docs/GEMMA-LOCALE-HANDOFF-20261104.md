@@ -1,3 +1,7 @@
+## Diagnosi finita della coda Windows
+
+Dopo nuovo «procedi», run41862178113 resta QUEUED/job126686686231 senza step; nessuna causa dimostrata. Nuovo esperimento minimo windows-runner-probe.yml su windows-2025: stampa OS, nessun checkout/modello/compilazione. Scopo distinguere disponibilità pool2022 da un problema più ampio, non considerare un esito runner come test motore. Non cambiare backend o aggirare gate di verifica per la coda.
+
 ## Prosecuzione autorizzata — criterio di confronto fissato
 
 L’utente richiede ancora prosecuzione autonoma con skill e domande solo necessarie. Stato run41862178113/job126686686231 ricontrollato: QUEUED, nessuno step avviato. Non è un fallimento del modello; causa della coda non accertata. Nessuna nuova compilazione o inferenza sostitutiva avviata. [Protocollo confronto Kobo](GEMMA-CONFRONTO-KOBO-20261104.md): GGUF/impostazioni identici, misure separate cold/warm/TTFT/token-s, cache e output comparabili, incertezza non promossa a PASS. Nessuna misura Pavilion acquisita. Prossima dipendenza resta esito prova Gemma reale; non pubblicare la006.

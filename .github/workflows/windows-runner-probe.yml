@@ -1,0 +1,17 @@
+name: Windows runner availability probe
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths: ['.github/workflows/windows-runner-probe.yml']
+permissions:
+  contents: read
+jobs:
+  runner-probe:
+    runs-on: windows-2025
+    timeout-minutes: 3
+    steps:
+      - name: Observe available Windows runner only
+        shell: pwsh
+        run: |
+          [Environment]::OSVersion.VersionString
+          Write-Output 'RUNNER_PROBE_STARTED_NO_MODEL_NO_BUILD'
