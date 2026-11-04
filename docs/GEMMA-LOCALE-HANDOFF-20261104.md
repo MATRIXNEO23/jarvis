@@ -25,3 +25,7 @@ Prima implementazione isolata del broker in local_model/service.py: locale prior
 ## Primo componente verificato, non ancora integrato
 
 Source a47c63a79b3865f655e24aef2530469c58988628, Windows run41841843739/job126615172345:9 test PASS, zero errori/fallimenti. Trasporti locali/online sostituiti, nessuna inferenza reale. Evidenza docs/evidence/gemma-routing-20261104.json. Suite globale/GUI/Gemma/Kobold/account non eseguiti. Non dichiarare add-on installabile. Prossimo passo: runtime/client locali con startup CPU loopback e timeout, poi UI consenso non modale e raccordo console/voce/Telegram. Autorizzazioni di sviluppo già date: non richiedere nuovamente il via per questi passi.
+
+## Runtime CPU — nuova unità in corso
+
+Utente: «Procedi». Prima del codice operativo, quattro test configurazione/command-line/persistenza/corruzione e stub LocalConfig. Windows RED da osservare; nessun test Linux. File local_model/runtime.py e tests/test_local_model_runtime.py, workflow focalizzato esteso. Segue implementazione runtime e client su loopback, senza cambiare ancora la console.
