@@ -1,0 +1,29 @@
+name: Embedded native ABI proof (Windows)
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths: ['tools/native_model/check_abi.py', '.github/workflows/native-abi.yml']
+permissions:
+  contents: read
+jobs:
+  native-proof:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: LostRuins/koboldcpp
+          ref: 7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759
+          path: upstream-kobold
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install upstream OldPC compiler
+        shell: pwsh
+        run: |
+          Invoke-WebRequest 'https://github.com/skeeto/w64devkit/releases/download/v1.22.0/w64devkit-1.22.0.zip' -OutFile "$env:RUNNER_TEMP/w64devkit.zip"
+          Expand-Archive "$env:RUNNER_TEMP/w64devkit.zip" -DestinationPath "$env:RUNNER_TEMP/native-compiler"
+          "$env:RUNNER_TEMP/native-compiler/w64devkit/bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+      - name: Compare every ctypes field with native header layout
+        run: python tools/native_model/check_abi.py upstream-kobold
