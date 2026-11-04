@@ -1,0 +1,84 @@
+name: Jarvis Gemma Windows test package
+on:
+  workflow_dispatch:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths:
+      - 'jarvis.py'
+      - 'local_model/**'
+      - 'tests/test_native_conversation_session.py'
+      - '.github/workflows/gemma-windows-test-package.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  package:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: LostRuins/koboldcpp
+          ref: 7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759
+          path: upstream-kobold
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-engine-proof-not-installable
+          run-id: 41860087656
+          github-token: ${{ github.token }}
+          path: upstream-kobold
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify native engine and syntax
+        shell: pwsh
+        run: |
+          $dll='upstream-kobold/koboldcpp_noavx2.dll'
+          if (!(Test-Path $dll)) { throw 'Native DLL missing' }
+          $hash=(Get-FileHash $dll -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne 'ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba') { throw 'Native DLL SHA mismatch' }
+          python -m py_compile jarvis.py
+          python -m unittest discover -s tests -p test_native_conversation_session.py -v
+          python -m unittest discover -s tests -p test_online_permissions.py -v
+      - name: Build isolated test ZIP with pinned native DLL
+        shell: pwsh
+        run: |
+          @'
+          import hashlib, os, pathlib, subprocess, zipfile
+          root=pathlib.Path('.')
+          entries=[pathlib.Path(os.fsdecode(p)) for p in subprocess.check_output(['git','ls-files','-z']).split(b'\0') if p]
+          entries=[p for p in entries if not (p.parts[0]=='Download' and p.suffix.lower()=='.zip')]
+          mandatory={'jarvis.py','avvia_jarvis.bat','local_model/native_conversation_session.py','local_model/online_permissions.py'}
+          assert mandatory.issubset({p.as_posix() for p in entries})
+          native=pathlib.Path('upstream-kobold')
+          assert (native/'koboldcpp.py').is_file()
+          assert (native/'koboldcpp_noavx2.dll').is_file()
+          name='Jarvis-Gemma-Windows-TEST-'+subprocess.check_output(['git','rev-parse','--short','HEAD'],text=True).strip()+'.zip'
+          with zipfile.ZipFile(name,'w',zipfile.ZIP_DEFLATED,compresslevel=6,allowZip64=True) as archive:
+              for p in entries:
+                  if p.is_file() and not p.is_symlink():
+                      archive.write(p,'Jarvis-Test/'+p.as_posix())
+              archive.write(native/'koboldcpp.py','Jarvis-Test/native_engine/koboldcpp.py')
+              archive.write(native/'koboldcpp_noavx2.dll','Jarvis-Test/native_engine/koboldcpp_noavx2.dll')
+              archive.writestr('Jarvis-Test/LEGGIMI-GEMMA-TEST.txt',
+                  'BUILD DI PROVA, NON SOSTITUIRE LA VERSIONE STABILE.\n'
+                  'Estrarre in una nuova cartella. Configurare un modello GGUF Gemma 2 2B '
+                  'e la DLL native_engine/koboldcpp_noavx2.dll nelle impostazioni Gemma.\n'
+                  'Il sorgente KoboldCpp viene rilevato automaticamente.\n'
+                  'Avviare con avvia_jarvis.bat dopo aver installato le dipendenze richieste '
+                  'dal progetto. Non e incluso il modello GGUF.\n'
+                  'Il collaudo reale sul Pavilion e ancora necessario.\n')
+          with zipfile.ZipFile(name) as archive:
+              assert archive.testzip() is None
+              assert 'Jarvis-Test/native_engine/koboldcpp.py' in archive.namelist()
+              assert 'Jarvis-Test/native_engine/koboldcpp_noavx2.dll' in archive.namelist()
+          print('PACKAGE',name,'BYTES',pathlib.Path(name).stat().st_size)
+          print('SHA256',hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest())
+          '@ | python -
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Jarvis-Gemma-Windows-TEST
+          path: Jarvis-Gemma-Windows-TEST-*.zip
+          retention-days: 14
+          if-no-files-found: error
