@@ -94,3 +94,9 @@
 - tests/test_native_chat_transport.py e workflow native-chat-routing.yml creati, esito Windows da verificare.
 - STOP prima della fase 4 come richiesto dall'utente: spiegare opzioni di selezione manuale, autorizzazione GPT per singola richiesta e comportamento in caso di errore; non abilitare Gemma automaticamente.
 - Non dichiarare completa integrazione Gemma in chat prima del selettore e prova reale end-to-end in Jarvis. Nessuna build.
+
+## Memoria compatta locale — prima implementazione
+- local_model/compact_context.py: finestra scorrevole di 8 messaggi (configurabile), archivio persistente JSON atomico, estratti sintetici rolling ogni 8 messaggi archiviati, budget caratteri massimo. Dati memorizzati non sono comandi né autorizzazioni.
+- tests/test_compact_context.py e workflow compact-context.yml: verificano limite, ripresa, persistenza e file danneggiato. Esito Windows da controllare.
+- ATTENZIONE: digest deterministico per estratti, non vero riassunto semantico; non è ancora collegato all'inferenza Gemma e non garantisce conservazione di fatti importanti. Evitare di definirlo completo.
+- Richiesta utente: sintetizzare carattere, umore e fatti importanti senza allungare il prompt; futuro riassunto semantico incrementale nei periodi di inattività, con verifiche contro perdita di decisioni e riferimenti.
