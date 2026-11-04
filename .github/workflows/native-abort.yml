@@ -1,0 +1,23 @@
+name: Native Gemma abort contract (Windows)
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths:
+      - 'local_model/native_bridge.py'
+      - 'local_model/native_provider.py'
+      - 'tests/test_native_abort.py'
+      - '.github/workflows/native-abort.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  abort:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test cooperative abort and timeout
+        run: python -m unittest discover -s tests -p test_native_abort.py -v
