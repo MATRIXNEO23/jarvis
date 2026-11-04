@@ -5,6 +5,7 @@ module is an explicit dependency supplied by the installer, not downloaded here.
 """
 from pathlib import Path
 import threading
+import time
 
 from .native_config import NativeModelConfig
 
@@ -18,6 +19,7 @@ class NativeGemmaBridge:
         self.initialize = initialize
         self._lock = threading.Lock()
         self._loaded = False
+        self._stop_requested = threading.Event()
 
     def load(self):
         """Load once. Caller must supply a verified, pinned upstream adapter."""
@@ -37,6 +39,13 @@ class NativeGemmaBridge:
                 raise RuntimeError("Caricamento modello nativo fallito.")
             self._loaded = True
 
+    def abort(self):
+        """Request cooperative abort without waiting for the generation lock."""
+        self._stop_requested.set()
+        abort = getattr(self.upstream, "abort_generate", None)
+        if callable(abort):
+            abort()
+
     def generate(self, prompt, *, timeout=120):
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Prompt vuoto.")
@@ -45,9 +54,12 @@ class NativeGemmaBridge:
         # A native blocking generate() call cannot be forcibly stopped safely
         # from Python; no misleading timeout or cancellation is advertised.
         with self._lock:
+            if self._stop_requested.is_set():
+                raise RuntimeError("Generazione annullata.")
             if not self._loaded:
                 raise RuntimeError("Modello non caricato.")
             c = self.config
+            started = time.monotonic()
             result = self.upstream.generate({
                 "prompt": prompt, "max_context_length": c.context_size,
                 "max_length": c.max_output, "temperature": c.temperature,
@@ -55,6 +67,10 @@ class NativeGemmaBridge:
                 "sampler_seed": c.seed,
                 "stop_sequence": ["<end_of_turn>"],
             })
+            if self._stop_requested.is_set():
+                raise RuntimeError("Generazione annullata.")
+            if time.monotonic() - started > timeout:
+                raise TimeoutError("Generazione locale oltre il tempo richiesto.")
             if not isinstance(result, dict) or result.get("status") != 1:
                 raise RuntimeError("Generazione nativa fallita.")
             value = result.get("text")
