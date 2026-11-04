@@ -178,6 +178,16 @@ def main() -> None:
     ttk.Button(native_settings_box, text="Configura memoria e inattivita...",
                command=open_memory_preferences).pack(anchor="w", padx=8, pady=6)
 
+    def open_online_permissions():
+        try:
+            from local_model.online_permissions_ui import OnlinePermissionsWindow
+            OnlinePermissionsWindow(settings_window)
+        except (OSError, ValueError, RuntimeError, ImportError) as exc:
+            messagebox.showerror("Jarvis / Permessi GPT", str(exc), parent=settings_window)
+
+    ttk.Button(native_settings_box, text="Autorizzazioni GPT per funzione...",
+               command=open_online_permissions).pack(anchor="w", padx=8, pady=6)
+
 
     def show_settings() -> None:
         settings_window.deiconify()
