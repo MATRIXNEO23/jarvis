@@ -28,11 +28,11 @@ def initialize_kobold_cpu(upstream, config, source_path):
             and isinstance(last.value.func, ast.Name)
             and last.value.func.id == "main"):
         raise RuntimeError("Inizializzazione upstream cambiata.")
-    if not hasattr(upstream, "parser"):
-        raise RuntimeError("Parser upstream non inizializzato.")
     # The upstream proof uses this initialization path; no server is started.
     exec(compile(ast.Module(body=block.body[:-1], type_ignores=[]),
                  str(source), "exec"), upstream.__dict__)
+    if not hasattr(upstream, "parser"):
+        raise RuntimeError("Parser upstream non inizializzato dopo il bootstrap.")
     args = upstream.parser.parse_args([
         "--usecpu", "--noavx2", "--gpulayers", "0",
         "--threads", str(config.threads),
