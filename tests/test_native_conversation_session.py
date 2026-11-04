@@ -49,6 +49,16 @@ class SessionTests(unittest.TestCase):
             session.ask("ciao")
         self.assertEqual(len(session.history), 0)
 
+    def test_question_role_cannot_be_silently_dropped(self):
+        adapter = FakeAdapter()
+        session = self.make_session(adapter)
+        # Budget is 256 characters; the question alone fits but
+        # its mandatory 'Utente: ' prefix does not.
+        with self.assertRaises(ValueError):
+            session.ask("x" * 250)
+        self.assertEqual(adapter.prepares, 0)
+        self.assertEqual(adapter.calls, [])
+
     def test_over_budget_rejected_before_model_load(self):
         adapter = FakeAdapter()
         session = self.make_session(adapter)
