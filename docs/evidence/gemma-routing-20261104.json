@@ -1,0 +1,25 @@
+{
+  "source_commit": "a47c63a79b3865f655e24aef2530469c58988628",
+  "windows_run": 41841843739,
+  "job": 126615172345,
+  "tests": 9,
+  "failures": 0,
+  "errors": 0,
+  "scope": "isolated routing broker; inference transports mocked",
+  "red": {
+    "commit": "0e1f36af97b59617dc4114eedf94993035436ce8",
+    "run": 41841632108,
+    "tests": 6,
+    "failures": 6,
+    "errors": 0
+  },
+  "not_tested": [
+    "Gemma inference",
+    "KoboldCpp lifecycle",
+    "Jarvis console integration",
+    "Telegram account",
+    "full regression",
+    "package"
+  ],
+  "next": "Task1 runtime/client, then Task3 console and owner consent UI"
+}

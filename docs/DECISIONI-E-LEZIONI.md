@@ -1,3 +1,7 @@
+## Gemma — primo broker verificato, 4 novembre 2026
+
+Nove test Windows PASS sul componente isolato (source a47c63a, run41841843739); modelli simulati, nessuna integrazione runtime o006 consegnata. [Checkpoint e prossimo passo](GEMMA-LOCALE-HANDOFF-20261104.md).
+
 ## Gemma locale principale — 4 novembre 2026
 
 Lavoro autorizzato in corso sul ramo feature/gemma-local-20261104 dalla005; [checkpoint e prossimo passo](GEMMA-LOCALE-HANDOFF-20261104.md), [specifica](GEMMA-LOCALE-SPEC-20261104.md). Motore CPU gestito da add-on, console unica, online disattivabile e confermato per ogni inferenza. Nessuna006 consegnata.
