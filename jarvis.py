@@ -1875,59 +1875,12 @@ def main() -> None:
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
 
     def start_conversation_gpt(spoken: str) -> None:
-        """Send one speech turn with the latest completed dialogue attached.
-
-        Local self-diagnostics ALWAYS take precedence over conversational
-        model guesses about access to Jarvis's own files.
-        """
-        if not closing and try_self_diagnostic(spoken):
-            return
+        """Voice conversation uses Gemma locally; never escalates to GPT."""
         if closing or voice_mode.get() != GPT_CONVERSATION:
             return
-        # Voice dialogue defaults to local Gemma, never to GPT. Existing
-        # deterministic voice commands have already been handled upstream.
+        if try_self_diagnostic(spoken):
+            return
         submit_gemma_voice(spoken)
-        return
-        if (busy_gpt or closing or voice_mode.get() != GPT_CONVERSATION
-                or not gpt_enabled.get() or not active_gpt):
-            return
-        reconcile_document_session(force=True)
-        snapshot = documents.current.ident if documents.current else None
-        try:
-            live=current_capability_snapshot(snapshot is not None)
-            prompt = build_conversation_prompt(
-                spoken, has_document=snapshot is not None,
-                memory_context=recent_memory_for_gpt(spoken),
-                telegram_send_ready=live["telegram_voice_send"],
-                runtime_info=capability_status_prompt(live),
-                addon_actions=active_addon_actions())
-        except ConversationRejected as exc:
-            write_line("JARVIS > " + str(exc))
-            return
-        # Voice requests must not silently reach GPT when local-only is selected.
-        from local_model.online_permissions import (
-            OnlinePermissionPolicy, default_online_permissions_path)
-        try:
-            permission = OnlinePermissionPolicy.load(default_online_permissions_path())
-            decision = permission.decide("chat.conversation")
-        except (OSError, ValueError, RuntimeError) as exc:
-            write_line("GPT > Permessi non disponibili: " + str(exc)[:150])
-            return
-        if decision == "local_only":
-            write_line("JARVIS > GPT vocale non autorizzato. Usa Gemma locale "
-                       "oppure modifica i permessi della conversazione.")
-            return
-        if decision == "request_consent":
-            if not messagebox.askyesno(
-                "Autorizzazione GPT online",
-                "Questa conversazione verra inviata a GPT online. "
-                "Autorizzi questa singola richiesta?", parent=root):
-                write_line("JARVIS > Richiesta GPT online annullata.")
-                return
-        write_line("JARVIS > Elaboro la tua richiesta...")
-        run_gpt("conversation", prompt=prompt,
-                epoch=conversation_epoch,
-                document_id=snapshot, utterance=spoken)
 
     def toggle_gpt() -> None:
         nonlocal active_gpt, conversation_epoch
@@ -3262,7 +3215,7 @@ def main() -> None:
                                                  source_utterance=spoken)
                                 else:
                                     write_line("Motore locale occupato: riprova.")
-                            elif True:  # Local Gemma dialogue does not require GPT login.
+                            else:
                                 if gemma_trial_busy[0]:
                                     if len(pending_conversation) < 3:
                                         pending_conversation.append(
@@ -3276,10 +3229,6 @@ def main() -> None:
                                             "Ripeti quest'ultima tra poco.")
                                 else:
                                     start_conversation_gpt(spoken)
-                            elif False:
-                                pass
-                            else:
-                                write_line("GPT sta rispondendo: attendi prima di parlare.")
                             continue
                         if route_type == "dictation":
                             # Only manual dictation may insert free speech.
