@@ -1,3 +1,9 @@
+## ABI verificata, compilazione motore in attesa — prossimo passo preciso
+
+Source0c57701d29dab9aa7bcdb24270ae07609ce36eda, run41860720969/job126681442160 SUCCESS:130 dimensioni/offset coincidono tra ctypes upstream ed header C++ compilato Windows; nessuna inferenza. Primo errore fixture conservato sotto. Evidenza native-engine-20261104.json. Compilazione DLL run41860087656/job126679185318 ancora IN_PROGRESS all’ultimo controllo; run41860458509 duplicata dallo stesso trigger ampio, non è una nuova variante del motore. Non avviare altre compilazioni finché non letto questo esito.
+
+Ripresa: leggere esito/log native build e probe, distinguere un verde compilazione da caricamento DLL. Poi binding nativo dalla revisione fissata, confronto default upstream, prova Gemma residente e misure stesse impostazioni; solo dopo raccordo console e consegna. Non riprendere subprocess Kobo esterno o dichiarare raggiunte le prestazioni. Nuova UI/impostazioni e006 non presenti. Sviluppo e pubblicazione checkpoint già autorizzati; nessuna nuova domanda sui requisiti confermati.
+
 ## Diagnosi ABI — fixture corretta
 
 Run41860458889/job126680509056 fallita prima del confronto: expose.h usa std::string e std::vector, include mancanti nella translation unit della prova. Non è mismatch ABI o difetto motore. Correzione minima include string/vector prima di expose.h; nuovo ingresso tools/check_native_abi.py per separare trigger ABI dalla costosa compilazione DLL. Vecchio tools/native_model/check_abi.py resta storico e non è più chiamato dal workflow ABI. Nuova verifica Windows da leggere.

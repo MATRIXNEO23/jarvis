@@ -1,0 +1,21 @@
+{
+  "upstream_commit": "7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759",
+  "abi": {
+    "source": "0c57701d29dab9aa7bcdb24270ae07609ce36eda",
+    "run": 41860720969,
+    "job": 126681442160,
+    "checked": 130,
+    "layout_match": true,
+    "inference_verified": false,
+    "initial_fixture_failure": 41860458889
+  },
+  "native_build": {
+    "source": "0b819a8c3f3a1911652b11811421da0c4f1e4f2e",
+    "run": 41860087656,
+    "job": 126679185318,
+    "status_at_checkpoint": "in_progress",
+    "duplicate_run": 41860458509
+  },
+  "package_delivered": false,
+  "pavilion_performance_verified": false
+}
