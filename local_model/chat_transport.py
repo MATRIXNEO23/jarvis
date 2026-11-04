@@ -31,3 +31,9 @@ class ChatTransport:
         if decision == "request_consent":
             raise PermissionError("Conferma GPT online richiesta per questa operazione.")
         return self.call(action, timeout=timeout, **arguments)
+
+    def ask_local_first(self, prompt, *, session, timeout=180):
+        """Use a prepared local Gemma session; errors never trigger GPT."""
+        if not isinstance(prompt, str) or not prompt.strip():
+            raise ValueError("Richiesta vuota.")
+        return session.ask(prompt, timeout=timeout)
