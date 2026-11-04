@@ -158,3 +158,8 @@
 - Workflow in corso: 41930697286 (native), 41930708973 (permissions). Verificare prima di dire SUCCESS.
 - Le skill installate consultate non includono skill di programmazione/Archify pertinenti; sviluppo eseguito mediante repository e test CI.
 - BLOCCO NON RISOLTO: routing voce Jarvis -> Gemma locale non ancora collegato alla UI standard; solo test Gemma manuale disponibile. Permessi GPT non ancora applicati a ogni invocazione legacy. Niente ZIP finale o benchmark i3-2100 certificato.
+
+## Pacchetto Windows di prova
+- 279f7062: jarvis.py rileva automaticamente native_engine/koboldcpp.py quando presente accanto all'app.
+- 61199f53: workflow gemma-windows-test-package.yml su Windows include repository tracciato, KoboldCpp pinned 7e0eb2dc e DLL noavx2 con SHA256 verificato, controlla sintassi e test, genera ZIP artifact isolato. Run 41932663081 in corso al momento del checkpoint.
+- Il GGUF Gemma 2 2B non e incluso; impostare percorso modello e DLL nelle impostazioni locali. ZIP test, non release certificata sul Pavilion. Non modificare main ne dati esistenti.
