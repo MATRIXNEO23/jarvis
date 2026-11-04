@@ -87,3 +87,10 @@
 - Modificato jarvis.py: nella scheda esistente «GPT e memoria» aggiunto pulsante «Configura Gemma locale...» che apre NativeSettingsWindow solo su richiesta, senza caricare DLL né cambiare instradamento GPT.
 - Aggiunto tests/test_native_settings_entry.py e aggiornato workflow native-ui.yml per verificare l'entrypoint; nuovo run da verificare.
 - La configurazione NON rende Gemma utilizzabile nella chat: provider reale non ancora collegato al percorso di chiamata Jarvis. Il contratto legacy executable/server resta incompatibile e workflow rosso; non mascherare la regressione. Non creare build pubblica prima di risolvere entrambi.
+
+## Fase 3 — predisposizione collegamento conversazione
+- Creati local_model/native_chat_adapter.py (NativeChatAdapter) e local_model/chat_transport.py (ChatTransport): adapter usa factory nativa e restituisce dizionario text, transport separa richieste e non fa fallback online.
+- jarvis.py: worker conversazione instradato attraverso ChatTransport, per ora con native non disponibile e use_native=False implicito. GPT esistente resta predefinito, senza cambiamento di comportamento. Telegram continua sul GPT esistente.
+- tests/test_native_chat_transport.py e workflow native-chat-routing.yml creati, esito Windows da verificare.
+- STOP prima della fase 4 come richiesto dall'utente: spiegare opzioni di selezione manuale, autorizzazione GPT per singola richiesta e comportamento in caso di errore; non abilitare Gemma automaticamente.
+- Non dichiarare completa integrazione Gemma in chat prima del selettore e prova reale end-to-end in Jarvis. Nessuna build.
