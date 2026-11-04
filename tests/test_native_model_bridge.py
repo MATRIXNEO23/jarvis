@@ -31,14 +31,29 @@ class NativeBridgeTests(unittest.TestCase):
                                   context_size=4096, max_output=256,
                                   temperature=0.4, seed=12)
             fake = FakeUpstream()
-            bridge = NativeGemmaBridge(c, fake)
+            initialized = []
+            bridge = NativeGemmaBridge(c, fake, initialize=lambda upstream, config: initialized.append(config))
             bridge.load()
             bridge.load()
             self.assertEqual(fake.loads, 1)
+            self.assertEqual(initialized, [c])
             self.assertEqual(bridge.generate("Saluta"), "Ciao!")
             self.assertEqual(fake.calls[0]["max_context_length"], 4096)
             self.assertEqual(fake.calls[0]["max_length"], 256)
             self.assertEqual(fake.calls[0]["sampler_seed"], 12)
+
+    def test_missing_initializer_prevents_native_load(self):
+        with tempfile.TemporaryDirectory() as folder:
+            dll = Path(folder) / "engine.dll"
+            model = Path(folder) / "model.gguf"
+            dll.write_bytes(b"test-only")
+            model.write_bytes(b"test-only")
+            fake = FakeUpstream()
+            bridge = NativeGemmaBridge(NativeModelConfig(
+                dll=str(dll), model=str(model)), fake)
+            with self.assertRaises(RuntimeError):
+                bridge.load()
+            self.assertEqual(fake.loads, 0)
 
     def test_missing_model_prevents_load(self):
         bridge = NativeGemmaBridge(NativeModelConfig(model="missing.gguf",
