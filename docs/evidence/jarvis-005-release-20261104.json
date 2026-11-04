@@ -1,0 +1,78 @@
+{
+  "build_number": 5,
+  "build_label": "005",
+  "previous_build": 4,
+  "source_commit": "b202181d435cf4ee13ffb355265e1f1a9f995963",
+  "archive": "Jarvis-005.zip",
+  "files": 86,
+  "bytes": 283598,
+  "sha256": "583bd55d1ef416b3781f6183d8ea6365f0b8761c6cf1fd614d652db832285728",
+  "tested_on": "Windows CI; see workflow for extracted tests",
+  "runtime_only": true,
+  "windows_workflow_run": "41749364482",
+  "pc_test": "pending",
+  "date": "2026-11-04",
+  "release_branch": "build/jarvis-005",
+  "verified_run": 41749364482,
+  "run_conclusion": "success",
+  "publication_commit": "a9520b3e2d0ec680746710821a7adbbefcd1cd19",
+  "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-005.zip",
+  "public_download_verified": {
+    "archive": "Jarvis-005.zip",
+    "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-005.zip",
+    "source_commit": "b202181d435cf4ee13ffb355265e1f1a9f995963",
+    "sha256": "583bd55d1ef416b3781f6183d8ea6365f0b8761c6cf1fd614d652db832285728",
+    "bytes": 283598,
+    "build_number": 5,
+    "previous_build_preserved": true
+  },
+  "jobs": [
+    {
+      "id": 126310308264,
+      "python": "3.11",
+      "tests": 558,
+      "seconds": 126.617,
+      "conclusion": "success"
+    },
+    {
+      "id": 126310308535,
+      "python": "3.12",
+      "tests": 558,
+      "seconds": 71.776,
+      "conclusion": "success"
+    },
+    {
+      "id": 126311593976,
+      "role": "publisher_and_public_download_check",
+      "conclusion": "success"
+    }
+  ],
+  "extracted_tests": {
+    "tests": 213,
+    "seconds": 32.976,
+    "conclusion": "success",
+    "runtime_cwd": "extracted_package",
+    "includes_wake_name_and_empty_context": true
+  },
+  "checks": {
+    "manifest_hash_and_runtime_only": "passed",
+    "single_launcher": "passed",
+    "extracted_imports": "passed",
+    "real_ui_boot_and_close": "passed",
+    "reproducible_with_different_clock": "passed",
+    "windows_native_probe": "passed",
+    "windows_search_live": "passed",
+    "windows_search_fixture_and_service_restored": true,
+    "public_download_hash_and_bytes": "passed",
+    "previous_001_002_003_004_download_hashes": "passed"
+  },
+  "limits": {
+    "personal_microphone": false,
+    "personal_gpt_account": false,
+    "personal_desktop": false,
+    "pavilion_performance": false,
+    "personal_quota_measurement": false,
+    "linux_functional_tests": false
+  },
+  "new_components": false
+}

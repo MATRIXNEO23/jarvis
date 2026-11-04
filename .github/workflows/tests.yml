@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'feature/program-apps-20261103', 'fix/gpt-voice-addressing-20261103', 'fix/empty-prompt-context-20261104', 'build/jarvis-005']
+    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'feature/program-apps-20261103', 'fix/gpt-voice-addressing-20261103', 'fix/empty-prompt-context-20261104']
     paths:
       - '**.py'
       - '**.mjs'
@@ -99,7 +99,7 @@ jobs:
   publish-file-access:
     name: Publish immutable numbered candidate 005 (Windows)
     needs: unit
-    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.build_candidate) || (github.event_name == 'push' && github.ref == 'refs/heads/build/jarvis-005') }} # One-time 005 delivery authorized by user continuation.
+    if: ${{ false }} # Build005 delivered; one-time publisher disabled.
     runs-on: windows-2022
     permissions:
       contents: write
