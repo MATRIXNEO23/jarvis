@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 from local_model.online_permissions import OnlinePermissionPolicy
+from local_model.chat_transport import ChatTransport
 
 
 class OnlinePermissionsTests(unittest.TestCase):
@@ -35,6 +36,31 @@ class OnlinePermissionsTests(unittest.TestCase):
             path.write_text('{"version":1,"rules":{"web.search":"always_yes"}}', encoding="utf-8")
             with self.assertRaises(ValueError):
                 OnlinePermissionPolicy.load(path)
+
+    def test_transport_never_calls_online_without_scoped_permission(self):
+        class Endpoint:
+            def __init__(self):
+                self.calls = []
+            def call(self, action, **kwargs):
+                self.calls.append((action, kwargs))
+                return {"text": "ok"}
+        online, native = Endpoint(), Endpoint()
+        transport = ChatTransport(online, native)
+        policy = OnlinePermissionPolicy()
+        with self.assertRaises(PermissionError):
+            transport.call_feature("web.search", "ask", policy=policy, prompt="test")
+        self.assertEqual(online.calls, [])
+        policy.set_mode("web.search", "ask")
+        with self.assertRaises(PermissionError):
+            transport.call_feature("web.search", "ask", policy=policy, prompt="test")
+        self.assertEqual(online.calls, [])
+        transport.call_feature("web.search", "ask", policy=policy,
+                               confirmed=True, prompt="test")
+        self.assertEqual(len(online.calls), 1)
+        transport.call_feature("web.navigate", "ask", policy=policy,
+                               use_native=True, prompt="test")
+        self.assertEqual(len(native.calls), 1)
+        self.assertEqual(len(online.calls), 1)
 
     def test_invalid_capability_and_mode_rejected(self):
         p = OnlinePermissionPolicy()
