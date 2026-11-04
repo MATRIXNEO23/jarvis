@@ -6,8 +6,10 @@ on:
       - 'jarvis.py'
       - 'local_model/chat_transport.py'
       - 'local_model/native_chat_adapter.py'
+      - 'local_model/native_conversation_session.py'
       - 'tests/test_native_chat_transport.py'
       - 'tests/test_native_adapter_budget.py'
+      - 'tests/test_native_conversation_session.py'
       - '.github/workflows/native-chat-routing.yml'
   workflow_dispatch:
 permissions:
@@ -23,6 +25,8 @@ jobs:
           python-version: '3.12'
       - name: Compile Jarvis entrypoint
         run: python -m py_compile jarvis.py
+      - name: Test reusable native conversation session
+        run: python -m unittest discover -s tests -p test_native_conversation_session.py -v
       - name: Test native adapter prompt budget
         run: python -m unittest discover -s tests -p test_native_adapter_budget.py -v
       - name: Test explicit routing and no fallback
