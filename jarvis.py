@@ -2186,6 +2186,8 @@ def main() -> None:
     local_button.pack(side="left", padx=(0, 4))
     ask_button = ttk.Button(buttons_row, text="Chiedi a GPT")
     ask_button.pack(side="left", padx=(0, 4))
+    gemma_button = ttk.Button(buttons_row, text="Prova Gemma locale")
+    gemma_button.pack(side="left", padx=(0, 4))
     plan_button = ttk.Button(buttons_row, text="Pianifica attività")
     plan_button.pack(side="left", padx=(0, 4))
     diagnostic_button = ttk.Button(buttons_row, text="Autodiagnosi Jarvis")
@@ -3868,6 +3870,68 @@ def main() -> None:
     tools_button.configure(command=toggle_console_tools)
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
+    # Manual, isolated native test. No automatic online fallback or PC actions.
+    gemma_trial_queue = queue.Queue()
+    gemma_trial_busy = [False]
+    gemma_source = [None]
+
+    def submit_gemma_trial():
+        if closing or gemma_trial_busy[0]:
+            return
+        question = request.get().strip()
+        if not question:
+            write_line("GEMMA > Scrivi una domanda prima di avviare la prova.")
+            return
+        if gemma_source[0] is None or not Path(gemma_source[0]).is_file():
+            source = filedialog.askopenfilename(
+                parent=root, title="Seleziona koboldcpp.py della versione verificata",
+                filetypes=[("Sorgente KoboldCpp", "koboldcpp.py"), ("Python", "*.py")])
+            if not source:
+                return
+            if Path(source).name.lower() != "koboldcpp.py":
+                messagebox.showerror("Gemma", "Seleziona koboldcpp.py.", parent=root)
+                return
+            gemma_source[0] = source
+        request.set("")
+        write_line("GEMMA / DOMANDA > " + question)
+        gemma_trial_busy[0] = True
+        gemma_button.configure(state="disabled")
+
+        def native_trial_worker():
+            adapter = None
+            try:
+                from local_model.native_chat_adapter import NativeChatAdapter
+                adapter = NativeChatAdapter(gemma_source[0])
+                adapter.prepare()
+                response = adapter.call("ask", prompt=question, timeout=180)
+                gemma_trial_queue.put(("ok", str(response.get("text", ""))))
+            except Exception as exc:
+                gemma_trial_queue.put(("error", str(exc)[:350]))
+            finally:
+                if adapter is not None:
+                    try:
+                        adapter.stop()
+                    except Exception:
+                        pass
+
+        threading.Thread(target=native_trial_worker, daemon=True,
+                         name="jarvis-native-gemma-trial").start()
+
+    def poll_gemma_trial():
+        try:
+            while True:
+                kind, value = gemma_trial_queue.get_nowait()
+                gemma_trial_busy[0] = False
+                gemma_button.configure(state="normal")
+                write_line(("GEMMA > " if kind == "ok" else "GEMMA / ERRORE > ") + value)
+        except queue.Empty:
+            pass
+        if not closing:
+            root.after(250, poll_gemma_trial)
+
+    root.after(250, poll_gemma_trial)
+    gemma_button.configure(command=submit_gemma_trial)
+
     plan_button.configure(command=submit_plan)
     diagnostic_button.configure(
         command=lambda: try_self_diagnostic("Jarvis, fai un'autodiagnosi"))
