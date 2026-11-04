@@ -1,6 +1,7 @@
 """Validated native CPU model settings. No executable or server launch."""
 from dataclasses import asdict, dataclass
 import json
+import math
 import os
 from pathlib import Path
 import tempfile
@@ -26,11 +27,11 @@ class NativeModelConfig:
             ("top_k", 1, 1000), ("seed", -1, 2147483647),
         ):
             value = getattr(self, key)
-            if type(value) is not int or not low <= value <= high:
+            if type(value) is not int or not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f"Parametro non valido: {key}")
         for key, low, high in (("temperature", 0, 2), ("top_p", 0, 1)):
             value = getattr(self, key)
-            if type(value) not in (int, float) or not low <= value <= high:
+            if type(value) not in (int, float) or not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f"Parametro non valido: {key}")
         if self.max_output > self.context_size:
             raise ValueError("Max output supera la finestra di contesto.")
