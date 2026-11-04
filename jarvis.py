@@ -168,6 +168,16 @@ def main() -> None:
     ttk.Button(native_settings_box, text="Configura Gemma locale...",
                command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
 
+    def open_memory_preferences():
+        try:
+            from local_model.memory_ui import MemoryPreferencesWindow
+            MemoryPreferencesWindow(settings_window)
+        except (OSError, ValueError, RuntimeError, ImportError) as exc:
+            messagebox.showerror("Jarvis / Memoria", str(exc), parent=settings_window)
+
+    ttk.Button(native_settings_box, text="Configura memoria e inattivita...",
+               command=open_memory_preferences).pack(anchor="w", padx=8, pady=6)
+
 
     def show_settings() -> None:
         settings_window.deiconify()
