@@ -42,7 +42,8 @@ class NativeGemmaBridge:
     def abort(self):
         """Request cooperative abort without waiting for the generation lock."""
         self._stop_requested.set()
-        abort = getattr(self.upstream, "abort_generate", None)
+        handle = getattr(self.upstream, "handle", None)
+        abort = getattr(handle, "abort_generate", None)
         if callable(abort):
             abort()
 
