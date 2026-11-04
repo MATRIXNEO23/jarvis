@@ -1,3 +1,7 @@
+## Motore nativo compilato e caricato — prova successiva Gemma in preparazione
+
+Run41860087656/job126679185318 SUCCESS: DLL19010560byte SHA256ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba, export e contatore iniziale reali PASS. Anche duplicata41860458509 SUCCESS. Non sono inferenze. Prossima unità tools/probe_native_gemma.py usa mapping Python upstream fissato e DLL direttamente, mai main/server. Download CI pubblico bartowski/gemma-2-2b-it-Q4_K_M.gguf con revisione/hash dalla metadata publisher; nessun account, peso non redistribuito. Identità col GGUF dell’utente NON verificata. Due richieste con un solo load, report risultati/tempi; non è benchmark Pavilion o raccordo Jarvis. Workflow native-gemma.yml da verificare.
+
 ## ABI verificata, compilazione motore in attesa — prossimo passo preciso
 
 Source0c57701d29dab9aa7bcdb24270ae07609ce36eda, run41860720969/job126681442160 SUCCESS:130 dimensioni/offset coincidono tra ctypes upstream ed header C++ compilato Windows; nessuna inferenza. Primo errore fixture conservato sotto. Evidenza native-engine-20261104.json. Compilazione DLL run41860087656/job126679185318 ancora IN_PROGRESS all’ultimo controllo; run41860458509 duplicata dallo stesso trigger ampio, non è una nuova variante del motore. Non avviare altre compilazioni finché non letto questo esito.

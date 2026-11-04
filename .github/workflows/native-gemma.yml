@@ -1,0 +1,44 @@
+name: Embedded Gemma inference proof (Windows)
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths: ['tools/probe_native_gemma.py','tools/fetch_probe_gemma.py','.github/workflows/native-gemma.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-gemma:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: LostRuins/koboldcpp
+          ref: 7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759
+          path: upstream-kobold
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-engine-proof-not-installable
+          run-id: 41860087656
+          github-token: ${{ github.token }}
+          path: upstream-kobold
+      - name: Verify native DLL provenance
+        shell: pwsh
+        run: |
+          $hash=(Get-FileHash upstream-kobold/koboldcpp_noavx2.dll -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne 'ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba') { throw 'DLL integrity mismatch' }
+      - name: Fetch public CI model and verify publisher SHA256
+        run: python tools/fetch_probe_gemma.py
+      - name: Native Gemma generation (no launcher or server)
+        run: python tools/probe_native_gemma.py upstream-kobold probe-model.gguf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-gemma-proof-reports-only
+          path: |
+            native-gemma-report.json
+            probe-model-source.json
+          retention-days: 14
