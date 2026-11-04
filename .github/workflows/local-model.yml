@@ -1,0 +1,17 @@
+name: Local model contract (Windows)
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths: ['local_model/**', 'tests/test_model*.py', 'tests/test_local_model*.py', '.github/workflows/local-model.yml']
+permissions:
+  contents: read
+jobs:
+  local-model:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Model routing contract (no model or account)
+        run: python -m unittest discover -s tests -p "test_model*.py" -v

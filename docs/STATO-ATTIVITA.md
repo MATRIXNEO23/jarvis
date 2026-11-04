@@ -1,3 +1,7 @@
+## Gemma locale principale — 4 novembre 2026
+
+Lavoro autorizzato in corso sul ramo feature/gemma-local-20261104 dalla005; [checkpoint e prossimo passo](GEMMA-LOCALE-HANDOFF-20261104.md), [specifica](GEMMA-LOCALE-SPEC-20261104.md). Motore CPU gestito da add-on, console unica, online disattivabile e confermato per ogni inferenza. Nessuna006 consegnata.
+
 ## CONSEGNATO — Jarvis004, Programmi e app, 3 novembre2026
 
 [Scarica Jarvis-004.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-004.zip). Sorgenti esatti a1b93f34ff25bd9a972ed971a432af4984366f28, ramo build/jarvis-004; avvio programmi classici/Store consentiti, elenco filtrabile, aggiunta manuale, frase personale e varianti apri/avvia/lancia. Add-on installata OFF: configurare le app e attivarla dal gestore. Runtime precedente e dati del profilo conservati; nessun merge dei sorgenti storici main.
