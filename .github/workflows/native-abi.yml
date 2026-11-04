@@ -2,7 +2,7 @@ name: Embedded native ABI proof (Windows)
 on:
   push:
     branches: ['feature/gemma-local-20261104']
-    paths: ['tools/native_model/check_abi.py', '.github/workflows/native-abi.yml']
+    paths: ['tools/check_native_abi.py', '.github/workflows/native-abi.yml']
 permissions:
   contents: read
 jobs:
@@ -26,4 +26,4 @@ jobs:
           Expand-Archive "$env:RUNNER_TEMP/w64devkit.zip" -DestinationPath "$env:RUNNER_TEMP/native-compiler"
           "$env:RUNNER_TEMP/native-compiler/w64devkit/bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
       - name: Compare every ctypes field with native header layout
-        run: python tools/native_model/check_abi.py upstream-kobold
+        run: python tools/check_native_abi.py upstream-kobold

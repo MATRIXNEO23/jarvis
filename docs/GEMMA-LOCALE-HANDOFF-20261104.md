@@ -1,3 +1,7 @@
+## Diagnosi ABI — fixture corretta
+
+Run41860458889/job126680509056 fallita prima del confronto: expose.h usa std::string e std::vector, include mancanti nella translation unit della prova. Non è mismatch ABI o difetto motore. Correzione minima include string/vector prima di expose.h; nuovo ingresso tools/check_native_abi.py per separare trigger ABI dalla costosa compilazione DLL. Vecchio tools/native_model/check_abi.py resta storico e non è più chiamato dal workflow ABI. Nuova verifica Windows da leggere.
+
 ## Prova Windows avviata
 
 Source0b819a8c3f3a1911652b11811421da0c4f1e4f2e, run41860087656/job126679185318: compilazione DLL upstream in corso. Compilatore installato; non dichiarare PASS prima del probe. Mappa impostazioni in GEMMA-IMPOSTAZIONI-20261104.md. Preparato check_abi.py per confrontare strutture ctypes upstream con sizeof/offsetof C++ dello stesso header: da eseguire su Windows prima di chiamare load_model/generate dal nuovo binding. Nessun peso o account personale usato.
