@@ -61,3 +61,10 @@
 - Analisi del sorgente KoboldCpp upstream pinned 7e0eb2d: la funzione è `upstream.handle.abort_generate()`, NON `upstream.abort_generate()`. Corretta la chiamata in native_bridge.py e adeguato FakeUpstream dei test.
 - Estesa la prova reale per verificare la presenza di `handle.abort_generate` sulla DLL caricata, senza rischiare di interrompere una generazione live non ancora testata. Workflow Windows avviato automaticamente.
 - Mancano ancora prova di cancellazione durante generazione reale, hard timeout, cablaggio UI e benchmark Pavilion. Non dichiarare queste capacità come verificate.
+
+## Prova cancellazione reale
+- Run 41875814331 SUCCESS: generazione reale attraverso bridge e presenza ABI abort verificata.
+- Run 41875796810 SUCCESS: test di contratto cancellazione con fake aggiornato.
+- Nuovo script tools/probe_native_abort_real.py: avvia una generazione lunga in thread, richiede abort mentre è attiva, verifica completamento entro 15 s e assenza di risposta restituita. Il test fallisce se la generazione termina prima dell'abort (inconcludente).
+- Nuovo workflow .github/workflows/native-abort-real.yml, run 41878329249 in coda al checkpoint. L'esito deve essere verificato prima di dichiarare cancellazione reale funzionante.
+- Nessuna build, nessuna modifica alla UI; test isolato Windows CI. Benchmark Pavilion e hard timeout non verificati.
