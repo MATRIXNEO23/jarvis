@@ -107,3 +107,8 @@
 - Test tests/test_memory_preferences.py e .github/workflows/memory-preferences.yml; verificare esito run 41891499740.
 - Run 41890983269 compact-context SUCCESS.
 - CRITICO: scheduler idle, sospensione reale su carico alto, enforcement priorita/abort e sintesi semantica NON implementati. Questi campi sono preferenze persistenti ma non ancora operative. Il budget prompt e in token configurati ma compact_context limita caratteri, serve token budgeting effettivo.
+
+## Ripresa dopo blocco pubblicazione
+- Run 41891499740 Memory preferences SUCCESS; 41890983269 Compact context SUCCESS; native routing 41891469742 SUCCESS.
+- Aggiunto metodo MemoryPreferences.available_prompt_tokens(context_size, max_output, reserve=128), con test per finestra 512/2048 e configurazioni impossibili. Commit a5e3d875, test commit 62e010a8. Non equivale a conteggio token reale né a collegamento alla DLL.
+- Da fare: applicare il budget al prompt realmente inviato, scheduler inattivita e priorita, sintetizzatore semantico e integrazione completa. Legacy Local model contract ancora fallisce: indagare, non disattivare.
