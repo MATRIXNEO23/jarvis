@@ -47,3 +47,11 @@
 - Aggiunta native_factory.py: costruzione esplicita del provider in-process (senza attivazione automatica).
 - Aggiunto test_native_service_routing.py e workflow native-service-routing.yml: verifica che ModelService instradi localmente e non usi GPT online senza consenso. Run 41874409746 avviata, esito da controllare.
 - Restano non verificati: cablaggio UI/app principale, distribuzione DLL/modello, timeout/cancel robusti, prestazioni CPU AVX del PC reale e vecchio runtime legacy (workflow rosso). Non pubblicare ZIP.
+
+## Arresto e timeout nativi
+- Run 41874409746 SUCCESS: instradamento ModelService e consenso online verificati con fake.
+- Aggiunto NativeGemmaBridge.abort(): segnala stop e invoca abort_generate() se disponibile, senza prendere il lock della generazione.
+- NativeLocalProvider.stop() inoltra l'abort senza attendere il lock del provider.
+- NativeGemmaBridge.generate() scarta il risultato se abortito o se il tempo è già scaduto. Il timeout NON preempta la chiamata nativa bloccante: non dichiarare hard timeout.
+- Nuovi test Windows tests/test_native_abort.py e workflow native-abort.yml, run 41874727654 avviata (esito da verificare).
+- Rischi ancora aperti: thread safety del backend C, cancellazione reale su DLL, race di stop, UI/impostazioni, benchmark hardware reale. Il runtime legacy resta rosso.
