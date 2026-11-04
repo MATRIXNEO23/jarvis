@@ -40,7 +40,11 @@ for question in ("Saluta brevemente in italiano.", "Quanto fa due più due? Risp
     answer = bridge.generate(prompt, timeout=120)
     responses.append({"question": question, "answer": answer,
                       "seconds": time.perf_counter() - start})
+abort_supported = callable(getattr(getattr(upstream, "handle", None), "abort_generate", None))
+if not abort_supported:
+    raise RuntimeError("Native DLL abort ABI missing.")
 report = {"proof": "native_bridge_real_dll_two_generations",
+          "native_abort_abi_present": abort_supported,
           "load_seconds": load_seconds, "responses": responses,
           "pavilion_verified": False, "jarvis_ui_verified": False,
           "performance_parity_verified": False}
