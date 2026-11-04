@@ -74,3 +74,10 @@
 - Aggiunto local_model/native_settings.py con campi editabili e indicazione di reload per modello/context/threads, senza applicare modifiche a generazione in corso. Percorso separato: %LOCALAPPDATA%/Jarvis/addon-data/modello_locale/native.json; prova isolata JARVIS_TRIAL_HOME.
 - Aggiunti tests/test_native_settings.py e .github/workflows/native-settings.yml (esito da verificare); corretto rifiuto di NaN/inf nella configurazione nativa.
 - ATTENZIONE: questo è il contratto delle impostazioni, NON ancora pannello UI integrato; i parametri avanzati KoboldCpp inventariati in docs/GEMMA-IMPOSTAZIONI-20261104.md non sono ancora tutti collegati alla DLL. Nessuna build.
+
+## Preparazione build con UI isolata
+- Run 41881063593 SUCCESS: configurazione nativa editabile, isolata dal settings.json principale, verificata Windows.
+- Le skill disponibili via catalogo sono per documenti/media/Drive, non per sviluppo Python Windows; seguire istruzioni AGENTS.md e skill Archify del repository quando disponibile. La skill .agents/skills/archify/SKILL.md non è presente in questo ramo (404), non inventarne contenuti.
+- Creato local_model/native_ui.py: pannello Tk opt-in per GGUF, Context Size, Max Output, thread, temperatura, Top-K/P, seed; Salva, Sfoglia, ripristina campi, messaggi ricaricamento. Non carica/attiva la DLL, non modifica la UI principale né settings.json.
+- Test Tk Windows tests/test_native_ui.py e workflow native-ui.yml aggiunti; esito da verificare.
+- GATE BUILD: non pubblicare una build finché il pannello non è raggiungibile dall'interfaccia reale, il provider non è cablato al ModelService nel programma, il runtime legacy rosso non è chiarito, e non sono superate regressioni Windows. Prestazioni KoboldCpp sul Pavilion ancora non misurate. L'utente ha autorizzato l'obiettivo di arrivare a una build, non la distribuzione di un prototipo difettoso.
