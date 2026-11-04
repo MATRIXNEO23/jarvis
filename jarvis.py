@@ -3217,16 +3217,8 @@ def main() -> None:
                                     write_line("Motore locale occupato: riprova.")
                             else:
                                 if gemma_trial_busy[0]:
-                                    if len(pending_conversation) < 3:
-                                        pending_conversation.append(
-                                            (conversation_epoch, spoken))
-                                        write_line(
-                                            "JARVIS > Ho ricevuto la frase. "
-                                            "La considero appena termino la risposta.")
-                                    else:
-                                        write_line(
-                                            "JARVIS > Ho già tre frasi in attesa. "
-                                            "Ripeti quest'ultima tra poco.")
+                                    write_line("GEMMA > Sto ancora elaborando. "
+                                               "Ripeti la frase al termine.")
                                 else:
                                     start_conversation_gpt(spoken)
                             continue
