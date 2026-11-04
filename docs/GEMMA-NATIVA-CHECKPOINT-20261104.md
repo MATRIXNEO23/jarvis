@@ -34,3 +34,9 @@
 - Il bridge ora richiede una callback esplicita di inizializzazione ABI prima di load_model: senza callback rifiuta il caricamento, evitando false inizializzazioni.
 - Creato native_initializer.py che replica la preparazione argomenti CPU/noAVX2 della prova pinned upstream, ma il caricamento della DLL esatta e la compatibilità dell'intero ciclo di vita NON sono ancora verificati in un workflow di inferenza reale integrata.
 - Workflow native-initializer.yml testa il contratto con fake, non la DLL reale. Non pubblicare build né dichiarare integrazione Jarvis completata.
+
+## Verifica reale del bridge avviata
+- Run 41871634418 SUCCESS: inizializzatore/contratto con upstream simulato; non equivale a generazione reale.
+- Nuovo script tools/probe_native_bridge_real.py e workflow native-bridge-real.yml: eseguono su Windows 2022 la DLL pinned con SHA256 verificato e GGUF verificato, chiamando NativeGemmaBridge.load/generate per due prompt. Report JSON pubblicato come artifact se disponibile.
+- Run iniziale 41872170746: in coda al momento del checkpoint. In caso di errore leggere log e correggere la causa, non dichiarare passaggio completato.
+- Restano da fare: timeout/cancellazione reali, eventuale compatibilità dell'ABI, instradamento verso ModelService e UI, impostazioni utente, benchmark su Pavilion, test regressione; non generare ZIP automaticamente.
