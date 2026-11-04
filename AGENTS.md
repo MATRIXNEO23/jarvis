@@ -1,3 +1,15 @@
+## CONSEGNATA Jarvis005 — 4 novembre 2026
+
+[Scarica Jarvis-005.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-005.zip), pubblicata in cima a Download. Source **b202181d435cf4ee13ffb355265e1f1a9f995963**, ramo **build/jarvis-005**, checkpoint finale **7203fef3357cb880161d20dd5304ccee92a0c0bb**. [RunWindows41749364482](https://github.com/MATRIXNEO23/jarvis/actions/runs/41749364482) SUCCESS: **558 test per Python3.11/3.12**, **213 dal pacchetto estratto**, sintassi/probe/indiceWindows live, manifest/hash/soli operativi/launcher unico/import/avvio e chiusura UI/riproducibilità PASS. Publisher126311593976 ha pubblicato e riscaricato005 verificando hash/byte/posizione in cima e pacchetti001–004. Pubblicazione maina9520b3e2d0ec680746710821a7adbbefcd1cd19; metadata riletti e coincidenti. ZIP283598byte,86file, SHA-256 **583bd55d1ef416b3781f6183d8ea6365f0b8761c6cf1fd614d652db832285728**.
+
+[Consegna e collaudo](docs/CONSEGNA-JARVIS-005-20261104.md), [evidenza](docs/evidence/jarvis-005-release-20261104.json). Contiene richiamo «Jarvis» per ogni richiesta e omissione del blocco memoria vuoto quando allegato. Conservati ricordi utili/personalità/catalogo/controlli manuali; nessun componente AppServer/quotaHUD o ulteriore riduzione. Le vecchie indicazioni “solo sorgenti/non nella004” restano storiche: le due correzioni sono ORA distribuite nella005. La004 rimane disponibile.
+
+La richiesta «prosegui», successiva alle correzioni e all’avviso di004 non aggiornata, è stata eseguita come prosecuzione alla nuova candidata: preparazione→verificaWindows→pubblicazione. Disabilitati nuovamente trigger push dedicato e publisher dopo la consegna. Registro latest5/next6; versioni immutabili, non rigenerare005 o creare nuove build su push ordinari. Future consegne richiedono nuova richiesta esplicita e verifica ZIP estratto. Non usare il root storico main come base runtime.
+
+Installazione: chiudere004, estrarre005 in cartella NUOVA e avviare solo avvia_jarvis.bat. Stesso profilo AccessoFile, dati/preferenze/permessi conservati. Prima prova locale con GPTspento: «apri Netflix» non avvia; «Jarvis, apri Netflix» avvia la app già consentita. Anche conferme e risposte richiedono nome iniziale; il solo nome non apre una finestra di ascolto libero. Il collaudo acustico/account/desktop/Pavilion rimane da riferire sul pacchetto005: non promuovere a BASE-UTENTE dal solo CI. Nessun test funzionale Linux o misura della quota personale.
+
+Prossimo passo: un riscontro PC alla volta, partendo dalla prova sopra; conservare004 e profilo. Barra quota/AppServer e ulteriori snellimenti restano in pausa, senza nuove funzioni automatiche.
+
 ## Riduzione prudente dei prompt verificata — 4 novembre 2026
 
 L’utente autorizza a procedere dopo l’audit. Implementato soltanto il primo intervento chiaro: omettere il blocco memoria DOPO compattazione/validazione se non contiene dati utili, nei builder voce/router e chat. Nessun taglio a personalità, catalogo, contesto utile o dati salvati; nessun nuovo SDK/processo/add-on. Le altre proposte dell’audit restano da valutare separatamente.
