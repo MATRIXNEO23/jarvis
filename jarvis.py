@@ -3874,6 +3874,7 @@ def main() -> None:
     gemma_trial_queue = queue.Queue()
     gemma_trial_busy = [False]
     gemma_source = [None]
+    gemma_session = [None]
 
     def submit_gemma_trial():
         if closing or gemma_trial_busy[0]:
@@ -3898,21 +3899,16 @@ def main() -> None:
         gemma_button.configure(state="disabled")
 
         def native_trial_worker():
-            adapter = None
             try:
                 from local_model.native_chat_adapter import NativeChatAdapter
-                adapter = NativeChatAdapter(gemma_source[0])
-                adapter.prepare()
-                response = adapter.call("ask", prompt=question, timeout=180)
-                gemma_trial_queue.put(("ok", str(response.get("text", ""))))
+                from local_model.native_conversation_session import NativeConversationSession
+                if gemma_session[0] is None:
+                    gemma_session[0] = NativeConversationSession(
+                        NativeChatAdapter(gemma_source[0]))
+                answer = gemma_session[0].ask(question, timeout=180)
+                gemma_trial_queue.put(("ok", answer))
             except Exception as exc:
                 gemma_trial_queue.put(("error", str(exc)[:350]))
-            finally:
-                if adapter is not None:
-                    try:
-                        adapter.stop()
-                    except Exception:
-                        pass
 
         threading.Thread(target=native_trial_worker, daemon=True,
                          name="jarvis-native-gemma-trial").start()
