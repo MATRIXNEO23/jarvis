@@ -143,3 +143,10 @@
 - tests/test_online_permissions.py (ee36fa57 e c6c82613): default deny, consenso per richiesta, isolamento capability, persistenza corrotta e blocco prima del trasporto.
 - CI Windows workflow online-permissions.yml: prima run 41926067086 SUCCESS; run aggiornata 41926107439 da verificare.
 - Prossimo: interfaccia per add-on, migrazione graduale di ogni invocazione online al percorso protetto, test no-leak e conferma per azioni sensibili. Nessuna build finale ancora.
+
+## UI permessi e prima integrazione GPT vocale
+- 26f9b74b: finestra Tk per permessi online per funzione, cinque capability note, valori Mai/Chiedi/Autorizzato, reset, salvataggio atomico; funzioni sconosciute restano Mai.
+- 385269df: pulsante nel pannello GPT e memoria.
+- 4900b4cc: start_conversation_gpt controlla chat.conversation prima di run_gpt: Mai blocca, Chiedi usa messagebox.askyesno, Autorizzato passa. Se configurazione corrotta blocca.
+- b9d14ef0: workflow Windows compila jarvis.py e editor permessi, test policy; run 41928734053 da verificare.
+- NOTA: questo NON costituisce protezione globale di ogni chiamata GPT. submit_gpt, richieste legacy, Telegram e altre invocazioni non ancora migrate. La voce locale Gemma non e ancora il percorso predefinito; con GPT vocale su Mai la richiesta puo essere bloccata finche il routing locale non e implementato. Mantenere branch separato e non pubblicare ZIP finale.
