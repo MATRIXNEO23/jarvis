@@ -13,9 +13,20 @@
     "source": "0b819a8c3f3a1911652b11811421da0c4f1e4f2e",
     "run": 41860087656,
     "job": 126679185318,
-    "status_at_checkpoint": "in_progress",
-    "duplicate_run": 41860458509
+    "status_at_checkpoint": "success",
+    "duplicate_run": 41860458509,
+    "dll_bytes": 19010560,
+    "dll_sha256": "ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba",
+    "native_export_probe": "passed",
+    "inference_verified": false
   },
   "package_delivered": false,
-  "pavilion_performance_verified": false
+  "pavilion_performance_verified": false,
+  "gemma_probe": {
+    "source": "220241d07041c12a055295b11a71adc4aba08645",
+    "run": 41862178113,
+    "job": 126686686231,
+    "status_at_checkpoint": "queued",
+    "pavilion_verified": false
+  }
 }

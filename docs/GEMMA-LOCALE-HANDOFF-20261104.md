@@ -1,3 +1,7 @@
+## Prova Gemma reale in coda — prossimo controllo
+
+Run41862178113/job126686686231 sul source220241d07041c12a055295b11a71adc4aba08645, ultimo stato QUEUED (nessuna generazione osservata). Non ricompilare la DLL già verde; il workflow scarica artifact13339099748 della run41860087656 e verifica SHA256. Esito ABI130 PASS resta distinto da inferenza. Leggere log di questo job, correggere solo cause dimostrate, poi implementare binding/add-on e raccordo console. Non richiedere di nuovo approvazione ai passi autorizzati.
+
 ## Motore nativo compilato e caricato — prova successiva Gemma in preparazione
 
 Run41860087656/job126679185318 SUCCESS: DLL19010560byte SHA256ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba, export e contatore iniziale reali PASS. Anche duplicata41860458509 SUCCESS. Non sono inferenze. Prossima unità tools/probe_native_gemma.py usa mapping Python upstream fissato e DLL direttamente, mai main/server. Download CI pubblico bartowski/gemma-2-2b-it-Q4_K_M.gguf con revisione/hash dalla metadata publisher; nessun account, peso non redistribuito. Identità col GGUF dell’utente NON verificata. Due richieste con un solo load, report risultati/tempi; non è benchmark Pavilion o raccordo Jarvis. Workflow native-gemma.yml da verificare.
