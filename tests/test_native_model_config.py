@@ -26,7 +26,7 @@ class NativeModelConfigTests(unittest.TestCase):
             {"context_size": 128}, {"max_output": 9000},
             {"context_size": 256, "max_output": 512},
             {"temperature": -1}, {"top_p": 1.5},
-            {"seed": 2147483648}, {"model": "bad\\x00path"}
+            {"seed": 2147483648}, {"model": "bad" + chr(0) + "path"}
         ):
             with self.subTest(changes=changes):
                 with self.assertRaises(ValueError):
