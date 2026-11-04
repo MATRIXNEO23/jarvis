@@ -3,7 +3,6 @@
 No HTTP service, executable launch or autonomous online fallback. The upstream
 module is an explicit dependency supplied by the installer, not downloaded here.
 """
-import importlib.util
 from pathlib import Path
 import threading
 
@@ -11,11 +10,12 @@ from .native_config import NativeModelConfig
 
 
 class NativeGemmaBridge:
-    def __init__(self, config, upstream):
+    def __init__(self, config, upstream, *, initialize=None):
         if not isinstance(config, NativeModelConfig):
             raise TypeError("Configurazione nativa richiesta.")
         self.config = config.validate()
         self.upstream = upstream
+        self.initialize = initialize
         self._lock = threading.Lock()
         self._loaded = False
 
@@ -28,8 +28,9 @@ class NativeGemmaBridge:
                 raise RuntimeError("Modello GGUF non disponibile.")
             if not self.config.dll or not Path(self.config.dll).is_file():
                 raise RuntimeError("Libreria nativa non disponibile.")
-            # Upstream ABI initialization is intentionally not guessed here.
-            # The verified inference proof initializes these globals explicitly.
+            if not callable(self.initialize):
+                raise RuntimeError("Inizializzazione ABI nativa non configurata.")
+            self.initialize(self.upstream, self.config)
             if not hasattr(self.upstream, "load_model"):
                 raise RuntimeError("Adattatore nativo non compatibile.")
             if not self.upstream.load_model(str(Path(self.config.model).resolve())):
