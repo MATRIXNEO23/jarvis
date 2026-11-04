@@ -6,6 +6,8 @@ on:
       - 'local_model/native_ui.py'
       - 'local_model/native_settings.py'
       - 'tests/test_native_ui.py'
+      - 'tests/test_native_settings_entry.py'
+      - 'jarvis.py'
       - '.github/workflows/native-ui.yml'
   workflow_dispatch:
 permissions:
@@ -21,3 +23,5 @@ jobs:
           python-version: '3.12'
       - name: Tk settings UI smoke tests
         run: python -m unittest discover -s tests -p test_native_ui.py -v
+      - name: Check Jarvis settings entry
+        run: python -m unittest discover -s tests -p test_native_settings_entry.py -v
