@@ -5,6 +5,8 @@ on:
     paths:
       - 'local_model/online_permissions.py'
       - 'local_model/chat_transport.py'
+      - 'local_model/online_permissions_ui.py'
+      - 'jarvis.py'
       - 'tests/test_online_permissions.py'
       - '.github/workflows/online-permissions.yml'
   workflow_dispatch:
@@ -19,5 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Compile Jarvis and permissions editor
+        run: python -m py_compile jarvis.py local_model/online_permissions_ui.py
       - name: Test offline-first GPT authorization
         run: python -m unittest discover -s tests -p test_online_permissions.py -v
