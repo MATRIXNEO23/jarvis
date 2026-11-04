@@ -119,3 +119,8 @@
 - Aggiunto local_model/idle_memory_gate.py: gate cooperativo senza thread, 60 s da preferenze, un solo lavoro, priorita conversazione, controllo carico e retry se lavoro non salvato. Test tests/test_idle_memory_gate.py e workflow idle-memory-gate.yml, run 41915760750 da verificare.
 - Memory preferences Windows run 41904633981 SUCCESS. Budget finestra esposto tramite MemoryPreferences.available_prompt_tokens.
 - NON ancora completo: nessun timer/event loop Jarvis collegato al gate, nessuna inferenza di sintesi semantica, nessun abort preemptivo verificato su CPU utente, nessun conteggio token reale nella pipeline nativa. Non consegnare build finale come pronta.
+
+## Integrazione budget al confine della DLL
+- Commit 5a1d8064: NativeChatAdapter ora verifica MemoryPreferences.available_prompt_tokens prima della generazione quando riceve prompt testuale. Limite caratteri volutamente conservativo, non tokenizzazione GGUF. Prompt fuori budget rifiutato, non troncato silenziosamente.
+- Test con provider fittizio test_native_adapter_budget.py, commit 6dd6cd63; workflow native-chat-routing aggiornato commit d25bee13; run 41916822847 inizialmente queued, esito da controllare.
+- Attenzione: percorso conversazione principale jarvis.py usa ancora ChatTransport con _UnavailableNative e use_native=False. Non dichiarare Gemma collegato alla UI finche selezione locale e caricamento sono reali. Non consegnare ZIP.
