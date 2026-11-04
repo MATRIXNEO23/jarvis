@@ -9,7 +9,7 @@ on:
       - 'tests/test_native_conversation_session.py'
       - '.github/workflows/gemma-windows-test-package.yml'
 permissions:
-  contents: read
+  contents: write
   actions: read
 jobs:
   package:
@@ -82,3 +82,35 @@ jobs:
           path: Jarvis-Gemma-Windows-TEST-*.zip
           retention-days: 14
           if-no-files-found: error
+
+      - name: Publish validated test ZIP to main Download
+        if: success()
+        shell: pwsh
+        run: |
+          git clone --depth 1 --branch main https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git publish-main
+          $zip = Get-ChildItem -Path . -Filter 'Jarvis-Gemma-Windows-TEST-*.zip' | Select-Object -First 1
+          if (!$zip) { throw 'ZIP missing: refusing publication' }
+          Copy-Item $zip.FullName (Join-Path 'publish-main/Download' $zip.Name)
+          $readme = 'publish-main/Download/README.md'
+          $old = Get-Content $readme -Raw -Encoding UTF8
+          $section = @"
+          # Jarvis Gemma - test Windows (05/11/2026)
+
+          **[SCARICA ZIP GEMMA WINDOWS DI PROVA](./$($zip.Name))**
+
+          Versione sperimentale isolata, con DLL nativa KoboldCpp no-AVX2 verificata.
+          Modello GGUF non incluso: selezionarlo nelle impostazioni Gemma insieme alla DLL.
+          Non sostituire la versione stabile; test prestazioni su Pavilion non ancora eseguito.
+          Pacchetto compilato e testato su Windows CI.
+
+          ---
+
+          "@
+          if (!$old.Contains('# Jarvis Gemma - test Windows (05/11/2026)')) {
+            [System.IO.File]::WriteAllText((Resolve-Path $readme), $section + $old, [System.Text.UTF8Encoding]::new($false))
+          }
+          git -C publish-main config user.name 'github-actions[bot]'
+          git -C publish-main config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C publish-main add Download
+          git -C publish-main commit -m 'Publish isolated Jarvis Gemma Windows test ZIP in Download'
+          git -C publish-main push origin HEAD:main
