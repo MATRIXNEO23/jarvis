@@ -4,6 +4,7 @@ on:
     branches: ['feature/gemma-local-20261104']
     paths:
       - 'local_model/online_permissions.py'
+      - 'local_model/chat_transport.py'
       - 'tests/test_online_permissions.py'
       - '.github/workflows/online-permissions.yml'
   workflow_dispatch:
