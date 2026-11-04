@@ -1,0 +1,45 @@
+name: Embedded Kobold native engine proof (Windows)
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths: ['tools/native_model/**', '.github/workflows/native-model.yml']
+permissions:
+  contents: read
+jobs:
+  native-proof:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: LostRuins/koboldcpp
+          ref: 7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759
+          path: upstream-kobold
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install upstream OldPC compiler
+        shell: pwsh
+        run: |
+          Invoke-WebRequest 'https://github.com/skeeto/w64devkit/releases/download/v1.22.0/w64devkit-1.22.0.zip' -OutFile "$env:RUNNER_TEMP/w64devkit.zip"
+          Expand-Archive "$env:RUNNER_TEMP/w64devkit.zip" -DestinationPath "$env:RUNNER_TEMP/native-compiler"
+          "$env:RUNNER_TEMP/native-compiler/w64devkit/bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+      - name: Build upstream CPU AVX library without AVX2 FMA or F16C
+        working-directory: upstream-kobold
+        shell: pwsh
+        run: |
+          $sha = git rev-parse HEAD
+          if ($sha -ne '7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759') { throw 'Wrong upstream revision' }
+          make LLAMA_PORTABLE=1 LLAMA_NOAVX2=1 koboldcpp_noavx2 -j 2
+          if ($LASTEXITCODE -ne 0) { throw 'Native compilation failed' }
+      - name: Load DLL directly through ctypes (no Kobold executable or server)
+        run: python tools/native_model/probe.py upstream-kobold/koboldcpp_noavx2.dll
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-engine-proof-not-installable
+          path: |
+            upstream-kobold/koboldcpp_noavx2.dll
+            upstream-kobold/LICENSE*
+            upstream-kobold/*LICENSE*.md
+          retention-days: 14

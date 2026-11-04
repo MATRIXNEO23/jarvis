@@ -1,3 +1,7 @@
+## Prova motore incorporato in corso — checkpoint corrente
+
+Requisiti più recenti: prestazioni almeno Kobo e tutte le impostazioni utili configurabili. Prima prova su backend nativo della stessa versione, non wrapper exe. [Decisione e percorso verificabile](GEMMA-MOTORE-NATIVO-20261104.md). Workflow native-model.yml e tools/native_model/probe.py: compilazione/caricamento DLL Windows da eseguire, nessuna006. Il percorso subprocess/HTTP precedente resta scartato per la consegna.
+
 ## Correzione architetturale dell’utente — 4 novembre 2026
 
 Requisito prevalente: incorporare nell’add-on di Jarvis il motore e le funzioni utili che consentono a KoboldCpp di eseguire Gemma, senza installazione/configurazione esterna di KoboldCpp. Stessa console, controllo CPU/RAM/thread/contesto, modello residente. L’utente descrive il lavoro come reverse engineering: prima analisi e riuso dei sorgenti pubblici e delle librerie, non reimplementazione cieca degli algoritmi. Prestazioni pari a Kobo sono un obiettivo da misurare sul Pavilion, non un risultato garantito.
