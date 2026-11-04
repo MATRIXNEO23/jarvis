@@ -35,7 +35,7 @@ bridge.load()
 load_seconds = time.perf_counter() - start
 responses = []
 for question in ("Saluta brevemente in italiano.", "Quanto fa due più due? Rispondi brevemente."):
-    prompt = "<start_of_turn>user\\n" + question + "<end_of_turn>\\n<start_of_turn>model\\n"
+    prompt = "<start_of_turn>user\n" + question + "<end_of_turn>\n<start_of_turn>model\n"
     start = time.perf_counter()
     answer = bridge.generate(prompt, timeout=120)
     responses.append({"question": question, "answer": answer,
