@@ -47,3 +47,28 @@ class ModelRoutingTests(unittest.TestCase):
             self.service(online=True).call("ask",prompt="Testo Telegram",origin="Telegram")
         self.assertEqual(self.consent.call_args.kwargs["origin"],"Telegram")
         self.online.call.assert_not_called()
+    def test_switch_off_during_consent_prevents_the_online_call(self):
+        service=self.service(online=True)
+        def approve_after_off(**kw):
+            service.configure(local_enabled=True,online_enabled=False)
+            return True
+        service.consent=approve_after_off
+        with self.assertRaises(RuntimeError):
+            service.call('ask',prompt='Domanda',force_online=True)
+        self.online.call.assert_not_called()
+    def test_approval_is_not_reused_for_the_next_request(self):
+        self.consent.side_effect=[True,False]
+        service=self.service(online=True)
+        service.call('ask',prompt='Prima',force_online=True)
+        with self.assertRaises(RuntimeError):
+            service.call('ask',prompt='Seconda',force_online=True)
+        self.assertEqual(self.online.call.call_count,1)
+    def test_revoked_local_result_is_not_returned(self):
+        service=self.service()
+        def late(**kw):
+            service.configure(local_enabled=False,online_enabled=False)
+            return {'text':'risposta vecchia'}
+        self.local.ask.side_effect=late
+        with self.assertRaises(RuntimeError):
+            service.call('ask',prompt='Ciao')
+        self.online.call.assert_not_called()
