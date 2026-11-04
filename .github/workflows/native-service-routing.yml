@@ -1,0 +1,24 @@
+name: Native Gemma service routing (Windows)
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths:
+      - 'local_model/native_factory.py'
+      - 'local_model/native_provider.py'
+      - 'local_model/service.py'
+      - 'tests/test_native_service_routing.py'
+      - '.github/workflows/native-service-routing.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  service:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test native model service routing
+        run: python -m unittest discover -s tests -p test_native_service_routing.py -v
