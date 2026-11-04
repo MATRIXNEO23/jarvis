@@ -1,0 +1,26 @@
+name: Native chat routing (Windows)
+on:
+  push:
+    branches: ['feature/gemma-local-20261104']
+    paths:
+      - 'jarvis.py'
+      - 'local_model/chat_transport.py'
+      - 'local_model/native_chat_adapter.py'
+      - 'tests/test_native_chat_transport.py'
+      - '.github/workflows/native-chat-routing.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  routing:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Jarvis entrypoint
+        run: python -m py_compile jarvis.py
+      - name: Test explicit routing and no fallback
+        run: python -m unittest discover -s tests -p test_native_chat_transport.py -v
