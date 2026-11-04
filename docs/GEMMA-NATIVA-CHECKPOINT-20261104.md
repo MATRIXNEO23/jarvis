@@ -112,3 +112,10 @@
 - Run 41891499740 Memory preferences SUCCESS; 41890983269 Compact context SUCCESS; native routing 41891469742 SUCCESS.
 - Aggiunto metodo MemoryPreferences.available_prompt_tokens(context_size, max_output, reserve=128), con test per finestra 512/2048 e configurazioni impossibili. Commit a5e3d875, test commit 62e010a8. Non equivale a conteggio token reale né a collegamento alla DLL.
 - Da fare: applicare il budget al prompt realmente inviato, scheduler inattivita e priorita, sintetizzatore semantico e integrazione completa. Legacy Local model contract ancora fallisce: indagare, non disattivare.
+
+## Sessione 04/11 — verifica skill e riparazioni
+- Skill installate verificate: nessuna skill di programmazione/Archify disponibile; non dichiarare di averla usata. Usati test e GitHub Actions Windows.
+- Causa verificata Local model contract rosso: local_model/runtime.py era uno stub (validate no-op, save no-op, load default, command vuoto), contraddiceva tests/test_local_model_runtime.py. Ripristinato contratto legacy con validazione, persistenza atomica e comando solo come lista; non avvia EXE ne server. Commit 9acf6eee. Run 41915731799 da verificare.
+- Aggiunto local_model/idle_memory_gate.py: gate cooperativo senza thread, 60 s da preferenze, un solo lavoro, priorita conversazione, controllo carico e retry se lavoro non salvato. Test tests/test_idle_memory_gate.py e workflow idle-memory-gate.yml, run 41915760750 da verificare.
+- Memory preferences Windows run 41904633981 SUCCESS. Budget finestra esposto tramite MemoryPreferences.available_prompt_tokens.
+- NON ancora completo: nessun timer/event loop Jarvis collegato al gate, nessuna inferenza di sintesi semantica, nessun abort preemptivo verificato su CPU utente, nessun conteggio token reale nella pipeline nativa. Non consegnare build finale come pronta.
