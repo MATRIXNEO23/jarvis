@@ -55,3 +55,9 @@
 - NativeGemmaBridge.generate() scarta il risultato se abortito o se il tempo è già scaduto. Il timeout NON preempta la chiamata nativa bloccante: non dichiarare hard timeout.
 - Nuovi test Windows tests/test_native_abort.py e workflow native-abort.yml, run 41874727654 avviata (esito da verificare).
 - Rischi ancora aperti: thread safety del backend C, cancellazione reale su DLL, race di stop, UI/impostazioni, benchmark hardware reale. Il runtime legacy resta rosso.
+
+## Revisione ABI abort 04/11
+- Run 41874727654 SUCCESS per test finto di abort e timeout, NON prova cancellazione della DLL reale.
+- Analisi del sorgente KoboldCpp upstream pinned 7e0eb2d: la funzione è `upstream.handle.abort_generate()`, NON `upstream.abort_generate()`. Corretta la chiamata in native_bridge.py e adeguato FakeUpstream dei test.
+- Estesa la prova reale per verificare la presenza di `handle.abort_generate` sulla DLL caricata, senza rischiare di interrompere una generazione live non ancora testata. Workflow Windows avviato automaticamente.
+- Mancano ancora prova di cancellazione durante generazione reale, hard timeout, cablaggio UI e benchmark Pavilion. Non dichiarare queste capacità come verificate.
