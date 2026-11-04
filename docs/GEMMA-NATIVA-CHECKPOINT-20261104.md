@@ -100,3 +100,10 @@
 - tests/test_compact_context.py e workflow compact-context.yml: verificano limite, ripresa, persistenza e file danneggiato. Esito Windows da controllare.
 - ATTENZIONE: digest deterministico per estratti, non vero riassunto semantico; non è ancora collegato all'inferenza Gemma e non garantisce conservazione di fatti importanti. Evitare di definirlo completo.
 - Richiesta utente: sintetizzare carattere, umore e fatti importanti senza allungare il prompt; futuro riassunto semantico incrementale nei periodi di inattività, con verifiche contro perdita di decisioni e riferimenti.
+
+## Impostazioni memoria e inattivita (richiesta utente)
+- Default 60 secondi di inattivita, regolabile 10-3600 secondi; ultimi 8 messaggi; ogni 8 messaggi; 150 token riassunto; 600 token budget prompt; un lavoro alla volta; conversazione prioritaria, pausa carico alto, sintesi background attive come preferenze.
+- Aggiunti local_model/memory_preferences.py (dataclass con validazione e persistenza atomica), local_model/memory_ui.py (dialogo Tk) e pulsante nella scheda GPT e memoria di jarvis.py.
+- Test tests/test_memory_preferences.py e .github/workflows/memory-preferences.yml; verificare esito run 41891499740.
+- Run 41890983269 compact-context SUCCESS.
+- CRITICO: scheduler idle, sospensione reale su carico alto, enforcement priorita/abort e sintesi semantica NON implementati. Questi campi sono preferenze persistenti ma non ancora operative. Il budget prompt e in token configurati ma compact_context limita caratteri, serve token budgeting effettivo.
