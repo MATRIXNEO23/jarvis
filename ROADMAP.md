@@ -1,3 +1,5 @@
+> Aggiornamento vincolante 2026-11-05: microfono attivo all'avvio con hotword «Jarvis» obbligatoria, salvo disattivazione manuale persistente; conversazione locale Gemma, nessun invio GPT automatico. Le sezioni storiche sottostanti possono descrivere la precedente architettura GPT-first.
+
 # Roadmap Jarvis — architettura GPT-first, controllo locale e funzionamento offline
 
 > Stato: **sviluppo alpha locale** (comandi locali e prima connessione GPT funzionanti; pianificatore con approvazione in prova). Questa roadmap descrive le funzionalità da realizzare; le caselle non completate **non** rappresentano funzioni disponibili. Aggiornamento: 30 ottobre 2026.
@@ -48,7 +50,7 @@ Voce (Vosk offline) / chat testuale / tasti
 
 | Impostazione | Comportamento |
 | --- | --- |
-| Microfono all'avvio | **Spento**, sempre, anche dopo riavvio. |
+| Microfono all'avvio | **Attivo automaticamente** nel profilo corrente se Vosk e dispositivo sono disponibili; ogni comando in ascolto passivo richiede **Jarvis** nella stessa frase. L'opzione resta disattivabile e la preferenza salvata va rispettata. Confermato dall'utente il 2026-11-05. |
 | Modalità microfono | Standby / ascolto continuo / premi per parlare, selezionate **solo manualmente**. |
 | Applicazioni pesanti | Non cambiano automaticamente la scelta dell'utente. |
 | Collegamento GPT | **Abilitato di default**, con interruttore manuale ON/OFF e scelta salvata. |
