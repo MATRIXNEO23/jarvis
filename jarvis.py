@@ -2874,6 +2874,13 @@ def main() -> None:
     def submit_gpt() -> None:
         if closing:
             return
+        from local_model.native_settings import default_native_settings_path
+        if default_native_settings_path().is_file():
+            if not messagebox.askyesno(
+                "Conferma GPT online",
+                "Inviare questa richiesta al modello GPT online invece che a Gemma locale?",
+                parent=root):
+                return
         message = request.get().strip()
         if not message:
             return
