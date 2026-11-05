@@ -126,13 +126,18 @@ class GPTClient:
             if current:
                 self.events.put({"event": "stopped"})
 
-    def call(self, action: str, *, timeout: float = 40, **arguments) -> dict:
+    def call(self, action: str, *, timeout: float = 40, authorize_send=None,
+             **arguments) -> dict:
+        if authorize_send is not None and not authorize_send():
+            raise GPTUnavailable("Autorizzazione GPT revocata.")
         self.start()
         response: queue.Queue[dict] = queue.Queue()
         with self._lock:
             proc = self._process
             if not proc or proc.poll() is not None or not proc.stdin:
                 raise GPTUnavailable("Servizio GPT non avviato.")
+            if authorize_send is not None and not authorize_send():
+                raise GPTUnavailable("Autorizzazione GPT revocata.")
             self._next_id += 1
             request_id = self._next_id
             self._pending[request_id] = response

@@ -64,7 +64,9 @@ class ActivityStatusTests(unittest.TestCase):
                    GPT_CONVERSATION=GPT_CONVERSATION, STANDBY=STANDBY,
                    PUSH_TO_TALK=PUSH_TO_TALK)
         env['chat_transport'] = ChatTransport(env['service'], native=None)
-        env.update(root=None, online_consent_pending=False, messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
+        env.update(root=None, online_consent_pending=False,
+                   telegram_gpt_ready=threading.Event(), planner_abort_event=threading.Event(),
+                   messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
         self.callback("confirm_gpt_inference", env)
         return env, workers, eval(self.provider_code, env)
 
@@ -150,6 +152,16 @@ class ActivityStatusTests(unittest.TestCase):
         workers.pop()()
         env["service"].call.assert_not_called()
         self.assertEqual(env["output_queue"].get_nowait()[0], "gpt_error")
+
+    def test_disconnect_revokes_gpt_workers_before_account_response(self):
+        env, workers, _ = self.environment()
+        env["telegram_gpt_ready"].set()
+        self.assertTrue(self.callback("run_gpt", env)("disconnect"))
+        self.assertEqual(env["conversation_epoch"], 8)
+        self.assertFalse(env["active_gpt"])
+        self.assertFalse(env["telegram_gpt_ready"].is_set())
+        self.assertTrue(env["planner_abort_event"].is_set())
+        self.assertEqual(len(workers), 1)
 
     def test_telegram_consent_starts_no_online_call_on_denial_or_revocation(self):
         for decision in ("deny", "revoke", "allow", "timeout"):

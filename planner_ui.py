@@ -55,6 +55,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
     pending: ApprovedPlan | None = None
     busy = False
     phase = "idle"
+    pending_generation = None
     cancel_requested = False
     closed = False
     events: queue.Queue[tuple] = queue.Queue()
@@ -119,12 +120,16 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
 
         def worker() -> None:
             try:
-                if abort_event.is_set() or cancel_event.is_set() or generation != consent_generation():
+                def authorized():
+                    return (not abort_event.is_set() and not cancel_event.is_set()
+                            and generation == consent_generation())
+                if not authorized():
                     events.put(("error", "Richiesta di pianificazione annullata."))
                     return
-                response = service.call("ask", timeout=180, prompt=prompt)
+                response = service.call("ask", timeout=180, prompt=prompt,
+                                        authorize_send=authorized)
                 plan = parse_plan(response.get("text", ""))
-                events.put(("planned", plan))
+                events.put(("planned", generation, plan))
             except Exception as exc:
                 # Never show stack traces or any sensitive protocol detail.
                 events.put(("error", str(exc)[:300]))
@@ -135,7 +140,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         nonlocal pending, busy, phase, cancel_requested, tracking
         if busy or pending is None:
             return
-        if abort_event.is_set():
+        if abort_event.is_set() or pending_generation != consent_generation():
             pending = None
             status.set("Piano scartato: autorizzazione revocata.")
             buttons()
@@ -145,7 +150,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
             status.set("Piano scartato: GPT disattivato o scollegato.")
             buttons()
             return
-        preview = pending.preview()
+        candidate = pending
         choices = "\n".join(f"{idx}. {s.command} [{s.risk}]"
                             for idx, s in enumerate(pending.steps, 1))
         if not messagebox.askyesno(
@@ -157,7 +162,13 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
             status.set("Esecuzione non autorizzata: piano mantenuto come anteprima.")
             buttons()
             return
-        accepted = pending
+        if (pending is not candidate or pending_generation != consent_generation()
+                or abort_event.is_set() or not is_available()):
+            pending = None
+            status.set("Piano scartato: autorizzazione revocata.")
+            buttons()
+            return
+        accepted = candidate
         # Stop before executing if the project checkpoint cannot be persisted.
         try:
             tracking = on_approved(accepted) if on_approved is not None else None
@@ -227,11 +238,12 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
     show("Il piano resta soltanto una proposta finché premi 'Approva ed esegui'.")
 
     def poll() -> None:
-        nonlocal busy, pending, phase, cancel_requested
+        nonlocal busy, pending, pending_generation, phase, cancel_requested
         if closed:
             return
         # Query Tk state on the UI thread only, never from worker threads.
-        if abort_event.is_set() or not is_available():
+        if abort_event.is_set() or not is_available() or (
+                pending is not None and pending_generation != consent_generation()):
             if pending is not None:
                 pending = None
                 status.set("Piano scartato perché GPT è stato disattivato.")
@@ -245,7 +257,10 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
                 if event == "planned":
                     busy = False
                     phase = "idle"
-                    pending = None if cancel_requested or not is_available() else values[0]
+                    generation, plan = values
+                    pending_generation = generation
+                    pending = (None if cancel_requested or not is_available()
+                               or generation != consent_generation() else plan)
                     if pending is not None:
                         show(pending.preview())
                         status.set("Piano valido: controlla i passi e decidi se autorizzarlo.")

@@ -58,6 +58,18 @@ class GPTClientTests(unittest.TestCase):
         status = self.client.call("status", timeout=5)
         self.assertEqual(status, {"status": "disconnected", "sharing": False})
 
+    def test_revocation_during_start_prevents_writing_the_prompt(self):
+        allowed = True
+        def start_and_revoke():
+            nonlocal allowed
+            allowed = False
+        with patch.object(self.client, "start", side_effect=start_and_revoke):
+            with patch.object(self.client._process.stdin, "write") as write:
+                with self.assertRaisesRegex(GPTUnavailable, "revocata"):
+                    self.client.call("ask", prompt="Dato privato",
+                                     authorize_send=lambda: allowed)
+                write.assert_not_called()
+
     def test_errors_are_returned_not_hidden(self):
         with self.assertRaisesRegex(GPTUnavailable, "testing error"):
             self.client.call("error", timeout=5)

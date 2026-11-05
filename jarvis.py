@@ -1736,12 +1736,15 @@ def main() -> None:
         except TimeoutError:
             approval.cancel()
             return ""
-        if (approved_epoch != conversation_epoch or not telegram_gpt_ready.is_set()
-                or not bridge.is_enabled()):
+        def authorized():
+            return (approved_epoch == conversation_epoch and telegram_gpt_ready.is_set()
+                    and bridge.is_enabled())
+        if not authorized():
             return ""
         try:
-            result = service.call("ask", prompt=prompt, timeout=120)
-            return str(result.get("text", ""))
+            result = service.call("ask", prompt=prompt, timeout=120,
+                                  authorize_send=authorized)
+            return str(result.get("text", "")) if authorized() else ""
         except (GPTUnavailable, OSError, RuntimeError):
             return ""
 
@@ -1845,7 +1848,6 @@ def main() -> None:
             doc_dialog.revoke_pending()
             planner_abort_event.set()
         if not gpt_enabled.get():
-            telegram_gpt_ready.clear()
             gpt_status.set("GPT: disattivato manualmente")
         elif connected:
             label = state.get("profileLabel") or "account ChatGPT"
@@ -1882,7 +1884,7 @@ def main() -> None:
 
     def run_gpt(action: str, *, consent_granted=False,
                 consent_detail="La richiesta e il contesto disponibile.", **params) -> bool:
-        nonlocal busy_gpt, gpt_request_action
+        nonlocal busy_gpt, gpt_request_action, active_gpt, conversation_epoch
         if busy_gpt or not gpt_enabled.get() or closing:
             return False
         if action in ("ask", "conversation", "typed_conversation"):
@@ -1890,6 +1892,11 @@ def main() -> None:
                 return False
             if not consent_granted and not confirm_gpt_inference(consent_detail):
                 return False
+        if action == "disconnect":
+            conversation_epoch += 1
+            active_gpt = False
+            telegram_gpt_ready.clear()
+            planner_abort_event.set()
         gpt_request_action = action
         busy_gpt = True
         refresh_buttons()
@@ -1913,10 +1920,14 @@ def main() -> None:
             try:
                 timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
                 sdk_action = "ask" if structured else action
-                if sdk_action == "ask" and (closing or consent_epoch != conversation_epoch):
-                    raise PermissionError("Autorizzazione GPT revocata.")
                 sdk_params = {key: value for key, value in params.items()
                               if key not in ("epoch", "document_id", "utterance", "source", "file_refinement")}
+                if sdk_action == "ask":
+                    def authorized():
+                        return not closing and consent_epoch == conversation_epoch
+                    if not authorized():
+                        raise PermissionError("Autorizzazione GPT revocata.")
+                    sdk_params["authorize_send"] = authorized
                 result = chat_transport.call(sdk_action, timeout=timeout, **sdk_params)
                 if structured:
                     output_queue.put(("conversation_ok", epoch, doc_snapshot,
@@ -1960,6 +1971,7 @@ def main() -> None:
             doc_dialog.revoke_pending()
             planner_abort_event.set()
             active_gpt = False
+            telegram_gpt_ready.clear()
             gpt_status.set("GPT: disattivato manualmente")
             threading.Thread(target=service.stop, daemon=True).start()
             refresh_buttons()
