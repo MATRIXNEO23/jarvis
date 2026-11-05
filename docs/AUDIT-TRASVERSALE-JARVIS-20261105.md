@@ -53,7 +53,7 @@ Stati: DA VERIFICARE / IN LAVORAZIONE / TEST CI / TEST PC / RISOLTO. Nessun prob
 | ID | Priorità | Problema | Stato | Evidenza e prossimo gate |
 | --- | --- | --- | --- | --- |
 | JRV-001 | P0 | Gemma produce note interne, anche lette dal TTS | TEST PC | `d8dab46` ripristina sintassi, `e581701` aggiunge casi di regressione; verificare workflow Windows e prova vocale reale |
-| JRV-002 | P0 | Avvio microfono: preferenze e documentazione in conflitto | IN LAVORAZIONE | `settings.py` usa `auto_listen=True` come default; README/ROADMAP discordanti; verificare percorso runtime e requisito vigente prima di modificare |
+| JRV-002 | P0 | Avvio microfono: preferenze e documentazione in conflitto | TEST CI | `settings.py` usa `auto_listen=True` come default; README/ROADMAP discordanti; verificare percorso runtime e requisito vigente prima di modificare |
 | JRV-003 | P1 | Programmi e app: errore generico e Netflix non verificato | DA VERIFICARE | add-on disattivato nel test riportato; distinguere OFF/permessi/catalogo/parser/esecuzione |
 | JRV-004 | P1 | Consenso GPT online su ogni entry point | DA VERIFICARE | inventario chiamate da voce, testo, piani, fallback, Telegram |
 | JRV-005 | P1 | Memoria locale 8/8, compattazione e continuità | DA VERIFICARE | distinguere `CompactContext` da `NativeConversationSession`; benchmark prima di 12/12 |
@@ -70,3 +70,6 @@ Un ID alla volta: riproduzione -> causa -> fix minimo -> test Windows -> prova s
 ### Aggiornamento 2026-11-05 — JRV-001/JRV-002
 - JRV-001: test Windows `42104937299` SUCCESS, commit `e581701`; resta prova TTS/modello su hardware utente.
 - JRV-002: `settings.py` definisce `auto_listen=True`, carica e salva scelta persistente; `avvia_jarvis.bat` annuncia esplicitamente microfono ON, `README.md` ON, `ROADMAP.md` OFF. Prima di modificare default occorre confermare requisito vigente; evitare di sovrascrivere preferenze dell'utente. Verificare poi startup reale e test Windows.
+
+### JRV-002 — intervento 2026-11-05
+Utente conferma microfono ON automaticamente all'avvio, hotword «Jarvis» obbligatoria. Analisi: `settings.py` default `auto_listen=True`, preferenza persistente e modificabile; `prepara_test_telegram50.py` imposta ON soltanto in migrazione iniziale; `voice_control.WakeWordGate.route(require_name=True)` rifiuta richieste senza hotword; `jarvis.py` usa `require_name=True` in entrambi i modi passivi. Correzione `ee9f622`: etichette UI non dichiarano più erroneamente invio automatico a GPT, chiariscono Gemma locale e hotword. Correzione `718f953`: roadmap aggiornata al requisito corrente. Nessun cambiamento al comportamento di microfono o alle preferenze salvate. Restano test Windows e prova su microfono Vosk reale.
