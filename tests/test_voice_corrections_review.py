@@ -78,7 +78,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
                       ("voice_ok", "Risposta corrente", 7),
                       ("ok", "Risposta scritta", None)):
             results.put(event)
-        self.env.update(gemma_trial_queue=results, gemma_trial_busy=[True],
+        self.env.update(queue=queue, gemma_trial_queue=results, gemma_trial_busy=[True],
                         gemma_button=Mock(), conversation_epoch=7,
                         speak_result=Mock(), closing=True)
         self.callback("poll_gemma_trial")()
