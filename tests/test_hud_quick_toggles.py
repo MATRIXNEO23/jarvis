@@ -76,7 +76,8 @@ class HeaderQuickControlTests(unittest.TestCase):
             gpt_status=self.tk.StringVar(), memory_status=self.tk.StringVar(),
             conversation_epoch=3, pending_conversation={}, conversation_memory=memory,
             doc_dialog=SimpleNamespace(revoke_pending=lambda: None),
-            planner_abort_event=threading.Event(), refresh_buttons=lambda: None,
+            planner_abort_event=threading.Event(), telegram_gpt_ready=threading.Event(),
+            refresh_buttons=lambda: None,
             run_gpt=lambda action: self.requests.append(action),
             service=SimpleNamespace(stop=lambda: self.stops.append('stop')),
             threading=SimpleNamespace(Thread=lambda *, target, **kw: SimpleNamespace(start=target)),
@@ -90,6 +91,7 @@ class HeaderQuickControlTests(unittest.TestCase):
             voice=SimpleNamespace(is_user_speaking=lambda: False, is_listening=lambda: self.stream),
             busy_gpt=False, busy_local=False, document_busy=False, gpt_request_action='',
             engine=SimpleNamespace(file_access=None), orbit_nodes_cache=())
+        env["telegram_gpt_ready"].set()
         for name in ('memory_status_refresh', 'toggle_gpt', 'toggle_memory', 'toggle_hud_microphone'):
             self.callback(name, env)
         env['gpt_toggle'] = ttk.Checkbutton(self.root, variable=env['gpt_enabled'],
@@ -123,6 +125,7 @@ class HeaderQuickControlTests(unittest.TestCase):
         self.assertEqual(env['voice_mode'].get(), env['STANDBY'])
         self.assertFalse(env['gpt_enabled'].get())
         self.assertFalse(env['active_gpt'])
+        self.assertFalse(env["telegram_gpt_ready"].is_set())
         self.assertFalse(env['memory_enabled'].get())
         self.assertEqual(self.stops, ['stop'])
         self.assertEqual(self.modes, [env['STANDBY']])
