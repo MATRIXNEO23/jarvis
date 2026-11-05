@@ -62,7 +62,7 @@ Stati: DA VERIFICARE / IN LAVORAZIONE / TEST CI / TEST PC / RISOLTO. Nessun prob
 | JRV-008 | P1 | Telegram: segreti, cronologia, autorizzazioni, messaggi vocali | DA VERIFICARE | test simulati + collaudo account autorizzato |
 | JRV-009 | P2 | Documenti/progetti: persistenza, rollback, salvataggi | DA VERIFICARE | verifiche isolamento profili e non regressione |
 | JRV-010 | P2 | Prestazioni, avvio, CPU AVX, RAM, TTS e code UI | DA VERIFICARE | misure su hardware target |
-| JRV-011 | P2 | Packaging, ZIP, README, workflow e riproducibilità | DA VERIFICARE | confrontare hash/commit, contenuti e modalità pubblicazione |
+| JRV-011 | P0 | Packaging, ZIP, README, workflow e riproducibilità | IN LAVORAZIONE | confrontare hash/commit, contenuti e modalità pubblicazione |
 
 ### Procedura
 Un ID alla volta: riproduzione -> causa -> fix minimo -> test Windows -> prova sul PC -> aggiornamento stato. Non eseguire build pubblica senza consenso esplicito. Per JRV-001, `tests/test_native_conversation_session.py` copre note `What's Going Right`, blocchi `<think>`, preservazione di risposte normali e fallback; non prova da solo che il modello generi correttamente italiano.
@@ -76,3 +76,9 @@ Utente conferma microfono ON automaticamente all'avvio, hotword «Jarvis» obbli
 
 ### JRV-003 — intervento 2026-11-05
 Verificati `program_apps/service.py`, `native.py`, test service/integration. Il parser è locale, le selezioni sono persistenti, l'add-on è un gate e il lancio Windows restituisce solo accettazione, non verifica finestra aperta. `65e79d8` distingue rifiuto per app assente dal catalogo e app presente senza autorizzazione; `53b79ba` aggiunge regressione Windows. Restano: test CI, prova reale app Store/Netflix, e progettazione della verifica apertura senza promesse false.
+
+### JRV-011 — rischio pubblicazione automatica scoperto durante JRV-003
+`.github/workflows/gemma-windows-test-package.yml` aveva trigger push sul ramo Gemma e step `Publish ZIP to main Download` che effettuava `git push` su `main`. Ciò viola la regola build solo su richiesta esplicita. Commit `5636470`: eliminato il trigger push, mantenuto solo `workflow_dispatch`; il pacchetto può essere generato/pubblicato soltanto con avvio manuale. Non è stata richiesta né avviata una build in questo intervento. Audit degli altri workflow di pubblicazione ancora necessario.
+
+### JRV-003 — nota test
+`tests.yml` non include `feature/gemma-local-20261104` fra i trigger push: i test specifici programmi aggiunti in `53b79ba` non hanno ancora un run CI su quel commit. Il workflow Gemma precedente non copre `test_program_apps_service.py`. Non dichiarare superata questa regressione senza esecuzione Windows della suite.
