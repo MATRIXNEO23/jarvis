@@ -43,7 +43,7 @@ jobs:
             submit_gemma_voice(message)
         else:
             submit_local()'''
-                      code=code.replace('\\r\\n','\\n')
+                      code=code.replace(chr(13)+chr(10),chr(10))
                       print('ROUTER MATCHES:',code.count(anchor),'GEMMA HANDLER:',code.count('def submit_gemma_voice'),flush=True)
                       assert code.count(anchor)==1,'Unexpected console router; refusing to publish'
                       code=code.replace(anchor,replacement)
