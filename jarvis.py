@@ -3955,8 +3955,11 @@ def main() -> None:
                 elif kind == "voice_error":
                     write_line("GEMMA / ERRORE > " + value)
                     speak_result("Gemma locale non disponibile. Controlla la configurazione.")
+                elif kind == "ok":
+                    write_line("GEMMA > " + value)
+                    speak_result(value)
                 else:
-                    write_line(("GEMMA > " if kind == "ok" else "GEMMA / ERRORE > ") + value)
+                    write_line("GEMMA / ERRORE > " + value)
         except queue.Empty:
             pass
         if not closing:
