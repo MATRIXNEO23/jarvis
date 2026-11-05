@@ -46,3 +46,23 @@ Commit `d8dab462ae350954ad11a8c5d482f5b0cde44480`: `Local model contract (Window
 
 ## Vincoli
 Nessun costo aggiuntivo, CPU i3-2100 AVX-only, Windows 10 x64, 10GB RAM, microfono sotto controllo manuale secondo scelta corrente, preferenza voce/GUI, add-on modulari `.jaddon`, nessuna esecuzione di testo generato dal modello, nessuna perdita dati, test su Windows, build solo dopo autorizzazione esplicita.
+
+## Registro operativo dei problemi — sequenza di risoluzione
+Stati: DA VERIFICARE / IN LAVORAZIONE / TEST CI / TEST PC / RISOLTO. Nessun problema si considera RISOLTO sulla sola base di un commit.
+
+| ID | Priorità | Problema | Stato | Evidenza e prossimo gate |
+| --- | --- | --- | --- | --- |
+| JRV-001 | P0 | Gemma produce note interne, anche lette dal TTS | TEST CI | `d8dab46` ripristina sintassi, `e581701` aggiunge casi di regressione; verificare workflow Windows e prova vocale reale |
+| JRV-002 | P0 | Avvio microfono: preferenze e documentazione in conflitto | DA VERIFICARE | `settings.py` usa `auto_listen=True` come default; README/ROADMAP discordanti; verificare percorso runtime e requisito vigente prima di modificare |
+| JRV-003 | P1 | Programmi e app: errore generico e Netflix non verificato | DA VERIFICARE | add-on disattivato nel test riportato; distinguere OFF/permessi/catalogo/parser/esecuzione |
+| JRV-004 | P1 | Consenso GPT online su ogni entry point | DA VERIFICARE | inventario chiamate da voce, testo, piani, fallback, Telegram |
+| JRV-005 | P1 | Memoria locale 8/8, compattazione e continuità | DA VERIFICARE | distinguere `CompactContext` da `NativeConversationSession`; benchmark prima di 12/12 |
+| JRV-006 | P1 | Indicizzazione completa e portabilità Windows | DA VERIFICARE | percorso Known Folders presente, indice totale non confermato |
+| JRV-007 | P1 | Interferenze router comandi, GUI e add-on | DA VERIFICARE | test integrati per precedenza e azioni autorizzate |
+| JRV-008 | P1 | Telegram: segreti, cronologia, autorizzazioni, messaggi vocali | DA VERIFICARE | test simulati + collaudo account autorizzato |
+| JRV-009 | P2 | Documenti/progetti: persistenza, rollback, salvataggi | DA VERIFICARE | verifiche isolamento profili e non regressione |
+| JRV-010 | P2 | Prestazioni, avvio, CPU AVX, RAM, TTS e code UI | DA VERIFICARE | misure su hardware target |
+| JRV-011 | P2 | Packaging, ZIP, README, workflow e riproducibilità | DA VERIFICARE | confrontare hash/commit, contenuti e modalità pubblicazione |
+
+### Procedura
+Un ID alla volta: riproduzione -> causa -> fix minimo -> test Windows -> prova sul PC -> aggiornamento stato. Non eseguire build pubblica senza consenso esplicito. Per JRV-001, `tests/test_native_conversation_session.py` copre note `What's Going Right`, blocchi `<think>`, preservazione di risposte normali e fallback; non prova da solo che il modello generi correttamente italiano.
