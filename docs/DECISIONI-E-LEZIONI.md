@@ -1,3 +1,13 @@
+## Verifica Windows e blocchi di rilascio
+
+`db0b3a4`: [run 42113303954](https://github.com/MATRIXNEO23/jarvis/actions/runs/42113303954) verde su entrambi i job, 628 test per job. Il test di finestra Tk reale e i casi di accettazione, PID e finestra sono passati. Nessuna prova di apertura Netflix sul Pavilion.
+
+`09c5e95`: [run 42113573907](https://github.com/MATRIXNEO23/jarvis/actions/runs/42113573907) ha riprodotto un errore della nuova fixture, che non passava `queue` all'esecuzione isolata del poll. `75bef3a` ripristina la dipendenza mantenendo le asserzioni. Nella [run 42113970995](https://github.com/MATRIXNEO23/jarvis/actions/runs/42113970995) i test unitari risultano verdi in entrambe le versioni Python. Il job 127548563547 ha registrato 629 test e ha superato la nuova prova sulla risposta vocale obsoleta. L'integrazione Windows Search del secondo job era ancora in corso al checkpoint.
+
+Prossimo intervento JRV-004: trattare separatamente login e inferenza. Il pulsante GPT verifica un consenso condizionato alla presenza della configurazione Gemma prima di instradare azioni locali. Il chiarimento progetto, il raffinamento file e la spiegazione del file arrivano a `run_gpt`. Telegram chiama direttamente `service.call` dal worker e il pianificatore riceve lo stesso servizio. L'autodiagnosi ha un dialogo già dedicato. Per ogni percorso verificare esplicita autorizzazione, rifiuto, revoca e assenza di invio di contenuti altrimenti. Conservare il percorso locale e il consenso alle azioni come controlli distinti.
+
+Per JRV-011 resta da collegare il pacchetto a una dipendenza esplicita dalla matrice Windows sullo stesso SHA, mantenendo separata la verifica dell'archivio estratto. La DLL no-AVX2 deve restare disponibile e verificabile per una ricostruzione futura. Il rilascio pubblico dipende anche dai collaudi obbligatori sul Pavilion, ancora aperti. Nessuna build pubblicata nel checkpoint.
+
 ## Voce Gemma: risposta in corso e cambi di contesto
 
 La run [42112965273](https://github.com/MATRIXNEO23/jarvis/actions/runs/42112965273) su `cfa0e19` ha concluso la matrice Windows con successo. `db0b3a4` ha introdotto l'osservazione del PID e della finestra, run [42113303954](https://github.com/MATRIXNEO23/jarvis/actions/runs/42113303954). Il controllo osserva una finestra Win32 con titolo dello stesso PID, non minimizzata e non nascosta da DWM. Può rilevare una finestra già esistente o coperta. L'app Store può usare un altro processo per la finestra.
