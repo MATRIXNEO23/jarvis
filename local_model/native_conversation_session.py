@@ -5,8 +5,7 @@ No online fallback, no desktop actions and no model load on import.
 from collections import deque
 import re
 
-# Never forward recognizable model-side planning sections to the console or TTS.
-_PLANNING_HEADER = re.compile(r'(?im)^\s*(?:[-*] ?)?(?:["“”]?)(?:what.s going right|conversation flow|internal reasoning|analysis|thinking|reasoning|plan of action)(?:["“”]?)\s*:?\s*from threading import RLock
+_PLANNING_HEADER = re.compile(r'(?i)^\s*[-*]?\s*["“”]?(?:what.s going right|conversation flow|internal reasoning|analysis|thinking|reasoning|plan of action)["“”]?\s*:?\s*from threading import RLock
 
 from .memory_preferences import MemoryPreferences, default_memory_preferences_path
 from .native_config import NativeModelConfig
@@ -38,8 +37,8 @@ class NativeConversationSession:
                 raise ValueError("Domanda troppo lunga per il contesto configurato.")
             turns = list(self.history)[-memory.recent_messages:]
             instruction = ("Rispondi come Jarvis in italiano, in modo naturale e diretto. "
-                           "Non scrivere analisi, piani, istruzioni interne o note di valutazione. "
-                           "Non fingere di aver eseguito azioni sul computer.\\n")
+                           "Non scrivere analisi, piani o istruzioni interne. "
+                           "Non dichiarare di aver eseguito azioni sul computer.\\n")
             prefix = instruction
             suffix = "Utente: " + latest + "\\nJarvis:"
             # Keep the newest complete messages first. Budget for the actual
@@ -67,13 +66,12 @@ class NativeConversationSession:
                 self.adapter.stop()
                 self.prepared = False
 )
-_INLINE_PLANNING = re.compile(r'(?im)^\s*[-*]?\s*["“”]?(?:what.s going right|conversation flow|internal reasoning|analysis|thinking|reasoning)["“”]?\s*[:—-]')
-
+_INLINE_PLANNING = re.compile(r'(?i)^\s*[-*]?\s*["“”]?(?:what.s going right|conversation flow|internal reasoning|analysis|thinking|reasoning)["“”]?\s*[:—-]')
 
 def clean_native_answer(text):
-    """Conservative visible/spoken answer filter; do not expose planning notes."""
+    """Do not forward recognizable planning notes to history, console or TTS."""
     if not isinstance(text, str):
-        raise RuntimeError('Risposta Gemma non valida.')
+        raise RuntimeError("Risposta Gemma non valida.")
     value = re.sub(r'(?is)<think>.*?</think>', '', text)
     value = re.sub(r'(?is)<think>.*from threading import RLock
 
@@ -137,11 +135,11 @@ class NativeConversationSession:
 , '', value)
     value = re.sub(r'(?is)```(?:thinking|analysis|reasoning)\b.*?```', '', value)
     lines = value.splitlines()
-    cut = next((i for i, line in enumerate(lines) if _PLANNING_HEADER.match(line) or _INLINE_PLANNING.match(line)), None)
+    cut = next((i for i, line in enumerate(lines)
+                if _PLANNING_HEADER.match(line) or _INLINE_PLANNING.match(line)), None)
     if cut is not None:
         lines = lines[:cut]
-    value = '\n'.join(lines).strip()
-    return value or 'Non riesco a formulare una risposta affidabile. Puoi ripetere la domanda?'
+    return '\n'.join(lines).strip() or "Puoi ripetere la domanda?"
 
 from threading import RLock
 
