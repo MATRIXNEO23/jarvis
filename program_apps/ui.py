@@ -200,7 +200,12 @@ class ProgramSettings:
         if ident is None:
             self.status.set('Seleziona un programma.')
             return
-        self._start(lambda:self.service.execute('launch_id',{'query':ident}).message)
+        def launch_and_report():
+            result = self.service.execute('launch_id', {'query':ident})
+            if result.status != 'completed':
+                return 'Avvio non riuscito: ' + result.message
+            return result.message
+        self._start(launch_and_report)
 
     def close(self):
         self.cancelled.set()
