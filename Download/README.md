@@ -1,3 +1,11 @@
+# Jarvis Gemma — diagnostica generazione (05/11/2026)
+
+**[SCARICA JARVIS GEMMA DIAGNOSTICA](./Jarvis-Gemma-DIAGNOSTICA-20261105.zip)**
+
+Versione diagnostica: espone lo stato e i dettagli restituiti dal motore nativo. Non risolve ancora il problema di generazione, non collaudata sul Pavilion. Estrarre in cartella separata senza sostituire la versione stabile.
+
+---
+
 # Jarvis Gemma — prova corretta (05/11/2026)
 
 **[SCARICA JARVIS GEMMA — PROVA CORRETTA](./Jarvis-Gemma-PROVA-CORRETTA.zip)**
