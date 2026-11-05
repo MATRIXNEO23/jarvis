@@ -16,6 +16,7 @@ from test_activity_status import Value, GlobalCallbacks
 from conversation_router import build_conversation_prompt, parse_conversation_intent, ConversationRejected
 from dialogue_focus import is_ambiguous_short_reply
 from local_engine import TaskResult
+from local_model.chat_transport import ChatTransport
 from voice_control import GPT_CONVERSATION, STANDBY, WakeWordGate
 from live_capabilities import snapshot_capabilities, capability_status_prompt
 
@@ -78,6 +79,7 @@ class FileRefinementTests(unittest.TestCase):
             build_conversation_prompt=build_conversation_prompt,
             parse_conversation_intent=parse_conversation_intent,ConversationRejected=ConversationRejected,
             is_ambiguous_short_reply=is_ambiguous_short_reply,announce_document=Mock(),root=None)
+        env['chat_transport'] = ChatTransport(env['service'], native=None)
         for name in ('run_gpt','start_file_refinement','accept_file_refinement','submit_local','try_file_command','submit_gpt'):
             self.callback(name,env)
         return env,workers
