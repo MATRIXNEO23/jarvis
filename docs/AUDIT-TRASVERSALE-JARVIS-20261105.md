@@ -1,5 +1,13 @@
 # Jarvis — audit trasversale dell'intero repository (2026-11-05)
 
+## 5 novembre 2026 — suite Windows del ramo Gemma
+
+La run [42106340408](https://github.com/MATRIXNEO23/jarvis/actions/runs/42106340408) ha riprodotto 8 fallimenti e 13 errori su 626 test. `7ff60e2` collega il vero `ChatTransport` al servizio simulato in `tests/test_file_refinement.py`, usato anche da `tests/test_pending_file_context.py`. La relativa [run 42112126088](https://github.com/MATRIXNEO23/jarvis/actions/runs/42112126088) è stata avviata sul commit esatto.
+
+Il checkpoint corrente applica lo stesso cablaggio a `tests/test_activity_status.py`. La fixture in `tests/test_voice_corrections_review.py` riproduce il contenitore `[False]` usato dal callback. `tests/test_gpt_voice_addressing.py` verifica che Gemma occupata rifiuti solo la richiesta indirizzata e che il parlato ambientale non venga inviato o accodato. `tests/test_self_review.py` controlla la precedenza della diagnosi rispetto al percorso Gemma della voce e al percorso GPT del testo. In `jarvis.py` i progetti espliciti tornano a precedere il filtro generico di avvio app, dopo la gestione dei file.
+
+Gate aperto: verificare test mirati e matrice Windows 3.11/3.12 sul checkpoint, quindi analizzare eventuali fallimenti residui. JRV-001 e JRV-002 richiedono ancora collaudo reale. JRV-003 non ha conferma di apertura Netflix. Il rilascio resta subordinato alle prove obbligatorie.
+
 ## Metodo e limiti
 Review iniziale repository `feature/gemma-local-20261104`, 320 file tracciati, 178 Python, 80 file sotto tests/, 27 workflow. Esaminati direttamente `AGENTS.md`, `README.md`, `ROADMAP.md`, `docs/AUDIT_COMPLETO_20261031.md`, `docs/HANDOFF-ARCHITETTURA-JARVIS-20261105.md`, `jarvis.py` (percorsi Gemma/programmi), `local_engine.py`, `addon_manager.py`, `program_apps/service.py`, `program_apps/native.py`, `local_model/native_conversation_session.py`, `local_model/memory_preferences.py`, `local_model/compact_context.py`, `conversation_memory.py`, `source_review.py`, `self_diagnostics.py`, `runtime_diagnostics.py`, `network_telemetry.py`, `memory_boundaries.py`. Non equivale a lettura riga-per-riga di tutti i 320 file, né a collaudo fisico di Windows 10. Il repository dispone di una skill/strumento interno di audit statico (`self_diagnostics.py` + `source_review.py`), ma non è stato eseguito su una copia locale completa; non confondere con skill ChatGPT installate.
 

@@ -61,13 +61,17 @@ class GPTVoiceAddressingTests(unittest.TestCase):
         self.env['submit_local'].assert_not_called()
         self.env['start_conversation_gpt'].assert_not_called()
 
-    def test_busy_queue_contains_only_explicit_requests(self):
-        self.env['busy_gpt'] = True
+    def test_busy_gemma_rejects_only_addressed_requests(self):
+        self.env['gemma_trial_busy'][0] = True
         self.receive('mi racconti qualcosa')
         self.receive('Jarvis mi racconti qualcosa')
         self.receive('continua pure')
-        self.assertEqual(self.env['pending_conversation'], [(7, 'mi racconti qualcosa')])
+        self.assertEqual(self.env['pending_conversation'], [])
         self.env['start_conversation_gpt'].assert_not_called()
+        self.assertEqual([call.args[0] for call in self.env['write_line'].call_args_list], [
+            'TU > mi racconti qualcosa',
+            'GEMMA > Sto ancora elaborando. Ripeti la frase al termine.',
+        ])
 
     def test_local_command_stays_local_and_background_cannot_trigger_it(self):
         self.receive('apri browser')

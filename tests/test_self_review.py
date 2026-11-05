@@ -63,14 +63,15 @@ class SelfReviewTests(unittest.TestCase):
             with self.subTest(request=request):
                 self.assertIsNone(diagnostic_request(request))
 
-    def test_all_gpt_entrypoints_keep_explicit_local_diagnostics_first(self):
+    def test_model_entrypoints_keep_explicit_local_diagnostics_first(self):
         # Inspect the GUI source, do not import it or start Tk/GPT.
         source=(Path(__file__).resolve().parent.parent/"jarvis.py"
                 ).read_text(encoding="utf-8")
         start=source.split("    def start_conversation_gpt(spoken: str) -> None:",1)[1]
         start=start.split("    def toggle_gpt(",1)[0]
         self.assertLess(start.index("try_self_diagnostic(spoken)"),
-                        start.index("run_gpt("))
+                        start.index("submit_gemma_voice(spoken)"))
+        self.assertNotIn("run_gpt(",start)
         ask=source.split("    def submit_gpt() -> None:",1)[1]
         ask=ask.split("    def poll() -> None:",1)[0]
         self.assertLess(ask.index("try_self_diagnostic(message)"),

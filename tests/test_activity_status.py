@@ -14,6 +14,7 @@ import unittest
 from unittest.mock import Mock
 
 from local_engine import TaskResult
+from local_model.chat_transport import ChatTransport
 from voice_control import GPT_CONVERSATION, STANDBY, PUSH_TO_TALK
 
 
@@ -61,6 +62,7 @@ class ActivityStatusTests(unittest.TestCase):
                    conversation_epoch=7, voice_mode=Value(GPT_CONVERSATION),
                    GPT_CONVERSATION=GPT_CONVERSATION, STANDBY=STANDBY,
                    PUSH_TO_TALK=PUSH_TO_TALK)
+        env['chat_transport'] = ChatTransport(env['service'], native=None)
         return env, workers, eval(self.provider_code, env)
 
     def callback(self, name, env):
