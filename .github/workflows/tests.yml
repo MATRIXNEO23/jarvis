@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'feature/program-apps-20261103', 'fix/gpt-voice-addressing-20261103', 'fix/empty-prompt-context-20261104']
+    branches: [main, 'feature/file-access-20261101', 'feature/fix-file-search-20261102', 'feature/program-apps-20261103', 'feature/gemma-local-20261104', 'fix/gpt-voice-addressing-20261103', 'fix/empty-prompt-context-20261104']
     paths:
       - '**.py'
       - '**.mjs'
