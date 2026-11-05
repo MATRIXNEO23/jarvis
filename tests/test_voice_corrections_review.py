@@ -234,6 +234,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             maybe_queue_telegram_note=lambda _: False,
             speech_to_local_command=speech_to_local_command, busy_local=False,
             gpt_enabled=Value(True), active_gpt=True, busy_gpt=False,
+            gemma_trial_busy=False,
             start_conversation_gpt=Mock(), submit_local=Mock(),
         )
 
