@@ -1,0 +1,88 @@
+name: Fix Jarvis Gemma chat routing
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-gemma-chat-routing.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch and regression-check ZIP
+        shell: python
+        run: |
+          from pathlib import Path
+          import zipfile
+          src=Path('Download/Jarvis-Gemma-PROVA-TEST-RIPRISTINATO.zip')
+          dst=Path('Download/Jarvis-Gemma-CHAT-ROUTING-20261105.zip')
+          assert src.exists(), 'Missing verified test build'
+          patched=False
+          with zipfile.ZipFile(src) as zin,zipfile.ZipFile(dst,'w') as zout:
+              for info in zin.infolist():
+                  data=zin.read(info.filename)
+                  if info.filename.endswith('/jarvis.py'):
+                      code=data.decode('utf-8')
+                      anchor='''        if gpt_enabled.get() and active_gpt:
+              if busy_gpt:
+                  write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
+                  return
+              submit_gpt()
+          else:
+              submit_local()'''
+                      assert code.count(anchor)==1,'Unexpected console router: abort, preserve existing build'
+                      replacement='''        if gpt_enabled.get() and active_gpt:
+              if busy_gpt:
+                  write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
+                  return
+              submit_gpt()
+          elif _is_native_conversation(message):
+              request.set("")
+              submit_gemma_voice(message)
+          else:
+              submit_local()'''
+                      code=code.replace(anchor,replacement)
+                      insertion='''    def _is_native_conversation(message):
+          # Explicit conversational input only: never steal Windows commands.
+          import re
+          normalized=message.strip().casefold()
+          return bool(re.match(
+              r"^(ciao|salve|buongiorno|buonasera|ehi|hey|come stai|"
+              r"come va|chi sei|raccontami|spiegami|parliamo|"
+              r"che cosa ne pensi|cosa ne pensi)(?:[\\s,!?\\.]|$)",
+              normalized))
+
+  '''
+                      anchor2='    def send_console_input(event=None) -> None:'
+                      assert code.count(anchor2)==1,'Console function missing'
+                      code=code.replace(anchor2,insertion+anchor2)
+                      compile(code,info.filename,'exec')
+                      assert 'submit_gemma_voice(message)' in code
+                      assert 'gemma_button.configure(command=submit_gemma_trial)' in code
+                      patched=True
+                      data=code.encode('utf-8')
+                  zout.writestr(info,data)
+          assert patched,'jarvis.py not found'
+          with zipfile.ZipFile(dst) as check:
+              assert check.testzip() is None
+              main=check.read(next(n for n in check.namelist() if n.endswith('/jarvis.py'))).decode()
+              assert 'submit_gemma_voice(message)' in main
+              assert 'gemma_button.configure(command=submit_gemma_trial)' in main
+              assert 'submit_local()' in main and 'submit_gpt()' in main
+          readme=Path('Download/README.md')
+          entry=('# Jarvis Gemma — chat locale corretta (05/11/2026)\n\n'
+                 '**[SCARICA JARVIS GEMMA — CHAT LOCALE](./Jarvis-Gemma-CHAT-ROUTING-20261105.zip)**\n\n'
+                 'Instrada saluti e richieste conversazionali esplicite a Gemma quando GPT online è spento; '
+                 'preserva i comandi locali, la modalità GPT e Prova generazione. '
+                 'Test statici di regressione e integrità ZIP in Windows CI; prova sul Pavilion necessaria.\n\n---\n\n')
+          old=readme.read_text(encoding='utf-8')
+          if dst.name not in old:readme.write_text(entry+old,encoding='utf-8')
+      - name: Publish ZIP and README
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Download/Jarvis-Gemma-CHAT-ROUTING-20261105.zip Download/README.md
+          git diff --cached --quiet || (git commit -m "Publish Gemma local chat routing fix" && git push)
