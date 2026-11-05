@@ -3813,6 +3813,19 @@ def main() -> None:
         if maybe_queue_telegram_note(message):
             request.set("")
             return
+        # Configured local model takes priority for conversational text.
+        from local_model.native_config import NativeModelConfig
+        from local_model.native_settings import default_native_settings_path
+        native_path = default_native_settings_path()
+        if native_path.is_file():
+            try:
+                native_cfg = NativeModelConfig.load(native_path)
+                if native_cfg.model and Path(native_cfg.model).is_file():
+                    submit_gemma_trial()
+                    return
+            except (OSError, ValueError) as exc:
+                write_line("GEMMA / CONFIGURAZIONE > " + str(exc))
+                return
         if gpt_enabled.get() and active_gpt:
             if busy_gpt:
                 write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
