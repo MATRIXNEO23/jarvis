@@ -20,6 +20,7 @@ jobs:
           dst=Path('Download/Jarvis-Gemma-CHAT-ROUTING-20261105.zip')
           assert src.exists(), 'Missing verified test build'
           patched=False
+          print('SOURCE:',src,'bytes:',src.stat().st_size,flush=True)
           with zipfile.ZipFile(src) as zin,zipfile.ZipFile(dst,'w') as zout:
               for info in zin.infolist():
                   data=zin.read(info.filename)
@@ -43,6 +44,7 @@ jobs:
         else:
             submit_local()'''
                       code=code.replace('\\r\\n','\\n')
+                      print('ROUTER MATCHES:',code.count(anchor),'GEMMA HANDLER:',code.count('def submit_gemma_voice'),flush=True)
                       assert code.count(anchor)==1,'Unexpected console router; refusing to publish'
                       code=code.replace(anchor,replacement)
                       insertion='''    def _is_native_conversation(message):
