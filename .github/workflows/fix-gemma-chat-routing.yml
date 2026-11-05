@@ -55,7 +55,7 @@ jobs:
             r"come va|chi sei|raccontami|spiegami|parliamo|"
             r"che cosa ne pensi|cosa ne pensi)(?:[\\s,!?\\.]|$)",
             normalized))
-          
+                    
           '''
                       anchor2='    def send_console_input(event=None) -> None:'
                       assert code.count(anchor2)==1,'Console function missing'
