@@ -38,6 +38,16 @@ class ProgramServiceTests(unittest.TestCase):
     def save(self, phrases, enabled=True):
         self.apps.save_preferences({key:dict(enabled=enabled,phrase=value) for key,value in phrases.items()})
 
+    def test_rejection_explains_missing_catalog_vs_revoked_consent(self):
+        missing = self.apps.execute('launch', {'query':'applicazione inesistente xyz'})
+        self.assertEqual(missing.status, 'rejected')
+        self.assertIn('catalogo', missing.message)
+        self.save({self.mail:'apri la posta'}, enabled=False)
+        forbidden = self.apps.execute('launch', {'query':'posta µ'})
+        self.assertEqual(forbidden.status, 'rejected')
+        self.assertIn('non autorizzato', forbidden.message)
+        self.assertFalse(self.launched)
+
     def test_variants_and_custom_phrase_share_local_identity_and_persist(self):
         for phrase in ['apri la posta','avvia la posta','Lancia la posta!','puoi aprire la posta?',
                        'avvia Posta µ','apri il mio gioco','lancia il mio gioco']:
