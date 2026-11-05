@@ -45,7 +45,10 @@ jobs:
             submit_local()'''
                       code=code.replace(chr(13)+chr(10),chr(10))
                       print('ROUTER MATCHES:',code.count(anchor),'GEMMA HANDLER:',code.count('def submit_gemma_voice'),flush=True)
-                      assert code.count(anchor)==1,'Unexpected console router; refusing to publish'
+                      if code.count(anchor)!=1:
+                          pos=code.find('def send_console_input(')
+                          print('ACTUAL CONSOLE ROUTER:',repr(code[pos:pos+4500]),flush=True)
+                          raise AssertionError('Unexpected console router; refusing to publish')
                       code=code.replace(anchor,replacement)
                       insertion='''    def _is_native_conversation(message):
                   import re
