@@ -25,20 +25,26 @@ jobs:
                   data=zin.read(info.filename)
                   if info.filename.endswith('/jarvis.py'):
                       code=data.decode('utf-8')
-                      import re
-                      # Keep every existing early-return command and document handler.
-                      pattern=(r'(?m)^(?P<indent>[ \\t]*)if gpt_enabled\\.get\\(\\) and active_gpt:\\s*\\n'
-                               r'(?P<body>(?:(?!^\\s*else:\\s*$).+\\n)+?)'
-                               r'(?P=indent)else:\\s*\\n(?P=indent)    submit_local\\(\\)')
-                      matches=list(re.finditer(pattern,code))
-                      assert len(matches)==1, 'Unexpected console router; refusing to publish'
-                      m=matches[0]
-                      ind=m.group('indent')
-                      branch=(ind+'elif _is_native_conversation(message):\\n'
-                              +ind+'    request.set("")\\n'
-                              +ind+'    submit_gemma_voice(message)\\n'
-                              +ind+'else:\\n'+ind+'    submit_local()')
-                      code=code[:m.start()]+m.group(0)[:m.group(0).rfind(ind+'else:')]+branch+code[m.end():]
+                      anchor = ('        if gpt_enabled.get() and active_gpt:\\n'
+                                '            if busy_gpt:\\n'
+                                '                write_line("JARVIS > Sto già elaborando. Attendi la risposta.")\\n'
+                                '                return\\n'
+                                '            submit_gpt()\\n'
+                                '        else:\\n'
+                                '            submit_local()')
+                      replacement = ('        if gpt_enabled.get() and active_gpt:\\n'
+                                     '            if busy_gpt:\\n'
+                                     '                write_line("JARVIS > Sto già elaborando. Attendi la risposta.")\\n'
+                                     '                return\\n'
+                                     '            submit_gpt()\\n'
+                                     '        elif _is_native_conversation(message):\\n'
+                                     '            request.set("")\\n'
+                                     '            submit_gemma_voice(message)\\n'
+                                     '        else:\\n'
+                                     '            submit_local()')
+                      code=code.replace('\\r\\n','\\n')
+                      assert code.count(anchor)==1,'Unexpected console router; refusing to publish'
+                      code=code.replace(anchor,replacement)
                       insertion='''    def _is_native_conversation(message):
         import re
         normalized = message.strip().casefold()
