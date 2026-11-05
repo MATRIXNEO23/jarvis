@@ -1,15 +1,22 @@
 name: Jarvis Gemma clean Windows trial
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Jarvis unit and GPT protocol checks']
+    types: [completed]
+    branches: ['feature/gemma-local-20261104']
 permissions:
   contents: write
   actions: read
 jobs:
   package:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'feature/gemma-local-20261104')
     runs-on: windows-2022
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/checkout@v4
         with:
           repository: LostRuins/koboldcpp
