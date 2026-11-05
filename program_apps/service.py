@@ -316,7 +316,9 @@ class ProgramService:
                 matches = ([query] if query in self._apps else []) if operation=='launch_id' else self._matches(query)
             allowed = [key for key in matches if self._preferences.get(key,{}).get('enabled')]
             if not allowed:
-                return ProgramResult('rejected', 'Programma non trovato o non consentito: selezionalo in Programmi e app.')
+                if not matches:
+                    return ProgramResult('rejected', 'Programma non presente nel catalogo: aggiorna l’elenco in Programmi e app.')
+                return ProgramResult('rejected', 'Programma presente ma non autorizzato: abilitalo in Programmi e app.')
             if len(allowed)>1 or (operation=='launch' and len(allowed)==1 and not self._exact(query,allowed[0])):
                 token = uuid.uuid4().hex
                 self._pending = dict(token=token, ids=allowed, revision=self._revision,
