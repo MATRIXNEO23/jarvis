@@ -54,7 +54,7 @@ Stati: DA VERIFICARE / IN LAVORAZIONE / TEST CI / TEST PC / RISOLTO. Nessun prob
 | --- | --- | --- | --- | --- |
 | JRV-001 | P0 | Gemma produce note interne, anche lette dal TTS | TEST PC | `d8dab46` ripristina sintassi, `e581701` aggiunge casi di regressione; verificare workflow Windows e prova vocale reale |
 | JRV-002 | P0 | Avvio microfono: preferenze e documentazione in conflitto | TEST CI | `settings.py` usa `auto_listen=True` come default; README/ROADMAP discordanti; verificare percorso runtime e requisito vigente prima di modificare |
-| JRV-003 | P1 | Programmi e app: errore generico e Netflix non verificato | DA VERIFICARE | add-on disattivato nel test riportato; distinguere OFF/permessi/catalogo/parser/esecuzione |
+| JRV-003 | P1 | Programmi e app: errore generico e Netflix non verificato | TEST CI | add-on disattivato nel test riportato; distinguere OFF/permessi/catalogo/parser/esecuzione |
 | JRV-004 | P1 | Consenso GPT online su ogni entry point | DA VERIFICARE | inventario chiamate da voce, testo, piani, fallback, Telegram |
 | JRV-005 | P1 | Memoria locale 8/8, compattazione e continuità | DA VERIFICARE | distinguere `CompactContext` da `NativeConversationSession`; benchmark prima di 12/12 |
 | JRV-006 | P1 | Indicizzazione completa e portabilità Windows | DA VERIFICARE | percorso Known Folders presente, indice totale non confermato |
@@ -73,3 +73,6 @@ Un ID alla volta: riproduzione -> causa -> fix minimo -> test Windows -> prova s
 
 ### JRV-002 — intervento 2026-11-05
 Utente conferma microfono ON automaticamente all'avvio, hotword «Jarvis» obbligatoria. Analisi: `settings.py` default `auto_listen=True`, preferenza persistente e modificabile; `prepara_test_telegram50.py` imposta ON soltanto in migrazione iniziale; `voice_control.WakeWordGate.route(require_name=True)` rifiuta richieste senza hotword; `jarvis.py` usa `require_name=True` in entrambi i modi passivi. Correzione `ee9f622`: etichette UI non dichiarano più erroneamente invio automatico a GPT, chiariscono Gemma locale e hotword. Correzione `718f953`: roadmap aggiornata al requisito corrente. Nessun cambiamento al comportamento di microfono o alle preferenze salvate. Restano test Windows e prova su microfono Vosk reale.
+
+### JRV-003 — intervento 2026-11-05
+Verificati `program_apps/service.py`, `native.py`, test service/integration. Il parser è locale, le selezioni sono persistenti, l'add-on è un gate e il lancio Windows restituisce solo accettazione, non verifica finestra aperta. `65e79d8` distingue rifiuto per app assente dal catalogo e app presente senza autorizzazione; `53b79ba` aggiunge regressione Windows. Restano: test CI, prova reale app Store/Netflix, e progettazione della verifica apertura senza promesse false.
