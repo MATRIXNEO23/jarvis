@@ -25,23 +25,23 @@ jobs:
                   data=zin.read(info.filename)
                   if info.filename.endswith('/jarvis.py'):
                       code=data.decode('utf-8')
-                      anchor = ('        if gpt_enabled.get() and active_gpt:\\n'
-                                '            if busy_gpt:\\n'
-                                '                write_line("JARVIS > Sto già elaborando. Attendi la risposta.")\\n'
-                                '                return\\n'
-                                '            submit_gpt()\\n'
-                                '        else:\\n'
-                                '            submit_local()')
-                      replacement = ('        if gpt_enabled.get() and active_gpt:\\n'
-                                     '            if busy_gpt:\\n'
-                                     '                write_line("JARVIS > Sto già elaborando. Attendi la risposta.")\\n'
-                                     '                return\\n'
-                                     '            submit_gpt()\\n'
-                                     '        elif _is_native_conversation(message):\\n'
-                                     '            request.set("")\\n'
-                                     '            submit_gemma_voice(message)\\n'
-                                     '        else:\\n'
-                                     '            submit_local()')
+                      anchor = '''        if gpt_enabled.get() and active_gpt:
+            if busy_gpt:
+                write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
+                return
+            submit_gpt()
+        else:
+            submit_local()'''
+                      replacement = '''        if gpt_enabled.get() and active_gpt:
+            if busy_gpt:
+                write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
+                return
+            submit_gpt()
+        elif _is_native_conversation(message):
+            request.set("")
+            submit_gemma_voice(message)
+        else:
+            submit_local()'''
                       code=code.replace('\\r\\n','\\n')
                       assert code.count(anchor)==1,'Unexpected console router; refusing to publish'
                       code=code.replace(anchor,replacement)
