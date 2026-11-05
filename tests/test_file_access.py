@@ -832,7 +832,8 @@ function New-Object {
         self.assertEqual(len(calls),1)
 
         request.get.return_value='apri Netflix'
-        env['send_console_input']()
+        with patch.object(self.manager, 'files_enabled', return_value=False):
+            env['send_console_input']()
         self.assertIn('Non ho avviato il programma',env['speak_result'].call_args.args[0])
         self.assertEqual(projects,['apri progetto Romanzo'])
         self.assertEqual(len(calls),1)
