@@ -31,32 +31,32 @@ jobs:
                 write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
                 return
             submit_gpt()
-        else:
+                  else:
             submit_local()'''
                       replacement = '''        if gpt_enabled.get() and active_gpt:
             if busy_gpt:
                 write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
                 return
             submit_gpt()
-        elif _is_native_conversation(message):
+                  elif _is_native_conversation(message):
             request.set("")
             submit_gemma_voice(message)
-        else:
+                  else:
             submit_local()'''
                       code=code.replace(chr(13)+chr(10),chr(10))
                       print('ROUTER MATCHES:',code.count(anchor),'GEMMA HANDLER:',code.count('def submit_gemma_voice'),flush=True)
                       assert code.count(anchor)==1,'Unexpected console router; refusing to publish'
                       code=code.replace(anchor,replacement)
                       insertion='''    def _is_native_conversation(message):
-        import re
-        normalized = message.strip().casefold()
-        return bool(re.match(
+                  import re
+                  normalized = message.strip().casefold()
+                  return bool(re.match(
             r"^(ciao|salve|buongiorno|buonasera|ehi|hey|come stai|"
             r"come va|chi sei|raccontami|spiegami|parliamo|"
             r"che cosa ne pensi|cosa ne pensi)(?:[\\s,!?\\.]|$)",
             normalized))
-
-'''
+          
+          '''
                       anchor2='    def send_console_input(event=None) -> None:'
                       assert code.count(anchor2)==1,'Console function missing'
                       code=code.replace(anchor2,insertion+anchor2)
