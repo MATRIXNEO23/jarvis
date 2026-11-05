@@ -261,21 +261,22 @@ def main() -> None:
             ("Standby (spento)", STANDBY),
             ("Premi per parlare", PUSH_TO_TALK),
             ("Ascolto continuo (Ehi Jarvis)", CONTINUOUS),
-            ("Conversazione continua GPT", GPT_CONVERSATION))):
+            ("Conversazione continua locale (Gemma)", GPT_CONVERSATION))):
         button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
         button.grid(row=index // 2, column=index % 2, sticky="w", padx=(0, 12), pady=3)
         mode_buttons.append(button)
     auto_listen_enabled = tk.BooleanVar(value=settings["auto_listen"])
     auto_listen_switch = ttk.Checkbutton(
         audio_controls,
-        text="Avvia Jarvis già in Conversazione continua GPT (microfono attivo)",
+        text="Avvia Jarvis con microfono attivo (richiede Jarvis prima di ogni comando)",
         variable=auto_listen_enabled)
     auto_listen_switch.pack(anchor="w", pady=(5, 1))
     ttk.Label(
         audio_controls,
         text="Il microfono resta acceso fino a quando scegli Standby. "
              "La voce non viene salvata: Vosk trascrive in locale; "
-             "le frasi vengono inviate a GPT quando connesso.",
+             "solo le richieste precedute da Jarvis vengono elaborate; "
+             "la conversazione usa Gemma locale, senza invio automatico a GPT.",
         wraplength=710).pack(anchor="w", pady=(0, 4))
     ptt_button = ttk.Button(audio_controls, text="Tieni premuto per parlare", state="disabled")
     ptt_button.pack(anchor="w", pady=(5, 0))
@@ -2573,7 +2574,7 @@ def main() -> None:
             return
         write_line(
             "SISTEMA > Al prossimo avvio microfono "
-            + ("in conversazione continua GPT." if desired
+            + ("in conversazione locale con hotword Jarvis." if desired
                else "in standby, come selezionato nelle impostazioni."))
 
     def change_voice_mode() -> None:
