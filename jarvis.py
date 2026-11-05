@@ -1232,8 +1232,9 @@ def main() -> None:
             "Gli errori contati riguardano solo questa istanza.\n\n"
             "È un'analisi di possibili miglioramenti, NON una verifica "
             "del corretto funzionamento e non autorizza modifiche.",
-            parent=root)
-        if not approved or consent_epoch != conversation_epoch:
+            parent=root, default="no")
+        approved = approved and consent_epoch == conversation_epoch
+        if not approved:
             write_line("DIAGNOSTICA > Invio al modello esterno annullato. "
                        "Il rapporto locale è conservato.")
             return True
