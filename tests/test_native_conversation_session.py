@@ -1,7 +1,7 @@
 import unittest
 from local_model.memory_preferences import MemoryPreferences
 from local_model.native_config import NativeModelConfig
-from local_model.native_conversation_session import NativeConversationSession
+from local_model.native_conversation_session import NativeConversationSession, clean_native_answer
 
 
 class FakeAdapter:
@@ -30,6 +30,26 @@ class SessionTests(unittest.TestCase):
             adapter, config_loader=lambda: NativeModelConfig(
                 context_size=512, max_output=128),
             memory_loader=lambda: MemoryPreferences(recent_messages=8))
+
+    def test_internal_notes_never_reach_spoken_answer(self):
+        raw = ("Va bene, ti rispondo.\n\n"
+               "**What's Going Right:**\n"
+               "Conversation Flow: instructions to Jarvis")
+        self.assertEqual(clean_native_answer(raw), "Va bene, ti rispondo.")
+
+    def test_think_block_is_not_spoken(self):
+        self.assertEqual(
+            clean_native_answer("<think>Internal reasoning</think>La risposta."),
+            "La risposta.")
+
+    def test_normal_answer_is_preserved(self):
+        self.assertEqual(
+            clean_native_answer("Mi piace parlare di film e cinema."),
+            "Mi piace parlare di film e cinema.")
+
+    def test_empty_internal_output_uses_safe_fallback(self):
+        self.assertEqual(clean_native_answer("<think>secret</think>"),
+                         "Puoi ripetere la domanda?")
 
     def test_reuses_loaded_model_and_history(self):
         adapter = FakeAdapter()
