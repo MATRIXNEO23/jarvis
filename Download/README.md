@@ -1,3 +1,11 @@
+# Jarvis Gemma — chat vocale e avvio programmi (05/11/2026)
+
+**[SCARICA JARVIS GEMMA — CHAT, VOCE E AVVIO PROGRAMMI](./Jarvis-Gemma-PROVA-CORRETTA.zip)**
+
+Build di prova aggiornata: chat collegata a Gemma locale, risposte vocali tramite la sintesi di Jarvis e gestione dei comandi di avvio attraverso il modulo autorizzato **Programmi e app**. Se un programma non può essere avviato, Jarvis deve segnalarlo anziché dichiarare falsamente di averlo aperto. Compilazione Windows [riuscita](https://github.com/MATRIXNEO23/jarvis/actions/runs/42081766861). **L'avvio effettivo dei programmi e la voce sul PC dell'utente sono ancora da collaudare.** Estrai in una cartella separata, senza sostituire la versione stabile.
+
+---
+
 # Jarvis Gemma — pulsante di prova ripristinato (05/11/2026)
 
 **[SCARICA JARVIS GEMMA — PROVA TEST RIPRISTINATO](./Jarvis-Gemma-PROVA-TEST-RIPRISTINATO.zip)**
