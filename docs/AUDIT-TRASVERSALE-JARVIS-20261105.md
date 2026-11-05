@@ -82,3 +82,6 @@ Verificati `program_apps/service.py`, `native.py`, test service/integration. Il 
 
 ### JRV-003 — nota test
 `tests.yml` non include `feature/gemma-local-20261104` fra i trigger push: i test specifici programmi aggiunti in `53b79ba` non hanno ancora un run CI su quel commit. Il workflow Gemma precedente non copre `test_program_apps_service.py`. Non dichiarare superata questa regressione senza esecuzione Windows della suite.
+
+### Regola di pubblicazione confermata dall'utente
+Quando tutte le verifiche obbligatorie sono superate, pubblicazione automatica della build; nessuna conferma aggiuntiva. Non equivale a pubblicare ogni push o con test non eseguiti. `3330d6a` abilita la suite completa Windows sul ramo Gemma; `daa872d` configura il publisher per reagire soltanto al completamento positivo della suite (o avvio manuale). **Limite da risolvere prima di dichiarare l'automazione operativa:** GitHub Actions esegue i trigger `workflow_run` solo se il file ricevente è presente sul branch predefinito; la modifica è per ora solo sul ramo feature. Inoltre il collaudo reale del microfono/app Store non è coperto dalla suite: non equiparare CI verde a «tutto fatto». Verificare gate di release e workflow sul default branch prima di una pubblicazione automatica. Nessuna build pubblicata da questi commit.
