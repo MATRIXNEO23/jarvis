@@ -110,11 +110,21 @@ def launch(app):
     if app.kind in ('exe', 'lnk') and fingerprint(app.target) != app.fingerprint:
         raise OSError('Programma o collegamento cambiato: aggiorna e conferma la selezione.')
     if app.kind == 'store':
-        _activate_store(app.target)
+        pid = _activate_store(app.target)
     else:
         target = 'shell:AppsFolder\\' + app.target if app.kind == 'shell' else app.target
-        _shell_open(target)
-    return 'Richiesta di avvio di ' + app.name + ' accettata da Windows.'
+        pid = _shell_open(target)
+    message = 'Richiesta di avvio di ' + app.name + ' accettata da Windows.'
+    if not pid:
+        return message + ' Processo e finestra da verificare.'
+    message += f' Windows ha restituito il PID {pid}.'
+    try:
+        window_visible = _visible_process_window(pid)
+    except OSError:
+        window_visible = False
+    if window_visible:
+        return message + ' Finestra visibile associata al processo.'
+    return message + ' Visibilità della finestra da verificare.'
 
 
 def _shell_open(target):
@@ -138,7 +148,49 @@ def _shell_open(target):
     if info.hProcess:
         close = ctypes.WinDLL('kernel32', use_last_error=True).CloseHandle
         close.argtypes = [wintypes.HANDLE]
-        close(info.hProcess)
+        try:
+            get_pid = ctypes.WinDLL('kernel32', use_last_error=True).GetProcessId
+            get_pid.argtypes, get_pid.restype = [wintypes.HANDLE], wintypes.DWORD
+            return get_pid(info.hProcess)
+        finally:
+            close(info.hProcess)
+    return 0
+
+
+def _visible_process_window(pid):
+    """Observe a titled top-level window owned by the returned process."""
+    user32 = ctypes.WinDLL('user32', use_last_error=True)
+    dwm = ctypes.WinDLL('dwmapi').DwmGetWindowAttribute
+    dwm.argtypes = [wintypes.HWND, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD]
+    dwm.restype = ctypes.HRESULT
+    get_pid = user32.GetWindowThreadProcessId
+    get_pid.argtypes, get_pid.restype = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)], wintypes.DWORD
+    visible = user32.IsWindowVisible
+    visible.argtypes, visible.restype = [wintypes.HWND], wintypes.BOOL
+    minimized = user32.IsIconic
+    minimized.argtypes, minimized.restype = [wintypes.HWND], wintypes.BOOL
+    title_length = user32.GetWindowTextLengthW
+    title_length.argtypes, title_length.restype = [wintypes.HWND], ctypes.c_int
+    callback_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    found = False
+
+    @callback_type
+    def inspect(hwnd, _):
+        nonlocal found
+        owner = wintypes.DWORD()
+        get_pid(hwnd, ctypes.byref(owner))
+        if owner.value != pid or not visible(hwnd) or minimized(hwnd) or not title_length(hwnd):
+            return True
+        cloaked = wintypes.DWORD()
+        dwmwa_cloaked = 14
+        result = dwm(hwnd, dwmwa_cloaked, ctypes.byref(cloaked), ctypes.sizeof(cloaked))
+        found = result == 0 and not cloaked.value
+        return not found
+
+    enumerate_windows = user32.EnumWindows
+    enumerate_windows.argtypes, enumerate_windows.restype = [callback_type, wintypes.LPARAM], wintypes.BOOL
+    enumerate_windows(inspect, 0)
+    return found
 
 
 def _activate_store(aumid):

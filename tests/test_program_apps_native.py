@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 
 
 @unittest.skipUnless(os.name=='nt','Windows-only user requirement')
@@ -48,6 +49,31 @@ class NativeProgramTests(unittest.TestCase):
             link.write_bytes(link.read_bytes()+b'changed')
             with self.assertRaisesRegex(OSError,'cambiato'):
                 launch(app)
+
+    def test_launch_message_keeps_shell_acceptance_process_and_window_distinct(self):
+        from program_apps.native import entry, launch
+        app = entry('App di prova', 'store', 'JarvisTestPackage_123456!App')
+        for pid, visible in ((0, False), (123, False), (123, True)):
+            with self.subTest(pid=pid, visible=visible):
+                with patch('program_apps.native._activate_store', return_value=pid), \
+                     patch('program_apps.native._visible_process_window', return_value=visible) as observe:
+                    message = launch(app)
+                self.assertIn('accettata da Windows', message)
+                self.assertEqual('PID 123' in message, bool(pid))
+                self.assertEqual('Finestra visibile associata al processo' in message, visible)
+                if pid:
+                    observe.assert_called_once_with(pid)
+                else:
+                    observe.assert_not_called()
+
+    def test_visible_window_probe_observes_own_titled_tk_window(self):
+        import tkinter as tk
+        from program_apps.native import _visible_process_window
+        root = tk.Tk()
+        self.addCleanup(root.destroy)
+        root.title('Jarvis native launch observation')
+        root.update()
+        self.assertTrue(_visible_process_window(os.getpid()))
 
     def test_store_activation_invalid_identity_reports_native_failure(self):
         from program_apps.native import entry,launch
