@@ -72,8 +72,14 @@ class NativeGemmaBridge:
                 raise RuntimeError("Generazione annullata.")
             if time.monotonic() - started > timeout:
                 raise TimeoutError("Generazione locale oltre il tempo richiesto.")
-            if not isinstance(result, dict) or result.get("status") != 1:
-                raise RuntimeError("Generazione nativa fallita.")
+            if not isinstance(result, dict):
+                raise RuntimeError("Generazione nativa: risposta ABI non valida.")
+            if result.get("status") != 1:
+                status = result.get("status")
+                reason = result.get("stopreason")
+                raise RuntimeError(
+                    "Generazione nativa fallita (status=" + str(status)[:20]
+                    + ", stopreason=" + str(reason)[:40] + ").")
             value = result.get("text")
             if not isinstance(value, str) or not value.strip():
                 raise RuntimeError("Generazione nativa vuota.")
