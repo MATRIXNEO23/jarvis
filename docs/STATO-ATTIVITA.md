@@ -1,3 +1,11 @@
+## 6 novembre 2026 — JRV-004, verifica Windows
+
+La [run 42129127625](https://github.com/MATRIXNEO23/jarvis/actions/runs/42129127625) sul commit `e51c269` ha superato 635 test per job con Python 3.11 e 3.12. È passata anche la prova live Windows Search sul job previsto. Copertura mirata nei log: rifiuto e revoca dei callback, Telegram simulato, disconnessione immediata, revoca durante avvio del bridge e toggle HUD.
+
+`dea28e6`: consenso console e planner. `4dd0e1f`: consenso Telegram e generazione di revoca del planner. `43d29e4`: ripristina il guard esplicito di rifiuto dell'autodiagnosi, mantenendo il controllo dell'epoca. `36d549e`: verifica nel trasporto prima dell'invio e scarto dei piani di un contesto superato. `e51c269`: inizializza lo stato Telegram nella fixture del pannello rapido dopo il fallimento della run 42129015218. Il risultato è simulato per account GPT e Telegram. Restano la configurazione persistente per funzionalità, le prove con account reale e il gate di rilascio. Una revoca dopo l'invio può scartare la risposta in Telegram, mentre i dati già trasmessi restano fuori dal controllo di Jarvis.
+
+Prossimo intervento: JRV-005, isolare la cronologia Gemma tra progetto e contesto generale conservando il modello caricato e gli archivi persistenti. Verificare anche la configurazione applicata al provider quando si modificano contesto massimo e output.
+
 ## Verifica Windows e blocchi di rilascio
 
 `db0b3a4`: [run 42113303954](https://github.com/MATRIXNEO23/jarvis/actions/runs/42113303954) verde su entrambi i job, 628 test per job. Il test di finestra Tk reale e i casi di accettazione, PID e finestra sono passati. Nessuna prova di apertura Netflix sul Pavilion.
