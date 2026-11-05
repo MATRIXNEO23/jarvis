@@ -1,0 +1,63 @@
+name: Restore Gemma generation test and diagnostics
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-gemma-test.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preserve working UI and patch bridge
+        shell: python
+        run: |
+          from pathlib import Path
+          import zipfile
+          source=Path('Download/Jarvis-Gemma-PROVA-CORRETTA.zip')
+          target=Path('Download/Jarvis-Gemma-PROVA-TEST-RIPRISTINATO.zip')
+          assert source.is_file(), 'Missing previous version with test button'
+          found_button=False
+          patched=False
+          with zipfile.ZipFile(source) as src, zipfile.ZipFile(target,'w') as dst:
+              for info in src.infolist():
+                  data=src.read(info.filename)
+                  if info.filename.endswith('.py'):
+                      txt=data.decode('utf-8')
+                      if 'Prova generazione' in txt:
+                          found_button=True
+                      if info.filename.endswith('/local_model/native_bridge.py'):
+                          anchor='if not isinstance(result, dict) or result.get("status") != 1:'
+                          if anchor in txt:
+                              txt=txt.replace('raise RuntimeError("Generazione nativa fallita.")', 'raise RuntimeError("Generazione nativa fallita: " + repr(result)[:1000])',1)
+                              patched=True
+                          elif 'nessun dettaglio dal motore' in txt or 'repr(result)' in txt:
+                              patched=True
+                          else:
+                              raise RuntimeError('Unexpected native bridge, refusing to publish')
+                          compile(txt,info.filename,'exec')
+                          data=txt.encode('utf-8')
+                  dst.writestr(info,data)
+          assert found_button, 'Regression: Prova generazione missing from source package'
+          assert patched, 'Native diagnostic bridge not found'
+          with zipfile.ZipFile(target) as z:
+              assert z.testzip() is None
+              assert any('Prova generazione' in z.read(n).decode('utf-8') for n in z.namelist() if n.endswith('.py'))
+          readme=Path('Download/README.md')
+          entry=('# Jarvis Gemma — pulsante di prova ripristinato (05/11/2026)\n\n'
+                 '**[SCARICA JARVIS GEMMA — PROVA TEST RIPRISTINATO](./Jarvis-Gemma-PROVA-TEST-RIPRISTINATO.zip)**\n\n'
+                 'Deriva dalla precedente PROVA-CORRETTA, preserva il pulsante Prova generazione e aggiunge dettagli di errore dal bridge. '
+                 'Test di regressione del pulsante e integrità ZIP eseguiti in CI Windows. '
+                 'Generazione effettiva sul Pavilion ancora da verificare; non sostituire la versione stabile.\n\n---\n\n')
+          existing=readme.read_text(encoding='utf-8')
+          if 'Jarvis-Gemma-PROVA-TEST-RIPRISTINATO.zip' not in existing:
+              readme.write_text(entry+existing,encoding='utf-8')
+      - name: Publish
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Download/Jarvis-Gemma-PROVA-TEST-RIPRISTINATO.zip Download/README.md
+          git diff --cached --quiet || (git commit -m "Restore Gemma test button and diagnostic" && git push)
