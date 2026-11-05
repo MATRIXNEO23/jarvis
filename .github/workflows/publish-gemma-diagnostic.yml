@@ -22,15 +22,15 @@ jobs:
           target = Path('Download/Jarvis-Gemma-DIAGNOSTICA-20261105.zip')
           if not source.is_file():
               raise SystemExit('Missing source archive: ' + str(source))
-          old = 'if not isinstance(result, dict) or result.get("status") != 1:\\n                raise RuntimeError("Generazione nativa fallita.")'
+          old = 'if not isinstance(result, dict) or result.get("status") != 1:\n                raise RuntimeError("Generazione nativa fallita.")'
           with zipfile.ZipFile(source) as zin, zipfile.ZipFile(target, 'w') as zout:
               found = False
               for item in zin.infolist():
                   data = zin.read(item.filename)
                   if item.filename.endswith('/local_model/native_bridge.py'):
                       code = data.decode('utf-8')
-                      normalized = code.replace('\\r\\n', '\\n')
-                      anchor = '            if not isinstance(result, dict) or result.get("status") != 1:\\n                raise RuntimeError("Generazione nativa fallita.")'
+                      normalized = code.replace('\r\n', '\n')
+                      anchor = '            if not isinstance(result, dict) or result.get("status") != 1:\n                raise RuntimeError("Generazione nativa fallita.")'
                       replacement = '''            if not isinstance(result, dict):
                           raise RuntimeError(f"Generazione nativa fallita: risposta {type(result).__name__}.")
                       if result.get("status") != 1:
@@ -53,11 +53,11 @@ jobs:
               assert check.testzip() is None
               assert 'nessun dettaglio dal motore' in check.read(next(n for n in check.namelist() if n.endswith('/local_model/native_bridge.py'))).decode()
           readme = Path('Download/README.md')
-          entry = ('# Jarvis Gemma — diagnostica generazione (05/11/2026)\\n\\n'
-                   '**[SCARICA JARVIS GEMMA DIAGNOSTICA](./Jarvis-Gemma-DIAGNOSTICA-20261105.zip)**\\n\\n'
+          entry = ('# Jarvis Gemma — diagnostica generazione (05/11/2026)\n\n'
+                   '**[SCARICA JARVIS GEMMA DIAGNOSTICA](./Jarvis-Gemma-DIAGNOSTICA-20261105.zip)**\n\n'
                    'Versione diagnostica: espone lo stato e i dettagli restituiti dal motore nativo. '
                    'Non risolve ancora il problema di generazione, non collaudata sul Pavilion. '
-                   'Estrarre in cartella separata senza sostituire la versione stabile.\\n\\n---\\n\\n')
+                   'Estrarre in cartella separata senza sostituire la versione stabile.\n\n---\n\n')
           existing = readme.read_text(encoding='utf-8')
           if 'Jarvis-Gemma-DIAGNOSTICA-20261105.zip' not in existing:
               readme.write_text(entry + existing, encoding='utf-8')
