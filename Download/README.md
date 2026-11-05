@@ -1,3 +1,11 @@
+# Jarvis Gemma — pulsante di prova ripristinato (05/11/2026)
+
+**[SCARICA JARVIS GEMMA — PROVA TEST RIPRISTINATO](./Jarvis-Gemma-PROVA-TEST-RIPRISTINATO.zip)**
+
+Deriva dalla precedente PROVA-CORRETTA, preserva il pulsante Prova generazione e aggiunge dettagli di errore dal bridge. Test di regressione del pulsante e integrità ZIP eseguiti in CI Windows. Generazione effettiva sul Pavilion ancora da verificare; non sostituire la versione stabile.
+
+---
+
 # Jarvis Gemma — diagnostica generazione (05/11/2026)
 
 **[SCARICA JARVIS GEMMA DIAGNOSTICA](./Jarvis-Gemma-DIAGNOSTICA-20261105.zip)**
