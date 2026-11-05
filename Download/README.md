@@ -1,3 +1,13 @@
+# Jarvis Gemma — prova corretta (05/11/2026)
+
+**[SCARICA JARVIS GEMMA — PROVA CORRETTA](./Jarvis-Gemma-PROVA-CORRETTA.zip)**
+
+[Download diretto ZIP](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-Gemma-PROVA-CORRETTA.zip) · [Workflow Windows riuscito](https://github.com/MATRIXNEO23/jarvis/actions/runs/42056417329)
+
+Pacchetto sperimentale isolato e alleggerito, con DLL KoboldCpp CPU no-AVX2 inclusa e pulsante **Prova generazione** per visualizzare risposta o errore. Estrai in una cartella nuova, avvia `avvia_jarvis.bat`, scegli il GGUF nelle impostazioni Gemma e premi **Prova generazione**. Il GGUF non è incluso. **FunctionGemma 270M non è ancora stato collaudato sul PC Pavilion**; non sostituire la versione stabile.
+
+---
+
 # Jarvis Gemma - test Windows (05/11/2026)
 
 **[SCARICA ZIP GEMMA WINDOWS DI PROVA](./Jarvis-Gemma-Windows-TEST-cc52c20.zip)**
