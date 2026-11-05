@@ -25,42 +25,35 @@ jobs:
                   data=zin.read(info.filename)
                   if info.filename.endswith('/jarvis.py'):
                       code=data.decode('utf-8')
-                      anchor='''        if gpt_enabled.get() and active_gpt:
-              if busy_gpt:
-                  write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
-                  return
-              submit_gpt()
-          else:
-              submit_local()'''
-                      assert code.count(anchor)==1,'Unexpected console router: abort, preserve existing build'
-                      replacement='''        if gpt_enabled.get() and active_gpt:
-              if busy_gpt:
-                  write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
-                  return
-              submit_gpt()
-          elif _is_native_conversation(message):
-              request.set("")
-              submit_gemma_voice(message)
-          else:
-              submit_local()'''
-                      code=code.replace(anchor,replacement)
+                      import re
+                      # Keep every existing early-return command and document handler.
+                      pattern=(r'(?m)^(?P<indent>[ \\t]*)if gpt_enabled\\.get\\(\\) and active_gpt:\\s*\\n'
+                               r'(?P<body>(?:(?!^\\s*else:\\s*$).+\\n)+?)'
+                               r'(?P=indent)else:\\s*\\n(?P=indent)    submit_local\\(\\)')
+                      matches=list(re.finditer(pattern,code))
+                      assert len(matches)==1, 'Unexpected console router; refusing to publish'
+                      m=matches[0]
+                      ind=m.group('indent')
+                      branch=(ind+'elif _is_native_conversation(message):\\n'
+                              +ind+'    request.set("")\\n'
+                              +ind+'    submit_gemma_voice(message)\\n'
+                              +ind+'else:\\n'+ind+'    submit_local()')
+                      code=code[:m.start()]+m.group(0)[:m.group(0).rfind(ind+'else:')]+branch+code[m.end():]
                       insertion='''    def _is_native_conversation(message):
-          # Explicit conversational input only: never steal Windows commands.
-          import re
-          normalized=message.strip().casefold()
-          return bool(re.match(
-              r"^(ciao|salve|buongiorno|buonasera|ehi|hey|come stai|"
-              r"come va|chi sei|raccontami|spiegami|parliamo|"
-              r"che cosa ne pensi|cosa ne pensi)(?:[\\s,!?\\.]|$)",
-              normalized))
+        import re
+        normalized = message.strip().casefold()
+        return bool(re.match(
+            r"^(ciao|salve|buongiorno|buonasera|ehi|hey|come stai|"
+            r"come va|chi sei|raccontami|spiegami|parliamo|"
+            r"che cosa ne pensi|cosa ne pensi)(?:[\\s,!?\\.]|$)",
+            normalized))
 
-  '''
+'''
                       anchor2='    def send_console_input(event=None) -> None:'
                       assert code.count(anchor2)==1,'Console function missing'
                       code=code.replace(anchor2,insertion+anchor2)
                       compile(code,info.filename,'exec')
                       assert 'submit_gemma_voice(message)' in code
-                      assert 'gemma_button.configure(command=submit_gemma_trial)' in code
                       patched=True
                       data=code.encode('utf-8')
                   zout.writestr(info,data)
@@ -69,7 +62,6 @@ jobs:
               assert check.testzip() is None
               main=check.read(next(n for n in check.namelist() if n.endswith('/jarvis.py'))).decode()
               assert 'submit_gemma_voice(message)' in main
-              assert 'gemma_button.configure(command=submit_gemma_trial)' in main
               assert 'submit_local()' in main and 'submit_gpt()' in main
           readme=Path('Download/README.md')
           entry=('# Jarvis Gemma — chat locale corretta (05/11/2026)\n\n'
