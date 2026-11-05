@@ -71,6 +71,23 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
         self.root.update_idletasks()
         self.root.destroy()
 
+    def test_gemma_poll_discards_voice_result_after_context_or_mode_change(self):
+        results = queue.Queue()
+        for event in (("voice_ok", "Risposta precedente", 6),
+                      ("voice_error", "Errore precedente", 6),
+                      ("voice_ok", "Risposta corrente", 7),
+                      ("ok", "Risposta scritta", None)):
+            results.put(event)
+        self.env.update(gemma_trial_queue=results, gemma_trial_busy=[True],
+                        gemma_button=Mock(), conversation_epoch=7,
+                        speak_result=Mock(), closing=True)
+        self.callback("poll_gemma_trial")()
+        self.assertFalse(self.env["gemma_trial_busy"][0])
+        self.assertEqual([call.args[0] for call in self.env["speak_result"].call_args_list],
+                         ["Risposta corrente", "Risposta scritta"])
+        self.assertEqual([call.args[0] for call in self.env["write_line"].call_args_list],
+                         ["GEMMA > Risposta corrente", "GEMMA > Risposta scritta"])
+
     def callback(self, name):
         node = copy.deepcopy(next(n for n in self.main.body
                                   if isinstance(n, ast.FunctionDef)

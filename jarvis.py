@@ -2603,8 +2603,7 @@ def main() -> None:
             if not spoken_enabled.get():
                 spoken_enabled.set(True)
                 save_speech_preferences()
-            if not gpt_enabled.get() or not active_gpt:
-                write_line("Conversazione GPT: per le richieste non locali collega ChatGPT.")
+            write_line("Conversazione vocale con Gemma locale. Inizia con Jarvis.")
         else:
             mic_status.set("Ascolto continuo: inizia ogni comando con Jarvis. "
                            "La dettatura richiede l’attivazione manuale.")
@@ -3905,6 +3904,8 @@ def main() -> None:
             gemma_source[0] = source
         gemma_trial_busy[0] = True
         write_line("UTENTE / VOCE > " + spoken)
+        voice_epoch = conversation_epoch
+
         def voice_worker():
             try:
                 from local_model.native_chat_adapter import NativeChatAdapter
@@ -3914,9 +3915,9 @@ def main() -> None:
                         NativeChatAdapter(gemma_source[0]))
                 answer = chat_transport.ask_local_first(
                     spoken, session=gemma_session[0], timeout=180)
-                gemma_trial_queue.put(("voice_ok", answer))
+                gemma_trial_queue.put(("voice_ok", answer, voice_epoch))
             except Exception as exc:
-                gemma_trial_queue.put(("voice_error", str(exc)[:350]))
+                gemma_trial_queue.put(("voice_error", str(exc)[:350], voice_epoch))
         threading.Thread(target=voice_worker, daemon=True,
                          name="jarvis-gemma-voice").start()
 
@@ -3950,9 +3951,9 @@ def main() -> None:
                     gemma_session[0] = NativeConversationSession(
                         NativeChatAdapter(gemma_source[0]))
                 answer = gemma_session[0].ask(question, timeout=180)
-                gemma_trial_queue.put(("ok", answer))
+                gemma_trial_queue.put(("ok", answer, None))
             except Exception as exc:
-                gemma_trial_queue.put(("error", str(exc)[:350]))
+                gemma_trial_queue.put(("error", str(exc)[:350], None))
 
         threading.Thread(target=native_trial_worker, daemon=True,
                          name="jarvis-native-gemma-trial").start()
@@ -3960,9 +3961,11 @@ def main() -> None:
     def poll_gemma_trial():
         try:
             while True:
-                kind, value = gemma_trial_queue.get_nowait()
+                kind, value, voice_epoch = gemma_trial_queue.get_nowait()
                 gemma_trial_busy[0] = False
                 gemma_button.configure(state="normal")
+                if voice_epoch is not None and voice_epoch != conversation_epoch:
+                    continue
                 if kind == "voice_ok":
                     write_line("GEMMA > " + value)
                     speak_result(value)
