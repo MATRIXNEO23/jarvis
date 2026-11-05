@@ -79,6 +79,7 @@ class FileRefinementTests(unittest.TestCase):
             build_conversation_prompt=build_conversation_prompt,
             parse_conversation_intent=parse_conversation_intent,ConversationRejected=ConversationRejected,
             is_ambiguous_short_reply=is_ambiguous_short_reply,announce_document=Mock(),root=None,
+            online_consent_pending=False,
             messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
         env['chat_transport'] = ChatTransport(env['service'], native=None)
         for name in ('confirm_gpt_inference','run_gpt','start_file_refinement','accept_file_refinement','submit_local','try_file_command','submit_gpt'):

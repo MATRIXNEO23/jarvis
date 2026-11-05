@@ -18,7 +18,8 @@ from plan_runner import run_approved_plan
 
 def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool],
                  execution_lock: Lock, abort_event: threading.Event,
-                 on_approved=None, on_step=None, on_finished=None) -> None:
+                 on_approved=None, on_step=None, on_finished=None, *,
+                 confirm_inference, consent_generation) -> None:
     previous = getattr(parent, "_jarvis_planner_window", None)
     if previous is not None and previous.winfo_exists():
         previous.lift()
@@ -98,17 +99,16 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         except PlanRejected as exc:
             messagebox.showwarning("Richiesta non valida", str(exc), parent=window)
             return
-        if not messagebox.askyesno(
-            "Conferma GPT online",
-            "Inviare a GPT online la richiesta di pianificazione? "
-            "Potrai decidere separatamente se eseguire il piano.",
-            parent=window, default="no",
+        generation = consent_generation()
+        if not confirm_inference(
+            "La richiesta di pianificazione. Potrai decidere separatamente se eseguire il piano."
         ):
             return
-        if closed or not is_available():
+        if closed or generation != consent_generation() or not is_available():
             return
         # Only a new approved request can clear an earlier revocation.
         abort_event.clear()
+        cancel_event.clear()
         pending = None
         busy = True
         phase = "planning"
@@ -119,7 +119,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
 
         def worker() -> None:
             try:
-                if abort_event.is_set():
+                if abort_event.is_set() or cancel_event.is_set() or generation != consent_generation():
                     events.put(("error", "Richiesta di pianificazione annullata."))
                     return
                 response = service.call("ask", timeout=180, prompt=prompt)
@@ -207,8 +207,8 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
             show("Piano annullato prima dell'esecuzione.")
         if busy:
             cancel_requested = True
+            cancel_event.set()
             if phase == "running":
-                cancel_event.set()
                 status.set("Interruzione richiesta: non partiranno ulteriori passi.")
             else:
                 status.set("Proposta annullata: l'eventuale risposta GPT verrà ignorata.")

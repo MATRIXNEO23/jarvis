@@ -11,6 +11,7 @@ import os
 import queue
 import shutil
 from collections import deque
+from concurrent.futures import Future
 import json
 import re
 import sqlite3
@@ -477,6 +478,7 @@ def main() -> None:
     gpt_status = tk.StringVar(value="GPT: inizializzazione" if gpt_enabled.get() else "GPT: disattivato")
     busy_local = False
     busy_gpt = False
+    online_consent_pending = False
     gpt_request_action = ""
     local_execution_lock = threading.Lock()
     planner_abort_event = threading.Event()
@@ -1722,15 +1724,37 @@ def main() -> None:
             speak_result("Il messaggio deve avere da uno a 480 caratteri. Riprova.")
         return True
 
-    def ask_telegram_gpt(prompt:str) -> str:
-        # Runs in a worker: no Tk variable or widget is accessed here.
-        if not telegram_gpt_ready.is_set():
+    def ask_telegram_gpt(prompt: str, bridge: TelegramBridge) -> str:
+        # The worker waits for one approval and never accesses Tk.
+        if not telegram_gpt_ready.is_set() or not bridge.is_enabled():
+            return ""
+        approval = Future()
+        output_queue.put(("telegram_gpt_consent", bridge, approval))
+        try:
+            approved_epoch = approval.result(timeout=30)
+        except TimeoutError:
+            approval.cancel()
+            return ""
+        if (approved_epoch != conversation_epoch or not telegram_gpt_ready.is_set()
+                or not bridge.is_enabled()):
             return ""
         try:
-            result=service.call("ask",prompt=prompt,timeout=120)
-            return str(result.get("text",""))
-        except (GPTUnavailable,OSError,RuntimeError):
+            result = service.call("ask", prompt=prompt, timeout=120)
+            return str(result.get("text", ""))
+        except (GPTUnavailable, OSError, RuntimeError):
             return ""
+
+    def resolve_telegram_gpt_consent(bridge, approval) -> None:
+        if not approval.set_running_or_notify_cancel():
+            return
+        approved_epoch = None
+        try:
+            if (bridge is telegram_bridge and bridge.is_enabled() and telegram_gpt_ready.is_set()
+                    and confirm_gpt_inference(
+                        "Il messaggio Telegram ricevuto e i messaggi recenti della stessa chat.")):
+                approved_epoch = conversation_epoch
+        finally:
+            approval.set_result(approved_epoch)
 
     def toggle_telegram_automatic() -> None:
         nonlocal telegram_bridge
@@ -1758,11 +1782,13 @@ def main() -> None:
                 return
             if telegram_bridge:
                 telegram_bridge.stop()
-            telegram_bridge=TelegramBridge(
-                workspace,chosen[0]["id"],chosen[0]["name"],ask_telegram_gpt,
-                output_queue.put,voice_name=selected_voice(),
+            bridge = TelegramBridge(
+                workspace, chosen[0]["id"], chosen[0]["name"],
+                lambda prompt: ask_telegram_gpt(prompt, bridge),
+                output_queue.put, voice_name=selected_voice(),
                 allowed_contacts=chosen)
-            if telegram_bridge.start():
+            telegram_bridge = bridge
+            if bridge.start():
                 settings["telegram_enabled"]=True
                 telegram_status.set("Telegram: collegamento in corso per "+
                                     str(len(chosen))+" contatti autorizzati.")
@@ -1818,6 +1844,7 @@ def main() -> None:
             doc_dialog.revoke_pending()
             planner_abort_event.set()
         if not gpt_enabled.get():
+            telegram_gpt_ready.clear()
             gpt_status.set("GPT: disattivato manualmente")
         elif connected:
             label = state.get("profileLabel") or "account ChatGPT"
@@ -1837,11 +1864,18 @@ def main() -> None:
         local_button.configure(state="disabled" if busy_local or closing else "normal")
 
     def confirm_gpt_inference(detail: str) -> bool:
+        nonlocal online_consent_pending
+        if online_consent_pending or closing or busy_gpt or not gpt_enabled.get() or not active_gpt:
+            return False
         epoch = conversation_epoch
-        approved = messagebox.askyesno(
-            "Conferma GPT online",
-            "Inviare a GPT online per questa richiesta?\n\n" + detail,
-            parent=root, default="no")
+        online_consent_pending = True
+        try:
+            approved = messagebox.askyesno(
+                "Conferma GPT online",
+                "Inviare a GPT online per questa richiesta?\n\n" + detail,
+                parent=root, default="no")
+        finally:
+            online_consent_pending = False
         return (approved and epoch == conversation_epoch and not closing
                 and gpt_enabled.get() and active_gpt and not busy_gpt)
 
@@ -2683,6 +2717,8 @@ def main() -> None:
             on_approved=journal_plan_approved,
             on_step=journal_plan_step,
             on_finished=journal_plan_finished,
+            confirm_inference=confirm_gpt_inference,
+            consent_generation=lambda: conversation_epoch,
         )
 
     def try_timer_command(spoken: str) -> bool:
@@ -2721,8 +2757,11 @@ def main() -> None:
             write_line("FILE > Nessun risultato utile; raffinamento GPT non disponibile. Puoi precisare la ricerca.")
             return False
         provider=addon_manager.file_service
-        if not provider.refinement_live(token) or not confirm_gpt_inference(
+        if not provider.refinement_live(token):
+            return False
+        if not confirm_gpt_inference(
                 "La richiesta di ricerca e gli indizi sul nome del file o della cartella."):
+            write_line("FILE > Richiesta GPT annullata. Puoi precisare la ricerca localmente.")
             return False
         feedback=provider.refinement_context(token,original,answer=answer)
         if feedback is None:
@@ -3114,6 +3153,8 @@ def main() -> None:
                                str(error_type)[:50]+"): "+str(reason)[:150])
                     speak_result("Non posso confermare l'invio Telegram. "
                                  "Controlla la chat prima di riprovare.")
+                elif kind == "telegram_gpt_consent":
+                    resolve_telegram_gpt_consent(*data)
                 elif kind == "telegram_status":
                     telegram_status.set(str(data[0])[:220])
                     write_line("TELEGRAM > "+str(data[0])[:170])
@@ -3759,6 +3800,8 @@ def main() -> None:
                 elif event.get("event") == "fatal":
                     runtime_events.record("gpt_failure")
                     conversation_epoch += 1
+                    active_gpt = False
+                    telegram_gpt_ready.clear()
                     planner_abort_event.set()
                     if gpt_enabled.get():
                         gpt_status.set("GPT: modulo non pronto.")
@@ -3767,6 +3810,7 @@ def main() -> None:
                     conversation_epoch += 1
                     planner_abort_event.set()
                     active_gpt = False
+                    telegram_gpt_ready.clear()
                     gpt_status.set("GPT: servizio arrestato.")
                 refresh_buttons()
         except queue.Empty:

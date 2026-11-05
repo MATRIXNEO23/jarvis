@@ -1,5 +1,9 @@
 # Jarvis — audit trasversale dell'intero repository (2026-11-05)
 
+## JRV-004 — Telegram e revoca durante la conferma
+
+Il worker Telegram attende fino a 30 secondi una decisione monouso della console prima di inviare messaggio e contesto recente a GPT. Il collegamento Telegram e il recapito dei messaggi approvati dal proprietario restano separati. Una richiesta scaduta o riferita a un bridge disattivato viene scartata. Il pianificatore usa lo stesso dialogo e conserva la generazione di consenso fino al worker. La disattivazione o la perdita del collegamento GPT revoca l'accesso del worker Telegram. Verifica Windows e collaudo con account reale distinti.
+
 ## 6 novembre 2026 — JRV-004, consenso per richiesta dalla console
 
 Il percorso `run_gpt` richiede il consenso prima di avviare un worker di inferenza e ricontrolla connessione, stato ed epoca dopo il dialogo. Login, stato e disconnessione seguono il loro percorso. Il raffinamento chiede prima di consumare il token, la spiegazione distingue il testo dell'anteprima, il chiarimento progetto conserva il riepilogo locale e l'autodiagnosi riusa il consenso specifico già esistente. I comandi locali precedono il dialogo del pulsante GPT. Il pianificatore separa il consenso a inviare la richiesta dall'approvazione del piano. Aggiornati i test Windows dei callback. Verifica CI sul nuovo commit in attesa. Restano il worker Telegram, la policy persistente per funzionalità e il collaudo con account reale.

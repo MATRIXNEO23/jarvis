@@ -3,6 +3,7 @@
 Real Tk and app code; no microphone, model, login or user files are used.
 """
 import ast
+from concurrent.futures import Future
 import copy
 import os
 from pathlib import Path
@@ -63,7 +64,7 @@ class ActivityStatusTests(unittest.TestCase):
                    GPT_CONVERSATION=GPT_CONVERSATION, STANDBY=STANDBY,
                    PUSH_TO_TALK=PUSH_TO_TALK)
         env['chat_transport'] = ChatTransport(env['service'], native=None)
-        env.update(root=None, messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
+        env.update(root=None, online_consent_pending=False, messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
         self.callback("confirm_gpt_inference", env)
         return env, workers, eval(self.provider_code, env)
 
@@ -141,6 +142,45 @@ class ActivityStatusTests(unittest.TestCase):
                 self.assertFalse(workers)
                 self.assertFalse(env["busy_gpt"])
                 env["service"].call.assert_not_called()
+
+    def test_revoked_approval_does_not_reach_gpt_transport(self):
+        env, workers, _ = self.environment()
+        self.assertTrue(self.callback("run_gpt", env)("ask", prompt="Richiesta privata"))
+        env["conversation_epoch"] += 1
+        workers.pop()()
+        env["service"].call.assert_not_called()
+        self.assertEqual(env["output_queue"].get_nowait()[0], "gpt_error")
+
+    def test_telegram_consent_starts_no_online_call_on_denial_or_revocation(self):
+        for decision in ("deny", "revoke", "allow", "timeout"):
+            with self.subTest(decision=decision):
+                env, _, _ = self.environment()
+                ready = threading.Event()
+                ready.set()
+                bridge = SimpleNamespace(is_enabled=lambda: True)
+                env.update(Future=Future, TelegramBridge=object, telegram_bridge=bridge,
+                           telegram_gpt_ready=ready,
+                           GPTUnavailable=RuntimeError)
+                resolve = self.callback("resolve_telegram_gpt_consent", env)
+                env["messagebox"].askyesno.return_value = decision == "allow"
+                env["service"].call.return_value = {"text": "Risposta"}
+                def post(event):
+                    _, candidate, approval = event
+                    if decision == "revoke":
+                        ready.clear()
+                    resolve(candidate, approval)
+                env["output_queue"] = SimpleNamespace(put=post)
+                ask = self.callback("ask_telegram_gpt", env)
+                if decision == "timeout":
+                    # A cancelled request is ignored by the UI callback.
+                    approval = Future()
+                    approval.cancel()
+                    resolve(bridge, approval)
+                    env["messagebox"].askyesno.assert_not_called()
+                    continue
+                reply = ask("Messaggio privato", bridge)
+                self.assertEqual(reply, "Risposta" if decision == "allow" else "")
+                self.assertEqual(env["service"].call.call_count, int(decision == "allow"))
 
     def test_actual_gpt_timeout_clears_phase_and_reports_reason_in_chat(self):
         env, workers, provider = self.environment()
