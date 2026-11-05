@@ -92,14 +92,23 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
                 parent=window,
             )
             return
-        # Only a new request can clear an earlier revocation.
-        abort_event.clear()
         try:
             text = request.get().strip()
             prompt = build_planning_prompt(text)
         except PlanRejected as exc:
             messagebox.showwarning("Richiesta non valida", str(exc), parent=window)
             return
+        if not messagebox.askyesno(
+            "Conferma GPT online",
+            "Inviare a GPT online la richiesta di pianificazione? "
+            "Potrai decidere separatamente se eseguire il piano.",
+            parent=window, default="no",
+        ):
+            return
+        if closed or not is_available():
+            return
+        # Only a new approved request can clear an earlier revocation.
+        abort_event.clear()
         pending = None
         busy = True
         phase = "planning"
@@ -110,6 +119,9 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
 
         def worker() -> None:
             try:
+                if abort_event.is_set():
+                    events.put(("error", "Richiesta di pianificazione annullata."))
+                    return
                 response = service.call("ask", timeout=180, prompt=prompt)
                 plan = parse_plan(response.get("text", ""))
                 events.put(("planned", plan))

@@ -78,9 +78,10 @@ class FileRefinementTests(unittest.TestCase):
                                              for a in self.manager.active_actions()),
             build_conversation_prompt=build_conversation_prompt,
             parse_conversation_intent=parse_conversation_intent,ConversationRejected=ConversationRejected,
-            is_ambiguous_short_reply=is_ambiguous_short_reply,announce_document=Mock(),root=None)
+            is_ambiguous_short_reply=is_ambiguous_short_reply,announce_document=Mock(),root=None,
+            messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
         env['chat_transport'] = ChatTransport(env['service'], native=None)
-        for name in ('run_gpt','start_file_refinement','accept_file_refinement','submit_local','try_file_command','submit_gpt'):
+        for name in ('confirm_gpt_inference','run_gpt','start_file_refinement','accept_file_refinement','submit_local','try_file_command','submit_gpt'):
             self.callback(name,env)
         return env,workers
 
@@ -116,6 +117,18 @@ class FileRefinementTests(unittest.TestCase):
                 self.assertEqual(len(self.files._results),1)
                 self.assertTrue(os.path.samefile(self.a,self.files._results[0]))
                 env['speak_result'].assert_not_called()
+
+    def test_declined_online_refinement_leaves_local_search_available(self):
+        env, workers = self.environment()
+        token = self.empty()
+        env["messagebox"].askyesno.return_value = False
+        self.assertFalse(env["start_file_refinement"](token, "cerca file nome pronunciato"))
+        self.assertTrue(self.files.refinement_live(token))
+        self.assertFalse(workers)
+        env["service"].call.assert_not_called()
+        env["messagebox"].askyesno.return_value = True
+        self.assertTrue(env["start_file_refinement"](token, "cerca file nome pronunciato"))
+        self.assertEqual(len(workers), 1)
 
     def test_empty_to_actual_worker_model_and_local_result_without_clicks(self):
         env,workers=self.environment()

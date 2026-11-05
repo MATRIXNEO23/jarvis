@@ -63,6 +63,8 @@ class ActivityStatusTests(unittest.TestCase):
                    GPT_CONVERSATION=GPT_CONVERSATION, STANDBY=STANDBY,
                    PUSH_TO_TALK=PUSH_TO_TALK)
         env['chat_transport'] = ChatTransport(env['service'], native=None)
+        env.update(root=None, messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
+        self.callback("confirm_gpt_inference", env)
         return env, workers, eval(self.provider_code, env)
 
     def callback(self, name, env):
@@ -125,6 +127,20 @@ class ActivityStatusTests(unittest.TestCase):
                 env["gpt_enabled"].set(False)
                 self.assertFalse(provider()["reasoning"])
                 self.assertFalse(provider()["thinking"])
+
+    def test_refused_or_revoked_online_consent_does_not_start_a_worker(self):
+        for answer in (False, True):
+            with self.subTest(answer=answer):
+                env, workers, _ = self.environment()
+                def respond(*args, **kwargs):
+                    if answer:
+                        env["conversation_epoch"] += 1
+                    return answer
+                env["messagebox"].askyesno.side_effect = respond
+                self.assertFalse(self.callback("run_gpt", env)("ask", prompt="Richiesta privata"))
+                self.assertFalse(workers)
+                self.assertFalse(env["busy_gpt"])
+                env["service"].call.assert_not_called()
 
     def test_actual_gpt_timeout_clears_phase_and_reports_reason_in_chat(self):
         env, workers, provider = self.environment()

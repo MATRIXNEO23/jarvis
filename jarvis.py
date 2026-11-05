@@ -1083,8 +1083,9 @@ def main() -> None:
                     try:
                         prompt=build_chat_prompt(
                             original,memory_context=recent_memory_for_gpt(original))
-                        run_gpt("ask",prompt=prompt,source=original)
-                        return True
+                        if run_gpt("ask",prompt=prompt,source=original,
+                                   consent_detail="La domanda precedente e il contesto del progetto selezionato."):
+                            return True
                     except ValueError:
                         pass
                 steps=workspace.project_steps(match["id"],limit=1)
@@ -1217,6 +1218,7 @@ def main() -> None:
             write_line("DIAGNOSTICA > GPT sta già rispondendo; "
                        "non ho inviato nessun dato.")
             return True
+        consent_epoch = conversation_epoch
         approved=messagebox.askyesno(
             "JARVIS — valutazione esterna",
             "Vuoi inviare al GPT collegato soltanto un rapporto tecnico "
@@ -1229,7 +1231,7 @@ def main() -> None:
             "È un'analisi di possibili miglioramenti, NON una verifica "
             "del corretto funzionamento e non autorizza modifiche.",
             parent=root)
-        if not approved:
+        if not approved or consent_epoch != conversation_epoch:
             write_line("DIAGNOSTICA > Invio al modello esterno annullato. "
                        "Il rapporto locale è conservato.")
             return True
@@ -1254,7 +1256,7 @@ def main() -> None:
             return True
         write_line("DIAGNOSTICA > Consenso ricevuto. Invio SOLO metadati "
                    "della diagnosi locale al GPT esterno per suggerimenti.")
-        run_gpt("ask",prompt=prompt,source="")
+        run_gpt("ask",prompt=prompt,source="",consent_granted=True)
         return True
 
     def update_diagnostic_ui() -> None:
@@ -1834,10 +1836,25 @@ def main() -> None:
         plan_button.configure(state="normal" if can_gpt and active_gpt else "disabled")
         local_button.configure(state="disabled" if busy_local or closing else "normal")
 
-    def run_gpt(action: str, **params) -> None:
+    def confirm_gpt_inference(detail: str) -> bool:
+        epoch = conversation_epoch
+        approved = messagebox.askyesno(
+            "Conferma GPT online",
+            "Inviare a GPT online per questa richiesta?\n\n" + detail,
+            parent=root, default="no")
+        return (approved and epoch == conversation_epoch and not closing
+                and gpt_enabled.get() and active_gpt and not busy_gpt)
+
+    def run_gpt(action: str, *, consent_granted=False,
+                consent_detail="La richiesta e il contesto disponibile.", **params) -> bool:
         nonlocal busy_gpt, gpt_request_action
         if busy_gpt or not gpt_enabled.get() or closing:
-            return
+            return False
+        if action in ("ask", "conversation", "typed_conversation"):
+            if not active_gpt:
+                return False
+            if not consent_granted and not confirm_gpt_inference(consent_detail):
+                return False
         gpt_request_action = action
         busy_gpt = True
         refresh_buttons()
@@ -1850,6 +1867,8 @@ def main() -> None:
         else:
             gpt_status.set("GPT: verifica connessione...")
 
+        consent_epoch = conversation_epoch
+
         def worker() -> None:
             structured = action in ("conversation","typed_conversation")
             epoch = params.get("epoch") if structured else None
@@ -1859,6 +1878,8 @@ def main() -> None:
             try:
                 timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
                 sdk_action = "ask" if structured else action
+                if sdk_action == "ask" and (closing or consent_epoch != conversation_epoch):
+                    raise PermissionError("Autorizzazione GPT revocata.")
                 sdk_params = {key: value for key, value in params.items()
                               if key not in ("epoch", "document_id", "utterance", "source", "file_refinement")}
                 result = chat_transport.call(sdk_action, timeout=timeout, **sdk_params)
@@ -1874,6 +1895,7 @@ def main() -> None:
                 else:
                     output_queue.put(("gpt_error", action, str(exc)[:400]))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
+        return True
 
     def start_conversation_gpt(spoken: str) -> None:
         """Voice conversation uses Gemma locally; never escalates to GPT."""
@@ -2699,6 +2721,9 @@ def main() -> None:
             write_line("FILE > Nessun risultato utile; raffinamento GPT non disponibile. Puoi precisare la ricerca.")
             return False
         provider=addon_manager.file_service
+        if not provider.refinement_live(token) or not confirm_gpt_inference(
+                "La richiesta di ricerca e gli indizi sul nome del file o della cartella."):
+            return False
         feedback=provider.refinement_context(token,original,answer=answer)
         if feedback is None:
             return False
@@ -2713,9 +2738,9 @@ def main() -> None:
             write_line("FILE > Raffinamento non avviato: "+str(exc))
             return False
         write_line("FILE > Chiedo al modello di precisare la stessa ricerca.")
-        run_gpt("typed_conversation",prompt=prompt,epoch=conversation_epoch,
-                document_id=snapshot,utterance=original,file_refinement=token)
-        return True
+        return run_gpt("typed_conversation",prompt=prompt,epoch=conversation_epoch,
+                       document_id=snapshot,utterance=original,file_refinement=token,
+                       consent_granted=True)
 
     def accept_file_refinement(token, intent) -> bool:
         provider=addon_manager.file_service if addon_manager is not None and addon_manager.files_enabled() else None
@@ -2874,13 +2899,6 @@ def main() -> None:
     def submit_gpt() -> None:
         if closing:
             return
-        from local_model.native_settings import default_native_settings_path
-        if default_native_settings_path().is_file():
-            if not messagebox.askyesno(
-                "Conferma GPT online",
-                "Inviare questa richiesta al modello GPT online invece che a Gemma locale?",
-                parent=root):
-                return
         message = request.get().strip()
         if not message:
             return
@@ -2914,8 +2932,6 @@ def main() -> None:
         if len(message) > 5000:
             messagebox.showwarning("Testo troppo lungo", "Massimo 5000 caratteri.", parent=root)
             return
-        request.set("")
-        write_line("DOMANDA A GPT > " + message)
         document_snapshot=(documents.current.ident if documents.current else None)
         try:
             live=current_capability_snapshot(document_snapshot is not None)
@@ -2928,9 +2944,11 @@ def main() -> None:
                     telegram_send_ready=live["telegram_voice_send"],
                     runtime_info=capability_status_prompt(live),
                     addon_actions=active_addon_actions())
-                run_gpt("typed_conversation",prompt=prompt,
-                        epoch=conversation_epoch,
-                        document_id=document_snapshot,utterance=message)
+                if run_gpt("typed_conversation",prompt=prompt,
+                           epoch=conversation_epoch,
+                           document_id=document_snapshot,utterance=message):
+                    request.set("")
+                    write_line("DOMANDA A GPT > " + message)
                 return
             # Longer free-form questions are conversational only; never
             # interpret a 5000-character document as an executable action.
@@ -2941,7 +2959,9 @@ def main() -> None:
             request.set(message)
             write_line("JARVIS > " + str(exc))
             return
-        run_gpt("ask", prompt=prompt, source=message)
+        if run_gpt("ask", prompt=prompt, source=message):
+            request.set("")
+            write_line("DOMANDA A GPT > " + message)
 
     def diagnostic_heartbeat() -> None:
         """Independent watchdog: runs even if another event handler fails."""
@@ -3345,7 +3365,8 @@ def main() -> None:
                             if gpt_enabled.get() and active_gpt and not busy_gpt:
                                 from file_access.service import explanation_prompt
                                 run_gpt("ask",prompt=explanation_prompt(result.preview),
-                                        source="Spiega il file letto su mia richiesta")
+                                        source="Spiega il file letto su mia richiesta",
+                                        consent_detail="Il testo mostrato nell’anteprima del file.")
                             else:
                                 write_line("FILE > Testo letto. Per spiegarlo collega GPT e ripeti ‘spiega file …’.")
                     source = last_user_for_action or result.action
