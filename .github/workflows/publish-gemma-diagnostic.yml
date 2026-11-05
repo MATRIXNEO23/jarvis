@@ -1,0 +1,69 @@
+name: Publish Jarvis Gemma diagnostic ZIP
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-gemma-diagnostic.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Patch diagnostic and package
+        shell: python
+        run: |
+          from pathlib import Path
+          import zipfile
+          source = Path('Download/Jarvis-Gemma-Windows-TEST-cc52c20.zip')
+          target = Path('Download/Jarvis-Gemma-DIAGNOSTICA-20261105.zip')
+          if not source.is_file():
+              raise SystemExit('Missing source archive: ' + str(source))
+          old = 'if not isinstance(result, dict) or result.get("status") != 1:\\n                raise RuntimeError("Generazione nativa fallita.")'
+          with zipfile.ZipFile(source) as zin, zipfile.ZipFile(target, 'w') as zout:
+              found = False
+              for item in zin.infolist():
+                  data = zin.read(item.filename)
+                  if item.filename.endswith('/local_model/native_bridge.py'):
+                      code = data.decode('utf-8')
+                      normalized = code.replace('\\r\\n', '\\n')
+                      anchor = '            if not isinstance(result, dict) or result.get("status") != 1:\\n                raise RuntimeError("Generazione nativa fallita.")'
+                      replacement = '''            if not isinstance(result, dict):
+                          raise RuntimeError(f"Generazione nativa fallita: risposta {type(result).__name__}.")
+                      if result.get("status") != 1:
+                          details = ", ".join(
+                              f"{key}={str(result[key])[:250]}"
+                              for key in ("status", "error", "message", "detail") if key in result
+                          )
+                          raise RuntimeError("Generazione nativa fallita: " + (details or "nessun dettaglio dal motore"))'''
+                      if normalized.count(anchor) != 1:
+                          raise SystemExit('Unexpected bridge code; refusing to publish')
+                      normalized = normalized.replace(anchor, replacement)
+                      compile(normalized, item.filename, 'exec')
+                      data = normalized.encode('utf-8')
+                      found = True
+                  zout.writestr(item, data)
+          if not found:
+              target.unlink(missing_ok=True)
+              raise SystemExit('Native bridge not found; refusing to publish')
+          with zipfile.ZipFile(target) as check:
+              assert check.testzip() is None
+              assert 'nessun dettaglio dal motore' in check.read(next(n for n in check.namelist() if n.endswith('/local_model/native_bridge.py'))).decode()
+          readme = Path('Download/README.md')
+          entry = ('# Jarvis Gemma — diagnostica generazione (05/11/2026)\\n\\n'
+                   '**[SCARICA JARVIS GEMMA DIAGNOSTICA](./Jarvis-Gemma-DIAGNOSTICA-20261105.zip)**\\n\\n'
+                   'Versione diagnostica: espone lo stato e i dettagli restituiti dal motore nativo. '
+                   'Non risolve ancora il problema di generazione, non collaudata sul Pavilion. '
+                   'Estrarre in cartella separata senza sostituire la versione stabile.\\n\\n---\\n\\n')
+          existing = readme.read_text(encoding='utf-8')
+          if 'Jarvis-Gemma-DIAGNOSTICA-20261105.zip' not in existing:
+              readme.write_text(entry + existing, encoding='utf-8')
+      - name: Commit published ZIP and README
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Download/Jarvis-Gemma-DIAGNOSTICA-20261105.zip Download/README.md
+          git diff --cached --quiet || (git commit -m "Publish Jarvis Gemma diagnostic archive" && git push)
