@@ -38,9 +38,9 @@ class NativeConversationSession:
             turns = list(self.history)[-memory.recent_messages:]
             instruction = ("Rispondi come Jarvis in italiano, in modo naturale e diretto. "
                            "Non scrivere analisi, piani o istruzioni interne. "
-                           "Non dichiarare di aver eseguito azioni sul computer.\\n")
+                           "Non dichiarare di aver eseguito azioni sul computer.\n")
             prefix = instruction
-            suffix = "Utente: " + latest + "\\nJarvis:"
+            suffix = "Utente: " + latest + "\nJarvis:"
             # Keep the newest complete messages first. Budget for the actual
             # prompt, not only the question; do not silently lose its role tag.
             if len(suffix) > budget:
@@ -69,7 +69,7 @@ class NativeConversationSession:
 _INLINE_PLANNING = re.compile(r'(?i)^\s*[-*]?\s*["“”]?(?:what.s going right|conversation flow|internal reasoning|analysis|thinking|reasoning)["“”]?\s*[:—-]')
 
 def clean_native_answer(text):
-    """Do not forward recognizable planning notes to history, console or TTS."""
+    """Remove recognizable model-side notes before storing, displaying or speaking."""
     if not isinstance(text, str):
         raise RuntimeError("Risposta Gemma non valida.")
     value = re.sub(r'(?is)<think>.*?</think>', '', text)
@@ -133,7 +133,6 @@ class NativeConversationSession:
                 self.adapter.stop()
                 self.prepared = False
 , '', value)
-    value = re.sub(r'(?is)```(?:thinking|analysis|reasoning)\b.*?```', '', value)
     lines = value.splitlines()
     cut = next((i for i, line in enumerate(lines)
                 if _PLANNING_HEADER.match(line) or _INLINE_PLANNING.match(line)), None)
