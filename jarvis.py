@@ -3803,21 +3803,22 @@ def main() -> None:
                  or pending_project_trash_id is not None) and try_file_command(message)):
             request.set("")
             return
-        if project_voice_command(message):
-            request.set("")
-            return
         # Explicit application launches must never become pretend Gemma replies.
         # Only the trusted, user-enabled Programmi e app add-on can launch them.
         if not (pending_project_name or pending_project_rename_id is not None
                 or pending_project_trash_id is not None):
             from program_apps.service import launch_query, blocked
-            if launch_query(message) and not blocked(message):
+            query = launch_query(message)
+            if query and not blocked(message) and not re.search(r'\bprogett[oi]\b', query):
                 request.set("")
                 explanation = ("Non ho avviato il programma. Attiva Programmi e app, "
                                "seleziona l'applicazione e aggiorna l'elenco se necessario.")
                 write_line("PROGRAMMI > " + explanation)
                 speak_result(explanation)
                 return
+        if project_voice_command(message):
+            request.set("")
+            return
         if preference_command(message):
             request.set("")
             return

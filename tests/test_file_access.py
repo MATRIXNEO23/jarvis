@@ -2,6 +2,7 @@
 import ast
 import json
 import os
+import re
 from pathlib import Path
 import tempfile
 import time
@@ -812,7 +813,8 @@ function New-Object {
                    for name in ('try_file_command','send_console_input')]
         calls=[]; projects=[]; request=Mock(); request.get.return_value='apri Foto'
         env={'engine':self.engine,'request':request,'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
-             'write_line':lambda *a:None,'submit_local':lambda **kw:calls.append(kw),
+             'write_line':lambda *a:None,'speak_result':Mock(),'re':re,
+             'submit_local':lambda **kw:calls.append(kw),
              'reconcile_document_session':lambda **kw:None,'try_telegram_voice_send':lambda s:False,
              'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,
              'save_only_waiting':False,'doc_dialog':SimpleNamespace(phase='idle'),
@@ -826,6 +828,12 @@ function New-Object {
         self.assertEqual(projects,[])
         request.get.return_value='apri progetto Romanzo'
         env['send_console_input']()
+        self.assertEqual(projects,['apri progetto Romanzo'])
+        self.assertEqual(len(calls),1)
+
+        request.get.return_value='apri Netflix'
+        env['send_console_input']()
+        self.assertIn('Non ho avviato il programma',env['speak_result'].call_args.args[0])
         self.assertEqual(projects,['apri progetto Romanzo'])
         self.assertEqual(len(calls),1)
 
