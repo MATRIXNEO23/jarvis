@@ -1,13 +1,6 @@
 name: Jarvis Gemma clean Windows trial
 on:
   workflow_dispatch:
-  push:
-    branches: ['feature/gemma-local-20261104']
-    paths:
-      - 'tools/build_gemma_clean_trial.py'
-      - 'jarvis.py'
-      - 'local_model/**'
-      - '.github/workflows/gemma-windows-test-package.yml'
 permissions:
   contents: write
   actions: read
