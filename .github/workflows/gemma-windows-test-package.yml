@@ -1,22 +1,15 @@
 name: Jarvis Gemma clean Windows trial
 on:
-  workflow_dispatch:
-  workflow_run:
-    workflows: ['Jarvis unit and GPT protocol checks']
-    types: [completed]
-    branches: ['feature/gemma-local-20261104']
+  workflow_call:
 permissions:
-  contents: write
+  contents: read
   actions: read
 jobs:
   package:
-    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'feature/gemma-local-20261104')
     runs-on: windows-2022
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/checkout@v4
         with:
           repository: LostRuins/koboldcpp
@@ -44,20 +37,29 @@ jobs:
           python tools/build_gemma_clean_trial.py
           python -m py_compile local_model/native_factory.py local_model/native_ui.py jarvis.py
           python -m unittest discover -s tests -p test_native_conversation_session.py -v
+      - name: Verify the extracted Windows package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $target = Join-Path $env:RUNNER_TEMP 'jarvis-gemma-extracted'
+          Expand-Archive Jarvis-Gemma-PROVA-CORRETTA.zip -DestinationPath $target
+          Copy-Item tests (Join-Path $target 'Jarvis-Gemma/tests') -Recurse
+          Push-Location (Join-Path $target 'Jarvis-Gemma')
+          try {
+            python -m compileall -q jarvis.py local_model program_apps
+            if ($LASTEXITCODE -ne 0) { throw 'Extracted Python syntax failed' }
+            python -m unittest discover -s tests -p test_program_apps_service.py -v
+            if ($LASTEXITCODE -ne 0) { throw 'Extracted app command tests failed' }
+            python -m unittest discover -s tests -p test_native_conversation_session.py -v
+            if ($LASTEXITCODE -ne 0) { throw 'Extracted Gemma tests failed' }
+            python -c "import ctypes; ctypes.WinDLL(r'native_engine/koboldcpp_noavx2.dll')"
+            if ($LASTEXITCODE -ne 0) { throw 'Extracted native DLL failed to load' }
+          } finally {
+            Pop-Location
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: Jarvis-Gemma-PROVA-CORRETTA
           path: Jarvis-Gemma-PROVA-CORRETTA.zip
           retention-days: 14
           if-no-files-found: error
-      - name: Publish ZIP to main Download
-        shell: pwsh
-        run: |
-          git clone --depth 1 --branch main https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git publish-main
-          New-Item -ItemType Directory -Force -Path publish-main/Download | Out-Null
-          Copy-Item Jarvis-Gemma-PROVA-CORRETTA.zip publish-main/Download/Jarvis-Gemma-PROVA-CORRETTA.zip
-          git -C publish-main config user.name 'github-actions[bot]'
-          git -C publish-main config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git -C publish-main add Download/Jarvis-Gemma-PROVA-CORRETTA.zip
-          git -C publish-main commit -m 'Publish clean Gemma Windows trial build'
-          git -C publish-main push origin HEAD:main

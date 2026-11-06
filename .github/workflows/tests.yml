@@ -96,6 +96,14 @@ jobs:
           path: dist/*
           retention-days: 30
 
+  gemma-candidate:
+    needs: unit
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feature/gemma-local-20261104'
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/gemma-windows-test-package.yml
+
   publish-file-access:
     name: Publish immutable numbered candidate 005 (Windows)
     needs: unit
