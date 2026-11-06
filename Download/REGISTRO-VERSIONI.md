@@ -12,6 +12,10 @@ Da questa consegna i file hanno numeri progressivi. Ogni versione pubblicata res
 
 Registro tecnico: [BUILD-NUMBERS.json](BUILD-NUMBERS.json). I pacchetti storici senza numero restano elencati sotto.
 
+## Candidata Gemma — voce in console, 53460ce
+
+[Jarvis-Gemma-Voce-Console-53460ce.zip](./Jarvis-Gemma-Voce-Console-53460ce.zip) — Ripristina la ricerca del modello vocale italiano nel profilo sorgente e mostra gli errori del microfono in console. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42165467735) superate. Collaudo sul Pavilion pendente.
+
 ## Candidata Gemma per Telegram — 9adc86e
 
 [Jarvis-Gemma-Telegram-9adc86e.zip](./Jarvis-Gemma-Telegram-9adc86e.zip) — Gemma può rispondere su Telegram quando GPT è disattivato. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42163091184) superate. Collaudo sul Pavilion pendente.
