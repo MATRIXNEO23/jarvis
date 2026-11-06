@@ -123,7 +123,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $short = $env:GITHUB_SHA.Substring(0, 7)
-          $name = "Jarvis-Gemma-Telegram-Notifiche-HUD-$short.zip"
+          $name = "Jarvis-Gemma-Telegram-Consenso-GPT-Sessione-$short.zip"
           $archive = Join-Path $env:RUNNER_TEMP 'verified-gemma/Jarvis-Gemma-PROVA-CORRETTA.zip'
           $dest = Join-Path 'Download' $name
           $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -139,11 +139,11 @@ jobs:
           if (-not $old.Contains($name)) {
             $run = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
             $entry = @"
-          # Jarvis Gemma — notifiche Telegram nel HUD
+          # Jarvis Gemma — consenso GPT per la sessione Telegram
 
           **[Scarica la candidata Windows](./$name)**
 
-          Il pallino del contatto lampeggia finché ci sono messaggi Telegram da vedere. Aprendo la conversazione dal pallino, i messaggi mostrati vengono segnati come visti in Jarvis.
+          In Impostazioni → Telegram → Consenso GPT online puoi scegliere Consenti per questa sessione per i contatti spuntati. Chiedi ogni volta resta il valore iniziale.
 
           [Verifiche Windows e ZIP estratto]($run). Collaudo con Telegram e Gemma sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
 
@@ -158,7 +158,7 @@ jobs:
           $log = Get-Content $registry -Raw
           if (-not $log.Contains($name)) {
             $run = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
-            $section = "## Candidata Gemma — notifiche Telegram nel HUD, $short`n`n[$name](./$name) — Pallino Telegram lampeggiante per i messaggi da vedere e viola tenue dopo la lettura. [Verifiche Windows e ZIP estratto]($run) superate. Collaudo sul Pavilion pendente.`n`n"
+            $section = "## Candidata Gemma — consenso GPT per la sessione Telegram, $short`n`n[$name](./$name) — Consenso GPT online per la sessione Telegram, con conferma per messaggio come modalità predefinita. [Verifiche Windows e ZIP estratto]($run) superate. Collaudo sul Pavilion pendente.`n`n"
             $position = $log.IndexOf('## Candidata Gemma')
             if ($position -lt 0) { throw 'Gemma section missing from Download registry' }
             Set-Content -Path $registry -Value ($log.Insert($position, $section)) -NoNewline -Encoding utf8
