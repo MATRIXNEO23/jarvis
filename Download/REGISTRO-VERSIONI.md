@@ -12,6 +12,10 @@ Da questa consegna i file hanno numeri progressivi. Ogni versione pubblicata res
 
 Registro tecnico: [BUILD-NUMBERS.json](BUILD-NUMBERS.json). I pacchetti storici senza numero restano elencati sotto.
 
+## Candidata Gemma — contesto per contatto Telegram, 0055607
+
+[Jarvis-Gemma-Telegram-Contesto-Contatti-0055607.zip](./Jarvis-Gemma-Telegram-Contesto-Contatti-0055607.zip) — Profilo modificabile per singolo contatto, usato da Gemma locale. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42211351973) superate. Collaudo sul Pavilion pendente.
+
 ## Candidata Gemma — ascolto continuo, b62d8a7
 
 [Jarvis-Gemma-Ascolto-Continuo-b62d8a7.zip](./Jarvis-Gemma-Ascolto-Continuo-b62d8a7.zip) — Ascolto continuo senza richiamo, modalità Hey Jarvis con richiamo e priorità al motore locale. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42170295267) superate. Collaudo sul Pavilion pendente.

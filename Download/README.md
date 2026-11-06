@@ -1,3 +1,15 @@
+# Jarvis Gemma — contesto per contatto Telegram
+
+**[Scarica la candidata Windows](./Jarvis-Gemma-Telegram-Contesto-Contatti-0055607.zip)**
+
+In Impostazioni Telegram → Contatti puoi salvare un contesto separato per ogni contatto autorizzato. Il profilo è usato da Gemma locale nelle risposte Telegram.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42211351973). Collaudo con Telegram e Gemma sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: 6e718b5f1576bfc86a8b68d56a015eea29d38ed966027eff8d180d0f03df7a48
+
+---
+
 # Jarvis Gemma — ascolto continuo
 
 **[Scarica la candidata Windows](./Jarvis-Gemma-Ascolto-Continuo-b62d8a7.zip)**
