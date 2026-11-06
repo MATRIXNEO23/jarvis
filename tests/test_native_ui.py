@@ -23,10 +23,10 @@ class NativeSettingsUITests(unittest.TestCase):
                 window.personality.insert("1.0", "Ironia secca e tono preciso.")
                 window.save()
                 self.assertEqual(NativeModelConfig.load(target).personality, "Ironia secca e tono preciso.")
+                self.assertIn("Ricaricamento", window.status.get())
                 window.reset()
                 self.assertEqual(window.personality.get("1.0", "end-1c"), "")
                 self.assertEqual(NativeModelConfig.load(target).context_size, 4096)
-                self.assertIn("Ricaricamento", window.status.get())
                 window.window.destroy()
             finally:
                 root.destroy()
