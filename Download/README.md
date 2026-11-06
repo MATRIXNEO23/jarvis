@@ -1,5 +1,17 @@
 # Jarvis Gemma — comandi in chat e finestre senza cornice
 
+**[Scarica la candidata Windows](./Jarvis-Gemma-Comandi-e-Interfaccia-a4dce52.zip)**
+
+Le risposte di dialogo restano in chat. Una richiesta di apertura con un riferimento recente e univoco può diventare una proposta da confermare. Include «con Gemma» anche per testo e i tre pulsanti integrati, senza barra del titolo aggiuntiva.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42149101326). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: f22f5500a2f67d7e6143a0d750d48083ca64b9434c79d898d17f49c04c41a083
+
+---
+
+# Jarvis Gemma — comandi in chat e finestre senza cornice
+
 **[Scarica la candidata Windows](./Jarvis-Gemma-Comandi-e-Interfaccia-0c3117b.zip)**
 
 Le risposte di dialogo restano in chat. Una richiesta di apertura con un riferimento recente e univoco può diventare una proposta da confermare. Include «con Gemma» anche per testo e i tre pulsanti integrati, senza barra del titolo aggiuntiva.
