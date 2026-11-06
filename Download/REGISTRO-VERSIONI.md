@@ -12,6 +12,10 @@ Da questa consegna i file hanno numeri progressivi. Ogni versione pubblicata res
 
 Registro tecnico: [BUILD-NUMBERS.json](BUILD-NUMBERS.json). I pacchetti storici senza numero restano elencati sotto.
 
+## Candidata Gemma — ascolto continuo, b62d8a7
+
+[Jarvis-Gemma-Ascolto-Continuo-b62d8a7.zip](./Jarvis-Gemma-Ascolto-Continuo-b62d8a7.zip) — Ascolto continuo senza richiamo, modalità Hey Jarvis con richiamo e priorità al motore locale. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42170295267) superate. Collaudo sul Pavilion pendente.
+
 ## Candidata Gemma — voce in console, 53460ce
 
 [Jarvis-Gemma-Voce-Console-53460ce.zip](./Jarvis-Gemma-Voce-Console-53460ce.zip) — Ripristina la ricerca del modello vocale italiano nel profilo sorgente e mostra gli errori del microfono in console. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42165467735) superate. Collaudo sul Pavilion pendente.
