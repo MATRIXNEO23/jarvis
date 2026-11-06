@@ -18,11 +18,14 @@ class WindowChromeTests(unittest.TestCase):
         root._jarvis_window_header = header
         tk.Frame(root).pack(fill="both", expand=True)
         dialog = tk.Toplevel(root)
-        dialog.transient(root)
+        dialog.withdraw()
         dialog.title("Impostazioni")
         tk.Frame(dialog).pack(fill="both", expand=True)
         closed = []
-        dialog.protocol("WM_DELETE_WINDOW", lambda: (closed.append(True), dialog.withdraw()))
+        root.protocol("WM_DELETE_WINDOW", lambda: closed.append("root"))
+        dialog.protocol("WM_DELETE_WINDOW", lambda: (closed.append("settings"), dialog.withdraw()))
+        root.update()
+        dialog.deiconify()
         root.update()
 
         api = _WindowApi()
@@ -46,9 +49,19 @@ class WindowChromeTests(unittest.TestCase):
 
         dialog._jarvis_window_buttons.nametowidget("close").invoke()
         root.update()
-        self.assertEqual(closed, [True])
+        self.assertEqual(closed, ["settings"])
+        self.assertTrue(root.winfo_ismapped())
         self.assertEqual(dialog.state(), "withdrawn")
         dialog.deiconify()
         root.update()
         self.assertEqual(len([w for w in dialog.pack_slaves()
                               if w.winfo_name() == "jarvis_window_buttons"]), 1)
+
+        child = tk.Toplevel(dialog)
+        tk.Frame(child).pack(fill="both", expand=True)
+        root.update()
+        child._jarvis_window_buttons.nametowidget("close").invoke()
+        self.assertFalse(child.winfo_exists())
+        self.assertTrue(dialog.winfo_ismapped())
+        self.assertTrue(root.winfo_ismapped())
+        self.assertEqual(closed, ["settings"])

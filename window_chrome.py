@@ -32,8 +32,6 @@ class _WindowApi:
         self.release_capture = bind("ReleaseCapture", wintypes.BOOL)
         self.send = bind("SendMessageW", wintypes.LPARAM, wintypes.HWND,
                          wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
-        self.post = bind("PostMessageW", wintypes.BOOL, wintypes.HWND,
-                         wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
         self.show = bind("ShowWindow", wintypes.BOOL, wintypes.HWND, ctypes.c_int)
         self.zoomed = bind("IsZoomed", wintypes.BOOL, wintypes.HWND)
 
@@ -103,7 +101,13 @@ def install_window_chrome(root):
             api.show(handle, 9 if api.zoomed(handle) else 3)  # SW_RESTORE / SW_MAXIMIZE
 
         def close():
-            api.post(api.hwnd(window), 0x0010, 0, 0)  # WM_CLOSE preserves Tk protocols
+            # Invoke the protocol on this Tk object, even if Windows has
+            # reparented or recreated the window's native wrapper.
+            handler = window.protocol("WM_DELETE_WINDOW")
+            if handler:
+                window.tk.call(handler)
+            else:
+                window.destroy()
 
         for label, name, action in (("×", "close", close),
                                     ("□", "maximize", toggle_maximize),
