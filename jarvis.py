@@ -35,7 +35,8 @@ from diagnostic_handoff import (build_external_review_prompt,
 from settings import default_path
 from telegram_commands import explicit_telegram_note
 from telegram_directory import (list_telegram_contacts, send_telegram_voice)
-from telegram_ui import TelegramContactsWindow, show_telegram_manual_send
+from telegram_ui import (TelegramContactsWindow, edit_telegram_context,
+                         show_telegram_manual_send)
 from telegram_outbound_flow import (
     VoiceSendDialog, parse_telegram_send_intent, resolve_selected_recipient,
 )
@@ -76,7 +77,8 @@ from gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
-from settings import load_settings, save_settings, normalize_telegram_contacts
+from settings import (load_settings, save_settings, normalize_telegram_contacts,
+                      TELEGRAM_PROFILE_LIMIT)
 from jarvis_timer import TimerPopup, SOUNDS, parse_timer_command, preview_sound
 from sveglia.service import Alarm, parse_command as parse_alarm_clock_command
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
@@ -1680,6 +1682,34 @@ def main() -> None:
                             "Cronologia locale cancellata per "+
                             allowed[peer_id]+".",parent=root)
 
+    def edit_telegram_contact_profile(parent, peer_id: int) -> None:
+        contact = next((row for row in selected_telegram_contacts()
+                        if row["id"] == peer_id), None)
+        if contact is None:
+            messagebox.showwarning("Telegram", "Contatto non autorizzato.", parent=parent)
+            return
+        key = str(peer_id)
+        profiles = settings.get("telegram_contact_profiles", {}).copy()
+        profile = edit_telegram_context(
+            parent, contact["name"], profiles.get(key, ""), TELEGRAM_PROFILE_LIMIT)
+        if profile is None:
+            return
+        profile = profile.strip()
+        if len(profile) > TELEGRAM_PROFILE_LIMIT:
+            messagebox.showwarning("Telegram", "Contesto troppo lungo. Nessuna modifica salvata.",
+                                   parent=parent)
+            return
+        if profile:
+            profiles[key] = profile
+        else:
+            profiles.pop(key, None)
+        try:
+            save_settings({**settings, "telegram_contact_profiles": profiles})
+        except (OSError, ValueError):
+            messagebox.showerror("Telegram", "Impossibile salvare il contesto.", parent=parent)
+            return
+        settings["telegram_contact_profiles"] = profiles
+
     def open_telegram_contact_list() -> None:
         nonlocal telegram_contacts_dialog
         if (telegram_contacts_dialog is not None
@@ -1690,7 +1720,8 @@ def main() -> None:
             root,settings.get("telegram_contacts",[]),
             load_telegram_contacts_for_ui,save_telegram_contact_selection,
             on_open_history=open_telegram_history,
-            on_clear_history=clear_telegram_history)
+            on_clear_history=clear_telegram_history,
+            on_edit_context=edit_telegram_contact_profile)
 
     def send_owner_telegram_voice(peer_id:int,name:str,message:str) -> bool:
         """Explicit owner-initiated, one-shot OGG/Opus send; no GPT needed."""
@@ -1798,15 +1829,17 @@ def main() -> None:
         except (GPTUnavailable, OSError, RuntimeError):
             return ""
 
-    def ask_telegram_reply(message, context, bridge):
+    def ask_telegram_reply(message, context, bridge, peer_id=None):
         if not bridge.is_enabled():
             return ""
         if telegram_gpt_ready.is_set():
             return ask_telegram_gpt(telegram_assistant_prompt(message, context), bridge)
         try:
             session = get_gemma_session()
+            profile = (settings.get("telegram_contact_profiles", {}).get(str(peer_id), "")
+                       if peer_id is not None else "")
             answer = session.ask_isolated(
-                lambda budget: telegram_local_prompt(message, context, budget))
+                lambda budget: telegram_local_prompt(message, context, budget, profile))
             return answer if bridge.is_enabled() else ""
         except (OSError, ValueError, RuntimeError):
             if bridge.is_enabled():
@@ -1856,7 +1889,8 @@ def main() -> None:
                 workspace, chosen[0]["id"], chosen[0]["name"],
                 None, output_queue.put, voice_name=selected_voice(),
                 allowed_contacts=chosen,
-                reply_with_context=lambda message, context: ask_telegram_reply(message, context, bridge))
+                reply_with_context=lambda message, context, peer_id:
+                    ask_telegram_reply(message, context, bridge, peer_id))
             telegram_bridge = bridge
             if bridge.start():
                 settings["telegram_enabled"]=True

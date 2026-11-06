@@ -7,6 +7,18 @@ from settings import load_settings, save_settings
 
 
 class SettingsTests(unittest.TestCase):
+    def test_telegram_profiles_are_local_settings_by_peer_id(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "settings.json"
+            settings = load_settings(path)
+            profiles = {"123": "Usa il tu", "456": "Usa il lei"}
+            settings["telegram_contact_profiles"] = profiles
+            save_settings(settings, path)
+            self.assertEqual(load_settings(path)["telegram_contact_profiles"], profiles)
+            settings["telegram_contact_profiles"] = {"456": "Usa il lei"}
+            save_settings(settings, path)
+            self.assertEqual(load_settings(path)["telegram_contact_profiles"], {"456": "Usa il lei"})
+
     def test_default_chatgpt_enabled(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"

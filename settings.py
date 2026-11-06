@@ -36,6 +36,18 @@ def normalize_telegram_contacts(value) -> list[dict]:
     return accepted
 
 
+TELEGRAM_PROFILE_LIMIT = 180
+
+
+def normalize_telegram_profiles(value):
+    if not isinstance(value, dict):
+        return {}
+    return {key: profile.strip() for key, profile in value.items()
+            if isinstance(key, str) and len(key) <= 20 and key.isascii()
+            and key.isdecimal() and key[0] != "0"
+            and isinstance(profile, str) and 0 < len(profile.strip()) <= TELEGRAM_PROFILE_LIMIT}
+
+
 def default_path() -> Path:
     # Trial launcher redirects Jarvis's own settings, workspace, preferences,
     # Telegram auth and add-ons without replacing the user's live installation.
@@ -83,6 +95,9 @@ def load_settings(path: Path | None = None) -> dict:
                 "id": result["telegram_peer_id"],
                 "name": result["telegram_contact_name"], "enabled": True,
             }]
+        profiles = normalize_telegram_profiles(data.get("telegram_contact_profiles"))
+        if profiles:
+            result["telegram_contact_profiles"] = profiles
         sound = data.get("timer_sound")
         if isinstance(sound, str) and sound in (
                 "digital", "double", "electronic", "siren", "soft"):
@@ -144,6 +159,8 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
                                "telegram_peer_id": peer,
                                "telegram_contact_name": peer_name,
                                "telegram_contacts": contacts,
+                               "telegram_contact_profiles": normalize_telegram_profiles(
+                                   settings.get("telegram_contact_profiles")),
                                "timer_sound": sound, "timer_volume": volume,
                                "timer_repeat": repeat,
                                "timer_audio_mode": audio_mode},

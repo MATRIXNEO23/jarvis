@@ -519,3 +519,8 @@ Utente approva la struttura semplice dischi/cartelle con sottocartelle ed eccezi
 
 ## 2026-11-01 — Riscontro PC Accesso file e correzioni in corso
 Elenco/lettura funzionano nell’uso riferito, ma emersi difetti voce, numeri, tipo file/cartella e ricerca d’installazione/chiarimenti. Richiesta navigazione nelle sottocartelle e contesto Esplora file. [Checkpoint corrente](ACCESSO-FILE-CORREZIONI-20261101.md). Non promuovere 7298fb6 a base confermata. Run 41329991457 fallita e pubblicazione bloccata; correzione 755f988 in run Windows 41330559676. Nessun test Linux. Prossimo passo: verificare esito Windows, poi incremento installazione e navigazione nel servizio esistente. Base b936879 preservata.
+
+## 6 novembre 2026 — contesto Telegram per contatto
+
+Prova autorizzata sulla base b62d8a7. In Gestisci contatti la riga autorizzata apre un editor locale (180 caratteri, campo vuoto per rimuovere). Impostazioni per ID salvate separatamente da spunte e cronologia. Il listener passa al callback l'ID mittente già verificato. Solo il prompt Gemma locale riceve il profilo in una sezione distinta dal messaggio e dalla cronologia. Il percorso GPT online e i comandi del PC restano separati. Si estende il modulo Telegram esistente, senza un secondo add-on o nuove dipendenze.
+Prove: la suite Windows deve controllare persistenza, rimozione, isolamento tra due ID, modifica durante la sessione e assenza del profilo nel prompt online. Il collaudo sul Pavilion richiede due chat di prova con GPT spento e Gemma configurata. Per disattivare un profilo, svuotare il campo. La CI Windows e il collaudo reale sono ancora da verificare a questo checkpoint.

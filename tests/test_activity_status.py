@@ -200,22 +200,35 @@ class ActivityStatusTests(unittest.TestCase):
         ready = env["telegram_gpt_ready"]
         bridge = SimpleNamespace(is_enabled=Mock(return_value=True))
         session = Mock()
+        prompts = []
         def ask_local(build_prompt):
-            self.assertIn("Ciao", build_prompt(512))
+            prompts.append(build_prompt(512))
             return "Ciao, come posso aiutarti?"
         session.ask_isolated.side_effect = ask_local
         env.update(get_gemma_session=Mock(return_value=session),
                    ask_telegram_gpt=Mock(return_value=""),
                    telegram_assistant_prompt=telegram_assistant_prompt,
-                   telegram_local_prompt=telegram_local_prompt)
+                   telegram_local_prompt=telegram_local_prompt,
+                   settings={"telegram_contact_profiles": {"123": "Usa il tu", "456": "Usa il lei"}})
         reply = self.callback("ask_telegram_reply", env)
-        self.assertEqual(reply("Ciao", "Contesto privato", bridge), "Ciao, come posso aiutarti?")
+        self.assertEqual(reply("Ciao", "Contesto privato", bridge, 123),
+                         "Ciao, come posso aiutarti?")
+        reply("Ciao", "", bridge, 456)
+        self.assertIn("Usa il tu", prompts[0])
+        self.assertNotIn("Usa il lei", prompts[0])
+        self.assertIn("Usa il lei", prompts[1])
+        self.assertNotIn("Usa il tu", prompts[1])
+        env["settings"]["telegram_contact_profiles"] = {"123": "Tono cordiale"}
+        reply("Ciao", "", bridge, 123)
+        self.assertIn("Tono cordiale", prompts[2])
+        self.assertNotIn("Usa il tu", prompts[2])
         env["ask_telegram_gpt"].assert_not_called()
 
         ready.set()
-        self.assertEqual(reply("Ciao", "", bridge), "")
+        self.assertEqual(reply("Ciao", "", bridge, 123), "")
         env["ask_telegram_gpt"].assert_called_once()
-        session.ask_isolated.assert_called_once()
+        self.assertNotIn("Tono cordiale", env["ask_telegram_gpt"].call_args.args[0])
+        self.assertEqual(session.ask_isolated.call_count, 3)
 
     def test_actual_gpt_timeout_clears_phase_and_reports_reason_in_chat(self):
         env, workers, provider = self.environment()

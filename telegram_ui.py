@@ -5,12 +5,13 @@ UI only: Telegram network/voice synthesis run in Jarvis workers, never in Tk.
 from __future__ import annotations
 
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, simpledialog, ttk
 
 
 class TelegramContactsWindow:
     def __init__(self, parent, stored, on_load, on_save,
-                 on_open_history=None, on_clear_history=None):
+                 on_open_history=None, on_clear_history=None, on_edit_context=None):
+        self.on_edit_context=on_edit_context
         self.on_open_history=on_open_history
         self.on_clear_history=on_clear_history
         self.window=tk.Toplevel(parent)
@@ -106,6 +107,10 @@ class TelegramContactsWindow:
 
     def add_history_buttons(self,frame,peer_id):
         """Local history tools only for contacts already authorized."""
+        if self.on_edit_context is not None:
+            ttk.Button(frame, text="Contesto del contatto",
+                       command=lambda: self.on_edit_context(self.window, peer_id)).pack(
+                           side="right", padx=(4, 0))
         if self.on_open_history is not None:
             ttk.Button(frame,text="Apri conversazione",
                        command=lambda p=peer_id:self.on_open_history(p)).pack(
@@ -130,6 +135,14 @@ class TelegramContactsWindow:
             return
         if self.on_save(rows):
             self.window.destroy()
+
+
+def edit_telegram_context(parent, name, current, limit):
+    return simpledialog.askstring(
+        "Contesto del contatto",
+        f"{name} — solo con Gemma locale (massimo {limit} caratteri).\n"
+        "Scrivi poche indicazioni. Lascia vuoto per rimuovere il contesto.",
+        initialvalue=current, parent=parent)
 
 
 def show_telegram_manual_send(parent, selected_contacts, on_send):

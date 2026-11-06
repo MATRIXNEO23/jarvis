@@ -77,3 +77,8 @@ Source a47c63a79b3865f655e24aef2530469c58988628, Windows run41841843739/job12661
 ## Runtime CPU — nuova unità in corso
 
 Utente: «Procedi». Prima del codice operativo, quattro test configurazione/command-line/persistenza/corruzione e stub LocalConfig. Windows RED da osservare; nessun test Linux. File local_model/runtime.py e tests/test_local_model_runtime.py, workflow focalizzato esteso. Segue implementazione runtime e client su loopback, senza cambiare ancora la console.
+
+## 6 novembre 2026 — contesto Telegram per contatto
+
+Prova autorizzata sulla base b62d8a7. In Gestisci contatti la riga autorizzata apre un editor locale (180 caratteri, campo vuoto per rimuovere). Impostazioni per ID salvate separatamente da spunte e cronologia. Il listener passa al callback l'ID mittente già verificato. Solo il prompt Gemma locale riceve il profilo in una sezione distinta dal messaggio e dalla cronologia. Il percorso GPT online e i comandi del PC restano separati. Si estende il modulo Telegram esistente, senza un secondo add-on o nuove dipendenze.
+Prove: la suite Windows deve controllare persistenza, rimozione, isolamento tra due ID, modifica durante la sessione e assenza del profilo nel prompt online. Il collaudo sul Pavilion richiede due chat di prova con GPT spento e Gemma configurata. Per disattivare un profilo, svuotare il campo. La CI Windows e il collaudo reale sono ancora da verificare a questo checkpoint.
