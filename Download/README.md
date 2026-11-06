@@ -1,5 +1,17 @@
 # Jarvis Gemma — comandi in chat e finestre senza cornice
 
+**[Scarica la candidata Windows](./Jarvis-Gemma-Comandi-e-Interfaccia-43b2045.zip)**
+
+Le risposte di dialogo restano in chat. Una richiesta di apertura con un riferimento recente e univoco può diventare una proposta da confermare. Include «con Gemma» anche per testo e i tre pulsanti integrati, senza barra del titolo aggiuntiva. Trascina vicino al bordo superiore per spostare ogni finestra. Jarvis cerca la finestra del programma avviato e verifica il passaggio in primo piano. Include l’orologio nell’interfaccia, il comando «che ore sono?» e l’add-on Sveglia.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42157045926). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: 3e65c7244a0515c0c727b2443021e09011c7c225b84e71027fe97bfce60d5a52
+
+---
+
+# Jarvis Gemma — comandi in chat e finestre senza cornice
+
 **[Scarica la candidata Windows](./Jarvis-Gemma-Comandi-e-Interfaccia-b96a0d6.zip)**
 
 Le risposte di dialogo restano in chat. Una richiesta di apertura con un riferimento recente e univoco può diventare una proposta da confermare. Include «con Gemma» anche per testo e i tre pulsanti integrati, senza barra del titolo aggiuntiva. Trascina vicino al bordo superiore per spostare ogni finestra. Jarvis cerca la finestra del programma avviato e verifica il passaggio in primo piano.
