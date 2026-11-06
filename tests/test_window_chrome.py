@@ -13,6 +13,9 @@ class WindowChromeTests(unittest.TestCase):
         self.addCleanup(root.destroy)
         install_window_chrome(root)
         root.geometry("520x300")
+        header = tk.Frame(root)
+        header.pack(fill="x")
+        root._jarvis_window_header = header
         tk.Frame(root).pack(fill="both", expand=True)
         dialog = tk.Toplevel(root)
         dialog.transient(root)
@@ -24,25 +27,28 @@ class WindowChromeTests(unittest.TestCase):
 
         api = _WindowApi()
         for window in (root, dialog):
-            bar = window.nametowidget("jarvis_titlebar")
-            self.assertIs(window.pack_slaves()[0], bar)
+            bar = window._jarvis_window_buttons
+            self.assertEqual(bar.pack_info()["fill"], "none")
+            self.assertTrue(all(isinstance(child, tk.Button) for child in bar.winfo_children()))
+        self.assertIs(root._jarvis_window_buttons.master, header)
+        for window in (root, dialog):
             self.assertEqual(api.get_style(api.hwnd(window), GWL_STYLE)
                              & (WS_CAPTION | WS_THICKFRAME), 0)
-            self.assertEqual(set(bar.children) & {"minimize", "maximize", "close"},
+            self.assertEqual(set(window._jarvis_window_buttons.children) & {"minimize", "maximize", "close"},
                              {"minimize", "maximize", "close"})
 
-        root.nametowidget("jarvis_titlebar.maximize").invoke()
+        root._jarvis_window_buttons.nametowidget("maximize").invoke()
         root.update()
         self.assertTrue(api.zoomed(api.hwnd(root)))
-        root.nametowidget("jarvis_titlebar.maximize").invoke()
+        root._jarvis_window_buttons.nametowidget("maximize").invoke()
         root.update()
         self.assertFalse(api.zoomed(api.hwnd(root)))
 
-        dialog.nametowidget("jarvis_titlebar.close").invoke()
+        dialog._jarvis_window_buttons.nametowidget("close").invoke()
         root.update()
         self.assertEqual(closed, [True])
         self.assertEqual(dialog.state(), "withdrawn")
         dialog.deiconify()
         root.update()
         self.assertEqual(len([w for w in dialog.pack_slaves()
-                              if w.winfo_name() == "jarvis_titlebar"]), 1)
+                              if w.winfo_name() == "jarvis_window_buttons"]), 1)

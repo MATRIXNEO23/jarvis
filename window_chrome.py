@@ -3,6 +3,7 @@ import ctypes
 from ctypes import wintypes
 import sys
 import tkinter as tk
+from tkinter import ttk
 
 
 GWL_STYLE = -16
@@ -69,15 +70,28 @@ def install_window_chrome(root):
         hwnd = api.hwnd(window)
         if not hwnd or not api.strip_frame(hwnd):
             return
-        bar = getattr(window, "_jarvis_titlebar", None)
-        if bar is not None:
-            bar.title_label.configure(text=window.title())
+        if getattr(window, "_jarvis_window_buttons", None) is not None:
             return
 
-        bar = tk.Frame(window, bg="#091c2b", name="jarvis_titlebar")
-        window._jarvis_titlebar = bar
+        header = getattr(window, "_jarvis_window_header", None)
         children = window.pack_slaves()
-        bar.pack(side="top", fill="x", **({"before": children[0]} if children else {}))
+        host = header if header is not None else window
+        background = host.cget("background")
+        if header is None and children:
+            content = children[0]
+            if isinstance(content, ttk.Widget):
+                style = content.cget("style") or content.winfo_class()
+                background = ttk.Style(window).lookup(style, "background") or background
+            elif "background" in content.keys():
+                background = content.cget("background")
+            window.configure(background=background)
+
+        buttons = tk.Frame(host, bg=background, name="jarvis_window_buttons")
+        window._jarvis_window_buttons = buttons
+        if header is not None:
+            buttons.pack(side="right")
+        else:
+            buttons.pack(side="top", anchor="e", **({"before": children[0]} if children else {}))
 
         def minimize():
             owner = window.transient()
@@ -94,23 +108,20 @@ def install_window_chrome(root):
         for label, name, action in (("×", "close", close),
                                     ("□", "maximize", toggle_maximize),
                                     ("–", "minimize", minimize)):
-            button = tk.Button(bar, text=label, name=name, command=action, width=4,
-                               bg="#091c2b", fg="#d9f3ff", activebackground="#16415a",
+            button = tk.Button(buttons, text=label, name=name, command=action, width=4,
+                               bg=background, fg="#000000" if sum(window.winfo_rgb(background)) > 98000
+                               else "#d9f3ff", activebackground="#16415a",
                                activeforeground="#ffffff", bd=0, highlightthickness=0)
             button.pack(side="right", ipady=3)
-
-        title = tk.Label(bar, text=window.title(), bg="#091c2b", fg="#83cce8",
-                         anchor="w", padx=10)
-        title.pack(side="left", fill="x", expand=True)
-        bar.title_label = title
 
         def drag(event):
             api.release_capture()
             position = (event.x_root & 0xffff) | ((event.y_root & 0xffff) << 16)
             api.send(api.hwnd(window), 0x00A1, 2, position)  # WM_NCLBUTTONDOWN, HTCAPTION
 
-        title.bind("<ButtonPress-1>", drag)
-        bar.bind("<ButtonPress-1>", drag)
+        if header is not None:
+            header.bind("<ButtonPress-1>", drag, add="+")
+        window.bind("<Alt-ButtonPress-1>", drag, add="+")
 
     def on_map(event):
         if isinstance(event.widget, (tk.Tk, tk.Toplevel)):

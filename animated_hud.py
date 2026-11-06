@@ -226,6 +226,7 @@ class JarvisHUD:
         self.frame.pack(fill="both",expand=True)
 
         header=tk.Frame(self.frame,bg=BG,height=54)
+        parent._jarvis_window_header = header
         header.pack(fill="x",padx=13,pady=(9,0))
         header_chrome=tk.Canvas(header,bg=BG,highlightthickness=0,bd=0)
         # Created before controls, so header text/buttons paint on top.
@@ -266,7 +267,8 @@ class JarvisHUD:
             fg=MUTED,bg=BG,activeforeground=WHITE,
             activebackground=BG,font=("Segoe UI",18),
             bd=0,relief="flat",cursor="hand2")
-        self.exit_button.pack(side="right",padx=(5,4))
+        if self.frame.tk.call("tk", "windowingsystem") != "win32":
+            self.exit_button.pack(side="right",padx=(5,4))
         self.gear=tk.Button(
             header,text="⚙",command=on_settings,
             fg=CYAN,bg=BG,activeforeground=WHITE,
