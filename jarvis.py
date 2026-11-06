@@ -77,6 +77,7 @@ from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
 from settings import load_settings, save_settings, normalize_telegram_contacts
 from jarvis_timer import TimerPopup, SOUNDS, parse_timer_command, preview_sound
+from sveglia.service import Alarm, parse_command as parse_alarm_clock_command
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
@@ -239,8 +240,19 @@ def main() -> None:
             if bundled.is_file():
                 addon_manager.install(bundled)  # No application is enabled by installation.
 
+        if not any(item["id"] == "sveglia" for item in addon_manager.list_installed()):
+            bundled = Path(__file__).parent / "sveglia" / "Sveglia.jaddon"
+            if bundled.is_file():
+                addon_manager.install(bundled)
+
     except (AddonError,OSError,ValueError) as exc:
         addon_setup_error=str(exc)[:150]
+    alarm_status = tk.StringVar(value="Nessuna sveglia impostata.")
+    alarm = Alarm(root, lambda: bool(addon_manager and any(
+        item["id"] == "sveglia" and item["enabled"]
+        for item in addon_manager.list_installed())),
+        lambda: settings, alarm_status,
+        lambda text: (write_line("SVEGLIA > " + text), speak_result(text)))
     addon_settings_window=None
     telegram_owner_busy=False
     orbit_nodes_cache=()
@@ -415,6 +427,16 @@ def main() -> None:
               wraplength=630).pack(anchor="w", pady=(3, 10))
     ttk.Button(timer_settings_frame, text="Apri timer",
                command=timer.show).pack(anchor="w", pady=(0, 10))
+    alarm_box = ttk.LabelFrame(timer_settings_frame, text="Sveglia")
+    alarm_box.pack(fill="x", pady=(0, 10))
+    alarm_input = ttk.Entry(alarm_box, width=8)
+    alarm_input.insert(0, "07:30")
+    alarm_input.pack(side="left", padx=6, pady=6)
+    ttk.Button(alarm_box, text="Imposta",
+               command=lambda: alarm_status.set(alarm.arm(alarm_input.get()))).pack(side="left")
+    ttk.Button(alarm_box, text="Ferma", command=alarm.stop).pack(side="left", padx=6)
+    ttk.Label(timer_settings_frame, textvariable=alarm_status).pack(anchor="w")
+
 
     document_controls = ttk.Frame(frame)
     document_controls.pack(fill="x", pady=(0, 6))
@@ -2739,6 +2761,21 @@ def main() -> None:
         )
 
     def try_timer_command(spoken: str) -> bool:
+        alarm_request = parse_alarm_clock_command(spoken)
+        if alarm_request:
+            action, value = alarm_request
+            if action == "clock":
+                from datetime import datetime
+                now = datetime.now()
+                message = f"Sono le {now.hour:02d}:{now.minute:02d}."
+            elif action == "stop":
+                alarm.stop()
+                message = "Sveglia fermata."
+            else:
+                message = alarm.arm(value)
+            write_line("OROLOGIO > " + message)
+            speak_result(message)
+            return True
         parsed = parse_timer_command(spoken)
         if parsed is None:
             return False
@@ -3915,6 +3952,10 @@ def main() -> None:
         if maybe_queue_telegram_note(message):
             request.set("")
             return
+        from sveglia.service import parse_command as alarm_command
+        if alarm_command(message) is not None and try_timer_command(message):
+            request.set("")
+            return
         # Configured local model takes priority for conversational text.
         from local_model.native_config import NativeModelConfig
         from local_model.native_settings import default_native_settings_path
@@ -4154,6 +4195,7 @@ def main() -> None:
         telegram_gpt_ready.clear()
         speaker.close()
         hud.close()
+        alarm.stop()
         timer.close()
         root.destroy()
         # Non-daemon: ensure the Node child is terminated before Python exits.

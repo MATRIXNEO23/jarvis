@@ -73,7 +73,7 @@ def validate_manifest(value: object) -> dict:
                 or name in seen):
             raise AddonError("ID azione duplicato o non appartenente all'add-on.")
         if (not isinstance(item["core_action"],str)
-                or item["core_action"] not in (_SAFE_TARGETS | _FILE_TARGETS.keys() | _APP_TARGETS.keys())):
+                or item["core_action"] not in (_SAFE_TARGETS | _FILE_TARGETS.keys() | _APP_TARGETS.keys() | {"alarm.local"})):
             raise AddonError("Funzione add-on non approvata: nessun codice viene eseguito.")
         if item["core_action"] in _FILE_TARGETS and (addon_id != "accesso_file" or
                 name != "addon.accesso_file."+_FILE_TARGETS[item["core_action"]]):
@@ -81,6 +81,8 @@ def validate_manifest(value: object) -> dict:
         if item["core_action"] in _APP_TARGETS and (addon_id != "programmi_app" or
                 name != "addon.programmi_app.avvia"):
             raise AddonError("Identità del componente Programmi e app non valida.")
+        if item["core_action"] == "alarm.local" and (addon_id, name) != ("sveglia", "addon.sveglia.imposta"):
+            raise AddonError("Identità del componente Sveglia non valida.")
         if not _safe_text(item["description"], 125) or not _safe_text(
                 item["example"], 85):
             raise AddonError("Testo dell'azione non valido.")
@@ -275,6 +277,8 @@ class AddonManager:
                 fresh={}
             for addon_id,record in fresh.items():
                 for action in record["manifest"]["actions"]:
+                    if action["core_action"] == "alarm.local":
+                        continue
                     action_id=action["id"]
                     bindings[action_id]=AddonBinding(
                         action_id=action_id,
@@ -393,6 +397,8 @@ class AddonManager:
                 if not item["enabled"]:
                     continue
                 for action in item["manifest"]["actions"]:
+                    if action["core_action"] == "alarm.local":
+                        continue
                     if action["core_action"] in _FILE_TARGETS and not self.file_service.available():
                         continue
                     actions.append({"id":action["id"],

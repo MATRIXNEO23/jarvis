@@ -374,6 +374,8 @@ class JarvisHUD:
         self.ram_text=tk.StringVar(value="RAM --")
         self.disk_text=tk.StringVar(value="DISCO C --")
         self.clock_text=tk.StringVar(value="--:--")
+        tk.Label(self.visual, textvariable=self.clock_text, bg=BG, fg=CYAN,
+                 font=("Consolas", 11), padx=10).pack(anchor="e")
         self._update_metrics()
         self.last_metrics=time.monotonic()
         self.select_tab("CONSOLE")

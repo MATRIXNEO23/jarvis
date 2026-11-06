@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "sveglia",
+  "name": "Sveglia",
+  "version": "1.0.0",
+  "description": "Sveglia locale con i suoni del timer.",
+  "actions": [
+    {
+      "id": "addon.sveglia.imposta",
+      "description": "Imposta una sveglia locale.",
+      "example": "imposta la sveglia alle 7:30",
+      "core_action": "alarm.local"
+    }
+  ]
+}
