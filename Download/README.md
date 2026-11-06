@@ -1,3 +1,15 @@
+# Jarvis Gemma — risposte Telegram
+
+**[Scarica la candidata Windows](./Jarvis-Gemma-Telegram-9adc86e.zip)**
+
+Gemma può rispondere su Telegram quando GPT è disattivato. Il collaudo con Telegram e Gemma sul Pavilion è ancora da fare.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42163091184). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: 7df6c330da85c6bf49353e657e5d0f3c8a5fd2076f8c257bdb71e27ed9e8cdbd
+
+---
+
 # Jarvis Gemma — comandi in chat e finestre senza cornice
 
 **[Scarica la candidata Windows](./Jarvis-Gemma-Comandi-e-Interfaccia-f387779.zip)**
