@@ -1,5 +1,11 @@
 # JARVIS — handoff tecnico, mappa architetturale e checkpoint (2026-11-05)
 
+## 6 novembre 2026 — avvio app con varianti locali e prova Gemma
+
+I commit `9c08935` e `56fd9e4` riusano il catalogo e le autorizzazioni di Programmi e app. Una selezione abilita i verbi comuni. Frase senza nome, risposta successiva con nome esatto e suggerimenti per somiglianza sono stati verificati con launcher controllato. Il suggerimento Gemma richiede il prefisso vocale «con Gemma» in modalità conversazione e una conferma della scelta. La prova del selettore usa un modello simulato e verifica una generazione e l'esclusione della cronologia.
+
+La [run Windows 42139706373](https://github.com/MATRIXNEO23/jarvis/actions/runs/42139706373) su `56fd9e4` ha superato 638 test per versione di Python. Restano il collaudo con voce, Gemma e app reali sul Pavilion, e il gate di rilascio. Nessuna nuova build pubblicata.
+
 ## Apertura locale e prova Gemma su richiesta
 
 Programmi e app riconosce anche aprimi, avviami, lanciami, esegui, fai partire e metti in esecuzione. Una frase senza nome apre un chiarimento locale. I nomi simili suggeriscono un'app autorizzata e attendono una scelta. La prova vocale esplicita «Jarvis, con Gemma, mi serve qualcosa per vedere un film» seleziona una proposta fra 1–12 app abilitate e disponibili, senza cronologia nel prompt. Il motore chiede conferma e applica i permessi correnti. Gemma usa una sola generazione con il modello già caricato se disponibile. Prova Windows CI e collaudo Pavilion da registrare.
