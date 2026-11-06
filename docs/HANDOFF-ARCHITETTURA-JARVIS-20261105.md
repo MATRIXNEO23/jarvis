@@ -1,5 +1,9 @@
 # JARVIS — handoff tecnico, mappa architetturale e checkpoint (2026-11-05)
 
+## Finestre Windows con comandi integrati
+
+Le finestre Tk di Jarvis usano una barra interna scura con riduci, massimizza/ripristina e chiudi. La rimozione della cornice avviene sul wrapper Win32 e mantiene i protocolli di chiusura Tk. La barra si applica anche alle finestre secondarie mappate dopo l’avvio e alla finestra separata di configurazione segreti Telegram. Le finestre native di sistema seguono l'aspetto Windows. Verifica Windows in corso.
+
 ## 6 novembre 2026 — candidata Gemma pubblicata
 
 La [run Windows 42142495567](https://github.com/MATRIXNEO23/jarvis/actions/runs/42142495567) sul commit `5d554c8` ha superato la matrice Windows, i 26 test mirati dal pacchetto estratto e il caricamento della DLL inclusa. Il commit `7088b95` su main ha pubblicato `Download/Jarvis-Gemma-Avvio-Programmi-5d554c8.zip` e aggiornato `Download/README.md`. Archivio: 8.093.345 byte, SHA-256 `e54912b4e3de94c06dc654cd2fc4f64b698f0f2f2249ff67dab6e091022b8944`. Candidata per il collaudo su Pavilion. Voce, Gemma e app reali restano da provare.

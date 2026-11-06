@@ -84,6 +84,8 @@ from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK,
 def main() -> None:
     settings = load_settings()
     root = tk.Tk()
+    from window_chrome import install_window_chrome
+    install_window_chrome(root)
     root.title("JARVIS // Interfaccia")
     root.geometry("1200x670")
     root.minsize(940, 580)

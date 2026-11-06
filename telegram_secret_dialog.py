@@ -34,6 +34,8 @@ def prompt_masked_secret(title: str, description: str, *,
         raise ValueError("Parametri finestra segreta non validi.")
 
     win = tk.Tk()
+    from window_chrome import install_window_chrome
+    install_window_chrome(win)
     answer: list[str | None] = [None]
     try:
         win.title(title)
