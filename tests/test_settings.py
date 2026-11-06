@@ -12,7 +12,7 @@ class SettingsTests(unittest.TestCase):
             path = Path(folder) / "settings.json"
             self.assertEqual(load_settings(path), {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "",
                                                          "memory_enabled": False,
-                                                         "auto_listen": True,"telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": [], "timer_sound": "digital", "timer_volume": 80, "timer_repeat": True, "timer_audio_mode": "auto"})
+                                                         "auto_listen": True, "keep_awake_fullscreen": False, "telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": [], "timer_sound": "digital", "timer_volume": 80, "timer_repeat": True, "timer_audio_mode": "auto"})
 
     def test_disable_then_reenable_persists(self):
         with TemporaryDirectory() as folder:
@@ -21,6 +21,14 @@ class SettingsTests(unittest.TestCase):
             self.assertFalse(load_settings(path)["gpt_enabled"])
             save_settings({"gpt_enabled": True}, path)
             self.assertTrue(load_settings(path)["gpt_enabled"])
+
+    def test_keep_awake_is_an_explicit_persistent_opt_in(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "settings.json"
+            self.assertFalse(load_settings(path)["keep_awake_fullscreen"])
+            for enabled in (True, False):
+                save_settings({"gpt_enabled": True, "keep_awake_fullscreen": enabled}, path)
+                self.assertIs(load_settings(path)["keep_awake_fullscreen"], enabled)
 
     def test_invalid_file_falls_back_to_default(self):
         with TemporaryDirectory() as folder:
@@ -36,7 +44,7 @@ class SettingsTests(unittest.TestCase):
             self.assertEqual(load_settings(path),
                              {"gpt_enabled": False, "tts_enabled": True,
                               "tts_voice": "Voce italiana", "memory_enabled": False,
-                              "auto_listen": True,"telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": [], "timer_sound": "digital", "timer_volume": 80, "timer_repeat": True, "timer_audio_mode": "auto"})
+                              "auto_listen": True, "keep_awake_fullscreen": False, "telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": [], "timer_sound": "digital", "timer_volume": 80, "timer_repeat": True, "timer_audio_mode": "auto"})
 
     def test_memory_opt_in_is_persistent_and_independent(self):
         with TemporaryDirectory() as folder:
