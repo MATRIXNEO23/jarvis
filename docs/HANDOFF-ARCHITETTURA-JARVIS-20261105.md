@@ -2,7 +2,7 @@
 
 ## 6 novembre 2026 — Indicatore Telegram dei messaggi da vedere
 
-Base `0055607`. Il pallino del contatto riusa il conteggio dei messaggi in arrivo non ancora visti. L'animazione HUD esistente alterna due tonalità viola per i nuovi messaggi e mantiene una tonalità tenue e fissa dopo l'apertura della cronologia. Il clic registra solo gli ID in arrivo mostrati, così un messaggio concorrente resta da vedere. Nessuna modifica alle ricevute di Telegram. Verifiche previste su Windows per la transizione visiva e per un nuovo arrivo tra lettura e conferma. Prossimo passo: esito CI e prova visiva sul Pavilion.
+Base `0055607`. Il pallino del contatto riusa il conteggio dei messaggi in arrivo non ancora visti. L'animazione HUD esistente alterna due tonalità viola per i nuovi messaggi e mantiene una tonalità tenue e fissa dopo l'apertura della cronologia. Il clic registra solo gli ID in arrivo mostrati, così un messaggio concorrente resta da vedere. Nessuna modifica alle ricevute di Telegram. Le due suite Windows e la verifica dello ZIP estratto sono passate nella [run 42221709872](https://github.com/MATRIXNEO23/jarvis/actions/runs/42221709872) sul commit `addc19e`. Resta la prova visiva sul Pavilion. Nessuna pubblicazione in Download.
 
 ## Telegram con Gemma locale
 
