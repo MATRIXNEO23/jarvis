@@ -66,8 +66,10 @@ class ActivityStatusTests(unittest.TestCase):
         env['chat_transport'] = ChatTransport(env['service'], native=None)
         env.update(root=None, online_consent_pending=False,
                    telegram_gpt_ready=threading.Event(), planner_abort_event=threading.Event(),
+                   telegram_gpt_session_token=None, telegram_gpt_session_choice=Value(False),
                    messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
         self.callback("confirm_gpt_inference", env)
+        self.callback("set_telegram_gpt_session", env)
         return env, workers, eval(self.provider_code, env)
 
     def callback(self, name, env):
@@ -156,7 +158,10 @@ class ActivityStatusTests(unittest.TestCase):
     def test_disconnect_revokes_gpt_workers_before_account_response(self):
         env, workers, _ = self.environment()
         env["telegram_gpt_ready"].set()
+        env["set_telegram_gpt_session"](True)
         self.assertTrue(self.callback("run_gpt", env)("disconnect"))
+        self.assertIsNone(env["telegram_gpt_session_token"])
+        self.assertFalse(env["telegram_gpt_session_choice"].get())
         self.assertEqual(env["conversation_epoch"], 8)
         self.assertFalse(env["active_gpt"])
         self.assertFalse(env["telegram_gpt_ready"].is_set())
@@ -193,6 +198,32 @@ class ActivityStatusTests(unittest.TestCase):
                 reply = ask("Messaggio privato", bridge)
                 self.assertEqual(reply, "Risposta" if decision == "allow" else "")
                 self.assertEqual(env["service"].call.call_count, int(decision == "allow"))
+
+    def test_telegram_session_consent_skips_dialog_and_revocation_blocks_transport(self):
+        env, _, _ = self.environment()
+        env.update(Future=Future, TelegramBridge=object, GPTUnavailable=RuntimeError)
+        env["telegram_gpt_ready"].set()
+        bridge = SimpleNamespace(is_enabled=Mock(return_value=True))
+        ask = self.callback("ask_telegram_gpt", env)
+        set_session = env["set_telegram_gpt_session"]
+        set_session(True)
+        env["service"].call.return_value = {"text": "Risposta"}
+        self.assertEqual(ask("Primo messaggio", bridge), "Risposta")
+        self.assertEqual(ask("Secondo messaggio", bridge), "Risposta")
+        self.assertTrue(env["output_queue"].empty())
+
+        def revoke_during_call(*args, authorize_send, **kwargs):
+            self.assertTrue(authorize_send())
+            set_session(False)
+            set_session(True)
+            self.assertFalse(authorize_send())
+            return {"text": "Risposta obsoleta"}
+
+        env["service"].call.side_effect = revoke_during_call
+        self.assertEqual(ask("Terzo messaggio", bridge), "")
+        bridge.is_enabled.return_value = False
+        self.assertEqual(ask("Bridge fermo", bridge), "")
+        self.assertEqual(env["service"].call.call_count, 3)
 
     def test_telegram_uses_gemma_only_when_gpt_is_unavailable(self):
         from telegram_bridge import telegram_assistant_prompt, telegram_local_prompt

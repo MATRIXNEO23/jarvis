@@ -243,6 +243,8 @@ def main() -> None:
         workspace_status.set("Memoria progetti non disponibile: "+str(exc)[:120])
     telegram_bridge=None
     telegram_gpt_ready=threading.Event()
+    telegram_gpt_session_token=None
+    telegram_gpt_session_choice=tk.BooleanVar(value=False)
     telegram_auto=tk.BooleanVar(value=settings["telegram_enabled"])
     telegram_contacts_dialog=None
     telegram_contacts_frame=None
@@ -1813,20 +1815,30 @@ def main() -> None:
             speak_result("Il messaggio deve avere da uno a 480 caratteri. Riprova.")
         return True
 
+    def set_telegram_gpt_session(enabled: bool) -> None:
+        nonlocal telegram_gpt_session_token
+        telegram_gpt_session_token = object() if enabled and gpt_enabled.get() else None
+        telegram_gpt_session_choice.set(telegram_gpt_session_token is not None)
+
     def ask_telegram_gpt(prompt: str, bridge: TelegramBridge) -> str:
-        # The worker waits for one approval and never accesses Tk.
+        # The worker reads only runtime state. Tk is used on the UI thread.
+        approved_epoch = conversation_epoch
+        session_token = telegram_gpt_session_token
         if not telegram_gpt_ready.is_set() or not bridge.is_enabled():
             return ""
-        approval = Future()
-        output_queue.put(("telegram_gpt_consent", bridge, approval))
-        try:
-            approved_epoch = approval.result(timeout=30)
-        except TimeoutError:
-            approval.cancel()
-            return ""
+        if session_token is None:
+            approval = Future()
+            output_queue.put(("telegram_gpt_consent", bridge, approval))
+            try:
+                approved_epoch = approval.result(timeout=30)
+            except TimeoutError:
+                approval.cancel()
+                return ""
+
         def authorized():
             return (approved_epoch == conversation_epoch and telegram_gpt_ready.is_set()
-                    and bridge.is_enabled())
+                    and bridge.is_enabled()
+                    and (session_token is None or session_token is telegram_gpt_session_token))
         if not authorized():
             return ""
         try:
@@ -2000,6 +2012,7 @@ def main() -> None:
             if not consent_granted and not confirm_gpt_inference(consent_detail):
                 return False
         if action == "disconnect":
+            set_telegram_gpt_session(False)
             conversation_epoch += 1
             active_gpt = False
             telegram_gpt_ready.clear()
@@ -2073,6 +2086,7 @@ def main() -> None:
             gpt_status.set("GPT: attivo nelle impostazioni; controllo collegamento...")
             run_gpt("status")
         else:
+            set_telegram_gpt_session(False)
             conversation_epoch += 1
             pending_conversation.clear()
             doc_dialog.revoke_pending()
@@ -2268,6 +2282,20 @@ def main() -> None:
         telegram_panel,text="Risposte vocali automatiche ON / OFF",
         variable=telegram_auto)
     telegram_toggle.pack(anchor="w")
+    telegram_consent_row=ttk.Frame(telegram_panel)
+    telegram_consent_row.pack(fill="x",pady=(4,0))
+    ttk.Label(telegram_consent_row,text="Consenso GPT online").pack(side="left",padx=(0,8))
+    ttk.Radiobutton(telegram_consent_row,text="Chiedi ogni volta",
+                    variable=telegram_gpt_session_choice,value=False,
+                    command=lambda: set_telegram_gpt_session(False)).pack(side="left")
+    ttk.Radiobutton(telegram_consent_row,text="Consenti per questa sessione",
+                    variable=telegram_gpt_session_choice,value=True,
+                    command=lambda: set_telegram_gpt_session(True)).pack(side="left",padx=(8,0))
+    ttk.Label(telegram_panel,wraplength=690,
+              text="Il consenso per questa sessione permette di inviare a GPT online "
+                   "i messaggi e il contesto recente delle chat Telegram dei contatti "
+                   "spuntati. Si azzera quando spegni o disconnetti GPT o chiudi Jarvis."
+              ).pack(anchor="w",pady=(2,0))
     telegram_row=ttk.Frame(telegram_panel)
     telegram_row.pack(fill="x",pady=(4,3))
     telegram_configure_button=ttk.Button(

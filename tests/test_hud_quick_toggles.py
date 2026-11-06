@@ -77,6 +77,8 @@ class HeaderQuickControlTests(unittest.TestCase):
             conversation_epoch=3, pending_conversation={}, conversation_memory=memory,
             doc_dialog=SimpleNamespace(revoke_pending=lambda: None),
             planner_abort_event=threading.Event(), telegram_gpt_ready=threading.Event(),
+            telegram_gpt_session_token=None,
+            telegram_gpt_session_choice=self.tk.BooleanVar(value=False),
             refresh_buttons=lambda: None,
             run_gpt=lambda action: self.requests.append(action),
             service=SimpleNamespace(stop=lambda: self.stops.append('stop')),
@@ -92,7 +94,7 @@ class HeaderQuickControlTests(unittest.TestCase):
             busy_gpt=False, busy_local=False, document_busy=False, gpt_request_action='',
             engine=SimpleNamespace(file_access=None), orbit_nodes_cache=())
         env["telegram_gpt_ready"].set()
-        for name in ('memory_status_refresh', 'toggle_gpt', 'toggle_memory', 'toggle_hud_microphone'):
+        for name in ('memory_status_refresh', 'set_telegram_gpt_session', 'toggle_gpt', 'toggle_memory', 'toggle_hud_microphone'):
             self.callback(name, env)
         env['gpt_toggle'] = ttk.Checkbutton(self.root, variable=env['gpt_enabled'],
                                           command=env['toggle_gpt'])
