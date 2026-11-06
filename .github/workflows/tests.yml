@@ -123,7 +123,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $short = $env:GITHUB_SHA.Substring(0, 7)
-          $name = "Jarvis-Gemma-Voce-Console-$short.zip"
+          $name = "Jarvis-Gemma-Ascolto-Continuo-$short.zip"
           $archive = Join-Path $env:RUNNER_TEMP 'verified-gemma/Jarvis-Gemma-PROVA-CORRETTA.zip'
           $dest = Join-Path 'Download' $name
           $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -139,11 +139,11 @@ jobs:
           if (-not $old.Contains($name)) {
             $run = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
             $entry = @"
-          # Jarvis Gemma — voce in console
+          # Jarvis Gemma — ascolto continuo
 
           **[Scarica la candidata Windows](./$name)**
 
-          Ripristina la ricerca del modello vocale italiano nel profilo sorgente e mostra in console gli errori del microfono.
+          In Ascolto continuo puoi parlare direttamente. In modalità Hey Jarvis serve il richiamo. Entrambe provano prima il motore locale e usano Gemma per le richieste non gestite localmente.
 
           [Verifiche Windows e ZIP estratto]($run). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
 
