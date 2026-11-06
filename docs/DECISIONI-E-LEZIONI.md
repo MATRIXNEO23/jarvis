@@ -1,6 +1,6 @@
 ## 6 novembre 2026 — Consenso GPT per Telegram durante la sessione
 
-La modalità predefinita resta la conferma per messaggio. L'opzione esplicita in Impostazioni → Telegram autorizza l'invio dei messaggi e del contesto recente dei soli contatti selezionati. Il consenso è solo in RAM e si azzera disattivando o disconnettendo GPT oppure chiudendo Jarvis. Il trasporto ricontrolla token, epoca e bridge prima dell'invio e scarta risposte obsolete. Console e planner mantengono i propri controlli. Verifica Windows prevista su conferma, rifiuto, sessione e revoca.
+La modalità predefinita resta la conferma per messaggio. L'opzione esplicita in Impostazioni → Telegram autorizza l'invio dei messaggi e del contesto recente dei soli contatti selezionati. Il consenso è solo in RAM e si azzera disattivando o disconnettendo GPT oppure chiudendo Jarvis. Il trasporto ricontrolla token, epoca e bridge prima dell'invio e scarta risposte obsolete. Console e planner mantengono i propri controlli. Le due suite Windows e la verifica dello ZIP estratto sono passate nella [run 42246973814](https://github.com/MATRIXNEO23/jarvis/actions/runs/42246973814). I test simulano conferma, rifiuto, sessione e revoca. Resta il collaudo con l'account reale sul Pavilion.
 
 ## 6 novembre 2026 — Indicatore Telegram dei messaggi da vedere
 
