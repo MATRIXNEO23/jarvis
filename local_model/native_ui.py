@@ -2,7 +2,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from .native_config import NativeModelConfig
+from .native_config import NativeModelConfig, PERSONALITY_LIMIT
 from .native_settings import (
     EDITABLE_FIELDS, default_native_settings_path, update_native_settings,
 )
@@ -33,6 +33,8 @@ class NativeSettingsWindow:
             "top_k": "Top-K", "top_p": "Top-P", "seed": "Seed (-1 casuale)",
         }
         for key in EDITABLE_FIELDS:
+            if key == "personality":
+                continue
             line = ttk.Frame(frame)
             line.pack(fill="x", pady=3)
             ttk.Label(line, text=labels[key], width=19).pack(side="left")
@@ -41,6 +43,14 @@ class NativeSettingsWindow:
             ttk.Entry(line, textvariable=variable).pack(side="left", fill="x", expand=True)
             if key == "model":
                 ttk.Button(line, text="Sfoglia...", command=self.browse).pack(side="left", padx=5)
+        ttk.Label(frame, text=f"Carattere e stile (facoltativo, max {PERSONALITY_LIMIT} caratteri)").pack(
+            anchor="w", pady=(6, 2))
+        self.personality = tk.Text(frame, height=3, width=1, wrap="word",
+                                   bg="#031522", fg="#d7f6ff", insertbackground="#d7f6ff")
+        self.personality.insert("1.0", self.current.personality)
+        self.personality.pack(fill="x")
+        ttk.Label(frame, text="Es. Parla come Jarvis: preciso, con ironia secca.",
+                  wraplength=420).pack(anchor="w", pady=(2, 0))
         self.status = tk.StringVar(value="Modello disattivato finché non viene attivato esplicitamente.")
         ttk.Label(frame, textvariable=self.status, wraplength=520).pack(
             anchor="w", pady=10)
@@ -62,11 +72,12 @@ class NativeSettingsWindow:
         defaults = NativeModelConfig()
         for key, variable in self.values.items():
             variable.set(str(getattr(defaults, key)))
+        self.personality.delete("1.0", "end")
         self.status.set("Valori predefiniti mostrati; premi Salva per confermare.")
 
     def save(self):
         try:
-            changes = {}
+            changes = {"personality": self.personality.get("1.0", "end-1c").strip()}
             for key, variable in self.values.items():
                 value = variable.get().strip()
                 if key in ("threads", "batch_threads", "context_size",
@@ -84,7 +95,9 @@ class NativeSettingsWindow:
             self.status.set("Impostazioni salvate. " + (
                 "Ricaricamento modello necessario." if reload_needed
                 else "Valori applicabili alla prossima generazione."))
+            return True
         except (OSError, ValueError, TypeError) as exc:
             messagebox.showerror("Jarvis / Gemma",
                                  "Impostazioni non valide: " + str(exc),
                                  parent=self.window)
+            return False

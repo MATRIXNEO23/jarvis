@@ -50,21 +50,25 @@ class NativeConversationSession:
                 config.context_size, config.max_output)
             # Conservative character budget: never claim this is a tokenizer.
             latest = question.strip()
-            if len(latest) > budget:
-                raise ValueError("Domanda troppo lunga per il contesto configurato.")
             turns = list(self.history)[-memory.recent_messages:]
-            prefix = "Rispondi in italiano in modo diretto, senza analisi o note interne.\n"
+            instructions = "Rispondi in italiano in modo diretto, senza analisi o note interne.\n"
             suffix = "Utente: " + latest + "\nJarvis:"
+            style = "Stile di risposta: " + " ".join(config.personality.split()) + "\n"
+            if config.personality.strip() and len(instructions) + len(style) + len(suffix) <= budget:
+                instructions += style
+            if len(instructions) + len(suffix) > budget:
+                instructions = ""
+            history = ""
             # Keep the newest complete messages first. Budget for the actual
             # prompt, not only the question; do not silently lose its role tag.
             if len(suffix) > budget:
                 raise ValueError("Domanda troppo lunga per il contesto configurato.")
             for role, text in reversed(turns):
                 candidate = ("Utente: " if role == "user" else "Jarvis: ") + text + "\n"
-                if len(prefix) + len(candidate) + len(suffix) > budget:
+                if len(instructions) + len(history) + len(candidate) + len(suffix) > budget:
                     break
-                prefix = candidate + prefix
-            prompt = prefix + suffix
+                history = candidate + history
+            prompt = instructions + history + suffix
             if not self.prepared:
                 self.adapter.prepare()
                 self.prepared = True

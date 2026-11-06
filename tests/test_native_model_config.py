@@ -1,4 +1,5 @@
 """Windows-only native model configuration regression checks."""
+import json
 import os
 from pathlib import Path
 import tempfile
@@ -19,6 +20,15 @@ class NativeModelConfigTests(unittest.TestCase):
                 top_k=50, top_p=0.95, seed=42)
             expected.save(path)
             self.assertEqual(NativeModelConfig.load(path), expected)
+
+    def test_older_settings_load_without_personality(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "native.json"
+            NativeModelConfig(seed=42).save(path)
+            saved = json.loads(path.read_text(encoding="utf-8"))
+            del saved["personality"]
+            path.write_text(json.dumps(saved), encoding="utf-8")
+            self.assertEqual(NativeModelConfig.load(path), NativeModelConfig(seed=42))
 
     def test_reject_bad_parameters(self):
         for changes in (

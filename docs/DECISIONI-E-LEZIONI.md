@@ -1,3 +1,7 @@
+## 6 novembre 2026 — Carattere di Gemma locale
+
+La configurazione del modello include istruzioni facoltative di stile (240 caratteri). Il valore è locale e compatibile con i profili precedenti. Si applica alle nuove risposte della conversazione Gemma e a Prova generazione, senza richiedere un ricaricamento per il solo cambio di stile. Si preserva la domanda se il budget è stretto. Le risposte Telegram continuano a usare il contesto del contatto. Verifica Windows in corso.
+
 ## 6 novembre 2026 — Consenso GPT per Telegram durante la sessione
 
 La modalità predefinita resta la conferma per messaggio. L'opzione esplicita in Impostazioni → Telegram autorizza l'invio dei messaggi e del contesto recente dei soli contatti selezionati. Il consenso è solo in RAM e si azzera disattivando o disconnettendo GPT oppure chiudendo Jarvis. Il trasporto ricontrolla token, epoca e bridge prima dell'invio e scarta risposte obsolete. Console e planner mantengono i propri controlli. Le due suite Windows e la verifica dello ZIP estratto sono passate nella [run 42246973814](https://github.com/MATRIXNEO23/jarvis/actions/runs/42246973814). I test simulano conferma, rifiuto, sessione e revoca. Resta il collaudo con l'account reale sul Pavilion.

@@ -11,7 +11,7 @@ from .native_config import NativeModelConfig
 
 EDITABLE_FIELDS = (
     "model", "threads", "batch_threads", "context_size", "max_output",
-    "temperature", "top_k", "top_p", "seed",
+    "temperature", "top_k", "top_p", "seed", "personality",
 )
 RELOAD_FIELDS = frozenset(("model", "threads", "batch_threads", "context_size"))
 

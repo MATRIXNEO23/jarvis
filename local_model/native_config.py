@@ -7,6 +7,9 @@ from pathlib import Path
 import tempfile
 
 
+PERSONALITY_LIMIT = 240
+
+
 @dataclass(frozen=True)
 class NativeModelConfig:
     dll: str = ""
@@ -19,6 +22,7 @@ class NativeModelConfig:
     top_k: int = 100
     top_p: float = 0.9
     seed: int = -1
+    personality: str = ""
 
     def validate(self):
         for key, low, high in (
@@ -39,6 +43,9 @@ class NativeModelConfig:
             value = getattr(self, key)
             if not isinstance(value, str) or "\x00" in value:
                 raise ValueError(f"Percorso non valido: {key}")
+        if (not isinstance(self.personality, str) or "\x00" in self.personality
+                or len(self.personality) > PERSONALITY_LIMIT):
+            raise ValueError(f"Istruzioni di carattere non valide (massimo {PERSONALITY_LIMIT} caratteri).")
         return self
 
     def save(self, path):
@@ -66,7 +73,7 @@ class NativeModelConfig:
         target = Path(path)
         try:
             data = json.loads(target.read_text(encoding="utf-8"))
-            if not isinstance(data, dict) or set(data) != set(cls.__dataclass_fields__):
+            if not isinstance(data, dict) or set(data) | {"personality"} != set(cls.__dataclass_fields__):
                 raise ValueError("Schema configurazione non valido.")
             return cls(**data).validate()
         except (UnicodeError, json.JSONDecodeError, TypeError) as exc:

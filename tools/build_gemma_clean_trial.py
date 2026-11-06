@@ -13,17 +13,22 @@ s += '''
     def test_model(self):
         """Run one real native generation without using GPT online."""
         try:
-            self.save()
+            if not self.save():
+                return
             if not self.current.model or not Path(self.current.model).is_file():
                 raise ValueError("Seleziona prima un file GGUF esistente.")
             self.test_button.configure(state="disabled")
             self.status.set("Caricamento DLL e GGUF in corso...")
             def worker():
                 try:
-                    from .native_factory import create_native_provider
+                    from .native_chat_adapter import NativeChatAdapter
+                    from .native_conversation_session import NativeConversationSession
                     source = Path(__file__).resolve().parent.parent / "native_engine" / "koboldcpp.py"
-                    provider = create_native_provider(self.current, upstream_source=source)
-                    answer = provider.ask(prompt="Rispondi con una breve frase in italiano.", timeout=180)
+                    session = NativeConversationSession(NativeChatAdapter(source))
+                    try:
+                        answer = session.ask("Presentati con una breve frase.", timeout=180)
+                    finally:
+                        session.stop()
                     result = "TEST RIUSCITO. Risposta: " + str(answer)[:200]
                 except Exception as exc:
                     result = "TEST FALLITO: " + str(exc)[:300]
