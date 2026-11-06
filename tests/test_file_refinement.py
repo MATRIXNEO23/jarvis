@@ -17,7 +17,7 @@ from conversation_router import build_conversation_prompt, parse_conversation_in
 from dialogue_focus import is_ambiguous_short_reply
 from local_engine import TaskResult
 from local_model.chat_transport import ChatTransport
-from voice_control import GPT_CONVERSATION, STANDBY, WakeWordGate
+from voice_control import CONTINUOUS, GPT_CONVERSATION, STANDBY, WakeWordGate
 from live_capabilities import snapshot_capabilities, capability_status_prompt
 
 
@@ -60,7 +60,8 @@ class FileRefinementTests(unittest.TestCase):
             gpt_enabled=Value(True),gpt_request_action='',gpt_status=Value(''),
             addon_manager=self.manager,engine=self.engine,active_project_id=None,
             documents=SimpleNamespace(current=None),conversation_epoch=7,
-            voice_mode=Value(GPT_CONVERSATION),GPT_CONVERSATION=GPT_CONVERSATION,STANDBY=STANDBY,
+            voice_mode=Value(GPT_CONVERSATION),GPT_CONVERSATION=GPT_CONVERSATION,
+            CONTINUOUS=CONTINUOUS,STANDBY=STANDBY,
             speaker=SimpleNamespace(is_audible=lambda:False),speech_lexicon=None,
             memory_enabled=Value(True),last_voice_sample=Value(''),wake_gate=WakeWordGate(),
             refresh_buttons=Mock(),write_line=Mock(),speak_result=Mock(),
