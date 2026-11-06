@@ -123,7 +123,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $short = $env:GITHUB_SHA.Substring(0, 7)
-          $name = "Jarvis-Gemma-Comandi-e-Interfaccia-$short.zip"
+          $name = "Jarvis-Gemma-Telegram-$short.zip"
           $archive = Join-Path $env:RUNNER_TEMP 'verified-gemma/Jarvis-Gemma-PROVA-CORRETTA.zip'
           $dest = Join-Path 'Download' $name
           $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -139,11 +139,11 @@ jobs:
           if (-not $old.Contains($name)) {
             $run = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
             $entry = @"
-          # Jarvis Gemma — comandi in chat e finestre senza cornice
+          # Jarvis Gemma — risposte Telegram
 
           **[Scarica la candidata Windows](./$name)**
 
-          Le risposte di dialogo restano in chat. Una richiesta di apertura con un riferimento recente e univoco può diventare una proposta da confermare. Include «con Gemma» anche per testo e i tre pulsanti integrati, senza barra del titolo aggiuntiva. Trascina vicino al bordo superiore per spostare ogni finestra. Jarvis cerca la finestra del programma avviato e verifica il passaggio in primo piano. Include l’orologio nell’interfaccia, il comando «che ore sono?» e l’add-on Sveglia.
+          Gemma può rispondere su Telegram quando GPT è disattivato. Il collaudo con Telegram e Gemma sul Pavilion è ancora da fare.
 
           [Verifiche Windows e ZIP estratto]($run). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
 
