@@ -12,6 +12,10 @@ Da questa consegna i file hanno numeri progressivi. Ogni versione pubblicata res
 
 Registro tecnico: [BUILD-NUMBERS.json](BUILD-NUMBERS.json). I pacchetti storici senza numero restano elencati sotto.
 
+## Candidata Gemma per Telegram — 9adc86e
+
+[Jarvis-Gemma-Telegram-9adc86e.zip](./Jarvis-Gemma-Telegram-9adc86e.zip) — Gemma può rispondere su Telegram quando GPT è disattivato. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42163091184) superate. Collaudo sul Pavilion pendente.
+
 ## Riscontro successivo — correzioni nei sorgenti, 2 novembre 2026
 Dopo il candidato d06e233 proposto in chat: foto ricerca parziale e blocco locale del contesto GPT; segnalati apertura browser su ricerca senza ambito, risposta solo Download e perdita di azione al chiarimento. La foto non identifica autonomamente nome ZIP/richiesta iniziale; nessuna promozione a base PC. Source correttivo 806685275947cea4b933d20aa0317658d13b853c, ramo feature/fix-file-search-20261102, 471 test per job Windows PASS (run 41367835278). [Scheda](../docs/RICERCA-DIALOGO-CORREZIONI-20261102.md). Non pubblicato un nuovo pacchetto: i file Download e la base b936879 sono preservati, d06e233 non contiene queste correzioni. Nuova build solo su richiesta esplicita.
 
