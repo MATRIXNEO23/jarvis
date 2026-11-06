@@ -1,3 +1,15 @@
+# Jarvis Gemma — avvio programmi e varianti vocali
+
+**[Scarica la candidata Windows](./Jarvis-Gemma-Avvio-Programmi-5d554c8.zip)**
+
+Include apri, aprimi, avvia, avviami e altre varianti. Se il nome è incompleto o simile, Jarvis chiede di precisare. «Con Gemma» è una prova facoltativa con conferma.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42142495567). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: e54912b4e3de94c06dc654cd2fc4f64b698f0f2f2249ff67dab6e091022b8944
+
+---
+
 # Jarvis Gemma — chat vocale e avvio programmi (05/11/2026)
 
 **[SCARICA JARVIS GEMMA — CHAT, VOCE E AVVIO PROGRAMMI](./Jarvis-Gemma-PROVA-CORRETTA.zip)**
