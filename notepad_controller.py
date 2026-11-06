@@ -136,6 +136,8 @@ class ClassicNotepadBridge:
                 if not title:
                     raise NotepadUnavailable(
                         "Non riesco a identificare in sicurezza il titolo del documento.")
+                from program_apps.native import bring_window_forward
+                bring_window_forward(hwnd)
                 return NotepadSession(uuid4().hex, process.pid, hwnd, edit,
                                       process, original_title=title)
             time.sleep(0.12)

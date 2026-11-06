@@ -244,8 +244,9 @@ class LocalEngine:
     def _open_app(self, argv: list[str], label: str) -> str:
         if not self.windows:
             raise OSError("Apertura programmi disponibile solo su Windows.")
-        subprocess.Popen(argv, close_fds=True, shell=False)
-        return label + " avviato."
+        from program_apps.native import describe_program_launch
+        process = subprocess.Popen(argv, close_fds=True, shell=False)
+        return describe_program_launch(label, process.pid)
 
     def _open_drive_c(self) -> str:
         # Fixed Windows Explorer destination. No GPT-provided paths or shell.

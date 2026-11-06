@@ -53,14 +53,15 @@ class NativeProgramTests(unittest.TestCase):
     def test_launch_message_keeps_shell_acceptance_process_and_window_distinct(self):
         from program_apps.native import entry, launch
         app = entry('App di prova', 'store', 'JarvisTestPackage_123456!App')
-        for pid, visible in ((0, False), (123, False), (123, True)):
+        for pid, visible in ((0, None), (123, None), (123, False), (123, True)):
             with self.subTest(pid=pid, visible=visible):
                 with patch('program_apps.native._activate_store', return_value=pid), \
-                     patch('program_apps.native._visible_process_window', return_value=visible) as observe:
+                     patch('program_apps.native._foreground_process_window', return_value=visible) as observe:
                     message = launch(app)
                 self.assertIn('accettata da Windows', message)
                 self.assertEqual('PID 123' in message, bool(pid))
-                self.assertEqual('Finestra visibile associata al processo' in message, visible)
+                self.assertEqual('Finestra in primo piano' in message, visible is True)
+                self.assertEqual('Finestra individuata' in message, visible is False)
                 if pid:
                     observe.assert_called_once_with(pid)
                 else:
@@ -68,12 +69,21 @@ class NativeProgramTests(unittest.TestCase):
 
     def test_visible_window_probe_observes_own_titled_tk_window(self):
         import tkinter as tk
-        from program_apps.native import _visible_process_window
+        from program_apps.native import _find_process_window
         root = tk.Tk()
         self.addCleanup(root.destroy)
         root.title('Jarvis native launch observation')
         root.update()
-        self.assertTrue(_visible_process_window(os.getpid()))
+        self.assertTrue(_find_process_window(os.getpid()))
+
+    def test_foreground_waits_for_late_window_and_uses_only_its_handle(self):
+        from program_apps.native import _foreground_process_window
+        with patch("program_apps.native._find_process_window", side_effect=[None, 42]) as find, \
+             patch("program_apps.native.bring_window_forward", return_value=True) as activate, \
+             patch("program_apps.native.time.sleep"):
+            self.assertTrue(_foreground_process_window(123))
+            self.assertEqual(find.call_count, 2)
+            activate.assert_called_once_with(42)
 
     def test_store_activation_invalid_identity_reports_native_failure(self):
         from program_apps.native import entry,launch

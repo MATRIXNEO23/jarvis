@@ -114,16 +114,22 @@ def launch(app):
     else:
         target = 'shell:AppsFolder\\' + app.target if app.kind == 'shell' else app.target
         pid = _shell_open(target)
-    message = 'Richiesta di avvio di ' + app.name + ' accettata da Windows.'
+    return describe_program_launch(app.name, pid)
+
+
+def describe_program_launch(name, pid):
+    message = 'Richiesta di avvio di ' + name + ' accettata da Windows.'
     if not pid:
         return message + ' Processo e finestra da verificare.'
     message += f' Windows ha restituito il PID {pid}.'
     try:
-        window_visible = _visible_process_window(pid)
+        foreground = _foreground_process_window(pid)
     except OSError:
-        window_visible = False
-    if window_visible:
-        return message + ' Finestra visibile associata al processo.'
+        foreground = None
+    if foreground:
+        return message + ' Finestra in primo piano.'
+    if foreground is False:
+        return message + ' Finestra individuata. Windows non l’ha portata in primo piano.'
     return message + ' Visibilità della finestra da verificare.'
 
 
@@ -157,8 +163,37 @@ def _shell_open(target):
     return 0
 
 
-def _visible_process_window(pid):
-    """Observe a titled top-level window owned by the returned process."""
+def _foreground_process_window(pid, *, timeout=4):
+    """Wait for an identifiable app window and verify foreground activation."""
+    deadline = time.monotonic() + timeout
+    while True:
+        hwnd = _find_process_window(pid)
+        if hwnd:
+            return bring_window_forward(hwnd)
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        time.sleep(min(.15, remaining))
+
+
+def bring_window_forward(hwnd):
+    user32 = ctypes.WinDLL('user32', use_last_error=True)
+    for name in ('IsIconic', 'SetForegroundWindow'):
+        function = getattr(user32, name)
+        function.argtypes, function.restype = [wintypes.HWND], wintypes.BOOL
+    show = user32.ShowWindowAsync
+    show.argtypes, show.restype = [wintypes.HWND, ctypes.c_int], wintypes.BOOL
+    get_foreground = user32.GetForegroundWindow
+    get_foreground.argtypes, get_foreground.restype = [], wintypes.HWND
+    if user32.IsIconic(hwnd):
+        show(hwnd, 9)  # SW_RESTORE
+    if get_foreground() != hwnd:
+        user32.SetForegroundWindow(hwnd)
+    return get_foreground() == hwnd
+
+
+def _find_process_window(pid):
+    """Match a top-level window by PID, including hosted Store windows."""
     user32 = ctypes.WinDLL('user32', use_last_error=True)
     dwm = ctypes.WinDLL('dwmapi').DwmGetWindowAttribute
     dwm.argtypes = [wintypes.HWND, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD]
@@ -167,25 +202,43 @@ def _visible_process_window(pid):
     get_pid.argtypes, get_pid.restype = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)], wintypes.DWORD
     visible = user32.IsWindowVisible
     visible.argtypes, visible.restype = [wintypes.HWND], wintypes.BOOL
-    minimized = user32.IsIconic
-    minimized.argtypes, minimized.restype = [wintypes.HWND], wintypes.BOOL
     title_length = user32.GetWindowTextLengthW
     title_length.argtypes, title_length.restype = [wintypes.HWND], ctypes.c_int
+    get_class = user32.GetClassNameW
+    get_class.argtypes, get_class.restype = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int], ctypes.c_int
     callback_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
-    found = False
+    enum_children = user32.EnumChildWindows
+    enum_children.argtypes, enum_children.restype = [wintypes.HWND, callback_type, wintypes.LPARAM], wintypes.BOOL
+    found = None
+
+    def owns(hwnd):
+        owner = wintypes.DWORD()
+        get_pid(hwnd, ctypes.byref(owner))
+        return owner.value == pid
 
     @callback_type
     def inspect(hwnd, _):
         nonlocal found
-        owner = wintypes.DWORD()
-        get_pid(hwnd, ctypes.byref(owner))
-        if owner.value != pid or not visible(hwnd) or minimized(hwnd) or not title_length(hwnd):
+        if not visible(hwnd) or not title_length(hwnd):
             return True
         cloaked = wintypes.DWORD()
-        dwmwa_cloaked = 14
-        result = dwm(hwnd, dwmwa_cloaked, ctypes.byref(cloaked), ctypes.sizeof(cloaked))
-        found = result == 0 and not cloaked.value
-        return not found
+        if dwm(hwnd, 14, ctypes.byref(cloaked), ctypes.sizeof(cloaked)) != 0 or cloaked.value:
+            return True
+        if owns(hwnd):
+            found = hwnd
+            return False
+        name = ctypes.create_unicode_buffer(64)
+        get_class(hwnd, name, len(name))
+        if name.value == 'ApplicationFrameWindow':
+            @callback_type
+            def inspect_child(child, _):
+                nonlocal found
+                if owns(child):
+                    found = hwnd
+                    return False
+                return True
+            enum_children(hwnd, inspect_child, 0)
+        return found is None
 
     enumerate_windows = user32.EnumWindows
     enumerate_windows.argtypes, enumerate_windows.restype = [callback_type, wintypes.LPARAM], wintypes.BOOL
