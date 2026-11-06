@@ -34,6 +34,11 @@ def model_directory() -> Path:
     preferred=default_path().parent / "models" / MODEL_NAME
     if preferred.is_dir() or not os.environ.get("JARVIS_TRIAL_HOME"):
         return preferred
+    source = os.environ.get("JARVIS_TRIAL_SOURCE")
+    if source:
+        source_model = Path(source) / "models" / MODEL_NAME
+        if source_model.is_dir():
+            return source_model
     localappdata=os.environ.get("LOCALAPPDATA")
     if localappdata:
         installed=Path(localappdata)/"Jarvis"/"models"/MODEL_NAME
@@ -259,7 +264,6 @@ class VoiceController:
             if stop.is_set() or not self._is_current(generation):
                 return
             recognizer = KaldiRecognizer(model, 16000)
-            self._report("voice_status", "Microfono attivo — riconoscimento offline.", generation)
             # Blocking reads last about 250 ms. The stream closes on stop/error.
             # No recordings are written to disk or sent over the network.
             with sd.RawInputStream(samplerate=16000, blocksize=4000,
@@ -267,6 +271,7 @@ class VoiceController:
                 with self._lock:
                     if self._is_current(generation) and not stop.is_set():
                         self._active_generation = generation
+                self._report("voice_status", "Microfono attivo — riconoscimento offline.", generation)
                 fragments: list[str] = []
                 suppressed = False
                 activity = SpeechActivity()
@@ -310,7 +315,8 @@ class VoiceController:
             failed = True
             self._report("voice_status", "Voce non disponibile: " + str(exc)[:220], generation)
         finally:
-            self._report("voice_status", "Microfono spento.", generation)
+            if not failed:
+                self._report("voice_status", "Microfono spento.", generation)
             with self._lock:
                 if self._active_generation == generation:
                     self._active_generation = -1

@@ -3276,6 +3276,8 @@ def main() -> None:
                         runtime_events.record("voice_unavailable")
                     if voice_mode.get() != STANDBY:
                         mic_status.set(data[0])
+                        if str(data[0]).startswith("Voce non disponibile"):
+                            write_line("MICROFONO > " + str(data[0]))
                     if (dictation.enabled and
                             (str(data[0]).startswith("Microfono spento") or
                              str(data[0]).startswith("Voce non disponibile"))):

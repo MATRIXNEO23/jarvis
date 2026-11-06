@@ -1,6 +1,7 @@
 """Voice safety checks: no live microphone or model required."""
 import unittest
 import os
+import threading
 from pathlib import Path
 from unittest.mock import patch
 from tempfile import TemporaryDirectory
@@ -125,6 +126,20 @@ class VoiceModelTrialPathTests(unittest.TestCase):
                 self.assertEqual(model_directory(),original)
                 self.assertFalse((trial/"models"/MODEL_NAME).exists())
 
+    def test_trial_reuses_model_from_launcher_source(self):
+        from voice_control import model_directory, MODEL_NAME
+        with TemporaryDirectory() as directory:
+            base = Path(directory)
+            source = base / "Jarvis-Telegram50-Trial"
+            model = source / "models" / MODEL_NAME
+            model.mkdir(parents=True)
+            with patch.dict(os.environ, {
+                "LOCALAPPDATA": str(base),
+                "JARVIS_TRIAL_HOME": str(base / "Jarvis-Gemma-Trial"),
+                "JARVIS_TRIAL_SOURCE": str(source),
+            }):
+                self.assertEqual(model_directory(), model)
+
     def test_trial_prefers_its_own_model_if_present(self):
         from voice_control import model_directory, MODEL_NAME
         with TemporaryDirectory() as directory:
@@ -151,6 +166,16 @@ class MicrophoneSafetyTests(unittest.TestCase):
             self.assertEqual(control.mode, STANDBY)
             self.assertFalse(control.press())
             self.assertFalse(events)
+
+    def test_missing_model_leaves_the_error_as_last_status(self):
+        with TemporaryDirectory() as folder:
+            events = []
+            control = VoiceController(events.append, Path(folder) / "no-model")
+            control.mode = CONTINUOUS
+            control._listen(threading.Event(), 0)
+            self.assertEqual(len(events), 1)
+            self.assertEqual(events[0][0], "voice_status")
+            self.assertIn("Modello italiano mancante", events[0][1])
 
     def test_no_automatic_switch_to_standby(self):
         with TemporaryDirectory() as folder:

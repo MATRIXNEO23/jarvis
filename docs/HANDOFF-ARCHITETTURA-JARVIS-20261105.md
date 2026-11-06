@@ -177,3 +177,9 @@ Windows 10 x64, HP Pavilion i3-2100 (AVX, NO AVX2), 10 GB RAM, Radeon HD6450 1GB
 - README Download aggiornato: `7e1cfad8113205a266d63785c374dc967116f7a9`.
 - URL ZIP: `https://github.com/MATRIXNEO23/jarvis/raw/refs/heads/main/Download/Jarvis-Gemma-PROVA-CORRETTA.zip`.
 - **Non ancora collaudato**: Netflix dopo riattivazione add-on; TTS reale su Pavilion.
+
+## JRV-002 — console senza trascrizione vocale, 6 novembre 2026
+
+Confronto tra le candidate `f387779` e `9adc86e`: il percorso da `voice_text` alla riga `TU` non è cambiato con Telegram. Riprodotti due difetti: il profilo Gemma ignorava un modello Vosk presente solo nel profilo sorgente del launcher e lo stato generico di microfono spento sostituiva il messaggio di errore.
+
+Jarvis ora cerca il modello anche nel profilo sorgente e conserva l'errore di avvio del microfono, visibile anche in console. Restano il controllo della hotword e la modalità selezionata. Le due regressioni riprodotte falliscono prima del fix e passano dopo. Suite Windows e prova acustica sul Pavilion da verificare.
