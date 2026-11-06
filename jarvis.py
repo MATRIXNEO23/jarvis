@@ -299,7 +299,7 @@ def main() -> None:
     for index, (label, mode) in enumerate((
             ("Standby (spento)", STANDBY),
             ("Premi per parlare", PUSH_TO_TALK),
-            ("Ascolto continuo (Ehi Jarvis)", CONTINUOUS),
+            ("Ascolto continuo", CONTINUOUS),
             ("Conversazione continua locale (Gemma)", GPT_CONVERSATION))):
         button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
         button.grid(row=index // 2, column=index % 2, sticky="w", padx=(0, 12), pady=3)
@@ -2740,7 +2740,7 @@ def main() -> None:
                 save_speech_preferences()
             write_line("Conversazione vocale con Gemma locale. Inizia con Jarvis.")
         else:
-            mic_status.set("Ascolto continuo: inizia ogni comando con Jarvis. "
+            mic_status.set("Ascolto continuo: parla direttamente. "
                            "La dettatura richiede l’attivazione manuale.")
 
     def ptt_press(event=None) -> None:
@@ -3296,8 +3296,12 @@ def main() -> None:
                             raw_spoken, require_name=True,
                             dictation_active=(voice_mode.get() != GPT_CONVERSATION
                                               and dictation.enabled))
+                        if (route_type == "ignored" and voice_mode.get() == CONTINUOUS
+                                and not dictation.enabled):
+                            route_type, spoken = "command", raw_spoken
                         if route_type == "wake":
-                            mic_status.set("Dì Jarvis seguito dalla richiesta nella stessa frase.")
+                            if voice_mode.get() == GPT_CONVERSATION:
+                                mic_status.set("Dì Jarvis seguito dalla richiesta nella stessa frase.")
                         if route_type not in ("command", "dictation"):
                             continue
                     if raw_spoken and voice_mode.get() != STANDBY:

@@ -183,3 +183,7 @@ Windows 10 x64, HP Pavilion i3-2100 (AVX, NO AVX2), 10 GB RAM, Radeon HD6450 1GB
 Confronto tra le candidate `f387779` e `9adc86e`: il percorso da `voice_text` alla riga `TU` non è cambiato con Telegram. Riprodotti due difetti: il profilo Gemma ignorava un modello Vosk presente solo nel profilo sorgente del launcher e lo stato generico di microfono spento sostituiva il messaggio di errore.
 
 Jarvis ora cerca il modello anche nel profilo sorgente e conserva l'errore di avvio del microfono, visibile anche in console. Restano il controllo della hotword e la modalità selezionata. Le due regressioni riprodotte falliscono prima del fix e passano dopo. Suite Windows e prova acustica sul Pavilion da verificare.
+
+## JRV-002 — Ascolto continuo senza parola di richiamo
+
+L'utente ha chiarito che in Ascolto continuo deve poter parlare direttamente. Il callback applicava lo stesso filtro di Conversazione Gemma a entrambe le modalità e scartava le trascrizioni prima della console. Ascolto continuo ora accetta la trascrizione e la mostra sotto TU anche senza prefisso, con la normale gestione dei comandi locali. Conversazione Gemma conserva il richiamo obbligatorio. Durante la dettatura manuale, le frasi libere vanno al campo di destinazione e il richiamo distingue i comandi dalla dettatura. Aggiunte verifiche al callback vocale. Collaudo acustico sul Pavilion da fare.

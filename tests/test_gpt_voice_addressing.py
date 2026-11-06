@@ -98,29 +98,21 @@ class GPTVoiceAddressingTests(unittest.TestCase):
                 self.receive(text)
                 self.env['start_conversation_gpt'].assert_called_once_with('raccontami qualcosa')
 
-    def test_continuous_mode_pending_dialog_cannot_bypass_name(self):
+    def test_continuous_mode_logs_and_dispatches_without_wake_word(self):
         self.fixture.voice_environment(CONTINUOUS)
-        self.env['telegram_voice_dialog'].pending = True
         self.receive('apri browser')
-        self.env['try_file_command'].assert_not_called()
-        self.env['submit_local'].assert_not_called()
+        self.env['write_line'].assert_called_once_with('TU > apri browser')
+        self.env['submit_local'].assert_called_once_with(
+            message_override='apri browser', source_utterance='apri browser')
+        self.env['start_conversation_gpt'].assert_not_called()
 
-    def test_continuous_mode_bare_name_cannot_arm_next_utterance(self):
+    def test_continuous_mode_accepts_an_optional_name(self):
         self.fixture.voice_environment(CONTINUOUS)
         self.receive('Jarvis')
-        self.receive('apri browser')
-        self.env['submit_local'].assert_not_called()
+        self.env['write_line'].assert_not_called()
         self.receive('Jarvis apri browser')
         self.env['submit_local'].assert_called_once_with(
             message_override='apri browser', source_utterance='apri browser')
-
-    def test_continuous_mode_checks_raw_before_learned_corrections(self):
-        self.fixture.voice_environment(CONTINUOUS)
-        self.env['speech_lexicon'] = Mock()
-        self.env['speech_lexicon'].correct.return_value = 'Jarvis apri browser'
-        self.receive('garbis apri browser')
-        self.env['speech_lexicon'].correct.assert_not_called()
-        self.env['submit_local'].assert_not_called()
 
     def test_manual_dictation_still_inserts_free_text_without_commands(self):
         self.fixture.voice_environment(CONTINUOUS)
