@@ -799,7 +799,7 @@ def main() -> None:
 
     project_dialog=None
 
-    def refresh_orbit_nodes() -> None:
+    def refresh_orbit_nodes(*, reschedule=True) -> None:
         nonlocal orbit_nodes_cache
         if closing:
             return
@@ -814,13 +814,16 @@ def main() -> None:
                     items.append({"id":"projects:more","kind":"project",
                                   "name":"Altri progetti: "
                                          +str(len(projects)-33)})
+                unread_items=[]
                 for contact in selected_telegram_contacts()[:12]:
                     peer_id=contact["id"]
                     counts=workspace.telegram_counts(peer_id)
                     if counts["received"] or counts["replied"]:
-                        items.append({
+                        unread=counts["unread"]
+                        target=unread_items if unread else items
+                        target.append({
                             "id":"telegram:"+str(peer_id),
-                            "kind":"telegram",
+                            "kind":"telegram_unread" if unread else "telegram",
                             "name":contact["name"]+
                                    " · ricevuti "+str(counts["received"])+
                                    " / risposti "+str(counts["replied"])+
@@ -831,13 +834,14 @@ def main() -> None:
                                       "kind":"pending",
                                       "name":contact["name"]+
                                       " · da riferire: "+str(len(notes))})
-                orbit_nodes_cache=tuple(items[:36])
+                orbit_nodes_cache=tuple((unread_items+items)[:36])
                 workspace_status.set(
                     "Progetti: "+str(len(projects))+" attivi. "
                     +"Archivi separati sul disco.")
             except (OSError,sqlite3.Error,WorkspaceError) as exc:
                 workspace_status.set("Memoria progetti: "+str(exc)[:95])
-        root.after(2600,refresh_orbit_nodes)
+        if reschedule:
+            root.after(2600,refresh_orbit_nodes)
 
     def switch_context(project_id=None) -> bool:
         nonlocal active_project_id,conversation_epoch,pending_preference
@@ -1475,7 +1479,10 @@ def main() -> None:
                 log.insert("end",item["when"]+"  "+direction
                            +" ["+item["kind"]+"]\n"
                            +item["text"]+"\n\n")
-            workspace.mark_telegram_read(peer_id)
+            displayed_ids=[item["message_id"] for item in records
+                           if item["direction"]=="incoming"]
+            workspace.mark_telegram_read(peer_id, displayed_ids)
+            refresh_orbit_nodes(reschedule=False)
         except (OSError,sqlite3.Error,WorkspaceError) as exc:
             log.insert("end","Archivio Telegram non leggibile: "+str(exc)[:100])
         log.configure(state="disabled")

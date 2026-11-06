@@ -1,5 +1,9 @@
 # JARVIS — handoff tecnico, mappa architetturale e checkpoint (2026-11-05)
 
+## 6 novembre 2026 — Indicatore Telegram dei messaggi da vedere
+
+Base `0055607`. Il pallino del contatto riusa il conteggio dei messaggi in arrivo non ancora visti. L'animazione HUD esistente alterna due tonalità viola per i nuovi messaggi e mantiene una tonalità tenue e fissa dopo l'apertura della cronologia. Il clic registra solo gli ID in arrivo mostrati, così un messaggio concorrente resta da vedere. Nessuna modifica alle ricevute di Telegram. Verifiche previste su Windows per la transizione visiva e per un nuovo arrivo tra lettura e conferma. Prossimo passo: esito CI e prova visiva sul Pavilion.
+
 ## Telegram con Gemma locale
 
 Il bridge mantiene contatti autorizzati, contesto recente della singola chat, presentazione, sintesi e invio dei vocali. Se GPT è attivo e connesso, resta il consenso per richiesta. Se GPT non è disponibile, Gemma riusa il modello caricato senza accedere alla cronologia della console o dei progetti. Il collaudo con account Telegram e modello reali resta separato dalla CI Windows.

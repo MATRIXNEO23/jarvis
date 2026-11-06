@@ -942,16 +942,23 @@ class WorkspaceMemory:
         return {"unread":int(r[0] or 0),"received":int(r[1] or 0),
                 "replied":int(r[2] or 0)}
 
-    def mark_telegram_read(self,peer_id:int):
+    def mark_telegram_read(self,peer_id:int,message_ids=None):
+        query="UPDATE telegram_events SET read=1 WHERE peer_id=? AND direction='incoming'"
+        params=(peer_id,)
+        if message_ids is not None:
+            ids=tuple(message_ids)
+            if not ids:
+                return
+            query+=" AND message_id IN ("+",".join("?" for _ in ids)+")"
+            params+=ids
         with self._db() as db:
-            db.execute("UPDATE telegram_events SET read=1 "
-                       "WHERE peer_id=? AND direction='incoming'",(peer_id,))
+            db.execute(query,params)
 
     def telegram_activity(self,peer_id:int,limit=16):
         with self._db() as db:
             rows=db.execute(
-                "SELECT direction,kind,text,time_utc FROM telegram_events "
+                "SELECT direction,kind,text,time_utc,message_id FROM telegram_events "
                 "WHERE peer_id=? ORDER BY rowid DESC LIMIT ?",
                 (peer_id,min(self.TELEGRAM_HISTORY_LIMIT,max(1,int(limit))))).fetchall()
-        return tuple({"direction":d,"kind":k,"text":text,"when":when}
-                     for d,k,text,when in rows)
+        return tuple({"direction":d,"kind":k,"text":text,"when":when,"message_id":mid}
+                     for d,k,text,when,mid in rows)

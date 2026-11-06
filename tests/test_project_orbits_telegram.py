@@ -3,8 +3,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import Mock, call
 
-from hud_orbits import orbit_position,sanitize_nodes,MAX_MARKERS
+from hud_orbits import (MARKER_COLORS, MAX_MARKERS, OrbitMarkers,
+                        TELEGRAM_PULSE_DIM, orbit_position, sanitize_nodes)
 from telegram_bridge import (
     accepted_private_message,telegram_assistant_prompt,clean_generated_reply)
 from telegram_security import save_credentials,load_credentials
@@ -28,6 +30,29 @@ class OrbitsAndTelegramTests(unittest.TestCase):
         self.assertNotEqual(p0,orbit_position(0,3,1,100,100,60))
         with self.assertRaises(ValueError):
             orbit_position(4,3,0,100,100,60)
+
+    def test_telegram_marker_pulses_until_seen_and_remains_clickable(self):
+        canvas = Mock()
+        canvas.create_oval.side_effect = range(1, 5)
+        open_chat = Mock()
+        markers = OrbitMarkers(canvas, open_chat)
+        node = {"id": "telegram:123", "name": "Contatto", "kind": "telegram_unread"}
+        markers.update([node], 100, 100, 60, 0.1)
+        self.assertIn(call(2, fill=MARKER_COLORS["telegram_unread"]),
+                      canvas.itemconfigure.call_args_list)
+        canvas.itemconfigure.reset_mock()
+        markers.update([node], 100, 100, 60, 0.8)
+        self.assertIn(call(2, fill=TELEGRAM_PULSE_DIM),
+                      canvas.itemconfigure.call_args_list)
+        markers._click(0)
+        open_chat.assert_called_once_with("telegram:123")
+
+        canvas.itemconfigure.reset_mock()
+        node["kind"] = "telegram"
+        markers.update([node], 100, 100, 60, 0.9)
+        markers.update([node], 100, 100, 60, 1.5)
+        self.assertEqual(canvas.create_oval.call_args.kwargs["fill"], MARKER_COLORS["telegram"])
+        canvas.itemconfigure.assert_not_called()
 
     def test_only_exact_authorized_private_peer_can_be_replied(self):
         self.assertTrue(accepted_private_message(123,True,False,123))

@@ -94,6 +94,17 @@ class WorkspaceMemoryTests(unittest.TestCase):
         self.assertEqual(self.hub.telegram_counts(a)["unread"],0)
         self.assertEqual(len(self.hub.telegram_activity(a)),3)
 
+    def test_reading_telegram_history_marks_only_displayed_messages_for_that_peer(self):
+        self.hub.telegram_event(123, "incoming", 10, "text", "Visibile")
+        self.hub.telegram_event(456, "incoming", 10, "text", "Altra chat")
+        shown = self.hub.telegram_activity(123)
+        self.hub.telegram_event(123, "incoming", 11, "text", "Appena arrivato")
+        self.hub.mark_telegram_read(123, [message["message_id"] for message in shown])
+        self.assertEqual(self.hub.telegram_counts(123)["unread"], 1)
+        self.assertEqual(self.hub.telegram_counts(456)["unread"], 1)
+        self.hub.mark_telegram_read(123, [11])
+        self.assertEqual(self.hub.telegram_counts(123)["unread"], 0)
+
     def test_failed_send_will_not_auto_retry_uncertain_note(self):
         p=self.hub.note_for_contact(777,"Messaggio una tantum")
         self.hub.reserve_notes(777,[p])

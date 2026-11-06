@@ -1,3 +1,7 @@
+## 6 novembre 2026 — Indicatore Telegram dei messaggi da vedere
+
+Base `0055607`. Il pallino del contatto riusa il conteggio dei messaggi in arrivo non ancora visti. L'animazione HUD esistente alterna due tonalità viola per i nuovi messaggi e mantiene una tonalità tenue e fissa dopo l'apertura della cronologia. Il clic registra solo gli ID in arrivo mostrati, così un messaggio concorrente resta da vedere. Nessuna modifica alle ricevute di Telegram. Verifiche previste su Windows per la transizione visiva e per un nuovo arrivo tra lettura e conferma. Prossimo passo: esito CI e prova visiva sul Pavilion.
+
 ## 6 novembre 2026 — JRV-004, verifica Windows
 
 La [run 42129127625](https://github.com/MATRIXNEO23/jarvis/actions/runs/42129127625) sul commit `e51c269` ha superato 635 test per job con Python 3.11 e 3.12. È passata anche la prova live Windows Search sul job previsto. Copertura mirata nei log: rifiuto e revoca dei callback, Telegram simulato, disconnessione immediata, revoca durante avvio del bridge e toggle HUD.

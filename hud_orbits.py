@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import math
 
-MARKER_COLORS={"project":"#25d4ff","telegram":"#b68aff",
+MARKER_COLORS={"project":"#25d4ff","telegram":"#8061ad",
+               "telegram_unread":"#d6afff",
                "pending":"#ffbc61"}
+TELEGRAM_PULSE_DIM="#9b72cc"
 MAX_MARKERS=36
 
 
@@ -53,6 +55,7 @@ class OrbitMarkers:
         self._tip=None
         self._tip_box=None
         self._geometry=None
+        self._pulse_bright=None
 
     def reset(self):
         # Called after ReactorArt.build clears the whole canvas.
@@ -69,11 +72,18 @@ class OrbitMarkers:
             self._build(clean,geometry)
         if not self._items:
             return
+        pulse_bright=phase % 1.4 < 0.7
+        pulse_changed=pulse_bright!=self._pulse_bright
+        self._pulse_bright=pulse_bright
         n=len(self._items)
         for index,(circle,halo) in enumerate(self._items):
             x,y=orbit_position(index,n,phase,cx,cy,r)
             self.canvas.coords(halo,x-7,y-7,x+7,y+7)
             self.canvas.coords(circle,x-4,y-4,x+4,y+4)
+            if pulse_changed and self.nodes[index][1]=="telegram_unread":
+                color=MARKER_COLORS["telegram_unread"] if pulse_bright else TELEGRAM_PULSE_DIM
+                self.canvas.itemconfigure(circle,fill=color)
+                self.canvas.itemconfigure(halo,outline=color)
             if self._hover==index:
                 self._show_tip(index,x,y)
 
@@ -88,6 +98,7 @@ class OrbitMarkers:
         self._tip_box=None
         self._hover=None
         self._items=[]
+        self._pulse_bright=None
         self.nodes=clean
         self._geometry=geometry
         for index,(_id,kind,_name) in enumerate(clean):
@@ -122,7 +133,7 @@ class OrbitMarkers:
     def _show_tip(self,index,x,y):
         _,kind,name=self.nodes[index]
         text=("PROGETTO  " if kind=="project" else
-              "TELEGRAM  " if kind=="telegram" else "IN ATTESA  ")+name
+              "TELEGRAM  " if kind in ("telegram","telegram_unread") else "IN ATTESA  ")+name
         cw=self.canvas.winfo_width()
         ch=self.canvas.winfo_height()
         tx=max(8,min(cw-240,x+11))
