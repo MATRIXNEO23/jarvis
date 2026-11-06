@@ -12,6 +12,10 @@ Da questa consegna i file hanno numeri progressivi. Ogni versione pubblicata res
 
 Registro tecnico: [BUILD-NUMBERS.json](BUILD-NUMBERS.json). I pacchetti storici senza numero restano elencati sotto.
 
+## Candidata Gemma — consenso GPT per la sessione Telegram, c233bb4
+
+[Jarvis-Gemma-Telegram-Consenso-GPT-Sessione-c233bb4.zip](./Jarvis-Gemma-Telegram-Consenso-GPT-Sessione-c233bb4.zip) — Consenso GPT online per la sessione Telegram, con conferma per messaggio come modalità predefinita. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42251845994) superate. Collaudo sul Pavilion pendente.
+
 ## Candidata Gemma — notifiche Telegram nel HUD, bf6bce9
 
 [Jarvis-Gemma-Telegram-Notifiche-HUD-bf6bce9.zip](./Jarvis-Gemma-Telegram-Notifiche-HUD-bf6bce9.zip) — Pallino Telegram lampeggiante per i messaggi da vedere e viola tenue dopo la lettura. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42222733895) superate. Collaudo sul Pavilion pendente.

@@ -1,3 +1,15 @@
+# Jarvis Gemma — consenso GPT per la sessione Telegram
+
+**[Scarica la candidata Windows](./Jarvis-Gemma-Telegram-Consenso-GPT-Sessione-c233bb4.zip)**
+
+In Impostazioni → Telegram → Consenso GPT online puoi scegliere Consenti per questa sessione per i contatti spuntati. Chiedi ogni volta resta il valore iniziale.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42251845994). Collaudo con Telegram e Gemma sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: 59f3acd524c7f39b3bcb7846ca13ecd614f7537040220b2d9843522ca42a34e2
+
+---
+
 # Jarvis Gemma — notifiche Telegram nel HUD
 
 **[Scarica la candidata Windows](./Jarvis-Gemma-Telegram-Notifiche-HUD-bf6bce9.zip)**
