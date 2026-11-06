@@ -2,7 +2,7 @@
 
 ## Segnalazione Pavilion — dialogo Gemma e apertura app
 
-La foto mostra «Apri Netflix» come risposta della chat. Il percorso scritto di Gemma non condivideva la selezione app del percorso vocale. Ora «con Gemma» può essere scritto oppure pronunciato. Dopo uno scambio recente che identifica una sola app autorizzata, una richiesta esplicita come «me lo apri?» passa al motore come proposta da confermare. Il testo del dialogo continua ad andare in chat. Scambio valido per 120 secondi e solo nella stessa epoca di conversazione. Verifica Windows in corso.
+La foto mostra «Apri Netflix» come risposta della chat. Il percorso scritto di Gemma non condivideva la selezione app del percorso vocale. Ora «con Gemma» può essere scritto oppure pronunciato. Dopo uno scambio recente che identifica una sola app autorizzata, una richiesta esplicita come «me lo apri?» passa al motore come proposta da confermare. Il testo del dialogo continua ad andare in chat. Scambio valido per 120 secondi e solo nella stessa epoca di conversazione. [Matrice Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42145643937) superati sul commit `0d99357`. Nessuna pubblicazione in Download.
 
 ## Finestre Windows con comandi integrati
 
