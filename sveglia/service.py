@@ -19,7 +19,25 @@ def parse_command(text):
     return None
 
 
+def _spoken_numbers():
+    units = ("zero", "uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove")
+    teens = ("dieci", "undici", "dodici", "tredici", "quattordici", "quindici",
+             "sedici", "diciassette", "diciotto", "diciannove")
+    numbers = {word: str(index) for index, word in enumerate(units + teens)}
+    for index, tens in enumerate(("venti", "trenta", "quaranta", "cinquanta"), 2):
+        numbers[tens] = str(index * 10)
+        for digit in range(1, 10):
+            stem = tens[:-1] if digit in (1, 8) else tens
+            numbers[stem + units[digit]] = str(index * 10 + digit)
+    return numbers
+
+
+_SPOKEN_NUMBERS = _spoken_numbers()
+
+
 def next_alarm(value, now):
+    words = value.strip().casefold().replace("tré", "tre").replace(" e ", " ").split()
+    value = " ".join(_SPOKEN_NUMBERS.get(word, word) for word in words)
     match = re.fullmatch(r"([0-9]{1,2})(?:[:. ]([0-9]{1,2}))?", value.strip())
     if not match:
         raise ValueError("Indica un orario come 07:30.")
@@ -40,6 +58,7 @@ class Alarm:
         self.target = None
         self.job = None
         self.audio_stop = threading.Event()
+        self.audio_thread = None
 
     def arm(self, value):
         if not self.enabled():
@@ -67,14 +86,18 @@ class Alarm:
             self.status.set("Sveglia in corso.")
             self.notify("Sveglia in corso. Dì «ferma la sveglia» per spegnerla.")
             prefs = self.preferences()
-            threading.Thread(
+            self.audio_thread = threading.Thread(
                 target=play_alarm,
                 args=(prefs.get("timer_sound", "digital"), prefs.get("timer_volume", 80),
                       self.audio_stop),
                 kwargs={"repeat": prefs.get("timer_repeat", True),
                         "mode": prefs.get("timer_audio_mode", "auto")},
                 daemon=True,
-            ).start()
+            )
+            self.audio_thread.start()
+        elif self.audio_thread is not None and not self.audio_thread.is_alive():
+            self.stop()
+            return
         self.job = self.root.after(500, self.tick)
 
     def stop(self):
@@ -83,5 +106,6 @@ class Alarm:
             self.root.after_cancel(self.job)
             self.job = None
         self.audio_stop.set()
+        self.audio_thread = None
         self.audio_stop = threading.Event()
         self.status.set("Nessuna sveglia impostata.")

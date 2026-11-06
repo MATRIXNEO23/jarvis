@@ -15,5 +15,6 @@ class AlarmTests(unittest.TestCase):
         now = datetime(2026, 11, 6, 23, 30)
         self.assertEqual(next_alarm("23:45", now), datetime(2026, 11, 6, 23, 45))
         self.assertEqual(next_alarm("7 30", now), datetime(2026, 11, 7, 7, 30))
+        self.assertEqual(next_alarm("sette e trenta", now), datetime(2026, 11, 7, 7, 30))
         with self.assertRaises(ValueError):
             next_alarm("24:60", now)
