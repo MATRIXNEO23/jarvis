@@ -2,7 +2,7 @@
 
 ## Finestre Windows con comandi integrati
 
-Le finestre Tk di Jarvis usano una barra interna scura con riduci, massimizza/ripristina e chiudi. La rimozione della cornice avviene sul wrapper Win32 e mantiene i protocolli di chiusura Tk. La barra si applica anche alle finestre secondarie mappate dopo l’avvio e alla finestra separata di configurazione segreti Telegram. Le finestre native di sistema seguono l'aspetto Windows. Verifica Windows in corso.
+Le finestre Tk di Jarvis usano una barra interna scura con riduci, massimizza/ripristina e chiudi. La rimozione della cornice avviene sul wrapper Win32 e mantiene i protocolli di chiusura Tk. La barra si applica anche alle finestre secondarie mappate dopo l’avvio e alla finestra separata di configurazione segreti Telegram. Le finestre native di sistema seguono l'aspetto Windows. La run [42144862058](https://github.com/MATRIXNEO23/jarvis/actions/runs/42144862058) sul commit `72af40e` ha superato 639 test per versione Python, compresa la prova Windows della barra su finestra principale e secondaria. Il pacchetto CI è stato generato e verificato dopo estrazione. Nessuna pubblicazione in `Download` per questa modifica.
 
 ## 6 novembre 2026 — candidata Gemma pubblicata
 
