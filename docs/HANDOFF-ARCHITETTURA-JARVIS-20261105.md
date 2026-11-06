@@ -1,5 +1,9 @@
 # JARVIS — handoff tecnico, mappa architetturale e checkpoint (2026-11-05)
 
+## 6 novembre 2026 — candidata Gemma pubblicata
+
+La [run Windows 42142495567](https://github.com/MATRIXNEO23/jarvis/actions/runs/42142495567) sul commit `5d554c8` ha superato la matrice Windows, i 26 test mirati dal pacchetto estratto e il caricamento della DLL inclusa. Il commit `7088b95` su main ha pubblicato `Download/Jarvis-Gemma-Avvio-Programmi-5d554c8.zip` e aggiornato `Download/README.md`. Archivio: 8.093.345 byte, SHA-256 `e54912b4e3de94c06dc654cd2fc4f64b698f0f2f2249ff67dab6e091022b8944`. Candidata per il collaudo su Pavilion. Voce, Gemma e app reali restano da provare.
+
 ## 6 novembre 2026 — avvio app con varianti locali e prova Gemma
 
 I commit `9c08935` e `56fd9e4` riusano il catalogo e le autorizzazioni di Programmi e app. Una selezione abilita i verbi comuni. Frase senza nome, risposta successiva con nome esatto e suggerimenti per somiglianza sono stati verificati con launcher controllato. Il suggerimento Gemma richiede il prefisso vocale «con Gemma» in modalità conversazione e una conferma della scelta. La prova del selettore usa un modello simulato e verifica una generazione e l'esclusione della cronologia.
