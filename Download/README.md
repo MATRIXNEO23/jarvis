@@ -1,3 +1,15 @@
+# Jarvis Gemma — voce in console
+
+**[Scarica la candidata Windows](./Jarvis-Gemma-Voce-Console-53460ce.zip)**
+
+Ripristina la ricerca del modello vocale italiano nel profilo sorgente e mostra in console gli errori del microfono.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42165467735). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: e2101e7523f424256dea9fbca3eb401500b401c7cbf332c3fdc80c7e93e1f094
+
+---
+
 # Jarvis Gemma — risposte Telegram
 
 **[Scarica la candidata Windows](./Jarvis-Gemma-Telegram-9adc86e.zip)**
