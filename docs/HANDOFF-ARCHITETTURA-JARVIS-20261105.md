@@ -1,5 +1,9 @@
 # JARVIS — handoff tecnico, mappa architetturale e checkpoint (2026-11-05)
 
+## 6 novembre 2026 — rimossa la barra sostitutiva
+
+La candidata `Download/Jarvis-Gemma-Comandi-e-Interfaccia-6e73e3b.zip` è pubblicata su main `14967a4`. Il commit `6e73e3b` mantiene solo i tre pulsanti, integrati nell'intestazione HUD esistente o raggruppati in alto a destra nelle finestre secondarie. Eliminata la fascia aggiuntiva con il titolo. I dialoghi nativi Windows mantengono l'aspetto di sistema. [Suite Windows, archivio estratto e pubblicazione](https://github.com/MATRIXNEO23/jarvis/actions/runs/42147766728) riusciti.
+
 ## Segnalazione Pavilion — dialogo Gemma e apertura app
 
 La foto mostra «Apri Netflix» come risposta della chat. Il percorso scritto di Gemma non condivideva la selezione app del percorso vocale. Ora «con Gemma» può essere scritto oppure pronunciato. Dopo uno scambio recente che identifica una sola app autorizzata, una richiesta esplicita come «me lo apri?» passa al motore come proposta da confermare. Il testo del dialogo continua ad andare in chat. Scambio valido per 120 secondi e solo nella stessa epoca di conversazione. [Matrice Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42145643937) superati sul commit `0d99357`. Nessuna pubblicazione in Download.
