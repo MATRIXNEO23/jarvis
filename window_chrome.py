@@ -99,6 +99,7 @@ def install_window_chrome(root):
         def toggle_maximize():
             handle = api.hwnd(window)
             api.show(handle, 9 if api.zoomed(handle) else 3)  # SW_RESTORE / SW_MAXIMIZE
+            buttons.nametowidget("maximize").configure(text="❐" if api.zoomed(handle) else "□")
 
         def close():
             # Invoke the protocol on this Tk object, even if Windows has

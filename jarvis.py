@@ -4159,7 +4159,8 @@ def main() -> None:
         # Non-daemon: ensure the Node child is terminated before Python exits.
         threading.Thread(target=service.stop, daemon=False, name="jarvis-gpt-shutdown").start()
 
-    ttk.Button(frame, text="Esci", command=close).pack(anchor="e", pady=(9, 0))
+    ttk.Button(frame, text="Chiudi impostazioni", command=settings_window.withdraw).pack(
+        anchor="e", pady=(9, 0))
     # Settings are intentionally hidden until the gear is pressed.
     # The normal window-close control invokes the same safe shutdown.
     hud.set_close_handler(close)
