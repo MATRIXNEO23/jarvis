@@ -1,5 +1,9 @@
 # JARVIS — handoff tecnico, mappa architetturale e checkpoint (2026-11-05)
 
+## Telegram con Gemma locale
+
+Il bridge mantiene contatti autorizzati, contesto recente della singola chat, presentazione, sintesi e invio dei vocali. Se GPT è attivo e connesso, resta il consenso per richiesta. Se GPT non è disponibile, Gemma riusa il modello caricato senza accedere alla cronologia della console o dei progetti. Il collaudo con account Telegram e modello reali resta separato dalla CI Windows.
+
 ## 6 novembre 2026 — rimossa la barra sostitutiva
 
 La candidata `Download/Jarvis-Gemma-Comandi-e-Interfaccia-6e73e3b.zip` è pubblicata su main `14967a4`. Il commit `6e73e3b` mantiene solo i tre pulsanti, integrati nell'intestazione HUD esistente o raggruppati in alto a destra nelle finestre secondarie. Eliminata la fascia aggiuntiva con il titolo. I dialoghi nativi Windows mantengono l'aspetto di sistema. [Suite Windows, archivio estratto e pubblicazione](https://github.com/MATRIXNEO23/jarvis/actions/runs/42147766728) riusciti.

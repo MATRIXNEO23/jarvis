@@ -39,7 +39,7 @@ from telegram_ui import TelegramContactsWindow, show_telegram_manual_send
 from telegram_outbound_flow import (
     VoiceSendDialog, parse_telegram_send_intent, resolve_selected_recipient,
 )
-from telegram_bridge import TelegramBridge
+from telegram_bridge import TelegramBridge, telegram_assistant_prompt, telegram_local_prompt
 from live_capabilities import (LiveCapabilityRegistry, snapshot_capabilities,
                                capability_status_prompt)
 from addon_manager import AddonManager, AddonError
@@ -1798,6 +1798,22 @@ def main() -> None:
         except (GPTUnavailable, OSError, RuntimeError):
             return ""
 
+    def ask_telegram_reply(message, context, bridge):
+        if not bridge.is_enabled():
+            return ""
+        if telegram_gpt_ready.is_set():
+            return ask_telegram_gpt(telegram_assistant_prompt(message, context), bridge)
+        try:
+            session = get_gemma_session()
+            answer = session.ask_isolated(
+                lambda budget: telegram_local_prompt(message, context, budget))
+            return answer if bridge.is_enabled() else ""
+        except (OSError, ValueError, RuntimeError):
+            if bridge.is_enabled():
+                output_queue.put(("telegram_status",
+                                  "Telegram: risposta locale non disponibile. Controlla le impostazioni Gemma."))
+            return ""
+
     def resolve_telegram_gpt_consent(bridge, approval) -> None:
         if not approval.set_running_or_notify_cancel():
             return
@@ -1838,9 +1854,9 @@ def main() -> None:
                 telegram_bridge.stop()
             bridge = TelegramBridge(
                 workspace, chosen[0]["id"], chosen[0]["name"],
-                lambda prompt: ask_telegram_gpt(prompt, bridge),
-                output_queue.put, voice_name=selected_voice(),
-                allowed_contacts=chosen)
+                None, output_queue.put, voice_name=selected_voice(),
+                allowed_contacts=chosen,
+                reply_with_context=lambda message, context: ask_telegram_reply(message, context, bridge))
             telegram_bridge = bridge
             if bridge.start():
                 settings["telegram_enabled"]=True
@@ -4034,6 +4050,18 @@ def main() -> None:
                     if (Path(__file__).resolve().parent / "native_engine" / "koboldcpp.py").is_file()
                     else None]
     gemma_session = [None]
+    gemma_session_lock = threading.Lock()
+
+    def get_gemma_session():
+        with gemma_session_lock:
+            if gemma_session[0] is None:
+                from local_model.native_chat_adapter import NativeChatAdapter
+                from local_model.native_conversation_session import NativeConversationSession
+                source = gemma_source[0]
+                if not source or not Path(source).is_file():
+                    raise ValueError("Sorgente Gemma non configurata.")
+                gemma_session[0] = NativeConversationSession(NativeChatAdapter(source))
+            return gemma_session[0]
 
     gemma_recent_reply = [None]
 
@@ -4105,19 +4133,15 @@ def main() -> None:
 
         def voice_worker():
             try:
-                from local_model.native_chat_adapter import NativeChatAdapter
-                from local_model.native_conversation_session import NativeConversationSession
-                if gemma_session[0] is None:
-                    gemma_session[0] = NativeConversationSession(
-                        NativeChatAdapter(gemma_source[0]))
+                session = get_gemma_session()
                 if explicit:
-                    index = gemma_session[0].pick_program(
+                    index = session.pick_program(
                         question, tuple(row["name"] for row in candidates))
                     app_id = candidates[index]["id"] if index is not None else None
                     gemma_trial_queue.put(("program_choice", (spoken, app_id), voice_epoch))
                 else:
                     answer = chat_transport.ask_local_first(
-                        spoken, session=gemma_session[0], timeout=180)
+                        spoken, session=session, timeout=180)
                     gemma_recent_reply[0] = (voice_epoch, time.monotonic(), spoken[:500] + " " + answer[:500])
                     gemma_trial_queue.put(("ok" if typed else "voice_ok", answer, voice_epoch))
             except Exception as exc:

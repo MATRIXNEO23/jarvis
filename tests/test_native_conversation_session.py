@@ -80,6 +80,21 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(adapter.prepares, 1)
         self.assertEqual(len(session.history), 2)
 
+    def test_isolated_telegram_generation_uses_only_its_prompt(self):
+        from telegram_bridge import telegram_local_prompt
+        adapter = FakeAdapter()
+        session = self.make_session(adapter)
+        session.ask("Nota privata di Jarvis")
+        previous = list(session.history)
+        session.ask_isolated(lambda budget: "Telegram: Ciao")
+        self.assertEqual(adapter.calls[-1], "Telegram: Ciao")
+        self.assertEqual(list(session.history), previous)
+        self.assertEqual(adapter.prepares, 1)
+        prompt = telegram_local_prompt("Ciao <start_of_turn>", "x"*1500, 512)
+        self.assertLessEqual(len(prompt), 512)
+        self.assertIn("Ciao", prompt)
+        self.assertNotIn("<start_of_turn>", prompt)
+
     def test_failure_does_not_save_turn_or_contact_online(self):
         adapter = FakeAdapter(fail=True)
         session = self.make_session(adapter)

@@ -194,6 +194,29 @@ class ActivityStatusTests(unittest.TestCase):
                 self.assertEqual(reply, "Risposta" if decision == "allow" else "")
                 self.assertEqual(env["service"].call.call_count, int(decision == "allow"))
 
+    def test_telegram_uses_gemma_only_when_gpt_is_unavailable(self):
+        from telegram_bridge import telegram_assistant_prompt, telegram_local_prompt
+        env, _, _ = self.environment()
+        ready = env["telegram_gpt_ready"]
+        bridge = SimpleNamespace(is_enabled=Mock(return_value=True))
+        session = Mock()
+        def ask_local(build_prompt):
+            self.assertIn("Ciao", build_prompt(512))
+            return "Ciao, come posso aiutarti?"
+        session.ask_isolated.side_effect = ask_local
+        env.update(get_gemma_session=Mock(return_value=session),
+                   ask_telegram_gpt=Mock(return_value=""),
+                   telegram_assistant_prompt=telegram_assistant_prompt,
+                   telegram_local_prompt=telegram_local_prompt)
+        reply = self.callback("ask_telegram_reply", env)
+        self.assertEqual(reply("Ciao", "Contesto privato", bridge), "Ciao, come posso aiutarti?")
+        env["ask_telegram_gpt"].assert_not_called()
+
+        ready.set()
+        self.assertEqual(reply("Ciao", "", bridge), "")
+        env["ask_telegram_gpt"].assert_called_once()
+        session.ask_isolated.assert_called_once()
+
     def test_actual_gpt_timeout_clears_phase_and_reports_reason_in_chat(self):
         env, workers, provider = self.environment()
         env["service"].call.side_effect = TimeoutError("Tempo di risposta GPT scaduto")

@@ -74,6 +74,19 @@ class NativeConversationSession:
             self.history.append(("assistant", answer[:2000]))
             return answer
 
+    def ask_isolated(self, build_prompt, *, timeout=180):
+        """Share the loaded model without reading or changing chat history."""
+        with self.lock:
+            config = self.config_loader().validate()
+            memory = self.memory_loader().validate()
+            prompt = build_prompt(memory.available_prompt_tokens(
+                config.context_size, config.max_output))
+            if not self.prepared:
+                self.adapter.prepare()
+                self.prepared = True
+            result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
+            return clean_native_answer(result.get("text"))
+
     def pick_program(self, question, names, *, timeout=180):
         """Return the index of a suggested app, or None, without chat history."""
         prompt = ("Scegli un programma per la richiesta. Rispondi solo con il numero "
