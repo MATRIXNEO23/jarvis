@@ -61,18 +61,20 @@ class ProgramServiceTests(unittest.TestCase):
 
     def test_open_verbs_and_missing_name_use_the_local_catalog(self):
         for phrase in ("aprimi la posta", "avviami la posta", "lanciami la posta",
-                       "puoi far partire la posta?", "metti in esecuzione la posta"):
+                       "puoi far partire la posta?", "metti in esecuzione la posta",
+                       "mi apri la posta per favore"):
             self.assertEqual(self.engine.execute(phrase).status, "completed", phrase)
-        self.assertEqual(self.launched, [self.mail]*5)
-        self.assertIn("Quale programma", self.engine.execute("aprimi").message)
-        self.assertEqual(self.launched, [self.mail]*5)
-        self.assertEqual(self.engine.execute("posta").status, "completed")
         self.assertEqual(self.launched, [self.mail]*6)
+        self.assertIn("Quale programma", self.engine.execute("aprimi per favore").message)
+        self.assertEqual(self.launched, [self.mail]*6)
+        self.assertEqual(self.engine.execute("posta").status, "completed")
+        self.assertEqual(self.launched, [self.mail]*7)
 
     def test_similar_name_and_gemma_suggestion_require_confirmation(self):
         netflix = self.add("Netflix")
         self.save({netflix: ""})
-        proposal = self.engine.execute("apri Netflis")
+        self.assertIn("Quale programma", self.engine.execute("apri").message)
+        proposal = self.engine.execute("Netflis")
         self.assertIn("Intendevi Netflix?", proposal.message)
         self.assertFalse(self.launched)
         self.assertEqual(self.engine.execute("sì").status, "completed")

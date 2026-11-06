@@ -30,12 +30,13 @@ def blocked(text):
 def launch_query(text):
     value = normalized(text)
     value = re.sub(r'^(?:(?:ehi|hey) )?jarvis\s+', '', value)
+    value = value.removesuffix(' per favore')
     match = re.fullmatch(r'(?:(?:per favore|gentilmente) )?'
         r'(?:(?:mi )?(?:puoi|potresti|vorrei|voglio)(?: che tu)? )?(?:mi )?'
         r'(?:aprimi|apri|aprire|avviami|avvia|avviare|lanciami|lancia|lanciare|'
         r'eseguimi|esegui|eseguire|fammi partire|fai partire|far partire|'
         r'metti in esecuzione|mettere in esecuzione)'
-        r'(?: (.+?))?(?: per favore)?', value)
+        r'(?: (.+))?', value)
     return name_key(match.group(1) or '') if match else None
 
 
@@ -281,13 +282,16 @@ class ProgramService:
                 return None
             pending = self._live_pending()
             if pending:
+                if not pending['query']:
+                    if any(key in pending['ids'] for key in self._matches(text) or self._similar(text)):
+                        return 'launch', {'query':text}
                 if pending['query'] and len(pending['ids']) == 1 and value in ('sì', 'si', 'confermo'):
                     return 'select', {'query': '1', 'token': pending['token']}
                 number = re.fullmatch(r'(?:il |la |numero )?(\d+)', value)
                 ordinal = {'il primo':1, 'il secondo':2, 'il terzo':3, 'il quarto':4}
                 index = int(number.group(1)) if number else ordinal.get(value)
                 matches = [key for key in self._matches(text) if key in pending['ids']]
-                if (index is not None and pending['query']) or len(matches)==1:
+                if pending['query'] and (index is not None or len(matches)==1):
                     return 'select', {'query':str(index) if index is not None else text,
                                       'token':pending['token']}
             query = launch_query(text)
