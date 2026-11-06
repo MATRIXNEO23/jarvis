@@ -1,6 +1,7 @@
 """Saved application consent, local language and revocable launch requests."""
 from __future__ import annotations
 from dataclasses import dataclass, asdict
+from difflib import SequenceMatcher
 import json
 import os
 from pathlib import Path
@@ -30,10 +31,12 @@ def launch_query(text):
     value = normalized(text)
     value = re.sub(r'^(?:(?:ehi|hey) )?jarvis\s+', '', value)
     match = re.fullmatch(r'(?:(?:per favore|gentilmente) )?'
-        r'(?:(?:mi )?(?:puoi|potresti|vorrei|voglio)(?: che tu)? )?'
-        r'(?:apri|aprire|avvia|avviare|lancia|lanciare|fammi partire|fai partire) '
-        r'(.+?)(?: per favore)?', value)
-    return name_key(match.group(1)) if match else None
+        r'(?:(?:mi )?(?:puoi|potresti|vorrei|voglio)(?: che tu)? )?(?:mi )?'
+        r'(?:aprimi|apri|aprire|avviami|avvia|avviare|lanciami|lancia|lanciare|'
+        r'eseguimi|esegui|eseguire|fammi partire|fai partire|far partire|'
+        r'metti in esecuzione|mettere in esecuzione)'
+        r'(?: (.+?))?(?: per favore)?', value)
+    return name_key(match.group(1) or '') if match else None
 
 
 def protected(text):
@@ -232,6 +235,22 @@ class ProgramService:
                 partial.append(app.id)
         return exact or partial
 
+    def _similar(self, query):
+        key = name_key(query)
+        if not 5 <= len(key) <= 80:
+            return []
+        matches = []
+        for app in self._apps.values():
+            preference = self._preferences.get(app.id, {})
+            if app.id not in self._available or not preference.get('enabled'):
+                continue
+            phrase = preference.get('phrase', '')
+            aliases = {name_key(app.name), launch_query(phrase) or normalized(phrase)}
+            if any(candidate and SequenceMatcher(None, key, candidate).ratio() >= .82
+                   for candidate in aliases):
+                matches.append(app.id)
+        return matches
+
     def _exact(self, query, ident):
         app = self._apps[ident]
         phrase = self._preferences.get(ident,{}).get('phrase','')
@@ -262,17 +281,23 @@ class ProgramService:
                 return None
             pending = self._live_pending()
             if pending:
+                if pending['query'] and len(pending['ids']) == 1 and value in ('sì', 'si', 'confermo'):
+                    return 'select', {'query': '1', 'token': pending['token']}
                 number = re.fullmatch(r'(?:il |la |numero )?(\d+)', value)
                 ordinal = {'il primo':1, 'il secondo':2, 'il terzo':3, 'il quarto':4}
                 index = int(number.group(1)) if number else ordinal.get(value)
                 matches = [key for key in self._matches(text) if key in pending['ids']]
-                if index is not None or len(matches)==1:
+                if (index is not None and pending['query']) or len(matches)==1:
                     return 'select', {'query':str(index) if index is not None else text,
                                       'token':pending['token']}
             query = launch_query(text)
-            if query:
+            if query is not None:
                 self.reset(self._context)
+                if not query:
+                    return 'choose', {}
                 matches = self._matches(query)
+                if not matches and self._similar(query):
+                    return 'launch', {'query':query}
                 if any(self._preferences.get(key,{}).get('enabled') or self._exact(query,key) for key in matches):
                     return 'launch', {'query':query}
                 return None
@@ -294,7 +319,16 @@ class ProgramService:
             if operation == 'cancel':
                 self.reset(self._context)
                 return ProgramResult('completed', 'Avvio annullato.')
-            if (operation not in ('launch','launch_id','select') or not isinstance(arguments,dict)
+            if operation == 'choose' and arguments == {}:
+                allowed = [key for key in self._apps if key in self._available
+                           and self._preferences.get(key, {}).get('enabled')]
+                self.reset(self._context)
+                if not allowed:
+                    return ProgramResult('rejected', 'Abilita almeno un programma in Programmi e app.')
+                self._pending = dict(token=uuid.uuid4().hex, ids=allowed, revision=self._revision,
+                                     expires=self.clock()+120, query='')
+                return ProgramResult('completed', 'Quale programma vuoi aprire?')
+            if (operation not in ('launch','launch_id','select','suggest_id') or not isinstance(arguments,dict)
                     or set(arguments) - {'query','token'} or not isinstance(arguments.get('query'),str)
                     or not 1 <= len(arguments['query'].strip()) <= 300):
                 return ProgramResult('rejected', 'Richiesta programma non valida.')
@@ -306,24 +340,29 @@ class ProgramService:
                 pending = self._live_pending()
                 if not pending or arguments.get('token') != pending['token']:
                     return ProgramResult('rejected', 'Scelta scaduta o revocata; ripeti la richiesta di avvio.')
-                if query.isdecimal():
+                if query.isdecimal() and pending['query']:
                     index = int(query)-1
                     matches = [pending['ids'][index]] if 0 <= index < len(pending['ids']) else []
                 else:
                     matches = [key for key in self._matches(query) if key in pending['ids']]
             else:
                 self.reset(self._context)
-                matches = ([query] if query in self._apps else []) if operation=='launch_id' else self._matches(query)
+                matches = ([query] if query in self._apps else []) if operation in ('launch_id','suggest_id') else self._matches(query)
+                if operation == 'launch' and not matches:
+                    matches = self._similar(query)
             allowed = [key for key in matches if self._preferences.get(key,{}).get('enabled')]
             if not allowed:
                 if not matches:
                     return ProgramResult('rejected', 'Programma non presente nel catalogo: aggiorna l’elenco in Programmi e app.')
                 return ProgramResult('rejected', 'Programma presente ma non autorizzato: abilitalo in Programmi e app.')
-            if len(allowed)>1 or (operation=='launch' and len(allowed)==1 and not self._exact(query,allowed[0])):
+            if operation == 'suggest_id' or len(allowed)>1 or (operation=='launch' and len(allowed)==1 and not self._exact(query,allowed[0])):
                 token = uuid.uuid4().hex
                 self._pending = dict(token=token, ids=allowed, revision=self._revision,
                                      expires=self.clock()+120, query=query)
-                return ProgramResult('completed', 'Quale programma vuoi avviare? Scegli il nome o il numero.',
+                message = ('Intendevi '+self._apps[allowed[0]].name+'? Di’ sì o annulla.'
+                           if len(allowed) == 1 else
+                           'Quale programma vuoi avviare? Scegli il nome o il numero.')
+                return ProgramResult('completed', message,
                     dict(token=token, rows=[dict(number=i+1, id=key, name=self._apps[key].name,
                         kind=self._apps[key].kind, target=self._apps[key].target) for i,key in enumerate(allowed)]))
             self.reset(self._context)  # consume before crossing the native boundary
@@ -351,5 +390,5 @@ class ProgramService:
         if not self.available():
             return ''
         chosen = [row for row in self.entries() if row['enabled'] and row['available']]
-        return ('Programmi e app: apri/avvia/lancia NOME, oppure il comando personalizzato.\n'
+        return ('Programmi e app: apri/aprimi/avvia/avviami/lancia NOME, oppure il comando personalizzato.\n'
                 + '\n'.join(row['name']+(' — '+row['phrase'] if row['phrase'] else '') for row in chosen))

@@ -59,6 +59,32 @@ class ProgramServiceTests(unittest.TestCase):
         self.assertEqual(restored.parse_command('avvia la posta'),('launch',{'query':'posta'}))
         self.assertIn('apri la posta',restored.commands())
 
+    def test_open_verbs_and_missing_name_use_the_local_catalog(self):
+        for phrase in ("aprimi la posta", "avviami la posta", "lanciami la posta",
+                       "puoi far partire la posta?", "metti in esecuzione la posta"):
+            self.assertEqual(self.engine.execute(phrase).status, "completed", phrase)
+        self.assertEqual(self.launched, [self.mail]*5)
+        self.assertIn("Quale programma", self.engine.execute("aprimi").message)
+        self.assertEqual(self.launched, [self.mail]*5)
+        self.assertEqual(self.engine.execute("posta").status, "completed")
+        self.assertEqual(self.launched, [self.mail]*6)
+
+    def test_similar_name_and_gemma_suggestion_require_confirmation(self):
+        netflix = self.add("Netflix")
+        self.save({netflix: ""})
+        proposal = self.engine.execute("apri Netflis")
+        self.assertIn("Intendevi Netflix?", proposal.message)
+        self.assertFalse(self.launched)
+        self.assertEqual(self.engine.execute("sì").status, "completed")
+        self.assertEqual(self.launched, [netflix])
+        proposal = self.apps.execute("suggest_id", {"query": netflix})
+        self.assertIn("Intendevi Netflix?", proposal.message)
+        self.save({netflix: ""}, enabled=False)
+        self.assertEqual(self.apps.execute("select", {
+            "query": "1", "token": proposal.listing["token"]
+        }).status, "rejected")
+        self.assertEqual(self.launched, [netflix])
+
     def test_negations_questions_and_reserved_document_commands_never_launch_app(self):
         for phrase in ['non aprire la posta','evita di avviare la posta','come aprire la posta?',
                        'Netflix funziona?','apri cartella posta','apri blocco note']:

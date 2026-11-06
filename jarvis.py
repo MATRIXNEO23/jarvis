@@ -3969,6 +3969,21 @@ def main() -> None:
     def submit_gemma_voice(spoken):
         if closing or gemma_trial_busy[0]:
             return
+        explicit = re.match(r"^con gemma(?:[ ,:]+)(.+)$", spoken, re.I)
+        candidates = ()
+        if explicit:
+            from program_apps.service import blocked
+            provider = engine.program_apps
+            question = explicit.group(1).strip()
+            if blocked(question):
+                write_line("GEMMA > Per scegliere un’app indica un obiettivo da svolgere.")
+                return
+            if provider is not None and provider.available():
+                candidates = tuple(row for row in provider.entries()
+                                   if row["enabled"] and row["available"])
+            if not 1 <= len(candidates) <= 12:
+                write_line("GEMMA > Per la prova abilita da 1 a 12 app in Programmi e app.")
+                return
         if gemma_source[0] is None or not Path(gemma_source[0]).is_file():
             source = filedialog.askopenfilename(
                 parent=root, title="Configura Gemma: seleziona koboldcpp.py",
@@ -3991,9 +4006,15 @@ def main() -> None:
                 if gemma_session[0] is None:
                     gemma_session[0] = NativeConversationSession(
                         NativeChatAdapter(gemma_source[0]))
-                answer = chat_transport.ask_local_first(
-                    spoken, session=gemma_session[0], timeout=180)
-                gemma_trial_queue.put(("voice_ok", answer, voice_epoch))
+                if explicit:
+                    index = gemma_session[0].pick_program(
+                        question, tuple(row["name"] for row in candidates))
+                    app_id = candidates[index]["id"] if index is not None else None
+                    gemma_trial_queue.put(("program_choice", (spoken, app_id), voice_epoch))
+                else:
+                    answer = chat_transport.ask_local_first(
+                        spoken, session=gemma_session[0], timeout=180)
+                    gemma_trial_queue.put(("voice_ok", answer, voice_epoch))
             except Exception as exc:
                 gemma_trial_queue.put(("voice_error", str(exc)[:350], voice_epoch))
         threading.Thread(target=voice_worker, daemon=True,
@@ -4044,7 +4065,19 @@ def main() -> None:
                 gemma_button.configure(state="normal")
                 if voice_epoch is not None and voice_epoch != conversation_epoch:
                     continue
-                if kind == "voice_ok":
+                if kind == "program_choice":
+                    spoken, app_id = value
+                    if app_id is None:
+                        message = "Quale programma vuoi aprire?"
+                        write_line("GEMMA > " + message)
+                        speak_result(message)
+                    elif busy_local:
+                        write_line("GEMMA > Motore locale occupato. Riprova.")
+                    else:
+                        submit_local(message_override=spoken, source_utterance=spoken,
+                                     addon_action_id="addon.programmi_app.avvia",
+                                     program_call=("suggest_id", {"query": app_id}))
+                elif kind == "voice_ok":
                     write_line("GEMMA > " + value)
                     speak_result(value)
                 elif kind == "voice_error":

@@ -3,6 +3,7 @@
 No online fallback, no desktop actions and no model load on import.
 """
 from collections import deque
+import json
 import re
 
 def clean_native_answer(text):
@@ -72,6 +73,28 @@ class NativeConversationSession:
             self.history.append(("user", latest))
             self.history.append(("assistant", answer[:2000]))
             return answer
+
+    def pick_program(self, question, names, *, timeout=180):
+        """Return the index of a suggested app, or None, without chat history."""
+        prompt = ("Scegli un programma per la richiesta. Rispondi solo con il numero "
+                  "nell'elenco. Rispondi 0 se manca una scelta chiara.\n"
+                  + json.dumps(dict(programmi=dict(enumerate(names, 1)),
+                                    richiesta=question), ensure_ascii=False))
+        with self.lock:
+            config = self.config_loader().validate()
+            memory = self.memory_loader().validate()
+            if len(prompt) > memory.available_prompt_tokens(config.context_size, config.max_output):
+                raise ValueError("Richiesta o elenco troppo lungo per il contesto Gemma.")
+            if not self.prepared:
+                self.adapter.prepare()
+                self.prepared = True
+            answer = clean_native_answer(
+                self.adapter.call("ask", prompt=prompt, timeout=timeout).get("text"))
+            if re.fullmatch(r"[0-9]{1,2}", answer):
+                index = int(answer) - 1
+                if 0 <= index < len(names):
+                    return index
+            return None
 
     def stop(self):
         with self.lock:

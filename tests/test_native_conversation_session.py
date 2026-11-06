@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from local_model.memory_preferences import MemoryPreferences
 from local_model.native_config import NativeModelConfig
 from local_model.native_conversation_session import NativeConversationSession, clean_native_answer
@@ -61,6 +62,23 @@ class SessionTests(unittest.TestCase):
         self.assertIn("Jarvis: risposta 1", adapter.calls[1])
         session.stop()
         self.assertEqual(adapter.stops, 1)
+
+    def test_program_picker_uses_one_generation_and_keeps_chat_history_out(self):
+        adapter = FakeAdapter()
+        session = self.make_session(adapter)
+        session.ask("nota privata")
+        with patch.object(adapter, "call", wraps=adapter.call) as call:
+            call.side_effect = lambda *args, **kwargs: {"text": "2"}
+            self.assertEqual(session.pick_program("voglio vedere un film", ("Posta", "Netflix")), 1)
+            call.assert_called_once()
+            self.assertIn("Netflix", call.call_args.kwargs["prompt"])
+            self.assertNotIn("nota privata", call.call_args.kwargs["prompt"])
+            for answer in ("0", "9", "Avvia Netflix", "2 oppure 1"):
+                # A strict reply is checked independently of the chat.
+                with patch.object(adapter, "call", return_value={"text": answer}):
+                    self.assertIsNone(session.pick_program("un film", ("Posta", "Netflix")))
+        self.assertEqual(adapter.prepares, 1)
+        self.assertEqual(len(session.history), 2)
 
     def test_failure_does_not_save_turn_or_contact_online(self):
         adapter = FakeAdapter(fail=True)
