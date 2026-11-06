@@ -252,7 +252,9 @@ def main() -> None:
         item["id"] == "sveglia" and item["enabled"]
         for item in addon_manager.list_installed())),
         lambda: settings, alarm_status,
-        lambda text: (write_line("SVEGLIA > " + text), speak_result(text)))
+        lambda text: (write_line("SVEGLIA > " + text), speak_result(text)),
+        hud.set_alarm_active)
+    hud.alarm_stop_button.configure(command=alarm.stop)
     addon_settings_window=None
     telegram_owner_busy=False
     orbit_nodes_cache=()

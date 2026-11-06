@@ -374,8 +374,13 @@ class JarvisHUD:
         self.ram_text=tk.StringVar(value="RAM --")
         self.disk_text=tk.StringVar(value="DISCO C --")
         self.clock_text=tk.StringVar(value="--:--")
-        tk.Label(self.visual, textvariable=self.clock_text, bg=BG, fg=CYAN,
-                 font=("Consolas", 11), padx=10).pack(anchor="e")
+        clock_row = tk.Frame(self.visual, bg=BG)
+        clock_row.pack(anchor="e", padx=10)
+        self.alarm_stop_button = tk.Button(clock_row, text="⏰ Ferma", bg=BG, fg=CYAN,
+                                           activebackground=PANEL, activeforeground=WHITE,
+                                           bd=0, highlightthickness=0)
+        tk.Label(clock_row, textvariable=self.clock_text, bg=BG, fg=CYAN,
+                 font=("Consolas", 11)).pack(side="right")
         self._update_metrics()
         self.last_metrics=time.monotonic()
         self.select_tab("CONSOLE")
@@ -434,6 +439,12 @@ class JarvisHUD:
     def set_orbit_open_handler(self,callback):
         """Open a known project or Telegram activity by its trusted ID."""
         self._orbit_click=callback
+
+    def set_alarm_active(self, active):
+        if active:
+            self.alarm_stop_button.pack(side="right", padx=(6, 0))
+        else:
+            self.alarm_stop_button.pack_forget()
 
     def set_close_handler(self,callback):
         self.exit_button.configure(command=callback)

@@ -49,12 +49,13 @@ def next_alarm(value, now):
 
 
 class Alarm:
-    def __init__(self, root, enabled, preferences, status, notify):
+    def __init__(self, root, enabled, preferences, status, notify, on_active):
         self.root = root
         self.enabled = enabled
         self.preferences = preferences
         self.status = status
         self.notify = notify
+        self.on_active = on_active
         self.target = None
         self.job = None
         self.audio_stop = threading.Event()
@@ -70,6 +71,7 @@ class Alarm:
             return str(exc)
         self.stop()
         self.target = target
+        self.on_active(True)
         day = "oggi" if target.date() == now.date() else "domani"
         message = f"Sveglia impostata per {day} alle {target:%H:%M}."
         self.status.set(message)
@@ -109,3 +111,4 @@ class Alarm:
         self.audio_thread = None
         self.audio_stop = threading.Event()
         self.status.set("Nessuna sveglia impostata.")
+        self.on_active(False)
