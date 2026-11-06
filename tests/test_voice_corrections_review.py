@@ -71,6 +71,39 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
         self.root.update_idletasks()
         self.root.destroy()
 
+    def test_gemma_dialogue_is_chat_and_app_followup_is_a_proposal(self):
+        import re
+        import time
+        provider = SimpleNamespace(
+            available=lambda: True,
+            entries=lambda: [dict(id="netflix", name="Netflix", enabled=True, available=True)],
+        )
+        results = queue.Queue()
+        results.put(("ok", "Apri Netflix.", 7))
+        self.env.update(
+            queue=queue, re=re, time=time, engine=SimpleNamespace(program_apps=provider),
+            gemma_trial_queue=results, gemma_trial_busy=[True], gemma_button=Mock(),
+            gemma_recent_reply=[(7, time.monotonic(), "Posso aiutarti a trovare Netflix")],
+            conversation_epoch=7, speak_result=Mock(), closing=True, busy_local=False,
+            save_only_waiting=False, document_busy=False, doc_dialog=SimpleNamespace(phase="idle"),
+            pending_project_name=False, pending_project_rename_id=None,
+            pending_project_trash_id=None, submit_local=Mock(),
+        )
+        self.callback("poll_gemma_trial")()
+        self.env["write_line"].assert_called_with("GEMMA > Apri Netflix.")
+        self.env["submit_local"].assert_not_called()
+
+        self.env["closing"] = False
+        followup = self.callback("try_gemma_app_followup")
+        self.assertFalse(followup("Mi piace Netflix"))
+        self.assertTrue(followup("me lo apri?"))
+        self.env["submit_local"].assert_called_once_with(
+            message_override="me lo apri?", source_utterance="me lo apri?",
+            addon_action_id="addon.programmi_app.avvia",
+            program_call=("suggest_id", {"query": "netflix"}),
+        )
+        self.assertFalse(followup("fallo"))
+
     def test_gemma_poll_discards_voice_result_after_context_or_mode_change(self):
         results = queue.Queue()
         for event in (("voice_ok", "Risposta precedente", 6),

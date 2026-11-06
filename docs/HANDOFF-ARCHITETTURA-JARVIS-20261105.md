@@ -1,5 +1,9 @@
 # JARVIS — handoff tecnico, mappa architetturale e checkpoint (2026-11-05)
 
+## Segnalazione Pavilion — dialogo Gemma e apertura app
+
+La foto mostra «Apri Netflix» come risposta della chat. Il percorso scritto di Gemma non condivideva la selezione app del percorso vocale. Ora «con Gemma» può essere scritto oppure pronunciato. Dopo uno scambio recente che identifica una sola app autorizzata, una richiesta esplicita come «me lo apri?» passa al motore come proposta da confermare. Il testo del dialogo continua ad andare in chat. Scambio valido per 120 secondi e solo nella stessa epoca di conversazione. Verifica Windows in corso.
+
 ## Finestre Windows con comandi integrati
 
 Le finestre Tk di Jarvis usano una barra interna scura con riduci, massimizza/ripristina e chiudi. La rimozione della cornice avviene sul wrapper Win32 e mantiene i protocolli di chiusura Tk. La barra si applica anche alle finestre secondarie mappate dopo l’avvio e alla finestra separata di configurazione segreti Telegram. Le finestre native di sistema seguono l'aspetto Windows. La run [42144862058](https://github.com/MATRIXNEO23/jarvis/actions/runs/42144862058) sul commit `72af40e` ha superato 639 test per versione Python, compresa la prova Windows della barra su finestra principale e secondaria. Il pacchetto CI è stato generato e verificato dopo estrazione. Nessuna pubblicazione in `Download` per questa modifica.

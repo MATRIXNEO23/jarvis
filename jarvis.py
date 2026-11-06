@@ -1116,6 +1116,8 @@ def main() -> None:
 
     def handle_unanchored_short_reply(spoken: str) -> bool:
         """Never pretend an isolated yes/no confirms a stale action."""
+        if try_gemma_app_followup(spoken):
+            return True
         if (not is_ambiguous_short_reply(spoken)
                 or conversation_memory.last_question()):
             return False
@@ -3968,9 +3970,42 @@ def main() -> None:
                     else None]
     gemma_session = [None]
 
-    def submit_gemma_voice(spoken):
+    gemma_recent_reply = [None]
+
+    def try_gemma_app_followup(utterance):
+        from program_apps.service import normalized
+        if normalized(utterance) not in (
+            "me lo apri", "me la apri", "puoi aprirlo", "puoi aprirla",
+            "aprilo", "aprila", "avvialo", "avviala", "fallo",
+        ):
+            return False
+        recent = gemma_recent_reply[0]
+        provider = getattr(engine, "program_apps", None)
+        if (recent is None or recent[0] != conversation_epoch
+                or time.monotonic() - recent[1] > 120
+                or provider is None or not provider.available()
+                or closing or busy_local or gemma_trial_busy[0]
+                or save_only_waiting or document_busy or doc_dialog.phase != "idle"
+                or pending_project_name or pending_project_rename_id is not None
+                or pending_project_trash_id is not None):
+            return False
+        context = normalized(recent[2])
+        matches = [
+            row["id"] for row in provider.entries()
+            if row["enabled"] and row["available"]
+            and re.search(r"(?<!\w)" + re.escape(normalized(row["name"])) + r"(?!\w)", context)
+        ]
+        gemma_recent_reply[0] = None
+        if len(matches) != 1:
+            return False
+        submit_local(message_override=utterance, source_utterance=utterance,
+                     addon_action_id="addon.programmi_app.avvia",
+                     program_call=("suggest_id", {"query": matches[0]}))
+        return True
+
+    def submit_gemma_voice(spoken, *, typed=False):
         if closing or gemma_trial_busy[0]:
-            return
+            return False
         explicit = re.match(r"^con gemma(?:[ ,:]+)(.+)$", spoken, re.I)
         candidates = ()
         if explicit:
@@ -3979,26 +4014,28 @@ def main() -> None:
             question = explicit.group(1).strip()
             if blocked(question):
                 write_line("GEMMA > Per scegliere un’app indica un obiettivo da svolgere.")
-                return
+                return False
             if provider is not None and provider.available():
                 candidates = tuple(row for row in provider.entries()
                                    if row["enabled"] and row["available"])
             if not 1 <= len(candidates) <= 12:
                 write_line("GEMMA > Per la prova abilita da 1 a 12 app in Programmi e app.")
-                return
+                return False
         if gemma_source[0] is None or not Path(gemma_source[0]).is_file():
             source = filedialog.askopenfilename(
                 parent=root, title="Configura Gemma: seleziona koboldcpp.py",
                 filetypes=[("Sorgente KoboldCpp", "koboldcpp.py"), ("Python", "*.py")])
             if not source:
                 write_line("GEMMA > Configurazione locale mancante. Nessun invio online.")
-                return
+                return False
             if Path(source).name.lower() != "koboldcpp.py":
                 write_line("GEMMA > File sorgente non valido. Nessun invio online.")
-                return
+                return False
             gemma_source[0] = source
         gemma_trial_busy[0] = True
-        write_line("UTENTE / VOCE > " + spoken)
+        gemma_recent_reply[0] = None
+        gemma_button.configure(state="disabled")
+        write_line(("GEMMA / DOMANDA > " if typed else "UTENTE / VOCE > ") + spoken)
         voice_epoch = conversation_epoch
 
         def voice_worker():
@@ -4016,11 +4053,13 @@ def main() -> None:
                 else:
                     answer = chat_transport.ask_local_first(
                         spoken, session=gemma_session[0], timeout=180)
-                    gemma_trial_queue.put(("voice_ok", answer, voice_epoch))
+                    gemma_recent_reply[0] = (voice_epoch, time.monotonic(), spoken[:500] + " " + answer[:500])
+                    gemma_trial_queue.put(("ok" if typed else "voice_ok", answer, voice_epoch))
             except Exception as exc:
-                gemma_trial_queue.put(("voice_error", str(exc)[:350], voice_epoch))
+                gemma_trial_queue.put(("error" if typed else "voice_error", str(exc)[:350], voice_epoch))
         threading.Thread(target=voice_worker, daemon=True,
-                         name="jarvis-gemma-voice").start()
+                         name="jarvis-gemma").start()
+        return True
 
     def submit_gemma_trial():
         if closing or gemma_trial_busy[0]:
@@ -4029,35 +4068,9 @@ def main() -> None:
         if not question:
             write_line("GEMMA > Scrivi una domanda prima di avviare la prova.")
             return
-        if gemma_source[0] is None or not Path(gemma_source[0]).is_file():
-            source = filedialog.askopenfilename(
-                parent=root, title="Seleziona koboldcpp.py della versione verificata",
-                filetypes=[("Sorgente KoboldCpp", "koboldcpp.py"), ("Python", "*.py")])
-            if not source:
-                return
-            if Path(source).name.lower() != "koboldcpp.py":
-                messagebox.showerror("Gemma", "Seleziona koboldcpp.py.", parent=root)
-                return
-            gemma_source[0] = source
-        request.set("")
-        write_line("GEMMA / DOMANDA > " + question)
-        gemma_trial_busy[0] = True
-        gemma_button.configure(state="disabled")
-
-        def native_trial_worker():
-            try:
-                from local_model.native_chat_adapter import NativeChatAdapter
-                from local_model.native_conversation_session import NativeConversationSession
-                if gemma_session[0] is None:
-                    gemma_session[0] = NativeConversationSession(
-                        NativeChatAdapter(gemma_source[0]))
-                answer = gemma_session[0].ask(question, timeout=180)
-                gemma_trial_queue.put(("ok", answer, None))
-            except Exception as exc:
-                gemma_trial_queue.put(("error", str(exc)[:350], None))
-
-        threading.Thread(target=native_trial_worker, daemon=True,
-                         name="jarvis-native-gemma-trial").start()
+        if (try_program_command(question) or try_gemma_app_followup(question)
+                or submit_gemma_voice(question, typed=True)):
+            request.set("")
 
     def poll_gemma_trial():
         try:
