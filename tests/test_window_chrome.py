@@ -65,3 +65,38 @@ class WindowChromeTests(unittest.TestCase):
         self.assertTrue(dialog.winfo_ismapped())
         self.assertTrue(root.winfo_ismapped())
         self.assertEqual(closed, ["settings"])
+
+    def test_top_edge_moves_each_window_independently(self):
+        import ctypes
+        from ctypes import wintypes
+
+        root = tk.Tk()
+        self.addCleanup(root.destroy)
+        install_window_chrome(root)
+        root.geometry("400x250+40+40")
+        settings = tk.Toplevel(root)
+        settings.geometry("360x220+100+100")
+        child = tk.Toplevel(settings)
+        child.geometry("320x180+150+150")
+        root.update()
+
+        api = _WindowApi()
+
+        def position(window):
+            rect = wintypes.RECT()
+            self.assertTrue(api.get_rect(api.hwnd(window), ctypes.byref(rect)))
+            return rect.left, rect.top
+
+        for window in (root, settings, child):
+            with self.subTest(window=window):
+                others = {other: position(other) for other in (root, settings, child)
+                          if other is not window}
+                before = position(window)
+                x, y = window.winfo_rootx() + 15, window.winfo_rooty() + 3
+                window.event_generate("<ButtonPress-1>", rootx=x, rooty=y)
+                window.event_generate("<Motion>", state=0x0100, rootx=x+27, rooty=y+19)
+                window.event_generate("<ButtonRelease-1>", rootx=x+27, rooty=y+19)
+                root.update()
+                self.assertEqual(position(window), (before[0]+27, before[1]+19))
+                for other, previous in others.items():
+                    self.assertEqual(position(other), previous)

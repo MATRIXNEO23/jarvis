@@ -143,7 +143,7 @@ jobs:
 
           **[Scarica la candidata Windows](./$name)**
 
-          Le risposte di dialogo restano in chat. Una richiesta di apertura con un riferimento recente e univoco può diventare una proposta da confermare. Include «con Gemma» anche per testo e i tre pulsanti integrati, senza barra del titolo aggiuntiva.
+          Le risposte di dialogo restano in chat. Una richiesta di apertura con un riferimento recente e univoco può diventare una proposta da confermare. Include «con Gemma» anche per testo e i tre pulsanti integrati, senza barra del titolo aggiuntiva. Trascina vicino al bordo superiore per spostare ogni finestra.
 
           [Verifiche Windows e ZIP estratto]($run). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
 

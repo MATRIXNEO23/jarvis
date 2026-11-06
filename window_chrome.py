@@ -10,6 +10,8 @@ GWL_STYLE = -16
 WS_CAPTION = 0x00C00000
 WS_THICKFRAME = 0x00040000
 GA_ROOT = 2
+DRAG_EDGE_HEIGHT = 10
+MOVE_ONLY = 0x0015  # NOACTIVATE | NOZORDER | NOSIZE
 FRAME_CHANGED = 0x0037  # FRAMECHANGED | NOACTIVATE | NOZORDER | NOMOVE | NOSIZE
 
 
@@ -29,9 +31,8 @@ class _WindowApi:
                               wintypes.HWND, ctypes.c_int, wintypes.LONG)
         self.set_position = bind("SetWindowPos", wintypes.BOOL, wintypes.HWND,
                                  wintypes.HWND, *([ctypes.c_int] * 4), wintypes.UINT)
-        self.release_capture = bind("ReleaseCapture", wintypes.BOOL)
-        self.send = bind("SendMessageW", wintypes.LPARAM, wintypes.HWND,
-                         wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
+        self.get_rect = bind("GetWindowRect", wintypes.BOOL, wintypes.HWND,
+                             ctypes.POINTER(wintypes.RECT))
         self.show = bind("ShowWindow", wintypes.BOOL, wintypes.HWND, ctypes.c_int)
         self.zoomed = bind("IsZoomed", wintypes.BOOL, wintypes.HWND)
 
@@ -119,14 +120,39 @@ def install_window_chrome(root):
                                activeforeground="#ffffff", bd=0, highlightthickness=0)
             button.pack(side="right", ipady=3)
 
-        def drag(event):
-            api.release_capture()
-            position = (event.x_root & 0xffff) | ((event.y_root & 0xffff) << 16)
-            api.send(api.hwnd(window), 0x00A1, 2, position)  # WM_NCLBUTTONDOWN, HTCAPTION
+        drag_origin = None
 
-        if header is not None:
-            header.bind("<ButtonPress-1>", drag, add="+")
-        window.bind("<Alt-ButtonPress-1>", drag, add="+")
+        def start_drag(event, *, anywhere=False):
+            nonlocal drag_origin
+            drag_origin = None
+            if not anywhere:
+                on_edge = (0 <= event.y_root - window.winfo_rooty() < DRAG_EDGE_HEIGHT
+                           and isinstance(event.widget, (tk.Tk, tk.Toplevel, tk.Frame,
+                                                         tk.Label, tk.Canvas, ttk.Frame, ttk.Label)))
+                if event.widget is not header and not on_edge:
+                    return
+            handle = api.hwnd(window)
+            rect = wintypes.RECT()
+            if handle and not api.zoomed(handle) and api.get_rect(handle, ctypes.byref(rect)):
+                drag_origin = (handle, rect.left - event.x_root, rect.top - event.y_root)
+                return "break"
+
+        def move_drag(event):
+            if drag_origin is None:
+                return
+            handle, dx, dy = drag_origin
+            api.set_position(handle, None, event.x_root + dx, event.y_root + dy, 0, 0, MOVE_ONLY)
+            return "break"
+
+        def end_drag(_event):
+            nonlocal drag_origin
+            drag_origin = None
+
+        window.bind("<ButtonPress-1>", start_drag, add="+")
+        window.bind("<Alt-ButtonPress-1>", lambda event: start_drag(event, anywhere=True), add="+")
+        window.bind("<B1-Motion>", move_drag, add="+")
+        window.bind("<ButtonRelease-1>", end_drag, add="+")
+        window.bind("<Unmap>", end_drag, add="+")
 
     def on_map(event):
         if isinstance(event.widget, (tk.Tk, tk.Toplevel)):
