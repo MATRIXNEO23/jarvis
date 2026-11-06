@@ -123,7 +123,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $short = $env:GITHUB_SHA.Substring(0, 7)
-          $name = "Jarvis-Gemma-Avvio-Programmi-$short.zip"
+          $name = "Jarvis-Gemma-Comandi-e-Interfaccia-$short.zip"
           $archive = Join-Path $env:RUNNER_TEMP 'verified-gemma/Jarvis-Gemma-PROVA-CORRETTA.zip'
           $dest = Join-Path 'Download' $name
           $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -139,11 +139,11 @@ jobs:
           if (-not $old.Contains($name)) {
             $run = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
             $entry = @"
-          # Jarvis Gemma — avvio programmi e varianti vocali
+          # Jarvis Gemma — comandi in chat e finestre senza cornice
 
           **[Scarica la candidata Windows](./$name)**
 
-          Include apri, aprimi, avvia, avviami e altre varianti. Se il nome è incompleto o simile, Jarvis chiede di precisare. «Con Gemma» è una prova facoltativa con conferma.
+          Le risposte di dialogo restano in chat. Una richiesta di apertura con un riferimento recente e univoco può diventare una proposta da confermare. Include «con Gemma» anche per testo e i pulsanti integrati nelle finestre di Jarvis.
 
           [Verifiche Windows e ZIP estratto]($run). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
 
