@@ -123,7 +123,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $short = $env:GITHUB_SHA.Substring(0, 7)
-          $name = "Jarvis-Gemma-Ascolto-Continuo-$short.zip"
+          $name = "Jarvis-Gemma-Telegram-Contesto-Contatti-$short.zip"
           $archive = Join-Path $env:RUNNER_TEMP 'verified-gemma/Jarvis-Gemma-PROVA-CORRETTA.zip'
           $dest = Join-Path 'Download' $name
           $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -139,13 +139,13 @@ jobs:
           if (-not $old.Contains($name)) {
             $run = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
             $entry = @"
-          # Jarvis Gemma — ascolto continuo
+          # Jarvis Gemma — contesto per contatto Telegram
 
           **[Scarica la candidata Windows](./$name)**
 
-          In Ascolto continuo puoi parlare direttamente. In modalità Hey Jarvis serve il richiamo. Entrambe provano prima il motore locale e usano Gemma per le richieste non gestite localmente.
+          In Impostazioni Telegram → Contatti puoi salvare un contesto separato per ogni contatto autorizzato. Il profilo è usato da Gemma locale nelle risposte Telegram.
 
-          [Verifiche Windows e ZIP estratto]($run). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+          [Verifiche Windows e ZIP estratto]($run). Collaudo con Telegram e Gemma sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
 
           SHA-256: $hash
 
@@ -154,9 +154,18 @@ jobs:
           "@
             Set-Content -Path $index -Value ($entry + "`n" + $old) -NoNewline -Encoding utf8
           }
+          $registry = 'Download/REGISTRO-VERSIONI.md'
+          $log = Get-Content $registry -Raw
+          if (-not $log.Contains($name)) {
+            $run = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+            $section = "## Candidata Gemma — contesto per contatto Telegram, $short`n`n[$name](./$name) — Profilo modificabile per singolo contatto, usato da Gemma locale. [Verifiche Windows e ZIP estratto]($run) superate. Collaudo sul Pavilion pendente.`n`n"
+            $position = $log.IndexOf('## Candidata Gemma')
+            if ($position -lt 0) { throw 'Gemma section missing from Download registry' }
+            Set-Content -Path $registry -Value ($log.Insert($position, $section)) -NoNewline -Encoding utf8
+          }
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- $dest $index
+          git add -- $dest $index $registry
           if ($LASTEXITCODE -ne 0) { throw 'git add failed' }
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 1) {
