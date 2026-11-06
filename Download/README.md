@@ -1,3 +1,15 @@
+# Jarvis Gemma — ascolto continuo
+
+**[Scarica la candidata Windows](./Jarvis-Gemma-Ascolto-Continuo-b62d8a7.zip)**
+
+In Ascolto continuo puoi parlare direttamente. In modalità Hey Jarvis serve il richiamo. Entrambe provano prima il motore locale e usano Gemma per le richieste non gestite localmente.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42170295267). Collaudo di voce, Gemma e app reali sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: a27885b2e085f9aad47054f53acec5599f5558367d26b49d3858559ea87e8b26
+
+---
+
 # Jarvis Gemma — voce in console
 
 **[Scarica la candidata Windows](./Jarvis-Gemma-Voce-Console-53460ce.zip)**
