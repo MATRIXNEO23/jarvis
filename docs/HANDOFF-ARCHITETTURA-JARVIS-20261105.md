@@ -2,7 +2,7 @@
 
 ## 6 novembre 2026 — Carattere di Gemma locale
 
-La configurazione del modello include istruzioni facoltative di stile (240 caratteri). Il valore è locale e compatibile con i profili precedenti. Si applica alle nuove risposte della conversazione Gemma e a Prova generazione, senza richiedere un ricaricamento per il solo cambio di stile. Si preserva la domanda se il budget è stretto. Le risposte Telegram continuano a usare il contesto del contatto. Verifica Windows in corso.
+La configurazione del modello include istruzioni facoltative di stile (240 caratteri). Il valore è locale e compatibile con i profili precedenti. Si applica alle nuove risposte della conversazione Gemma e a Prova generazione, senza richiedere un ricaricamento per il solo cambio di stile. Si preserva la domanda se il budget è stretto. Le risposte Telegram continuano a usare il contesto del contatto. La prima run 42268657858 ha rilevato un'asserzione UI eseguita dopo Ripristina anziché dopo Salva. Sul commit correttivo `3c71ca4` le due suite Windows e la verifica dello ZIP estratto sono passate nella [run 42269297921](https://github.com/MATRIXNEO23/jarvis/actions/runs/42269297921). Resta il collaudo con il GGUF sul Pavilion.
 
 ## 6 novembre 2026 — Consenso GPT per Telegram durante la sessione
 
