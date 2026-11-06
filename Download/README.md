@@ -1,3 +1,15 @@
+# Jarvis Gemma — carattere e stile del modello locale
+
+**[Scarica la candidata Windows](./Jarvis-Gemma-Carattere-e-Stile-61a95f8.zip)**
+
+In Impostazioni → GPT e memoria → Configura Gemma locale, il campo Carattere e stile accetta istruzioni personalizzate fino a 240 caratteri.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42270285346). Collaudo con Telegram e Gemma sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: c38806cf12574e7ae142a8eef2cebe2afec6244c92db0a195c507d6bade6041a
+
+---
+
 # Jarvis Gemma — consenso GPT per la sessione Telegram
 
 **[Scarica la candidata Windows](./Jarvis-Gemma-Telegram-Consenso-GPT-Sessione-c233bb4.zip)**
