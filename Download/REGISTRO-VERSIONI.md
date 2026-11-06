@@ -12,6 +12,10 @@ Da questa consegna i file hanno numeri progressivi. Ogni versione pubblicata res
 
 Registro tecnico: [BUILD-NUMBERS.json](BUILD-NUMBERS.json). I pacchetti storici senza numero restano elencati sotto.
 
+## Candidata Gemma — notifiche Telegram nel HUD, bf6bce9
+
+[Jarvis-Gemma-Telegram-Notifiche-HUD-bf6bce9.zip](./Jarvis-Gemma-Telegram-Notifiche-HUD-bf6bce9.zip) — Pallino Telegram lampeggiante per i messaggi da vedere e viola tenue dopo la lettura. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42222733895) superate. Collaudo sul Pavilion pendente.
+
 ## Candidata Gemma — contesto per contatto Telegram, 0055607
 
 [Jarvis-Gemma-Telegram-Contesto-Contatti-0055607.zip](./Jarvis-Gemma-Telegram-Contesto-Contatti-0055607.zip) — Profilo modificabile per singolo contatto, usato da Gemma locale. [Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42211351973) superate. Collaudo sul Pavilion pendente.

@@ -1,3 +1,15 @@
+# Jarvis Gemma — notifiche Telegram nel HUD
+
+**[Scarica la candidata Windows](./Jarvis-Gemma-Telegram-Notifiche-HUD-bf6bce9.zip)**
+
+Il pallino del contatto lampeggia finché ci sono messaggi Telegram da vedere. Aprendo la conversazione dal pallino, i messaggi mostrati vengono segnati come visti in Jarvis.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42222733895). Collaudo con Telegram e Gemma sul Pavilion ancora da fare. Estrai la candidata in una cartella separata.
+
+SHA-256: 30f1226a76c4723d5d756faa51bd10306a90ddaaff96a889517c39250be30cc3
+
+---
+
 # Jarvis Gemma — contesto per contatto Telegram
 
 **[Scarica la candidata Windows](./Jarvis-Gemma-Telegram-Contesto-Contatti-0055607.zip)**
