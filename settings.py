@@ -7,6 +7,7 @@ from pathlib import Path
 
 DEFAULTS = {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "",
             "memory_enabled": False, "auto_listen": True,
+            "keep_awake_fullscreen": False,
             "telegram_enabled": False, "telegram_peer_id": 0,
             "telegram_contact_name": "", "telegram_contacts": [],
             "timer_sound": "digital", "timer_volume": 80,
@@ -62,6 +63,8 @@ def load_settings(path: Path | None = None) -> dict:
             result["memory_enabled"] = data["memory_enabled"]
         if type(data.get("auto_listen")) is bool:
             result["auto_listen"] = data["auto_listen"]
+        if type(data.get("keep_awake_fullscreen")) is bool:
+            result["keep_awake_fullscreen"] = data["keep_awake_fullscreen"]
         if type(data.get("telegram_enabled")) is bool:
             result["telegram_enabled"] = data["telegram_enabled"]
         peer = data.get("telegram_peer_id")
@@ -107,6 +110,7 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
     voice = settings.get("tts_voice", "")
     memory_enabled = settings.get("memory_enabled", False)
     auto_listen = settings.get("auto_listen", True)
+    keep_awake_fullscreen = settings.get("keep_awake_fullscreen", False)
     telegram_enabled = settings.get("telegram_enabled", False)
     peer = settings.get("telegram_peer_id", 0)
     peer_name = settings.get("telegram_contact_name", "")
@@ -123,7 +127,7 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
     if not isinstance(contacts, list) or normalize_telegram_contacts(contacts) != contacts:
         raise ValueError("Invalid Telegram contact selection")
     if (type(enabled) is not bool or type(memory_enabled) is not bool
-            or type(auto_listen) is not bool
+            or type(auto_listen) is not bool or type(keep_awake_fullscreen) is not bool
             or type(telegram_enabled) is not bool
             or type(peer) is not int or peer < 0
             or not isinstance(peer_name,str) or len(peer_name) > 90
@@ -135,6 +139,7 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
                                "tts_enabled": enabled, "tts_voice": voice,
                                "memory_enabled": memory_enabled,
                                "auto_listen": auto_listen,
+                               "keep_awake_fullscreen": keep_awake_fullscreen,
                                "telegram_enabled": telegram_enabled,
                                "telegram_peer_id": peer,
                                "telegram_contact_name": peer_name,

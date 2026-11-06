@@ -53,6 +53,7 @@ from second_brain import SecondBrain, BrainError
 from memory_boundaries import (PreferenceStore, OperationJournal, MemoryBoundaryError,
                                observed_local_result, observed_saved_file)
 from preference_voice import parse_preference_intent
+from foreground_power import ForegroundPower
 from animated_hud import JarvisHUD, BG, PANEL, CYAN, MUTED, WHITE, GREEN, AMBER
 from desktop_dictation import DesktopDictation, dictation_voice_action
 from conversation_router import (
@@ -154,6 +155,27 @@ def main() -> None:
     assistant_settings_frame = settings_page("GPT e memoria")
     integrations_settings_frame = settings_page("Progetti e servizi")
     timer_settings_frame = settings_page("Timer e allarmi")
+    interface_settings_frame = settings_page("Interfaccia")
+    keep_awake = tk.BooleanVar(value=settings["keep_awake_fullscreen"])
+    power = ForegroundPower(root, keep_awake.get)
+
+    def save_keep_awake():
+        previous = settings["keep_awake_fullscreen"]
+        settings["keep_awake_fullscreen"] = keep_awake.get()
+        try:
+            save_settings(settings)
+        except (OSError, ValueError) as exc:
+            settings["keep_awake_fullscreen"] = previous
+            keep_awake.set(previous)
+            messagebox.showerror("Impostazioni", str(exc), parent=settings_window)
+
+    ttk.Checkbutton(interface_settings_frame,
+                    text="Tieni acceso il PC con Jarvis massimizzato in primo piano",
+                    variable=keep_awake, command=save_keep_awake).pack(anchor="w")
+    ttk.Label(interface_settings_frame, wraplength=540,
+              text="Sospende lo standby automatico e lo spegnimento dello schermo "
+                   "finché la finestra principale di Jarvis è massimizzata e in primo piano."
+              ).pack(anchor="w", pady=(6, 0))
 
     # Optional native settings editor. No model initialization or provider switch.
     def open_native_model_settings():
@@ -4254,7 +4276,11 @@ def main() -> None:
         root.after(1400,toggle_telegram_automatic)
     if gpt_enabled.get():
         root.after(200, lambda: run_gpt("status"))
-    root.mainloop()
+    power.start()
+    try:
+        root.mainloop()
+    finally:
+        power.close()
 
 
 if __name__ == "__main__":
