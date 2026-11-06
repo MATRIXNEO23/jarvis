@@ -300,7 +300,7 @@ def main() -> None:
             ("Standby (spento)", STANDBY),
             ("Premi per parlare", PUSH_TO_TALK),
             ("Ascolto continuo", CONTINUOUS),
-            ("Conversazione continua locale (Gemma)", GPT_CONVERSATION))):
+            ("Hey Jarvis", GPT_CONVERSATION))):
         button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
         button.grid(row=index // 2, column=index % 2, sticky="w", padx=(0, 12), pady=3)
         mode_buttons.append(button)
@@ -2011,7 +2011,7 @@ def main() -> None:
 
     def start_conversation_gpt(spoken: str) -> None:
         """Voice conversation uses Gemma locally; never escalates to GPT."""
-        if closing or voice_mode.get() != GPT_CONVERSATION:
+        if closing or voice_mode.get() not in (GPT_CONVERSATION, CONTINUOUS):
             return
         if try_self_diagnostic(spoken):
             return
@@ -2738,7 +2738,7 @@ def main() -> None:
             if not spoken_enabled.get():
                 spoken_enabled.set(True)
                 save_speech_preferences()
-            write_line("Conversazione vocale con Gemma locale. Inizia con Jarvis.")
+            write_line("Modalità Hey Jarvis. Inizia ogni richiesta con Jarvis.")
         else:
             mic_status.set("Ascolto continuo: parla direttamente. "
                            "La dettatura richiede l’attivazione manuale.")
@@ -3299,6 +3299,8 @@ def main() -> None:
                         if (route_type == "ignored" and voice_mode.get() == CONTINUOUS
                                 and not dictation.enabled):
                             route_type, spoken = "command", raw_spoken
+                        if route_type == "dictation" and dictation_voice_action(raw_spoken) == "stop":
+                            route_type = "command"
                         if route_type == "wake":
                             if voice_mode.get() == GPT_CONVERSATION:
                                 mic_status.set("Dì Jarvis seguito dalla richiesta nella stessa frase.")
@@ -3314,7 +3316,10 @@ def main() -> None:
                             if spoken != uncorrected:
                                 write_line("VOCABOLARIO LIA > " + spoken)
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
-                        if voice_mode.get() == GPT_CONVERSATION:
+                        if route_type == "dictation":
+                            sync_dictation_ui(dictation.insert(spoken))
+                            continue
+                        if voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS):
                             write_line("TU > " + spoken)
                             if try_file_command(spoken):
                                 continue
@@ -3361,6 +3366,14 @@ def main() -> None:
                             ):
                                 ask_to_close_document(spoken)
                                 continue
+                            if voice_mode.get() == CONTINUOUS:
+                                dictation_action = dictation_voice_action(spoken)
+                                if dictation_action == "stop":
+                                    sync_dictation_ui(dictation.disable())
+                                    continue
+                                if dictation_action == "start":
+                                    sync_dictation_ui(dictation.enable())
+                                    continue
                             if project_voice_command(spoken):
                                 continue
                             if preference_command(spoken):
@@ -3389,10 +3402,6 @@ def main() -> None:
                                                "Ripeti la frase al termine.")
                                 else:
                                     start_conversation_gpt(spoken)
-                            continue
-                        if route_type == "dictation":
-                            # Only manual dictation may insert free speech.
-                            sync_dictation_ui(dictation.insert(spoken))
                             continue
                         # Log commands that passed the wake/press gate.
                         # Do not record free dictation or phrases ignored by wake.

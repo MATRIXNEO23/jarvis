@@ -106,6 +106,14 @@ class GPTVoiceAddressingTests(unittest.TestCase):
             message_override='apri browser', source_utterance='apri browser')
         self.env['start_conversation_gpt'].assert_not_called()
 
+    def test_continuous_mode_sends_only_unhandled_speech_to_gemma(self):
+        self.fixture.voice_environment(CONTINUOUS)
+        self.receive('raccontami qualcosa')
+        self.env['write_line'].assert_called_once_with('TU > raccontami qualcosa')
+        self.env['try_file_command'].assert_called_once_with('raccontami qualcosa')
+        self.env['submit_local'].assert_not_called()
+        self.env['start_conversation_gpt'].assert_called_once_with('raccontami qualcosa')
+
     def test_continuous_mode_accepts_an_optional_name(self):
         self.fixture.voice_environment(CONTINUOUS)
         self.receive('Jarvis')
