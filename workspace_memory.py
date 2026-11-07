@@ -539,25 +539,26 @@ class WorkspaceMemory:
         return tuple({"user":u[:160],"reply":a[:180],"when":t}
                      for u,a,t in rows)
 
-    def prompt_context(self,scope,scope_id,query,budget=950):
+    def prompt_context(self,scope,scope_id,query,budget=950,*,prefer_related=False):
         budget=max(160,min(1800,int(budget)))
         context={"recent":[],"evidence":[]}
-        for row in self.recent(scope,scope_id,4):
-            item={"utente":row["utente"][:115],"jarvis":row["jarvis"][:140],
-                  "tipo":row["tipo"]}
-            proposed={**context,"recent":context["recent"]+[item]}
-            if len(json.dumps(proposed,ensure_ascii=False))<=budget:
-                context=proposed
-        for row in self.search(scope,scope_id,query,4):
-            item={"source":"conversation","when":row["when"],
-                  "fact":"Utente: "+row["user"]+" | Jarvis: "+row["reply"]}
-            proposed={**context,"evidence":context["evidence"]+[item]}
-            if len(json.dumps(proposed,ensure_ascii=False))<=budget:
-                context=proposed
+        recent=[{"utente":r["utente"][:115],"jarvis":r["jarvis"][:140],
+                 "tipo":r["tipo"]} for r in self.recent(scope,scope_id,4)]
+        evidence=[{"source":"conversation","when":r["when"],
+                   "fact":"Utente: "+r["user"]+" | Jarvis: "+r["reply"]}
+                  for r in self.search(scope,scope_id,query,4)]
+        groups=[("recent",recent),("evidence",evidence)]
+        for key,items in (reversed(groups) if prefer_related else groups):
+            for item in items:
+                proposed={**context,key:context[key]+[item]}
+                if len(json.dumps(proposed,ensure_ascii=False))<=budget:
+                    context=proposed
         if scope=="project":
             project=self.project(scope_id)
             if project:
-                context["project"]=project["name"][:65]
+                candidate={**context,"project":project["name"][:65]}
+                if not prefer_related or len(json.dumps(candidate,ensure_ascii=False))<=budget:
+                    context=candidate
                 if project["summary"]:
                     summary=project["summary"][:280]
                     if len(json.dumps({**context,"state":summary},ensure_ascii=False))<=budget:

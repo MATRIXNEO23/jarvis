@@ -2,10 +2,8 @@
 
 Only Windows. No user profile, account, native model or desktop action is used.
 """
-from collections import deque
 import json
 import os
-from pathlib import Path
 import queue
 import sqlite3
 import subprocess
@@ -140,7 +138,9 @@ class NativeDurableMemoryTests(unittest.TestCase):
         workspace = self.env["workspace"]
         workspace.add_turn("project", a, "Nebulosa AMETISTA_ANTICA", "Violetto")
         for number in range(12):
-            workspace.add_turn("project", a, "Altro tema " + str(number), "Testo recente")
+            workspace.add_turn("project", a, "Altro tema " + str(number) + "x" * 70,
+                               "Testo recente " + "r" * 95)
+        self.fixture.session.memory_loader = lambda: MemoryPreferences(prompt_max_tokens=520)
         self.fixture.switch(a)
         self.assertIn("AMETISTA_ANTICA", self.ask("Qual è il colore della nebulosa?"))
 
@@ -285,9 +285,11 @@ finally:
 
     def test_reader_runs_in_worker_without_accessing_ui_values(self):
         owner = threading.get_ident()
+        violations = []
         class OwnerValue(Value):
             def get(self):
                 if threading.get_ident() != owner:
+                    violations.append(threading.get_ident())
                     raise RuntimeError("UI value read outside owner thread")
                 return super().get()
         self.env["memory_enabled"] = OwnerValue(True)
@@ -307,6 +309,7 @@ finally:
         self.env["poll_gemma_trial"]()
         self.assertEqual(len(threads), 1)
         self.assertNotEqual(threads[0], owner)
+        self.assertEqual(violations, [])
         self.env["speak_result"].assert_called_once()
 
     def test_clear_does_not_wait_for_inference_or_remove_project_memory(self):
@@ -353,3 +356,20 @@ finally:
         self.assertIn("RAM_PROGETTO_DA_CONSERVARE", self.fixture.adapter.prompts[-1])
         self.assertEqual(self.env["workspace"].recent("project", a)[0]["utente"],
                          "DISCO_PROGETTO_DA_CONSERVARE")
+
+    def test_failed_post_delete_cleanup_cannot_restore_old_general_turns(self):
+        self.ask("PRIMA_DI_CLEAR_CON_ERRORE")
+        self.fixture.submit("PENDENTE_DI_CLEAR_CON_ERRORE", typed=True)
+        self.fixture.workers.pop()()
+        original_clear = self.brain.clear_all
+        def delete_then_fail():
+            original_clear()  # Real committed deletion in this test's SQLite.
+            raise sqlite3.OperationalError("Controlled post-delete cleanup error")
+        with patch.object(self.brain, "clear_all", side_effect=delete_then_fail):
+            self.env["clear_saved_memory"]()
+        self.assertIn("non riuscita", self.env["memory_status"].get())
+        self.env["poll_gemma_trial"]()
+        self.assertEqual(self.brain.stats()[0], 0)
+        prompt = self.ask("Dopo cancellazione con errore")
+        self.assertNotIn("PRIMA_DI_CLEAR_CON_ERRORE", prompt)
+        self.assertNotIn("PENDENTE_DI_CLEAR_CON_ERRORE", prompt)

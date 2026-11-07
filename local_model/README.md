@@ -20,7 +20,7 @@ La conversazione generale e ogni progetto hanno ricordi brevi separati nella ste
 
 Una risposta generata entra in memoria solo quando la UI la accetta nello stesso contesto ed epoca della richiesta. Se nel frattempo cambia progetto, modalità o autorizzazione, la risposta revocata non viene ricordata. Telegram e selettore programmi non leggono né scrivono questa memoria chat.
 
-Non vengono modificati database, cronologie o file di progetto. Questa correzione non aggiunge persistenza al dialogo Gemma: il collegamento alla memoria duratura resta il distinto JRV-AUD-009.
+La memoria breve introdotta dalla002 resta limitata alla sessione. Il successivo collegamento agli archivi esistenti della009 è descritto sotto; i suoi dati rimangono separati per contesto.
 
 ## Proprietario della prova Gemma — JRV-AUD-005
 
@@ -35,3 +35,13 @@ Il pulsante resta aggiunto dal builder Gemma; i sorgenti root del pannello sono 
 Salva conserva i nuovi valori senza avviare il modello. La prossima richiesta valida li usa: max output, temperatura, top-k/top-p e seed senza ricaricare il GGUF; cambi di modello, thread o contesto richiedono ricaricamento automatico dopo la richiesta in corso. Il carattere continua ad applicarsi al prossimo prompt. Un errore non deve cancellare i ricordi della chat; correggere le impostazioni e riprovare.
 
 Queste modifiche sono nel ramo di correzione, verificato da747test per Python3.11/3.12 su Windows (run42344534309), senza nuova build pubblicata. Le prove usano ABI controllata e non certificano prestazioni o qualità sul PC. Nessuna dipendenza o impostazione del microfono aggiunta.
+
+## Ricordi archiviati Gemma — correzione009 in verifica
+
+Fuori dai progetti, Second Brain attivo consente di conservare gli scambi accettati e recuperarne piccoli estratti dopo riapertura. Se disattivato, non vengono avviati nuovi recuperi o salvataggi generali; i dati già sul disco e la memoria breve non sono cancellati. Nei progetti espliciti si usa il relativo archivio separato, come per le altre funzioni di Jarvis, indipendente dalla spunta generale.
+
+La ricerca usa parole ed estratti limitati: non garantisce ogni dettaglio della cronologia. Lo spazio dipende dalle impostazioni del contesto. Trial, selezione app e Telegram isolato mantengono i loro percorsi e non archiviano la chat locale.
+
+Cancellare il Second Brain generale revoca anche i turni generali in attesa e la loro memoria breve; i progetti restano separati. Un errore di archiviazione viene segnalato e la risposta locale rimane disponibile. Una richiesta già in corso può aver già usato il contesto prima della disattivazione/cancellazione; non può essere ritirato dal modello, ma la revoca impedisce riscritture tardive dopo Clear.
+
+Correzione ancora in verifica Windows, nessuna nuova build installabile. Non sono attivati riassunti automatici in inattività né nuovi archivi o servizi.
