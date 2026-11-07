@@ -1,3 +1,7 @@
+## Timer scritto — nuovi test passati, fixture esistente completata
+
+Run42417636927/source928ebb9f:918test per job,0failure1error nel solo test_file_access.test_actual_console_gate_prefers_explorer_but_preserves_explicit_projects; il callbackAST ora incontra il gate timer e la vecchia fixture non forniva quel collaboratore. Aggiunto solo try_timer_command=False per i casi file/app/progetto di questa fixture, mantenuti tutti gli assert; runtime invariato.3.11 job128539063041137.059s;3.12 job128539063270159.435s. I7nuovi metodi passati. Red2run42417313290:918test/job1failure13errori di fixture Path/re, completati nella candidata; non considerarli difetti runtime. Nuova verifica suite completa necessaria dopo questo solo completamento fixture, nessuna build.
+
 ## Timer scritto — candidata minima e review
 
 Correzione: gate timer/sveglia dopo file e prima del guard di avvio app (necessario per «avvia un timer»), con progetto pendente protetto. Rimossa restrizione alle sole sveglie. Parser ora accetta interamente comandi supportati e controlli, non menzioni conversazionali/negate; cifre e parole italiane condividono la mappa esistente importata solo al parse, senza ciclo. Sveglia accetta «di mattina/del mattino» con ore0–11 e rollover già previsto. Nessun modello nuovo/consenso/dipendenza o salvataggio cambiato.
