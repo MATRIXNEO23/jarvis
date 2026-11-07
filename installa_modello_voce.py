@@ -88,7 +88,7 @@ def install() -> Path:
 if __name__ == "__main__":
     try:
         print("Modello disponibile in:", install())
-        print("Riavvia Jarvis: il microfono resterà spento fino all'attivazione manuale.")
+        print("Riavvia Jarvis: verrà usata la preferenza microfono salvata.")
     except (OSError, ValueError, zipfile.BadZipFile) as exc:
         print("Installazione modello non riuscita:", exc)
         raise SystemExit(1)

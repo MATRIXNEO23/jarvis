@@ -1,3 +1,27 @@
+## 7 novembre 2026 — JRV-AUD-013 verificata nei sorgenti in bozza
+
+Quattro guide operative incluse e obbligatorie, sviluppo/handoff/test/upstream esclusi. Guida voce e messaggi installer coerenti con modalità/preferenze reali, link tecnico online immutabile. Nessun comportamento assistente o profilo cambiato. Fixture012 conserva guard nativi e ZIP vietato.
+
+Source970bcb17e15b9c197ec4fa5766eac6a6519058a6, bozza53, run42378831525 SUCCESS tentativo1:911test su3.11.9 (job128421936403,129.771s) e3.12.10 (job128421936166,151.451s),0failure/errori/skip,3nuovi passati. Red1ed02006/run42378209746:911test/job5failure0errori guide/rimedio;3.11job128420097593139.441s,3.12job128420097746192.454s. Review e ricontrollo indipendenti senza blocchi dopo rettifica dei testi; sintassi/probe/Searchlive3.12 passati con ripristino. Rapporti/evidenza013 preservati.
+
+Nessun build/ZIP/estrazione/installer/download, main/merge/release, test funzionale Linux o dato reale. Verifica guide dall'archivio ancora da fare quando autorizzato; Windows10/hardware/audio/account non provati. Codice/test/guide da confrontare col sourceverde nel checkpoint finale. Stack001–015 salvo016,017–019,021 e022 nel loro ambito conservato;023 aperto. Prossimo020 solo indice documentale da main e riepilogo finale, senza portare lì il runtime.016 indice autonomo resta funzione distinta da progettare, non correzione automatica.
+
+## JRV-AUD-013 — ricontrollo completato, candidata per Green
+
+Nessun blocco statico residuo dopo rettifica dei testi voce; selezione/esclusioni e obbligatorietà corrette, helper012 valido.911test Windows attesi, nessun archivio costruito o installer eseguito. Prossimo esiti/evidenza e verifica remota.
+
+## JRV-AUD-013 — rilievi documentali corretti
+
+Review verifica allowlist/obbligatorietà/esclusioni e segnala due testi da allineare: UI reale HeyJarvis richiede nome a ogni frase, Ascolto continuo accetta richieste dirette senza dettatura; corrette le descrizioni. Corretto anche il print dell'installer modello richiamato dalBAT, mantenendo invariati installazione e preferenze. AST/diff passano, nessun installer eseguito. Assert/fixture012 preservati e rafforzati. Ricontrollo mirato e Green Windows necessari,911attesi; nessun build/ZIP/merge/test funzionale Linux o dato reale.
+
+## JRV-AUD-013 — Red acquisito e candidata minima
+
+Red1ed02006/run42378209746:911test per versione,5failure0errori guide/rimedio esclusi;3.11job128420097593139.441s,3.12job128420097746192.454s. Candidata allowlist esatta quattro guide anche obbligatorie, esclusioni generali conservate. Guida voce aggiornata a preferenze/modalità reali e soloechoBAT corretto; riferimento tecnico Accesso file online immutabile. Fixture012 riceve guide e guard boundary nativi, nessun assert indebolito/ZIP. Review mirata richiesta, Green necessario. Nessun comportamento assistente, dato, installer/download, build/merge o test funzionale Linux.022 passa,023 aperto, futuro pacchetto non verificato.
+
+## 7 novembre 2026 — JRV-AUD-013 avviata: guide operative
+
+Base012605c7056 verificata remota14file/7codice-test-workflow uguali al sourceverde, main pulito f147b1a. Ramo013 isolato. Selettore esclude guide richiamate dall'installer: allowlist esatta delle quattro guide operative, obbligatorie; niente docs di sviluppo/handoff. Aggiornare testo voce storico contraddittorio e rimedi, senza cambiare avvio o impostazioni. Spec/piano prima del runtime, tre regressioni pronte sul selettore reale/percorsi locali,911test attesi. Nessun builder eseguito, ZIP, installer/download, merge, dato reale o test funzionale Linux. ProssimoRed Windows, fix minimo e review.
+
 ## 7 novembre 2026 — JRV-AUD-012 verificata nei sorgenti in bozza
 
 Stesso Python già generato ora nei moduli; builder non lo riscrive più dopo i test. Launcher/profili invariati, helper diretti con assert precedenti conservati. Workflow futuro rifiuta modifiche PY/MJS/PS1 e si ferma al primo comando Python fallito. Parità statica con il vecchio codice generato verificata.

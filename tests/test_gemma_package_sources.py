@@ -27,7 +27,9 @@ def build_workflow_script():
 class PackageSourceParityTests(unittest.TestCase):
     def test_builder_failure_before_archive_does_not_mutate_verified_python(self):
         builder = Path('tools/build_gemma_clean_trial.py').read_text(encoding='utf-8')
-        names = ('jarvis.py', 'avvia_jarvis.bat', 'local_model/native_ui.py', 'local_model/native_factory.py')
+        names = ('jarvis.py', 'avvia_jarvis.bat', 'local_model/native_ui.py', 'local_model/native_factory.py',
+                 'docs/VOCE_OFFLINE.md', 'docs/RECUPERO-IMPOSTAZIONI.md',
+                 'file_access/LEGGIMI.md', 'program_apps/LEGGIMI.md')
         sources = {name: Path(name).read_bytes() for name in names}
         archive = Mock(side_effect=RuntimeError('An application archive must never be created by this test'))
         git = SimpleNamespace(check_output=Mock(return_value=b'\0'.join(n.encode() for n in names)+b'\0'))
@@ -44,13 +46,14 @@ class PackageSourceParityTests(unittest.TestCase):
                 target = root / name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(data)
+            namespace = {'__builtins__': dict(vars(builtins), __import__=imported)}
             with chdir(root), self.assertRaises(AssertionError):
                 # Real builder, isolated inputs; deliberately absent native
                 # files stop it before ZIP. Import stubs affect only this exec.
-                exec(compile(builder, 'actual-builder-no-native-assets', 'exec'),
-                     {'__builtins__': dict(vars(builtins), __import__=imported)})
+                exec(compile(builder, 'actual-builder-no-native-assets', 'exec'), namespace)
             archive.assert_not_called()
             git.check_output.assert_called_once_with(['git', 'ls-files', '-z'])
+            self.assertIn('native', namespace, 'Builder must reach the deliberate missing-native boundary')
             self.assertFalse((root / 'Jarvis-Gemma-PROVA-CORRETTA.zip').exists())
             for name in names:
                 if name.endswith('.py'):

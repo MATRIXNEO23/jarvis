@@ -11,7 +11,7 @@ py -3 installa_modello_voce.py
 if errorlevel 1 goto error
 echo.
 echo Componenti e modello installati. Avvia avvia_jarvis.bat.
-echo Il microfono resta SPENTO all'avvio.
+echo All'avvio Jarvis usa la preferenza microfono salvata.
 pause
 exit /b 0
 :error
