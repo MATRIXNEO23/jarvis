@@ -1,3 +1,19 @@
+## 7 novembre 2026 — JRV-AUD-019 verificata nei sorgenti in bozza
+
+Corrette soltanto etichette/testo e docstring: il pannello memoria indica caratteri nel prompt (spazi inclusi), Context Size/Max Output Gemma indicano token, sintesi automatica e suo limite dichiarati non collegati. Nessun tokenizer, attivazione di sintesi o migrazione. ConfrontoAST con la base conferma defaults/schema, budget/validate/save e callbacksave UI identici. Valori e algoritmo non cambiano.
+
+Base017 530fad08, sourceverde190cac1e1080134de06e64ed241079ba07a7a369, [bozza50](https://github.com/MATRIXNEO23/jarvis/pull/50). [Run42361597736](https://github.com/MATRIXNEO23/jarvis/actions/runs/42361597736) SUCCESS tentativo1:884test per Python3.11.9 (job128370965405,139.336s) e3.12.10 (job128370965635,137.486s),0failure/errori/skip. Sintassi/probe passati, Searchlive3.12 con servizio/fixture ripristinati. [Rapporto](CORREZIONE-JRV-AUD-019-20261107.md), [evidenza](evidence/jrv-aud-019-fix-20261107.json). Nessun nuovo test speculare delle stringhe o Red runtime rivendicato per questa correzione di testo; nessuna review indipendente rivendicata.
+
+Checkpoint finale solo documenti/evidenza, tre moduli da confrontare col sourceverde prima di dichiarare conservazione remota. Nessuna build/ZIP/merge/release, test funzionale Linux, dipendenza o dato/profilo reale. Budget caratteri non è tokenizzazione GGUF né garanzia per ogni Unicode; layout PC, Windows10/i3/HDD e pacchetto estratto non verificati.022/023 non osservati, restano aperti. Conservate001–011,018,014,015,017,019. Prossimo021: annullamento del processo vocale posseduto in chiusura, mantenendo runner personalizzati e anti-eco. Distribuzione012/013 e indice020 separati;016 nuova funzione da valutare, non implementata automaticamente. Build solo su richiesta esplicita.
+
+## JRV-AUD-019 — etichette/docstring corrette, verifica Windows necessaria
+
+Pannello memoria chiarisce caratteri/spazi inclusi e sintesi non collegata; summary_max_tokens non presentato come limite attivo. Pannello Gemma indica token per Context Size/Max Output. Docstring del metodo legacy spiega che budget in caratteri non è tokenizzazione. ConfrontoAST statico con base: algoritmo budget/defaults/schema e callbacksave identici, nessuna modifica a dati o valori. Nessun nuovo test speculare di stringhe né Red runtime rivendicato. Guida e rapporto aggiornati, suite/probe Windows esistenti da acquisire; nessun test funzionale Linux/build/merge/tokenizer/dipendenza. Layout PC reale/tokenizzazioneGGUF non verificati;022/023 restano aperti. Prossimo: CI e checkpoint remoto, poi021.
+
+## 7 novembre 2026 — JRV-AUD-019 avviata: chiarire caratteri e token
+
+Base017 530fad08935f29b2909a6ae2481a19cf77dcefc8, remoto verificato12file e5runtime/test uguali al source verde; main pulito f147b1a. Ramo019 isolato. Il budget prompt600 è applicato conlen(str), non tokenizer. Context Size/Max Output sono token del backend; summary_max_tokens soltanto validato e non usato da sintesi collegata. Correzione di etichette/testo/docstring: schema JSON/API/valori/algoritmo invariati, nessuna sintesi attivata o dipendenza. Specifica/piano salvati prima dell'edit. Suite Windows esistente da eseguire per regressioni, nessun nuovo test speculare di etichette o Red runtime rivendicato. Nessuna build/merge/test funzionale Linux/dato reale.
+
 ## 7 novembre 2026 — JRV-AUD-017 verificata nei sorgenti in bozza
 
 HUD thinking/reasoning include attività dell'owner Gemma già esistente e flag chat pendente, anche con GPT spento e da Telegram/prova impostazioni. La sessione conta operazioni attive/in coda, con finally e metadata lock breve; nessun caricamento/I/O/attesa del lock d'inferenza per leggere is_busy. Nessun nuovo poller o fase dettagliata inventata. Stop/close non dichiarano idle prima dell'uscita effettiva, errori e annidamento scaricano il contatore. Risposte, permessi, memoria e priorità voce preservati.

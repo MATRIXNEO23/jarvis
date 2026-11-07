@@ -18,15 +18,15 @@ class MemoryPreferencesWindow:
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="Memoria locale - impostazioni",
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
-        ttk.Label(frame, text="Modifica e salva senza ricompilare Jarvis. "
-                  "Le preferenze saranno usate dal gestore di sintesi quando "
-                  "verra collegato.", wraplength=530).pack(anchor="w", pady=8)
+        ttk.Label(frame, text="Contesto Gemma: limite in caratteri, spazi inclusi. "
+                  "La sintesi automatica non è ancora collegata.",
+                  wraplength=530).pack(anchor="w", pady=8)
         fields = (
             ("idle_seconds", "Inattivita prima sintesi (secondi)"),
             ("recent_messages", "Ultimi messaggi conservati"),
             ("summarize_every", "Sintesi ogni N messaggi"),
-            ("summary_max_tokens", "Token massimi riassunto"),
-            ("prompt_max_tokens", "Token massimi contesto"),
+            ("summary_max_tokens", "Limite riassunto (non collegato)"),
+            ("prompt_max_tokens", "Caratteri massimi nel prompt"),
             ("max_background_jobs", "Lavori simultanei (max 1)"),
         )
         self.values = {}

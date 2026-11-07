@@ -29,8 +29,8 @@ class NativeSettingsWindow:
         self.values = {}
         labels = {
             "model": "Modello GGUF", "threads": "Thread CPU",
-            "batch_threads": "Thread batch", "context_size": "Context Size",
-            "max_output": "Max Output", "temperature": "Temperatura",
+            "batch_threads": "Thread batch", "context_size": "Context Size (token)",
+            "max_output": "Max Output (token)", "temperature": "Temperatura",
             "top_k": "Top-K", "top_p": "Top-P", "seed": "Seed (-1 casuale)",
         }
         for key in EDITABLE_FIELDS:

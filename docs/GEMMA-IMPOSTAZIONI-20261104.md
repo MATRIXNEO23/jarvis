@@ -1,3 +1,7 @@
+## Aggiornamento019 — 7 novembre 2026, unità chiarite nei sorgenti in bozza
+
+Nel pannello Memoria e inattività il limite del prompt è in **caratteri**, spazi inclusi: il default600 comprende istruzioni, domanda e memoria nel prompt, non600token del modello. Context Size e Max Output nel pannello Gemma sono invece in **token** del backend. Chiavi JSON storiche, valori e algoritmo non cambiano; nessun profilo viene migrato. La sintesi automatica non è collegata: il suo limite non diventa una funzione attiva cambiando il testo. Il budget locale non è un tokenizer o una garanzia universale per Unicode. [Rapporto019](CORREZIONE-JRV-AUD-019-20261107.md); Windows2022/Python3.11 e3.12:884test per versione, run42361597736 SUCCESS. Nessun nuovo pacchetto.
+
 ## Aggiornamento008 — 7 novembre2026, correzione verificata nei sorgenti in bozza
 
 Il pannello attuale esiste: modello, thread CPU/batch, contesto, max output, temperatura, top-k/top-p, seed e carattere. Inventario sotto storico; gli altri controlli restano proposte. La correzione008 applica i valori salvati alla prossima richiesta serializzata: samplers senza reload; modello/thread/contesto e DLL interna con reload. Salva non avvia inferenza. [Specifica008](superpowers/specs/2026-11-07-jrv-aud-008-design.md); Windows run42344534309 SUCCESS,747test per Python3.11/3.12. [Rapporto008](CORREZIONE-JRV-AUD-008-20261107.md); nessun nuovo pacchetto.
