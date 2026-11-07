@@ -54,3 +54,10 @@ Il modello può usare target/scope portabili come %APPDATA%\Nome, %LOCALAPPDATA%
 Il raffinamento usa un contesto dedicato alla ricerca file; la proposta resta soggetta agli stessi permessi e vincoli locali. Una proposta GPT di aprire/cercare nel browser dopo «cerca Netflix» o un’altra ricerca senza ambito produce invece la domanda «Vuoi cercare sul PC oppure su Internet?». La richiesta e la domanda restano nel dialogo; si può rispondere «sul PC» o esplicitare «cerca Netflix su internet». Nessun trattamento speciale per Netflix e nessuna garanzia che tutte le app installate siano riconoscibili. Modifica nei sorgenti, non ancora nello ZIP pubblicato.
 
 Richiesta incompleta: «cercami un file» → domanda del nome → «preventivo» riprende la ricerca nelle cartelle autorizzate, senza chiedere di nuovo l’azione e senza limitarsi ai Download. Eventuale ambito «in documenti» rimane nella richiesta pendente; annullamento, scadenza e revoca delle spunte restano validi. Se Accesso file è spento, la ricerca precedente del nucleo resta limitata ai Download.
+
+
+## JRV-AUD-015 — limite unico di tempo nella ricerca (sorgenti in verifica)
+
+Indice Windows e scansione diretta condividono il budget di una passata (10secondi predefiniti). Ogni helper dell'indice riceve al massimo8secondi e comunque solo il tempo residuo; il fallback non ottiene altri10secondi. Alla scadenza non parte un'altra interrogazione o directory e il riepilogo indica ricerca parziale, conservando i risultati validi già raccolti. Puoi selezionarli come prima o restringere la ricerca. Le spunte e le reinclusioni restano vincolanti; annullamento/revoca scartano i risultati. Non aggiunge un indice persistente autonomo né una scansione completa del PC.
+
+Non è una garanzia di ritorno esatto entro10secondi: avvio helper, operazioni filesystem e controlli dei percorsi possono ritardare il ritorno; il rilevamento preliminare di cartelle note/registrazioni non fa parte del budget indice/scansione. Una callback iniettata non cooperativa non viene interrotta forzatamente. Il pacchetto pubblicato non cambia con questi sorgenti in bozza; verifica Windows da completare prima di dichiararli pronti.

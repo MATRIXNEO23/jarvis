@@ -217,6 +217,50 @@ class SearchDeadlineTests(unittest.TestCase):
         self.assert_partial(result)
         self.assertEqual(len(result.listing['items']), 1)
 
+    def test_callback_internal_type_error_is_not_retried(self):
+        self.roots()
+        calls = []
+        def broken(query, root, **options):
+            calls.append((query, root, options))
+            raise TypeError('Internal adapter defect, not an unsupported argument')
+        self.files.index = broken
+        with self.assertRaisesRegex(TypeError, 'Internal adapter defect'):
+            self.search()
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], {})
+
+    def test_fallback_hit_is_kept_when_budget_expires_before_next_entry(self):
+        self.roots(1)
+        second = self.docs / 'secondo.txt'
+        second.write_text('fixture', encoding='utf-8')
+        with os.scandir(self.docs) as entries:
+            by_name = {entry.name: entry for entry in entries}
+        def index(query, root):
+            self.clock.advance(6)
+            return [], 'Indice vuoto della fixture'
+        self.files.index = index
+        clock = self.clock
+        first_entry, next_entry = by_name[self.a.name], by_name[second.name]
+        class Walk:
+            def __enter__(self):
+                def entries():
+                    yield first_entry
+                    clock.advance(4)
+                    yield next_entry
+                return entries()
+            def __exit__(self, *args):
+                return False
+        with patch('file_access.service.os.scandir', return_value=Walk()) as walked:
+            result = self.search('preventivo')
+        self.assertEqual(walked.call_count, 1)
+        self.assertEqual(result.listing['coverage']['scanned'], 1)
+        self.assert_partial(result)
+        self.assertFalse(result.listing['coverage']['index_results_only'])
+        self.assertTrue(os.path.samefile(self.files._results[0], self.a))
+        read = self.files.execute('read', {'target': '1'})
+        self.assertEqual(read.status, 'completed', read.message)
+        self.assertEqual(read.preview, 'Testo reale di esempio')
+
     def test_cancel_at_deadline_discards_late_index_hits(self):
         self.roots()
         def index(argv, **kw):

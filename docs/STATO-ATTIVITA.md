@@ -1,3 +1,13 @@
+## JRV-AUD-015 — review runtime completata, Green Windows da acquisire
+
+Review indipendente readonly sul diff esatto dalla014 senza rilievi bloccanti: una deadline, timeout residuo, directory vuote, risultati/cancellazione e protocollo legacy verificati staticamente. Entrambi i gap preventivi recepiti,17nuovi/869attesi. Non è una prova eseguita: suite Windows e probe ancora necessari. Runtime candidata soltanto in file_access/service.py, guida operativa e rapporto aggiornati; nessuna build/estrazione/pubblicazione autorizzata. Main, versioni precedenti, dati e permessi conservati. Prossimo: esito Green, eventuali errori analizzati e checkpoint remoto.
+
+## JRV-AUD-015 — Red Windows acquisito, candidata minima da verificare
+
+Red1 source82379bfe793aa35938542408ff007a7cc5e02903/run42358971980:867test per job,10failure0errori tutti nel nuovo015;3.11job128363078992192.808s,3.12job128363079143181.795s. Confermati timeout8s ripetuti, nuove scansioni oltre limite, falsa copertura completa e nessun controllo del tempo tra directory vuote. Nessun022/023 osservato; Search live3.12 eseguito separatamente, nessuna build. Nessun fallimento occultato o retry.
+
+Candidata soltanto in file_access/service.py: deadline unica indice/fallback, timeout min(8,residuo) al wrapper produzione, protocollo legacy2arg senza retry TypeError, controlli prima di directory e voci, scadenza con risultati validi e copertura parziale. Review preventiva ha rafforzato TypeError interno e risultato fallback conservato:17nuovi/869attesi,2aggiunti dopoRed senza rivendicare ulterioreRed. Review runtime readonly richiesta; Green Windows ancora da eseguire, AST/diff locali soltanto. Nessun nuovo indice/dipendenza/build/merge o dato utente modificato. Prossimo: recepire rilievi e Green.
+
 ## JRV-AUD-015 — quindici prove pronte prima del runtime
 
 Nuovo tests/test_file_search_deadline.py: wrapper Windows reale con subprocess e orologio controllati, add-on/policy/filesystem temporaneo reali. Copre budget globale multiradice, timeout residuo e cap8s, fallback con residuo e directory vuote, progressi che consumano il budget, risultati validi tardivi/selezione numerica, esclusioni e reinclusioni, callback legacy, cancellazione/revoca e nuova passata senza toccare il profilo.867test attesi; runtime invariato014. Review indipendente preventiva avviata; Red Windows da acquisire in bozza, nessuna esecuzione funzionale Linux/build/merge. Lentezza simulata, non benchmark HDD; nessuna garanzia hard timeout su I/O o callback non cooperativa.
