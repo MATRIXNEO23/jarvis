@@ -36,7 +36,7 @@ Questa integrazione usa **solo** il kit ufficiale [Sign in with ChatGPT DevKit](
 - `local_engine.py` esegue soltanto le azioni allowlisted; le risposte GPT **non sono mai eseguite automaticamente**.
 - Per accedere al motore di pianificazione GPT -> task locale occorreranno schema dei piani, validazione, permessi, backup, rollback e test end-to-end.
 
-## Timeout e annullamento — candidata011
+## Timeout e annullamento — correzione011 verificata nei sorgenti
 
 Le richieste GPT vocali e scritte usano lo stesso limite di attesa di180secondi
 dopo l'avvio del collegamento. Login600secondi e controlli40secondi mantengono
@@ -50,4 +50,5 @@ dell'account per riprovare. Token già consumati non vengono restituiti.
 
 Si riusa AbortSignal del DevKit già fissato, senza aggiornare SDK o dipendenze.
 Client Python e bridge Node devono provenire dalla stessa versione del codice.
-Questo è codice candidato in bozza, non una nuova build o un collaudo account.
+Verifica Windows2022:811test per Python3.11/3.12, run42352732284,
+inclusi19nuovi controlli con SDK simulato. Nessuna nuova build o collaudo account.

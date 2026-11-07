@@ -1,9 +1,9 @@
 {
   "issue": "JRV-AUD-011",
   "date": "2026-11-07",
-  "status": "candidate-awaiting-Windows-Green",
+  "status": "verified-in-draft-Windows-real-client-and-Node-fake-SDK",
   "base": "e65b5ebfa01fe83b7c6ec605da7df836a66ae42e",
-  "source": "c6949e28fd5fb4ba3303f0412fdef9405da58cba",
+  "source": "3ca986aaff89c176b684d44999b74e303814839c",
   "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/45",
   "branch": "fix/jrv-aud-011-gpt-timeout-20261107",
   "environment": "Windows Server2022 x64; GitHub Actions; Python3.11.9/3.12.10; Node22.12",
@@ -91,6 +91,36 @@
           "cause": "same readline shutdown wait3s; only failing new011test"
         }
       ]
+    },
+    {
+      "phase": "Green2-after-source-fix",
+      "source": "3ca986aaff89c176b684d44999b74e303814839c",
+      "run_id": 42352732284,
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "id": 128344138298,
+          "python": "3.11.9",
+          "tests": 811,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 151.63,
+          "new_tests_passed": 19
+        },
+        {
+          "id": 128344138543,
+          "python": "3.12.10",
+          "tests": 811,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 133.249,
+          "new_tests_passed": 19
+        }
+      ]
     }
   ],
   "Red_analysis": "All failures/errors in new011module. Typed40 vs180 reproduced at virtual41/179s. Red1 two errors are bounded waits for missing cancellation/shutdown response. Invalid99 expectation identified statically and removed before Red2; Red2 deterministic19tests has16failures0errors.",
@@ -121,8 +151,8 @@
       "sha256": "65a6db74dd1e1991922caf8243b1d5f815f926be5cd4c3f68b7ea95f1d04e9c1"
     },
     "gpt_bridge.mjs": {
-      "blob": "b47ad00bd8c9f5c8520be139e3641a650ab91570",
-      "sha256": "94140cd49d0147b935f568b988158e770d1a1a8d6a2526def02f0747eddffc84"
+      "blob": "585168e85566619b1e9b4036df0305f90083cd2d",
+      "sha256": "bae43820f21085616d36066c10af21fd3c0a60b509be20fe48a5081069954941"
     },
     "tests/test_gpt_timeouts.py": {
       "blob": "385fdaa6f4706cb9c8b005a5c1af3b24a9d30ce2",
@@ -152,5 +182,20 @@
     ],
     "change": "Explicit input.close() before shutdown break, preserve pending completion/flush; no process.exit or widened test bound",
     "independent_readonly_review": "agrees with source-derived cause and smallest fix"
+  },
+  "checks": {
+    "python_syntax": "passed-both",
+    "javascript_syntax": "passed-both",
+    "powershell_syntax": "passed-both",
+    "native_file_access_probe": "passed-both",
+    "live_windows_search_3_12": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "build": "skipped",
+    "extracted_package": "skipped",
+    "publication": "skipped",
+    "022_023": "not-reproduced-still-open"
   }
 }

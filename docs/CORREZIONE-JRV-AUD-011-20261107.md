@@ -1,6 +1,6 @@
 # JRV-AUD-011 — timeout GPT e annullamento per richiesta
 
-Stato: candidata nei sorgenti in bozza, GreenWindows ancora da acquisire.
+Stato: verificata nei sorgenti in bozza, senza nuova build installabile. Sourceverde `3ca986aaff89c176b684d44999b74e303814839c`, [evidenza](evidence/jrv-aud-011-fix-20261107.json).
 Base010 `e65b5ebfa01fe83b7c6ec605da7df836a66ae42e`, [bozza45](https://github.com/MATRIXNEO23/jarvis/pull/45), ramo `fix/jrv-aud-011-gpt-timeout-20261107`.
 [Specifica](superpowers/specs/2026-11-07-jrv-aud-011-design.md), [piano](superpowers/plans/2026-11-07-jrv-aud-011-fix.md).
 
@@ -35,8 +35,23 @@ Sourcec6949e28/run42352333419 fallita:3.11.9/job128342938450,811test130.180s,1er
 
 Il vecchio smoke test chiude stdin dal parent, GPTClient.stop lo tiene aperto durante wait: il nuovo test ha esposto un caso reale. Aggiunto input.close() esplicito prima del break di shutdown, che pausa stdin lasciando finire pending/flush senza process.exit. Causa/soluzione riesaminate indipendentemente in sola lettura; nuova candidata da verificare, non semplice retry del source fallito.
 
+## Green dopo la correzione shutdown
+
+Source `3ca986aaff89c176b684d44999b74e303814839c`, [run42352732284](https://github.com/MATRIXNEO23/jarvis/actions/runs/42352732284) SUCCESS, tentativo1 di questo nuovo source. Non è un retry identico della candidata fallita; il fallimento precedente e il fix restano registrati sopra.
+
+|Python/job|Esito suite completa|
+|---|---|
+|3.11.9/128344138298|811test,0failure/errori/skip,151.630s; tutti19nuovi metodi passati|
+|3.12.10/128344138543|811test,0failure/errori/skip,133.249s; tutti19nuovi metodi passati|
+
+Sintassi Python/JS/PS e probe fileaccess passati in entrambi, Searchlive3.12 passata con servizio/fixture ripristinati. Build/estrazione/pubblicazione skipped. Nessuna regressione rilevata nella suite001–010, nessun022/023 riprodotto: non sono dichiarati corretti. Nessuna asserzione indebolita o timeout del test esteso per il Green.
+
+Prove reali di callback/client/reader ebridge Node; protocollo verso SDK falso esplicito. Timeout brevi reali delclient, deadlinevirtualiUI, annullamento in session/models/stream, due stream entrambiattivi con cancellazione selettiva, successo tardivo rifiutato anche conSDKnoncooperativo, IDinvalidi/ignoti e mapcleanup, pipefallita/owner cambiato, nessun retry/start automatico, acktardivi separati, shutdown constdinparentaperto e uscita naturale. Questo non dimostra login/rete/SDKautentico o rimborso quota.
+
+Checkpoint finale solo docs/evidenze: runtime/test identici al sourceverde. Riferimenti: jarvis.py run_gpt2022/timeout2066; gpt_client.py call129/_cancel_request170; gpt_bridge.mjs map102/cancel124/ask153/cleanup171/shutdown194. Rischio protocollo medio; shutdown/SDKreale da collaudare prima di rilascio.
+
 ## Limiti e recupero
 
 Abort è best effort: il messaggio conferma invio del comando alla pipe, non arresto remoto/ackserver o rimborso token. GetSession e refreshcredenziali del SDK possono terminare il proprio lavoro prima di osservare il segnale; non interrompere forzatamente la persistenza OAuth. Se il SDK ignora abort, il bridge rifiuta successo tardivo quando ritorna; Python ignora comunque pacchetti del requestID scaduto. Lo shutdown può ancora richiedere l'escalation stop già esistente.
 
-Tempi39/41/179/181s simulati nel trasporto dei callback: non attese di minuti o qualità GPT. Client/reader e Nodebridge reali, SDK inferenza/sessione esplicitamente simulati inLOCALAPPDATAtemporaneo. Nessun account, rete, token, DPAPI reale o Windows10/i3-HDD testato. Nessun test funzionaleLinux, build/ZIP/merge/release/config/dati/credenziali utente.022/023 separati. Prima di build: Greencompleto, client/bridge coordinati nello ZIP estratto e collaudo SDK/account autorizzato su target. Ramo/bozza reversibili, main e001–010 conservati.
+Tempi39/41/179/181s simulati nel trasporto dei callback: non attese di minuti o qualità GPT. Client/reader e Nodebridge reali, SDK inferenza/sessione esplicitamente simulati inLOCALAPPDATAtemporaneo. Nessun account, rete, token, DPAPI reale o Windows10/i3-HDD testato. Nessun test funzionaleLinux, build/ZIP/merge/release/config/dati/credenziali utente.022/023 separati. Greencompleto ottenuto; prima di build affidabile servono ancora client/bridge coordinati nello ZIP estratto e collaudo SDK/account autorizzato su target. Ramo/bozza reversibili, main e001–010 conservati.
