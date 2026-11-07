@@ -1,3 +1,7 @@
+## 7 novembre2026 — JRV-AUD-010 autorizzata, riproduzione in preparazione
+
+Utente: Jarvis funzionava nei suoi limiti; «procedi con le correzioni senza rompere niente». Feedback senza versione identificata, non attribuito a uno ZIP. Correzioni minime, comportamento/dati conservati. Base0096e6b081, ramo fix/jrv-aud-010-native-cancel-20261107. Specifica/piano010 registrati: riuso abort_generate già presente upstream, Timer limitato alla generazione con callback congiunta, revoca richiesta/turni e close senza lock inferenza. Nessun hard timeout garantito della DLL/load; niente nuovi processi/dipendenze o fallback GPT. Prima prove Red Windows, poi runtime/review/Green. Nessun test funzionale Linux, build/ZIP/release/merge o modifica configurazioni/dati utente.022/023 separati. Prossimo: pubblicare test riproduttivi in bozza su009.
+
 ## 7 novembre2026 — JRV-AUD-009: collegamento memoria verificato in bozza
 
 Source5cb797a0d8e7cb1ed508ee1ed2367839fd8b4426, [bozza43](https://github.com/MATRIXNEO23/jarvis/pull/43) dalla42/base8ca4829,001–008 conservate. [Run42347553638](https://github.com/MATRIXNEO23/jarvis/actions/runs/42347553638) SUCCESS al tentativo1:768test Python3.11.9/job128328470822171.328s e768 Python3.12.10/job128328470641138.359s,0failure/errori/skip. Tutti21nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-009-20261107.md), [evidenza](evidence/jrv-aud-009-fix-20261107.json).
