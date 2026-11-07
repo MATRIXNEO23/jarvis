@@ -1,3 +1,7 @@
+## JRV-AUD-018 — review preventiva: compatibilità e guardia rafforzate
+
+Review indipendente senza blocchi di contratto,3gaptest recepiti: profilo valido{} echiavimancanti confrontati coninteriDEFAULTS normalizzati; flagcriticiinvalidi conTTS/memoria/Telegram/keepawakeTrue perprovareOFFditutteautomazioni; nuovo test verifica rifiuto prima dimkdir/write_text/replace. Ora18nuovi/829attesi. Tutti callerssavegestisconoOSError/ValueError salvotelegram_reconfigure individuato nelpiano. Red1sourcec021a84bce5eb67d71c04d6d91f358569cda301f inbozza46, runtime ancora011. Redampliatodapubblicare, nessun testfunzionaleLinux/build/merge/configutente. Prossimo: RedWindows, poicorrezioneminima.
+
 ## JRV-AUD-018 —17test pronti prima del runtime
 
 Nuovo test_settings_recovery.py:14test parser/persistenza conprofilitemporanei,3owner conprefixmain/Tkvalueassignment/schedulerGPT ecallbackinitial_launch/speak_result/telegram_reconfigure reali, servizi controllati.17nuovi/828attesi. ErroriJSON/UTF8/IO/nondict/flagtipoinvalido; assenti/validi/legacy; warningnonprivato; saveguardoriginal/copied/postloadcorruption/temp/history; ripristinomanualesimulato; bootstrapMIC/GPT/TTSoff ewarninguna volta. Runtime018 ancora invariato. Review indipendente preventiva richiesta; prossimopubblicareRedWindows inbozza su011. Nessun testfunzionaleLinux/build/merge/config/account/datoutente.

@@ -69,7 +69,10 @@ class SettingsRecoveryTests(unittest.TestCase):
         for flag in ("gpt_enabled", "auto_listen"):
             for value in ("false", 0, 1, None, []):
                 with self.subTest(flag=flag, invalid_value=value):
-                    self.path.write_text(json.dumps({flag:value}), encoding="utf-8")
+                    payload = dict(DEFAULTS, tts_enabled=True, memory_enabled=True,
+                                   telegram_enabled=True, keep_awake_fullscreen=True)
+                    payload[flag] = value
+                    self.path.write_text(json.dumps(payload), encoding="utf-8")
                     self.assert_prudent(load_settings(self.path))
 
     def test_warning_identifies_recovery_without_including_private_file_content(self):
@@ -90,15 +93,15 @@ class SettingsRecoveryTests(unittest.TestCase):
         self.assertFalse(self.path.exists())
 
     def test_valid_and_legacy_profiles_retain_preferences_without_warnings_or_writes(self):
-        for payload in ({"gpt_enabled":False}, {"gpt_enabled":True,"auto_listen":True},
+        for payload in ({}, {"auto_listen":False}, {"gpt_enabled":False},
+                        {"gpt_enabled":True,"auto_listen":True},
                         {"gpt_enabled":False,"auto_listen":False,"tts_enabled":True,
                          "tts_voice":"Fixture voice","timer_volume":35}):
             with self.subTest(payload=payload):
                 raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
                 self.path.write_bytes(raw)
                 value, warnings = self.load_with_warnings()
-                for key, wanted in payload.items():
-                    self.assertEqual(value[key], wanted)
+                self.assertEqual(value, dict(DEFAULTS, **payload))
                 self.assertEqual(warnings, [])
                 self.assertEqual(self.path.read_bytes(), raw)
 
@@ -154,6 +157,19 @@ class SettingsRecoveryTests(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), raw)
         self.assertEqual(temporary.read_bytes(), b"preexisting recoverable temporary data")
         self.assertEqual(history.read_bytes(), b"unrelated history marker")
+
+    def test_refusal_precedes_directory_temp_write_and_replace_mutations(self):
+        raw = b'{'
+        self.path.write_bytes(raw)
+        with patch.object(Path, "mkdir") as mkdir, \
+                patch.object(Path, "write_text") as write, \
+                patch("settings.os.replace") as replace:
+            with self.assertRaises(OSError):
+                save_settings(dict(DEFAULTS), self.path)
+            mkdir.assert_not_called()
+            write.assert_not_called()
+            replace.assert_not_called()
+        self.assertEqual(self.path.read_bytes(), raw)
 
     def test_explicit_manual_restore_then_normal_save_keeps_backup(self):
         raw = b'{"gpt_enabled":false,'
