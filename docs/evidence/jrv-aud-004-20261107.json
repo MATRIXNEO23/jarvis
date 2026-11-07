@@ -1,0 +1,134 @@
+{
+  "issue": "JRV-AUD-004",
+  "severity": "ALTO",
+  "status": "verified_in_windows_ci_not_released",
+  "base_commit": "386fcd191659adf844cfa0d7711e8c2162162099",
+  "source_commit": "8557ddb9b23c34c11aaee7a1b65bf57470dfd7f5",
+  "pull_request": 37,
+  "depends_on_pull_request": 36,
+  "red": {
+    "commit": "baa93177c75d55e163d3e968b0d0a1b8b2265c5c",
+    "run": 42331515560,
+    "jobs": [
+      {
+        "id": 128278876066,
+        "python": "3.11.9",
+        "tests": 692,
+        "seconds": 114.29,
+        "assertion_failures": 4,
+        "fixture_errors": 0
+      },
+      {
+        "id": 128278876307,
+        "python": "3.12.10",
+        "tests": 692,
+        "seconds": 133.764,
+        "assertion_failures": 4,
+        "fixture_errors": 0
+      }
+    ],
+    "evidence": "Real file reader and lifecycle threads remained blocked after join in disable/remove/upgrade/ledger-revocation probes. Both permission/reset gates reached; no worker exceptions."
+  },
+  "rejected_candidate": {
+    "commit": "dc1e4f2e6fbcd305034cc9723f182e0bd8c88907",
+    "run": 42332104260,
+    "reason": "Conditional deferred reset allowed stale state to revive after reenable or external-ledger reapproval.",
+    "full_red_job": {
+      "id": 128280722332,
+      "python": "3.11.9",
+      "tests": 698,
+      "seconds": 130.461,
+      "assertion_failures": 3,
+      "fixture_errors": 0
+    },
+    "partial_job": {
+      "id": 128280722034,
+      "python": "3.12.10",
+      "observed_expected_failures": 3,
+      "suite_summary_available": false,
+      "abort_issue": "JRV-AUD-022"
+    },
+    "disposition": "Replaced after independent review; never merged or released."
+  },
+  "change": "Separate lifecycle RLock serializes complete refresh/mutations/invalidation. Metadata and permission checks keep the manager lock; file reset runs after releasing it. Initial full refresh invalidates external revocation before new approval. Program reset position and FileAccessService source unchanged.",
+  "green": {
+    "run": 42332441469,
+    "conclusion": "success_after_retry_of_failed_python312_job",
+    "runner": "windows-2022",
+    "source_unchanged_on_retry": true,
+    "command": "python -m unittest discover -s tests -v",
+    "jobs": [
+      {
+        "id": 128281773601,
+        "python": "3.11.9",
+        "tests": 698,
+        "seconds": 90.906,
+        "conclusion": "success",
+        "attempt": 1
+      },
+      {
+        "id": 128282998223,
+        "python": "3.12.10",
+        "tests": 698,
+        "seconds": 113.115,
+        "conclusion": "success",
+        "attempt": 2
+      }
+    ],
+    "first_python312_attempt": {
+      "id": 128281773458,
+      "tests": 698,
+      "seconds": 191.343,
+      "errors": 1,
+      "new_addon_test_methods_passed": 7,
+      "issue": "JRV-AUD-023"
+    },
+    "new_test_methods": 7,
+    "syntax_and_native_file_probe": "passed",
+    "windows_search_live": "passed_service_restored_fixture_removed",
+    "package_jobs": "skipped"
+  },
+  "coverage": [
+    "Concurrent pending clarification versus disable/remove/upgrade/approval ledger removal, with actual locks and persisted records.",
+    "Reactivation waits for old invalidation; a fresh request survives; no-fresh pending and real listed/selected result cannot revive.",
+    "Sequential missing-ledger reapproval clears old actual selection/token.",
+    "Permission callback waits for revocation metadata transaction; per-operation limits and descriptor copies preserved.",
+    "Unrelated refresh retains active pending request, token and policy; test-owned data preserved."
+  ],
+  "substitutions": [
+    "Event-controlled callback boundaries only; manager, file service, RLocks and temporary files real.",
+    "Deadlock probes run in isolated child processes using daemon worker threads so a regression cannot hang the suite.",
+    "No account, microphone, GGUF, user profile or installed Jarvis exercised."
+  ],
+  "independent_review": {
+    "scope": "read-only working-tree runtime/test delta against base, then targeted rereview after rejecting candidate1",
+    "verdict": "no_remaining_blocking_defect_in_candidate2",
+    "tests_executed_by_reviewer": false,
+    "blob_identity": [
+      {
+        "path": "addon_manager.py",
+        "sha": "e0ebaf73faf88fbded19fd463fd895723bc1b316",
+        "remote": "e0ebaf73faf88fbded19fd463fd895723bc1b316",
+        "match": true
+      },
+      {
+        "path": "tests/test_addon_concurrency.py",
+        "sha": "73089d7e2691f3489ff6438ecba009a643269c29",
+        "remote": "73089d7e2691f3489ff6438ecba009a643269c29",
+        "match": true
+      },
+      {
+        "path": "file_access/service.py",
+        "sha": "caaffaf9151482d1546a5170ef08ba42b970e745",
+        "remote": "caaffaf9151482d1546a5170ef08ba42b970e745",
+        "match": true
+      }
+    ]
+  },
+  "residual_issues": [
+    "JRV-AUD-022: separate Tkinter full-suite abort, root cause not established; not fixed by this change.",
+    "JRV-AUD-023: first-attempt PowerShell harness timeout; same source passed retry, root cause remains unestablished.",
+    "Real Windows10 / i3-2100 / HDD target not verified; no build or deployment."
+  ],
+  "next_issue": "JRV-AUD-005: investigate ownership/concurrency of native model backend before changing it."
+}

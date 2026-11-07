@@ -1,0 +1,32 @@
+{
+  "issue": "JRV-AUD-022",
+  "severity": "MEDIO",
+  "status": "confirmed_ci_abort_root_cause_to_verify",
+  "component": "Windows CI / Tkinter object finalization",
+  "first_observed": {
+    "source_commit": "dc1e4f2e6fbcd305034cc9723f182e0bd8c88907",
+    "run": 42332104260,
+    "job": 128280722034,
+    "python": "3.12.10",
+    "runner": "windows-2022",
+    "active_test": "test_document_save_race.DocumentSaveRaceTests.test_failed_close_restores_dirty_and_editability",
+    "final_summary_available": false
+  },
+  "evidence": [
+    "Several tkinter.Variable.__del__ and tkinter.Image.__del__ finalizers report RuntimeError: main thread is not in main loop.",
+    "Tcl_AsyncDelete: async handler deleted by the wrong thread; process exits with code1 before a suite summary.",
+    "New JRV-AUD-004 tests had already produced three expected behavioral failures before the abort; no complete test count is assigned to this job."
+  ],
+  "impact": "At least one full regression job aborted, reducing CI reliability. No conclusion about the installed application or target PC follows from this failure.",
+  "cause_status": "PROBABILE: garbage collection/finalization of earlier Tk objects on a worker thread; exact object ownership/trigger not yet reproduced independently.",
+  "recommended_next_step": "Isolate Tk object lifetime and thread ownership in the Windows test fixtures; reproduce with controlled finalization before choosing a correction. Preserve the abort log; do not suppress the error or skip the tests.",
+  "tests_needed": [
+    "Windows3.12 controlled finalization with thread identifiers and isolated test data.",
+    "Complete regression suite on both Windows Python versions after a correction."
+  ],
+  "fixed": false,
+  "limits": [
+    "No runtime change or fixture mitigation bundled into JRV-AUD-004.",
+    "No functional Linux execution or target PC test."
+  ]
+}

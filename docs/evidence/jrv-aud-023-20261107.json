@@ -1,0 +1,32 @@
+{
+  "issue": "JRV-AUD-023",
+  "severity": "MEDIO",
+  "status": "confirmed_ci_timeout_root_cause_to_verify",
+  "component": "Windows CI / PowerShell Explorer fixture",
+  "observed": {
+    "source_commit": "8557ddb9b23c34c11aaee7a1b65bf57470dfd7f5",
+    "run": 42332441469,
+    "job": 128281773458,
+    "python": "3.12.10",
+    "runner": "windows-2022",
+    "test": "test_file_access.FileAccessTests.test_real_powershell_explorer_selection_and_navigation_contract",
+    "tests": 698,
+    "errors": 1,
+    "new_addon_tests": "all7_passed"
+  },
+  "evidence": "subprocess.TimeoutExpired: first powershell.exe -File explorer-fixture.ps1 invocation timed out after15 seconds.",
+  "scope": "Existing real PowerShell harness substitutes Shell.Application objects and reads Windows shell script; no new lifecycle code executes during that subprocess. Test and windows_shell.ps1 unchanged.",
+  "cause_status": "DA VERIFICARE; runner/startup/transient delay is a hypothesis, not established.",
+  "action": "Only the failed Python3.12 job was requested again on the identical source revision, without relaxing timeout, skipping tests or changing code.",
+  "fixed": false,
+  "release_requirement": "Investigate recurrence before treating CI as reliable; a passing retry would not establish a root-cause correction.",
+  "retry_result": {
+    "job": 128282998223,
+    "python": "3.12.10",
+    "tests": 698,
+    "seconds": 113.115,
+    "conclusion": "success",
+    "same_source_commit": true,
+    "test_previously_timed_out": "passed"
+  }
+}

@@ -7,6 +7,7 @@ providers require audited application code and a new allowlisted adapter.
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
 import hashlib
 import json
 import os
@@ -137,6 +138,7 @@ class AddonManager:
         self.folder=(Path(folder) if folder is not None else
                      default_path().parent/"addons")
         self._lock=threading.RLock()
+        self._lifecycle_lock=threading.RLock()
         self._file_service = None
         self._program_service = None
         self._records: dict[str,dict] = {}
@@ -244,7 +246,35 @@ class AddonManager:
             if tmp.is_file():
                 tmp.unlink()
 
+    @contextmanager
+    def _lifecycle_change(self):
+        # Serialize complete transitions, including invalidation. Permission
+        # callbacks need only _lock, so they can finish while reset waits.
+        with self._lifecycle_lock:
+            # Observe and invalidate an external revocation BEFORE a caller
+            # can grant fresh approval in the transaction below.
+            self.refresh()
+            try:
+                with self._lock:
+                    yield
+            finally:
+                self._reset_inactive_files()
+
+    def _reset_inactive_files(self):
+        # Caller holds _lifecycle_lock, never _lock. A later activation cannot
+        # publish until this reset completes, so old state cannot revive.
+        service = self._file_service
+        if service is not None and not self.files_enabled():
+            service.reset()
+
     def refresh(self) -> None:
+        with self._lifecycle_lock:
+            try:
+                self._refresh_records()
+            finally:
+                self._reset_inactive_files()
+
+    def _refresh_records(self) -> None:
         """Observe installs/changes/removals; do not trust arbitrary new files."""
         with self._lock:
             files=sorted(self.folder.glob("*.json"))
@@ -299,8 +329,6 @@ class AddonManager:
             self._records=fresh
             self._consents=approvals
             self._invalid=invalid
-            if self._file_service is not None and not self.files_enabled():
-                self._file_service.reset()
             if self._program_service is not None and not self.programs_enabled():
                 self._program_service.reset()
 
@@ -337,8 +365,7 @@ class AddonManager:
             raise AddonError("Seleziona un pacchetto .jaddon (JSON, senza codice).")
         manifest=validate_manifest(_read_json_file(source,input_file=True))
         addon_id=manifest["id"]
-        with self._lock:
-            self.refresh()
+        with self._lifecycle_change():
             before=self._records.get(addon_id)
             if before is None and len(self._records)>=MAX_ADDONS:
                 raise AddonError("Limite add-on installati raggiunto.")
@@ -356,15 +383,14 @@ class AddonManager:
             # Revoke first: upgrades never inherit prior approval.
             self._write_consent(addon_id,None)
             self._save(addon_id,record)
-            self.refresh()
+            self._refresh_records()
             return {"id":addon_id,"version":manifest["version"],
                     "updated":before is not None}
 
     def set_enabled(self, addon_id: str, enabled: bool) -> None:
         if type(enabled) is not bool:
             raise AddonError("Selettore add-on non valido.")
-        with self._lock:
-            self.refresh()
+        with self._lifecycle_change():
             before=self._records.get(addon_id)
             if before is None:
                 raise AddonError("Add-on non trovato o non valido.")
@@ -374,11 +400,10 @@ class AddonManager:
             self._write_consent(addon_id,
                                 before["digest"] if enabled else None)
             self._save(addon_id,record)
-            self.refresh()
+            self._refresh_records()
 
     def remove(self, addon_id: str) -> None:
-        with self._lock:
-            self.refresh()
+        with self._lifecycle_change():
             if addon_id not in self._records:
                 raise AddonError("Add-on non presente.")
             target=self._path(addon_id)
@@ -386,7 +411,7 @@ class AddonManager:
                 raise AddonError("Collegamento add-on non consentito.")
             self._write_consent(addon_id,None)
             target.unlink()
-            self.refresh()
+            self._refresh_records()
 
     def active_actions(self) -> tuple[dict, ...]:
         """Only enabled, checked, installed actions are sent to GPT."""
