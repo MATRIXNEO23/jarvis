@@ -106,8 +106,12 @@ class FileAccessService:
         self.max_entries = 5000
         self.max_seconds = 10.0
 
-    def reset(self, context=None):
+    def reset(self, context=None, *, only_if_inactive=False):
         with self._lock:
+            # A deferred lifecycle reset must not clear a fresh request made
+            # after reactivation. Check under the same lock as request state.
+            if only_if_inactive and self.enabled():
+                return
             self.cancelled.set()
             self._results = []
             self._selected = None
