@@ -30,9 +30,23 @@ jobs:
       - name: Build and validate clean ZIP
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+          $verifiedScripts = @(git ls-files -- '*.py' '*.mjs' '*.ps1')
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot enumerate verified scripts' }
+          $scriptHashes = @{}
+          foreach ($script in $verifiedScripts) {
+            $scriptHashes[$script] = (Get-FileHash -LiteralPath $script -Algorithm SHA256).Hash
+          }
           python tools/build_gemma_clean_trial.py
+          if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
+          foreach ($script in $verifiedScripts) {
+            $after = (Get-FileHash -LiteralPath $script -Algorithm SHA256).Hash
+            if ($after -ne $scriptHashes[$script]) { throw "Build changed verified script: $script" }
+          }
           python -m py_compile local_model/native_factory.py local_model/native_ui.py jarvis.py
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged Python syntax failed' }
           python -m unittest discover -s tests -p test_native_conversation_session.py -v
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged Gemma tests failed' }
       - name: Verify the extracted Windows package
         shell: pwsh
         run: |

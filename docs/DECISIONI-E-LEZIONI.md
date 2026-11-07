@@ -1,3 +1,27 @@
+## 7 novembre 2026 — JRV-AUD-012 verificata nei sorgenti in bozza
+
+Stesso Python già generato ora nei moduli; builder non lo riscrive più dopo i test. Launcher/profili invariati, helper diretti con assert precedenti conservati. Workflow futuro rifiuta modifiche PY/MJS/PS1 e si ferma al primo comando Python fallito. Parità statica con il vecchio codice generato verificata.
+
+Sourceverde a95cbd2884afe1079774419bedabf2f324d1a611, bozza52. Run42377581328 SUCCESS tentativo1:908test su3.11.9 (job128418236381,119.730s) e3.12.10 (job128418236628,137.421s),0failure/errori/skip, tutti7nuovi passati. Red1af0f654/run42377060724:907test/job4failure1errore solo012;3.11job128416727551170.282s,3.12job128416727411157.150s. Review indipendente senza blocchi; un metodo/rafforzamenti aggiunti dopoRed, nessun extraRed rivendicato. Rapporti/evidenza012 preservano confini e risultati.
+
+Sintassi/probe passati, Searchlive3.12 con ripristino. Nessuna build/ZIP/estrazione/DLL reale, publish, merge, test funzionale Linux o dato utente modificato. Writer ZIP vietato e python stub nei test del futuro workflow.022 passa,023 aperto; build vera/Windows10/hardware restano da verificare. Checkpoint finale solo documenti/evidenza con hash da confermare; prossimo013 guide operative nel futuro pacchetto, poi020 indice.016 funzione distinta non implementata.
+
+## JRV-AUD-012 — candidata revisionata pronta per Windows
+
+Red1af0f654/run42377060724:907test per versione,4failure1errore tutti nuovo012;3.11job128416727551170.282s,3.12job128416727411157.150s. Fallback DLL realmente assente nei sorgenti, UI e gate parità mancanti;022 passa,023 non osservato,Searchlive3.12 ripristinato. Candidata sposta esatto Python già generato nei moduli e rimuove riscritture, profili/launcher sorgente invariati. Parità del testo verificata staticamente. Workflow futuro con hash e fail-fast; helper test diretti e assert conservati. Review indipendente readonly senza rilievi bloccanti, rafforzamenti preventivi recepiti.7nuovi/908attesi, un metodo dopoRed senza extraRed rivendicato.
+
+Nessun build/ZIP dell'app, DLL reale o test funzionale Linux. I test del workflow eseguono stub innocuo al posto di python; builder fermato prima di ZIP con writer vietato. Green Windows necessario, estrazione/build vera ancora da autorizzare. Prossimo esiti/checkpoint, poi013.
+
+## JRV-AUD-012 — review preventiva recepita
+
+Rafforzato il test pre-ZIP: deve raggiungere git ls-files, evitando il falso verde dell'assert iniziale dopo spostamento della UI. Il blocco workflow viene ora verificato con pwsh come in CI, su PY/MJS/PS1 e con fallimento py_compile oltre al builder.7nuovi/908attesi, un metodo e questi rafforzamenti dopo il sourceRed1af0f654/run42377060724 (6nuovi/907attesi), nessun ulterioreRed rivendicato. Runtime ancora021/022, nessun build/ZIP/test funzionale Linux; prossimi logRed, spostamento minimo e review finale.
+
+## 7 novembre 2026 — JRV-AUD-012 avviata: parità sorgenti/pacchetto
+
+Base021/0228626d193 verificata remota19file/7runtime-test uguali al sourceverde; main pulito f147b1a. Ramo012 isolato. Il builder riscrive due moduli Python dopo la suite: portare nei sorgenti lo stesso comportamento già presente nel pacchetto, conservando profilo isolato del launcher. Nel workflow futuro hash prima/dopo e stop sul primo comando fallito. Spec/piano salvati prima del runtime.
+
+Sei nuove regressioni pronte: builder reale fermato prima dello ZIP con assets nativi assenti/writer vietato, vero blocco PowerShell in Git temporaneo con pythonstub innocuo, prova UI/fallback DLL dai sorgenti con ABI controllata.907test attesi, runtime ancora021/022. Nessuna build/ZIP prodotto, DLL caricata, test funzionale Linux, merge o dato reale. ProssimoRed Windows/review; verifica del vero pacchetto resterà pendente fino a richiesta esplicita.
+
 ## 7 novembre 2026 — JRV-AUD-021 e022 verificate nei sorgenti in bozza
 
 La voce possiede il solo helper avviato dal runner predefinito: close richiede termine senza aspettare sulla UI, scarta la coda e rifiuta il testo quando la pubblicazione arriva dopo chiusura. Custom runner, lista voci, JSON/cwd, chunk e anti-eco conservati. Se Windows nega la terminazione il worker può aspettare l'uscita effettiva, senza mascherare l'errore primario. Nessun altro processo controllato.

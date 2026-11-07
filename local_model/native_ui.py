@@ -1,5 +1,7 @@
 """Opt-in native Gemma settings dialog; no model loading or activation."""
 import tkinter as tk
+import threading
+from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from .native_config import NativeModelConfig, PERSONALITY_LIMIT
@@ -52,12 +54,14 @@ class NativeSettingsWindow:
         self.personality.pack(fill="x")
         ttk.Label(frame, text="Es. Parla come Jarvis: preciso, con ironia secca.",
                   wraplength=420).pack(anchor="w", pady=(2, 0))
-        self.status = tk.StringVar(value="Modello disattivato finché non viene attivato esplicitamente.")
+        self.status = tk.StringVar(value="Salva il GGUF, poi premi Prova generazione. Nessun invio online.")
         ttk.Label(frame, textvariable=self.status, wraplength=520).pack(
             anchor="w", pady=10)
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x", pady=5)
         ttk.Button(buttons, text="Salva", command=self.save).pack(side="left")
+        self.test_button = ttk.Button(buttons, text="Prova generazione", command=self.test_model)
+        self.test_button.pack(side="left", padx=6)
         ttk.Button(buttons, text="Ripristina campi", command=self.reset).pack(
             side="left", padx=6)
         ttk.Button(buttons, text="Chiudi", command=self.window.destroy).pack(side="right")
@@ -102,3 +106,35 @@ class NativeSettingsWindow:
                                  "Impostazioni non valide: " + str(exc),
                                  parent=self.window)
             return False
+
+    def test_model(self):
+        """Run one real native generation without using GPT online."""
+        try:
+            if not self.save():
+                return
+            if not self.current.model or not Path(self.current.model).is_file():
+                raise ValueError("Seleziona prima un file GGUF esistente.")
+            get_session = self.get_session
+            if not callable(get_session):
+                raise ValueError("Sessione Gemma di Jarvis non disponibile.")
+            config = self.current
+            self.test_button.configure(state="disabled")
+            self.status.set("Caricamento DLL e GGUF in corso...")
+            def worker():
+                try:
+                    session = get_session()
+                    answer = session.test_generation(config=config, timeout=180)
+                    result = "TEST RIUSCITO. Risposta: " + str(answer)[:200]
+                except Exception as exc:
+                    result = "TEST FALLITO: " + str(exc)[:300]
+                def finish():
+                    if self.window.winfo_exists():
+                        self.status.set(result)
+                        self.test_button.configure(state="normal")
+                try:
+                    self.window.after(0, finish)
+                except RuntimeError:
+                    pass
+            threading.Thread(target=worker, daemon=True, name="jarvis-gemma-test").start()
+        except (OSError, ValueError, TypeError) as exc:
+            self.status.set("TEST FALLITO: " + str(exc))

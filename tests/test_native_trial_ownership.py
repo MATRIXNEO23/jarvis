@@ -1,6 +1,6 @@
 """Actual generated trial UI + factory/bridge/session, controlled native ABI.
 
-Only UI transform is applied to a temporary source copy: no ZIP/build or DLL
+The exact runtime UI is copied to a temporary source tree: no ZIP/build or DLL
 is produced or loaded. The fake ABI records overlapping native entry/abort.
 """
 from __future__ import annotations
@@ -74,22 +74,6 @@ def generated_ui(root):
     target.parent.mkdir()
     target.write_text(Path("local_model/native_ui.py").read_text(encoding="utf-8"),
                       encoding="utf-8")
-    tree = ast.parse(Path("tools/build_gemma_clean_trial.py").read_text(encoding="utf-8"))
-    prefix = []
-    started = False
-    for node in tree.body:
-        if isinstance(node, ast.Assign):
-            names = [n.id for n in node.targets if isinstance(n, ast.Name)]
-            if "factory" in names:
-                break
-            if "ui" in names:
-                started = True
-        if started:
-            prefix.append(node)
-    if not prefix:
-        raise AssertionError("Trial UI transform not found")
-    exec(compile(ast.Module(body=prefix, type_ignores=[]), "trial-ui-transform", "exec"),
-         {"root": root, "Path": Path})
     module = ModuleType("local_model._ownership_trial")
     module.__file__ = str(target)
     module.__package__ = "local_model"
