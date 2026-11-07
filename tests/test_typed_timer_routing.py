@@ -4,7 +4,8 @@ import os
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+import tempfile
+from unittest.mock import Mock, patch
 from jarvis_timer import parse_timer_command
 from sveglia.service import parse_command, next_alarm
 from datetime import datetime
@@ -14,6 +15,11 @@ class TypedTimerTests(unittest.TestCase):
     def environment(self, text):
         main = next(n for n in ast.parse(Path('jarvis.py').read_text(encoding='utf-8')).body if isinstance(n,ast.FunctionDef) and n.name=='main')
         nodes=[n for n in main.body if isinstance(n,ast.FunctionDef) and n.name in ('try_timer_command','send_console_input')]
+        from local_model.native_config import NativeModelConfig
+        temporary=Path(self.enterContext(tempfile.TemporaryDirectory(prefix='timer-routing-')))
+        model=temporary/'model.gguf';model.write_bytes(b'controlled-unused-model')
+        config=temporary/'native.json';NativeModelConfig(model=str(model)).save(config)
+        self.enterContext(patch('local_model.native_settings.default_native_settings_path',return_value=config))
         request=SimpleNamespace(value=text)
         request.get=lambda:request.value
         request.set=lambda v:setattr(request,'value',v)
@@ -26,6 +32,8 @@ class TypedTimerTests(unittest.TestCase):
             parse_alarm_clock_command=parse_command,parse_timer_command=parse_timer_command,
             timer=Mock(),alarm=Mock(),write_line=Mock(),speak_result=Mock(),
             submit_gemma_trial=Mock(),gpt_enabled=SimpleNamespace(get=lambda:False),active_gpt=False,submit_local=Mock())
+        env['alarm'].arm.return_value='Sveglia impostata.'
+        env['timer'].remaining_text.return_value='06:00'
         exec(compile(ast.Module(body=nodes,type_ignores=[]),'actual-console-timer','exec'),env)
         return env
 
@@ -49,3 +57,32 @@ class TypedTimerTests(unittest.TestCase):
         e['alarm'].arm.assert_called_once_with('sette e trenta di mattina')
         self.assertEqual(next_alarm('sette e trenta di mattina',datetime(2026,11,7,6)),datetime(2026,11,7,7,30))
         e['submit_gemma_trial'].assert_not_called()
+
+    def test_conversational_and_negated_mentions_stay_with_configured_gemma(self):
+        for text in ('non impostare timer 6 minuti','spiegami un timer da 6 minuti','non fermare timer','come funziona un timer','raccontami una storia'):
+            with self.subTest(text=text):
+                e=self.environment(text);e['send_console_input']()
+                e['submit_gemma_trial'].assert_called_once_with()
+                e['timer'].start.assert_not_called();e['timer'].stop.assert_not_called()
+                self.assertIsNone(parse_timer_command(text))
+
+    def test_typed_controls_and_bare_timer_never_reach_gemma(self):
+        for text,method in [('pausa timer','pause'),('riprendi timer','resume'),('stop timer','stop'),('timer','show')]:
+            with self.subTest(text=text):
+                e=self.environment(text);e['send_console_input']()
+                getattr(e['timer'],method).assert_called_once_with()
+                e['submit_gemma_trial'].assert_not_called()
+
+    def test_pending_document_and_file_handler_keep_priority(self):
+        for kind in ('document','file'):
+            e=self.environment('imposta timer 6 minuti')
+            if kind=='document':
+                e['doc_dialog'].phase='awaiting_close';e['handle_document_confirmation']=Mock()
+            else:
+                e['try_file_command']=lambda _:True
+            e['send_console_input']()
+            e['timer'].start.assert_not_called();e['submit_gemma_trial'].assert_not_called()
+
+    def test_invalid_morning_hour_is_not_armed_as_afternoon(self):
+        with self.assertRaises(ValueError):
+            next_alarm('tredici e trenta di mattina',datetime(2026,11,7,6))
