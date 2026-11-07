@@ -571,6 +571,7 @@ def main() -> None:
     memory_enabled = tk.BooleanVar(value=settings["memory_enabled"])
     memory_status = tk.StringVar(value="Second Brain: inizializzazione.")
     durable_brain: SecondBrain | None = None
+    gemma_memory_revision = 0
     speech_lexicon: SpeechCorrections | None = None
     # Preferences and operation history never share project/chat partitions.
     try:
@@ -648,29 +649,31 @@ def main() -> None:
         except (OSError, sqlite3.Error, ValueError) as exc:
             memory_status.set("Second Brain: errore di lettura: " + str(exc)[:85])
 
-    def remember_exchange(user: str, reply: str, kind: str = "chat") -> None:
+    def remember_exchange(user: str, reply: str, kind: str = "chat") -> bool | None:
         if re.search(r"\b(password|passphrase|token|pin|codice otp)\b",
                      user + " " + reply, re.I):
-            return
+            return False
         conversation_memory.remember(user, reply, kind)
         # Explicitly created project memory advances independently from
         # the general-chat Second Brain opt-in switch.
         if active_project_id is not None:
             if workspace is not None:
                 try:
-                    workspace.add_turn("project",active_project_id,
-                                       user,reply,kind)
+                    return workspace.add_turn("project",active_project_id,
+                                              user,reply,kind)
                 except (OSError,sqlite3.Error,WorkspaceError) as exc:
                     workspace_status.set("Memoria progetto: "+str(exc)[:90])
-            return
+            return False
         if not memory_enabled.get():
             return
         if durable_brain is not None:
             try:
-                durable_brain.remember_turn(user, reply, kind)
+                saved = durable_brain.remember_turn(user, reply, kind)
                 memory_status_refresh()
+                return saved
             except (OSError, sqlite3.Error, BrainError) as exc:
                 memory_status.set("Memoria locale non scritta: " + str(exc)[:95])
+        return False
 
     def remember_completed_action(action_id: str, application: str,
                                   summary: str, receipt_id: str,
@@ -2151,6 +2154,7 @@ def main() -> None:
             if not desired else "Memoria attiva anche dopo il prossimo riavvio.")
 
     def clear_saved_memory() -> None:
+        nonlocal gemma_memory_revision
         if not messagebox.askyesno(
             "Cancella il Second Brain",
             "Eliminare scambi, operazioni e correzioni vocali archiviate da Lia? "
@@ -2160,9 +2164,14 @@ def main() -> None:
         ):
             return
         try:
+            # A post-commit cleanup (e.g. VACUUM) can fail after DELETE. Revoke
+            # pending turns/RAM on confirmation, before any fallible disk I/O.
+            gemma_memory_revision += 1
+            conversation_memory.clear()
+            if gemma_session[0] is not None:
+                gemma_session[0].forget_context(None)
             target = durable_brain if durable_brain is not None else SecondBrain()
             target.clear_all()
-            conversation_memory.clear()
             if speech_lexicon is not None:
                 speech_lexicon.reload()
             memory_status_refresh("Memoria e correzioni vocali eliminate su richiesta.")
@@ -4216,6 +4225,44 @@ def main() -> None:
                      program_call=("suggest_id", {"query": matches[0]}))
         return True
 
+    def native_memory_request(context_id, spoken):
+        """Capture UI authorization; only the returned worker reader does I/O."""
+        revision = gemma_memory_revision
+        wanted = context_id is not None or memory_enabled.get()
+        owner = workspace if context_id is not None else (durable_brain if wanted else None)
+        warnings = []
+        if wanted and owner is None:
+            warnings.append("Archivio dei ricordi non disponibile.")
+
+        def read(budget):
+            if closing or owner is None:
+                return ""
+            try:
+                if context_id is None:
+                    if owner is not durable_brain or revision != gemma_memory_revision:
+                        return ""
+                    raw = owner.prompt_context(spoken[:180], budget=budget)
+                else:
+                    if owner is not workspace or budget < 160:
+                        return ""
+                    project = owner.project(context_id)
+                    if project is None or project["trashed"]:
+                        return ""
+                    raw = owner.prompt_context("project", context_id, spoken,
+                                               budget=budget, prefer_related=True)
+                value = json.loads(raw)
+                if not isinstance(value, dict) or not any(value.values()):
+                    return ""
+                if len(raw) > budget:
+                    raise ValueError("Memoria oltre il budget.")
+                return raw
+            except (OSError, sqlite3.Error, ValueError) as exc:
+                warnings.append("Ricordi precedenti non disponibili ("
+                                + type(exc).__name__ + ").")
+                return ""
+
+        return (read if owner is not None else None), owner, revision, warnings
+
     def submit_gemma_voice(spoken, *, typed=False):
         if closing or gemma_trial_busy[0]:
             return False
@@ -4251,6 +4298,9 @@ def main() -> None:
         write_line(("GEMMA / DOMANDA > " if typed else "UTENTE / VOCE > ") + spoken)
         voice_epoch = conversation_epoch
         native_context = active_project_id
+        reader, memory_owner, memory_revision, memory_warnings = (
+            (None, None, gemma_memory_revision, []) if explicit
+            else native_memory_request(native_context, spoken))
 
         def voice_worker():
             try:
@@ -4263,7 +4313,13 @@ def main() -> None:
                 else:
                     turn = chat_transport.ask_local_first(
                         spoken, session=session, timeout=180,
-                        context_id=native_context, defer_history=True)
+                        context_id=native_context, defer_history=True,
+                        memory_context=reader)
+                    from local_model.native_conversation_session import NativeChatTurn
+                    if isinstance(turn, NativeChatTurn):
+                        turn.memory_owner = memory_owner
+                        turn.memory_revision = memory_revision
+                        turn.memory_warning = " ".join(memory_warnings)
                     gemma_trial_queue.put(("ok" if typed else "voice_ok", turn, voice_epoch))
             except Exception as exc:
                 gemma_trial_queue.put(("error" if typed else "voice_error", str(exc)[:350], voice_epoch))
@@ -4295,10 +4351,21 @@ def main() -> None:
                     if isinstance(value, NativeChatTurn):
                         if closing or value.context_id != active_project_id:
                             continue
+                        if (value.context_id is None and value.memory_revision is not None
+                                and value.memory_revision != gemma_memory_revision):
+                            continue
                         # UI context/epoch cannot change during this synchronous
                         # acceptance. The metadata commit never waits for native inference.
                         if not value.commit():
                             continue
+                        if value.memory_warning:
+                            write_line("MEMORIA > " + value.memory_warning)
+                        owner = value.memory_owner
+                        can_save = owner is not None and (
+                            owner is workspace if value.context_id is not None else
+                            owner is durable_brain and memory_enabled.get())
+                        if can_save and remember_exchange(value.question, value.text, "chat") is False:
+                            write_line("MEMORIA > Scambio non archiviato.")
                         gemma_recent_reply[0] = (
                             voice_epoch, time.monotonic(),
                             value.question[:500] + " " + value.text[:500])

@@ -4,6 +4,7 @@ Windows-only project requirement. Uses a temporary workspace, captured prompts
 and explicitly scheduled workers; no DLL, GGUF, account or microphone.
 """
 from collections import deque
+import json
 import os
 from pathlib import Path
 import queue
@@ -22,6 +23,7 @@ from local_model.memory_preferences import MemoryPreferences
 from local_model.native_config import NativeModelConfig
 from local_model.native_conversation_session import NativeConversationSession
 from workspace_memory import WorkspaceMemory, WorkspaceError
+from second_brain import BrainError
 
 
 class CapturedAdapter:
@@ -78,9 +80,13 @@ class NativeProjectHistoryTests(unittest.TestCase):
             addon_manager=None, active_context_label=callbacks.Value("Generale"),
             workspace_status=callbacks.Value(""), sqlite3=sqlite3, WorkspaceError=WorkspaceError,
             conversation_memory=ConversationMemory(), pending_conversation=deque(),
-            pending_project_reference=Mock(), pending_preference=None)
+            pending_project_reference=Mock(), pending_preference=None,
+            json=json, memory_enabled=callbacks.Value(False), durable_brain=None,
+            gemma_memory_revision=0, gemma_session=[self.session], BrainError=BrainError,
+            memory_status=callbacks.Value(""), memory_status_refresh=Mock())
         self.harness = callbacks.ActivityStatusTests()
-        for name in ("switch_context", "submit_gemma_voice", "poll_gemma_trial"):
+        for name in ("switch_context", "native_memory_request", "remember_exchange",
+                     "submit_gemma_voice", "poll_gemma_trial"):
             self.harness.callback(name, self.env)
 
     def switch(self, project):
@@ -155,14 +161,17 @@ class NativeProjectHistoryTests(unittest.TestCase):
         self.assertIn("NOTA_DI_A", prompt)
         self.assertNotIn("NOTA_DI_B", prompt)
 
-    def test_local_chat_keeps_existing_persistent_project_records_untouched(self):
+    def test_local_chat_preserves_existing_records_and_appends_accepted_project_turns(self):
         self.workspace.add_turn("project", self.project_a, "Ricordo su disco", "Risposta su disco")
         before = self.workspace.recent("project", self.project_a)
         self.switch(self.project_a)
         self.ask("Scambio breve locale")
         self.switch(self.project_b)
         self.ask("Altro scambio")
-        self.assertEqual(self.workspace.recent("project", self.project_a), before)
+        after = self.workspace.recent("project", self.project_a)
+        self.assertEqual(after[:len(before)], before)
+        self.assertEqual(len(after), len(before) + 1)
+        self.assertEqual(len(self.workspace.recent("project", self.project_b)), 1)
         self.assertEqual(self.adapter.prepares, 1)
 
     def test_prepared_reply_is_remembered_only_after_single_acceptance(self):

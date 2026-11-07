@@ -33,14 +33,16 @@ class ChatTransport:
         return self.call(action, timeout=timeout, **arguments)
 
     def ask_local_first(self, prompt, *, session, timeout=180,
-                        context_id=None, defer_history=False):
+                        context_id=None, defer_history=False, memory_context=None):
         """Use a prepared local Gemma session; errors never trigger GPT."""
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Richiesta vuota.")
         if type(defer_history) is not bool:
             raise ValueError("Modalità memoria locale non valida.")
+        memory_args = {} if memory_context is None else {"memory_context": memory_context}
         if defer_history:
-            return session.prepare_turn(prompt, timeout=timeout, context_id=context_id)
+            return session.prepare_turn(prompt, timeout=timeout, context_id=context_id,
+                                        **memory_args)
         if context_id is not None:
-            return session.ask(prompt, timeout=timeout, context_id=context_id)
-        return session.ask(prompt, timeout=timeout)
+            return session.ask(prompt, timeout=timeout, context_id=context_id, **memory_args)
+        return session.ask(prompt, timeout=timeout, **memory_args)
