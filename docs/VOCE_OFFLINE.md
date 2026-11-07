@@ -1,3 +1,5 @@
+> **Correzione007 in revisione — 7/11/2026:** il ramo di correzione scarta frasi e avvisi rimasti in attesa dalla sessione precedente dopo cambio modalità o spegnimento/riaccensione. Non richiede nuove dipendenze, reinstallazione vocale o modifiche alle impostazioni. Verifica Windows della correzione ancora pendente; nessun nuovo pacchetto installabile pubblicato. Le istruzioni storiche sull'avvio sotto non descrivono automaticamente il ramo corrente: consultare lo stato della versione distribuita.
+
 # Jarvis: prima versione comando vocale offline (alpha)
 
 > **Nota aggiornata 31/10/2026:** questa guida documenta una fase precedente con microfono spento al lancio. Nel ramo di audit attuale è richiesta e configurata la **conversazione GPT con microfono attivo all'avvio**, purché Vosk e il dispositivo funzionino. Le modalità si possono sempre modificare manualmente; le sezioni sottostanti sono prove storiche.\n\n

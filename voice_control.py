@@ -236,9 +236,13 @@ class VoiceController:
             return (not self._closed and generation == self._generation
                     and self.mode != STANDBY)
 
+    def accepts_event(self, generation: object) -> bool:
+        """Recheck a queued event before the UI consumes it, including close."""
+        return type(generation) is int and self._is_current(generation)
+
     def _report(self, kind: str, value: str, generation: int) -> None:
         if self._is_current(generation):
-            self.notify((kind, value))
+            self.notify((kind, value, generation))
 
     def _listen(self, stop: threading.Event, generation: int) -> None:
         failed = False

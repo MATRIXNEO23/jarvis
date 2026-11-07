@@ -196,9 +196,9 @@ class VoiceQueueGenerationTests(unittest.TestCase):
         for kind, value in (("voice_text", "Jarvis apri browser"),
                             ("voice_status", "Voce non disponibile: errore vecchio")):
             with self.subTest(kind=kind):
-                self.configure(GPT_CONVERSATION)
+                self.configure(CONTINUOUS)
                 self.report(kind, value)
-                self.off_on(GPT_CONVERSATION)
+                self.off_on(CONTINUOUS)
                 disable = Mock(return_value="dettatura disabilitata")
                 self.env["dictation"] = SimpleNamespace(enabled=True, disable=disable)
                 sample = self.env["last_voice_sample"].get()
@@ -292,4 +292,19 @@ class VoiceQueueGenerationTests(unittest.TestCase):
                 self.drain()
                 self.assertEqual(self.env["mic_status"].get(),
                                  "Microfono attivo — riconoscimento offline.")
+
+    def test_current_audio_error_keeps_feedback_and_stops_current_dictation(self):
+        self.configure(CONTINUOUS)
+        disable = Mock(return_value="Dettatura interrotta per errore audio.")
+        self.env["dictation"] = SimpleNamespace(enabled=True, disable=disable)
+        self.env["sync_dictation_ui"].reset_mock()
+        error = "Voce non disponibile: errore audio corrente"
+        self.report("voice_status", error)
+        self.drain()
+        self.assertEqual(self.env["mic_status"].get(), error)
+        self.env["write_line"].assert_called_once_with("MICROFONO > " + error)
+        self.env["runtime_events"].record.assert_called_once_with("voice_unavailable")
+        disable.assert_called_once_with()
+        self.env["sync_dictation_ui"].assert_called_once_with(
+            "Dettatura interrotta per errore audio.")
 
