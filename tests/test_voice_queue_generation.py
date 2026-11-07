@@ -131,6 +131,11 @@ class VoiceQueueGenerationTests(unittest.TestCase):
 
     def test_old_background_phrase_cannot_be_reinterpreted_after_mode_change(self):
         self.configure(GPT_CONVERSATION)
+        # The same room phrase is ignored if consumed in its original mode.
+        self.report("voice_text", "apri browser")
+        self.drain()
+        self.env["submit_local"].assert_not_called()
+        self.env["start_conversation_gpt"].assert_not_called()
         old = self.report("voice_text", "apri browser")  # no hotword in original mode
         self.switch(CONTINUOUS)
         self.clear_observations()
@@ -175,4 +180,15 @@ class VoiceQueueGenerationTests(unittest.TestCase):
                 self.assertEqual(self.env["submit_local"].call_args.kwargs["message_override"],
                                  "apri browser")
                 self.env["start_conversation_gpt"].assert_not_called()
+
+    def test_current_model_request_dispatches_once(self):
+        for mode in (GPT_CONVERSATION, CONTINUOUS):
+            with self.subTest(mode=mode):
+                self.configure(mode)
+                current = self.report("voice_text", "Jarvis spiegami la gravita")
+                self.drain()
+                self.trace("fresh_model_control", current)
+                self.env["start_conversation_gpt"].assert_called_once_with(
+                    "spiegami la gravita")
+                self.env["submit_local"].assert_not_called()
 
