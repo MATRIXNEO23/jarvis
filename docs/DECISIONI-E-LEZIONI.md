@@ -1,3 +1,11 @@
+## 7 novembre 2026 — JRV-AUD-022 ricomparsa, blocca il Green completo021
+
+Candidata0216504abffe0553461a2f44c07c9833d67a2abf2e1/run42363252951:Python3.11.9 job128375837812 SUCCESS900test in172.068s, tutti16nuovi021 passati. Python3.12.10 job128375837908 abortisce durante DocumentSaveRace prima dei021:Variable.__del__/Image.__del__ RuntimeError main thread is not in main loop, poiTcl_AsyncDelete, nessun riepilogo completo assegnato. Search live3.12 passato con servizio/fixture ripristinati; nessun retry cieco o Green dichiarato per021.
+
+022 viene investigata come correzione distinta nella bozza51 perché dipendenza del collaudo021. Ipotesi: fixture HUD precedenti lasciano cicli Tk chiusi, raccolti poi da workerWin32 senzaTk. Nuovo tests/test_aa_tk_lifetime.py prima di editare teardown: un metodo/quattro figli isolati con fixture vere Activity/Animated/header/nativeHUD, GC automatico disabilitato solo nel figlio e raccolta esplicita da worker dopo fixture, nessun error suppression/skip. Diagnostica stampata prima degli assert per conservarla anche se il resto suite abortisce. Poller di rete intercettato, account/audio/profili reali assenti.901attesi se la suite completa; nessuna conta inventata su abort.
+
+Specifica/piano022 salvati, runtimeTTS invariato6504. ProssimoRed022 e review; cleanup Tk sul mainthread solo se la riproduzione lo dimostra. Nessuna modifica GC globale dell'app, build/merge/test funzionale Linux o dati reali.
+
 ## JRV-AUD-021 — Red acquisito, candidata revisionata pronta per Windows
 
 Red556a4b4460287fb41f0bf7e7c1d080c6b81ec993/run42362426651 FALLITO:897test/job6failure0errori nel nuovo021.3.11job128373412696144.361s,3.12job128373412895196.734s. Confermati helper/worker vivi dopo close e invio possibile dopo creazione concorrente; baseline precedente passa. Nessun022/023;Searchlive3.12 passato con servizio/fixture ripristinati.

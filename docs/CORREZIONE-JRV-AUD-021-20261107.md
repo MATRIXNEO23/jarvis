@@ -25,3 +25,7 @@ Review indipendente readonly rafforza latenza e cleanup: tutte le close nei test
 Popen/pipe/processi Windows reali, helper Python silenzioso temporaneo al posto dell'eseguibile PS intercettato alla sola frontiera Popen. Processo estraneo separato controllato; nessun SAPI/audio, account, microfono o profilo personale. AST/diff locali soltanto; nessuna esecuzione funzionale Linux. Nuove prove non certificano suono, latenza Windows10/i3/HDD o pacchetto estratto.022/023 restano aperti. Nessuna dipendenza o impostazione modificata.
 
 Ramo isolato reversibile `fix/jrv-aud-021-owned-tts-20261107`, nessun main/merge/build/ZIP/release o cancellazione di dati/versioni precedenti. Recupero tramite ritorno alla019 nel ramo di sviluppo. Prossimi012/013: coerenza dei sorgenti e guide nel futuro pacchetto;020 indice repository;016 distinta come funzione incompleta,022/023 da verificare causalmente.
+
+## Prima verifica candidata: parziale, blocco022
+
+Source6504abffe/run42363252951:3.11job128375837812 passa900test in172.068s (tutti16nuovi021).3.12job128375837908 abortisce conTcl_AsyncDelete durante DocumentSaveRace, prima dei021; nessun riepilogo completo assegnato. Errore022 già storico, causa di ownershipTk da investigare senza attribuirla alla voce. Searchlive3.12 passato con ripristino. Green completo021 non dichiarato, nessun retry cieco; specifica/piano022 e regressione controllata avviati nella stessa bozza per sbloccare il collaudo, runtimeTTS invariato.

@@ -28,5 +28,32 @@
   "limits": [
     "No runtime change or fixture mitigation bundled into JRV-AUD-004.",
     "No functional Linux execution or target PC test."
-  ]
+  ],
+  "recurrences": [
+    {
+      "source_commit": "6504abffe0553461a2f44c07c9833d67a2abf2e1",
+      "run": 42363252951,
+      "job": 128375837908,
+      "python": "3.12.10",
+      "active_test": "test_document_save_race.DocumentSaveRaceTests.test_clean_close_requires_current_text_to_match_saved_copy",
+      "final_summary_available": false,
+      "new_tts_tests_started": false,
+      "symptom": "Variable/Image finalizers call Tcl from wrong thread; Tcl_AsyncDelete abort",
+      "companion_python311": {
+        "job": 128375837812,
+        "tests": 900,
+        "seconds": 172.068,
+        "conclusion": "success",
+        "new_tts_methods_passed": 16
+      }
+    }
+  ],
+  "controlled_regression": {
+    "file": "tests/test_aa_tk_lifetime.py",
+    "status": "Windows Red to acquire before teardown changes",
+    "methods": 1,
+    "isolated_fixture_subtests": 4,
+    "automatic_gc_disabled_in_child_only": true,
+    "errors_suppressed": false
+  }
 }
