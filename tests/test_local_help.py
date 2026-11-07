@@ -79,6 +79,8 @@ class LocalHelpTests(unittest.TestCase):
         root.update();root.focus_force();root.update();root.event_generate('<F1>');root.update()
         window=root._jarvis_help_window
         self.assertTrue(window.winfo_exists())
+        window.focus_force();root.update();window.event_generate('<Control-l>');root.update()
+        self.assertIs(root.focus_get(),entry)
         window.focus_force();root.update();window.event_generate('<Escape>');root.update()
         self.assertIsNone(root._jarvis_help_window)
         root.focus_force();root.update();root.event_generate('<Control-l>');root.update()

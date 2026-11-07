@@ -4073,6 +4073,8 @@ def main() -> None:
         return "break"
 
     def focus_command_box(event=None):
+        root.lift()
+        root.focus_force()
         input_box.focus_set()
         return "break"
 

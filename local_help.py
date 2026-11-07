@@ -26,7 +26,7 @@ def help_sections(engine):
             'F1 apre la guida. Ctrl+L porta il cursore nella casella. Ctrl+, apre le impostazioni.\n'
             'La guida non invia richieste ai modelli e non esegue i comandi mostrati.\n'
             'Le sezioni spiegano esempi e prerequisiti; le funzioni opzionali richiedono attivazione e permessi.',
-        'Comandi locali': engine.available_commands(files_enabled=enabled),
+        'Comandi locali': 'Per questi comandi usa ⋯ → Esegui locale. Invio/Invia usa il percorso conversazione, salvo i comandi intercettati localmente.\n\n' + engine.available_commands(files_enabled=enabled),
         'Timer e sveglia':
             'imposta timer sei minuti\navvia un timer da 6 minuti\ntimer 45 secondi\n'
             'pausa timer\nriprendi timer\nquanto manca al timer\nferma timer\nreset timer\n\n'
@@ -44,7 +44,7 @@ def help_sections(engine):
             'Per installazione e problemi usa docs/VOCE_OFFLINE.md distribuita con Jarvis.',
         'Modelli e GPT':
             'La scelta dei modelli non è stata cambiata da questa guida. '
-            'I comandi locali supportati, incluso aiuto, vengono gestiti senza inviare richieste a GPT.\n\n'
+            'Aiuto, timer e sveglia sono intercettati localmente nella console; file e app seguono i rispettivi controlli. Per gli altri comandi del catalogo locale usa ⋯ → Esegui locale.\n\n'
             'Con Gemma configurata, la conversazione ordinaria della console usa Gemma. '
             'Chiedi a GPT è il pulsante esplicito per una richiesta al GPT collegato; Prova Gemma locale è una prova del modello.\n\n'
             'GPT richiede abilitazione, collegamento e permesso della funzione. '
@@ -101,6 +101,7 @@ class HelpWindow(tk.Toplevel):
             self.notebook.add(frame, text=title)
         ttk.Button(self, text='Chiudi (Esc)', command=self.destroy).pack(pady=(0, 10))
         self.bind('<Escape>', self.close)
+        self.bind('<Control-l>', self.focus_command)
         self.bind('<Destroy>', lambda event: self._forget(parent, event), add='+')
 
     def _forget(self, parent, event):
@@ -109,6 +110,12 @@ class HelpWindow(tk.Toplevel):
 
     def close(self, event=None):
         self.destroy()
+        return 'break'
+
+    def focus_command(self, event=None):
+        callback = getattr(self.master, '_jarvis_focus_command', None)
+        if callback is not None:
+            callback(event)
         return 'break'
 
     def refresh(self, engine):
@@ -129,10 +136,13 @@ def open_help(parent, engine):
     else:
         window = HelpWindow(parent, engine)
         parent._jarvis_help_window = window
+    window.focus_force()
     return window
 
 
 def bind_help_shortcuts(root, settings_window, show_help, focus_command):
+    root._jarvis_focus_command = focus_command
     root.bind('<F1>', show_help, add='+')
     settings_window.bind('<F1>', show_help, add='+')
+    settings_window.bind('<Control-l>', focus_command, add='+')
     root.bind('<Control-l>', focus_command, add='+')
