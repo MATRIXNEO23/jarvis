@@ -1,3 +1,7 @@
+## JRV-AUD-009 — collegamento memoria autorizzato in verifica, 2026-11-07
+
+Base8ca4829/bozza42 con001–008, ramo fix/jrv-aud-009-gemma-memory-20261107. L'utente approva collegare Gemma al recupero dei ricordi già presente, con opt-in generale e progetti separati. Specifica/piano009 salvati; nessun nuovo archivio/embedding/servizio o riassunto automatico. Codice attuale: pollGemma accetta soloRAM, prompt non usa archivi. Nuovi test usano callback/trasporto/sessione e SQLite reali con inferenza catturata, inclusi nuovo processo, revoche/owner e Clear, errori/budget/template. Runtime ancora invariato; Red da eseguire suWindows. Nessun test funzionale Linux, build/merge/dato utente;022/023 e010 separati. Prossimo: Red e review preventiva, poi collegamento minimo.
+
 ## 7 novembre2026 — JRV-AUD-008 verificato nei sorgenti in bozza
 
 Sourceb10453d5ddfda2155f4969dd8f1fa501cdcda8f9, [bozza42](https://github.com/MATRIXNEO23/jarvis/pull/42) dalla41/baseb25f54a,001–007 conservate. [Run42344534309](https://github.com/MATRIXNEO23/jarvis/actions/runs/42344534309) SUCCESS al tentativo1:747test Python3.11.9/job128319288492119.191s e747 Python3.12.10/job128319288706114.697s,0failure/errori/skip. Tutti17nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-008-20261107.md), [evidenza](evidence/jrv-aud-008-fix-20261107.json).
