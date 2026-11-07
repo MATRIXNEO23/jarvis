@@ -99,6 +99,7 @@ const encryption = {
 };
 
 let sdk = null;
+const inferenceRequests = new Map();
 async function initialize() {
   if (process.platform !== "win32") throw new Error("Jarvis GPT supporta per ora Windows.");
   if (!existsSync(sdkEntry)) {
@@ -120,6 +121,15 @@ async function initialize() {
 
 async function execute(req) {
   const action = req.action;
+  if (action === "cancel_request") {
+    if (!Number.isSafeInteger(req.request_id) || req.request_id < 1) {
+      throw new Error("Identificativo richiesta da annullare non valido.");
+    }
+    const controller = inferenceRequests.get(req.request_id);
+    if (!controller) return { cancelled: false };
+    controller.abort();
+    return { cancelled: true };
+  }
   if (action === "status") return sdk.getSession();
   if (action === "sign_in") return sdk.signIn();
   if (action === "cancel_sign_in") {
@@ -139,17 +149,27 @@ async function execute(req) {
     if (typeof prompt !== "string" || !prompt.trim() || prompt.length > 5000) {
       throw new Error("Messaggio GPT vuoto o troppo lungo (massimo 5000 caratteri).");
     }
-    const state = await sdk.getSession();
-    if (state.status !== "connected" || !state.sharing) {
-      throw new Error("ChatGPT non connesso o permesso di utilizzo del piano non concesso.");
+    const controller = new AbortController();
+    inferenceRequests.set(req.id, controller);
+    const signal = controller.signal;
+    try {
+      const state = await sdk.getSession();
+      signal.throwIfAborted();
+      if (state.status !== "connected" || !state.sharing) {
+        throw new Error("ChatGPT non connesso o permesso di utilizzo del piano non concesso.");
+      }
+      const models = await sdk.listModels({ signal });
+      signal.throwIfAborted();
+      if (!models.length) throw new Error("Nessun modello disponibile per questo account.");
+      const requested = typeof req.model === "string" ? req.model : "";
+      const model = models.find(m => m.slug === requested) || models[0];
+      const response = await sdk.streamResponse({ model: model.slug, input: prompt, signal });
+      signal.throwIfAborted();
+      if (!response.text || !response.text.trim()) throw new Error("GPT non ha fornito una risposta completa.");
+      return { text: response.text.slice(0, 30000), model: model.slug };
+    } finally {
+      inferenceRequests.delete(req.id);
     }
-    const models = await sdk.listModels();
-    if (!models.length) throw new Error("Nessun modello disponibile per questo account.");
-    const requested = typeof req.model === "string" ? req.model : "";
-    const model = models.find(m => m.slug === requested) || models[0];
-    const response = await sdk.streamResponse({ model: model.slug, input: prompt });
-    if (!response.text || !response.text.trim()) throw new Error("GPT non ha fornito una risposta completa.");
-    return { text: response.text.slice(0, 30000), model: model.slug };
   }
   throw new Error("Azione GPT non consentita.");
 }
@@ -172,6 +192,7 @@ try {
         throw new Error("Identificativo richiesta non valido.");
       }
       if (req.action === "shutdown") {
+        for (const controller of inferenceRequests.values()) controller.abort();
         sdk.cancelSignIn();
         emit({ id: req.id, ok: true, result: { stopped: true } });
         break;

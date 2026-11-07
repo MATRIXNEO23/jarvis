@@ -155,10 +155,38 @@ class GPTClient:
             result = reply.get("result")
             return result if isinstance(result, dict) else {"value": result}
         except queue.Empty as exc:
-            raise GPTUnavailable("GPT non ha risposto entro il limite previsto.") from exc
+            detail = ""
+            if action == "ask":
+                sent = self._cancel_request(proc, request_id)
+                detail = (" Annullamento richiesto; risposte tardive ignorate."
+                          if sent else
+                          " Annullamento non inviato; risposte tardive ignorate.")
+            raise GPTUnavailable("GPT non ha risposto entro il limite previsto."
+                                 + detail) from exc
         finally:
             with self._lock:
                 self._pending.pop(request_id, None)
+
+    def _cancel_request(self, proc: subprocess.Popen, request_id: int) -> bool:
+        """Best-effort cancellation on the same owned child; no start or wait.
+
+        This command is not an inference or a retry. Its acknowledgement is
+        deliberately not registered in pending, and uses a fresh ID so it
+        cannot satisfy an unrelated caller.
+        """
+        with self._lock:
+            if (self._process is not proc or proc.poll() is not None
+                    or not proc.stdin):
+                return False
+            self._next_id += 1
+            payload = {"id": self._next_id, "action": "cancel_request",
+                       "request_id": request_id}
+            try:
+                proc.stdin.write(json.dumps(payload) + "\n")
+                proc.stdin.flush()
+            except (OSError, ValueError):
+                return False
+        return True
 
     def bridge_running(self) -> bool:
         """Side-effect-free observation; no session refresh or model request."""

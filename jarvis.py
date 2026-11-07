@@ -2063,7 +2063,7 @@ def main() -> None:
             user_utterance = params.get("utterance", "") if structured else ""
             typed_question = params.get("source", "") if action == "ask" else ""
             try:
-                timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation") else 40
+                timeout = 600 if action == "sign_in" else 180 if action in ("ask", "conversation", "typed_conversation") else 40
                 sdk_action = "ask" if structured else action
                 sdk_params = {key: value for key, value in params.items()
                               if key not in ("epoch", "document_id", "utterance", "source", "file_refinement")}
