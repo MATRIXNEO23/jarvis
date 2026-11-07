@@ -1,0 +1,693 @@
+{
+  "issue": "JRV-AUD-007",
+  "date": "2026-11-07",
+  "status": "FIX_VERIFIED_WINDOWS_CI_DRAFT_NOT_RELEASED",
+  "base_commit": "c9d1d29a085770744e1a1cc34fc7d5f2826ac35b",
+  "source_commit": "425bfc38c1232ca26c5d1939bda7f0f95b07c04e",
+  "source_tree": "db84b77cf45300d8f1648d6e37937137517d1185",
+  "branch": "fix/jrv-aud-007-voice-generation-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/41",
+  "verified_blobs": {
+    "jarvis.py": "09acbc4d3649920526cf2da26d6c8839e978d39e",
+    "voice_control.py": "412b1107dc998d4e1c49efc73472ec2ba07ed9df",
+    "tests/test_voice_queue_generation.py": "dab606840a5b2d68a138fdbc06cb85a925986498"
+  },
+  "original_red": {
+    "source_commit": "2632321c258d9a20d44a7e6cbba8538476505412",
+    "run_id": 42340988254,
+    "tests_per_job": 723,
+    "failures_per_job": 9,
+    "errors_per_job": 0,
+    "evidence": "docs/evidence/jrv-aud-007-20261107.json"
+  },
+  "extended_red": {
+    "commit": "887e3db1eddaf734c440348d628b6702399eb943",
+    "run_id": 42342113095,
+    "command": "python -m unittest discover -s tests -v",
+    "jobs": [
+      {
+        "id": 128311857151,
+        "python": "3.11.9",
+        "tests": 729,
+        "failures": 24,
+        "errors": 1,
+        "seconds": 153.433,
+        "voice_failure_headers": [
+          "FAIL: test_close_revokes_already_queued_voice (test_voice_queue_generation.VoiceQueueGenerationTests.test_close_revokes_already_queued_voice)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=0)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=1)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=2)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=3)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=4)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=5)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=6)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=8)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=9)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=10)",
+          "FAIL: test_nonvoice_result_between_stale_and_fresh_voice_is_preserved (test_voice_queue_generation.VoiceQueueGenerationTests.test_nonvoice_result_between_stale_and_fresh_voice_is_preserved)",
+          "FAIL: test_old_background_phrase_cannot_be_reinterpreted_after_mode_change (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_background_phrase_cannot_be_reinterpreted_after_mode_change)",
+          "FAIL: test_old_local_command_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_local_command_is_ignored_after_off_on) (mode='conversazione_gpt')",
+          "FAIL: test_old_local_command_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_local_command_is_ignored_after_off_on) (mode='ascolto_continuo')",
+          "FAIL: test_old_local_command_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_local_command_is_ignored_after_off_on) (mode='premi_per_parlare')",
+          "FAIL: test_old_model_request_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_model_request_is_ignored_after_off_on) (mode='conversazione_gpt')",
+          "FAIL: test_old_model_request_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_model_request_is_ignored_after_off_on) (mode='ascolto_continuo')",
+          "FAIL: test_old_status_does_not_replace_new_session_status (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_status_does_not_replace_new_session_status) (mode='conversazione_gpt')",
+          "FAIL: test_old_status_does_not_replace_new_session_status (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_status_does_not_replace_new_session_status) (mode='ascolto_continuo')",
+          "FAIL: test_old_status_does_not_replace_new_session_status (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_status_does_not_replace_new_session_status) (mode='premi_per_parlare')",
+          "FAIL: test_stale_events_have_no_ui_memory_or_dictation_effects (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_events_have_no_ui_memory_or_dictation_effects) (kind='voice_text')",
+          "FAIL: test_stale_events_have_no_ui_memory_or_dictation_effects (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_events_have_no_ui_memory_or_dictation_effects) (kind='voice_status')",
+          "FAIL: test_stale_then_fresh_event_keeps_current_command (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_then_fresh_event_keeps_current_command)"
+        ],
+        "error_headers": [
+          "ERROR: test_real_powershell_explorer_selection_and_navigation_contract (test_file_access.FileAccessTests.test_real_powershell_explorer_selection_and_navigation_contract)"
+        ],
+        "note": "JRV-AUD-023: Explorer PowerShell fixture timed out after15s; no007 fixture error."
+      },
+      {
+        "id": 128311857388,
+        "python": "3.12.10",
+        "tests": 729,
+        "failures": 24,
+        "errors": 0,
+        "seconds": 167.838,
+        "voice_failure_headers": [
+          "FAIL: test_close_revokes_already_queued_voice (test_voice_queue_generation.VoiceQueueGenerationTests.test_close_revokes_already_queued_voice)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=0)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=1)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=2)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=3)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=4)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=5)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=6)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=8)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=9)",
+          "FAIL: test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) (payload=10)",
+          "FAIL: test_nonvoice_result_between_stale_and_fresh_voice_is_preserved (test_voice_queue_generation.VoiceQueueGenerationTests.test_nonvoice_result_between_stale_and_fresh_voice_is_preserved)",
+          "FAIL: test_old_background_phrase_cannot_be_reinterpreted_after_mode_change (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_background_phrase_cannot_be_reinterpreted_after_mode_change)",
+          "FAIL: test_old_local_command_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_local_command_is_ignored_after_off_on) (mode='conversazione_gpt')",
+          "FAIL: test_old_local_command_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_local_command_is_ignored_after_off_on) (mode='ascolto_continuo')",
+          "FAIL: test_old_local_command_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_local_command_is_ignored_after_off_on) (mode='premi_per_parlare')",
+          "FAIL: test_old_model_request_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_model_request_is_ignored_after_off_on) (mode='conversazione_gpt')",
+          "FAIL: test_old_model_request_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_model_request_is_ignored_after_off_on) (mode='ascolto_continuo')",
+          "FAIL: test_old_status_does_not_replace_new_session_status (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_status_does_not_replace_new_session_status) (mode='conversazione_gpt')",
+          "FAIL: test_old_status_does_not_replace_new_session_status (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_status_does_not_replace_new_session_status) (mode='ascolto_continuo')",
+          "FAIL: test_old_status_does_not_replace_new_session_status (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_status_does_not_replace_new_session_status) (mode='premi_per_parlare')",
+          "FAIL: test_stale_events_have_no_ui_memory_or_dictation_effects (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_events_have_no_ui_memory_or_dictation_effects) (kind='voice_text')",
+          "FAIL: test_stale_events_have_no_ui_memory_or_dictation_effects (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_events_have_no_ui_memory_or_dictation_effects) (kind='voice_status')",
+          "FAIL: test_stale_then_fresh_event_keeps_current_command (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_then_fresh_event_keeps_current_command)"
+        ],
+        "error_headers": [],
+        "note": "No error;24 behavioral failures in007."
+      }
+    ]
+  },
+  "green": {
+    "run": {
+      "id": 42342496402,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "425bfc38c1232ca26c5d1939bda7f0f95b07c04e",
+      "attempt": 1
+    },
+    "platform": "windows-2022 x64",
+    "command": "python -m unittest discover -s tests -v",
+    "jobs": [
+      {
+        "id": 128313038365,
+        "python": "3.11.9",
+        "url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/42342496402/job/128313038365",
+        "tests": 730,
+        "seconds": 159.103,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "regression_methods": [
+          "test_close_revokes_already_queued_voice (test_voice_queue_generation.VoiceQueueGenerationTests.test_close_revokes_already_queued_voice) ... ok",
+          "test_current_audio_error_keeps_feedback_and_stops_current_dictation (test_voice_queue_generation.VoiceQueueGenerationTests.test_current_audio_error_keeps_feedback_and_stops_current_dictation) ... ok",
+          "test_current_event_dispatches_and_old_generation_cannot_enqueue (test_voice_queue_generation.VoiceQueueGenerationTests.test_current_event_dispatches_and_old_generation_cannot_enqueue) ... ok",
+          "test_current_model_request_dispatches_once (test_voice_queue_generation.VoiceQueueGenerationTests.test_current_model_request_dispatches_once) ... ok",
+          "test_current_status_is_displayed_in_each_listening_mode (test_voice_queue_generation.VoiceQueueGenerationTests.test_current_status_is_displayed_in_each_listening_mode) ... ok",
+          "test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) ... ok",
+          "test_nonvoice_result_between_stale_and_fresh_voice_is_preserved (test_voice_queue_generation.VoiceQueueGenerationTests.test_nonvoice_result_between_stale_and_fresh_voice_is_preserved) ... ok",
+          "test_old_background_phrase_cannot_be_reinterpreted_after_mode_change (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_background_phrase_cannot_be_reinterpreted_after_mode_change) ... ok",
+          "test_old_local_command_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_local_command_is_ignored_after_off_on) ... ok",
+          "test_old_model_request_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_model_request_is_ignored_after_off_on) ... ok",
+          "test_old_status_does_not_replace_new_session_status (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_status_does_not_replace_new_session_status) ... ok",
+          "test_stale_events_have_no_ui_memory_or_dictation_effects (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_events_have_no_ui_memory_or_dictation_effects) ... ok",
+          "test_stale_then_fresh_event_keeps_current_command (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_then_fresh_event_keeps_current_command) ... ok",
+          "test_standby_without_reactivation_blocks_queued_command (test_voice_queue_generation.VoiceQueueGenerationTests.test_standby_without_reactivation_blocks_queued_command) ... ok"
+        ],
+        "probes": [
+          {
+            "case": "fresh_control",
+            "producer_generation": 3,
+            "consumer_generation": 3,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 1,
+            "model_starts": 0,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "fresh_control",
+            "producer_generation": 6,
+            "consumer_generation": 6,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 1,
+            "model_starts": 0,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "fresh_control",
+            "producer_generation": 9,
+            "consumer_generation": 9,
+            "current_mode": "premi_per_parlare",
+            "local_dispatches": 1,
+            "model_starts": 0,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Premi per parlare: microfono spento finché non tieni premuto."
+          },
+          {
+            "case": "fresh_model_control",
+            "producer_generation": 1,
+            "consumer_generation": 1,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 0,
+            "model_starts": 1,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "fresh_model_control",
+            "producer_generation": 2,
+            "consumer_generation": 2,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 1,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "background_gpt_to_continuous",
+            "producer_generation": 1,
+            "consumer_generation": 2,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "old_local_off_on",
+            "producer_generation": 1,
+            "consumer_generation": 3,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "old_local_off_on",
+            "producer_generation": 4,
+            "consumer_generation": 6,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "old_local_off_on",
+            "producer_generation": 7,
+            "consumer_generation": 9,
+            "current_mode": "premi_per_parlare",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Premi per parlare: microfono spento finché non tieni premuto."
+          },
+          {
+            "case": "old_model_off_on",
+            "producer_generation": 1,
+            "consumer_generation": 3,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "old_model_off_on",
+            "producer_generation": 4,
+            "consumer_generation": 6,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "old_status_off_on",
+            "producer_generation": 1,
+            "consumer_generation": 3,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "old_status_off_on",
+            "producer_generation": 4,
+            "consumer_generation": 6,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "old_status_off_on",
+            "producer_generation": 7,
+            "consumer_generation": 9,
+            "current_mode": "premi_per_parlare",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Premi per parlare: microfono spento finché non tieni premuto."
+          },
+          {
+            "case": "stay_off_control",
+            "producer_generation": 1,
+            "consumer_generation": 2,
+            "current_mode": "standby",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Microfono: SPENTO (standby)"
+          }
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Python syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "GPT JavaScript syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "Unit tests (no external login)",
+            "conclusion": "success"
+          },
+          {
+            "name": "PowerShell setup syntax (Windows)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native Windows file access probe",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows Search service observation (CI only)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Live Windows Search integration (isolated CI only)",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Build operational candidate (Windows only)",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Verify extracted candidate on Windows",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 128313038104,
+        "python": "3.12.10",
+        "url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/42342496402/job/128313038104",
+        "tests": 730,
+        "seconds": 113.337,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "regression_methods": [
+          "test_close_revokes_already_queued_voice (test_voice_queue_generation.VoiceQueueGenerationTests.test_close_revokes_already_queued_voice) ... ok",
+          "test_current_audio_error_keeps_feedback_and_stops_current_dictation (test_voice_queue_generation.VoiceQueueGenerationTests.test_current_audio_error_keeps_feedback_and_stops_current_dictation) ... ok",
+          "test_current_event_dispatches_and_old_generation_cannot_enqueue (test_voice_queue_generation.VoiceQueueGenerationTests.test_current_event_dispatches_and_old_generation_cannot_enqueue) ... ok",
+          "test_current_model_request_dispatches_once (test_voice_queue_generation.VoiceQueueGenerationTests.test_current_model_request_dispatches_once) ... ok",
+          "test_current_status_is_displayed_in_each_listening_mode (test_voice_queue_generation.VoiceQueueGenerationTests.test_current_status_is_displayed_in_each_listening_mode) ... ok",
+          "test_invalid_voice_payloads_do_not_dispatch_or_block_next_event (test_voice_queue_generation.VoiceQueueGenerationTests.test_invalid_voice_payloads_do_not_dispatch_or_block_next_event) ... ok",
+          "test_nonvoice_result_between_stale_and_fresh_voice_is_preserved (test_voice_queue_generation.VoiceQueueGenerationTests.test_nonvoice_result_between_stale_and_fresh_voice_is_preserved) ... ok",
+          "test_old_background_phrase_cannot_be_reinterpreted_after_mode_change (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_background_phrase_cannot_be_reinterpreted_after_mode_change) ... ok",
+          "test_old_local_command_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_local_command_is_ignored_after_off_on) ... ok",
+          "test_old_model_request_is_ignored_after_off_on (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_model_request_is_ignored_after_off_on) ... ok",
+          "test_old_status_does_not_replace_new_session_status (test_voice_queue_generation.VoiceQueueGenerationTests.test_old_status_does_not_replace_new_session_status) ... ok",
+          "test_stale_events_have_no_ui_memory_or_dictation_effects (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_events_have_no_ui_memory_or_dictation_effects) ... ok",
+          "test_stale_then_fresh_event_keeps_current_command (test_voice_queue_generation.VoiceQueueGenerationTests.test_stale_then_fresh_event_keeps_current_command) ... ok",
+          "test_standby_without_reactivation_blocks_queued_command (test_voice_queue_generation.VoiceQueueGenerationTests.test_standby_without_reactivation_blocks_queued_command) ... ok"
+        ],
+        "probes": [
+          {
+            "case": "fresh_control",
+            "producer_generation": 3,
+            "consumer_generation": 3,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 1,
+            "model_starts": 0,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "fresh_control",
+            "producer_generation": 6,
+            "consumer_generation": 6,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 1,
+            "model_starts": 0,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "fresh_control",
+            "producer_generation": 9,
+            "consumer_generation": 9,
+            "current_mode": "premi_per_parlare",
+            "local_dispatches": 1,
+            "model_starts": 0,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Premi per parlare: microfono spento finché non tieni premuto."
+          },
+          {
+            "case": "fresh_model_control",
+            "producer_generation": 1,
+            "consumer_generation": 1,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 0,
+            "model_starts": 1,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "fresh_model_control",
+            "producer_generation": 2,
+            "consumer_generation": 2,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 1,
+            "file_dispatch_attempts": 1,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "background_gpt_to_continuous",
+            "producer_generation": 1,
+            "consumer_generation": 2,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "old_local_off_on",
+            "producer_generation": 1,
+            "consumer_generation": 3,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "old_local_off_on",
+            "producer_generation": 4,
+            "consumer_generation": 6,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "old_local_off_on",
+            "producer_generation": 7,
+            "consumer_generation": 9,
+            "current_mode": "premi_per_parlare",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Premi per parlare: microfono spento finché non tieni premuto."
+          },
+          {
+            "case": "old_model_off_on",
+            "producer_generation": 1,
+            "consumer_generation": 3,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "old_model_off_on",
+            "producer_generation": 4,
+            "consumer_generation": 6,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "old_status_off_on",
+            "producer_generation": 1,
+            "consumer_generation": 3,
+            "current_mode": "conversazione_gpt",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Microfono attivo: inizia ogni richiesta con Jarvis, per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato."
+          },
+          {
+            "case": "old_status_off_on",
+            "producer_generation": 4,
+            "consumer_generation": 6,
+            "current_mode": "ascolto_continuo",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Ascolto continuo: parla direttamente. La dettatura richiede l’attivazione manuale."
+          },
+          {
+            "case": "old_status_off_on",
+            "producer_generation": 7,
+            "consumer_generation": 9,
+            "current_mode": "premi_per_parlare",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Premi per parlare: microfono spento finché non tieni premuto."
+          },
+          {
+            "case": "stay_off_control",
+            "producer_generation": 1,
+            "consumer_generation": 2,
+            "current_mode": "standby",
+            "local_dispatches": 0,
+            "model_starts": 0,
+            "file_dispatch_attempts": 0,
+            "mic_status": "Microfono: SPENTO (standby)"
+          }
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Python syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "GPT JavaScript syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "Unit tests (no external login)",
+            "conclusion": "success"
+          },
+          {
+            "name": "PowerShell setup syntax (Windows)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native Windows file access probe",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows Search service observation (CI only)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Live Windows Search integration (isolated CI only)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build operational candidate (Windows only)",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Verify extracted candidate on Windows",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  "change": {
+    "producer": "voice_control.py:239-246: accepts_event requires exact int and current/open/active controller; _report preserves producer generation in(kind,value,generation).",
+    "consumer": "jarvis.py:3244-3252: reject malformed or expired voice_text/voice_status before effects, leave other event shapes and queue contents alone.",
+    "runtime_delta": "git diff:12 insertions,1 deletion across2 existing runtime files; no new dependency/process/timer.",
+    "persistence": "No profile/configuration/history/project migration or user-data changes."
+  },
+  "covered_behaviors": [
+    "OFF→ON stale local commands ignored inGPT/continuous/PTT; last voice sample unchanged.",
+    "OFF→ON stale model request ignored inGPT/continuous.",
+    "Speech without hotword ignored in originalGPT mode remains ignored after mode change tocontinuous.",
+    "Old status cannot replace new status, emit log/telemetry or disable new-session dictation.",
+    "Closed controller revokes already queued events.",
+    "Malformed/missing/bool/float/string/None generation or wrong payload length cannot dispatch or block following valid voice.",
+    "Fresh local/model request dispatched exactly once; current status/error feedback and dictation stop retained.",
+    "TTS result between stale and fresh voice preserved; no wholesale queue flush."
+  ],
+  "independent_review": {
+    "reviewer": "/root/review_native_reference",
+    "mode": "Read-only source review; no tests or mutations.",
+    "result": "No concrete runtime defect or remaining blocker found in scoped delta.",
+    "minor_gaps_addressed": [
+      "Move active-dictation stale fixture toCONTINUOUS, where that state is reachable.",
+      "Add current audio error positive control for status/log/telemetry/dictation disable."
+    ],
+    "evidence_limit": "Only the initial expanded Red of729 tests had active dictation inGPT. Green fixture usesCONTINUOUS; original7 Red reproducers are unchanged. New current-error test is characterization, not claimed Red."
+  },
+  "preservation": {
+    "main_commit": "f147b1a5faa977e8e4aefe21c9799465a7a8e990",
+    "base_pr_40_unchanged": true,
+    "build": false,
+    "merge": false,
+    "release": false,
+    "application_zip": false,
+    "user_data_changes": false,
+    "functional_linux_tests": false
+  },
+  "residual_issues": {
+    "JRV_AUD_022": "Open; not reproduced in final Green. No fix claimed.",
+    "JRV_AUD_023": "Open; reproduced in extendedRed3.11 Explorer fixture TimeoutExpired15s. FinalGreen passed without changing that fixture; no fix claimed."
+  },
+  "limits": [
+    "Controlled transcripts at real VoiceController producer/Queue/mode callback/full poll dequeue/dispatch loop. No microphone/Vosk acoustic recognition/liveGPT/Telegram or real local desktop action.",
+    "AST test omits external poll closing/scheduling/document reconciliation under open/idle fixture; controller-close scenario covers queued revocation.",
+    "No claim for modal interleaving after validation, project changes or PTT release/press without mode change.",
+    "No Windows10/i3-2100/HDD/RAM/CPU measurements or GGUF inference.",
+    "No build/extracted-package/bootstrap release verification; those are deliberately skipped and require a separate user build request.",
+    "Shared event contract changed only for internal voice producer; no fallback for legacy untagged voice events."
+  ],
+  "windows_search_live": {
+    "native_index_verified": true,
+    "runtime_adapter": "indexed_candidates",
+    "scope_changes": false,
+    "global_reindex": false,
+    "personal_pc_verified": false,
+    "checks": {
+      "available_empty_query": "passed",
+      "created_file_found": "passed",
+      "other_scope_empty": "passed",
+      "rename_observed": "passed",
+      "deletion_observed": "passed",
+      "created_folder_found": "passed",
+      "folder_other_scope_empty": "passed",
+      "folder_deletion_observed": "passed"
+    },
+    "initial_service": {
+      "running": false,
+      "start_mode": "Disabled"
+    },
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "next_step": "Stop after007. On next user go-ahead verify whether008 Gemma saved-parameter propagation is still reproducible after005 before proposing any runtime change; no automatic build."
+}

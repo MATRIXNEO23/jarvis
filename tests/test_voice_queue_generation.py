@@ -1,7 +1,7 @@
-"""JRV-AUD-007 verification only: actual producer, queue and dispatch loop.
+"""JRV-AUD-007 regression: actual producer, queue and dispatch loop.
 
-Audio worker startup and action/model boundaries are controlled. No runtime
-patch, microphone, Vosk model, GPT account or desktop action is used.
+Audio worker startup and action/model boundaries are controlled. No microphone,
+Vosk model, GPT account or desktop action is used.
 """
 from __future__ import annotations
 
@@ -191,4 +191,120 @@ class VoiceQueueGenerationTests(unittest.TestCase):
                 self.env["start_conversation_gpt"].assert_called_once_with(
                     "spiegami la gravita")
                 self.env["submit_local"].assert_not_called()
+
+    def test_stale_events_have_no_ui_memory_or_dictation_effects(self):
+        for kind, value in (("voice_text", "Jarvis apri browser"),
+                            ("voice_status", "Voce non disponibile: errore vecchio")):
+            with self.subTest(kind=kind):
+                self.configure(CONTINUOUS)
+                self.report(kind, value)
+                self.off_on(CONTINUOUS)
+                disable = Mock(return_value="dettatura disabilitata")
+                self.env["dictation"] = SimpleNamespace(enabled=True, disable=disable)
+                sample = self.env["last_voice_sample"].get()
+                status = self.env["mic_status"].get()
+                self.env["sync_dictation_ui"].reset_mock()
+                self.drain()
+                self.env["write_line"].assert_not_called()
+                self.assertEqual(self.env["last_voice_sample"].get(), sample)
+                self.assertEqual(self.env["mic_status"].get(), status)
+                self.env["runtime_events"].record.assert_not_called()
+                self.env["sync_dictation_ui"].assert_not_called()
+                disable.assert_not_called()
+                self.env["submit_local"].assert_not_called()
+                self.env["start_conversation_gpt"].assert_not_called()
+
+    def test_stale_then_fresh_event_keeps_current_command(self):
+        self.configure(GPT_CONVERSATION)
+        self.report("voice_text", "Jarvis spiegami la gravita")
+        self.off_on(GPT_CONVERSATION)
+        self.control._report("voice_text", "Jarvis apri browser", self.control._generation)
+        self.drain()
+        self.env["submit_local"].assert_called_once_with(
+            message_override="apri browser", source_utterance="apri browser")
+        self.env["start_conversation_gpt"].assert_not_called()
+        self.env["write_line"].assert_called_once_with("TU > apri browser")
+
+    def test_nonvoice_result_between_stale_and_fresh_voice_is_preserved(self):
+        self.configure(GPT_CONVERSATION)
+        self.env.update(spoken_status=voice_fixture.Value(""), refresh_voices_button=Mock())
+        self.report("voice_text", "Jarvis spiegami la gravita")
+        self.off_on(GPT_CONVERSATION)
+        self.events.put(("tts_error", "Errore TTS controllato"))
+        self.control._report("voice_text", "Jarvis apri browser", self.control._generation)
+        self.drain()
+        self.assertIn("Errore TTS controllato", self.env["spoken_status"].get())
+        self.env["refresh_voices_button"].configure.assert_called_once_with(state="normal")
+        self.env["submit_local"].assert_called_once()
+        self.env["start_conversation_gpt"].assert_not_called()
+
+    def test_invalid_voice_payloads_do_not_dispatch_or_block_next_event(self):
+        # True/1.0 compare equal to integer1: they are not session identities.
+        payloads = [
+            lambda g: ("voice_text", "Jarvis spiegami la gravita", True),
+            lambda g: ("voice_text", "Jarvis spiegami la gravita", float(g)),
+            lambda g: ("voice_text", "Jarvis spiegami la gravita", str(g)),
+            lambda g: ("voice_text", "Jarvis spiegami la gravita", None),
+            lambda g: ("voice_text", "Jarvis spiegami la gravita"),
+            lambda g: ("voice_text",),
+            lambda g: ("voice_text", "Jarvis spiegami la gravita", g, "extra"),
+            lambda g: ("voice_text", None, g),
+            lambda g: ("voice_status", "Voce non disponibile: payload senza sessione"),
+            lambda g: ("voice_status",),
+            lambda g: ("voice_status", "Voce non disponibile: payload errato", str(g)),
+        ]
+        for index, payload in enumerate(payloads):
+            # A failing Red subcase must not leave its following event in the
+            # queue and contaminate the next independent payload scenario.
+            while not self.events.empty():
+                self.events.get_nowait()
+            with self.subTest(payload=index):
+                self.configure(GPT_CONVERSATION)
+                status = self.env["mic_status"].get()
+                self.events.put(payload(self.control._generation))
+                self.control._report("voice_text", "Jarvis apri browser", self.control._generation)
+                try:
+                    self.drain()
+                except (IndexError, ValueError, TypeError) as exc:
+                    self.fail("Malformed voice payload stopped the real dispatch loop: "
+                              + type(exc).__name__)
+                self.env["submit_local"].assert_called_once()
+                self.env["start_conversation_gpt"].assert_not_called()
+                self.env["write_line"].assert_called_once_with("TU > apri browser")
+                self.env["runtime_events"].record.assert_not_called()
+                self.assertEqual(self.env["mic_status"].get(), status)
+                self.assertTrue(self.events.empty())
+
+    def test_close_revokes_already_queued_voice(self):
+        self.configure(GPT_CONVERSATION)
+        self.report("voice_text", "Jarvis apri browser")
+        self.control.close()
+        self.drain()
+        self.env["submit_local"].assert_not_called()
+        self.env["start_conversation_gpt"].assert_not_called()
+        self.env["write_line"].assert_not_called()
+
+    def test_current_status_is_displayed_in_each_listening_mode(self):
+        for mode in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
+            with self.subTest(mode=mode):
+                self.configure(mode)
+                self.report("voice_status", "Microfono attivo — riconoscimento offline.")
+                self.drain()
+                self.assertEqual(self.env["mic_status"].get(),
+                                 "Microfono attivo — riconoscimento offline.")
+
+    def test_current_audio_error_keeps_feedback_and_stops_current_dictation(self):
+        self.configure(CONTINUOUS)
+        disable = Mock(return_value="Dettatura interrotta per errore audio.")
+        self.env["dictation"] = SimpleNamespace(enabled=True, disable=disable)
+        self.env["sync_dictation_ui"].reset_mock()
+        error = "Voce non disponibile: errore audio corrente"
+        self.report("voice_status", error)
+        self.drain()
+        self.assertEqual(self.env["mic_status"].get(), error)
+        self.env["write_line"].assert_called_once_with("MICROFONO > " + error)
+        self.env["runtime_events"].record.assert_called_once_with("voice_unavailable")
+        disable.assert_called_once_with()
+        self.env["sync_dictation_ui"].assert_called_once_with(
+            "Dettatura interrotta per errore audio.")
 

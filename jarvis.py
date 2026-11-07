@@ -3243,6 +3243,13 @@ def main() -> None:
             # Remaining events are processed during the next 120 ms tick.
             for _ in range(80):
                 kind, *data = output_queue.get_nowait()
+                # Mode changes revoke voice events already in the shared queue.
+                # Check before status, logging, dictation or command/model work;
+                # other producers keep their existing event contracts.
+                if kind in ("voice_text", "voice_status") and (
+                        len(data) != 2 or not isinstance(data[0], str)
+                        or not voice.accepts_event(data[1])):
+                    continue
                 if kind == "self_audit_progress":
                     run_id,phase,completed,total=data
                     if diagnostic_session.progress(
