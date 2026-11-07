@@ -43,3 +43,9 @@ python tools/native_model/restore_engine.py --archive percorso/archivio.zip --de
 Viene estratto solo il membro DLL atteso. Un file esistente diverso causa errore e resta intatto; un file identico viene riusato. Dati estratti e download restano temporanei fino alle verifiche. Nessun GGUF o modello viene scaricato, nessun server avviato, nessuna compilazione eseguita e nessun archivio applicativo prodotto dallo strumento.
 
 Il recupero dipende dalla disponibilità del repository GitHub o di una copia locale verificata, senza la scadenza della retention Actions. Non è una prova di compilazione C++ bit-per-bit; conserva gli stessi byte verificati, la provenienza e i checkout sorgente/licenze già esistenti. La build completa e il collaudo Windows10/i3-2100 devono essere svolti separatamente prima di un rilascio, su autorizzazione.022/023 restano aperti.
+
+## Verifica della correzione
+
+Source `c0007689154efa574917ddb2ce23279ddf36c5f8`, [run42339214356](https://github.com/MATRIXNEO23/jarvis/actions/runs/42339214356) SUCCESS:716 test per Python3.11.9 e3.12.10 su Windows2022. Il nuovo recupero reale fornisce prima il sorgente upstream fissato, scarica lo ZIP immutabile senza artifact Actions, verifica i byte della DLL e la carica col probe esistente. Sette export disponibili e token iniziali0; nessuna generazione o modello. Otto nuove prove comprendono integrità/errori e conservazione dei file. [Evidenza](evidence/jrv-aud-006-20261107.json).
+
+I quattro collegamenti ai workflow sono stati recensiti staticamente; l'action checkout, i workflow di inferenza e la build del pacchetto non sono stati eseguiti in questa fase. Nessun binario è stato ricompilato e nessun archivio applicativo è stato creato o pubblicato.
