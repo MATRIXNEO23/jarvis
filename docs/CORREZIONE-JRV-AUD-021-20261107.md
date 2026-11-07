@@ -1,6 +1,6 @@
 # JRV-AUD-021 — fermare il solo helper della voce
 
-Stato: candidata implementata/revisionata, Green Windows da acquisire. Nessuna build.
+Stato: verificata nei sorgenti in bozza insieme alla022. Nessuna nuova build. Sourceverde `3cd88a04b3a645257bc77c24bfcc9cd5fe5770b4`.
 Base019 `e059883a1e446ca71452a2358920b4af02001b69`, [bozza51](https://github.com/MATRIXNEO23/jarvis/pull/51).
 [Specifica](superpowers/specs/2026-11-07-jrv-aud-021-design.md), [piano](superpowers/plans/2026-11-07-jrv-aud-021-fix.md).
 
@@ -29,3 +29,11 @@ Ramo isolato reversibile `fix/jrv-aud-021-owned-tts-20261107`, nessun main/merge
 ## Prima verifica candidata: parziale, blocco022
 
 Source6504abffe/run42363252951:3.11job128375837812 passa900test in172.068s (tutti16nuovi021).3.12job128375837908 abortisce conTcl_AsyncDelete durante DocumentSaveRace, prima dei021; nessun riepilogo completo assegnato. Errore022 già storico, causa di ownershipTk da investigare senza attribuirla alla voce. Searchlive3.12 passato con ripristino. Green completo021 non dichiarato, nessun retry cieco; specifica/piano022 e regressione controllata avviati nella stessa bozza per sbloccare il collaudo, runtimeTTS invariato.
+
+## Green completo021/022
+
+[Run42364574425](https://github.com/MATRIXNEO23/jarvis/actions/runs/42364574425) SUCCESS al tentativo1 di questo source. Python3.11.9 job128379821296:901test in180.165s; Python3.12.10 job128379821451:901test in208.118s. Zero failure/errori/skip, tutti16nuoviTTS passati su entrambe le versioni, inclusi processi/pipe reali, erroreterminate, doppio close, gate di creazione/cleanup e errore primario conservato. RuntimeTTS hashc02a4a4e identico alla candidata6504, nessuna modifica alla voce per correggere022.
+
+Nuovo controllo022: otto figli completati, stderr vuoto, una immagine reale creata per fixture e già ritirata prima del worker GC. Nessun fatal nel processo padre. Sintassi Python/JavaScript/PowerShell e probe nativo passati; Searchlive3.12 passato con servizio e fixture ripristinati. Build, estrazione, artifact e publisher saltati. [Evidenza completa](evidence/jrv-aud-021-fix-20261107.json) conserva anche i tentativi falliti e senza riepilogo.
+
+Verifica nei sorgenti, non SAPI/audio reale o Windows10/i3/HDD.023 rimane aperto;022 risolta nell'ambito dimostrato delle fixture, non certificazione universale del runtime Tk. Checkpoint finale soltanto documenti/evidenze, runtime/test da confrontare col sourceverde prima di dichiarare conservazione remota.
