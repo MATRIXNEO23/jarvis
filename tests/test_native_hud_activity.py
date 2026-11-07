@@ -55,11 +55,16 @@ class NativeHudActivityTests(unittest.TestCase):
         return job
 
     def test_idle_snapshot_does_not_prepare_or_call_native_backend(self):
-        with patch.object(self.session.adapter, 'prepare') as prepare, patch.object(self.session.adapter, 'call') as call:
+        with (patch.object(self.session.adapter, 'prepare') as prepare,
+              patch.object(self.session.adapter, 'call') as call,
+              patch.object(self.session, 'config_loader', side_effect=AssertionError('No settings I/O')) as config,
+              patch.object(self.session, 'memory_loader', side_effect=AssertionError('No memory I/O')) as memory):
             for _ in range(5):
                 self.snapshot(busy=False)
         prepare.assert_not_called()
         call.assert_not_called()
+        config.assert_not_called()
+        memory.assert_not_called()
         self.assertEqual(self.abi.loads, [])
 
     def test_chat_is_visible_with_gpt_disabled_and_returns_idle(self):
@@ -210,6 +215,24 @@ class NativeHudActivityTests(unittest.TestCase):
             self.session.ask('Dopo chiusura')
         self.snapshot(busy=False)
 
+    def test_stop_with_ignored_abort_keeps_busy_until_native_really_exits(self):
+        aborted = threading.Event()
+        with patch.object(self.abi, 'abort', side_effect=aborted.set):
+            job = self.active(lambda: self.session.ask('Stop non cooperativo'))
+            stopped = self.worker(self.session.stop)
+            self.assertTrue(aborted.wait(1))
+            self.assertFalse(stopped.done.is_set())
+            self.assertFalse(job.done.is_set())
+            self.snapshot(busy=True)
+            self.abi.release.set()
+            self.assertTrue(job.done.wait(2))
+            self.assertTrue(stopped.done.wait(2))
+        self.assertIsInstance(job.error, RuntimeError)
+        self.assertIsNone(stopped.error)
+        self.snapshot(busy=False)
+        self.assertEqual(self.session.ask('Riprendi'), 'Risposta locale controllata')
+        self.snapshot(busy=False)
+
     def test_pending_chat_flag_and_existing_gpt_local_document_flags_are_preserved(self):
         self.env['gemma_session'][0] = None
         self.env['get_gemma_session'] = Mock(side_effect=AssertionError('HUD must not create a session'))
@@ -247,7 +270,10 @@ class NativeHudActivityTests(unittest.TestCase):
             self.assertIn('JARVIS STA PARLANDO', hud.chat_info.get())
         finally:
             self.abi.release.set()
-            self.assertTrue(job.done.wait(2))
-            hud.close()
-            root.destroy()
+            finished = job.done.wait(2)
+            try:
+                hud.close()
+            finally:
+                root.destroy()
+        self.assertTrue(finished)
         self.assertIsNone(job.error)

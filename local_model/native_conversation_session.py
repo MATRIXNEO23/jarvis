@@ -71,6 +71,13 @@ class NativeConversationSession:
         self._revision = 0
         self._closed = False
         self._stopping = 0
+        self._active_operations = 0
+
+    @property
+    def is_busy(self):
+        """Active/queued work; never waits for inference or loads a model."""
+        with self._state_lock:
+            return self._active_operations > 0
 
     def _check_revision(self, revision):
         with self._state_lock:
@@ -82,11 +89,16 @@ class NativeConversationSession:
         # Capture before waiting, so stop also revokes already queued calls.
         with self._state_lock:
             revision = self._revision
-        self._check_revision(revision)
-        with self.lock:
+            self._active_operations += 1
+        try:
             self._check_revision(revision)
-            yield revision
-            self._check_revision(revision)
+            with self.lock:
+                self._check_revision(revision)
+                yield revision
+                self._check_revision(revision)
+        finally:
+            with self._state_lock:
+                self._active_operations -= 1
 
     @property
     def history(self):

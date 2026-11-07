@@ -1,3 +1,13 @@
+## JRV-AUD-017 — Red acquisito e candidata revisionata pronta per Windows
+
+Red source5ac6e9d1e90f4c6ebc02d7d60d37161a4d1d2b5f/run42360223737:883test per job,18failure0errori tutti nel nuovo017 (subtest inclusi);3.11job128366829486118.761s e3.12job128366829253132.637s. Manca lo snapshotBoolean e la veraUI Tk mostra MICROFONO SPENTO durante generazione nativa. Baseline precedente passa, nessun022/023 osservato; Search live3.12 passato con servizio/fixture ripristinati. Nessun retry cieco.
+
+Candidata nei due componenti esistenti: contatore finally e propertyis_busy sul metadata lock nella sessione, provider HUD legge owner già creato e flag chat pendente indipendentemente da GPT. Nessun caricamento/I/O/attesa inference per status, né nuovo poller. Review runtime indipendente readonly senza blocchi rilevati; gap test recepiti,15nuovi/884attesi,1metodo e loader spies aggiunti dopoRed senza rivendicare altroRed. Green Windows ancora necessario; AST/diff locali soltanto. Nessuna build/merge/test funzionale Linux/profilo reale modificato. Prossimo: suite Windows e checkpoint evidenze.
+
+## JRV-AUD-017 — review preventiva recepita nei test
+
+Review readonly senza difetti confermati nella specifica/test; rafforzati due gap: config_loader/memory_loader intercettati negli snapshot idle per vietare I/O implicito, nuovo stop con abort ignorato che resta busy fino all'uscita reale del backend.15nuovi/884attesi; modifiche successive al sourceRed5ac6e9d1/run42360223737 (14nuovi/883attesi), senza rivendicare un ulterioreRed. Cleanup della UI Tk garantito anche se il worker tarda. Runtime ancora015, Green non eseguito. Rapporto017 avviato con limiti; nessun build/merge/test funzionale Linux/dato reale. Prossimo: log Red e correzione minima.
+
 ## JRV-AUD-017 — quattordici prove pronte prima del runtime
 
 Nuovo tests/test_native_hud_activity.py riusa fixture factory/bridge/sessione e ABI controllata; provider HUD e callback Telegram reali, UI impostazioni generata solo in temporaneo senzaZIP. Copertura chat/turno differito/Telegram/prova/programmi, preparazione, ask annidato in commit, attesa lock, abort ignorato/timeout e stop, errori/configurazione/close, nessun caricamento da idle, flag GPT/local/documento e stato Tk reale con priorità voce. Osservatore bounded evita blocco se status prendesse inference lock.14nuovi/883attesi; runtime ancora015, fixture ActivityStatus aggiunge solo owner/flag inattivi. Review indipendente preventiva avviata. Prossimo Red Windows, nessun test funzionale Linux/build/merge/dato reale.
