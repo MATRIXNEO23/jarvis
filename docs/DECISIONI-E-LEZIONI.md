@@ -1,3 +1,11 @@
+## 7 novembre 2026 — JRV-AUD-013 verificata nei sorgenti in bozza
+
+Quattro guide operative incluse e obbligatorie, sviluppo/handoff/test/upstream esclusi. Guida voce e messaggi installer coerenti con modalità/preferenze reali, link tecnico online immutabile. Nessun comportamento assistente o profilo cambiato. Fixture012 conserva guard nativi e ZIP vietato.
+
+Source970bcb17e15b9c197ec4fa5766eac6a6519058a6, bozza53, run42378831525 SUCCESS tentativo1:911test su3.11.9 (job128421936403,129.771s) e3.12.10 (job128421936166,151.451s),0failure/errori/skip,3nuovi passati. Red1ed02006/run42378209746:911test/job5failure0errori guide/rimedio;3.11job128420097593139.441s,3.12job128420097746192.454s. Review e ricontrollo indipendenti senza blocchi dopo rettifica dei testi; sintassi/probe/Searchlive3.12 passati con ripristino. Rapporti/evidenza013 preservati.
+
+Nessun build/ZIP/estrazione/installer/download, main/merge/release, test funzionale Linux o dato reale. Verifica guide dall'archivio ancora da fare quando autorizzato; Windows10/hardware/audio/account non provati. Codice/test/guide da confrontare col sourceverde nel checkpoint finale. Stack001–015 salvo016,017–019,021 e022 nel loro ambito conservato;023 aperto. Prossimo020 solo indice documentale da main e riepilogo finale, senza portare lì il runtime.016 indice autonomo resta funzione distinta da progettare, non correzione automatica.
+
 ## JRV-AUD-013 — ricontrollo completato, candidata per Green
 
 Nessun blocco statico residuo dopo rettifica dei testi voce; selezione/esclusioni e obbligatorietà corrette, helper012 valido.911test Windows attesi, nessun archivio costruito o installer eseguito. Prossimo esiti/evidenza e verifica remota.

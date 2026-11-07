@@ -1,0 +1,99 @@
+{
+  "issue": "JRV-AUD-013",
+  "status": "verified-source-selection-no-app-build",
+  "date": "2026-11-07",
+  "base": "605c7056a1320523bb2a177fc95acbadb70a6159",
+  "source": "970bcb17e15b9c197ec4fa5766eac6a6519058a6",
+  "branch": "fix/jrv-aud-013-operational-guides-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/53",
+  "runs": [
+    {
+      "phase": "Red",
+      "source": "1ed0200671de5a6f4eca128cbaf16bfe830019f6",
+      "run": 42378209746,
+      "jobs": [
+        {
+          "id": 128420097593,
+          "python": "3.11.9",
+          "tests": 911,
+          "seconds": 139.441,
+          "failures": 5,
+          "errors": 0
+        },
+        {
+          "id": 128420097746,
+          "python": "3.12.10",
+          "tests": 911,
+          "seconds": 192.454,
+          "failures": 5,
+          "errors": 0
+        }
+      ]
+    },
+    {
+      "phase": "Green",
+      "source": "970bcb17e15b9c197ec4fa5766eac6a6519058a6",
+      "run": 42378831525,
+      "attempt": 1,
+      "jobs": [
+        {
+          "id": 128421936403,
+          "python": "3.11.9",
+          "tests": 911,
+          "seconds": 129.771,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "id": 128421936166,
+          "python": "3.12.10",
+          "tests": 911,
+          "seconds": 151.451,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    }
+  ],
+  "new_methods": 3,
+  "guides": [
+    "docs/VOCE_OFFLINE.md",
+    "docs/RECUPERO-IMPOSTAZIONI.md",
+    "file_access/LEGGIMI.md",
+    "program_apps/LEGGIMI.md"
+  ],
+  "review_independent_readonly_no_blockers": true,
+  "review_fixes": [
+    "actual HeyJarvis/continuous mode descriptions",
+    "model installer print follows saved preference"
+  ],
+  "checks": {
+    "syntax_python_node_powershell": "passed",
+    "native_probe": "passed",
+    "windows_search_live_312": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "app_build_zip_extraction": "not executed/skipped",
+    "installer_download": "not executed",
+    "linux_functional": "not executed"
+  },
+  "boundaries": [
+    "actual include selector and its constant executed in isolated Windows fixtures",
+    "required guide selection/exclusions/remedy and relative link checks",
+    "012 fixture still reaches missing native assets before forbidden archive writer"
+  ],
+  "unchanged": [
+    "assistant runtime behavior",
+    "startup/preferences",
+    "user data and historical packages"
+  ],
+  "limits": [
+    "actual archive guide verification remains pending authorized build",
+    "no Windows10/hardware/audio/account/model verification",
+    "023 remains open"
+  ]
+}
