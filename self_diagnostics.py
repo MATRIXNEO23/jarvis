@@ -10,13 +10,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from collections.abc import Callable
 import re
+import stat
 
-from source_review import Improvement, format_improvements, review_sources
+from source_review import (
+    Improvement, format_improvements, review_sources,
+    SOURCE_EXCLUDED_DIRECTORIES, _source_metadata, _hidden_source_directory,
+)
 
 _SOURCE_SUFFIXES = frozenset({".py",".bat",".ps1",".mjs"})
-_IGNORE = frozenset({".git",".venv","venv","__pycache__","node_modules",
-                     "runtime","projects","reports","downloads"})
+_RUNTIME_FOLDERS = ("local_model", "file_access", "program_apps", "sveglia")
 _MAX_FILES = 140
+_MAX_DIRECTORIES = 140
 _MAX_BYTES = 260_000
 _MODULE = re.compile(r"[A-Za-z0-9_]{1,72}\.py\Z",re.I)
 
@@ -49,19 +53,78 @@ class SourceAudit:
     findings: tuple[str,...]
     recommendations: tuple[Improvement,...] = ()
 
-def _source_list(root: Path) -> list[Path]:
-    """Only installed source files, and one level of tests; never AppData."""
-    files=[]
-    for sub in (root,root/"tests"):
-        if sub != root and (not sub.is_dir() or sub.is_symlink()):
-            continue
-        for item in sorted(sub.iterdir(),key=lambda p:p.name.casefold()):
-            if (len(files)>=_MAX_FILES or item.is_symlink() or not item.is_file()
-                    or item.suffix.casefold() not in _SOURCE_SUFFIXES
-                    or any(part.casefold() in _IGNORE
-                           for part in item.relative_to(root).parts[:-1])):
+def _source_list(root: Path, *, data_root=None, notices=None) -> list[Path]:
+    """Bounded approved code only, then direct test files; never profile data."""
+    root = Path(root).resolve(strict=True)
+    data = Path(data_root).resolve() if data_root is not None else None
+    files = []
+    directories = 0
+
+    def note(message):
+        if notices is not None and message not in notices:
+            notices.append(message)
+
+    if data is not None and root.is_relative_to(data):
+        note("Inventario escluso: la cartella del programma è nella cartella dati.")
+        return files
+
+    def allowed(path):
+        physical = path.resolve(strict=True)
+        return physical.is_relative_to(root) and not (
+            data is not None and physical.is_relative_to(data))
+
+    def walk(start, recursive):
+        nonlocal directories
+        pending = [start]
+        while pending and len(files) < _MAX_FILES:
+            if directories >= _MAX_DIRECTORIES:
+                note("Inventario limitato a 140 directory di codice; copertura parziale.")
+                return
+            directory = pending.pop()
+            try:
+                info = _source_metadata(directory)
+                if (info is None or not stat.S_ISDIR(info.st_mode)
+                        or (directory != root and _hidden_source_directory(info))
+                        or not allowed(directory)):
+                    continue
+            except FileNotFoundError:
+                continue  # An optional runtime folder need not be installed.
+            except OSError:
+                note(directory.relative_to(root).as_posix() + ": cartella non disponibile.")
                 continue
-            files.append(item)
+            directories += 1
+            try:
+                entries = sorted(directory.iterdir(), key=lambda p: p.name.casefold())
+            except OSError:
+                note(directory.relative_to(root).as_posix() + ": cartella non disponibile.")
+                continue
+            children = []
+            for item in entries:
+                if len(files) >= _MAX_FILES:
+                    break
+                if item.name.startswith("."):
+                    continue
+                try:
+                    info = _source_metadata(item)
+                    if info is None:
+                        continue
+                    if stat.S_ISDIR(info.st_mode):
+                        if (recursive and item.name.casefold() not in SOURCE_EXCLUDED_DIRECTORIES
+                                and not _hidden_source_directory(info) and allowed(item)):
+                            children.append(item)
+                    elif (stat.S_ISREG(info.st_mode)
+                          and item.suffix.casefold() in _SOURCE_SUFFIXES and allowed(item)):
+                        files.append(item)
+                except OSError:
+                    note(item.relative_to(root).as_posix() + ": sorgente non disponibile.")
+            pending.extend(reversed(children))
+
+    walk(root, False)
+    for folder in _RUNTIME_FOLDERS:
+        walk(root / folder, True)
+    walk(root / "tests", False)
+    if len(files) >= _MAX_FILES:
+        note("Inventario limitato a 140 file; priorità ai moduli runtime, poi ai test.")
     return files
 
 def diagnostic_request(text: str) -> tuple[str,str] | None:
@@ -138,10 +201,13 @@ def inspect_jarvis(*,source_root: Path | None=None,
           else Path.home()/".local"/"share"/"Jarvis")
     if module and not _MODULE.fullmatch(module):
         raise ValueError("Il modulo deve essere un nome Python semplice.")
-    files=_source_list(root)
+    inventory_notes=[]
+    files=_source_list(root,data_root=data,notices=inventory_notes)
+    coverage=[message for message in inventory_notes if message.startswith("Inventario ")]
+    coverage_detail=("\nCopertura dell'inventario: " + " ".join(coverage)) if coverage else ""
     if progress is not None:
         progress("inventario",len(files),len(files))
-    findings=[]
+    findings=list(inventory_notes)
     modules=[]
     kinds={}
     targets=[]
@@ -175,13 +241,14 @@ def inspect_jarvis(*,source_root: Path | None=None,
     if progress is not None:
         progress("sintassi",len(targets),len(targets))
     if module and not targets:
-        return SourceAudit("Modulo non trovato nel programma.",
-              "Il modulo richiesto non è presente tra i file Python del programma.",
-              ("Controlla il nome del modulo; nessun file è stato modificato.",))
+        return SourceAudit("Modulo non trovato nell'inventario.",
+              "Il controllo non ha individuato il modulo richiesto tra i sorgenti accessibili."
+              + coverage_detail,
+              ("Controlla il nome e i limiti del controllo; nessun file è stato modificato.",))
     if not module and not files:
         return SourceAudit("Nessun sorgente del programma trovato.",
-               "Controlla la cartella di installazione. Nessun file modificato.",
-               ("I file del programma non sono disponibili qui.",))
+               "Controlla la cartella di installazione. Nessun file modificato." + coverage_detail,
+               tuple(inventory_notes) or ("I file del programma non sono disponibili qui.",))
     recommendations=review_sources(root,files,module=module,
                                     max_bytes=_MAX_BYTES,progress=progress)
     if progress is not None:
@@ -214,6 +281,9 @@ def inspect_jarvis(*,source_root: Path | None=None,
                 "Moduli chiave trovati: "+", ".join(p for p in important if p in found)
                 +"\nTest Python rilevati: "+
                 str(sum(1 for m in modules if m[0].startswith("tests/test_"))))
+    # Coverage must remain visible even when eight earlier I/O findings fill
+    # the compact observations list; never imply a complete inventory.
+    detail += coverage_detail
     suggestions=(tuple(findings[:8]) if findings else
          ("Nessun errore di sintassi individuato dai controlli statici.",
           "Questo controllo non verifica funzioni in esecuzione, malware o bug logici.",

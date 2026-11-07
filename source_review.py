@@ -10,6 +10,29 @@ import ast
 from dataclasses import dataclass
 from pathlib import Path
 from collections.abc import Callable
+import stat
+
+
+SOURCE_EXCLUDED_DIRECTORIES = frozenset({
+    ".git", ".venv", "venv", "__pycache__", "node_modules", "runtime",
+    "projects", "reports", "downloads", "addon-data", "data", "profile",
+    "profiles", "cache", "gpt_account", "backups", "logs", "models",
+    "native_engine", "upstream-kobold", "build", "dist", "tests",
+})
+
+
+def _source_metadata(path):
+    """Inspect the entry itself; never follow links or Windows reparse points."""
+    info = path.lstat()
+    if (stat.S_ISLNK(info.st_mode)
+            or getattr(info, "st_file_attributes", 0) & 0x400):
+        return None
+    return info
+
+
+def _hidden_source_directory(info):
+    return stat.S_ISDIR(info.st_mode) and bool(
+        getattr(info, "st_file_attributes", 0) & 0x2)
 
 
 @dataclass(frozen=True)
@@ -72,23 +95,37 @@ def review_sources(source_root: Path, files: list[Path], *,
     for index,file in enumerate(scan,1):
         if progress is not None:
             progress("consigli",index-1,total)
-        if file.suffix.casefold() != ".py" or file.is_symlink():
+        if file.suffix.casefold() != ".py":
             continue
         try:
-            relative = file.relative_to(root).as_posix()
-        except ValueError:
-            continue
-        if module and relative.casefold() != module.casefold():
-            continue
-        if any(part in (".venv", "__pycache__", ".git", "venv", "projects",
-                         "runtime") for part in Path(relative).parts[:-1]):
-            continue
-        if file.stat().st_size > max_bytes:
-            continue
-        try:
-            tree = ast.parse(file.read_text(encoding="utf-8"),
+            lexical = file.relative_to(root)
+            if ".." in lexical.parts:
+                continue
+            # tests/ is explicitly allowed by the validated inventory; nested
+            # profiles/cache remain excluded, including case variants.
+            parents = lexical.parts[:-1]
+            if parents and parents[0].casefold() == "tests":
+                parents = parents[1:]
+            if any(part.casefold() in SOURCE_EXCLUDED_DIRECTORIES or part.startswith(".")
+                   for part in parents):
+                continue
+            current, info = root, None
+            for part in lexical.parts:
+                current = current / part
+                info = _source_metadata(current)
+                if info is None or _hidden_source_directory(info):
+                    break
+            if current != file or info is None or not stat.S_ISREG(info.st_mode):
+                continue
+            physical = file.resolve(strict=True)
+            relative = physical.relative_to(root).as_posix()
+            if module and relative.casefold() != module.casefold():
+                continue
+            if info.st_size > max_bytes:
+                continue
+            tree = ast.parse(physical.read_text(encoding="utf-8"),
                              filename=relative)
-        except (SyntaxError, OSError, UnicodeError):
+        except (SyntaxError, OSError, UnicodeError, ValueError):
             # Syntax and I/O errors are reported by self_diagnostics itself.
             continue
         inspected += 1

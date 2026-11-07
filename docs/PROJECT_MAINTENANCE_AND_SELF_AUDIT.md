@@ -61,3 +61,30 @@ prova fare backup dell'intera cartella %LOCALAPPDATA%\Jarvis.
 Distribuzione ZIP sospesa per segnalazione Microsoft Defender
 Trojan:Script/Wacatac.B!ml sul pacchetto precedente: nessuna whitelist,
 eccezione antivirus, disattivazione della protezione o aggiramento.
+# Inventario statico: correzione014 in bozza
+
+La diagnosi generale include i file diretti della radice e il codice nelle
+cartelle `local_model`, `file_access`, `program_apps` e `sveglia`, comprese le
+sottocartelle consentite. I test diretti della cartella tests vengono dopo il
+runtime. Il controllo resta statico: non importa o esegue i file e non avvia
+test, modelli o richieste GPT da solo.
+
+Limiti:140file,140directory enumerate e260000byte per file. Raggiungere un
+limite significa copertura parziale e viene segnalato anche se ci sono molti
+altri errori. Un modulo non trovato nell'inventario non viene dichiarato
+inesistente nel programma. Il selettore esplicito continua ad accettare i nomi
+Python semplici della radice; questa correzione non aggiunge nuovi comandi.
+
+Restano esclusi profili/dati configurati, cache, modelli, upstream, cartelle
+nascoste sotto la radice esplicita (nomi con punto o attributo Hidden Windows),
+link e junction, anche se puntano dentro l'installazione. Se codice e cartella
+dati coincidono o il codice è dentro il profilo configurato, l'inventario viene
+escluso con spiegazione. Non spostare o cancellare dati per aggirare il limite.
+
+Errori di metadati, file spariti e directory non leggibili non interrompono il
+controllo degli altri sorgenti. Le raccomandazioni sono segnali da verificare,
+non una certificazione di assenza di bug o un audit universale di ogni lingua.
+Il controllo non è una sandbox contro sostituzioni concorrenti malevole del
+filesystem. Nessuna nuova dipendenza, scansione globale o attività residente.
+
+Questa è una candidata nei sorgenti, non una nuova build installabile.

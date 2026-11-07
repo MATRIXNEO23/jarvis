@@ -4,6 +4,8 @@ Inspected source is never executed. Junction probes only link fixture folders;
 no user data, model, network or real profile is inspected.
 """
 import os
+import ctypes
+from ctypes import wintypes
 from pathlib import Path
 import subprocess
 from tempfile import TemporaryDirectory
@@ -45,6 +47,16 @@ class DiagnosticInventoryTests(unittest.TestCase):
                 self.assertTrue(any(f.startswith(module+"/broken.py: sintassi non valida")
                                     for f in report.findings))
 
+    def test_actual_checkout_runtime_modules_fit_the_unchanged_file_inventory_budget(self):
+        checkout=Path(__file__).resolve().parents[1]
+        collected=set(_source_list(checkout))
+        self.assertLessEqual(len(collected),140)
+        for module in RUNTIME:
+            with self.subTest(module=module):
+                expected=set((checkout/module).glob("*.py"))
+                self.assertTrue(expected, "An implemented runtime folder must not silently disappear")
+                self.assertTrue(expected.issubset(collected), "Current runtime omitted by inventory budget")
+
     def test_nested_runtime_source_is_inventoried_and_reviewed(self):
         self.write("local_model/adapters/deeper/worker.py",SIGNAL)
         self.assertIn("local_model/adapters/deeper/worker.py",self.names())
@@ -84,6 +96,44 @@ class DiagnosticInventoryTests(unittest.TestCase):
         self.assertIn("140",report.summary)
         self.assertIn("limit",(report.detail+" "+" ".join(report.findings)).lower())
 
+    def test_directory_traversal_is_bounded_and_reported_even_with_no_source_files(self):
+        self.write("entry.py")
+        for number in range(160):
+            (self.root/f"local_model/folder_{number:03}").mkdir(parents=True)
+        visited=[]
+        real_iterdir=Path.iterdir
+        def iterdir(path):
+            visited.append(path)
+            return real_iterdir(path)
+        with patch.object(Path,"iterdir",iterdir):
+            report=inspect_jarvis(source_root=self.root)
+        self.assertLessEqual(len(visited),140)
+        self.assertIn("limit",(report.detail+" "+" ".join(report.findings)).lower())
+
+    def test_coverage_limit_stays_visible_after_more_than_eight_inventory_errors(self):
+        for number in range(10):
+            self.write(f"bad_{number:02}.py")
+        for number in range(145):
+            self.write(f"good_{number:03}.py")
+        real_stat=Path.stat
+        def stat(path,*args,**kwargs):
+            if path.name.startswith("bad_"):
+                raise PermissionError("Controlled source metadata denial")
+            return real_stat(path,*args,**kwargs)
+        with patch.object(Path,"stat",stat):
+            report=inspect_jarvis(source_root=self.root)
+        self.assertIn("limit",(report.summary+" "+report.detail).lower())
+        self.assertIn("140",report.summary)
+
+    def test_missing_module_in_capped_inventory_is_not_claimed_absent_from_program(self):
+        for number in range(145):
+            self.write(f"good_{number:03}.py")
+        self.write("zz_goal.py",SIGNAL)
+        report=inspect_jarvis(source_root=self.root,module="zz_goal.py")
+        self.assertIn("limit",(report.summary+" "+report.detail).lower())
+        self.assertNotIn("non è presente",report.detail)
+        self.assertEqual(report.recommendations,())
+
     def test_nested_profiles_cache_models_upstream_and_hidden_dirs_are_not_entered(self):
         safe=self.write("local_model/engine.py",SIGNAL)
         denied=[]
@@ -113,6 +163,37 @@ class DiagnosticInventoryTests(unittest.TestCase):
         names=self.names()
         self.assertIn("file_access/allowed.py",names)
         self.assertFalse(any("private.py" in name for name in names))
+
+    def test_windows_hidden_attribute_directory_is_not_enumerated_or_read(self):
+        self.write("local_model/good.py",SIGNAL)
+        private=self.write("local_model/ordinary-name/private.py",SIGNAL)
+        hidden=private.parent
+        kernel=ctypes.WinDLL("kernel32",use_last_error=True)
+        kernel.GetFileAttributesW.argtypes=[wintypes.LPCWSTR]
+        kernel.GetFileAttributesW.restype=wintypes.DWORD
+        kernel.SetFileAttributesW.argtypes=[wintypes.LPCWSTR,wintypes.DWORD]
+        kernel.SetFileAttributesW.restype=wintypes.BOOL
+        attributes=kernel.GetFileAttributesW(str(hidden))
+        self.assertNotEqual(attributes,0xFFFFFFFF)
+        self.assertTrue(kernel.SetFileAttributesW(str(hidden),attributes|0x2))
+        self.addCleanup(lambda: kernel.SetFileAttributesW(str(hidden),attributes))
+        self.assertTrue(kernel.GetFileAttributesW(str(hidden))&0x2)
+        real_iterdir,real_read=Path.iterdir,Path.read_text
+        def iterdir(path):
+            if path==hidden:
+                raise AssertionError("Windows-hidden directory was enumerated")
+            return real_iterdir(path)
+        def read(path,*args,**kwargs):
+            if path==private:
+                raise AssertionError("Windows-hidden directory source was read")
+            return real_read(path,*args,**kwargs)
+        with patch.object(Path,"iterdir",iterdir),patch.object(Path,"read_text",read):
+            names=self.names()
+            report=inspect_jarvis(source_root=self.root)
+            self.assertEqual(review_sources(self.root,[private]),())
+        self.assertIn("local_model/good.py",names)
+        self.assertNotIn("local_model/ordinary-name/private.py",names)
+        self.assertNotIn("private.py",format_audit(report))
 
     def test_explicit_data_root_inside_runtime_is_pruned_before_listing_or_reading(self):
         self.write("local_model/good.py",SIGNAL)

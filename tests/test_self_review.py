@@ -181,7 +181,9 @@ class SelfReviewTests(unittest.TestCase):
             "def known():\n    return True\n",encoding="utf-8")
         missing=inspect_jarvis(source_root=self.root,module="ghost.py")
         self.assertFalse(missing.recommendations)
-        self.assertIn("non è presente",missing.detail)
+        self.assertFalse((self.root/"ghost.py").exists())
+        self.assertIn("sorgenti accessibili",missing.detail)
+        self.assertIn("inventario",missing.summary)
         self.assertIn("Non ho trovato segnali statici",
                       format_improvements(()))
 

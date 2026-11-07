@@ -1,3 +1,15 @@
+## JRV-AUD-014 — candidata pronta per Green Windows
+
+Due componenti runtime esistenti, nessuna nuova dipendenza o indicizzatore. Inventario approvato e priorità runtime, criteri metadata/esclusione condivisi,140file/140directory e260000byte per file. Limiti visibili anche dopo molti errori, NoModule qualificato senza dichiarare inesistenza del programma. Hidden Windows e junction esclusi prima della lettura. Reviewer ricontrolla gli antenati lessicali prima del resolve; stat/file spariti non interrompono il resto.
+
+Review preventiva e runtime con due correzioni della candidata recepite; ultimo ricontrollo senza blocchi.22nuovi/851attesi,5aggiunti dopoRed2 e vecchio assert di wording aggiornato intenzionalmente con verifica di file realmente assente/0consigli. Rapporto014 e guida operativa aggiornati. Red1/Red2 documentati con tutti esiti e limiti; nessun test funzionale Linux, soloAST/diff locali. Prossimo: Green Windows e checkpoint remoto, niente build/merge, profili o credenziali toccati.022/023 restano aperti.
+
+## JRV-AUD-014 — Red acquisito e rilievi runtime corretti
+
+Red1 source1d69632/run42355483101:844test per job,14failure+2errori;3.11job128352529225154.869s,3.12job128352529347142.961s. Red2 source4ec1a9f/run42355703061:846test per job,16failure+2errori;3.11job128353233323141.023s,3.12job128353233067207.049s. Errori reali di stat/file sparito, tutto nel nuovo014; junction create, nessuno skip e022/023 non osservati.
+
+Candidata nei due componenti esistenti: whitelist runtime ricorsiva, dati/cache/upstream esclusi,140file/260000byte conservati e140directory per alberi vuoti; shared metadata lstat nega reparsepoint e reviewer verifica antenati prima di resolve. DataRoot configurato viene già passato dal caller. Review trova limiti nascosti da oltre8errori e WindowsHidden non escluso: corretti con copertura separata nel dettaglio e filtro attributo0x2; NoModule indica inventario accessibile senza falsa assenza fisica. Aggiornata intenzionalmente vecchia asserzione sul wording, conservando caso file davvero assente e0consigli. Test reali Windows hidden/junction, IO+limiti, modulo oltre limite e budget directory; aggiunto caso sul checkout reale.22nuovi/851attesi,5aggiunti dopoRed2 senza rivendicare altro Red. Runtime/test ancora da verificare suWindows; soloAST/diff locali. Nessun build/merge/testfunzionaleLinux o dato utente modificato. Prossimo: ricontrollo indipendente e Green.
+
 ## JRV-AUD-014 — review preventiva: esclusione junction e profili rafforzata
 
 Review readonly richiede due casi mancanti: junction con target interno alla radice e nessuna enumerazione quando dati/codice coincidono. Aggiunte due prove reali: target profiles interno con spy su elenco/lettura e reviewer diretto; alias interno verso codice consentito non attraversato due volte. Il caso data_root==source_root ora rifiuta sia iterdir sia read_text.17nuovi/846attesi. Runtime ancora018, Red1source1d69632f7cb0fa355add17f681450ed95b0e85a6 inbozza47; Red ampliato da pubblicare. Nessuna esecuzione funzionale Linux/build/merge/dati reali. Prossimo: Red e controlli statici di review, poi inventario minimo.
