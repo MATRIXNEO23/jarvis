@@ -195,6 +195,10 @@ try {
         for (const controller of inferenceRequests.values()) controller.abort();
         sdk.cancelSignIn();
         emit({ id: req.id, ok: true, result: { stopped: true } });
+        // Node22.12's iterator.return() removes iterator listeners but does
+        // not close this readline interface. Pause stdin explicitly while
+        // allowing accepted operations and stdout writes to finish below.
+        input.close();
         break;
       }
       const operation = execute(req)

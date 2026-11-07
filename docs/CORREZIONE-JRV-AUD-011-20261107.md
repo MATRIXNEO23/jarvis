@@ -25,9 +25,15 @@ Windows2022 x64, `python -m unittest discover -s tests -v`.
 |Red1|7a7589f74316959738811e254cf277638fa8223c /42351877630|3.11.9/128341566504|809test,11failure+2errori,145.413s|
 |Red1|stesso|3.12.10/128341566394|809test,11failure+2errori,113.026s|
 
-Tutti gli errori/fallimenti nel nuovo modulo011: timeout40anziché180, nessuncomandocancel/AbortSignal, comandi sconosciuti e nessuna risposta di annullamento/shutdown entro il bound della fixture. Red1 aveva un'asserzioneID99 incoerente conIDvalido ignoto, rimossa nella review preventiva; non è la prova del bug timeout. Red2source `53d674eac36254801d87d8883e4a7f35dc75cfa2`, run42352051679, amplia19test/811attesi e usa gate espliciti al posto di ritardi200ms: da acquisire.
+Tutti gli errori/fallimenti nel nuovo modulo011: timeout40anziché180, nessuncomandocancel/AbortSignal, comandi sconosciuti e nessuna risposta di annullamento/shutdown entro il bound della fixture. Red1 aveva un'asserzioneID99 incoerente conIDvalido ignoto, rimossa nella review preventiva; non è la prova del bug timeout. Red2source `53d674eac36254801d87d8883e4a7f35dc75cfa2`, run42352051679, amplia19test/811totali e usa gate espliciti al posto di ritardi200ms. Esito:16failure,0errori entrambi;3.11.9/job128342078144157.782s,3.12.10/job128342078389143.552s. Tutti nel nuovo modulo011,022/023 non osservati.
 
 Review preventiva recepita: unknownID coerenti; due stream entrambi bloccati prima del cancel; cambio/detachowner nel client; gate SDKsession/late rilasciati da status dopoack; wording annullamento inviato/noninviato epropagazioneUI. Ricontrollo senza blocchi fixture residui. Review runtime indipendente readonly: nessun blocco rilevato, nessun test eseguito dal revisore. Shutdown provato con SDKcooperativo, non garanzia di exit immediato di qualunque SDK.
+
+## Prima candidata: errore shutdown e correzione mirata
+
+Sourcec6949e28/run42352333419 fallita:3.11.9/job128342938450,811test130.180s,1errore shutdown attesa processo3s, dopoack/risposteabort già riuscite. Stesso errore su3.12.10/job128342938224,811test174.701s;0failure/1errore entrambi. Nessun timeout allargato o assert rimosso. SourceNode22.12 `lib/internal/readline/interface.js:1354` usa EventEmitter.on direttamente; `lib/events.js:1112,1196` iterator.return rimuove listener ma non chiude Interface. Fonti: https://github.com/nodejs/node/blob/v22.12.0/lib/events.js e https://github.com/nodejs/node/blob/v22.12.0/lib/internal/readline/interface.js .
+
+Il vecchio smoke test chiude stdin dal parent, GPTClient.stop lo tiene aperto durante wait: il nuovo test ha esposto un caso reale. Aggiunto input.close() esplicito prima del break di shutdown, che pausa stdin lasciando finire pending/flush senza process.exit. Causa/soluzione riesaminate indipendentemente in sola lettura; nuova candidata da verificare, non semplice retry del source fallito.
 
 ## Limiti e recupero
 
