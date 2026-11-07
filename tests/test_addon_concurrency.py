@@ -220,7 +220,9 @@ class AddonConcurrencyTests(unittest.TestCase):
 
     def test_delayed_disable_reset_does_not_clear_reenabled_request(self):
         report = self.isolated_transition("reenable")
-        self.assertTrue(report["finished_before_release"], report)
+        # Reenable must wait for the earlier revocation's invalidation, then
+        # the fresh request must survive all work from that transition.
+        self.assertFalse(report["finished_before_release"], report)
         self.assertTrue(report["enabled"])
         self.assertEqual(report["pending"], ["request", None])
         self.assertEqual(report["token"], report["fresh_token"])

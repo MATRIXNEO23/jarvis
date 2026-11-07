@@ -138,6 +138,7 @@ class AddonManager:
         self.folder=(Path(folder) if folder is not None else
                      default_path().parent/"addons")
         self._lock=threading.RLock()
+        self._lifecycle_lock=threading.RLock()
         self._file_service = None
         self._program_service = None
         self._records: dict[str,dict] = {}
@@ -247,19 +248,31 @@ class AddonManager:
 
     @contextmanager
     def _lifecycle_change(self):
-        # Permission readers keep the transactional manager lock. Never wait
-        # for the file lock until the OUTERMOST lifecycle lock is released.
-        try:
-            with self._lock:
-                yield
-        finally:
-            service = self._file_service
-            if service is not None and not self.files_enabled():
-                service.reset(only_if_inactive=True)
+        # Serialize complete transitions, including invalidation. Permission
+        # callbacks need only _lock, so they can finish while reset waits.
+        with self._lifecycle_lock:
+            # Observe and invalidate an external revocation BEFORE a caller
+            # can grant fresh approval in the transaction below.
+            self.refresh()
+            try:
+                with self._lock:
+                    yield
+            finally:
+                self._reset_inactive_files()
+
+    def _reset_inactive_files(self):
+        # Caller holds _lifecycle_lock, never _lock. A later activation cannot
+        # publish until this reset completes, so old state cannot revive.
+        service = self._file_service
+        if service is not None and not self.files_enabled():
+            service.reset()
 
     def refresh(self) -> None:
-        with self._lifecycle_change():
-            self._refresh_records()
+        with self._lifecycle_lock:
+            try:
+                self._refresh_records()
+            finally:
+                self._reset_inactive_files()
 
     def _refresh_records(self) -> None:
         """Observe installs/changes/removals; do not trust arbitrary new files."""
@@ -353,7 +366,6 @@ class AddonManager:
         manifest=validate_manifest(_read_json_file(source,input_file=True))
         addon_id=manifest["id"]
         with self._lifecycle_change():
-            self._refresh_records()
             before=self._records.get(addon_id)
             if before is None and len(self._records)>=MAX_ADDONS:
                 raise AddonError("Limite add-on installati raggiunto.")
@@ -379,7 +391,6 @@ class AddonManager:
         if type(enabled) is not bool:
             raise AddonError("Selettore add-on non valido.")
         with self._lifecycle_change():
-            self._refresh_records()
             before=self._records.get(addon_id)
             if before is None:
                 raise AddonError("Add-on non trovato o non valido.")
@@ -393,7 +404,6 @@ class AddonManager:
 
     def remove(self, addon_id: str) -> None:
         with self._lifecycle_change():
-            self._refresh_records()
             if addon_id not in self._records:
                 raise AddonError("Add-on non presente.")
             target=self._path(addon_id)
