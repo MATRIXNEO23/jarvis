@@ -1,3 +1,7 @@
+## 7 novembre2026 — build006 esplicitamente richiesta, preparazione
+
+Richiesta: «allora pubblicami la build in download». Build/pubblicazione autorizzate per questa consegna, nessuna nuova feature. Base f9458557074b528d2a480c124f54e3efe7ff9e05 (runtime verde970bcb17,911test Windows per Python). Ramo build/jarvis-006-audit-20261107, separato da main. [Spec](superpowers/specs/2026-11-07-build-006-design.md), [piano](superpowers/plans/2026-11-07-build-006-plan.md). Riutilizzare Gemma builder/DLL pinned, profilo invariato, nuova candidata006 con manifest, verifiche estratto e review prima di pubblicare. Vecchi ZIP e dati personali preservati. Nessuna esecuzione funzionale Linux; hardware/audio/account/GGUF reali ancora da verificare.016/023 restano dichiarati.
+
 ## 7 novembre 2026 — JRV-AUD-013 verificata nei sorgenti in bozza
 
 Quattro guide operative incluse e obbligatorie, sviluppo/handoff/test/upstream esclusi. Guida voce e messaggi installer coerenti con modalità/preferenze reali, link tecnico online immutabile. Nessun comportamento assistente o profilo cambiato. Fixture012 conserva guard nativi e ZIP vietato.
