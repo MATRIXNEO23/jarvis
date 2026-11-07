@@ -1,3 +1,15 @@
+## 7 novembre 2026 — JRV-AUD-018 verificata nei sorgenti in bozza
+
+La correzione conserva le preferenze valide e i valori di prima installazione. Se il file esiste ma è illeggibile, l'avvio tiene spenti GPT e ascolto automatico, con un avviso nella console. Il salvataggio ricontrolla il file e rifiuta di sostituirlo prima di qualunque scrittura, anche dopo una copia del dizionario o una corruzione successiva al caricamento. Nessun reset o backup automatico; recupero manuale documentato.
+
+Base 011:5994d17, source verificato 5fbb77d83b433c9c2f37694ac8bc96fb2f4b3dd0, [bozza46](https://github.com/MATRIXNEO23/jarvis/pull/46). Conservate 001–011 e018; gli altri ID restano distinti. [Run42354230043](https://github.com/MATRIXNEO23/jarvis/actions/runs/42354230043) SUCCESS al tentativo1:829 test per Python3.11.9 (job128348670591,140.607s) e3.12.10 (job128348670440,163.114s),0fallimenti/errori/skip. Tutti18nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-018-20261107.md), [evidenza](evidence/jrv-aud-018-fix-20261107.json), [recupero](RECUPERO-IMPOSTAZIONI.md).
+
+Red1 c021a84/run42353608784:828test e34failure per job; Red2 59c6d3f/run42353743362:829test e37failure per job,0errori. Tutti i fallimenti appartengono ai nuovi controlli018, incluse le attese sul collector warning ancora assente; autorun MIC/GPT e perdita del file sono riprodotti indipendentemente. Review indipendente: tre lacune nei test coperte, nessun difetto residuo rilevato nel codice. Una vecchia asserzione che accettava un flag di tipoerrato come GPTTrue è intenzionalmente corretta e rafforzata con la verifica dell'originale intatto.
+
+Sintassi e probe passati; Searchlive3.12 con servizio ripristinato e fixture rimossa.022/023 non riprodotti e ancora aperti. Checkpoint finale solo documenti/evidenze, runtime e test identici al source verde. Nessuna build, ZIP, merge, release o modifica ai dati/configurazioni/credenziali dell'utente. Nessun test funzionale Linux. Prove su profili temporanei e callback con servizi controllati: Windows10/i3/HDD, account, microfono e pacchetto estratto restano da collaudare. Nessuna garanzia CAS contro modifiche esterne dopo il controllo; file assente mantiene i valori iniziali, che possono abilitare MIC/GPT.
+
+Prossimo014: includere le cartelle di codice runtime nell'inventario dell'autodiagnosi, escludendo profili/cache/upstream e mantenendo i limiti.012/013 richiedono anche futura verifica del pacchetto;016 resta una funzionalità incompleta da valutare, senza introdurre un indice duplicato. Continuare soltanto correzioni mirate autorizzate; build solo su richiesta esplicita.
+
 ## JRV-AUD-018 — Red acquisito, candidata revisionata
 
 Red1sourcec021a84/run42353608784:828test/job34failure0errori;3.11job128346803002125.779s,3.12job128346802760133.185s. Red2source59c6d3f/run42353743362:829test/job37failure0errori;3.11job128347198453128.708s,3.12job128347198635139.055s. Tutti018 inclsubtest, collectorAPIassente fallisce esplicitamente; coreMIC/GPTautorun eperditafile al save riprodotti indipendentemente.022/023 nonriprodotti/aperti.

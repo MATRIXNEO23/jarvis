@@ -1,6 +1,6 @@
 # JRV-AUD-018 — protezione delle impostazioni illeggibili
 
-Stato: candidata nei sorgenti in bozza, GreenWindows ancora da eseguire.
+Stato: verificata nei sorgenti in bozza, nessuna nuova build installabile. Sourceverde `5fbb77d83b433c9c2f37694ac8bc96fb2f4b3dd0`, [evidenza](evidence/jrv-aud-018-fix-20261107.json).
 Base011 `5994d1751fdf02037f2ce3082dbc19a072d4c4a3`, [bozza46](https://github.com/MATRIXNEO23/jarvis/pull/46), ramo `fix/jrv-aud-018-settings-recovery-20261107`. Conservate001–011;012–017 restano distinti. Priorità anticipata perché protegge avvioMIC/GPT e dati, prima delle rifiniture packaging.
 [Specifica](superpowers/specs/2026-11-07-jrv-aud-018-design.md), [piano](superpowers/plans/2026-11-07-jrv-aud-018-fix.md), [recupero manuale](RECUPERO-IMPOSTAZIONI.md).
 
@@ -32,8 +32,23 @@ Fallimenti tutti nel nuovo modulo018, più asserzioni per subtest. I casi del nu
 
 Review preventiva readonly:3gaptest corretti prima del runtime: DEFAULTScompleti anche per{} echiavimancanti, invalidicritici conaltri4automatismiTrue, mutazioniguardmonitorate prima dirifiuto.18nuovi metodi/829attesi. Reviewruntime e ricontrollo senza difetti/blocchi rilevati; revisore non ha eseguito test. Locale soloAST/diff, nessun test funzionaleLinux.
 
+## Green Windows
+
+Source `5fbb77d83b433c9c2f37694ac8bc96fb2f4b3dd0`, [run42354230043](https://github.com/MATRIXNEO23/jarvis/actions/runs/42354230043) SUCCESS al tentativo1, nessunretry.
+
+|Python/job|Esito suite completa|
+|---|---|
+|3.11.9/128348670591|829test,0failure/errori/skip,140.607s; tutti18nuovi metodi passati|
+|3.12.10/128348670440|829test,0failure/errori/skip,163.114s; tutti18nuovi metodi passati|
+
+Sintassi Python/JS/PS e probe accessofile passati in entrambi. Searchlive3.12 passata con servizio ripristinato efixture rimossa. Build, estrazione e pubblicazione skipped. Nessun022/023 riprodotto; non dichiarati risolti. Suite precedente811 preservata, eccetto il comportamento invalido intenzionalmente corretto neltest storico come spiegato sopra.
+
+Prove reali di parser/persistenza ebootstrap/callback estratti, valoriUI/servizi controllati. Corruzione troncata/UTF8/IO/nonoggetto/flaginvalidi, recuperomanuale esplicito infixture, guardiaindipendente da copia/fallback ecorruzione successiva, originale/temp/history immutati e0mkdir/write/replace su rifiuto. Avvionormale conopt-in elegacy{} conservati; avviocorrotto niente schedulerGPT/cambiovoice/SAPI eavviso una volta. Nessun profilo utente o device/accountreale collaudato.
+
+Riferimenti codice: settings.py helper63/load74/error124/saveguard175; jarvis.py bootstrap89/telegram_reconfigure1946/initial_launch4492. Checkpoint finale solo docs/evidenze, runtime/test identici al sourceverde. Rischio residuo compatibilità basso-medio per configurazioni fuori schema; filevalidi testati, estensioni/vecchi profili ignoti noncertificati.
+
 ## Limiti e recupero
 
 La correzione protegge il file rilevato illeggibile; non ricostruisce preferenze mancanti e non fa backup/reset automatici. Il percorso manuale è documentato; viene simulato solo su fixture. Fileassente conserva defaultiniziali, quindi non va presentato comeavvioprudentementeOFF. Cronologie/progetti/credenziali non sono toccati.
 
-Guard non è un CAS filesystem: un editor esterno può cambiare il target dopo la verifica e prima dell'atomicreplace, limite di concorrenza già esistente. Nessuna nuova garanzia perpiùistanze. No benchmarkWindows10/i3/HDD, profilo utente reale, microfono/account o ZIPestratto testati. Nessuna nuova dipendenza/schema/servizioAPI, build/ZIP/merge/release o modifica configurazioni/dati reali. Ramo reversibile; prima di build affidabile servono Green e successivo collaudo pacchetto/target.
+Guard non è un CAS filesystem: un editor esterno può cambiare il target dopo la verifica e prima dell'atomicreplace, limite di concorrenza già esistente. Nessuna nuova garanzia perpiùistanze. No benchmarkWindows10/i3/HDD, profilo utente reale, microfono/account o ZIPestratto testati. Nessuna nuova dipendenza/schema/servizioAPI, build/ZIP/merge/release o modifica configurazioni/dati reali. Ramo reversibile; Green ottenuto; prima di build affidabile serve ancora il collaudo pacchetto/target.

@@ -1,0 +1,160 @@
+{
+  "issue": "JRV-AUD-018",
+  "date": "2026-11-07",
+  "status": "verified-in-draft-Windows-temporary-profiles",
+  "base": "5994d1751fdf02037f2ce3082dbc19a072d4c4a3",
+  "source": "5fbb77d83b433c9c2f37694ac8bc96fb2f4b3dd0",
+  "branch": "fix/jrv-aud-018-settings-recovery-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/46",
+  "command": "python -m unittest discover -s tests -v",
+  "environment": "Windows Server2022 x64; Python3.11.9/3.12.10; temporary profiles and controlled services",
+  "runs": [
+    {
+      "phase": "Red1",
+      "source": "c021a84bce5eb67d71c04d6d91f358569cda301f",
+      "run_id": 42353608784,
+      "jobs": [
+        {
+          "id": 128346803002,
+          "python": "3.11.9",
+          "tests": 828,
+          "failures": 34,
+          "errors": 0,
+          "seconds": 125.779
+        },
+        {
+          "id": 128346802760,
+          "python": "3.12.10",
+          "tests": 828,
+          "failures": 34,
+          "errors": 0,
+          "seconds": 133.185
+        }
+      ]
+    },
+    {
+      "phase": "Red2",
+      "source": "59c6d3f48015607cac5a554e0e26f7ccfff4e1ae",
+      "run_id": 42353743362,
+      "jobs": [
+        {
+          "id": 128347198453,
+          "python": "3.11.9",
+          "tests": 829,
+          "failures": 37,
+          "errors": 0,
+          "seconds": 128.708
+        },
+        {
+          "id": 128347198635,
+          "python": "3.12.10",
+          "tests": 829,
+          "failures": 37,
+          "errors": 0,
+          "seconds": 139.055
+        }
+      ]
+    },
+    {
+      "phase": "Green",
+      "source": "5fbb77d83b433c9c2f37694ac8bc96fb2f4b3dd0",
+      "run_id": 42354230043,
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "id": 128348670591,
+          "python": "3.11.9",
+          "tests": 829,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 140.607,
+          "new_tests_passed": 18
+        },
+        {
+          "id": 128348670440,
+          "python": "3.12.10",
+          "tests": 829,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 163.114,
+          "new_tests_passed": 18
+        }
+      ]
+    }
+  ],
+  "Red_analysis": "All failures in new018module, multiple subtests. Missing optional warningAPI fails explicitly rather than hiding TypeError; core MIC/GPTactivation and destructive save reproduced independently. Normal profile tests already exist; no claim that every Red subcase is a distinct bug.",
+  "new_test_methods": 18,
+  "intentional_test_change": "Existing invalidcritical flag characterization True becomes GPTFalse/autoFalse plus original text unchanged; valid/absent/legacy/migration assertions unchanged",
+  "coverage": [
+    "JSONtruncation/UTF8/IO/nonobject/criticalflagtype",
+    "all six disabled flags onerror including explicit automationTrue inputs",
+    "missing/valid/legacy including{} retain full normal defaults",
+    "warning path/recovery no private content",
+    "guard on original/copied dict and corruption afterload",
+    "no mkdir/tmp/write/replace before refusal, preexisting temp/history preserved",
+    "explicit manual backup/restore simulated only in fixture",
+    "actual mainprefix/UIvalue wiring/GPTstartup schedule and initial_launch/speak_result",
+    "telegramreconfigure shows saveerror"
+  ],
+  "review": {
+    "mode": "independent readonly, no functional execution",
+    "preventive_findings_corrected": [
+      "legacy default completeness",
+      "enabled automations with invalid critical flag",
+      "refusal before mkdir/write/replace"
+    ],
+    "runtime": "No defects/blockers reported on exactdiff; deliberate invalidflag behavior change accepted in reviewedcontract"
+  },
+  "source_files": {
+    "settings.py": {
+      "blob": "4602686e8e94e14f52b5a222ba1567012f7854ed",
+      "sha256": "f817d9344560868d6831fbf3dce166f28d60178181be9f31cf3a5ec822550568"
+    },
+    "jarvis.py": {
+      "blob": "2cfbebc1c0bb96a9d50109bc587f46fa5836779d",
+      "sha256": "1ad6cab1ddbffe33872d9dc767892a681feda4f715c22165739e94dd04fb7a08"
+    },
+    "tests/test_settings.py": {
+      "blob": "3156ce546799893b12edbe7320d988571c807d95",
+      "sha256": "719759b7dbda6c19bc8b5f27ab11966ebd189343ffef24e834dd95128061cfce"
+    },
+    "tests/test_settings_recovery.py": {
+      "blob": "7d1b5f1a28c6c06f1d7e33c9d4400055bf1a2136",
+      "sha256": "df2709e253214979d9d0ca01d14f24f8625c7733149801da7404e2ff3db694ec"
+    }
+  },
+  "limitations": [
+    "no live Windows10/i3/HDD or real userprofile/account/microphone test",
+    "absence remains original initial defaults withGPT/autoTrue; do not confuse absence with readerror",
+    "no automatic recovery/reset/backup; manual explicit privatecopy instructions",
+    "no filesystemCAS guarantee against external editor or multiinstance mutation afterguard; preexisting atomicreplace retained",
+    "small extra profile read onsave; HDDperformance unmeasured",
+    "022/023 open"
+  ],
+  "actions_not_taken": [
+    "functional Linux tests",
+    "app build/ZIP/merge/release",
+    "live settings/history/project/credential changes",
+    "new dependency/schema/paid service",
+    "automatic backup/reset or repeated popup confirmation"
+  ],
+  "checks": {
+    "python_syntax": "passed-both",
+    "javascript_syntax": "passed-both",
+    "powershell_syntax": "passed-both",
+    "native_file_probe": "passed-both",
+    "live_windows_search_3_12": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "build": "skipped",
+    "extracted_package": "skipped",
+    "publication": "skipped",
+    "022_023": "not-reproduced-still-open"
+  }
+}

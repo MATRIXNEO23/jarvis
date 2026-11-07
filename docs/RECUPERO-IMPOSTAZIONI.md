@@ -39,3 +39,6 @@ già esistenti, che prevedono GPT e ascolto automatico abilitati.
 Percorso ordinario: `%LOCALAPPDATA%\Jarvis\settings.json`. Un launcher di prova
 può usare un profilo separato tramite `JARVIS_TRIAL_HOME`: segui il percorso
 mostrato nell'avviso e non sostituire il profilo dell'altra installazione.
+
+Verifica018:829test per Python3.11/3.12 su Windows2022, run42354230043,
+con profili temporanei e18nuovi controlli; nessun aggiornamento automatico del PC.
