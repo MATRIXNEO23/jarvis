@@ -60,13 +60,22 @@ def default_path() -> Path:
     return Path(base) / "Jarvis" / "settings.json"
 
 
-def load_settings(path: Path | None = None) -> dict:
+def _read_settings_object(target: Path) -> dict:
+    """Shared read validation for loading and safe replacement of a profile."""
+    data = json.loads(target.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("Oggetto JSON impostazioni richiesto.")
+    for flag in ("gpt_enabled", "auto_listen"):
+        if flag in data and type(data[flag]) is not bool:
+            raise ValueError("Preferenza di avvio non valida.")
+    return data
+
+
+def load_settings(path: Path | None = None, *, warnings: list[str] | None = None) -> dict:
     target = path or default_path()
     result = DEFAULTS.copy()
     try:
-        data = json.loads(target.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            return result
+        data = _read_settings_object(target)
         if type(data.get("gpt_enabled")) is bool:
             result["gpt_enabled"] = data["gpt_enabled"]
         if type(data.get("tts_enabled")) is bool:
@@ -112,8 +121,20 @@ def load_settings(path: Path | None = None) -> dict:
         voice = data.get("tts_voice")
         if isinstance(voice, str) and len(voice) <= 180:
             result["tts_voice"] = voice
-    except (OSError, ValueError, UnicodeError):
+    except FileNotFoundError:
+        # Preserve the agreed first-installation/legacy defaults. A missing
+        # file is different from an existing file we could not interpret.
         pass
+    except (OSError, ValueError, UnicodeError):
+        result.update(gpt_enabled=False, auto_listen=False, tts_enabled=False,
+                      memory_enabled=False, telegram_enabled=False,
+                      keep_awake_fullscreen=False)
+        if warnings is not None:
+            warnings.append(
+                "Impostazioni non leggibili: avvio prudente con microfono e GPT spenti. "
+                "File originale conservato: " + str(target) + ". "
+                "Chiudi Jarvis, conserva una copia dell'originale e ripristina "
+                "un settings.json valido da backup.")
     return result
 
 
@@ -148,6 +169,16 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
             or not isinstance(peer_name,str) or len(peer_name) > 90
             or not isinstance(voice, str) or len(voice) > 180):
         raise ValueError("Invalid spoken reply settings")
+    # Recheck the target itself, even if the caller copied a fallback dict or
+    # corruption happened after load. Never replace unreadable recoverable data.
+    try:
+        _read_settings_object(target)
+    except FileNotFoundError:
+        pass
+    except (OSError, ValueError, UnicodeError) as exc:
+        raise OSError(
+            "Impostazioni originali non leggibili: chiudi Jarvis e ripristina "
+            "una copia valida; file non sovrascritto.") from exc
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_suffix(".tmp")
     tmp.write_text(json.dumps({"gpt_enabled": settings["gpt_enabled"],

@@ -42,11 +42,14 @@ class SettingsTests(unittest.TestCase):
                 save_settings({"gpt_enabled": True, "keep_awake_fullscreen": enabled}, path)
                 self.assertIs(load_settings(path)["keep_awake_fullscreen"], enabled)
 
-    def test_invalid_file_falls_back_to_default(self):
+    def test_invalid_critical_flag_is_prudent_and_preserves_original(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
             path.write_text('{"gpt_enabled": "no"}', encoding="utf-8")
-            self.assertTrue(load_settings(path)["gpt_enabled"])
+            current = load_settings(path)
+            self.assertFalse(current["gpt_enabled"])
+            self.assertFalse(current["auto_listen"])
+            self.assertEqual(path.read_text(encoding="utf-8"), '{"gpt_enabled": "no"}')
 
     def test_tts_preferences_persist_without_losing_gpt(self):
         with TemporaryDirectory() as folder:

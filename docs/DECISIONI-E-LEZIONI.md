@@ -1,3 +1,9 @@
+## JRV-AUD-018 — Red acquisito, candidata revisionata
+
+Red1sourcec021a84/run42353608784:828test/job34failure0errori;3.11job128346803002125.779s,3.12job128346802760133.185s. Red2source59c6d3f/run42353743362:829test/job37failure0errori;3.11job128347198453128.708s,3.12job128347198635139.055s. Tutti018 inclsubtest, collectorAPIassente fallisce esplicitamente; coreMIC/GPTautorun eperditafile al save riprodotti indipendentemente.022/023 nonriprodotti/aperti.
+
+Candidata settings.py condivideloadparser eguardiasave prima diogni mutazione; fileassente separato, fileesistenteinvalido prudentOFF6flag, warningopzionale senza metadatisalvati ocontenutofile. jarvismaincollector/initiallaunchdrainonce, callbackTelegramgestisceerroresave. Vecchiotesttipoinvalido permissivo aggiornatoFalse+autoFalse+preservazionebytes, assertvalidi/legacy invariati. Review indipendente copre3gaptest e runtime senza difetti rilevati.18nuovi/829attesi; nessun testfunzionaleLinux, soloAST/diff. GuidaRECUPERO-IMPOSTAZIONI e rapporto018 pronti: recuperomanuale conbackupprivato, nessun reset/backupautomatico; assenza file usa defaultiniziali epuòabilitaremic/GPT, raceeditoresternaCAS nongarantita, HDDnonmisurato. Prossimo GreenWindows echeckpoint remoto, nessuna build/merge/config/account/datiutente.
+
 ## JRV-AUD-018 — review preventiva: compatibilità e guardia rafforzate
 
 Review indipendente senza blocchi di contratto,3gaptest recepiti: profilo valido{} echiavimancanti confrontati coninteriDEFAULTS normalizzati; flagcriticiinvalidi conTTS/memoria/Telegram/keepawakeTrue perprovareOFFditutteautomazioni; nuovo test verifica rifiuto prima dimkdir/write_text/replace. Ora18nuovi/829attesi. Tutti callerssavegestisconoOSError/ValueError salvotelegram_reconfigure individuato nelpiano. Red1sourcec021a84bce5eb67d71c04d6d91f358569cda301f inbozza46, runtime ancora011. Redampliatodapubblicare, nessun testfunzionaleLinux/build/merge/configutente. Prossimo: RedWindows, poicorrezioneminima.
