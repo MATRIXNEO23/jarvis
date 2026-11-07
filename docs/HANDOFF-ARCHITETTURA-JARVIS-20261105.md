@@ -1,3 +1,7 @@
+## 7 novembre 2026 — JRV-AUD-004, riproduzione in corso
+
+Base386fcd1, ramo separato fix/jrv-aud-004-addon-locks-20261107,001/002/003 conservate. Piano docs/superpowers/plans/2026-11-07-jrv-aud-004-addon-locks.md. Test Windows con manager/servizio/lock e file temporanei reali, eventi ai confini enabled/reset e processo isolato: chiarimento pendente insieme a disable/remove/upgrade/revoca ledger. Runtime invariato; inversione dei lock ancora ipotesi statica fino al Red. Proposta minima: leggere lo snapshot già pubblicato nei callback file senza lock inverso, mantenendo reset/revoca sincroni. Nessun test funzionale Linux, build, merge o dato personale.
+
 ## 7 novembre 2026 — JRV-AUD-003 verificata su Windows, non distribuita
 
 Correzione4dabf48fd71e433d43a6b97ae1a057730b1ee3b8, [PR draft36](https://github.com/MATRIXNEO23/jarvis/pull/36), dipendente dalla35. [Run42330792141](https://github.com/MATRIXNEO23/jarvis/actions/runs/42330792141) SUCCESS:691 test per Python3.11.9/3.12.10; nove test nuovi con Edit Windows nativo e file temporanei. Red precedente684 test/due asserzioni fallite senza errori per ciascun job. [Evidenza](evidence/jrv-aud-003-20261107.json).
