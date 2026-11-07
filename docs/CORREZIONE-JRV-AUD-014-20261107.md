@@ -1,6 +1,7 @@
 # JRV-AUD-014 — autodiagnosi dei moduli runtime
 
-Stato: candidata in bozza, Green Windows ancora da eseguire. Base018
+Stato: verificata nei sorgenti in bozza, nessuna nuova build installabile.
+Sourceverde `d74333ebe09182a8d3aa84f571fc664be405e51f`, [evidenza](evidence/jrv-aud-014-fix-20261107.json). Base018
 `76e392f80eb7b1d1f43921f101eb1180cb54f76a`, [bozza47](https://github.com/MATRIXNEO23/jarvis/pull/47), ramo `fix/jrv-aud-014-diagnostic-inventory-20261107`.
 Conservate001–011 e018; gli altri ID restano distinti.
 [Specifica](superpowers/specs/2026-11-07-jrv-aud-014-design.md), [piano](superpowers/plans/2026-11-07-jrv-aud-014-fix.md).
@@ -62,6 +63,37 @@ Fix della sola fixture: radice canonicalizzata dopo creazione, assert conservati
 contatore che prova l'effettivo errore di metadata, caso reale GetShortPathNameW
 per verificareAPIpubblica anche conalias8.3 e dati esclusi.23nuovi/852attesi;
 runtime invariato, Green2 da acquisire, nessun semplice retry del source fallito.
+
+## Green Windows dopo la correzione della fixture
+
+Source `d74333ebe09182a8d3aa84f571fc664be405e51f`,
+[run42357790841](https://github.com/MATRIXNEO23/jarvis/actions/runs/42357790841)
+SUCCESS al tentativo1 del nuovo source. Non è un retry identico: il fallimento
+della fixture rimane documentato, runtime invariato e assert rafforzati.
+
+|Python/job|Esito suite completa|
+|---|---|
+|3.11.9/128359597362|852test,0failure/errori/skip,121.214s; tutti23nuovi metodi passati|
+|3.12.10/128359597262|852test,0failure/errori/skip,149.326s; tutti23nuovi metodi passati|
+
+Sintassi Python/JS/PS e probe file passati in entrambi; Searchlive3.12 passata
+con servizio/fixture ripristinati. Build, estrazione e pubblicazione skipped.
+Nessun022/023 riprodotto: non sono dichiarati risolti. Le prove con junction,
+Hidden Windows e nomi brevi8.3 sono effettivamente passate, senza skip.
+
+Verificata copertura delle quattro cartelle del checkout reale e dei moduli
+annidati nelle fixture. Inventario di base:100sorgenti runtime nelle estensioni
+ammesse (68radice+32pacchetti, includendo90Python), prima dei test. Test con
+limiti di file/directory/byte, molti errori e messaggi visibili; profili e
+cartelle collegate non enumerati/letti, literal privati non riportati e marker
+mai eseguito. Metadata/file sparito non interrompono gli altri controlli.
+Nessuna asserzione indebolita per ottenere Green.
+
+Checkpoint finale solo docs/evidenze; runtime/test identici al source verde.
+Riferimenti: self_diagnostics.py/_source_list56 e inspect_jarvis189;
+source_review.py/metadata24 e review_sources77 (righe soggette a successivi
+aggiornamenti, funzioni identificate). Consigli statici richiedono sempre
+riproduzione: queste prove non certificano inferenza, hardware o assenza di bug.
 
 ## Limiti e recupero
 

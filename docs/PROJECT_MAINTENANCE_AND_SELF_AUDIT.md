@@ -87,4 +87,6 @@ non una certificazione di assenza di bug o un audit universale di ogni lingua.
 Il controllo non è una sandbox contro sostituzioni concorrenti malevole del
 filesystem. Nessuna nuova dipendenza, scansione globale o attività residente.
 
-Questa è una candidata nei sorgenti, non una nuova build installabile.
+Correzione014 verificata nei sorgenti:852test per Python3.11/3.12 su
+Windows2022, run42357790841, con23nuovi controlli inclusi junction/Hidden/8.3
+reali e copertura dei moduli del checkout. Nessuna nuova build installabile.

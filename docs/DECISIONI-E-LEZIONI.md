@@ -1,3 +1,15 @@
+## 7 novembre 2026 — JRV-AUD-014 verificata nei sorgenti in bozza
+
+L'autodiagnosi ora include le quattro cartelle runtime approvate, con priorità rispetto ai test, senza eseguire o inviare il codice. Mantiene140file/260000byte e limita a140anche le directory enumerate. Profili, cache, modelli, upstream, link/junction e cartelle Hidden Windows sono esclusi; limiti e copertura restano visibili anche dopo molti errori. File spariti o metadati illeggibili non interrompono il resto. Nessun nuovo comando o indice.
+
+Base01876e392f, source verificato d74333ebe09182a8d3aa84f571fc664be405e51f, [bozza47](https://github.com/MATRIXNEO23/jarvis/pull/47). Conservate001–011,018 e014. [Run42357790841](https://github.com/MATRIXNEO23/jarvis/actions/runs/42357790841) SUCCESS al tentativo1 del source corretto:852test per Python3.11.9 (job128359597362,121.214s) e3.12.10 (job128359597262,149.326s),0failure/errori/skip. Tutti23nuovi metodi passati, incluse junction, attributo Hidden e alias8.3 reali. [Rapporto](CORREZIONE-JRV-AUD-014-20261107.md), [evidenza](evidence/jrv-aud-014-fix-20261107.json).
+
+Red1:1d69632/run42355483101,844test/job14failure+2errori; Red2:4ec1a9f/run42355703061,846test/job16failure+2errori. Errori reali di stat/file sparito, nessun022/023. Review preventiva rafforza privacy interna; review runtime trova limite nascosto da molti errori e Hidden Windows, entrambi corretti. Prima candidata f423fdb6/run42357007265 fallisce851test/job1failure+8errori per fixture conTEMP8.3 confrontato con path canonico: radice della fixture risolta, spy rafforzato e caso pubblico GetShortPathNameW aggiunto. Runtime identico alla prima candidata; hash confrontati. Vecchio testo di assenza modulo aggiornato all'inventario accessibile, con caso file davvero assente e0consigli preservato. Ultima review indipendente senza blocchi rilevati.
+
+Sintassi/probe passati, Searchlive3.12 con servizio/fixture ripristinati. Checkpoint finale solo documenti/evidenze, runtime/test uguali al source verde. Nessuna build/ZIP/merge/release, test funzionale Linux, profilo/dato/credenziale reale modificato o nuova dipendenza. Prove statiche su fixture e checkout, non Windows10/i3/HDD, modello, account, microfono o pacchetto estratto. Non è una sandbox contro modifiche malevole concorrenti né audit universale;022/023 restano aperti.
+
+Prossimo015: limite globale delle interrogazioni dell'indice Windows e della passata di ricerca, preservando permessi, cancellazione e risultati validi. Nessun nuovo indice persistente016.012/013 e019/020 restano separati; continuare correzioni mirate autorizzate, build soltanto su richiesta esplicita.
+
 ## JRV-AUD-014 — prima candidata fallita per fixture Windows8.3
 
 Sourcef423fdb6/run42357007265 FALLITO:851test per job,1failure+8errori solo nel nuovo014.3.11job128357180996133.861s,3.12job128357181094124.005s. Le fixture confrontavano il TEMP con aliasRUNNER~1 con i percorsi canonici runneradmin restituiti correttamente dall'inventario;8relative_to sollevanoValueError e lo spy della directory negata non scatta. Non è un difetto dimostrato del runtime, né022/023. Nessun retry cieco.

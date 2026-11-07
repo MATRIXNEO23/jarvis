@@ -1,0 +1,207 @@
+{
+  "issue": "JRV-AUD-014",
+  "date": "2026-11-07",
+  "status": "verified-in-draft-Windows-static-inventory",
+  "base": "76e392f80eb7b1d1f43921f101eb1180cb54f76a",
+  "source": "d74333ebe09182a8d3aa84f571fc664be405e51f",
+  "branch": "fix/jrv-aud-014-diagnostic-inventory-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/47",
+  "environment": "WindowsServer2022x64; Python3.11.9/3.12.10; temporary directories and actual source checkout",
+  "command": "python -m unittest discover -s tests -v",
+  "runs": [
+    {
+      "phase": "Red1",
+      "source": "1d69632f7cb0fa355add17f681450ed95b0e85a6",
+      "run_id": 42355483101,
+      "jobs": [
+        {
+          "id": 128352529225,
+          "python": "3.11.9",
+          "tests": 844,
+          "failures": 14,
+          "errors": 2,
+          "seconds": 154.869
+        },
+        {
+          "id": 128352529347,
+          "python": "3.12.10",
+          "tests": 844,
+          "failures": 14,
+          "errors": 2,
+          "seconds": 142.961
+        }
+      ]
+    },
+    {
+      "phase": "Red2",
+      "source": "4ec1a9f88f730a3fc06e53f6b7934cbe2b461546",
+      "run_id": 42355703061,
+      "jobs": [
+        {
+          "id": 128353233323,
+          "python": "3.11.9",
+          "tests": 846,
+          "failures": 16,
+          "errors": 2,
+          "seconds": 141.023
+        },
+        {
+          "id": 128353233067,
+          "python": "3.12.10",
+          "tests": 846,
+          "failures": 16,
+          "errors": 2,
+          "seconds": 207.049
+        }
+      ]
+    },
+    {
+      "phase": "Candidate1-failed-fixture-alias",
+      "source": "f423fdb6bd450addbbde3b62310c79eb880dd330",
+      "run_id": 42357007265,
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 128357180996,
+          "python": "3.11.9",
+          "tests": 851,
+          "failures": 1,
+          "errors": 8,
+          "seconds": 133.861
+        },
+        {
+          "id": 128357181094,
+          "python": "3.12.10",
+          "tests": 851,
+          "failures": 1,
+          "errors": 8,
+          "seconds": 124.005
+        }
+      ]
+    },
+    {
+      "phase": "Green2-after-fixture-correction",
+      "source": "d74333ebe09182a8d3aa84f571fc664be405e51f",
+      "run_id": 42357790841,
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "id": 128359597362,
+          "python": "3.11.9",
+          "tests": 852,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 121.214,
+          "new_tests_passed": 23
+        },
+        {
+          "id": 128359597262,
+          "python": "3.12.10",
+          "tests": 852,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 149.326,
+          "new_tests_passed": 23
+        }
+      ]
+    }
+  ],
+  "Red_analysis": "All failures in new014module. Two errors demonstrate unhandled metadata and disappearing-file paths. Junction creation succeeded with no skips; no022/023 observed.",
+  "candidate1_diagnosis": "Temporary fixture root used8.3RUNNER~1 but inventory returned canonical runneradmin paths. Eight relative_to comparisons failed; blocked-directory spy failed to match. Fixture base nowresolved before paths/spies, no runtime modification. No assertions removed; metadata denial now proves it executes.",
+  "new_test_methods": 23,
+  "added_after_Red2_before_candidate1": 5,
+  "added_after_candidate1": 1,
+  "review": {
+    "mode": "independent readonly, no functional execution",
+    "preventive": [
+      "internaljunction targets protected",
+      "coincident source/dataRoot no enumeration"
+    ],
+    "runtime_findings_corrected": [
+      "coverage notes survive8earlier findings, inclNoModule/NoSource",
+      "WindowsHidden directories excluded byattribute0x2, not only dotnames"
+    ],
+    "intentional_test_update": "missing-module wording qualified to inventory/accessiblesources with actual ghost absence/emptyrecommendations retained",
+    "candidate2_fixture_review": "no blockers; canonicalroot/8.3GetShortPathName regressioncase valid"
+  },
+  "coverage": [
+    "four approved runtime packages, nested Python syntax/recommendations",
+    "actualcheckout package*.py coverage within140filecap",
+    "runtime before170test files; deterministic inventory",
+    "140directorybudget and260000byte cap",
+    "profile/data/cache/upstream/models exclusion beforelisting",
+    "Windowsreparse/junctions outsideandinsideroot inclallowedcodealias",
+    "actual Hiddenattribute andshortalias WindowsAPIs",
+    "root/dataRootcoincidence no listing/read",
+    "stat failure/disappearance isolated",
+    "partialcoverage visibleafter10errors andcappedmodule notdeclaredphysicallyabsent",
+    "no inspectedsource executed or literal disclosed"
+  ],
+  "limits": {
+    "files": 140,
+    "directories": 140,
+    "bytes_per_file": 260000,
+    "allowed_recursive_folders": [
+      "local_model",
+      "file_access",
+      "program_apps",
+      "sveglia"
+    ],
+    "root": "direct only",
+    "tests": "direct only afterruntime"
+  },
+  "source_files": {
+    "self_diagnostics.py": {
+      "blob": "7c35d985dc36f74b2c81621a6c38a9f35631a868",
+      "sha256": "41a0c14907ee8a0574d32a0572b4fe70e0ca65c3b21b9664158588157f6864ec"
+    },
+    "source_review.py": {
+      "blob": "4255b75808f10837e4cb9f4793de4c300e1d4fb3",
+      "sha256": "84319298b8932318eab93b2a259a0d08ade16f283bc4fc2b9e4de5b7361f5e95"
+    },
+    "tests/test_diagnostic_inventory.py": {
+      "blob": "5634a4f3f71aa078a3df39e157a493d569cebd56",
+      "sha256": "8799707ee4bc0922ed973c7ab9cc8f74bd5a10b8b8b24c6c1c6271fbb584fd2f"
+    },
+    "tests/test_self_review.py": {
+      "blob": "e9cc8cdf5d43b71fc1f3ef692c75040ea08c02f2",
+      "sha256": "8d1e621c399f243ef3a459d662f0e3c35404083ee899a5762be585a1cd651541"
+    }
+  },
+  "limitations": [
+    "bounded static UTF8/Python checks, not universal runtime/malware audit",
+    "omitted data/hidden/upstream dirs andcaps meanpartialcoverage",
+    "explicitcode inside configuredDataRoot excluded forprivacy",
+    "not a filesystem sandbox against malicious concurrent replacements",
+    "no Windows10/i3-HDD benchmark/liveprofile/account/model/microphone/extractedZIP",
+    "022/023 remainopen"
+  ],
+  "actions_not_taken": [
+    "functional Linux tests",
+    "source import/execution/upload bydiagnosis",
+    "new index/dependency/residentservice",
+    "liveuserdata/config/credential changes",
+    "app build/ZIP/merge/release"
+  ],
+  "checks": {
+    "python_syntax": "passed-both",
+    "javascript_syntax": "passed-both",
+    "powershell_syntax": "passed-both",
+    "native_file_probe": "passed-both",
+    "live_windows_search_3_12": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "junction_hidden_shortalias_tests": "all passed; no skip",
+    "build": "skipped",
+    "extracted_package": "skipped",
+    "publication": "skipped",
+    "022_023": "not-reproduced-still-open"
+  },
+  "candidate2_runtime_matches_candidate1": true
+}
