@@ -13,7 +13,10 @@ KNOWN_CAPABILITIES = (
     ("web.search", "Ricerca Web assistita"),
     ("web.navigate", "Navigazione Web assistita"),
     ("files.search", "Ricerca file assistita"),
+    ("files.explain", "Spiegazione contenuto file"),
     ("telegram.compose", "Preparazione messaggi Telegram"),
+    ("planner.create", "Pianificazione con GPT"),
+    ("diagnostics.review", "Valutazione esterna diagnosi"),
 )
 MODE_OPTIONS = (
     ("Mai (solo locale)", "never"),
@@ -30,7 +33,7 @@ class OnlinePermissionsWindow:
         self.policy = OnlinePermissionPolicy.load(self.path)
         self.window = tk.Toplevel(parent)
         self.window.title("Jarvis - Autorizzazioni GPT per funzione")
-        self.window.geometry("590x410")
+        self.window.geometry("650x560")
         self.window.transient(parent)
         frame = ttk.Frame(self.window, padding=14)
         frame.pack(fill="both", expand=True)

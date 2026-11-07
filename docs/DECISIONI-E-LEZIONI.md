@@ -1,3 +1,9 @@
+## 7 novembre 2026 — JRV-AUD-001, correzione candidata in verifica
+
+Red Windows run42326631728 / job128263321901 sul commit4b21693: 659 test, cinque asserzioni fallite nei tre nuovi test di integrazione, nessun errore fixture. Riprodotti il bypass di Mai (tre azioni console e sessione Telegram) e il dialogo superfluo per allowed. Ramo correttivo isolato; PR draft34. Nessun pacchetto o pubblicazione Download.
+
+La candidata introduce grant di richiesta per funzione, riletto prima dell'invio: never nega, ask richiede conferma, allowed evita il dialogo. Integra console, raffinamento e spiegazione file, planner, diagnosi e Telegram; il consenso di sessione non supera Mai. UI estesa ai permessi effettivi di spiegazione file, planner e diagnosi. Configurazioni mancanti/danneggiate restano negate; nessun file utente scritto. Fixture storiche aggiornate con permessi ask espliciti solo in profili temporanei. Verifica statica AST/diff eseguita; Green Windows e review in corso, nessuna dichiarazione di fix verificato. Prossimo controllo: matrice completa Windows 3.11/3.12 e regressioni.
+
 ## 7 novembre 2026 — JRV-AUD-001, riproduzione in corso
 
 Autorizzate le correzioni dell'audit con spiegazioni sintetiche. Base evoluta61a95f8, ramo isolato fix/jrv-aud-001-permissions-20261107. Prima unità: permessi GPT per funzione. Aggiunti piano docs/superpowers/plans/2026-11-07-jrv-aud-001-permissions.md e tests/test_online_permissions_integration.py: Mai nella console anche dopo conferma, allowed senza dialogo e revoca prima del worker, Mai Telegram prevale sul consenso di sessione. Solo callback reali con confini controllati e profilo temporaneo; nessun account/dispositivo. Runtime ancora invariato. Prossimo controllo: Red Windows; nessun test funzionale Linux, nuova build, ZIP, merge o modifica ai dati.

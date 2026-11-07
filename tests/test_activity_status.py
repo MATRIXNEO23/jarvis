@@ -10,9 +10,10 @@ from pathlib import Path
 import queue
 import sqlite3
 import threading
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from local_engine import TaskResult
 from local_model.chat_transport import ChatTransport
@@ -46,7 +47,17 @@ class ActivityStatusTests(unittest.TestCase):
                     and isinstance(n.func, ast.Attribute) and n.func.attr == "set_state_provider")
         cls.provider_code = compile(ast.Expression(body=call.args[0]), "real-hud-provider", "eval")
 
-    def environment(self):
+    def environment(self, *, permissions=True):
+        if permissions:
+            from local_model.online_permissions import OnlinePermissionPolicy
+            temporary = TemporaryDirectory()
+            self.addCleanup(temporary.cleanup)
+            profile = Path(temporary.name)
+            env_patch = patch.dict(os.environ, {"JARVIS_TRIAL_HOME": str(profile)})
+            env_patch.start()
+            self.addCleanup(env_patch.stop)
+            OnlinePermissionPolicy({"chat.conversation": "ask", "telegram.compose": "ask"}).save(
+                profile / "addon-data/modello_locale/online-permissions.json")
         workers = []
         def thread(*, target, **kwargs):
             return SimpleNamespace(start=lambda: workers.append(target))
