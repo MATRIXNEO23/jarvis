@@ -19,10 +19,11 @@ class NativeChatAdapter:
         from .memory_preferences import MemoryPreferences, default_memory_preferences_path
         memory = MemoryPreferences.load(default_memory_preferences_path())
         memory.available_prompt_tokens(config.context_size, config.max_output)
-        if self.provider is not None and self.config is not None and all(
-                getattr(self.config, field) == getattr(config, field)
+        provider, previous = self.provider, self.config
+        if provider is not None and previous is not None and all(
+                getattr(previous, field) == getattr(config, field)
                 for field in RELOAD_FIELDS | {"dll"}):
-            self.provider.bridge.update_generation_settings(config)
+            provider.bridge.update_generation_settings(config)
             self.config = config
             return
         # Validate/create first; do not stop a working provider for a missing
@@ -35,7 +36,10 @@ class NativeChatAdapter:
     def call(self, action, *, timeout=120, **arguments):
         if action != "ask":
             raise ValueError("Native adapter supports ask only")
-        if self.provider is None:
+        # stop() can detach the owner while this call is in progress. Keep the
+        # selected provider stable; its stop flag/bridge handle cancellation.
+        provider = self.provider
+        if provider is None:
             raise RuntimeError("Native model not prepared")
         from .memory_preferences import MemoryPreferences, default_memory_preferences_path
         memory = MemoryPreferences.load(default_memory_preferences_path())
@@ -47,7 +51,7 @@ class NativeChatAdapter:
                 "Prompt troppo lungo per il budget conservativo: "
                 + str(len(prompt)) + " caratteri, limite " + str(budget)
                 + ". Ridurre il contesto o aumentare il budget.")
-        result = self.provider.ask(timeout=timeout, **arguments)
+        result = provider.ask(timeout=timeout, **arguments)
         return {"text": result}
 
     def stop(self):

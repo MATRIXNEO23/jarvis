@@ -45,3 +45,19 @@ La ricerca usa parole ed estratti limitati: non garantisce ogni dettaglio della 
 Cancellare il Second Brain generale revoca anche i turni generali Gemma in attesa e la loro memoria breve; i progetti restano separati. Un errore di archiviazione viene segnalato e la risposta locale rimane disponibile. Una richiesta già in corso può aver già usato il contesto prima della disattivazione/cancellazione; non può essere ritirato dal modello, ma la revoca impedisce riscritture tardive dopo Clear.
 
 Correzione verificata su Windows:768test per Python3.11/3.12, run42347553638. Nessuna nuova build installabile. Non sono attivati riassunti automatici in inattività né nuovi archivi o servizi.
+
+## Timeout e chiusura Gemma — candidata010
+
+Il limite di tempo della generazione richiede l'annullamento cooperativo al
+motore nativo. Risposte annullate/tardive non vengono accettate nella memoria.
+Stop conserva la storia accettata e permette nuove richieste dopo la fine
+effettiva del lavoro; chiudere Jarvis revoca anche le richieste in coda e non
+crea un modello solo per fermarlo. La prova esplicita conserva il reload.
+
+Questo limite riguarda generate, non il tempo di caricamento o l'attesa in
+coda. Il motore deve collaborare: se una chiamata C ignora abort, non viene
+terminata forzatamente e nessun altro modello viene caricato sopra di essa.
+Non è garantito un arresto entro un tempo massimo del processo nativo. Un
+timer esiste soltanto durante ciascuna generazione ed è congiunto prima del
+riuso; nessun servizio residente o dipendenza aggiunta. Collaudo GGUF/DLL reale
+e reattività Windows10/i3/HDD ancora necessari. Nessuna nuova build pubblicata.

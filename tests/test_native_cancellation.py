@@ -4,6 +4,7 @@ No GGUF/DLL inference, user profile or account. Events bound every wait and
 cleanup releases/joins all workers, including on the pre-fix Red revision.
 """
 import os
+from dataclasses import replace
 from pathlib import Path
 import threading
 from types import SimpleNamespace
@@ -14,6 +15,7 @@ import test_activity_status as callbacks
 import test_native_trial_ownership as ownership
 from local_model.native_bridge import NativeGemmaBridge
 from local_model.native_config import NativeModelConfig
+from local_model.native_settings import default_native_settings_path
 
 
 class ObservedLock:
@@ -210,6 +212,34 @@ class NativeCancellationTests(unittest.TestCase):
         self.assertFalse(self.session.prepared)
         self.assertIsNone(self.session.adapter.provider)
 
+    def test_close_while_preparing_sampler_update_uses_stable_provider_reference(self):
+        self.abi.release.set()
+        self.session.ask("Accettata prima del cambio")
+        history = list(self.session.history)
+        replace(self.harness.config, temperature=0.3).save(default_native_settings_path())
+        comparing, release = threading.Event(), threading.Event()
+        from local_model import native_chat_adapter
+        fields = native_chat_adapter.RELOAD_FIELDS
+        class GatedFields:
+            def __or__(self, other):
+                comparing.set()  # Provider-exists branch has already been selected.
+                if not release.wait(3):
+                    raise RuntimeError("Fixture settings comparison gate timed out")
+                return fields | other
+        self.enterContext(patch.object(native_chat_adapter, "RELOAD_FIELDS", GatedFields()))
+        first = self.worker(lambda: self.session.ask("Da annullare durante update"))
+        try:
+            self.assertTrue(comparing.wait(2))
+            self.close()
+        finally:
+            release.set()
+        self.assertTrue(first.done.wait(2))
+        self.assertIsInstance(first.error, RuntimeError)
+        self.assertEqual(list(self.session.history), history)
+        self.assertEqual(len(self.abi.calls), 1)
+        self.assertEqual(len(self.abi.loads), 1)
+        self.assertFalse(self.session.prepared)
+
     def test_terminal_close_prevents_new_requests_and_preserves_accepted_history(self):
         self.abi.release.set()
         self.session.ask("Accettata")
@@ -278,6 +308,34 @@ class NativeCancellationTests(unittest.TestCase):
                 self.assertEqual(self.session.ask("Seconda"), "Seconda risposta")
             abort.assert_not_called()
             self.assertEqual(len(self.abi.calls), 2)
+
+    def assert_cancel_during_timer_start(self, *, deadline):
+        self.abi.release.set()
+        close = self.close
+        timers = []
+        class Timer:
+            def __init__(self, interval, function):
+                self.function = function
+                self.joined = self.cancelled = False
+                timers.append(self)
+            def start(self):
+                self.function() if deadline else close()
+            def cancel(self): self.cancelled = True
+            def join(self): self.joined = True
+        with patch("local_model.native_bridge.threading.Timer", Timer):
+            with self.assertRaises(TimeoutError if deadline else RuntimeError):
+                self.session.ask("Annullata prima di entrare in C")
+        self.assertEqual(len(timers), 1)
+        self.assertTrue(timers[0].joined)
+        self.assertTrue(timers[0].cancelled)
+        self.assertEqual(self.abi.calls, [], "Cancellation at Timer.start must prevent native entry")
+        self.assertEqual(list(self.session.history), [])
+
+    def test_close_during_timer_start_prevents_native_entry(self):
+        self.assert_cancel_during_timer_start(deadline=False)
+
+    def test_deadline_during_timer_start_prevents_native_entry(self):
+        self.assert_cancel_during_timer_start(deadline=True)
 
     def test_stop_revokes_queued_chat_and_trial_then_new_request_can_succeed(self):
         first = self.worker(lambda: self.session.ask("Attiva"))

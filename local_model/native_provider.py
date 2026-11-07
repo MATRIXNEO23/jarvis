@@ -38,7 +38,7 @@ class NativeLocalProvider:
             return self.bridge.generate(prompt, timeout=timeout)
 
     def stop(self):
-        # Does not interrupt a currently blocking native C call.
+        # Request cooperative abort without acquiring the ask/load lock.
         self._stopped = True
         abort = getattr(self.bridge, "abort", None)
         if callable(abort):

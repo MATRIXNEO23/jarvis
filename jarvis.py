@@ -4183,6 +4183,8 @@ def main() -> None:
 
     def get_gemma_session():
         with gemma_session_lock:
+            if closing:
+                raise RuntimeError("Jarvis in chiusura: richiesta Gemma annullata.")
             if gemma_session[0] is None:
                 from local_model.native_chat_adapter import NativeChatAdapter
                 from local_model.native_conversation_session import NativeConversationSession
@@ -4429,7 +4431,16 @@ def main() -> None:
 
     def close() -> None:
         nonlocal closing
-        closing = True
+        # Synchronize only creation (which never loads the model), not native
+        # inference. A worker cannot publish a new owner after this snapshot.
+        with gemma_session_lock:
+            closing = True
+            native_owner = gemma_session[0]
+        if native_owner is not None:
+            try:
+                native_owner.close()
+            except Exception:
+                write_line("GEMMA > Errore nell'annullamento durante la chiusura.")
         if addon_manager is not None and addon_manager._file_service is not None:
             addon_manager.file_service.reset()
         if addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None:
