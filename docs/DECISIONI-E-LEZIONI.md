@@ -1,3 +1,7 @@
+## 7 novembre 2026 — JRV-AUD-005, review e due nuove prove mirate
+
+Candidata runtimee20e4b8 recensita indipendentemente: nessun difetto bloccante. Rilievo minore: manca prova del cambio configurazione durante attesa del lock. Aggiunti test deterministici del callback trial mentre chat è bloccata, poi salvataggio; e dello snapshot letto prima di un ulteriore salvataggio, verificando modello/parametri effettivi e file nuovo preservato. Runtime invariato; le nuove prove richiedono CI Windows aggiornata. Nessun test funzionale Linux, DLL/GGUF reale, build, ZIP o merge.
+
 ## 7 novembre 2026 — JRV-AUD-005 confermata al confine ABI, candidata in verifica
 
 Red728ef2d / run42336282687/job128293840609:700 test/tre fallimenti senza errori. Trial generato dal builder insieme alla chat o a un altro pannello: ABI controllata registra picco2 generazioni, ricaricamento e abort sovrapposti; callback apertura senza owner. Dimostrato il difetto di ownership, non un crash C/DLL reale.

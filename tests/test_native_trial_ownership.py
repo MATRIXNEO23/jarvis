@@ -238,6 +238,48 @@ class NativeTrialOwnershipTests(unittest.TestCase):
         self.assertEqual(len(self.abi.loads), 1)
         self.assertIn("Nuovo stile", self.abi.calls[-1]["prompt"])
 
+    def test_queued_trial_rechecks_settings_after_chat_finishes(self):
+        errors = []
+        def chat():
+            try:
+                self.session.ask("Chat già in corso")
+            except Exception as exc:
+                errors.append(type(exc).__name__)
+        self.make_thread(target=chat).start()
+        self.assertTrue(self.abi.first_started.wait(2))
+        requested = threading.Event()
+        panel = self.window()
+        def owner():
+            requested.set()
+            return self.session
+        panel.get_session = owner
+        panel.test_model()
+        self.assertTrue(requested.wait(2))
+        replace(self.config, personality="Salvataggio durante l'attesa").save(
+            default_native_settings_path())
+        self.finish_workers()
+        self.assertEqual(errors, [])
+        self.assertTrue(panel.status_value.startswith("TEST FALLITO"), panel.status_value)
+        self.assertIn("cambiate", panel.status_value)
+        self.assertEqual(len(self.abi.loads), 1)
+        self.assertEqual(len(self.abi.calls), 1)
+
+    def test_snapshot_survives_a_save_between_validation_and_prepare(self):
+        self.abi.release.set()
+        second = self.root / "saved-later.gguf"
+        second.write_bytes(b"new fixture: never loaded")
+        revised = replace(self.config, model=str(second), max_output=160)
+        original_loader = self.session.config_loader
+        def snapshot_then_save():
+            snapshot = original_loader()
+            revised.save(default_native_settings_path())
+            return snapshot
+        self.session.config_loader = snapshot_then_save
+        self.session.test_generation(config=self.config)
+        self.assertEqual(self.abi.loads, [self.config.model])
+        self.assertEqual(self.abi.calls[-1]["max_length"], 128)
+        self.assertEqual(NativeModelConfig.load(default_native_settings_path()), revised)
+
     def test_failed_trial_does_not_stop_subsequent_chat(self):
         self.abi.release.set()
         self.session.ask("Chat precedente")
