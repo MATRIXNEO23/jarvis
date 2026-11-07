@@ -73,5 +73,11 @@
   "main_runtime_replaced": false,
   "old_archives_preserved": true,
   "linux_functional_tests": false,
-  "public_download_verification": "pending post-publication readback"
+  "public_download_verification": {
+    "passed": true,
+    "evidence": "jarvis-006-download-20261107.json",
+    "publication_commit": "d6e330a1949a4ded5c61f441164a0743ed87a593",
+    "previous_archives_retrieved": 7,
+    "all_52_historical_zip_git_blobs_unchanged": true
+  }
 }

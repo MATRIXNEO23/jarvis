@@ -1,0 +1,57 @@
+{
+  "publication_commit": "d6e330a1949a4ded5c61f441164a0743ed87a593",
+  "source_commit": "3e2cc05b0b08fdc5b47054b19593cf3151aff75a",
+  "archive": {
+    "archive": "Jarvis-006.zip",
+    "bytes": 8134642,
+    "sha256": "066c6f0cb0af78a9e064119d1a9a39a9317f7524456e14c1716555d9d08f103a",
+    "verified": true
+  },
+  "previous_archives_downloaded_and_hash_verified": [
+    {
+      "archive": "Jarvis-001.zip",
+      "bytes": 268298,
+      "sha256": "d96e90657ad67399893ef5d89a7e250da5369b64a833fd596e4d718ad3687f07",
+      "verified": true
+    },
+    {
+      "archive": "Jarvis-002.zip",
+      "bytes": 265117,
+      "sha256": "43cc2258c684c8b6470263ffa43c13b5111e938ffbcbcffc59ef3c9f23617cb6",
+      "verified": true
+    },
+    {
+      "archive": "Jarvis-003.zip",
+      "bytes": 266469,
+      "sha256": "9554fd5bdde7b9f8c387bfa2fed66167abb90c5c98e691f74ad5ffb6bcf119fb",
+      "verified": true
+    },
+    {
+      "archive": "Jarvis-004.zip",
+      "bytes": 282968,
+      "sha256": "8589a789fecafd7918bdcf85cb81534ebd079b3531321a3e66042c0ff0a3c980",
+      "verified": true
+    },
+    {
+      "archive": "Jarvis-005.zip",
+      "bytes": 283598,
+      "sha256": "583bd55d1ef416b3781f6183d8ea6365f0b8761c6cf1fd614d652db832285728",
+      "verified": true
+    },
+    {
+      "archive": "Jarvis-Gemma-Carattere-e-Stile-61a95f8.zip",
+      "bytes": 8103631,
+      "sha256": "c38806cf12574e7ae142a8eef2cebe2afec6244c92db0a195c507d6bade6041a",
+      "verified": true
+    },
+    {
+      "archive": "Jarvis-Timer-Audio-Fix2-20261031.zip",
+      "bytes": 406653,
+      "sha256": "c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352",
+      "verified": true
+    }
+  ],
+  "metadata_registry_readback": true,
+  "root_and_download_links": true,
+  "immutable_commit_bytes_equal_main": true
+}
