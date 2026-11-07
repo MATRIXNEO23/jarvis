@@ -25,7 +25,9 @@ class DiagnosticInventoryTests(unittest.TestCase):
     def setUp(self):
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.base = Path(temporary.name)
+        # Windows TEMP can use RUNNER~1 while resolve() expands runneradmin.
+        # Match the public inspector's canonical root before comparisons/spies.
+        self.base = Path(temporary.name).resolve(strict=True)
         self.root = self.base / "code"
         self.root.mkdir()
 
@@ -320,12 +322,37 @@ class DiagnosticInventoryTests(unittest.TestCase):
     def test_static_reviewer_contains_stat_or_symlink_metadata_read_failure(self):
         file=self.write("entry.py",SIGNAL)
         real_stat=Path.stat
+        denied=[]
         def stat(path,*args,**kwargs):
             if path==file:
+                denied.append(path)
                 raise PermissionError("Controlled metadata denial")
             return real_stat(path,*args,**kwargs)
         with patch.object(Path,"stat",stat):
             self.assertEqual(review_sources(self.root,[file]),())
+        self.assertTrue(denied,"The metadata denial must actually be exercised")
+
+    def test_windows_short_alias_root_keeps_runtime_coverage_and_profile_exclusion(self):
+        self.write("local_model/good.py",SIGNAL)
+        private=self.write("local_model/owner-data/private.py",SIGNAL)
+        kernel=ctypes.WinDLL("kernel32",use_last_error=True)
+        kernel.GetShortPathNameW.argtypes=[wintypes.LPCWSTR,wintypes.LPWSTR,wintypes.DWORD]
+        kernel.GetShortPathNameW.restype=wintypes.DWORD
+        buffer=ctypes.create_unicode_buffer(32768)
+        length=kernel.GetShortPathNameW(str(self.root),buffer,len(buffer))
+        self.assertGreater(length,0)
+        self.assertLess(length,len(buffer))
+        short=Path(buffer.value)
+        if short==self.root:
+            self.skipTest("No distinct8.3alias on this Windows volume; short-name coverage incomplete")
+        self.assertEqual(short.resolve(strict=True),self.root)
+        canonical=inspect_jarvis(source_root=self.root,data_root=private.parent)
+        aliased=inspect_jarvis(source_root=short,data_root=short/"local_model/owner-data")
+        self.assertEqual(canonical.summary,aliased.summary)
+        self.assertEqual(canonical.findings,aliased.findings)
+        self.assertEqual(canonical.recommendations,aliased.recommendations)
+        self.assertTrue(any(r.file=="local_model/good.py" for r in aliased.recommendations))
+        self.assertNotIn("private.py",format_audit(aliased))
 
     def test_file_disappearing_before_recommendation_phase_does_not_abort_diagnosis(self):
         file=self.write("entry.py",SIGNAL)

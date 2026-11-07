@@ -50,6 +50,19 @@ al riferimento all'inventario accessibile, mantenendo il caso di file davvero
 assente e nessun consiglio inventato. Ricontrollo indipendente senza blocchi
 residui; revisore in sola lettura, nessuna esecuzione funzionale indipendente.
 
+## Prima candidata: fixture Windows8.3 da correggere
+
+Sourcef423fdb6/run42357007265 FALLITO:851test,1failure+8errori per job.
+Python3.11.9/job128357180996133.861s e3.12.10/job128357181094124.005s.
+Il TEMP delle fixture usava RUNNER~1 mentre il runtime canonizzava correttamente
+in runneradmin: i confronti relative_to e alcuni spy erano incoerenti. Nessun
+022/023 riprodotto. Non vengono dichiarati nove nuovi bug del programma.
+
+Fix della sola fixture: radice canonicalizzata dopo creazione, assert conservati,
+contatore che prova l'effettivo errore di metadata, caso reale GetShortPathNameW
+per verificareAPIpubblica anche conalias8.3 e dati esclusi.23nuovi/852attesi;
+runtime invariato, Green2 da acquisire, nessun semplice retry del source fallito.
+
 ## Limiti e recupero
 
 Non è un analizzatore universale o una certificazione di assenza di bug.

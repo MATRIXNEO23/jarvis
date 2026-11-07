@@ -1,3 +1,9 @@
+## JRV-AUD-014 — prima candidata fallita per fixture Windows8.3
+
+Sourcef423fdb6/run42357007265 FALLITO:851test per job,1failure+8errori solo nel nuovo014.3.11job128357180996133.861s,3.12job128357181094124.005s. Le fixture confrontavano il TEMP con aliasRUNNER~1 con i percorsi canonici runneradmin restituiti correttamente dall'inventario;8relative_to sollevanoValueError e lo spy della directory negata non scatta. Non è un difetto dimostrato del runtime, né022/023. Nessun retry cieco.
+
+Normalizzata la radice della fixture conresolve(strict=True), mantenendo tutti gli assert e rendendo sensibili gli spy. Rafforzato testmetadata con contatore che prova l'effettiva negazione; aggiunto caso reale GetShortPathNameW suAPIpubblica per stessa copertura eprunatura dati conalias8.3.23nuovi/852attesi. Runtime invariato dalla candidata; nuova verifica Windows necessaria. Revisione indipendente mirata da richiedere prima Green2. Nessun testfunzionaleLinux/build/merge o dati reali, failure conservato nel rapporto/evidenza.
+
 ## JRV-AUD-014 — candidata pronta per Green Windows
 
 Due componenti runtime esistenti, nessuna nuova dipendenza o indicizzatore. Inventario approvato e priorità runtime, criteri metadata/esclusione condivisi,140file/140directory e260000byte per file. Limiti visibili anche dopo molti errori, NoModule qualificato senza dichiarare inesistenza del programma. Hidden Windows e junction esclusi prima della lettura. Reviewer ricontrolla gli antenati lessicali prima del resolve; stat/file spariti non interrompono il resto.
