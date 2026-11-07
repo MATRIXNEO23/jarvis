@@ -1,3 +1,11 @@
+## JRV-AUD-014 —15test pronti prima del runtime
+
+Nuovo test_diagnostic_inventory.py,15nuovi/844totali attesi. Copertura di quattro cartelle runtime e sotto-moduli, raccomandazioni con righe senza esecuzione/literal, priorità runtime con170test e limite140, profili/cache/upstream/modelli esclusi prima di enumerare, data_root esplicito e coincidente, junction Windows reali e contenimento fisico, IO/stat/file sparito, budget byte e selettore modulo storico. Test solo su cartelle temporanee; junction non creabile è skip esplicito, non falsa prova. Runtime invariato018; review indipendente preventiva richiesta. Prossimo: RedWindows in bozza e correzione minima. Nessun build/merge/nuovo indice o test funzionale Linux, nessun accesso dati reali.
+
+## 7 novembre 2026 — JRV-AUD-014 avviata: inventario autodiagnosi
+
+Base01876e392f, ramo fix/jrv-aud-014-diagnostic-inventory-20261107. Il codice conferma che l'inventario legge solo radice e tests, saltando quattro cartelle runtime. Riusare AST e review esistenti, con ricorsione nelle sole local_model/file_access/program_apps/sveglia; runtime prima dei test, limiti140file/260000byte conservati e copertura dichiarata. Escludere dati/profili, cache/upstream/modelli, link/junction.90Python runtime dalla base, nessuna necessità dimostrata di aumentare limiti. Parser/review devono contenere errori di file spariti. Specifica/piano014 salvati prima del codice; runtime invariato, test RedWindows da preparare. Nessuna modifica a comandi/microfono/GPT o dati, nessun nuovo indice/dipendenza, build/merge o test funzionale Linux. Prossimo: test di copertura/esclusione e review.
+
 ## 7 novembre 2026 — JRV-AUD-018 verificata nei sorgenti in bozza
 
 La correzione conserva le preferenze valide e i valori di prima installazione. Se il file esiste ma è illeggibile, l'avvio tiene spenti GPT e ascolto automatico, con un avviso nella console. Il salvataggio ricontrolla il file e rifiuta di sostituirlo prima di qualunque scrittura, anche dopo una copia del dizionario o una corruzione successiva al caricamento. Nessun reset o backup automatico; recupero manuale documentato.
