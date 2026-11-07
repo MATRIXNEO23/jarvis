@@ -1,0 +1,201 @@
+{
+  "issue": "JRV-AUD-011",
+  "date": "2026-11-07",
+  "status": "verified-in-draft-Windows-real-client-and-Node-fake-SDK",
+  "base": "e65b5ebfa01fe83b7c6ec605da7df836a66ae42e",
+  "source": "3ca986aaff89c176b684d44999b74e303814839c",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/45",
+  "branch": "fix/jrv-aud-011-gpt-timeout-20261107",
+  "environment": "Windows Server2022 x64; GitHub Actions; Python3.11.9/3.12.10; Node22.12",
+  "command": "python -m unittest discover -s tests -v",
+  "SDK_reference": {
+    "repository": "openai/sign-in-with-chatgpt-devkit",
+    "commit": "0a36fefeb913055c8c7a1a29b63d82b96b2e841a",
+    "sources": [
+      "packages/local/src/types.ts",
+      "packages/local/src/index.ts",
+      "packages/local/src/responses.ts"
+    ],
+    "verified_readonly": "AbortSignal supported by listModels/streamResponse; no install or account call"
+  },
+  "runs": [
+    {
+      "phase": "Red1",
+      "source": "7a7589f74316959738811e254cf277638fa8223c",
+      "run_id": 42351877630,
+      "jobs": [
+        {
+          "id": 128341566504,
+          "python": "3.11.9",
+          "tests": 809,
+          "failures": 11,
+          "errors": 2,
+          "seconds": 145.413
+        },
+        {
+          "id": 128341566394,
+          "python": "3.12.10",
+          "tests": 809,
+          "failures": 11,
+          "errors": 2,
+          "seconds": 113.026
+        }
+      ]
+    },
+    {
+      "phase": "Red2",
+      "source": "53d674eac36254801d87d8883e4a7f35dc75cfa2",
+      "run_id": 42352051679,
+      "jobs": [
+        {
+          "id": 128342078144,
+          "python": "3.11.9",
+          "tests": 811,
+          "failures": 16,
+          "errors": 0,
+          "seconds": 157.782
+        },
+        {
+          "id": 128342078389,
+          "python": "3.12.10",
+          "tests": 811,
+          "failures": 16,
+          "errors": 0,
+          "seconds": 143.552
+        }
+      ]
+    },
+    {
+      "phase": "Candidate1-failed",
+      "source": "c6949e28fd5fb4ba3303f0412fdef9405da58cba",
+      "run_id": 42352333419,
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 128342938450,
+          "python": "3.11.9",
+          "tests": 811,
+          "failures": 0,
+          "errors": 1,
+          "seconds": 130.18,
+          "cause": "shutdown wait3s after cancellation acknowledged; readline Interface not closed on iterator break"
+        },
+        {
+          "id": 128342938224,
+          "python": "3.12.10",
+          "tests": 811,
+          "failures": 0,
+          "errors": 1,
+          "seconds": 174.701,
+          "cause": "same readline shutdown wait3s; only failing new011test"
+        }
+      ]
+    },
+    {
+      "phase": "Green2-after-source-fix",
+      "source": "3ca986aaff89c176b684d44999b74e303814839c",
+      "run_id": 42352732284,
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "id": 128344138298,
+          "python": "3.11.9",
+          "tests": 811,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 151.63,
+          "new_tests_passed": 19
+        },
+        {
+          "id": 128344138543,
+          "python": "3.12.10",
+          "tests": 811,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 133.249,
+          "new_tests_passed": 19
+        }
+      ]
+    }
+  ],
+  "Red_analysis": "All failures/errors in new011module. Typed40 vs180 reproduced at virtual41/179s. Red1 two errors are bounded waits for missing cancellation/shutdown response. Invalid99 expectation identified statically and removed before Red2; Red2 deterministic19tests has16failures0errors.",
+  "new_test_methods": 19,
+  "coverage": [
+    "five real owner callback tests incl virtual boundaries and obsolete reply/busy/no retry",
+    "six real client/reader tests with controlled pipe incl owner replacement/detach/failed cancel/late IDs",
+    "eight real Node bridge tests with explicitly fake temporary SDK incl simultaneous blocked streams, lookup/session/ignored abort/shutdown/map cleanup"
+  ],
+  "review": {
+    "mode": "independent readonly, no functional execution",
+    "preventive_findings_corrected": [
+      "valid unknownID99 must not be invalid",
+      "two active blocked streams during cancellation",
+      "client process replacement/detach ownership",
+      "deterministic SDK release gates replacing200ms windows",
+      "wording and UI propagation sent vs notsent"
+    ],
+    "runtime": "No blocking findings in exact runtime diff; best-effort shutdown limit explicit"
+  },
+  "source_files": {
+    "jarvis.py": {
+      "blob": "cef9f12cf44f1c4c4a64d54f3440ff474970b68b",
+      "sha256": "763b44737f0cc0c2787abd37c48427426fb9d9274c4781101287ffee3cbd78a1"
+    },
+    "gpt_client.py": {
+      "blob": "e8a8494b6efcaf4cfbbc4c635888d0dd34564122",
+      "sha256": "65a6db74dd1e1991922caf8243b1d5f815f926be5cd4c3f68b7ea95f1d04e9c1"
+    },
+    "gpt_bridge.mjs": {
+      "blob": "585168e85566619b1e9b4036df0305f90083cd2d",
+      "sha256": "bae43820f21085616d36066c10af21fd3c0a60b509be20fe48a5081069954941"
+    },
+    "tests/test_gpt_timeouts.py": {
+      "blob": "385fdaa6f4706cb9c8b005a5c1af3b24a9d30ce2",
+      "sha256": "6591669a7fd45f2c4c306e9e23144dd548ebe39cedd378c8cfba566337dfec13"
+    }
+  },
+  "limitations": [
+    "fake SDK session/inference explicitly simulated, no real OAuth/network/DPAPI/account",
+    "SDK getSession or credential refresh may complete before observing abort; preserve credential persistence",
+    "cancel sent on private pipe is not remote completion acknowledgement or token refund",
+    "no hard guarantee for unresponsive SDK/process exit; existing stop escalation retained",
+    "no Windows10/i3-HDD measurements or extracted package test",
+    "022/023 open"
+  ],
+  "actions_not_taken": [
+    "functional Linux tests",
+    "app build or ZIP",
+    "merge/release/package publication",
+    "user credentials/settings/data changes",
+    "new dependency/SDK version/paid service",
+    "automatic inference retry or account reconnect"
+  ],
+  "shutdown_fix": {
+    "source_evidence": [
+      "Nodev22.12.0 lib/internal/readline/interface.js:519,533,1354",
+      "Nodev22.12.0 lib/events.js:1112,1196"
+    ],
+    "change": "Explicit input.close() before shutdown break, preserve pending completion/flush; no process.exit or widened test bound",
+    "independent_readonly_review": "agrees with source-derived cause and smallest fix"
+  },
+  "checks": {
+    "python_syntax": "passed-both",
+    "javascript_syntax": "passed-both",
+    "powershell_syntax": "passed-both",
+    "native_file_access_probe": "passed-both",
+    "live_windows_search_3_12": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "build": "skipped",
+    "extracted_package": "skipped",
+    "publication": "skipped",
+    "022_023": "not-reproduced-still-open"
+  }
+}
