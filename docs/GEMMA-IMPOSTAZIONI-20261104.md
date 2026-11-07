@@ -1,3 +1,7 @@
+## Aggiornamento008 — 7 novembre2026, candidata in verifica
+
+Il pannello attuale esiste: modello, thread CPU/batch, contesto, max output, temperatura, top-k/top-p, seed e carattere. Inventario sotto storico; gli altri controlli restano proposte. La correzione008 applica i valori salvati alla prossima richiesta serializzata: samplers senza reload; modello/thread/contesto e DLL interna con reload. Salva non avvia inferenza. [Specifica008](superpowers/specs/2026-11-07-jrv-aud-008-design.md); prova Windows della candidata ancora pendente, nessun nuovo pacchetto.
+
 # Impostazioni configurabili — mappa dal codice KoboldCpp1.121
 
 Stato: inventario tecnico, UI ancora da implementare. Fonte immutabile koboldcpp.py, commit7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759, funzioni load_model e generate. Il sampler può ricavare default dall’adapter scelto: non spacciare un valore base per quello misurato nella chat dell’utente. Il preset della chat e il file .kcpps effettivi del PC non sono stati acquisiti.

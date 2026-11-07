@@ -1,7 +1,7 @@
 """Safe editable settings for the opt-in native model.
 
-Editing is separate from loading a native DLL; callers apply changes only
-after the current generation has stopped and the model is reloaded.
+Editing never loads a DLL. The next serialized request applies the saved
+snapshot; only model/thread/context/DLL changes require a reload.
 """
 from dataclasses import asdict, replace
 from pathlib import Path

@@ -1,3 +1,11 @@
+## JRV-AUD-008 — confermato, candidata in verifica Windows, 2026-11-07
+
+Red1 source6eaf7be/run42343723225:740test/job,16fallimenti/0errori;3.11job128316811765113.998s,3.12job128316811896113.969s. Red2 source6c62ae9/run42343974322:745test/job,22fallimenti/0errori;3.11job128317587284124.310s,3.12job128317587390135.665s. Solo nuovi casi008 falliscono: impostazioni stale, reload assente e snapshot discordante. Nessun errore fixture,022/023 non riprodotti ma aperti.
+
+Candidata: helper sessione passa snapshot a prepare quando cambiano valori di inferenza; chiave esclude il solo carattere, già letto nel prompt. Adapter riusa bridge per samplers e valida candidato prima di sostituire provider per campi reload+DLL. Bridge aggiorna solo5valori sotto lock, preservando DLL bundled; stop revoca stato/cache e detacha prima di abort anche dopo errori. UI/guida e2firme fixture allineate, nessuna asserzione precedente allentata.
+
+Review indipendente:3gap iniziali coperti; trovato e corretto prima del Green un difetto della candidata: Prova005 non ricaricava il provider trattenuto dopo impostazione non caricabile. Ora usa sempre stop sicuro; nuovo test sequenzaA/Bmissing/A/trial e successivo riuso. Aggiunti anche stop pubblico fallito e provider trattenuto. Totale candidato747(17nuovi), ancora da eseguire. Ricontrollo mirato senza rilievi residui; abortcount test reso>=1 per consentire pulizia legittima, serializzazione ancora richiesta. Nessuna build/merge/dati utente/test funzionali Linux. Prossimo: Green Windows747 e checkpoint prove;009 fuori da questo passo.
+
 ## JRV-AUD-008 — copertura ampliata prima del runtime, 2026-11-07
 
 Prima review indipendente del contratto/test senza falsi positivi certi. Coperti gap: DLL interna salvata, errore load dopo sostituzione/recupero e reload avviato da isolato/picker. Aggiunti anche stop fallito con recupero e factory realmente trasformata su copia temporanea: DLL bundled conservata quando rawconfig.dll è vuoto. Non è build/ZIP e non esegue DLL reali. Ora15nuovi test/745totali attesi. Red iniziale6eaf7be/run42343723225 ancora da acquisire completo; seconda prova ampliata da eseguire. Runtime invariato. Prossimo: leggere Red e applicare correzione minima;022/023 aperti.

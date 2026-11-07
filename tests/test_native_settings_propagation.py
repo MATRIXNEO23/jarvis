@@ -253,7 +253,7 @@ class NativeSettingsPropagationTests(unittest.TestCase):
                 self.session.ask("Caricamento fallito")
         self.assertEqual(len(self.abi.calls), calls)
         self.assertEqual(list(self.session.history), history)
-        self.assertEqual(self.abort.call_count, 1)
+        self.assertGreaterEqual(self.abort.call_count, 1)
         self.session.ask("Riprova dopo errore")
         self.assert_parameters(config)
         self.assertEqual(len(self.abi.calls), calls + 1)
@@ -328,3 +328,38 @@ class NativeSettingsPropagationTests(unittest.TestCase):
         self.assertEqual(len(self.abi.loads), 1)
         self.assertTrue(os.path.samefile(self.session.adapter.provider.bridge.config.dll,
                                         self.harness.config.dll))
+
+    def test_stop_releases_ready_or_retained_provider_after_abort_failure(self):
+        for retained in (False, True):
+            with self.subTest(retained_after_invalid_reconfiguration=retained):
+                self.session.ask("Ricordo prima dello stop")
+                history, calls = list(self.session.history), len(self.abi.calls)
+                if retained:
+                    self.save(model=str(self.harness.root / "missing-again.gguf"))
+                    with self.assertRaises((OSError, RuntimeError)):
+                        self.session.ask("Configurazione non caricabile")
+                with patch.object(self.abi, "abort", side_effect=RuntimeError("Stop failure")):
+                    with self.assertRaises(RuntimeError):
+                        self.session.stop()
+                self.assertEqual(len(self.abi.calls), calls)
+                self.assertEqual(list(self.session.history), history)
+                config = self.save(model=self.harness.config.model)
+                self.session.ask("Dopo stop fallito")
+                self.assert_parameters(config)
+                self.assertEqual(len(self.abi.calls), calls + 1)
+                self.assertIn("Ricordo prima dello stop", self.abi.calls[-1]["prompt"])
+
+    def test_explicit_trial_reloads_provider_retained_after_invalid_save(self):
+        self.session.ask("Ricordo da conservare")
+        history = list(self.session.history)
+        self.save(model=str(self.harness.root / "missing-before-trial.gguf"))
+        with self.assertRaises((OSError, RuntimeError)):
+            self.session.ask("Configurazione non caricabile")
+        config = self.save(model=self.harness.config.model)
+        self.session.test_generation(config=config)
+        self.assertEqual(len(self.abi.loads), 2, "Explicit trial must reload retained provider")
+        self.assertEqual(list(self.session.history), history)
+        self.assertNotIn("Ricordo da conservare", self.abi.calls[-1]["prompt"])
+        self.session.ask("Riprendi dopo prova")
+        self.assertEqual(len(self.abi.loads), 2)
+        self.assertIn("Ricordo da conservare", self.abi.calls[-1]["prompt"])

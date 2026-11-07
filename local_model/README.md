@@ -29,3 +29,9 @@ Nel pacchetto Gemma il pulsante Prova generazione usa la stessa sessione della c
 Se le impostazioni cambiano mentre la prova aspetta, la richiesta vecchia viene rifiutata e va ripetuta. Un salvataggio successivo all'acquisizione dello snapshot non cambia il modello che quella prova sta caricando. La prova non invia richieste online e non esegue azioni sul PC.
 
 Il pulsante resta aggiunto dal builder Gemma; i sorgenti root del pannello sono l'editor di configurazione. Le verifiche Windows usano il callback generato reale con ABI controllata, senza produrre un archivio. Il collaudo con DLL/GGUF reali sul PC di riferimento resta necessario.
+
+## Impostazioni Gemma — correzione008 in verifica
+
+Salva conserva i nuovi valori senza avviare il modello. La prossima richiesta valida li usa: max output, temperatura, top-k/top-p e seed senza ricaricare il GGUF; cambi di modello, thread o contesto richiedono ricaricamento automatico dopo la richiesta in corso. Il carattere continua ad applicarsi al prossimo prompt. Un errore non deve cancellare i ricordi della chat; correggere le impostazioni e riprovare.
+
+Queste modifiche sono nel ramo di correzione, ancora in verifica Windows e senza nuova build pubblicata. Le prove usano ABI controllata e non certificano prestazioni o qualità sul PC. Nessuna dipendenza o impostazione del microfono aggiunta.

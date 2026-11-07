@@ -12,7 +12,7 @@ class FakeAdapter:
         self.stops = 0
         self.fail = fail
 
-    def prepare(self):
+    def prepare(self, *, config=None):
         self.prepares += 1
 
     def call(self, action, *, prompt, timeout):

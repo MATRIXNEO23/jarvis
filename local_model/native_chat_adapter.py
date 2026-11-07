@@ -1,7 +1,7 @@
 """Opt-in native inference adapter; no network fallback."""
 from .native_config import NativeModelConfig
 from .native_factory import create_native_provider
-from .native_settings import default_native_settings_path
+from .native_settings import RELOAD_FIELDS, default_native_settings_path
 
 
 class NativeChatAdapter:
@@ -19,8 +19,18 @@ class NativeChatAdapter:
         from .memory_preferences import MemoryPreferences, default_memory_preferences_path
         memory = MemoryPreferences.load(default_memory_preferences_path())
         memory.available_prompt_tokens(config.context_size, config.max_output)
+        if self.provider is not None and self.config is not None and all(
+                getattr(self.config, field) == getattr(config, field)
+                for field in RELOAD_FIELDS | {"dll"}):
+            self.provider.bridge.update_generation_settings(config)
+            self.config = config
+            return
+        # Validate/create first; do not stop a working provider for a missing
+        # file. The session lock serializes replacement with every inference.
+        provider = create_native_provider(config, upstream_source=self.source)
+        self.stop()
+        self.provider = provider
         self.config = config
-        self.provider = create_native_provider(config, upstream_source=self.source)
 
     def call(self, action, *, timeout=120, **arguments):
         if action != "ask":
@@ -41,6 +51,7 @@ class NativeChatAdapter:
         return {"text": result}
 
     def stop(self):
-        if self.provider is not None:
-            self.provider.stop()
-            self.provider = None
+        # An abort failure must not leave a stopped provider reusable as ready.
+        provider, self.provider = self.provider, None
+        if provider is not None:
+            provider.stop()

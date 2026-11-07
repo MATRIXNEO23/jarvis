@@ -30,7 +30,7 @@ class CapturedAdapter:
         self.prepares = 0
         self.on_reply = None
 
-    def prepare(self):
+    def prepare(self, *, config=None):
         self.prepares += 1
 
     def call(self, action, *, prompt, timeout):
