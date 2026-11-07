@@ -1,3 +1,7 @@
+## 7 novembre 2026 — JRV-AUD-013 avviata: guide operative
+
+Base012605c7056 verificata remota14file/7codice-test-workflow uguali al sourceverde, main pulito f147b1a. Ramo013 isolato. Selettore esclude guide richiamate dall'installer: allowlist esatta delle quattro guide operative, obbligatorie; niente docs di sviluppo/handoff. Aggiornare testo voce storico contraddittorio e rimedi, senza cambiare avvio o impostazioni. Spec/piano prima del runtime, tre regressioni pronte sul selettore reale/percorsi locali,911test attesi. Nessun builder eseguito, ZIP, installer/download, merge, dato reale o test funzionale Linux. ProssimoRed Windows, fix minimo e review.
+
 ## 7 novembre 2026 — JRV-AUD-012 verificata nei sorgenti in bozza
 
 Stesso Python già generato ora nei moduli; builder non lo riscrive più dopo i test. Launcher/profili invariati, helper diretti con assert precedenti conservati. Workflow futuro rifiuta modifiche PY/MJS/PS1 e si ferma al primo comando Python fallito. Parità statica con il vecchio codice generato verificata.
