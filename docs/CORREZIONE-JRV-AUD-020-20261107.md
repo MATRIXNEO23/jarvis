@@ -1,0 +1,11 @@
+# JRV-AUD-020 — registro univoco delle versioni
+
+Correzione solo documentale da main `f147b1a5faa977e8e4aefe21c9799465a7a8e990`, separata dalle bozze runtime. La radice main non contiene il runtime evoluto: copiare moduli in blocco avrebbe cambiato il prodotto senza necessità.
+
+[Download/REGISTRO-VERSIONI.md](../Download/REGISTRO-VERSIONI.md) è l’ingresso autorevole: candidata Gemma61a95f8 pubblicata, serie storica005, base b936879 confermata storicamente e audit corretto solo nei sorgenti in bozza. Per ciascuno indica source/workflow e archivio, o assenza di nuovo archivio. Digest e dimensioni dei tre ZIP già presenti sono stati ricontrollati; metadata API dei quattro workflow corrispondono ai sorgenti dichiarati. La conferma storica della base non identifica automaticamente l’installazione attuale dell’utente.
+
+README, Download/README, indice sorgenti e prima installazione rimandano al registro e qualificano la cronologia. Conservati testo storico, registro numerico e tutti gli archivi. [Audit iniziale](AUDIT-JARVIS-INIZIALE-20261107.md) archiviato con avviso storico; [rapporto finale](RAPPORTO-FINALE-AUDIT-CORREZIONI-20261107.md) aggiorna i 23 ID, correzioni, prove e limiti.
+
+Verifiche: diff senza errori di whitespace, modifiche limitate a Markdown/JSON documentali, nuovi link relativi esistenti, sezioni storiche preservate, hash ZIP invariati e metadata workflow riletti. [Evidenza statica](evidence/jrv-aud-020-fix-20261107.json). Non sono test funzionali dell’app. Nessuna nuova esecuzione unittest è necessaria per modifiche documentali; il riferimento runtime è il source970bcb17, run42378831525 con911test per Python Windows3.11/3.12. Runtime/test/guide del checkpoint013 f9458557074b528d2a480c124f54e3efe7ff9e05 corrispondono al source verde, salvo documenti/evidenza.
+
+Rischio basso: aggiornare in futuro il solo ingresso canonico, conservando le schede storiche. Nessun runtime trasferito in main, build/ZIP/estrazione/pubblicazione, merge, modifica profili o dati utente. Nessun test funzionale Linux. Windows10/hardware/audio/account/GGUF reali e build corretta restano da verificare;016 e023 restano aperti. Il salvataggio in bozza non equivale a merge o distribuzione.

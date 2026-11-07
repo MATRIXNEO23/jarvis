@@ -1,3 +1,5 @@
+> **Riferimento attuale:** [registro versioni e sorgenti](../Download/REGISTRO-VERSIONI.md). Main conserva una radice storica: per esaminare il runtime usa il commit della versione scelta nel registro. Gli aggiornamenti sotto sono cronologia; le bozze audit restano separate dai pacchetti.
+
 ## Programmi e app — sorgenti verificati, 3 novembre 2026
 Source[67ca39c](https://github.com/MATRIXNEO23/jarvis/tree/67ca39c4af21c91a12a6306b1ed967f6d83bbedd), ramo feature/program-apps-20261103. Modulo program_apps: native.py/windows_apps.ps1 inventario/API; service.py profilo/frasi/permessi/contesto; ui.py configurazione/scelte; ProgrammiApp.jaddon manifest e LEGGIMI.md. Raccordi manager/UI/engine/router/jarvis esistenti; nessun nuovo backend, modello o processo residente.542 test per Python Windows3.11/3.12, avvioUI e attivazioni native verificati; [rapporto](PROGRAMMI-APP-IMPLEMENTAZIONE-20261103.md). Nessuna004 pubblicata; main conserva runtime storico e Download003.
 
