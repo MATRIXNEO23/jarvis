@@ -218,7 +218,9 @@ class NativeTrialOwnershipTests(unittest.TestCase):
                           max_output=160, temperature=0.3)
         revised.save(default_native_settings_path())
         self.session.test_generation(config=revised)
-        self.assertEqual(self.abi.loads, [self.config.model, revised.model])
+        self.assertEqual(len(self.abi.loads), 2)
+        for actual, expected in zip(self.abi.loads, (self.config.model, revised.model)):
+            self.assertTrue(os.path.samefile(actual, expected))
         self.assertEqual(self.abi.calls[-1]["max_length"], 160)
         self.assertEqual(self.abi.calls[-1]["temperature"], 0.3)
         self.session.ask_isolated(lambda _: "Telegram dopo la prova")
@@ -282,7 +284,8 @@ class NativeTrialOwnershipTests(unittest.TestCase):
             return snapshot
         self.session.config_loader = snapshot_then_save
         self.session.test_generation(config=self.config)
-        self.assertEqual(self.abi.loads, [self.config.model])
+        self.assertEqual(len(self.abi.loads), 1)
+        self.assertTrue(os.path.samefile(self.abi.loads[0], self.config.model))
         self.assertEqual(self.abi.calls[-1]["max_length"], 128)
         self.assertEqual(NativeModelConfig.load(default_native_settings_path()), revised)
 

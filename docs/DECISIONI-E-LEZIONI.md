@@ -1,3 +1,9 @@
+## 7 novembre 2026 — JRV-AUD-005, correzione della fixture percorsi Windows
+
+Run42336668228 sul runtimee20e4b8:706 test per Python3.11/3.12, un fallimento della nuova prova per confronto testuale fra percorso DOS RUNNER~1 e nome completo runneradmin del medesimo GGUF. Difetto della fixture, non del runtime. Corretti solo confronti con numero di load e os.path.samefile, mantenendo verifiche modello/parametri. La lezione sui nomi Windows era già presente e va applicata anche alle prove nuove.
+
+Review finale runtime senza blocchi; gap queued-settings ora coperto da osservatore sul tentativo reale del RLock (non solo getter), ricontrollato indipendentemente. Anche prova snapshot→prepare aggiunta. Nessuna ulteriore modifica runtime; prossimo controllo:708 test Windows sul checkpoint di test corretto. Nessuna build/ZIP/merge, prova DLL/GGUF reale o test funzionale Linux.022/023 restano aperti.
+
 ## 7 novembre 2026 — JRV-AUD-005, review e due nuove prove mirate
 
 Candidata runtimee20e4b8 recensita indipendentemente: nessun difetto bloccante. Rilievo minore: manca prova del cambio configurazione durante attesa del lock. Aggiunti test deterministici del callback trial mentre chat è bloccata, poi salvataggio; e dello snapshot letto prima di un ulteriore salvataggio, verificando modello/parametri effettivi e file nuovo preservato. Runtime invariato; le nuove prove richiedono CI Windows aggiornata. Nessun test funzionale Linux, DLL/GGUF reale, build, ZIP o merge.
