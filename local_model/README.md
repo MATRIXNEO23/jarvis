@@ -36,12 +36,12 @@ Salva conserva i nuovi valori senza avviare il modello. La prossima richiesta va
 
 Queste modifiche sono nel ramo di correzione, verificato da747test per Python3.11/3.12 su Windows (run42344534309), senza nuova build pubblicata. Le prove usano ABI controllata e non certificano prestazioni o qualità sul PC. Nessuna dipendenza o impostazione del microfono aggiunta.
 
-## Ricordi archiviati Gemma — correzione009 in verifica
+## Ricordi archiviati Gemma — correzione009 verificata nei sorgenti
 
 Fuori dai progetti, Second Brain attivo consente di conservare gli scambi accettati e recuperarne piccoli estratti dopo riapertura. Se disattivato, non vengono avviati nuovi recuperi o salvataggi generali; i dati già sul disco e la memoria breve non sono cancellati. Nei progetti espliciti si usa il relativo archivio separato, come per le altre funzioni di Jarvis, indipendente dalla spunta generale.
 
 La ricerca usa parole ed estratti limitati: non garantisce ogni dettaglio della cronologia. Lo spazio dipende dalle impostazioni del contesto. Trial, selezione app e Telegram isolato mantengono i loro percorsi e non archiviano la chat locale.
 
-Cancellare il Second Brain generale revoca anche i turni generali in attesa e la loro memoria breve; i progetti restano separati. Un errore di archiviazione viene segnalato e la risposta locale rimane disponibile. Una richiesta già in corso può aver già usato il contesto prima della disattivazione/cancellazione; non può essere ritirato dal modello, ma la revoca impedisce riscritture tardive dopo Clear.
+Cancellare il Second Brain generale revoca anche i turni generali Gemma in attesa e la loro memoria breve; i progetti restano separati. Un errore di archiviazione viene segnalato e la risposta locale rimane disponibile. Una richiesta già in corso può aver già usato il contesto prima della disattivazione/cancellazione; non può essere ritirato dal modello, ma la revoca impedisce riscritture tardive dopo Clear.
 
-Correzione ancora in verifica Windows, nessuna nuova build installabile. Non sono attivati riassunti automatici in inattività né nuovi archivi o servizi.
+Correzione verificata su Windows:768test per Python3.11/3.12, run42347553638. Nessuna nuova build installabile. Non sono attivati riassunti automatici in inattività né nuovi archivi o servizi.

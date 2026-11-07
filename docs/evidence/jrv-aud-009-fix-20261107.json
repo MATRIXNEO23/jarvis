@@ -1,0 +1,469 @@
+{
+  "issue": "JRV-AUD-009",
+  "date": "2026-11-07",
+  "severity": "MEDIO",
+  "status": "CORE_MEMORY_CONNECTION_VERIFIED_WINDOWS_CI_DRAFT_NOT_RELEASED",
+  "base_commit": "8ca48295da24cd4c5494fd8344e70df20c533133",
+  "source_commit": "5cb797a0d8e7cb1ed508ee1ed2367839fd8b4426",
+  "source_tree": "c18c1247b8b996c9eb776a9e1da73794946603bc",
+  "branch": "fix/jrv-aud-009-gemma-memory-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/43",
+  "verified_blobs": {
+    "jarvis.py": "bfbd44980b64b1a841dee7417ce8749c9c5f08db",
+    "workspace_memory.py": "6dc7713d7b453c20adb751c9d91a416a1d29ccb7",
+    "local_model/chat_transport.py": "054e15208c15926527516a080c13dfde4b13ac3f",
+    "local_model/native_conversation_session.py": "0e5a0e1560e744b884d04e6acd2f613092bb41c6",
+    "tests/test_native_durable_memory.py": "7254a6220b551c1f22f979f03c25fe10940d9b53",
+    "tests/test_native_project_history.py": "7a697e9b29ab025e3012390c4fc165ea4660742b"
+  },
+  "source_changed_files": [
+    "docs/DECISIONI-E-LEZIONI.md",
+    "docs/HANDOFF-ARCHITETTURA-JARVIS-20261105.md",
+    "docs/STATO-ATTIVITA.md",
+    "docs/superpowers/plans/2026-11-07-jrv-aud-009-fix.md",
+    "docs/superpowers/specs/2026-11-07-jrv-aud-009-design.md",
+    "jarvis.py",
+    "local_model/README.md",
+    "local_model/chat_transport.py",
+    "local_model/native_conversation_session.py",
+    "tests/test_native_durable_memory.py",
+    "tests/test_native_project_history.py",
+    "workspace_memory.py"
+  ],
+  "red_runs": [
+    {
+      "job_id": 128324998261,
+      "source": "6b10d1558a092c354af20c4ebc3d5193d142761e",
+      "run_id": 42346405650,
+      "python": "3.11.9",
+      "tests": 765,
+      "seconds": 182.984,
+      "failures": 16,
+      "errors": 0,
+      "failure_headers": [
+        "FAIL: test_archived_template_text_is_data_and_budget_keeps_current_question (test_native_durable_memory.NativeDurableMemoryTests.test_archived_template_text_is_data_and_budget_keeps_current_question)",
+        "FAIL: test_changed_project_before_worker_reads_dispatch_archive (test_native_durable_memory.NativeDurableMemoryTests.test_changed_project_before_worker_reads_dispatch_archive)",
+        "FAIL: test_clear_revokes_pending_general_reply_without_erasing_projects (test_native_durable_memory.NativeDurableMemoryTests.test_clear_revokes_pending_general_reply_without_erasing_projects)",
+        "FAIL: test_existing_relevant_old_general_memory_has_priority_over_recent_noise (test_native_durable_memory.NativeDurableMemoryTests.test_existing_relevant_old_general_memory_has_priority_over_recent_noise)",
+        "FAIL: test_explicit_project_memory_keeps_existing_policy_when_general_is_off (test_native_durable_memory.NativeDurableMemoryTests.test_explicit_project_memory_keeps_existing_policy_when_general_is_off)",
+        "FAIL: test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) (typed=False)",
+        "FAIL: test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) (typed=True)",
+        "FAIL: test_general_recall_survives_session_reopen (test_native_durable_memory.NativeDurableMemoryTests.test_general_recall_survives_session_reopen)",
+        "FAIL: test_new_process_recovers_an_accepted_general_turn (test_native_durable_memory.NativeDurableMemoryTests.test_new_process_recovers_an_accepted_general_turn)",
+        "FAIL: test_off_and_reenable_revokes_original_owner_before_acceptance (test_native_durable_memory.NativeDurableMemoryTests.test_off_and_reenable_revokes_original_owner_before_acceptance)",
+        "FAIL: test_off_to_on_does_not_authorize_an_already_dispatched_turn (test_native_durable_memory.NativeDurableMemoryTests.test_off_to_on_does_not_authorize_an_already_dispatched_turn)",
+        "FAIL: test_old_related_project_memory_is_not_starved_by_recent_turns (test_native_durable_memory.NativeDurableMemoryTests.test_old_related_project_memory_is_not_starved_by_recent_turns)",
+        "FAIL: test_project_persistence_keeps_existing_records_and_partitions (test_native_durable_memory.NativeDurableMemoryTests.test_project_persistence_keeps_existing_records_and_partitions)",
+        "FAIL: test_read_failure_keeps_local_answer_and_reports_memory_warning (test_native_durable_memory.NativeDurableMemoryTests.test_read_failure_keeps_local_answer_and_reports_memory_warning)",
+        "FAIL: test_reopened_project_retrieves_only_its_own_archive (test_native_durable_memory.NativeDurableMemoryTests.test_reopened_project_retrieves_only_its_own_archive)",
+        "FAIL: test_write_failure_keeps_answer_and_reports_failed_persistence (test_native_durable_memory.NativeDurableMemoryTests.test_write_failure_keeps_answer_and_reports_failed_persistence)"
+      ]
+    },
+    {
+      "job_id": 128324998507,
+      "source": "6b10d1558a092c354af20c4ebc3d5193d142761e",
+      "run_id": 42346405650,
+      "python": "3.12.10",
+      "tests": 765,
+      "seconds": 171.711,
+      "failures": 16,
+      "errors": 0,
+      "failure_headers": [
+        "FAIL: test_archived_template_text_is_data_and_budget_keeps_current_question (test_native_durable_memory.NativeDurableMemoryTests.test_archived_template_text_is_data_and_budget_keeps_current_question)",
+        "FAIL: test_changed_project_before_worker_reads_dispatch_archive (test_native_durable_memory.NativeDurableMemoryTests.test_changed_project_before_worker_reads_dispatch_archive)",
+        "FAIL: test_clear_revokes_pending_general_reply_without_erasing_projects (test_native_durable_memory.NativeDurableMemoryTests.test_clear_revokes_pending_general_reply_without_erasing_projects)",
+        "FAIL: test_existing_relevant_old_general_memory_has_priority_over_recent_noise (test_native_durable_memory.NativeDurableMemoryTests.test_existing_relevant_old_general_memory_has_priority_over_recent_noise)",
+        "FAIL: test_explicit_project_memory_keeps_existing_policy_when_general_is_off (test_native_durable_memory.NativeDurableMemoryTests.test_explicit_project_memory_keeps_existing_policy_when_general_is_off)",
+        "FAIL: test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) (typed=False)",
+        "FAIL: test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) (typed=True)",
+        "FAIL: test_general_recall_survives_session_reopen (test_native_durable_memory.NativeDurableMemoryTests.test_general_recall_survives_session_reopen)",
+        "FAIL: test_new_process_recovers_an_accepted_general_turn (test_native_durable_memory.NativeDurableMemoryTests.test_new_process_recovers_an_accepted_general_turn)",
+        "FAIL: test_off_and_reenable_revokes_original_owner_before_acceptance (test_native_durable_memory.NativeDurableMemoryTests.test_off_and_reenable_revokes_original_owner_before_acceptance)",
+        "FAIL: test_off_to_on_does_not_authorize_an_already_dispatched_turn (test_native_durable_memory.NativeDurableMemoryTests.test_off_to_on_does_not_authorize_an_already_dispatched_turn)",
+        "FAIL: test_old_related_project_memory_is_not_starved_by_recent_turns (test_native_durable_memory.NativeDurableMemoryTests.test_old_related_project_memory_is_not_starved_by_recent_turns)",
+        "FAIL: test_project_persistence_keeps_existing_records_and_partitions (test_native_durable_memory.NativeDurableMemoryTests.test_project_persistence_keeps_existing_records_and_partitions)",
+        "FAIL: test_read_failure_keeps_local_answer_and_reports_memory_warning (test_native_durable_memory.NativeDurableMemoryTests.test_read_failure_keeps_local_answer_and_reports_memory_warning)",
+        "FAIL: test_reopened_project_retrieves_only_its_own_archive (test_native_durable_memory.NativeDurableMemoryTests.test_reopened_project_retrieves_only_its_own_archive)",
+        "FAIL: test_write_failure_keeps_answer_and_reports_failed_persistence (test_native_durable_memory.NativeDurableMemoryTests.test_write_failure_keeps_answer_and_reports_failed_persistence)"
+      ]
+    },
+    {
+      "job_id": 128325781974,
+      "source": "c6ce3e04a7bca10efb71838b57b90f0be696274a",
+      "run_id": 42346662291,
+      "python": "3.11.9",
+      "tests": 767,
+      "seconds": 152.013,
+      "failures": 18,
+      "errors": 0,
+      "failure_headers": [
+        "FAIL: test_archived_template_text_is_data_and_budget_keeps_current_question (test_native_durable_memory.NativeDurableMemoryTests.test_archived_template_text_is_data_and_budget_keeps_current_question)",
+        "FAIL: test_changed_project_before_worker_reads_dispatch_archive (test_native_durable_memory.NativeDurableMemoryTests.test_changed_project_before_worker_reads_dispatch_archive)",
+        "FAIL: test_clear_does_not_wait_for_inference_or_remove_project_memory (test_native_durable_memory.NativeDurableMemoryTests.test_clear_does_not_wait_for_inference_or_remove_project_memory)",
+        "FAIL: test_clear_revokes_pending_general_reply_without_erasing_projects (test_native_durable_memory.NativeDurableMemoryTests.test_clear_revokes_pending_general_reply_without_erasing_projects)",
+        "FAIL: test_existing_relevant_old_general_memory_has_priority_over_recent_noise (test_native_durable_memory.NativeDurableMemoryTests.test_existing_relevant_old_general_memory_has_priority_over_recent_noise)",
+        "FAIL: test_explicit_project_memory_keeps_existing_policy_when_general_is_off (test_native_durable_memory.NativeDurableMemoryTests.test_explicit_project_memory_keeps_existing_policy_when_general_is_off)",
+        "FAIL: test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) (typed=False)",
+        "FAIL: test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) (typed=True)",
+        "FAIL: test_general_recall_survives_session_reopen (test_native_durable_memory.NativeDurableMemoryTests.test_general_recall_survives_session_reopen)",
+        "FAIL: test_new_process_recovers_an_accepted_general_turn (test_native_durable_memory.NativeDurableMemoryTests.test_new_process_recovers_an_accepted_general_turn)",
+        "FAIL: test_off_and_reenable_revokes_original_owner_before_acceptance (test_native_durable_memory.NativeDurableMemoryTests.test_off_and_reenable_revokes_original_owner_before_acceptance)",
+        "FAIL: test_off_to_on_does_not_authorize_an_already_dispatched_turn (test_native_durable_memory.NativeDurableMemoryTests.test_off_to_on_does_not_authorize_an_already_dispatched_turn)",
+        "FAIL: test_old_related_project_memory_is_not_starved_by_recent_turns (test_native_durable_memory.NativeDurableMemoryTests.test_old_related_project_memory_is_not_starved_by_recent_turns)",
+        "FAIL: test_project_persistence_keeps_existing_records_and_partitions (test_native_durable_memory.NativeDurableMemoryTests.test_project_persistence_keeps_existing_records_and_partitions)",
+        "FAIL: test_read_failure_keeps_local_answer_and_reports_memory_warning (test_native_durable_memory.NativeDurableMemoryTests.test_read_failure_keeps_local_answer_and_reports_memory_warning)",
+        "FAIL: test_reader_runs_in_worker_without_accessing_ui_values (test_native_durable_memory.NativeDurableMemoryTests.test_reader_runs_in_worker_without_accessing_ui_values)",
+        "FAIL: test_reopened_project_retrieves_only_its_own_archive (test_native_durable_memory.NativeDurableMemoryTests.test_reopened_project_retrieves_only_its_own_archive)",
+        "FAIL: test_write_failure_keeps_answer_and_reports_failed_persistence (test_native_durable_memory.NativeDurableMemoryTests.test_write_failure_keeps_answer_and_reports_failed_persistence)"
+      ]
+    },
+    {
+      "job_id": 128325781765,
+      "source": "c6ce3e04a7bca10efb71838b57b90f0be696274a",
+      "run_id": 42346662291,
+      "python": "3.12.10",
+      "tests": 767,
+      "seconds": 151.26,
+      "failures": 18,
+      "errors": 0,
+      "failure_headers": [
+        "FAIL: test_archived_template_text_is_data_and_budget_keeps_current_question (test_native_durable_memory.NativeDurableMemoryTests.test_archived_template_text_is_data_and_budget_keeps_current_question)",
+        "FAIL: test_changed_project_before_worker_reads_dispatch_archive (test_native_durable_memory.NativeDurableMemoryTests.test_changed_project_before_worker_reads_dispatch_archive)",
+        "FAIL: test_clear_does_not_wait_for_inference_or_remove_project_memory (test_native_durable_memory.NativeDurableMemoryTests.test_clear_does_not_wait_for_inference_or_remove_project_memory)",
+        "FAIL: test_clear_revokes_pending_general_reply_without_erasing_projects (test_native_durable_memory.NativeDurableMemoryTests.test_clear_revokes_pending_general_reply_without_erasing_projects)",
+        "FAIL: test_existing_relevant_old_general_memory_has_priority_over_recent_noise (test_native_durable_memory.NativeDurableMemoryTests.test_existing_relevant_old_general_memory_has_priority_over_recent_noise)",
+        "FAIL: test_explicit_project_memory_keeps_existing_policy_when_general_is_off (test_native_durable_memory.NativeDurableMemoryTests.test_explicit_project_memory_keeps_existing_policy_when_general_is_off)",
+        "FAIL: test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) (typed=False)",
+        "FAIL: test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) (typed=True)",
+        "FAIL: test_general_recall_survives_session_reopen (test_native_durable_memory.NativeDurableMemoryTests.test_general_recall_survives_session_reopen)",
+        "FAIL: test_new_process_recovers_an_accepted_general_turn (test_native_durable_memory.NativeDurableMemoryTests.test_new_process_recovers_an_accepted_general_turn)",
+        "FAIL: test_off_and_reenable_revokes_original_owner_before_acceptance (test_native_durable_memory.NativeDurableMemoryTests.test_off_and_reenable_revokes_original_owner_before_acceptance)",
+        "FAIL: test_off_to_on_does_not_authorize_an_already_dispatched_turn (test_native_durable_memory.NativeDurableMemoryTests.test_off_to_on_does_not_authorize_an_already_dispatched_turn)",
+        "FAIL: test_old_related_project_memory_is_not_starved_by_recent_turns (test_native_durable_memory.NativeDurableMemoryTests.test_old_related_project_memory_is_not_starved_by_recent_turns)",
+        "FAIL: test_project_persistence_keeps_existing_records_and_partitions (test_native_durable_memory.NativeDurableMemoryTests.test_project_persistence_keeps_existing_records_and_partitions)",
+        "FAIL: test_read_failure_keeps_local_answer_and_reports_memory_warning (test_native_durable_memory.NativeDurableMemoryTests.test_read_failure_keeps_local_answer_and_reports_memory_warning)",
+        "FAIL: test_reader_runs_in_worker_without_accessing_ui_values (test_native_durable_memory.NativeDurableMemoryTests.test_reader_runs_in_worker_without_accessing_ui_values)",
+        "FAIL: test_reopened_project_retrieves_only_its_own_archive (test_native_durable_memory.NativeDurableMemoryTests.test_reopened_project_retrieves_only_its_own_archive)",
+        "FAIL: test_write_failure_keeps_answer_and_reports_failed_persistence (test_native_durable_memory.NativeDurableMemoryTests.test_write_failure_keeps_answer_and_reports_failed_persistence)"
+      ]
+    }
+  ],
+  "green": {
+    "run": {
+      "id": 42347553638,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "5cb797a0d8e7cb1ed508ee1ed2367839fd8b4426",
+      "attempt": 1
+    },
+    "platform": "windows-2022 x64",
+    "command": "python -m unittest discover -s tests -v",
+    "jobs": [
+      {
+        "job_id": 128328470822,
+        "python": "3.11.9",
+        "url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/42347553638/job/128328470822",
+        "tests": 768,
+        "seconds": 171.328,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "memory_methods": [
+          "test_archived_template_text_is_data_and_budget_keeps_current_question (test_native_durable_memory.NativeDurableMemoryTests.test_archived_template_text_is_data_and_budget_keeps_current_question) ... ok",
+          "test_changed_project_before_worker_reads_dispatch_archive (test_native_durable_memory.NativeDurableMemoryTests.test_changed_project_before_worker_reads_dispatch_archive) ... ok",
+          "test_clear_does_not_wait_for_inference_or_remove_project_memory (test_native_durable_memory.NativeDurableMemoryTests.test_clear_does_not_wait_for_inference_or_remove_project_memory) ... ok",
+          "test_clear_revokes_pending_general_reply_without_erasing_projects (test_native_durable_memory.NativeDurableMemoryTests.test_clear_revokes_pending_general_reply_without_erasing_projects) ... ok",
+          "test_existing_relevant_old_general_memory_has_priority_over_recent_noise (test_native_durable_memory.NativeDurableMemoryTests.test_existing_relevant_old_general_memory_has_priority_over_recent_noise) ... ok",
+          "test_explicit_project_memory_keeps_existing_policy_when_general_is_off (test_native_durable_memory.NativeDurableMemoryTests.test_explicit_project_memory_keeps_existing_policy_when_general_is_off) ... ok",
+          "test_failed_post_delete_cleanup_cannot_restore_old_general_turns (test_native_durable_memory.NativeDurableMemoryTests.test_failed_post_delete_cleanup_cannot_restore_old_general_turns) ... ok",
+          "test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) ... ok",
+          "test_general_off_never_reads_or_persists_archive (test_native_durable_memory.NativeDurableMemoryTests.test_general_off_never_reads_or_persists_archive) ... ok",
+          "test_general_recall_survives_session_reopen (test_native_durable_memory.NativeDurableMemoryTests.test_general_recall_survives_session_reopen) ... ok",
+          "test_new_process_recovers_an_accepted_general_turn (test_native_durable_memory.NativeDurableMemoryTests.test_new_process_recovers_an_accepted_general_turn) ... ok",
+          "test_off_and_reenable_revokes_original_owner_before_acceptance (test_native_durable_memory.NativeDurableMemoryTests.test_off_and_reenable_revokes_original_owner_before_acceptance) ... ok",
+          "test_off_to_on_does_not_authorize_an_already_dispatched_turn (test_native_durable_memory.NativeDurableMemoryTests.test_off_to_on_does_not_authorize_an_already_dispatched_turn) ... ok",
+          "test_old_related_project_memory_is_not_starved_by_recent_turns (test_native_durable_memory.NativeDurableMemoryTests.test_old_related_project_memory_is_not_starved_by_recent_turns) ... ok",
+          "test_project_persistence_keeps_existing_records_and_partitions (test_native_durable_memory.NativeDurableMemoryTests.test_project_persistence_keeps_existing_records_and_partitions) ... ok",
+          "test_read_failure_keeps_local_answer_and_reports_memory_warning (test_native_durable_memory.NativeDurableMemoryTests.test_read_failure_keeps_local_answer_and_reports_memory_warning) ... ok",
+          "test_reader_runs_in_worker_without_accessing_ui_values (test_native_durable_memory.NativeDurableMemoryTests.test_reader_runs_in_worker_without_accessing_ui_values) ... ok",
+          "test_reopened_project_retrieves_only_its_own_archive (test_native_durable_memory.NativeDurableMemoryTests.test_reopened_project_retrieves_only_its_own_archive) ... ok",
+          "test_revoked_or_mismatched_reply_never_writes_any_archive (test_native_durable_memory.NativeDurableMemoryTests.test_revoked_or_mismatched_reply_never_writes_any_archive) ... ok",
+          "test_secret_filter_and_isolated_paths_do_not_create_durable_chat_turns (test_native_durable_memory.NativeDurableMemoryTests.test_secret_filter_and_isolated_paths_do_not_create_durable_chat_turns) ... ok",
+          "test_write_failure_keeps_answer_and_reports_failed_persistence (test_native_durable_memory.NativeDurableMemoryTests.test_write_failure_keeps_answer_and_reports_failed_persistence) ... ok"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Python syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "GPT JavaScript syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "Unit tests (no external login)",
+            "conclusion": "success"
+          },
+          {
+            "name": "PowerShell setup syntax (Windows)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native Windows file access probe",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows Search service observation (CI only)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Live Windows Search integration (isolated CI only)",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Build operational candidate (Windows only)",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Verify extracted candidate on Windows",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "job_id": 128328470641,
+        "python": "3.12.10",
+        "url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/42347553638/job/128328470641",
+        "tests": 768,
+        "seconds": 138.359,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "memory_methods": [
+          "test_archived_template_text_is_data_and_budget_keeps_current_question (test_native_durable_memory.NativeDurableMemoryTests.test_archived_template_text_is_data_and_budget_keeps_current_question) ... ok",
+          "test_changed_project_before_worker_reads_dispatch_archive (test_native_durable_memory.NativeDurableMemoryTests.test_changed_project_before_worker_reads_dispatch_archive) ... ok",
+          "test_clear_does_not_wait_for_inference_or_remove_project_memory (test_native_durable_memory.NativeDurableMemoryTests.test_clear_does_not_wait_for_inference_or_remove_project_memory) ... ok",
+          "test_clear_revokes_pending_general_reply_without_erasing_projects (test_native_durable_memory.NativeDurableMemoryTests.test_clear_revokes_pending_general_reply_without_erasing_projects) ... ok",
+          "test_existing_relevant_old_general_memory_has_priority_over_recent_noise (test_native_durable_memory.NativeDurableMemoryTests.test_existing_relevant_old_general_memory_has_priority_over_recent_noise) ... ok",
+          "test_explicit_project_memory_keeps_existing_policy_when_general_is_off (test_native_durable_memory.NativeDurableMemoryTests.test_explicit_project_memory_keeps_existing_policy_when_general_is_off) ... ok",
+          "test_failed_post_delete_cleanup_cannot_restore_old_general_turns (test_native_durable_memory.NativeDurableMemoryTests.test_failed_post_delete_cleanup_cannot_restore_old_general_turns) ... ok",
+          "test_general_accepted_voice_and_text_persist_once (test_native_durable_memory.NativeDurableMemoryTests.test_general_accepted_voice_and_text_persist_once) ... ok",
+          "test_general_off_never_reads_or_persists_archive (test_native_durable_memory.NativeDurableMemoryTests.test_general_off_never_reads_or_persists_archive) ... ok",
+          "test_general_recall_survives_session_reopen (test_native_durable_memory.NativeDurableMemoryTests.test_general_recall_survives_session_reopen) ... ok",
+          "test_new_process_recovers_an_accepted_general_turn (test_native_durable_memory.NativeDurableMemoryTests.test_new_process_recovers_an_accepted_general_turn) ... ok",
+          "test_off_and_reenable_revokes_original_owner_before_acceptance (test_native_durable_memory.NativeDurableMemoryTests.test_off_and_reenable_revokes_original_owner_before_acceptance) ... ok",
+          "test_off_to_on_does_not_authorize_an_already_dispatched_turn (test_native_durable_memory.NativeDurableMemoryTests.test_off_to_on_does_not_authorize_an_already_dispatched_turn) ... ok",
+          "test_old_related_project_memory_is_not_starved_by_recent_turns (test_native_durable_memory.NativeDurableMemoryTests.test_old_related_project_memory_is_not_starved_by_recent_turns) ... ok",
+          "test_project_persistence_keeps_existing_records_and_partitions (test_native_durable_memory.NativeDurableMemoryTests.test_project_persistence_keeps_existing_records_and_partitions) ... ok",
+          "test_read_failure_keeps_local_answer_and_reports_memory_warning (test_native_durable_memory.NativeDurableMemoryTests.test_read_failure_keeps_local_answer_and_reports_memory_warning) ... ok",
+          "test_reader_runs_in_worker_without_accessing_ui_values (test_native_durable_memory.NativeDurableMemoryTests.test_reader_runs_in_worker_without_accessing_ui_values) ... ok",
+          "test_reopened_project_retrieves_only_its_own_archive (test_native_durable_memory.NativeDurableMemoryTests.test_reopened_project_retrieves_only_its_own_archive) ... ok",
+          "test_revoked_or_mismatched_reply_never_writes_any_archive (test_native_durable_memory.NativeDurableMemoryTests.test_revoked_or_mismatched_reply_never_writes_any_archive) ... ok",
+          "test_secret_filter_and_isolated_paths_do_not_create_durable_chat_turns (test_native_durable_memory.NativeDurableMemoryTests.test_secret_filter_and_isolated_paths_do_not_create_durable_chat_turns) ... ok",
+          "test_write_failure_keeps_answer_and_reports_failed_persistence (test_native_durable_memory.NativeDurableMemoryTests.test_write_failure_keeps_answer_and_reports_failed_persistence) ... ok"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Python syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "GPT JavaScript syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "Unit tests (no external login)",
+            "conclusion": "success"
+          },
+          {
+            "name": "PowerShell setup syntax (Windows)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native Windows file access probe",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows Search service observation (CI only)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Live Windows Search integration (isolated CI only)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build operational candidate (Windows only)",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Verify extracted candidate on Windows",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  "diagnosis": "Gemma owner poll committed only RAM history, never remember_exchange; native prompts never retrieved SecondBrain/Workspace archives. Initial and expanded callback integration tests reproduced the missing connection without invoking new runtime APIs.",
+  "change": {
+    "owner": "jarvis.py:4228 native_memory_request captures archive/context/revision onUI; only returned worker reader doesDB retrieval. poll_gemma_trial persists via remember_exchange after epoch/context/one-time commit and owner revalidation. Clear revokes native general revision/RAM on confirmation beforefallibleI/O.",
+    "session": "native_conversation_session.py:80,115 optional reader within existing inference lock and actual character budget; max600archive characters, question/role suffix preserved, archived template delimiters escaped; forget_context uses short history lock only.",
+    "transport": "chat_transport.py:35 passes optional reader only when supplied; no online fallback.",
+    "workspace": "workspace_memory.py:542 prefer_related=True only for newnative caller, related excerpts before recent; default caller ordering preserved, project-name budget checked in newmode.",
+    "persistence": "SameSecondBrain/Workspace schemas and filtering; no new archive/migration/index/embedding/dependency/process."
+  },
+  "policy": {
+    "general": "Both dispatch opt-in/owner and acceptance currentowner+opt-in required; OFF→ON or ON→OFF→ON cannot archive already-dispatched oldturn. OFF retains existing diskdata and shortRAM, as before.",
+    "projects": "Explicitproject follows existing separate archive policy, independent of generalSecondBrain toggle; captured projectID is used in reader and UI epoch/context must match before persistence.",
+    "clear": "GeneralGemma pendingturns are revoked and generalRAM cleared beforeI/O; projectRAM/disk preserved. Already-read/in-flight local context cannot be recalled from a generation.",
+    "errors": "Read failure produces current local answer withwarning; failed write reports non-archival, keepsRAM answer; no retry/online request.",
+    "isolation": "Trial/picker/isolatedTelegram do not gain durable-chat writes or archivecontext."
+  },
+  "checked_by_passing_assertions": [
+    "Voice/text persist once after UIacceptance; duplicateNativeTurn cannot write twice.",
+    "Newsession and actual newPython process recover accepted generalturn; child checks recalled=True and online_calls=0.",
+    "General/project partitions isolated; old related record wins over recentnoise with tightbudget.",
+    "No generalDB lookup/store whenOFF; owner changes and epoch/context revocations preventlatewrites.",
+    "Reader invoked only in realworker, zero lookup atdispatch, no ownerValue access violations fromworker.",
+    "Clear doesnot wait behind blocked inference; pendinggeneral answer cannot restoreRAM/disk; projectRAM/disk preserved.",
+    "Realcommitted deletion followed by simulated cleanupOperationalError cannot resurrect generalturns.",
+    "Archivedtemplate delimiters are neutralized; currentquestion+role suffix fit smallbudget.",
+    "Read/write error feedback and existing secret filtering; isolated paths unchanged."
+  ],
+  "independent_review": {
+    "reviewer": "/root/review_durable_memory",
+    "mode": "Fresh-context read-only workingtree vs8ca4829; no functional tests or filemutations.",
+    "initial_gaps_addressed": [
+      "Explicit zero readOFF spy",
+      "Realworker/noTk probe with violationlist",
+      "Clear during blocked inference"
+    ],
+    "important_candidate_defect": {
+      "finding": "SecondBrain.clear_all commitsDELETE beforeVACUUM; initialcandidate revoked only after fullsuccess, so postcommitfailure could permit RAM/latewrite restoration.",
+      "fix": "Revoke revision and generalRAM immediately after confirmation beforeI/O; added realdelete thenforced-error regression.",
+      "status": "Targeted rereview found no remaining issue; new21st test passes bothGreen jobs, not claimed as separate executedRed."
+    }
+  },
+  "compatibility": {
+    "previous_tests": "747prior tests retained; single002characterization of no persistence intentionally replaced by preserved existingrows+authorizedappend009. Other assertions maintained; fixture now supplies memory context/env callbacks.",
+    "privacy": "Only synthetic temporarySQLite/profiles touched by tests. No user/config/history deletion or mutation performed in workspace. Existing action receipts/consents untouched; storedconversations remain data, not verified actions."
+  },
+  "limits": [
+    "RAG is bounded lexical retrieval/excerpts; no semantic index or guarantee of universal recall, realGGUF accuracy, modelquality or fulltranscript retention.",
+    "Generalretrieval uses existing boundedsearch (up to3000receipts/1500episodes); projectFTS or existing scopedfallback, max4candidates. Savedtext follows existing truncation/filtering.",
+    "No liveGPT/Telegram account, microphone/audio or realGGUF inference. Existing006referenceDLL/export probe remains in inheritedsuite, distinct from009captured inference.",
+    "No Windows10/i3/HDD/RAM/CPU benchmark; persistence reuses synchronous UIpath with SQLite5/6s timeout and project snapshot, so diskcontention can delay UI. ReaderI/O is offUI.",
+    "Clear guarantees here are scoped to Gemmageneral; pre-existing GPT/in-flight external-memory behavior was not changed or newly verified.",
+    "CompactContext/IdleMemoryGate and automaticbackground summaries remain unconnected/proposed, outside this approved009connection.",
+    "No functionalLinux test, build/extracted-package/bootstrap delivery, release ormerge. UserPC not updated."
+  ],
+  "windows_search_live": {
+    "native_index_verified": true,
+    "runtime_adapter": "indexed_candidates",
+    "scope_changes": false,
+    "global_reindex": false,
+    "personal_pc_verified": false,
+    "checks": {
+      "available_empty_query": "passed",
+      "created_file_found": "passed",
+      "other_scope_empty": "passed",
+      "rename_observed": "passed",
+      "deletion_observed": "passed",
+      "created_folder_found": "passed",
+      "folder_other_scope_empty": "passed",
+      "folder_deletion_observed": "passed"
+    },
+    "initial_service": {
+      "running": false,
+      "start_mode": "Disabled"
+    },
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "residual_issues": {
+    "JRV_AUD_022": "Open, not reproduced here; nofixclaimed.",
+    "JRV_AUD_023": "Open, not reproduced here; nofixclaimed.",
+    "JRV_AUD_010": "Native timeout/abort blocking remains separate."
+  },
+  "preservation": {
+    "main_commit": "f147b1a5faa977e8e4aefe21c9799465a7a8e990",
+    "base_pr_42_unchanged": true,
+    "application_zip": false,
+    "build": false,
+    "release": false,
+    "merge": false,
+    "user_data_changes": false
+  },
+  "next_step": "Stopafter009. On next usergo-ahead review/reproduce010native stop/timeout with safe controlled backend before fixing; no automatic build."
+}

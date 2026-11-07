@@ -1,3 +1,13 @@
+## 7 novembre2026 — JRV-AUD-009: collegamento memoria verificato in bozza
+
+Source5cb797a0d8e7cb1ed508ee1ed2367839fd8b4426, [bozza43](https://github.com/MATRIXNEO23/jarvis/pull/43) dalla42/base8ca4829,001–008 conservate. [Run42347553638](https://github.com/MATRIXNEO23/jarvis/actions/runs/42347553638) SUCCESS al tentativo1:768test Python3.11.9/job128328470822171.328s e768 Python3.12.10/job128328470641138.359s,0failure/errori/skip. Tutti21nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-009-20261107.md), [evidenza](evidence/jrv-aud-009-fix-20261107.json).
+
+Gemma recupera estratti dagli archivi SecondBrain/Workspace e salva solo scambi accettati attraverso remember_exchange. Owner/epoca/progetto e revisione impediscono scritture vecchie o duplicate; generale conopt-in, progetti conpolitica separata già esistente. Reader nelworker/noTk, budget max600caratteri entro contesto, domanda/ruoli protetti e templatearchivio neutralizzati. Prove su nuova sessione/processo, ricordi pertinenti, isolamento, OFF/cicliowner, errori e Clear concorrente. Clear Gemmagenerale revoca prima dell'I/O e preserva progetti; non promessa di revoca dei flussiGPT esterni.
+
+Red1 6b10d15/run42346405650:765test/job,16failure009/0errori. Red2 c6ce3e0/run42346662291:767test/job,18failure009/0errori. Review indipendente e ricontrollo senza rilievi residui dopo fix Clear: DELETE può essere committato anche conerrore successivoVACUUM; revoca anticipata e21°test reale-delete+errore prima delGreen. Non rivendicato ulterioreRed. Caratterizzazione002 di non-persistenza aggiornata alla009autorizzata, preservando righepreesistenti e altriassert.
+
+Sintassi/probe passati; Searchlive3.12 passata conservizio/fixture ripristinati. Nessuna build/ZIP/release/merge o modifica di dati/configutente, nessun test funzionaleLinux. Callback/sessione/SQLite e processoPython reali, inferenza catturata: non GGUF/microfono/account/benchmarkWindows10-i3-HDD. Lessicale/estratti limitati, non ricordo universale; persistenza UI sincrona conserva timeoutSQLite5/6s, contesaHDDnonmisurata. CompactContext/IdleMemoryGate e sintesi ininattività nonattivati.022/023 aperti e nonriprodotti;010distinto. Checkpoint finale solo documentazione/evidenze, runtime/test identici al sourceverde. Fermarsi; prossimo010 solo al via.
+
 ## JRV-AUD-009 — Red confermato, candidata in verifica, 2026-11-07
 
 Red1 6b10d15/run42346405650:765test/job,16failure009/0errori;3.11job128324998261182.984s,3.12job128324998507171.711s. Red2 c6ce3e0/run42346662291:767test/job,18failure009/0errori;3.11job128325781974152.013s,3.12job128325781765151.260s. Mancano persistenza/richiamo e revocaClear; nessun errore fixture né022/023 riprodotto.
@@ -740,3 +750,6 @@ Elenco/lettura funzionano nell’uso riferito, ma emersi difetti voce, numeri, t
 
 Prova autorizzata sulla base b62d8a7. In Gestisci contatti la riga autorizzata apre un editor locale (180 caratteri, campo vuoto per rimuovere). Impostazioni per ID salvate separatamente da spunte e cronologia. Il listener passa al callback l'ID mittente già verificato. Solo il prompt Gemma locale riceve il profilo in una sezione distinta dal messaggio e dalla cronologia. Il percorso GPT online e i comandi del PC restano separati. Si estende il modulo Telegram esistente, senza un secondo add-on o nuove dipendenze.
 Prove: la suite Windows deve controllare persistenza, rimozione, isolamento tra due ID, modifica durante la sessione e assenza del profilo nel prompt online. Il collaudo sul Pavilion richiede due chat di prova con GPT spento e Gemma configurata. Per disattivare un profilo, svuotare il campo. La CI Windows e il collaudo reale sono ancora da verificare a questo checkpoint.
+
+### Checkpoint API grandi — lezione009
+Un tentativo di serializzare insieme jarvis.py e tutti i documenti di continuità ha prodotto stdout troncato, quindi JSON non valido; nessun commit è stato creato da quel tentativo. Leggere i file a gruppi piccoli, verificare parse/exitcode, poi creare un solo albero/commit coerente e verificare i blob remoti. Non ripetere upload ciechi o interpretare output troncato come salvataggio riuscito.
