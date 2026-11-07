@@ -247,14 +247,20 @@ class NativeTrialOwnershipTests(unittest.TestCase):
                 errors.append(type(exc).__name__)
         self.make_thread(target=chat).start()
         self.assertTrue(self.abi.first_started.wait(2))
-        requested = threading.Event()
+        attempted = threading.Event()
+        real_lock = self.session.lock
+        class ObserveAcquisition:
+            def __enter__(self):
+                attempted.set()
+                return real_lock.__enter__()
+            def __exit__(self, *args):
+                return real_lock.__exit__(*args)
+        # Chat already holds this exact RLock. The proxy observes the trial's
+        # acquisition attempt, then delegates without changing lock behavior.
+        self.session.lock = ObserveAcquisition()
         panel = self.window()
-        def owner():
-            requested.set()
-            return self.session
-        panel.get_session = owner
         panel.test_model()
-        self.assertTrue(requested.wait(2))
+        self.assertTrue(attempted.wait(2))
         replace(self.config, personality="Salvataggio durante l'attesa").save(
             default_native_settings_path())
         self.finish_workers()
