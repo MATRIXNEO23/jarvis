@@ -758,16 +758,25 @@ class FileAccessService:
             if paths:
                 return self._report(paths,revision,reason+'Percorsi da fonti locali; nessuna scansione generale necessaria. Non è un inventario completo delle installazioni.')
             reason = 'Installazione non risolta dalle registrazioni/collegamenti Windows accessibili; seguono eventuali cartelle con nome corrispondente, ruolo non verificato. '
-        # Query every authorized root before a bounded directory walk can
-        # consume the budget. An indexed hit need not trigger a disk scan.
+        # Index queries have priority, but share one pass deadline with the
+        # fallback. An indexed hit need not trigger a disk scan.
+        deadline = time.monotonic() + self.max_seconds
         index_notes = []
         index_queried = 0
         index_limited = False
         for root in roots:
-            if not self._live(revision):
+            if not self._live(revision) or time.monotonic() >= deadline:
                 break
             self._notify_progress('Interrogo indice Windows',root,scanned,directories,errors,excluded,force=True)
-            indexed, note = self.index(query, root)
+            remaining = deadline - time.monotonic()
+            if not self._live(revision) or remaining <= 0:
+                break
+            if self.index is indexed_candidates:
+                indexed, note = self.index(query, root, timeout=min(8.0, remaining))
+            else:
+                # Existing injected adapters take two arguments; never retry
+                # their internal TypeError as another index request.
+                indexed, note = self.index(query, root)
             index_queried += 1
             if note and note not in index_notes:
                 index_notes.append(note)
@@ -787,24 +796,35 @@ class FileAccessService:
         reason += ' '.join(index_notes) + ' '
         if not self._live(revision):
             return self._report([], revision, reason)
+        index_time_limited = time.monotonic() >= deadline
         if paths:
             coverage = {'scanned':0, 'directories':0, 'errors':0, 'excluded':excluded,
-                        'stop_reason':'index_coverage', 'subfolders':True, 'roots':len(roots),
+                        'stop_reason':'time_limit' if index_time_limited else 'index_coverage',
+                        'subfolders':True, 'roots':len(roots),
                         'index_queried':index_queried, 'index_results_only':True,
                         'index_limited':index_limited}
             note = (reason + 'Risultati dall’indice Windows; copertura non necessariamente completa. '
                     'Nessuna scansione diretta eseguita.')
             if index_limited:
                 note += ' Raggiunto un limite dei risultati dell’indice.'
+            if index_time_limited:
+                note += ' Ricerca parziale: raggiunto limite tempo della passata.'
             return self._report(paths, revision, note, coverage)
 
-        started = time.monotonic()
         visited = set()
         for root in roots:
             if not self._live(revision):
                 break
+            if time.monotonic() >= deadline:
+                partial = limited = True
+                stop_reason = 'time_limit'
+                break
             stack = [root]
             while stack and self._live(revision):
+                if time.monotonic() >= deadline:
+                    partial = limited = True
+                    stop_reason = 'time_limit'
+                    break
                 current = stack.pop()
                 if current in visited:
                     continue
@@ -813,10 +833,20 @@ class FileAccessService:
                     excluded+=1
                     continue
                 self._notify_progress('Scansione nomi, sottocartelle incluse',current,scanned,directories,errors,excluded)
+                if not self._live(revision):
+                    break
+                if time.monotonic() >= deadline:
+                    partial = limited = True
+                    stop_reason = 'time_limit'
+                    break
                 try:
                     with os.scandir(current) as entries:
                         directories+=1
                         for entry in entries:
+                            if not self._live(revision) or time.monotonic() >= deadline:
+                                partial = limited = True
+                                stop_reason = 'cancelled' if not self._live(revision) else 'time_limit'
+                                break
                             scanned += 1
                             self._notify_progress('Scansione nomi, sottocartelle incluse',current,scanned,directories,errors,excluded)
                             path = Path(entry.path)
@@ -830,15 +860,19 @@ class FileAccessService:
                                 if entry.is_dir(follow_symlinks=False):
                                     stack.append(path)
                             if (len(paths) >= 20 or scanned >= self.max_entries or
-                                    time.monotonic()-started > self.max_seconds or not self._live(revision)):
+                                    time.monotonic() >= deadline or not self._live(revision)):
                                 partial = True
                                 limited = True
                                 stop_reason=('result_limit' if len(paths)>=20 else 'entry_limit' if scanned>=self.max_entries else
-                                             'time_limit' if time.monotonic()-started>self.max_seconds else 'cancelled')
+                                             'time_limit' if time.monotonic()>=deadline else 'cancelled')
                                 break
                 except OSError:
                     partial = True
                     errors+=1
+                # Empty directories and a slow scandir/error must also count.
+                if not limited and time.monotonic() >= deadline:
+                    partial = limited = True
+                    stop_reason = 'time_limit'
                 if limited:
                     break
             if limited or len(paths) >= 20:

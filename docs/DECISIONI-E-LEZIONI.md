@@ -1,3 +1,31 @@
+## 7 novembre 2026 — JRV-AUD-015 verificata nei sorgenti in bozza
+
+La ricerca ora condivide una deadline tra indice Windows e scansione: timeout min(8s,residuo), nessun nuovo budget per il fallback. Risultati validi conservati con copertura parziale time_limit, annullamento/revoca prevalgono, callback legacy a due argomenti senza retry TypeError. Radici e reinclusioni non rimosse,20risultati/5000voci e spunte invariati. Nessun nuovo indice016 o dipendenza.
+
+Base014 4f436630, source verificato bd722353fce33a38647e102778eb585579cb428e, [bozza48](https://github.com/MATRIXNEO23/jarvis/pull/48). [Run42359421674](https://github.com/MATRIXNEO23/jarvis/actions/runs/42359421674) SUCCESS prima candidata runtime:869test per Python3.11.9 (job128364417473,126.668s) e3.12.10 (job128364417195,130.805s),0failure/errori/skip, tutti17nuovi metodi passati. Sintassi/probe passati; Search live3.12 con servizio e fixture ripristinati. [Rapporto](CORREZIONE-JRV-AUD-015-20261107.md), [evidenza](evidence/jrv-aud-015-fix-20261107.json).
+
+Red82379bfe/run42358971980:867test/job,10failure0errori nel nuovo015;3.11job128363078992192.808s e3.12job128363079143181.795s. Causa dimostrata, nessun retry cieco. Review preventiva rafforza TypeError interno e risultato fallback selezionabile dopo scadenza:2metodi aggiunti dopoRed, senza rivendicare altroRed. Review runtime indipendente readonly senza blocchi rilevati.022/023 non osservati, restano aperti.
+
+Checkpoint finale solo documenti/evidenza, runtime/test da confrontare con il source verde prima di dichiarare conservazione remota. Nessuna build/ZIP/merge/release, test funzionale Linux o dato/profilo/credenziale reale modificato. Tempo controllato nei test, non benchmark Windows10/i3/HDD né hard timeout su I/O/callback non cooperativa; Known Folders/policy e localizzazione registrazioni precedono il budget. Prossimo017: indicatore HUD mentre Gemma elabora, senza creare/caricare modello per leggere lo stato. Conservate001–011,018,014,015;016 resta una funzione separata da valutare, build soltanto su richiesta esplicita.
+
+## JRV-AUD-015 — review runtime completata, Green Windows da acquisire
+
+Review indipendente readonly sul diff esatto dalla014 senza rilievi bloccanti: una deadline, timeout residuo, directory vuote, risultati/cancellazione e protocollo legacy verificati staticamente. Entrambi i gap preventivi recepiti,17nuovi/869attesi. Non è una prova eseguita: suite Windows e probe ancora necessari. Runtime candidata soltanto in file_access/service.py, guida operativa e rapporto aggiornati; nessuna build/estrazione/pubblicazione autorizzata. Main, versioni precedenti, dati e permessi conservati. Prossimo: esito Green, eventuali errori analizzati e checkpoint remoto.
+
+## JRV-AUD-015 — Red Windows acquisito, candidata minima da verificare
+
+Red1 source82379bfe793aa35938542408ff007a7cc5e02903/run42358971980:867test per job,10failure0errori tutti nel nuovo015;3.11job128363078992192.808s,3.12job128363079143181.795s. Confermati timeout8s ripetuti, nuove scansioni oltre limite, falsa copertura completa e nessun controllo del tempo tra directory vuote. Nessun022/023 osservato; Search live3.12 eseguito separatamente, nessuna build. Nessun fallimento occultato o retry.
+
+Candidata soltanto in file_access/service.py: deadline unica indice/fallback, timeout min(8,residuo) al wrapper produzione, protocollo legacy2arg senza retry TypeError, controlli prima di directory e voci, scadenza con risultati validi e copertura parziale. Review preventiva ha rafforzato TypeError interno e risultato fallback conservato:17nuovi/869attesi,2aggiunti dopoRed senza rivendicare ulterioreRed. Review runtime readonly richiesta; Green Windows ancora da eseguire, AST/diff locali soltanto. Nessun nuovo indice/dipendenza/build/merge o dato utente modificato. Prossimo: recepire rilievi e Green.
+
+## JRV-AUD-015 — quindici prove pronte prima del runtime
+
+Nuovo tests/test_file_search_deadline.py: wrapper Windows reale con subprocess e orologio controllati, add-on/policy/filesystem temporaneo reali. Copre budget globale multiradice, timeout residuo e cap8s, fallback con residuo e directory vuote, progressi che consumano il budget, risultati validi tardivi/selezione numerica, esclusioni e reinclusioni, callback legacy, cancellazione/revoca e nuova passata senza toccare il profilo.867test attesi; runtime invariato014. Review indipendente preventiva avviata; Red Windows da acquisire in bozza, nessuna esecuzione funzionale Linux/build/merge. Lentezza simulata, non benchmark HDD; nessuna garanzia hard timeout su I/O o callback non cooperativa.
+
+## 7 novembre 2026 — JRV-AUD-015 avviata: scadenza globale della ricerca
+
+Base014 4f436630b3aae935c808b13e798c9b8991fdedc8, ramo isolato fix/jrv-aud-015-search-deadline-20261107. Il servizio applica8s per ogni radice e avvia soltanto dopo il budget10s di scansione; attesa teorica cumulativa, non misurata sul PC. Riusare il timeout già presente nel wrapper Windows con il residuo di una sola deadline, conservando radici, permessi/reinclusioni, risultati validi e cancellazione. Dichiarare copertura parziale alla scadenza. Callback iniettate legacy a due argomenti conservate; nessuna promessa di hard timeout su I/O o callback non cooperativa. Specifica/piano015 salvati prima del runtime. Prossimo: test Red Windows, poi intervento minimo e review. Nessuna build/merge/test funzionale Linux, nessun dato o impostazione reale modificato;016 non implementata.
+
 ## 7 novembre 2026 — JRV-AUD-014 verificata nei sorgenti in bozza
 
 L'autodiagnosi ora include le quattro cartelle runtime approvate, con priorità rispetto ai test, senza eseguire o inviare il codice. Mantiene140file/260000byte e limita a140anche le directory enumerate. Profili, cache, modelli, upstream, link/junction e cartelle Hidden Windows sono esclusi; limiti e copertura restano visibili anche dopo molti errori. File spariti o metadati illeggibili non interrompono il resto. Nessun nuovo comando o indice.
