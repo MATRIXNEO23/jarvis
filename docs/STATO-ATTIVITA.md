@@ -1,3 +1,9 @@
+## 7 novembre 2026 — JRV-AUD-006, recupero dipendenza in preparazione
+
+Base649d1a0 con001–005 conservate; ramo fix/jrv-aud-006-native-reference-20261107. Artifact13339099748/run41860087656 non ancora scaduto, scadenza verificata18 novembre2026 ore15:49:03UTC. Quattro workflow lo consumano. Identica DLL già presente nello ZIP61a95f8 in Git al commitf147b1a, hashac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba; nessun binario nuovo necessario.
+
+Piano tools/native_model/restore_engine.py con manifest immutabile, recupero pubblico/hash/extraction selettiva, consumer aggiornati. Test Red della capacità di recuperare da checkout vuota senza artifact (baseline manca il helper): non si finge che la build attuale sia già fallita, non si cancella artifact. Dopo recupero il test userà il probe DLL esistente, senza modello/GGUF/build. Runtime/workflow ancora invariati, nessun test funzionale Linux, nuova build/ZIP, release o dato personale.
+
 ## 7 novembre 2026 — JRV-AUD-005 verificata in CI con ABI controllata, non distribuita
 
 Checkpoint357c65122bb0faa0b07871c8b59cb65692831b93, runtimee20e4b88451541d650d0a9160f536290a6daaa25, [PR draft38](https://github.com/MATRIXNEO23/jarvis/pull/38) dipendente dalla37. [Run42337129314](https://github.com/MATRIXNEO23/jarvis/actions/runs/42337129314) SUCCESS: Python3.11.9/job128296467283,708 test/114.337s; Python3.12.10/job128296467507,708 test/106.014s. [Evidenza](evidence/jrv-aud-005-20261107.json).
