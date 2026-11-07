@@ -1,3 +1,11 @@
+## JRV-AUD-021 — tredici prove pronte prima del runtime
+
+Nuovo tests/test_tts_process_lifecycle.py: Popen/pipe/figliWindows reali, eseguibile sostituito solo alla frontiera con helperPython silenzioso temporaneo. Copertura close attivo, chunk/coda scartati, close prima di pubblicazione/testo non inviato, doppio close/figlio già uscito, processo estraneo preservato, JSON/argv/cwd, timeout/exitnonzero/avviofallito, customrunner2arg/anti-eco e lista voci. Cleanup ritira sempre anche figli del Red senza orphan.13nuovi/897attesi, runtime ancora019. Review preventiva indipendente avviata; prossima bozza RedWindows. Nessun audio/SAPI/account/profilo reale, build/merge o test funzionale Linux.
+
+## 7 novembre 2026 — JRV-AUD-021 avviata: processo vocale in chiusura
+
+Base019 e059883a1e446ca71452a2358920b4af02001b69, remoto verificato11file/3moduli uguali al sourceverde; main pulito f147b1a. Ramo021 isolato. Il codice close svuota la coda ma non interrompe subprocess.run attivo: il chunk può continuare fino al termine/timeout90s. Conservare e ritirare solo il Popen creato dal runner vocale, sincronizzando pubblicazione/close senza attese sotto lock. Compatibilità runnercustom2arg, lista voci, JSON/cwd e anti-eco preservati. Nessun taskkill o gestione di app estranee, nessun nuovo mute/microfono. Specifica/piano prima del runtime; prossime prove RedWindows con figli temporanei reali, senza audio/account. Nessuna build/merge/test funzionale Linux/dato reale.
+
 ## 7 novembre 2026 — JRV-AUD-019 verificata nei sorgenti in bozza
 
 Corrette soltanto etichette/testo e docstring: il pannello memoria indica caratteri nel prompt (spazi inclusi), Context Size/Max Output Gemma indicano token, sintesi automatica e suo limite dichiarati non collegati. Nessun tokenizer, attivazione di sintesi o migrazione. ConfrontoAST con la base conferma defaults/schema, budget/validate/save e callbacksave UI identici. Valori e algoritmo non cambiano.
