@@ -1,3 +1,7 @@
+## 7 novembre 2026 — JRV-AUD-005, riproduzione in corso
+
+Basefa4eec2 con001–004 conservate; ramo fix/jrv-aud-005-native-owner-20261107, piano dedicato. La root UI non ha Prova generazione: il builder la aggiunge nel pacchetto creando una seconda sessione, mentre chat/Telegram già condividono get_gemma_session. Test Windows preparati: stessa trasformazione UI su copia temporanea (nessun ZIP), callback generato e factory/bridge/adapter/session reali con ABI controllata; chat+prova e due pannelli, reload/abort durante altra generazione. Ingresso impostazioni reale verificato senza attivazione automatica. Runtime invariato, Red da eseguire; nessun crash DLL/GGUF reale dichiarato, test funzionale Linux, build, merge o dato personale. Proposta: riusare il proprietario esistente e una prova isolata con reload serializzato.
+
 ## 7 novembre 2026 — JRV-AUD-004 verificata nei sorgenti, non distribuita
 
 Runtime8557ddb9b23c34c11aaee7a1b65bf57470dfd7f5, [PR draft37](https://github.com/MATRIXNEO23/jarvis/pull/37), dipendente dalla36. [Run42332441469](https://github.com/MATRIXNEO23/jarvis/actions/runs/42332441469) SUCCESS dopo un retry del solo job3.12: Python3.11.9/job128281773601,698 test/90.906s; Python3.12.10/job128282998223,698 test/113.115s. [Evidenza completa](evidence/jrv-aud-004-20261107.json).

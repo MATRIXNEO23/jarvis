@@ -1,0 +1,16 @@
+# JRV-AUD-005 — proprietario unico per la prova Gemma
+
+Goal: serializzare chat, Telegram e Prova generazione di una o più finestre senza backend concorrenti, reload o abort incrociati. Basefa4eec20281508c3928eefba7bcbd952d13eaabf, ramo isolato e PR dipendente dalla37,001–004 conservate. Nessuna build/ZIP/merge, account o dato personale.
+
+Fonti reali: jarvis.get_gemma_session già condivide NativeConversationSession fra chat e Telegram. La root native_ui è solo configurazione; tools/build_gemma_clean_trial.py aggiunge al pacchetto test_model, che invece crea una nuova sessione e la ferma alla fine. native_factory importa upstream per ciascun provider e i lock bridge/provider sono per istanza. Il backend DLL globale non ha quindi un proprietario unico quando si prova dal pannello. Crash nativo reale non ancora riprodotto.
+
+Scelta minima: passare get_gemma_session al pannello senza caricarlo all'apertura; il test generato usa quella sessione. Aggiungere un metodo di prova isolata nella sessione: sotto il lock esistente attende le richieste in corso, ricarica esplicitamente il modello usando le impostazioni salvate e genera senza leggere/scrivere storico; lascia il backend pronto alla chat. Nessuno stop del proprietario condiviso alla chiusura della prova. Configurazione catturata dalla UI confrontata prima del lavoro, per rifiutare prove obsolete dopo un altro salvataggio.
+
+Alternative: un solo lock globale sul bridge non risolve ownership/reload/abort fra istanze; un servizio/processo backend nuovo duplica ciò che la sessione esistente già fa. Non serve riscrivere factory, Telegram o motore nativo. Conservare il comportamento di prova con impostazioni appena salvate; il reload esplicito ha lo stesso costo della vecchia prova, ma viene serializzato.
+
+- [ ] Red Windows: trasformazione UI effettiva del builder applicata solo a copia temporanea, nessun ZIP; callback generato reale insieme a factory/bridge/adapter/session reali, ABI controllata al confine nativo. Chat+prova e due pannelli; verificare overlap, reload e abort. Callback reale di apertura trasmette il getter senza invocarlo.
+- [ ] Modifica minima: jarvis.py, costruttore native_ui.py, sessione e corpo test_model inserito dal builder; nessun caricamento automatico, invio remoto o cambio schema.
+- [ ] Test isolati: storico/progetti/Telegram intatti, preferenze nuove applicate, richiesta obsoleta/fallimento non fermano altra richiesta, backend riusato dopo prova; solo Windows.
+- [ ] Review indipendente, suite completa3.11/3.12 e probe; conservare fallimenti e limiti022/023. Verificare continuità/evidenze remote.
+
+Review focus: nessun secondo proprietario creato dal pacchetto; stop solo dopo il lock; impostazioni vecchie in coda; contaminazione storia; differenza sorgenti/pacchetto. Recupero: ramo separato, nessuna modifica al pacchetto distribuito o ai profili. Stato: runtime invariato, Red da acquisire. DLL/GGUF/Pavilion non provati; non presentare fake ABI come prova di stabilità nativa reale.
