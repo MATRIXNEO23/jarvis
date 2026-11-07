@@ -1,0 +1,164 @@
+{
+  "issue": "JRV-AUD-005",
+  "severity": "ALTO",
+  "status": "verified_in_windows_ci_not_released",
+  "base_commit": "fa4eec20281508c3928eefba7bcbd952d13eaabf",
+  "runtime_change_commit": "e20e4b88451541d650d0a9160f536290a6daaa25",
+  "verified_source_commit": "357c65122bb0faa0b07871c8b59cb65692831b93",
+  "pull_request": 38,
+  "depends_on_pull_request": 37,
+  "confirmed_scope": "Jarvis packaged trial callback can create a second native owner; controlled ABI reproduces concurrent generate, reload and abort entries. Real DLL crash not reproduced.",
+  "red": {
+    "commit": "728ef2d29b984cea40502598518b41ef638ace55",
+    "run": 42336282687,
+    "jobs": [
+      {
+        "id": 128293840609,
+        "python": "3.11.9",
+        "tests": 700,
+        "seconds": 97.076,
+        "assertion_failures": 3,
+        "fixture_errors": 0
+      },
+      {
+        "id": 128293840473,
+        "python": "3.12.10",
+        "tests": 700,
+        "seconds": 134.596,
+        "assertion_failures": 3,
+        "fixture_errors": 0
+      }
+    ],
+    "observations": [
+      "Packaged settings trial plus chat: (maximum active generations2, initialize/load during generation true, abort during generation true).",
+      "Two packaged settings panels: same observed overlap tuple(2,true,true).",
+      "Actual settings entry did not pass the shared owner getter."
+    ]
+  },
+  "intermediate_verification": [
+    {
+      "run": 42336668228,
+      "commit": "e20e4b88451541d650d0a9160f536290a6daaa25",
+      "tests_per_job": 706,
+      "failures_per_job": 1,
+      "reason": "New test compared short DOS and canonical Windows path strings for the same model."
+    },
+    {
+      "run": 42336816797,
+      "commit": "60e3e6331055d121aa36a45a36769c0fdfc580fa",
+      "tests_per_job": 708,
+      "failures_per_job": 2,
+      "reason": "Same path-alias fixture issue, including added snapshot test."
+    },
+    {
+      "run": 42337006650,
+      "commit": "e5c81f8b4b3e2c2a625e8a5b82a2f86a859f6d78",
+      "tests_per_job": 708,
+      "failures_per_job": 2,
+      "reason": "Same fixture issue; queued-lock test now synchronized at acquisition."
+    }
+  ],
+  "fixture_correction": "Exact load counts/order and os.path.samefile against expected model identity, inference parameter assertions retained. Runtime unchanged after e20e4b8.",
+  "green": {
+    "run": 42337129314,
+    "conclusion": "success",
+    "runner": "windows-2022",
+    "command": "python -m unittest discover -s tests -v",
+    "jobs": [
+      {
+        "id": 128296467283,
+        "python": "3.11.9",
+        "tests": 708,
+        "seconds": 114.337,
+        "conclusion": "success"
+      },
+      {
+        "id": 128296467507,
+        "python": "3.12.10",
+        "tests": 708,
+        "seconds": 106.014,
+        "conclusion": "success"
+      }
+    ],
+    "new_test_methods": 10,
+    "existing_settings_entry_test": "uses actual callback and verifies lazy owner injection",
+    "syntax_and_native_file_probe": "passed",
+    "windows_search_live": "passed_service_restored_fixture_removed",
+    "package_jobs": "skipped"
+  },
+  "change": [
+    "Jarvis supplies its lazy get_gemma_session getter to NativeSettingsWindow.",
+    "Generated trial callback uses the same owner and never stops it on trial completion.",
+    "Session test_generation holds existing lock through validation/stop/reload/generate, does not read/write chat history, keeps loaded backend ready.",
+    "NativeChatAdapter.prepare accepts the validated configuration snapshot to avoid rereading a different model after another save."
+  ],
+  "coverage": [
+    "Actual builder UI transformation on a temporary source copy; generated callback with real factory/bridge/provider/adapter/session.",
+    "Chat+trial, two panels and Telegram+trial have maximum native-entry concurrency1, no reload/abort overlap.",
+    "History, personality and isolated prompts; explicit reload of saved GGUF/parameters and reuse after trial.",
+    "Stale request before and during actual lock wait; snapshot retained across a later configuration save; newer disk settings untouched.",
+    "Controlled generation failure followed by chat; missing owner refuses any backend load."
+  ],
+  "substitutions": [
+    "Native ABI initialization/loading/generation/abort controlled; test DLL/GGUF are never executed/loaded.",
+    "Tk widgets substituted in generated callback tests; actual settings-entry callback extracted from Jarvis AST.",
+    "Only UI prefix of packaging script applied to temporary copy. No ZIP/build or new binary produced."
+  ],
+  "independent_review": {
+    "scope": "read-only source delta plus focused rechecks of lock-gate determinism and Windows file-identity assertions",
+    "verdict": "no_confirmed_blocking_defect",
+    "initial_gap": "queued settings event was before actual lock attempt; now proxy delegates to the same held RLock",
+    "tests_executed_by_reviewer": false,
+    "blob_identity": [
+      {
+        "path": "jarvis.py",
+        "sha": "318027f2951fc01ce7e1001caee162bbae8bdbbe",
+        "remote": "318027f2951fc01ce7e1001caee162bbae8bdbbe",
+        "match": true
+      },
+      {
+        "path": "local_model/native_ui.py",
+        "sha": "e28146328f9fb1cd542743b84cab8506ccdf36bf",
+        "remote": "e28146328f9fb1cd542743b84cab8506ccdf36bf",
+        "match": true
+      },
+      {
+        "path": "local_model/native_chat_adapter.py",
+        "sha": "8bbabaa60239e65a0e9ada54f469c96e28b80423",
+        "remote": "8bbabaa60239e65a0e9ada54f469c96e28b80423",
+        "match": true
+      },
+      {
+        "path": "local_model/native_conversation_session.py",
+        "sha": "2e9cfd0554a6b8dacbfbd509dbf238ae9992d15f",
+        "remote": "2e9cfd0554a6b8dacbfbd509dbf238ae9992d15f",
+        "match": true
+      },
+      {
+        "path": "tools/build_gemma_clean_trial.py",
+        "sha": "faeb6c26f903d70ad2fd7dfce50b669426ebd499",
+        "remote": "faeb6c26f903d70ad2fd7dfce50b669426ebd499",
+        "match": true
+      },
+      {
+        "path": "tests/test_native_trial_ownership.py",
+        "sha": "9f96fd2fea4d3e90823e3222d18b369d22eebfd4",
+        "remote": "9f96fd2fea4d3e90823e3222d18b369d22eebfd4",
+        "match": true
+      },
+      {
+        "path": "tests/test_native_settings_entry.py",
+        "sha": "e173726ef74aa74ccdd3bcffc7ff6bd7116f3b99",
+        "remote": "e173726ef74aa74ccdd3bcffc7ff6bd7116f3b99",
+        "match": true
+      }
+    ]
+  },
+  "limits": [
+    "No real DLL/GGUF, native crash or i3-2100/Windows10/HDD target validation.",
+    "No real Telegram account, microphone or external GPT calls.",
+    "No package/ZIP/build/merge/release or user profile/data/configuration changes.",
+    "Existing CI issues JRV-AUD-022 and023 remain open; passing this run does not fix them."
+  ],
+  "next_issue": "JRV-AUD-006: eliminate reliance on expiring native-engine artifact before2026-11-18, without publishing a build automatically."
+}

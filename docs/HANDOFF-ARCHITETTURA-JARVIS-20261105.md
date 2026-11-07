@@ -1,3 +1,13 @@
+## 7 novembre 2026 — JRV-AUD-005 verificata in CI con ABI controllata, non distribuita
+
+Checkpoint357c65122bb0faa0b07871c8b59cb65692831b93, runtimee20e4b88451541d650d0a9160f536290a6daaa25, [PR draft38](https://github.com/MATRIXNEO23/jarvis/pull/38) dipendente dalla37. [Run42337129314](https://github.com/MATRIXNEO23/jarvis/actions/runs/42337129314) SUCCESS: Python3.11.9/job128296467283,708 test/114.337s; Python3.12.10/job128296467507,708 test/106.014s. [Evidenza](evidence/jrv-aud-005-20261107.json).
+
+Red700 test/tre fallimenti per job ha dimostrato chat+trial e due pannelli con picco2 generazioni, reload e abort concorrenti al confine ABI controllato. Il builder aggiungeva un proprietario separato alla UI del pacchetto. Ora il getter condiviso passa al pannello senza attivazione automatica; prova, chat e Telegram usano lo stesso proprietario/lock. Reload esplicito e generazione isolata nella sessione, storico invariato, nessuno stop finale del proprietario condiviso. Adapter.prepare riceve snapshot validato; richieste obsolete in coda rifiutate, ulteriori salvataggi non cambiano il modello già acquisito.
+
+Dieci nuove prove, callback apertura reale, trasformazione UI effettiva su copia temporanea senza ZIP. Review indipendente senza blocchi; lacuna getter/lock corretta con osservatore del tentativo reale e ricontrollata, confronti DOS/canonici corretti con samefile senza rimuovere verifiche modello/parametri. CI intermedie706/708 fallite solo per quelle fixture, conservate nei riferimenti. Sette blob runtime/test recensiti uguali ai remoti. Sintassi/probe nativi e Windows Search live passati, servizio/fixture ripristinati; package/publisher skipped.
+
+Non è una prova di crash risolto con C/DLL/GGUF reali: nessun modello reale, target Windows10/i3-2100/HDD, account Telegram o microfono collaudato; nessuna build, ZIP, merge, chiamata GPT o modifica dati/configurazioni personali.022/023 restano aperti. Il checkpoint seguente cambia solo documentazione. Prossimo JRV-AUD-006: dipendenza da artifact nativo in scadenza il18 novembre, da risolvere prima di quella data senza build automatica.
+
 ## 7 novembre 2026 — JRV-AUD-005, correzione della fixture percorsi Windows
 
 Run42336668228 sul runtimee20e4b8:706 test per Python3.11/3.12, un fallimento della nuova prova per confronto testuale fra percorso DOS RUNNER~1 e nome completo runneradmin del medesimo GGUF. Difetto della fixture, non del runtime. Corretti solo confronti con numero di load e os.path.samefile, mantenendo verifiche modello/parametri. La lezione sui nomi Windows era già presente e va applicata anche alle prove nuove.
