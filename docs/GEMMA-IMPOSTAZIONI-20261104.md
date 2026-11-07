@@ -1,6 +1,6 @@
 ## Aggiornamento019 — 7 novembre 2026, unità chiarite nei sorgenti in bozza
 
-Nel pannello Memoria e inattività il limite del prompt è in **caratteri**, spazi inclusi: il default600 comprende istruzioni, domanda e memoria nel prompt, non600token del modello. Context Size e Max Output nel pannello Gemma sono invece in **token** del backend. Chiavi JSON storiche, valori e algoritmo non cambiano; nessun profilo viene migrato. La sintesi automatica non è collegata: il suo limite non diventa una funzione attiva cambiando il testo. Il budget locale non è un tokenizer o una garanzia universale per Unicode. [Rapporto019](CORREZIONE-JRV-AUD-019-20261107.md); verifica Windows da acquisire, nessun nuovo pacchetto.
+Nel pannello Memoria e inattività il limite del prompt è in **caratteri**, spazi inclusi: il default600 comprende istruzioni, domanda e memoria nel prompt, non600token del modello. Context Size e Max Output nel pannello Gemma sono invece in **token** del backend. Chiavi JSON storiche, valori e algoritmo non cambiano; nessun profilo viene migrato. La sintesi automatica non è collegata: il suo limite non diventa una funzione attiva cambiando il testo. Il budget locale non è un tokenizer o una garanzia universale per Unicode. [Rapporto019](CORREZIONE-JRV-AUD-019-20261107.md); Windows2022/Python3.11 e3.12:884test per versione, run42361597736 SUCCESS. Nessun nuovo pacchetto.
 
 ## Aggiornamento008 — 7 novembre2026, correzione verificata nei sorgenti in bozza
 

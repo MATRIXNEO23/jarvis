@@ -1,6 +1,6 @@
 # JRV-AUD-019 — distinguere caratteri e token
 
-Stato: testo corretto, suite Windows da acquisire; nessuna nuova build.
+Stato: verificata nei sorgenti in bozza; nessuna nuova build. Source `190cac1e1080134de06e64ed241079ba07a7a369`.
 Base017 `530fad08935f29b2909a6ae2481a19cf77dcefc8`.
 [Specifica](superpowers/specs/2026-11-07-jrv-aud-019-design.md), [piano](superpowers/plans/2026-11-07-jrv-aud-019-fix.md).
 
@@ -26,3 +26,9 @@ AST/diff locali soltanto. Confronto statico con la base dei defaults/schema, met
 Caratteri significa punti Unicode Python, non byte o simboli grafici. La sottrazione numerica di output/margine dalla finestra del modello resta una politica prudente, non un tokenizer o una garanzia per ogni testo Unicode. Non verificata tokenizzazione GGUF, qualità semantica, layout sul PC reale, Windows10/i3/HDD o pacchetto estratto.022/023 restano aperti indipendentemente da questo testo.
 
 Ramo isolato e reversibile fix/jrv-aud-019-memory-units-20261107 sulla017. Nessuna build/ZIP/merge/release, configurazione/profilo/credenziale reale o pacchetto precedente modificato. Recupero: tornare alle etichette precedenti senza migrare o cancellare dati. Prossimo021: durata della voce durante chiusura dell'app.
+
+## Verifica Windows conclusa
+
+[Run42361597736](https://github.com/MATRIXNEO23/jarvis/actions/runs/42361597736) SUCCESS al tentativo1, source `190cac1e1080134de06e64ed241079ba07a7a369`. Python3.11.9 job128370965405:884test in139.336s; Python3.12.10 job128370965635:884test in137.486s. Zero failure/errori/skip. Sintassi Python/JavaScript/PowerShell e probe nativo passati; Searchlive3.12 passato con servizio ripristinato e fixture rimossa. Build/estrazione/artifact/pubblicazione saltati.022/023 non osservati, restano aperti.
+
+[Evidenza JSON](evidence/jrv-aud-019-fix-20261107.json). Checkpoint finale soltanto documenti/evidenza, hash dei tre moduli da confrontare col sourceverde prima di dichiarare conservazione remota. Prove di regressione esistenti, senza nuovo test che rispecchi le etichette. L'assenza di modifica numerica è verificata staticamente, non una prova della tokenizzazione GGUF o del layout sul PC.

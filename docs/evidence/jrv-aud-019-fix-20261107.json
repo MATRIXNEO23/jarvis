@@ -1,0 +1,71 @@
+{
+  "issue": "JRV-AUD-019",
+  "date": "2026-11-07",
+  "status": "verified-in-draft-text-and-docstring-only",
+  "base": "530fad08935f29b2909a6ae2481a19cf77dcefc8",
+  "source": "190cac1e1080134de06e64ed241079ba07a7a369",
+  "branch": "fix/jrv-aud-019-memory-units-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/50",
+  "run_id": 42361597736,
+  "conclusion": "success",
+  "attempt": 1,
+  "command": "python -m unittest discover -s tests -v",
+  "jobs": [
+    {
+      "id": 128370965405,
+      "python": "3.11.9",
+      "tests": 884,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 139.336
+    },
+    {
+      "id": 128370965635,
+      "python": "3.12.10",
+      "tests": 884,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 137.486
+    }
+  ],
+  "static_checks": [
+    "AST parse only, no Linux functional execution",
+    "MemoryPreferences defaults/schema declarations unchanged",
+    "budget method unchanged excluding docstring; validate/save unchanged",
+    "both settings UI save callbacks unchanged",
+    "git diff --check clean"
+  ],
+  "new_tests": 0,
+  "red_runtime_claimed": false,
+  "reason": "Reversible text/docstring correction; no runtime algorithm/schema/value change; no tests mirroring label strings",
+  "checks": {
+    "python_syntax": "passed",
+    "javascript_syntax": "passed",
+    "powershell_syntax": "passed",
+    "native_file_access_probe": "passed",
+    "windows_search_live_python312": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "build": "skipped",
+    "extract": "skipped",
+    "artifact": "skipped",
+    "publish": "skipped",
+    "linux_functional_tests": "not executed"
+  },
+  "preserved": [
+    "JSON keys/API names/defaults/values",
+    "budget and save algorithms",
+    "automatic summarization remains unconnected",
+    "no tokenizer/dependency/profile migration"
+  ],
+  "limits": [
+    "character cap is not tokenizer or guarantee for all Unicode",
+    "real model tokenization and actual PC layout unverified",
+    "no Windows10/i3/HDD or extracted package verification",
+    "022/023 remain open"
+  ]
+}
