@@ -162,6 +162,29 @@ class NativeCancellationTests(unittest.TestCase):
         self.assertEqual(list(self.session.history), [])
         self.assertFalse(self.session.prepared)
 
+    def test_close_during_initialization_never_loads_or_aborts_initializing_abi(self):
+        initializing, release = threading.Event(), threading.Event()
+        self.addCleanup(release.set)
+        def initialize(*_):
+            initializing.set()
+            if not release.wait(3):
+                raise RuntimeError("Fixture initialize gate timed out")
+        self.enterContext(patch("local_model.native_factory.initialize_kobold_cpu",
+                                side_effect=initialize))
+        abort = self.enterContext(patch.object(self.abi, "abort", wraps=self.abi.abort))
+        first = self.worker(lambda: self.session.ask("Inizializzazione da annullare"))
+        try:
+            self.assertTrue(initializing.wait(2))
+            self.close()
+            abort.assert_not_called()
+        finally:
+            release.set()
+        self.assertTrue(first.done.wait(2))
+        self.assertIsInstance(first.error, RuntimeError)
+        self.assertEqual(self.abi.loads, [])
+        self.assertEqual(self.abi.calls, [])
+        self.assertFalse(self.session.prepared)
+
     def test_close_while_provider_is_being_created_never_loads_after_publication(self):
         creating, release = threading.Event(), threading.Event()
         self.addCleanup(release.set)
@@ -240,13 +263,112 @@ class NativeCancellationTests(unittest.TestCase):
             self.assertEqual(len(timers), 1, "No generation watchdog registered")
             self.assertTrue(timers[0].cancelled)
             self.assertTrue(timers[0].joined)
-            def memory(_):
-                timers[0].function()  # Delayed scheduling after cancel.
-                return ""
             abort = self.enterContext(patch.object(self.abi, "abort", wraps=self.abi.abort))
-            self.session.ask("Seconda", memory_context=memory)
+            def next_generate(arguments):
+                with self.abi.lock:
+                    self.abi.calls.append(dict(arguments))
+                    self.abi.active += 1
+                try:
+                    timers[0].function()  # Old callback while NEXT C call is active.
+                    return {"status": 1, "text": "Seconda risposta"}
+                finally:
+                    with self.abi.lock:
+                        self.abi.active -= 1
+            with patch.object(self.abi, "generate", side_effect=next_generate):
+                self.assertEqual(self.session.ask("Seconda"), "Seconda risposta")
             abort.assert_not_called()
             self.assertEqual(len(self.abi.calls), 2)
+
+    def test_stop_revokes_queued_chat_and_trial_then_new_request_can_succeed(self):
+        first = self.worker(lambda: self.session.ask("Attiva"))
+        self.assertTrue(self.abi.first_started.wait(2))
+        aborted = threading.Event()
+        self.enterContext(patch.object(self.abi, "abort", side_effect=aborted.set))
+        observed = ObservedLock(self.session.lock)
+        self.session.lock = observed
+        waiting = []
+        for request in (lambda: self.session.ask("Vecchia coda"),
+                        lambda: self.session.test_generation(config=self.harness.config)):
+            observed.waiting.clear()
+            waiting.append(self.worker(request))
+            self.assertTrue(observed.waiting.wait(2))
+        stop = self.worker(self.session.stop)
+        self.assertTrue(aborted.wait(1), "stop must request abort before native lock")
+        self.assertFalse(stop.done.is_set(), "Unresponsive C still owns inference lock")
+        self.abi.release.set()
+        for request in [first] + waiting:
+            self.assertTrue(request.done.wait(2))
+            self.assertIsInstance(request.error, RuntimeError)
+        self.assertTrue(stop.done.wait(2))
+        self.assertIsNone(stop.error)
+        self.assertEqual(len(self.abi.calls), 1)
+        self.assertEqual(list(self.session.history), [])
+        self.session.ask("Nuova dopo stop")
+        self.assertEqual(len(self.abi.calls), 2)
+        self.assertEqual(len(self.abi.loads), 2)
+
+    def test_watchdog_finishes_before_next_model_load_even_when_abort_returns_late(self):
+        abort_started, release_abort, native_done = (threading.Event() for _ in range(3))
+        original = self.abi.generate
+        def generate(arguments):
+            try:
+                return original(arguments)
+            finally:
+                native_done.set()
+        def abort():
+            abort_started.set()
+            if not release_abort.wait(3):
+                raise RuntimeError("Fixture abort gate timed out")
+        self.enterContext(patch.object(self.abi, "generate", side_effect=generate))
+        self.enterContext(patch.object(self.abi, "abort", side_effect=abort))
+        first = self.worker(lambda: self.session.ask("Scadenza", timeout=0.05))
+        try:
+            self.assertTrue(abort_started.wait(1))
+            self.abi.release.set()
+            self.assertTrue(native_done.wait(2))
+            observed = ObservedLock(self.session.lock)
+            self.session.lock = observed
+            next_call = self.worker(lambda: self.session.test_generation(config=self.harness.config))
+            self.assertTrue(observed.waiting.wait(2))
+            self.assertFalse(first.done.is_set(), "Watchdog must retire before releasing inference")
+            self.assertEqual(len(self.abi.loads), 1)
+        finally:
+            self.abi.release.set()
+            release_abort.set()
+        self.assertTrue(first.done.wait(2))
+        self.assertIsInstance(first.error, TimeoutError)
+        self.assertTrue(next_call.done.wait(2))
+        self.assertIsNone(next_call.error)
+        self.assertFalse(self.abi.initialize_during_generation)
+
+    def assert_exception_after_cancel(self, *, deadline):
+        started, release = threading.Event(), threading.Event()
+        def generate(_):
+            started.set()
+            if not release.wait(3):
+                raise RuntimeError("Fixture exception gate timed out")
+            raise ValueError("Controlled native failure after cancellation")
+        self.enterContext(patch.object(self.abi, "generate", side_effect=generate))
+        self.enterContext(patch.object(self.abi, "abort", side_effect=release.set))
+        first = self.worker(lambda: self.session.ask("Errore ABI", timeout=0.05 if deadline else 180))
+        try:
+            self.assertTrue(started.wait(2))
+            stop = None if deadline else self.worker(self.session.stop)
+            self.assertTrue(first.done.wait(1), "Cancellation did not reach active ABI")
+            self.assertIsInstance(first.error, TimeoutError if deadline else RuntimeError)
+            if not deadline:
+                self.assertIn("annullata", str(first.error).lower())
+                self.assertTrue(stop.done.wait(2))
+                self.assertIsNone(stop.error)
+            self.assertEqual(list(self.session.history), [])
+        finally:
+            release.set()
+
+    def test_native_exception_after_deadline_is_reported_as_timeout(self):
+        self.assert_exception_after_cancel(deadline=True)
+
+    def test_native_exception_after_stop_is_reported_as_cancellation(self):
+        self.assert_exception_after_cancel(deadline=False)
 
     def test_abort_exception_at_deadline_returns_timeout_and_allows_retry(self):
         original_generate = self.abi.generate

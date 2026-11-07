@@ -130,7 +130,10 @@ class NativeTrialOwnershipTests(unittest.TestCase):
         self.module = generated_ui(self.root)
         self.threads = []
         self.original_thread = threading.Thread
-        self.enterContext(patch.object(self.module.threading, "Thread", side_effect=self.make_thread))
+        # Replace only the generated UI's namespace. Patching the shared
+        # threading.Thread breaks Timer.__init__ in the production bridge.
+        self.enterContext(patch.object(self.module, "threading",
+                                      SimpleNamespace(Thread=self.make_thread)))
         self.callbacks = []
         self.addCleanup(self.finish_workers)
 
