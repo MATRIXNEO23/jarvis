@@ -1,3 +1,9 @@
+## Comandi interni — requisiti confermati, 8 novembre2026
+
+Utente ha confermato esplicitamente l'elenco: Invio locale prima di Gemma, sinonimi condivisi voce/chat, Gemma→capacità esistenti→validazione/esecuzione, browser predefinito distinto da Chrome/Edge, navigazione Explorer preservata, mostra Download apre la cartella, help coerente, nessun duplicato o regressione deliberata. [Piano e criteri](superpowers/plans/2026-11-08-local-command-routing.md). Ramo isolato fix/local-command-routing-20261108 dalla007 source9f8c5f5. Rettifica PC: apri Download funziona con Accesso file abilitato; Netflix già funziona. Stato sistema/browser in Invio restano casi segnalati.
+
+Preparati6metodi di regressione Windows in tests/test_internal_command_routing.py: callback console, engine e DB reali, apertura browser controllata; sinonimi/negazioni e priorità dialoghi. Il controllo Netflix è solo una caratterizzazione del gate, non prova di avvio reale. Runtime ancora invariato. Test non eseguiti: prossimo passo Red Windows, poi modifica minima. Nessuna nuova build/pacchetto o test funzionale Linux. La traduzione Gemma richiede prova del budget/contratto, non è implementata da questo checkpoint.
+
 ## Aiuto007 — callback senza ritenzione del root distrutto
 
 Review lifecycle conferma ciclo forte root→callbackfocus→root/input. Non è un crash osservato, ma ritarda il rilascio Tk fino aGC. Sostituito solo il riferimento registrato con weakref.ref; durante l'uso callback ancora mantenuto da main/binding. Test tastiera reale ora verifica anche rilascio del callback dopo destroy e rimozione dei riferimenti della fixture, senza GC dell'app modificato. Sourceb38/run42420088509 aveva922test verdi per matrice; package sostituito prima della pubblicazione per includere il fix minimo lifecycle. Nuova verifica finale richiesta, nessun vecchio artefatto promosso. Scelta modelli/profili invariata.
