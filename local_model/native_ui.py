@@ -9,9 +9,10 @@ from .native_settings import (
 
 
 class NativeSettingsWindow:
-    def __init__(self, parent, *, path=None, on_save=None):
+    def __init__(self, parent, *, path=None, on_save=None, get_session=None):
         self.path = path or default_native_settings_path()
         self.on_save = on_save
+        self.get_session = get_session
         self.current = (NativeModelConfig.load(self.path)
                         if self.path.exists() else NativeModelConfig())
         self.window = tk.Toplevel(parent)

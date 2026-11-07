@@ -10,8 +10,12 @@ class NativeChatAdapter:
         self.provider = None
         self.config = None
 
-    def prepare(self):
-        config = NativeModelConfig.load(default_native_settings_path())
+    def prepare(self, *, config=None):
+        if config is None:
+            config = NativeModelConfig.load(default_native_settings_path())
+        if not isinstance(config, NativeModelConfig):
+            raise TypeError("Configurazione nativa richiesta.")
+        config.validate()
         from .memory_preferences import MemoryPreferences, default_memory_preferences_path
         memory = MemoryPreferences.load(default_memory_preferences_path())
         memory.available_prompt_tokens(config.context_size, config.max_output)

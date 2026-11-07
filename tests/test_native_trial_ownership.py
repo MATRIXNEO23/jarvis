@@ -12,6 +12,7 @@ import sys
 from tempfile import TemporaryDirectory
 import threading
 from types import ModuleType, SimpleNamespace
+from dataclasses import replace
 import unittest
 from unittest.mock import patch
 
@@ -191,4 +192,89 @@ class NativeTrialOwnershipTests(unittest.TestCase):
         self.assert_serialized()
         self.assertTrue(first.status_value.startswith("TEST RIUSCITO"), first.status_value)
         self.assertTrue(second.status_value.startswith("TEST RIUSCITO"), second.status_value)
+
+    def test_trial_is_isolated_and_leaves_backend_ready_for_chat(self):
+        self.abi.release.set()
+        self.config = replace(self.config, personality="Ironia secca controllata")
+        self.config.save(default_native_settings_path())
+        self.session.ask("RISERVATO_CHAT: non includere nella prova")
+        history = list(self.session.history)
+        answer = self.session.test_generation(config=self.config)
+        self.assertEqual(answer, "Risposta locale controllata")
+        self.assertNotIn("RISERVATO_CHAT", self.abi.calls[-1]["prompt"])
+        self.assertIn("Ironia secca controllata", self.abi.calls[-1]["prompt"])
+        self.assertEqual(list(self.session.history), history)
+        self.assertEqual(len(self.abi.loads), 2)
+        self.session.ask("Riprendi la chat")
+        self.assertEqual(len(self.abi.loads), 2, "Chat should reuse the tested loaded model")
+        self.assertIn("RISERVATO_CHAT", self.abi.calls[-1]["prompt"])
+
+    def test_trial_applies_new_saved_model_and_inference_settings(self):
+        self.abi.release.set()
+        self.session.ask("Prima configurazione")
+        model = self.root / "second.gguf"
+        model.write_bytes(b"second fixture: never loaded")
+        revised = replace(self.config, model=str(model), threads=3,
+                          max_output=160, temperature=0.3)
+        revised.save(default_native_settings_path())
+        self.session.test_generation(config=revised)
+        self.assertEqual(self.abi.loads, [self.config.model, revised.model])
+        self.assertEqual(self.abi.calls[-1]["max_length"], 160)
+        self.assertEqual(self.abi.calls[-1]["temperature"], 0.3)
+        self.session.ask_isolated(lambda _: "Telegram dopo la prova")
+        self.assertEqual(len(self.abi.loads), 2)
+        self.assertEqual(self.abi.calls[-1]["max_length"], 160)
+
+    def test_stale_trial_cannot_replace_current_backend(self):
+        self.abi.release.set()
+        self.session.ask("Prima configurazione")
+        revised = replace(self.config, personality="Nuovo stile")
+        revised.save(default_native_settings_path())
+        with self.assertRaises(ValueError):
+            self.session.test_generation(config=self.config)
+        self.assertEqual(len(self.abi.loads), 1)
+        self.assertEqual(len(self.abi.calls), 1)
+        self.session.ask("Continua")
+        self.assertEqual(len(self.abi.loads), 1)
+        self.assertIn("Nuovo stile", self.abi.calls[-1]["prompt"])
+
+    def test_failed_trial_does_not_stop_subsequent_chat(self):
+        self.abi.release.set()
+        self.session.ask("Chat precedente")
+        history = list(self.session.history)
+        with patch.object(self.abi, "generate", side_effect=RuntimeError("Controlled ABI failure")):
+            with self.assertRaises(RuntimeError):
+                self.session.test_generation(config=self.config)
+        self.assertEqual(list(self.session.history), history)
+        self.assertEqual(self.session.ask("Continua dopo errore"),
+                         "Risposta locale controllata")
+        self.assertEqual(len(self.abi.loads), 2)
+
+    def test_telegram_waits_for_trial_without_history_changes(self):
+        panel = self.window()
+        panel.test_model()
+        self.assertTrue(self.abi.first_started.wait(2))
+        replies = []
+        errors = []
+        def telegram():
+            try:
+                replies.append(self.session.ask_isolated(lambda _: "Telegram isolato"))
+            except Exception as exc:
+                errors.append(type(exc).__name__)
+        self.make_thread(target=telegram).start()
+        self.abi.second_started.wait(1)
+        self.assert_serialized()
+        self.assertEqual(errors, [])
+        self.assertEqual(replies, ["Risposta locale controllata"])
+        self.assertEqual(list(self.session.history), [])
+        self.assertEqual(len(self.abi.loads), 1)
+
+    def test_generated_trial_without_owner_never_loads_a_backend(self):
+        panel = self.window()
+        panel.get_session = None
+        panel.test_model()
+        self.finish_workers()
+        self.assertTrue(panel.status_value.startswith("TEST FALLITO"), panel.status_value)
+        self.assertEqual(self.abi.loads, [])
+        self.assertEqual(self.abi.calls, [])
 
