@@ -3,6 +3,7 @@
 No online fallback, no desktop actions and no model load on import.
 """
 from collections import deque
+from contextlib import contextmanager
 from dataclasses import replace
 import json
 import re
@@ -36,12 +37,13 @@ class NativeChatTurn:
     This object is internal data, never a model command or a persistent record.
     Its default repr deliberately does not expose conversational text.
     """
-    def __init__(self, session, context_id, question, text):
+    def __init__(self, session, context_id, question, text, revision):
         self._session = session
         self.context_id = context_id
         self.question = question
         self.text = text
         self._committed = False
+        self._revision = revision
         # Owner-supplied metadata only, never model-generated authorizations.
         self.memory_owner = None
         self.memory_revision = None
@@ -65,6 +67,26 @@ class NativeConversationSession:
         self.prepared = False
         self._prepared_config = None
         self.lock = RLock()
+        self._state_lock = Lock()
+        self._revision = 0
+        self._closed = False
+        self._stopping = 0
+
+    def _check_revision(self, revision):
+        with self._state_lock:
+            if self._closed or self._stopping or revision != self._revision:
+                raise RuntimeError("Richiesta Gemma annullata.")
+
+    @contextmanager
+    def _operation(self):
+        # Capture before waiting, so stop also revokes already queued calls.
+        with self._state_lock:
+            revision = self._revision
+        self._check_revision(revision)
+        with self.lock:
+            self._check_revision(revision)
+            yield revision
+            self._check_revision(revision)
 
     @property
     def history(self):
@@ -86,30 +108,44 @@ class NativeConversationSession:
     def _commit_turn(self, turn):
         # Only a brief metadata lock: accepting an answer must never wait
         # behind a Telegram/model generation holding the inference lock.
-        with self._history_lock:
-            if turn._committed:
+        with self._state_lock:
+            if self._closed or self._stopping or turn._revision != self._revision:
                 return False
-            self._turns.append((turn.context_id, turn.question, turn.text[:2000]))
-            turn._committed = True
-            return True
+            with self._history_lock:
+                if turn._committed:
+                    return False
+                self._turns.append((turn.context_id, turn.question, turn.text[:2000]))
+                turn._committed = True
+                return True
 
-    def _prepare(self, config):
+    def _prepare(self, config, revision):
         # Personality is already read into each chat prompt and needs no
         # native change. Keep all inference values from the same snapshot.
         snapshot = replace(config, personality="")
-        if self.prepared and snapshot == self._prepared_config:
-            return
-        self.prepared = False
+        self._check_revision(revision)
+        with self._state_lock:
+            if self.prepared and snapshot == self._prepared_config:
+                return
+            self.prepared = False
         self.adapter.prepare(config=config)
-        self._prepared_config = snapshot
-        self.prepared = True
+        # close/stop may precede publication of the newly created provider.
+        # Retire that provider before it can load a model after cancellation.
+        with self._state_lock:
+            cancelled = self._closed or self._stopping or revision != self._revision
+            if not cancelled:
+                self._prepared_config = snapshot
+                self.prepared = True
+        if cancelled:
+            self.adapter.stop()
+            raise RuntimeError("Richiesta Gemma annullata.")
 
     def ask(self, question, *, timeout=180, context_id=None, memory_context=None):
         """Synchronous standalone API; the GUI uses prepare_turn instead."""
-        with self.lock:
+        with self._operation():
             turn = self.prepare_turn(question, timeout=timeout, context_id=context_id,
                                      memory_context=memory_context)
-            turn.commit()
+            if not turn.commit():
+                raise RuntimeError("Richiesta Gemma annullata.")
             return turn.text
 
     def prepare_turn(self, question, *, timeout=180, context_id=None, memory_context=None):
@@ -121,7 +157,7 @@ class NativeConversationSession:
             raise ValueError("Contesto progetto locale non valido.")
         if memory_context is not None and not callable(memory_context):
             raise ValueError("Sorgente memoria locale non valida.")
-        with self.lock:
+        with self._operation() as revision:
             config = self.config_loader().validate()
             memory = self.memory_loader().validate()
             budget = memory.available_prompt_tokens(
@@ -156,19 +192,21 @@ class NativeConversationSession:
                     break
                 history = candidate + history
             prompt = instructions + history + suffix
-            self._prepare(config)
+            self._prepare(config, revision)
+            self._check_revision(revision)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             answer = clean_native_answer(result.get("text"))
-            return NativeChatTurn(self, context_id, latest, answer)
+            return NativeChatTurn(self, context_id, latest, answer, revision)
 
     def ask_isolated(self, build_prompt, *, timeout=180):
         """Share the loaded model without reading or changing chat history."""
-        with self.lock:
+        with self._operation() as revision:
             config = self.config_loader().validate()
             memory = self.memory_loader().validate()
             prompt = build_prompt(memory.available_prompt_tokens(
                 config.context_size, config.max_output))
-            self._prepare(config)
+            self._prepare(config, revision)
+            self._check_revision(revision)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             return clean_native_answer(result.get("text"))
 
@@ -179,7 +217,7 @@ class NativeConversationSession:
         snapshot is passed into prepare so another UI save cannot change the
         model between validation and the native load.
         """
-        with self.lock:
+        with self._operation() as revision:
             current = self.config_loader().validate()
             if config is not None and config != current:
                 raise ValueError("Impostazioni Gemma cambiate: ripeti la prova.")
@@ -193,10 +231,9 @@ class NativeConversationSession:
                 raise ValueError("Budget di contesto insufficiente per la prova Gemma.")
             # The old trial loaded a fresh model every time. Preserve that
             # explicit reload, but only after all earlier generations finish.
-            self.stop()
-            self.adapter.prepare(config=current)
-            self._prepared_config = replace(current, personality="")
-            self.prepared = True
+            self._reset_adapter()
+            self._prepare(current, revision)
+            self._check_revision(revision)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             return clean_native_answer(result.get("text"))
 
@@ -206,12 +243,13 @@ class NativeConversationSession:
                   "nell'elenco. Rispondi 0 se manca una scelta chiara.\n"
                   + json.dumps(dict(programmi=dict(enumerate(names, 1)),
                                     richiesta=question), ensure_ascii=False))
-        with self.lock:
+        with self._operation() as revision:
             config = self.config_loader().validate()
             memory = self.memory_loader().validate()
             if len(prompt) > memory.available_prompt_tokens(config.context_size, config.max_output):
                 raise ValueError("Richiesta o elenco troppo lungo per il contesto Gemma.")
-            self._prepare(config)
+            self._prepare(config, revision)
+            self._check_revision(revision)
             answer = clean_native_answer(
                 self.adapter.call("ask", prompt=prompt, timeout=timeout).get("text"))
             if re.fullmatch(r"[0-9]{1,2}", answer):
@@ -220,10 +258,32 @@ class NativeConversationSession:
                     return index
             return None
 
-    def stop(self):
-        with self.lock:
-            # Failed reconfiguration can retain an old provider while this
-            # session is unprepared. Revoke state before any abort can fail.
+    def _reset_adapter(self):
+        with self._state_lock:
             self.prepared = False
             self._prepared_config = None
+        self.adapter.stop()
+
+    def stop(self):
+        """Abort first, then serialize reset; later new requests may recover."""
+        with self._state_lock:
+            self._revision += 1
+            self._stopping += 1
+            self.prepared = False
+            self._prepared_config = None
+        try:
             self.adapter.stop()
+        finally:
+            # An unresponsive C call still owns the lock; never reload over it.
+            with self.lock:
+                with self._state_lock:
+                    self._stopping -= 1
+
+    def close(self):
+        """Terminal owner shutdown, without waiting for the inference lock."""
+        with self._state_lock:
+            self._closed = True
+            self._revision += 1
+            self.prepared = False
+            self._prepared_config = None
+        self.adapter.stop()
