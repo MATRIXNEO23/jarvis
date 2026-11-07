@@ -1,3 +1,11 @@
+## JRV-AUD-015 — quindici prove pronte prima del runtime
+
+Nuovo tests/test_file_search_deadline.py: wrapper Windows reale con subprocess e orologio controllati, add-on/policy/filesystem temporaneo reali. Copre budget globale multiradice, timeout residuo e cap8s, fallback con residuo e directory vuote, progressi che consumano il budget, risultati validi tardivi/selezione numerica, esclusioni e reinclusioni, callback legacy, cancellazione/revoca e nuova passata senza toccare il profilo.867test attesi; runtime invariato014. Review indipendente preventiva avviata; Red Windows da acquisire in bozza, nessuna esecuzione funzionale Linux/build/merge. Lentezza simulata, non benchmark HDD; nessuna garanzia hard timeout su I/O o callback non cooperativa.
+
+## 7 novembre 2026 — JRV-AUD-015 avviata: scadenza globale della ricerca
+
+Base014 4f436630b3aae935c808b13e798c9b8991fdedc8, ramo isolato fix/jrv-aud-015-search-deadline-20261107. Il servizio applica8s per ogni radice e avvia soltanto dopo il budget10s di scansione; attesa teorica cumulativa, non misurata sul PC. Riusare il timeout già presente nel wrapper Windows con il residuo di una sola deadline, conservando radici, permessi/reinclusioni, risultati validi e cancellazione. Dichiarare copertura parziale alla scadenza. Callback iniettate legacy a due argomenti conservate; nessuna promessa di hard timeout su I/O o callback non cooperativa. Specifica/piano015 salvati prima del runtime. Prossimo: test Red Windows, poi intervento minimo e review. Nessuna build/merge/test funzionale Linux, nessun dato o impostazione reale modificato;016 non implementata.
+
 ## 7 novembre 2026 — JRV-AUD-014 verificata nei sorgenti in bozza
 
 L'autodiagnosi ora include le quattro cartelle runtime approvate, con priorità rispetto ai test, senza eseguire o inviare il codice. Mantiene140file/260000byte e limita a140anche le directory enumerate. Profili, cache, modelli, upstream, link/junction e cartelle Hidden Windows sono esclusi; limiti e copertura restano visibili anche dopo molti errori. File spariti o metadati illeggibili non interrompono il resto. Nessun nuovo comando o indice.
