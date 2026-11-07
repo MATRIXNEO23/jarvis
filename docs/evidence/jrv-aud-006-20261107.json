@@ -1,0 +1,180 @@
+{
+  "issue": "JRV-AUD-006",
+  "severity": "ALTO",
+  "status": "verified_dependency_recovery_in_windows_ci_not_released",
+  "base_commit": "649d1a06477f66ba214fdcb392c28d7af5010613",
+  "source_commit": "c0007689154efa574917ddb2ce23279ddf36c5f8",
+  "pull_request": 39,
+  "depends_on_pull_request": 38,
+  "original_dependency": {
+    "artifact_id": 13339099748,
+    "run": 41860087656,
+    "expired_at_inspection": false,
+    "expires_at": "2026-11-18T15:49:03Z",
+    "consumers": 4,
+    "scope": "Confirmed expiring dependency; no claim that the existing build had already failed."
+  },
+  "persistent_reference": {
+    "repository": "MATRIXNEO23/jarvis",
+    "git_commit": "f147b1a5faa977e8e4aefe21c9799465a7a8e990",
+    "archive_path": "Download/Jarvis-Gemma-Carattere-e-Stile-61a95f8.zip",
+    "git_blob": "662e4058fd63aa88b8be4e16eab4e4328eaf3011",
+    "archive_bytes": 8103631,
+    "archive_sha256": "c38806cf12574e7ae142a8eef2cebe2afec6244c92db0a195c507d6bade6041a",
+    "dll_bytes": 19010560,
+    "dll_sha256": "ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba",
+    "upstream_commit": "7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759",
+    "normalized_upstream_git_blob": "7805cd49cd1f7a8f0101aba52721af7a771067af",
+    "normalized_upstream_sha256": "17e234e20c410e770858a58bfe5b3a84f15374e8ed462e2b884faeb653369d96"
+  },
+  "red": {
+    "commit": "2da23de281dce56f15692f73e84450fa04b2f963",
+    "run": 42338424815,
+    "jobs": [
+      {
+        "id": 128300496475,
+        "python": "3.11.9",
+        "tests": 709,
+        "seconds": 123.415,
+        "assertion_failures": 1,
+        "fixture_errors": 0
+      },
+      {
+        "id": 128300496292,
+        "python": "3.12.10",
+        "tests": 709,
+        "seconds": 113.961,
+        "assertion_failures": 1,
+        "fixture_errors": 0
+      }
+    ],
+    "evidence": "The new standalone recovery capability was absent; a clean destination remained without DLL when no artifact was supplied. No expired response was fabricated and no artifact was deleted."
+  },
+  "green": {
+    "run": 42339214356,
+    "conclusion": "success",
+    "runner": "windows-2022",
+    "command": "python -m unittest discover -s tests -v",
+    "jobs": [
+      {
+        "id": 128302928559,
+        "python": "3.11.9",
+        "tests": 716,
+        "seconds": 122.394,
+        "conclusion": "success"
+      },
+      {
+        "id": 128302928433,
+        "python": "3.12.10",
+        "tests": 716,
+        "seconds": 131.725,
+        "conclusion": "success"
+      }
+    ],
+    "new_test_methods": 8,
+    "real_recovery": "public pinned archive downloaded without Actions artifact token; real pinned upstream source supplied and verified",
+    "native_probe": {
+      "bytes": 19010560,
+      "exports": [
+        "load_model",
+        "generate",
+        "abort_generate",
+        "token_count",
+        "get_last_eval_time",
+        "get_last_process_time",
+        "get_last_token_count"
+      ],
+      "file": "koboldcpp_noavx2.dll",
+      "inference_verified": false,
+      "initial_token_count": 0,
+      "proof": "native_load_and_export_call_only",
+      "sha256": "ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba"
+    },
+    "syntax_and_native_file_probe": "passed",
+    "windows_search_live": "passed_service_restored_fixture_removed",
+    "package_jobs": "skipped"
+  },
+  "implementation": [
+    "Build-only stdlib helper/reference JSON, immutable Git URL, bounded streaming and archive/DLL hashes.",
+    "Only expected ZIP member read; staging atomically linked without replacing divergent files, temporary files cleaned; identical files reused.",
+    "Optional identical local archive; preexisting upstream Python source checked after LF normalization.",
+    "Four consumers replace expiring artifact with helper; upstream checkout pins and existing DLL hashes preserved.",
+    "Test triggers cover manifest/consumer changes; build and publisher guards unchanged. No runtime code or new binary in the diff."
+  ],
+  "coverage": [
+    "Real DLL recovery and load/export-call-only probe, no GGUF/inference.",
+    "Synthetic dependency ZIPs for archive corruption, missing/duplicate/wrong-size/wrong-hash member.",
+    "Existing different DLL/configuration preserved, selective extraction and idempotent reuse.",
+    "Truncated/oversized/wrong-hash download, floating revisions/unsafe paths rejected.",
+    "Real pinned upstream source and synthetic LF/CRLF guard."
+  ],
+  "independent_review": {
+    "scope": "read-only helper/manifest/workflow/test/source-map delta against base, followed by targeted recheck",
+    "verdict": "no_blocking_defects_found",
+    "initial_minor_points_addressed": [
+      "candidate continuity was stale",
+      "real pinned upstream input added to the integration recovery test"
+    ],
+    "archive_and_dll_independently_hashed": true,
+    "tests_executed_by_reviewer": false,
+    "blob_identity": [
+      {
+        "path": "tools/native_model/restore_engine.py",
+        "sha": "c3b25268515530b530f31c9749ea4e6862b4b222",
+        "remote": "c3b25268515530b530f31c9749ea4e6862b4b222",
+        "match": true
+      },
+      {
+        "path": "tools/native_model/engine-reference.json",
+        "sha": "2e8beac09f42d993e6f996fc0b3459202857bf5c",
+        "remote": "2e8beac09f42d993e6f996fc0b3459202857bf5c",
+        "match": true
+      },
+      {
+        "path": "tests/test_native_engine_reference.py",
+        "sha": "76e687ff10a1d236a3da2449773128bff7f9a120",
+        "remote": "76e687ff10a1d236a3da2449773128bff7f9a120",
+        "match": true
+      },
+      {
+        "path": ".github/workflows/gemma-windows-test-package.yml",
+        "sha": "5708fd710fb29b810031e4fc60c7688750c95350",
+        "remote": "5708fd710fb29b810031e4fc60c7688750c95350",
+        "match": true
+      },
+      {
+        "path": ".github/workflows/native-gemma.yml",
+        "sha": "789e45275629e823482a919dd3e23bb7211bfbab",
+        "remote": "789e45275629e823482a919dd3e23bb7211bfbab",
+        "match": true
+      },
+      {
+        "path": ".github/workflows/native-bridge-real.yml",
+        "sha": "e64fc96132d4562b580c66ab1f411c575b846b51",
+        "remote": "e64fc96132d4562b580c66ab1f411c575b846b51",
+        "match": true
+      },
+      {
+        "path": ".github/workflows/native-abort-real.yml",
+        "sha": "d84e6251c422ff214b3693b055febaaf30119563",
+        "remote": "d84e6251c422ff214b3693b055febaaf30119563",
+        "match": true
+      },
+      {
+        "path": ".github/workflows/tests.yml",
+        "sha": "c644cc2b0e8bb88154d1949c5290e663648af5e0",
+        "remote": "c644cc2b0e8bb88154d1949c5290e663648af5e0",
+        "match": true
+      }
+    ]
+  },
+  "limits": [
+    "Actual checkout action, full build/package and the three inference workflows were not executed in this phase.",
+    "No compilation, new application ZIP/binary/release/merge, real model/GGUF, user data or configuration changes.",
+    "Windows10/i3-2100/HDD target not tested; only Windows2022 CI loads the existing identical DLL.",
+    "This is byte-identical dependency recovery, not a bit-reproducible C++ compilation claim.",
+    "GitHub repository/history or an identical verified local archive must remain available; no Actions retention dependency.",
+    "Existing CI issues JRV-AUD-022 and023 remain open."
+  ],
+  "next_issue": "JRV-AUD-007: reproduce stale queued voice transcript after microphone/mode off-on before changing dispatch."
+}

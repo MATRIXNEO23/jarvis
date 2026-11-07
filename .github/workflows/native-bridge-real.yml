@@ -25,12 +25,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - uses: actions/download-artifact@v4
-        with:
-          name: native-engine-proof-not-installable
-          run-id: 41860087656
-          github-token: ${{ github.token }}
-          path: upstream-kobold
+      - name: Restore pinned native engine
+        run: python tools/native_model/restore_engine.py --destination upstream-kobold
       - name: Verify native DLL provenance
         shell: pwsh
         run: |

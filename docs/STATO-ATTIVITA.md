@@ -1,3 +1,25 @@
+## 7 novembre 2026 — JRV-AUD-006: recupero dipendenza verificato, nessuna build
+
+Sourcec0007689154efa574917ddb2ce23279ddf36c5f8, [PR draft39](https://github.com/MATRIXNEO23/jarvis/pull/39) dipendente dalla38. [Run42339214356](https://github.com/MATRIXNEO23/jarvis/actions/runs/42339214356) SUCCESS: Python3.11.9/job128302928559,716 test/122.394s; Python3.12.10/job128302928433,716 test/131.725s. [Evidenza](evidence/jrv-aud-006-20261107.json), [mappa/provenienza](NATIVE-ENGINE-REFERENCE.md). Red709 test/un fallimento per job per capacità autonoma assente, senza fingere una build attualmente fallita: vecchio artifact ancora valido fino al18 novembre.
+
+Quattro consumer ora recuperano lo stesso componente da archivio Git fissatof147b1a; SHA archivio/DLL e source ABI controllati, estrazione selettiva, staging senza sovrascrittura divergente, riuso identico e archivio locale facoltativo. Source checkout pin, controlli hash esistenti e guardie build/publisher preservati. Runtime Jarvis, vecchi artifact/ZIP, configurazioni e dati non modificati; nessun binario nuovo in Git.
+
+Otto nuove prove Windows passate: recupero pubblico reale senza artifact, sorgente upstream fissato reale, probe DLL caricamento/export con7 simboli e token iniziali0, corruzione/dimensioni/hash, membro mancante/duplicato, download errato, conservazione/idempotenza e LF/CRLF. Review indipendente senza blocchi dopo ricontrollo dei gap; archivio e DLL anche verificati dal revisore, otto blob uguali ai remoti. Sintassi/probe e Windows Search live passati, servizio/fixture ripristinati; package/publisher skipped.
+
+Limiti: non eseguiti action checkout/full workflow di inferenza/build completa, GGUF o target Windows10/i3/HDD. Non è compilazione C++ bit-per-bit; è recupero dei medesimi byte senza scadenza Actions, con dipendenza dal repository GitHub o copia locale verificata. Nessuna nuova build, ZIP applicativo, release, merge o test funzionale Linux.022/023 restano aperti. Checkpoint successivo solo documentale; prossimo JRV-AUD-007: verificare e riprodurre trascrizioni vocali vecchie in coda dopo spegnimento/riattivazione o cambio modalità.
+
+## 7 novembre 2026 — JRV-AUD-006, candidata di preparazione build in verifica
+
+Red2da23de / run42338424815/job128300496475:709 test/un fallimento senza errori per capacità autonoma assente, non una build dichiarata fallita oggi. Implementati tools/native_model/restore_engine.py e manifest: archivio Git f147b1a, streaming limitato/hash archivio e DLL, membro unico, staging senza sovrascrivere file diversi, archivio locale identico facoltativo. Quattro consumer ora usano il helper dopo setup Python; pin upstream e hash esistenti conservati, guardie build/publisher invariate. Trigger suite estesi a manifest e workflow. Runtime Jarvis invariato.
+
+Review indipendente iniziale senza blocchi: archivio e DLL verificati anche dal revisore. Gap minore coperto estendendo il recupero reale al sorgente upstream fissato, oltre alle fixture; source normalizzato identico al blob Git7805cd49. Otto prove preparate: download reale senza artifact, probe DLL/export senza GGUF, ZIP sintetici corrotti/duplicati/dimensione/hash, file preesistenti/idempotenza, source ABI e download troncato. Nuova mappa docs/NATIVE-ENGINE-REFERENCE.md. AST/JSON/diff controllati; Green Windows ancora pendente. Nessuna compilazione/build/ZIP applicativo, release, esecuzione modello o test funzionale Linux;022/023 aperti.
+
+## 7 novembre 2026 — JRV-AUD-006, recupero dipendenza in preparazione
+
+Base649d1a0 con001–005 conservate; ramo fix/jrv-aud-006-native-reference-20261107. Artifact13339099748/run41860087656 non ancora scaduto, scadenza verificata18 novembre2026 ore15:49:03UTC. Quattro workflow lo consumano. Identica DLL già presente nello ZIP61a95f8 in Git al commitf147b1a, hashac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba; nessun binario nuovo necessario.
+
+Piano tools/native_model/restore_engine.py con manifest immutabile, recupero pubblico/hash/extraction selettiva, consumer aggiornati. Test Red della capacità di recuperare da checkout vuota senza artifact (baseline manca il helper): non si finge che la build attuale sia già fallita, non si cancella artifact. Dopo recupero il test userà il probe DLL esistente, senza modello/GGUF/build. Runtime/workflow ancora invariati, nessun test funzionale Linux, nuova build/ZIP, release o dato personale.
+
 ## 7 novembre 2026 — JRV-AUD-005 verificata in CI con ABI controllata, non distribuita
 
 Checkpoint357c65122bb0faa0b07871c8b59cb65692831b93, runtimee20e4b88451541d650d0a9160f536290a6daaa25, [PR draft38](https://github.com/MATRIXNEO23/jarvis/pull/38) dipendente dalla37. [Run42337129314](https://github.com/MATRIXNEO23/jarvis/actions/runs/42337129314) SUCCESS: Python3.11.9/job128296467283,708 test/114.337s; Python3.12.10/job128296467507,708 test/106.014s. [Evidenza](evidence/jrv-aud-005-20261107.json).
