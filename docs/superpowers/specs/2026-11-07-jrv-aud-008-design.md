@@ -1,0 +1,13 @@
+# JRV-AUD-008 — impostazioni salvate usate alla prossima richiesta
+
+Richiesta autorizzata: controllare se Gemma usa le impostazioni appena salvate e, se il problema persiste dopo005, correggere quel passaggio. Spiegazione semplice già accettata con «ok». Baseb25f54ad34534b7446b0a4e12518634071c47049/bozza41,001–007 conservate. Nessuna nuova intervista per dettagli tecnici ordinari.
+
+Fonte primaria: `NativeConversationSession` carica configurazione/budget per ogni richiesta ma chiama `adapter.prepare()` soltanto una volta. `NativeChatAdapter` e `NativeGemmaBridge` conservano la configurazione del primo caricamento;005 aggiorna il backend con Prova generazione esplicita, non con una normale richiesta successiva. Stato008 ancora da confermare con Windows Red, non dedotto dai soli documenti.
+
+Comportamento richiesto: Salva resta senza inferenza o caricamento; la prossima richiesta valida usa uno snapshot coerente dei valori salvati. max_output/temperatura/top-k/top-p/seed cambiano senza ricaricare GGUF; modello/thread/batch/context/DLL richiedono sostituzione serializzata del provider. Carattere già letto nel prompt per richiesta: conservarlo senza reload. Chat, Telegram isolato e selezione programmi devono condividere questa regola e mantenere storia/isolamento/consensi.
+
+Scelta tecnica dell'assistente: helper privato nella sessione confronta configurazione d'inferenza precedente (escluso carattere) e passa lo snapshot validato a `adapter.prepare(config=...)`. Rendere prepare riutilizzabile: se i campi di caricamento coincidono, aggiornare solo i parametri generazione nel bridge sotto il suo lock; altrimenti creare/validare il nuovo provider e poi arrestare il vecchio prima del nuovo caricamento. La sessione mantiene il lock esistente; Salva non attende l'inferenza. La prova esplicita005 conserva il reload e aggiorna lo snapshot della sessione. Nessun fallback silenzioso alla vecchia configurazione dopo errori.
+
+Alternative scartate: reload completo per ogni Salva sarebbe inutile su HDD; riavvio richiesto all'utente non rispetta il risultato; hook di salvataggio che ferma il modello può interferire con inferenze/UI; leggere due configurazioni indipendenti per budget e caricamento mantiene un TOCTOU. Non aggiungere un secondo gestore o dipendenze.
+
+Rischio MEDIO: ownership nativa, reload e budget, cache della sessione e fixture adapter. Test con callback Salva/Tk/file JSON, sessione/adapter/factory/provider/bridge reali e ABI controllata; nessun GGUF/DLL reali o account. Configurazioni e dati temporanei soltanto. Nessun test funzionale Linux, build/ZIP/release/merge.022/023 aperti; timeout/abort nativo010 e memoria persistente009 restano separati.

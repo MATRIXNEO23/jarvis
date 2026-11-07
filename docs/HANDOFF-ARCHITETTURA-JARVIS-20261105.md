@@ -1,3 +1,7 @@
+## JRV-AUD-008 — verifica/correzione autorizzata, 2026-11-07
+
+Baseb25f54a/bozza41 con001–007, ramo fix/jrv-aud-008-gemma-settings-20261107. L'utente approva controllo e correzione delle impostazioni salvate non applicate. Codice: sessione rilegge config/budget ma normale prepare soltanto iniziale;005 aggiorna solo Prova esplicita. Nuovi10test Windows in tests/test_native_settings_propagation.py: callback Salva/Tk e JSON reali, sessione/factory/provider/bridge reali, ABI controllata. Salva senza inferenza/load, samplers senza reload, modello/thread/contesto con reload serializzato, flussi isolati/picker/storia, errori/recupero e snapshot. Specifica/piano008 salvati; runtime ancora invariato, Red740atteso da eseguire. Nessuna build/merge/dato utente/test funzionale Linux;022/023 aperti. Prossimo: prova Windows, poi modifica minima solo se confermata.
+
 ## 7 novembre 2026 — JRV-AUD-007: correzione verificata nei sorgenti in bozza
 
 Source425bfc38c1232ca26c5d1939bda7f0f95b07c04e, [bozza41](https://github.com/MATRIXNEO23/jarvis/pull/41) dalla40/basec9d1d29,001–006 conservate. [Run42342496402](https://github.com/MATRIXNEO23/jarvis/actions/runs/42342496402) SUCCESS al tentativo1:730 test Python3.11.9/job128313038365159.103s e730 Python3.12.10/job128313038104113.337s,0 failure/errori/skip. Tutti14metodi007 passano. [Rapporto](CORREZIONE-JRV-AUD-007-20261107.md), [evidenza](evidence/jrv-aud-007-fix-20261107.json).
