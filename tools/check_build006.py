@@ -86,7 +86,8 @@ def main():
             "assert callable(native_ui.NativeSettingsWindow.test_model);"
             "import ctypes;ctypes.WinDLL(r'native_engine/koboldcpp_noavx2.dll');"
             "print('CLEAN_EXTRACTED_IMPORTS_NATIVE_DLL_OK')"], package)
-        boot = '''import tempfile,os,tkinter as tk
+        boot = '''import tempfile,os,tkinter as tk,traceback
+errors=[]
 from settings import load_settings,save_settings
 with tempfile.TemporaryDirectory(prefix='jarvis006-profile-') as profile:
  os.environ['JARVIS_TRIAL_HOME']=profile
@@ -95,13 +96,28 @@ with tempfile.TemporaryDirectory(prefix='jarvis006-profile-') as profile:
  original=tk.Tk
  def create(*args,**kwargs):
   root=original(*args,**kwargs)
+  def callback_error(exc,value,tb):
+   errors.append(str(value))
+   traceback.print_exception(exc,value,tb)
+  root.report_callback_exception=callback_error
   root.after(1500,lambda:root.tk.call(root.protocol('WM_DELETE_WINDOW')))
   return root
  tk.Tk=create
  import jarvis
  jarvis.main()
+ assert not errors, 'Tk callback errors: '+repr(errors)
  print('CLEAN_EXTRACTED_UI_BOOT_AND_CLOSE_OK')
 '''
+        # Negative acceptance control: the same smoke must reject a real Tk
+        # callback exception instead of mistaking normal process exit for success.
+        negative = boot.replace('  root.after(1500,',
+            '  root.after(50,lambda:1/0)\n  root.after(1500,')
+        rejected = subprocess.run([sys.executable, '-c', negative], cwd=package,
+            capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60,
+            env=dict(os.environ, JARVIS_TRIAL_HOME=str(root/'isolated-negative-profile')))
+        assert rejected.returncode != 0 and 'Tk callback errors:' in rejected.stderr
+        assert 'division by zero' in rejected.stderr
+        print('EXPECTED_CALLBACK_REJECTION_OK', flush=True)
         run([sys.executable, '-c', boot], package, timeout=60)
         print('CLEAN_PACKAGE_MANIFEST_GUIDES_PARITY_AND_UI_OK', flush=True)
         # The full suite includes build-tool/workflow tests. Overlay only its
@@ -132,6 +148,7 @@ with tempfile.TemporaryDirectory(prefix='jarvis006-profile-') as profile:
     evidence = dict(source_commit=details['source_commit'], archive=details['archive'],
         sha256=details['sha256'], manifest_files=details['files'],
         clean_imports_native_dll=True, clean_ui_boot_close=True,
+        injected_tk_callback_exception_rejected=True,
         required_guides_and_relative_links=True, operational_source_parity=True,
         full_extracted_runtime_suite=911, test_modules=source_tests,
         test_only_overlays=['tests', 'tools', '.github', 'nonoperative docs'],
