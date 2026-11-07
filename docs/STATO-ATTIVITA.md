@@ -1,3 +1,7 @@
+## JRV-AUD-014 — review preventiva: esclusione junction e profili rafforzata
+
+Review readonly richiede due casi mancanti: junction con target interno alla radice e nessuna enumerazione quando dati/codice coincidono. Aggiunte due prove reali: target profiles interno con spy su elenco/lettura e reviewer diretto; alias interno verso codice consentito non attraversato due volte. Il caso data_root==source_root ora rifiuta sia iterdir sia read_text.17nuovi/846attesi. Runtime ancora018, Red1source1d69632f7cb0fa355add17f681450ed95b0e85a6 inbozza47; Red ampliato da pubblicare. Nessuna esecuzione funzionale Linux/build/merge/dati reali. Prossimo: Red e controlli statici di review, poi inventario minimo.
+
 ## JRV-AUD-014 —15test pronti prima del runtime
 
 Nuovo test_diagnostic_inventory.py,15nuovi/844totali attesi. Copertura di quattro cartelle runtime e sotto-moduli, raccomandazioni con righe senza esecuzione/literal, priorità runtime con170test e limite140, profili/cache/upstream/modelli esclusi prima di enumerare, data_root esplicito e coincidente, junction Windows reali e contenimento fisico, IO/stat/file sparito, budget byte e selettore modulo storico. Test solo su cartelle temporanee; junction non creabile è skip esplicito, non falsa prova. Runtime invariato018; review indipendente preventiva richiesta. Prossimo: RedWindows in bozza e correzione minima. Nessun build/merge/nuovo indice o test funzionale Linux, nessun accesso dati reali.

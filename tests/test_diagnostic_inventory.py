@@ -138,7 +138,8 @@ class DiagnosticInventoryTests(unittest.TestCase):
 
     def test_coincident_source_and_data_root_is_reported_without_reading_profile(self):
         self.write("private.py",SIGNAL)
-        with patch.object(Path,"read_text",side_effect=AssertionError("Must not read a profile")):
+        with patch.object(Path,"read_text",side_effect=AssertionError("Must not read a profile")), \
+                patch.object(Path,"iterdir",side_effect=AssertionError("Must not enumerate a profile")):
             report=inspect_jarvis(source_root=self.root,data_root=self.root)
         self.assertIn("Nessun sorgente",report.summary)
         self.assertIn("dati",(report.detail+" "+" ".join(report.findings)).lower())
@@ -172,6 +173,53 @@ class DiagnosticInventoryTests(unittest.TestCase):
         link=self.root/"local_model/linked"
         self.junction(link,outside)
         self.assertEqual(review_sources(self.root,[link/"private.py"]),())
+
+    def test_internal_junction_to_excluded_profile_is_not_listed_or_read(self):
+        self.write("local_model/good.py",SIGNAL)
+        private=self.write("profiles/private.py",SIGNAL)
+        profile=private.parent
+        link=self.root/"local_model/linked-profile"
+        self.junction(link,profile)
+        real_iterdir,real_read=Path.iterdir,Path.read_text
+        opened=[]
+        def iterdir(path):
+            if path in (profile,link):
+                opened.append(path)
+                raise AssertionError("Internal profile junction was enumerated")
+            return real_iterdir(path)
+        def read(path,*args,**kwargs):
+            if path.resolve()==private.resolve():
+                opened.append(path)
+                raise AssertionError("Internal profile junction was read")
+            return real_read(path,*args,**kwargs)
+        with patch.object(Path,"iterdir",iterdir),patch.object(Path,"read_text",read):
+            names=self.names()
+            report=inspect_jarvis(source_root=self.root)
+            self.assertEqual(review_sources(self.root,[link/"private.py"]),())
+        self.assertIn("local_model/good.py",names)
+        self.assertEqual(opened,[])
+        self.assertNotIn("private.py",format_audit(report))
+
+    def test_internal_junction_alias_to_allowed_code_is_not_traversed_again(self):
+        self.write("local_model/owned.py",SIGNAL)
+        (self.root/"file_access").mkdir()
+        link=self.root/"file_access/alias"
+        target=self.root/"local_model"
+        self.junction(link,target)
+        real_iterdir=Path.iterdir
+        target_visits=[]
+        def iterdir(path):
+            if path==link:
+                raise AssertionError("Internal source junction was followed")
+            if path==target:
+                target_visits.append(path)
+            return real_iterdir(path)
+        with patch.object(Path,"iterdir",iterdir):
+            names=self.names()
+        self.assertEqual(target_visits,[target])
+        self.assertIn("local_model/owned.py",names)
+        self.assertNotIn("file_access/alias/owned.py",names)
+        self.assertEqual(review_sources(self.root,[link/"owned.py"]),())
 
     def test_one_unreadable_runtime_directory_does_not_abort_other_modules(self):
         self.write("local_model/blocked.py")
