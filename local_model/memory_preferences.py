@@ -52,7 +52,12 @@ class MemoryPreferences:
             raise ValueError("Impostazioni memoria danneggiate.") from exc
 
     def available_prompt_tokens(self, context_size, max_output, reserve=128):
-        """Limit memory prompt to the model window after output reservation."""
+        """Return the legacy character budget consumed by native prompt builders.
+
+        Keep the API/JSON names for existing profiles. context_size/max_output
+        are model tokens; their numeric remainder caps the character budget.
+        This policy is not a tokenizer or a guarantee for every Unicode text.
+        """
         self.validate()
         if any(type(x) is not int for x in (context_size, max_output, reserve)):
             raise ValueError("Dimensioni contesto non valide.")

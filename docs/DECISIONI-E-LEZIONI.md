@@ -1,3 +1,11 @@
+## JRV-AUD-019 — etichette/docstring corrette, verifica Windows necessaria
+
+Pannello memoria chiarisce caratteri/spazi inclusi e sintesi non collegata; summary_max_tokens non presentato come limite attivo. Pannello Gemma indica token per Context Size/Max Output. Docstring del metodo legacy spiega che budget in caratteri non è tokenizzazione. ConfrontoAST statico con base: algoritmo budget/defaults/schema e callbacksave identici, nessuna modifica a dati o valori. Nessun nuovo test speculare di stringhe né Red runtime rivendicato. Guida e rapporto aggiornati, suite/probe Windows esistenti da acquisire; nessun test funzionale Linux/build/merge/tokenizer/dipendenza. Layout PC reale/tokenizzazioneGGUF non verificati;022/023 restano aperti. Prossimo: CI e checkpoint remoto, poi021.
+
+## 7 novembre 2026 — JRV-AUD-019 avviata: chiarire caratteri e token
+
+Base017 530fad08935f29b2909a6ae2481a19cf77dcefc8, remoto verificato12file e5runtime/test uguali al source verde; main pulito f147b1a. Ramo019 isolato. Il budget prompt600 è applicato conlen(str), non tokenizer. Context Size/Max Output sono token del backend; summary_max_tokens soltanto validato e non usato da sintesi collegata. Correzione di etichette/testo/docstring: schema JSON/API/valori/algoritmo invariati, nessuna sintesi attivata o dipendenza. Specifica/piano salvati prima dell'edit. Suite Windows esistente da eseguire per regressioni, nessun nuovo test speculare di etichette o Red runtime rivendicato. Nessuna build/merge/test funzionale Linux/dato reale.
+
 ## 7 novembre 2026 — JRV-AUD-017 verificata nei sorgenti in bozza
 
 HUD thinking/reasoning include attività dell'owner Gemma già esistente e flag chat pendente, anche con GPT spento e da Telegram/prova impostazioni. La sessione conta operazioni attive/in coda, con finally e metadata lock breve; nessun caricamento/I/O/attesa del lock d'inferenza per leggere is_busy. Nessun nuovo poller o fase dettagliata inventata. Stop/close non dichiarano idle prima dell'uscita effettiva, errori e annidamento scaricano il contatore. Risposte, permessi, memoria e priorità voce preservati.
