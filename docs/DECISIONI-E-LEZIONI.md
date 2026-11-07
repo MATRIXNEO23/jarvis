@@ -1,3 +1,7 @@
+## 7 novembre 2026 — JRV-AUD-001, riproduzione in corso
+
+Autorizzate le correzioni dell'audit con spiegazioni sintetiche. Base evoluta61a95f8, ramo isolato fix/jrv-aud-001-permissions-20261107. Prima unità: permessi GPT per funzione. Aggiunti piano docs/superpowers/plans/2026-11-07-jrv-aud-001-permissions.md e tests/test_online_permissions_integration.py: Mai nella console anche dopo conferma, allowed senza dialogo e revoca prima del worker, Mai Telegram prevale sul consenso di sessione. Solo callback reali con confini controllati e profilo temporaneo; nessun account/dispositivo. Runtime ancora invariato. Prossimo controllo: Red Windows; nessun test funzionale Linux, nuova build, ZIP, merge o modifica ai dati.
+
 ## 6 novembre 2026 — Carattere di Gemma locale
 
 La configurazione del modello include istruzioni facoltative di stile (240 caratteri). Il valore è locale e compatibile con i profili precedenti. Si applica alle nuove risposte della conversazione Gemma e a Prova generazione, senza richiedere un ricaricamento per il solo cambio di stile. Si preserva la domanda se il budget è stretto. Le risposte Telegram continuano a usare il contesto del contatto. La prima run 42268657858 ha rilevato un'asserzione UI eseguita dopo Ripristina anziché dopo Salva. Sul commit correttivo `3c71ca4` le due suite Windows e la verifica dello ZIP estratto sono passate nella [run 42269297921](https://github.com/MATRIXNEO23/jarvis/actions/runs/42269297921). Resta il collaudo con il GGUF sul Pavilion.

@@ -1,3 +1,7 @@
+## 7 novembre 2026 — JRV-AUD-001, riproduzione in corso
+
+Autorizzate le correzioni dell'audit con spiegazioni sintetiche. Base evoluta61a95f8, ramo isolato fix/jrv-aud-001-permissions-20261107. Prima unità: permessi GPT per funzione. Aggiunti piano docs/superpowers/plans/2026-11-07-jrv-aud-001-permissions.md e tests/test_online_permissions_integration.py: Mai nella console anche dopo conferma, allowed senza dialogo e revoca prima del worker, Mai Telegram prevale sul consenso di sessione. Solo callback reali con confini controllati e profilo temporaneo; nessun account/dispositivo. Runtime ancora invariato. Prossimo controllo: Red Windows; nessun test funzionale Linux, nuova build, ZIP, merge o modifica ai dati.
+
 # JARVIS — handoff tecnico, mappa architetturale e checkpoint (2026-11-05)
 
 ## 6 novembre 2026 — Carattere di Gemma locale
