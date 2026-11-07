@@ -1,0 +1,42 @@
+{
+  "issue": "JRV-AUD-001",
+  "status": "verified_in_windows_ci_not_released",
+  "source_commit": "daa7a6a8760688f6081bca95ee6c9d6df6ac8ce8",
+  "base_commit": "61a95f8c78f0d429ede21acee25c87a77f91d712",
+  "pull_request": 34,
+  "red": {
+    "commit": "4b21693f3483e550f7f77518e4cef1e48d7ca753",
+    "run": 42326631728,
+    "tests": 659,
+    "assertion_failures": 5,
+    "new_test_methods": 3
+  },
+  "green": {
+    "run": 42327319575,
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 128265496181,
+        "python": "3.11.9",
+        "tests": 670,
+        "seconds": 98.78
+      },
+      {
+        "id": 128265495975,
+        "python": "3.12.10",
+        "tests": 670,
+        "seconds": 126.935
+      }
+    ],
+    "windows_search_live": "passed_fixture_removed_and_service_restored"
+  },
+  "review": "Independent read-only review of shared working files; no blocking defect found; added targeted file/diagnostic tests after initial coverage feedback.",
+  "limits": [
+    "No live GPT or Telegram account",
+    "No microphone or GGUF inference",
+    "Not a Pavilion test",
+    "No package generated or published",
+    "No merge"
+  ],
+  "next": "JRV-AUD-002: isolate Gemma history across project/general contexts without reloading backend."
+}
