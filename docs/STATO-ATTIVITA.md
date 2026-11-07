@@ -1,3 +1,7 @@
+## JRV-AUD-009 — review preventiva e copertura ampliata, 2026-11-07
+
+Review indipendente del contratto senza blocchi progettuali; tre lacune test recepite: OFF con assert esplicito zero letture, reader su thread reale e Value che rifiuta accessi fuori owner, Clear con inferenza bloccata da Event e conservazione RAM/disco progetto. Ora20nuovi test/767totali attesi. Runtime invariato; Red1 source6b10d15/run42346405650 da acquisire, Red ampliato da eseguire. Nessuna promessa di prestazioni dalla persistenza sincrona esistente, nessun nuovo DB/dipendenza/build/merge/testLinux. Prossimo: leggere Red ampliato, poi collegamento minimo.
+
 ## JRV-AUD-009 — collegamento memoria autorizzato in verifica, 2026-11-07
 
 Base8ca4829/bozza42 con001–008, ramo fix/jrv-aud-009-gemma-memory-20261107. L'utente approva collegare Gemma al recupero dei ricordi già presente, con opt-in generale e progetti separati. Specifica/piano009 salvati; nessun nuovo archivio/embedding/servizio o riassunto automatico. Codice attuale: pollGemma accetta soloRAM, prompt non usa archivi. Nuovi test usano callback/trasporto/sessione e SQLite reali con inferenza catturata, inclusi nuovo processo, revoche/owner e Clear, errori/budget/template. Runtime ancora invariato; Red da eseguire suWindows. Nessun test funzionale Linux, build/merge/dato utente;022/023 e010 separati. Prossimo: Red e review preventiva, poi collegamento minimo.

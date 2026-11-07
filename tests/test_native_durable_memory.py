@@ -147,8 +147,9 @@ class NativeDurableMemoryTests(unittest.TestCase):
     def test_general_off_never_reads_or_persists_archive(self):
         self.brain.remember_turn("Nebulosa RISERVATO_DISCO", "Vecchio ricordo")
         self.toggle(False)
-        with patch.object(SecondBrain, "prompt_context", side_effect=AssertionError("Unauthorized read")):
+        with patch.object(SecondBrain, "prompt_context", side_effect=AssertionError("Unauthorized read")) as read:
             prompt = self.ask("Che ricordi della nebulosa?")
+            read.assert_not_called()
         self.assertNotIn("RISERVATO_DISCO", prompt)
         self.assertEqual(self.brain.stats()[0], 1)
 
@@ -281,3 +282,74 @@ finally:
         child = subprocess.run([sys.executable, "-c", script, str(self.brain.path)],
                                capture_output=True, text=True, timeout=30, check=True)
         self.assertEqual(json.loads(child.stdout), {"recalled": True, "online_calls": 0})
+
+    def test_reader_runs_in_worker_without_accessing_ui_values(self):
+        owner = threading.get_ident()
+        class OwnerValue(Value):
+            def get(self):
+                if threading.get_ident() != owner:
+                    raise RuntimeError("UI value read outside owner thread")
+                return super().get()
+        self.env["memory_enabled"] = OwnerValue(True)
+        threads = []
+        original = self.brain.prompt_context
+        def read(*args, **kwargs):
+            threads.append(threading.get_ident())
+            return original(*args, **kwargs)
+        with patch.object(self.brain, "prompt_context", side_effect=read) as lookup:
+            self.fixture.submit("Domanda con recupero nel worker", typed=True)
+            lookup.assert_not_called()
+            worker = threading.Thread(target=self.fixture.workers.pop(), daemon=True)
+            worker.start()
+            worker.join(5)
+            self.assertFalse(worker.is_alive())
+            lookup.assert_called_once()
+        self.env["poll_gemma_trial"]()
+        self.assertEqual(len(threads), 1)
+        self.assertNotEqual(threads[0], owner)
+        self.env["speak_result"].assert_called_once()
+
+    def test_clear_does_not_wait_for_inference_or_remove_project_memory(self):
+        a = self.fixture.project_a
+        self.ask("GENERALE_DA_CANCELLARE")
+        self.fixture.session.ask("RAM_PROGETTO_DA_CONSERVARE", context_id=a)
+        self.env["workspace"].add_turn("project", a, "DISCO_PROGETTO_DA_CONSERVARE", "Dato")
+        entered, release, cleared = threading.Event(), threading.Event(), threading.Event()
+        errors = []
+        def block():
+            entered.set()
+            if not release.wait(8):
+                raise RuntimeError("Test inference gate timed out")
+        self.fixture.adapter.on_reply = block
+        self.fixture.submit("RISPOSTA_GENERALE_DA_REVOCARE", typed=True)
+        worker = threading.Thread(target=self.fixture.workers.pop(), daemon=True)
+        def clear():
+            try:
+                self.env["clear_saved_memory"]()
+            except Exception as exc:
+                errors.append(type(exc).__name__)
+            finally:
+                cleared.set()
+        metadata = threading.Thread(target=clear, daemon=True)
+        worker.start()
+        try:
+            self.assertTrue(entered.wait(3))
+            metadata.start()
+            self.assertTrue(cleared.wait(3), "Clear waited behind native inference")
+        finally:
+            release.set()
+            worker.join(5)
+            if metadata.ident is not None:
+                metadata.join(5)
+        self.assertFalse(worker.is_alive())
+        self.assertFalse(metadata.is_alive())
+        self.assertEqual(errors, [])
+        self.env["poll_gemma_trial"]()
+        self.assertEqual(self.brain.stats()[0], 0)
+        prompt = self.ask("Dopo cancellazione")
+        self.assertNotIn("GENERALE_DA_CANCELLARE", prompt)
+        self.assertNotIn("RISPOSTA_GENERALE_DA_REVOCARE", prompt)
+        self.fixture.session.prepare_turn("Che ricordi?", context_id=a)
+        self.assertIn("RAM_PROGETTO_DA_CONSERVARE", self.fixture.adapter.prompts[-1])
+        self.assertEqual(self.env["workspace"].recent("project", a)[0]["utente"],
+                         "DISCO_PROGETTO_DA_CONSERVARE")
