@@ -1,3 +1,11 @@
+## 7 novembre 2026 — JRV-AUD-012 verificata nei sorgenti in bozza
+
+Stesso Python già generato ora nei moduli; builder non lo riscrive più dopo i test. Launcher/profili invariati, helper diretti con assert precedenti conservati. Workflow futuro rifiuta modifiche PY/MJS/PS1 e si ferma al primo comando Python fallito. Parità statica con il vecchio codice generato verificata.
+
+Sourceverde a95cbd2884afe1079774419bedabf2f324d1a611, bozza52. Run42377581328 SUCCESS tentativo1:908test su3.11.9 (job128418236381,119.730s) e3.12.10 (job128418236628,137.421s),0failure/errori/skip, tutti7nuovi passati. Red1af0f654/run42377060724:907test/job4failure1errore solo012;3.11job128416727551170.282s,3.12job128416727411157.150s. Review indipendente senza blocchi; un metodo/rafforzamenti aggiunti dopoRed, nessun extraRed rivendicato. Rapporti/evidenza012 preservano confini e risultati.
+
+Sintassi/probe passati, Searchlive3.12 con ripristino. Nessuna build/ZIP/estrazione/DLL reale, publish, merge, test funzionale Linux o dato utente modificato. Writer ZIP vietato e python stub nei test del futuro workflow.022 passa,023 aperto; build vera/Windows10/hardware restano da verificare. Checkpoint finale solo documenti/evidenza con hash da confermare; prossimo013 guide operative nel futuro pacchetto, poi020 indice.016 funzione distinta non implementata.
+
 ## JRV-AUD-012 — candidata revisionata pronta per Windows
 
 Red1af0f654/run42377060724:907test per versione,4failure1errore tutti nuovo012;3.11job128416727551170.282s,3.12job128416727411157.150s. Fallback DLL realmente assente nei sorgenti, UI e gate parità mancanti;022 passa,023 non osservato,Searchlive3.12 ripristinato. Candidata sposta esatto Python già generato nei moduli e rimuove riscritture, profili/launcher sorgente invariati. Parità del testo verificata staticamente. Workflow futuro con hash e fail-fast; helper test diretti e assert conservati. Review indipendente readonly senza rilievi bloccanti, rafforzamenti preventivi recepiti.7nuovi/908attesi, un metodo dopoRed senza extraRed rivendicato.

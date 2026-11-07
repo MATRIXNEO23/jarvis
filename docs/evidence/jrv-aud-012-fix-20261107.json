@@ -1,0 +1,100 @@
+{
+  "issue": "JRV-AUD-012",
+  "status": "verified-source-parity-and-stubbed-future-workflow-no-app-build",
+  "date": "2026-11-07",
+  "base": "8626d193ef33ddc141f9c1ef1bce3decb0388185",
+  "source": "a95cbd2884afe1079774419bedabf2f324d1a611",
+  "branch": "fix/jrv-aud-012-package-source-parity-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/52",
+  "runs": [
+    {
+      "phase": "Red",
+      "source": "1af0f654cdea500b5099ad98b4026509e868f3e6",
+      "run": 42377060724,
+      "jobs": [
+        {
+          "id": 128416727551,
+          "python": "3.11.9",
+          "tests": 907,
+          "seconds": 170.282,
+          "failures": 4,
+          "errors": 1
+        },
+        {
+          "id": 128416727411,
+          "python": "3.12.10",
+          "tests": 907,
+          "seconds": 157.15,
+          "failures": 4,
+          "errors": 1
+        }
+      ],
+      "cause": "Python rewrites after testing, raw trial/fallback absent, changed scripts and failed builder accepted"
+    },
+    {
+      "phase": "Green",
+      "source": "a95cbd2884afe1079774419bedabf2f324d1a611",
+      "run": 42377581328,
+      "attempt": 1,
+      "jobs": [
+        {
+          "id": 128418236381,
+          "python": "3.11.9",
+          "tests": 908,
+          "seconds": 119.73,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "id": 128418236628,
+          "python": "3.12.10",
+          "tests": 908,
+          "seconds": 137.421,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    }
+  ],
+  "new_methods": 7,
+  "added_after_red": [
+    "compile failure gate",
+    "preZIP advancement assertion",
+    "pwsh host and all3script extensions"
+  ],
+  "extra_red_claimed": false,
+  "static_generated_text_parity": true,
+  "review_independent_readonly_no_blockers": true,
+  "checks": {
+    "python_node_powershell_syntax": "passed",
+    "native_probe": "passed",
+    "windows_search_live_312": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "app_build": "not executed/skipped",
+    "zip_creation": "forbidden in tests; not executed",
+    "extraction": "not executed/skipped",
+    "dll_real_load": "not executed",
+    "linux_functional": "not executed"
+  },
+  "test_boundaries": [
+    "actual builder stopped before ZIP on missing assets, archive writer forbidden",
+    "actual pwsh workflow block with python stub in temporary Git repo",
+    "real rawUI/factory/session with controlled ABI"
+  ],
+  "preserved": [
+    "existing packaged Python behavior",
+    "source and packaged isolated launcher profiles",
+    "all previous test assertions",
+    "user data and previous packages"
+  ],
+  "limits": [
+    "actual app build/extraction must run when authorized",
+    "no Windows10/i3/HDD or real model/audio/account verification",
+    "023 remains open"
+  ]
+}
