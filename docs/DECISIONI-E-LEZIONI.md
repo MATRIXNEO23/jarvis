@@ -1,3 +1,13 @@
+## JRV-AUD-017 — fixture header ricontrollata, seconda verifica Windows necessaria
+
+Review indipendente readonly conferma diagnosi NameError e modifica di soli due contenitori inattivi nella fixture HeaderQuickControlTests.wire; nessuna asserzione o callback attenuata. Runtime invariato rispetto0419b5b7 e hash da confrontare col prossimo source. Fallimento Green1 conservato, Green2 da acquisire;884test attesi. Nessuna build/merge/test funzionale Linux/dato reale. Prossimo: collaudo e checkpoint remoto.
+
+## JRV-AUD-017 — prima candidata fallita: fixture header da completare
+
+Source0419b5b7d31ca320a1fae9c48becd1f8efad5819/run42360619718 FALLITO:884test per job,0failure3errori.3.11job128368034045157.873s,3.12job128368034166121.567s. Tutti15nuovi metodi017 passano. Tre test header estraggono il provider HUD viaAST con env parziale: NameError gemma_trial_busy (manca anche owner). Nell'app reale entrambi sono inizializzati prima di registrare il provider. Causa fixture dimostrata, non022/023; Search live3.12 passato e stato/fixture ripristinati.
+
+Aggiunti soltanto owner=None eflagFalse a tests/test_hud_quick_toggles.py:wire; tutti gli assert esistenti di clic/persistenza/rollback/memoria conservati, runtime identico alla candidata. Nessun retry cieco o test indebolito. Review mirata su fixture da richiedere e nuova verifica Windows necessaria;884attesi. Nessun build/merge/test funzionale Linux/dato reale. Fallimento conservato nel rapporto017.
+
 ## JRV-AUD-017 — Red acquisito e candidata revisionata pronta per Windows
 
 Red source5ac6e9d1e90f4c6ebc02d7d60d37161a4d1d2b5f/run42360223737:883test per job,18failure0errori tutti nel nuovo017 (subtest inclusi);3.11job128366829486118.761s e3.12job128366829253132.637s. Manca lo snapshotBoolean e la veraUI Tk mostra MICROFONO SPENTO durante generazione nativa. Baseline precedente passa, nessun022/023 osservato; Search live3.12 passato con servizio/fixture ripristinati. Nessun retry cieco.

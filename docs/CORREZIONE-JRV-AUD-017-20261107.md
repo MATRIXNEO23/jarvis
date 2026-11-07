@@ -25,3 +25,9 @@ Usati callback/provider HUD/Telegram reali e fixture sessione/factory/bridge con
 Modello/DLL/account Telegram/microfono reali non utilizzati. Nessuna misura CPU/RAM su Windows10/i3/HDD né pacchetto estratto.022/023 restano distinti, non corretti per assenza di riproduzione. Nessuna esecuzione funzionale Linux, dipendenza o dato/profilo personale. Nessuna build/merge/release; ramo isolato `fix/jrv-aud-017-native-hud-20261107`, ritorno alla015 reversibile senza cancellare dati o pacchetti precedenti.
 
 Review runtime indipendente readonly senza rilievi bloccanti: contatore bilanciato, lock breve, nessuna creazione di sessione/statusIO, stop/close non azzerano prematuramente attività. Entrambi i gap recepiti. Green Windows ancora necessario; la review non è un test eseguito.
+
+## Prima candidata: fixture header incompleta, non un Green
+
+Source `0419b5b7d31ca320a1fae9c48becd1f8efad5819`, run42360619718 FALLITO.884test/job,0failure/3errori: Python3.11.9 job128368034045157.873s; Python3.12.10 job128368034166121.567s. Tutti15nuovi metodi017 passano, ma tre test header eseguono il provider estratto viaAST con un ambiente che non inizializza gemma_trial_busy/gemma_session: NameError nella lambda. L'app reale inizializza entrambi prima della registrazione del provider. Non è022/023 e non è una prova che i pulsanti runtime siano guasti.
+
+Corretta solo la fixture test_hud_quick_toggles.wire: owner=None/flagFalse, come nella vera inizializzazione e nella fixture ActivityStatus già aggiornata. Tutti gli assert di clic, salvataggio/rollback e conservazione memoria restano identici; runtime della candidata invariato. Il primo fallimento è conservato, niente retry cieco. Serve nuova verifica Windows del source con la fixture completa; nessun Green dichiarato.
