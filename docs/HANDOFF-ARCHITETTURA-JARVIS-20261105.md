@@ -1,3 +1,7 @@
+## Aiuto007 — callback senza ritenzione del root distrutto
+
+Review lifecycle conferma ciclo forte root→callbackfocus→root/input. Non è un crash osservato, ma ritarda il rilascio Tk fino aGC. Sostituito solo il riferimento registrato con weakref.ref; durante l'uso callback ancora mantenuto da main/binding. Test tastiera reale ora verifica anche rilascio del callback dopo destroy e rimozione dei riferimenti della fixture, senza GC dell'app modificato. Sourceb38/run42420088509 aveva922test verdi per matrice; package sostituito prima della pubblicazione per includere il fix minimo lifecycle. Nuova verifica finale richiesta, nessun vecchio artefatto promosso. Scelta modelli/profili invariata.
+
 ## Aiuto007 — review prima della consegna
 
 Review indipendente readonly segnala Ctrl+L non disponibile mentre la guida/impostazioni ha focus e descrizione troppo ampia dei comandi locali. Corretto: Ctrl+L anche nelle due finestre, ritorna al campo chat; apertura guida assegna focus per navigazione tastiera. Test evento reale ora parte dalla guida. Catalogo spiega Esegui locale per i comandi base non intercettati da Invio; scelta modelli invariata. Primo tentativo di buildcee342b1 viene sostituito prima della pubblicazione, nessun esito completo attribuito.922test restano richiesti su fonte finale e runtime estratto.

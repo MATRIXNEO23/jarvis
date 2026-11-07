@@ -1,5 +1,6 @@
 """Local, read-only help using the existing command catalogs and Tk widgets."""
 import tkinter as tk
+import weakref
 from tkinter import ttk
 
 
@@ -113,7 +114,8 @@ class HelpWindow(tk.Toplevel):
         return 'break'
 
     def focus_command(self, event=None):
-        callback = getattr(self.master, '_jarvis_focus_command', None)
+        reference = getattr(self.master, '_jarvis_focus_command', None)
+        callback = reference() if reference is not None else None
         if callback is not None:
             callback(event)
         return 'break'
@@ -141,7 +143,7 @@ def open_help(parent, engine):
 
 
 def bind_help_shortcuts(root, settings_window, show_help, focus_command):
-    root._jarvis_focus_command = focus_command
+    root._jarvis_focus_command = weakref.ref(focus_command)
     root.bind('<F1>', show_help, add='+')
     settings_window.bind('<F1>', show_help, add='+')
     settings_window.bind('<Control-l>', focus_command, add='+')

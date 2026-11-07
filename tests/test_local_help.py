@@ -28,7 +28,10 @@ class LocalHelpTests(unittest.TestCase):
         root=tk.Tk();root.geometry('250x90')
         engine=LocalEngine(download_dir=folder/'Downloads',db_path=folder/'tasks.db',windows=False)
         def cleanup():
-            root.destroy()
+            try:
+                root.destroy()
+            except tk.TclError:
+                pass  # This test may already have explicitly destroyed its root.
             gc.collect()
         self.addCleanup(cleanup)
         return root,engine
@@ -86,3 +89,9 @@ class LocalHelpTests(unittest.TestCase):
         root.focus_force();root.update();root.event_generate('<Control-l>');root.update()
         self.assertIs(root.focus_get(),entry)
         self.assertTrue(root.winfo_exists())
+        import gc, weakref
+        callback_reference=weakref.ref(env['focus_command_box'])
+        root.destroy()
+        env.clear()
+        gc.collect()
+        self.assertIsNone(callback_reference(), 'Destroyed root must not retain the command callback')
