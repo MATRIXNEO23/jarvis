@@ -1,3 +1,5 @@
+> **Indice autorevole:** [versioni, commit sorgenti, workflow e hash](REGISTRO-VERSIONI.md). I link sotto conservano la cronologia. Le correzioni audit in bozza non sono automaticamente contenute negli ZIP pubblicati.
+
 # Jarvis Gemma — carattere e stile del modello locale
 
 **[Scarica la candidata Windows](./Jarvis-Gemma-Carattere-e-Stile-61a95f8.zip)**

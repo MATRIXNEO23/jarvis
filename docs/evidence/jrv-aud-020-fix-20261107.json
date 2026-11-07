@@ -1,0 +1,65 @@
+{
+  "issue": "JRV-AUD-020",
+  "date": "2026-11-07",
+  "status": "documentary-draft-static-verification",
+  "base_main": "f147b1a5faa977e8e4aefe21c9799465a7a8e990",
+  "branch": "docs/jrv-aud-020-version-index-20261107",
+  "canonical_entry": "Download/REGISTRO-VERSIONI.md",
+  "runtime_source_verified": "970bcb17e15b9c197ec4fa5766eac6a6519058a6",
+  "runtime_documentary_checkpoint": "f9458557074b528d2a480c124f54e3efe7ff9e05",
+  "runtime_windows_run": 42378831525,
+  "runtime_tests_per_python_version": 911,
+  "archive_checks": [
+    {
+      "path": "Download/Jarvis-Gemma-Carattere-e-Stile-61a95f8.zip",
+      "bytes": 8103631,
+      "sha256": "c38806cf12574e7ae142a8eef2cebe2afec6244c92db0a195c507d6bade6041a",
+      "source": "61a95f8c78f0d429ede21acee25c87a77f91d712",
+      "runs": [
+        42270285346
+      ]
+    },
+    {
+      "path": "Download/Jarvis-005.zip",
+      "bytes": 283598,
+      "sha256": "583bd55d1ef416b3781f6183d8ea6365f0b8761c6cf1fd614d652db832285728",
+      "source": "b202181d435cf4ee13ffb355265e1f1a9f995963",
+      "runs": [
+        41749364482
+      ]
+    },
+    {
+      "path": "Download/Jarvis-Timer-Audio-Fix2-20261031.zip",
+      "bytes": 406653,
+      "sha256": "c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352",
+      "source": "b936879a431370d206152be7b089baf587d15499",
+      "runs": [
+        41229495866,
+        41229501460
+      ]
+    }
+  ],
+  "accessible_run_metadata": "all four success and head_sha matches archive source; read 2026-11-07",
+  "static_checks": {
+    "passed": true,
+    "changed_paths": 14,
+    "scope": "only Markdown and one documentary evidence JSON",
+    "new_or_added_relative_links_checked": 29,
+    "preserved_original_histories": true,
+    "original_audit_preserved": true,
+    "report_issue_rows": 23,
+    "archive_bytes_sha256_git_blobs_unchanged": 3,
+    "numeric_registry_unchanged": true,
+    "diff_check_passed": true,
+    "secret_pattern_scan_clear": true
+  },
+  "functional_test_on_documentary_branch": "not run; documentation only",
+  "linux_functional_tests": "not run",
+  "build_zip_extraction_publish_merge": "not run",
+  "target_hardware_audio_accounts_models": "not tested",
+  "open_ids": [
+    "JRV-AUD-016",
+    "JRV-AUD-023"
+  ],
+  "history_policy": "prepend notices; preserve original sections and archives; numeric build registry unchanged"
+}

@@ -1,3 +1,32 @@
+# Registro autorevole — versioni, sorgenti e pacchetti
+
+Aggiornamento documentale del 7 novembre 2026. Questo è l'ingresso per scegliere una versione: la radice di main è storica e non coincide con il runtime Gemma. Le sezioni successive conservano la cronologia. I numeri 001–005 sono una serie storica, non la numerazione delle candidate Gemma.
+
+| Riferimento | Sorgenti esatti | Verifica disponibile | Pacchetto/stato |
+|---|---|---|---|
+| Candidata Gemma pubblicata | [61a95f8c78f0d429ede21acee25c87a77f91d712](https://github.com/MATRIXNEO23/jarvis/tree/61a95f8c78f0d429ede21acee25c87a77f91d712) | [Windows e ZIP estratto 42270285346](https://github.com/MATRIXNEO23/jarvis/actions/runs/42270285346), SUCCESS | [Jarvis-Gemma-Carattere-e-Stile-61a95f8.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/f147b1a5faa977e8e4aefe21c9799465a7a8e990/Download/Jarvis-Gemma-Carattere-e-Stile-61a95f8.zip); collaudo PC ancora pendente |
+| Ultima della serie numerata | [b202181d435cf4ee13ffb355265e1f1a9f995963](https://github.com/MATRIXNEO23/jarvis/tree/b202181d435cf4ee13ffb355265e1f1a9f995963) | [Windows/estrazione 41749364482](https://github.com/MATRIXNEO23/jarvis/actions/runs/41749364482), SUCCESS | [Jarvis-005.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/f147b1a5faa977e8e4aefe21c9799465a7a8e990/Download/Jarvis-005.zip); candidata storica, collaudo PC pendente |
+| Base storicamente confermata | [b936879a431370d206152be7b089baf587d15499](https://github.com/MATRIXNEO23/jarvis/tree/b936879a431370d206152be7b089baf587d15499) | [Pubblicazione 41229495866](https://github.com/MATRIXNEO23/jarvis/actions/runs/41229495866), [test 41229501460](https://github.com/MATRIXNEO23/jarvis/actions/runs/41229501460), [verifica dei byte](../docs/VERIFICA-CONCRETA-BASE-20261101.md) | [Timer-Audio-Fix2](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/f147b1a5faa977e8e4aefe21c9799465a7a8e990/Download/Jarvis-Timer-Audio-Fix2-20261031.zip); non identifica automaticamente l'installazione attuale dell'utente |
+| Audit — sorgenti corretti in bozza | [970bcb17e15b9c197ec4fa5766eac6a6519058a6](https://github.com/MATRIXNEO23/jarvis/tree/970bcb17e15b9c197ec4fa5766eac6a6519058a6) | [Windows 42378831525](https://github.com/MATRIXNEO23/jarvis/actions/runs/42378831525): 911 test per versione Python; [correzioni in bozza, PR53](https://github.com/MATRIXNEO23/jarvis/pull/53) | Nessun nuovo ZIP/build/pubblicazione. Queste correzioni non sono negli archivi sopra |
+
+Hash SHA256 degli archivi già presenti, ricontrollati staticamente dalla main f147b1a (nessuna ricostruzione):
+
+| Archivio | Byte | SHA256 |
+|---|---:|---|
+| Gemma 61a95f8 | 8103631 | `c38806cf12574e7ae142a8eef2cebe2afec6244c92db0a195c507d6bade6041a` |
+| 005 | 283598 | `583bd55d1ef416b3781f6183d8ea6365f0b8761c6cf1fd614d652db832285728` |
+| Timer-Audio-Fix2 | 406653 | `c37270265918c63ddb3a9cf6a2c0982d468dd1af83a1af330c5af1dfb20f9352` |
+
+Per sviluppare o verificare il codice, aprire il commit scelto della tabella, leggere AGENTS/RECUPERO e usare i test Windows previsti. Il vecchio builder Gemma trasformava alcuni Python: il commit della release identifica anche quella ricetta. La correzione 012 elimina tale differenza solo nelle bozze nuove, senza cambiare gli archivi pubblicati.
+
+Il [registro numerico JSON](BUILD-NUMBERS.json) conserva i metadata 001–005; gli altri pacchetti e dati storici restano sotto. Non promuovere una bozza a versione PC confermata dal solo CI e non associare i test nuovi al vecchio ZIP. Nessuna nuova build è autorizzata da questo indice.
+
+---
+
+Rapporti: [audit iniziale](../docs/AUDIT-JARVIS-INIZIALE-20261107.md) e [stato finale delle correzioni](../docs/RAPPORTO-FINALE-AUDIT-CORREZIONI-20261107.md). I report di sviluppo restano nella repository, fuori dal pacchetto operativo.
+
+## Cronologia conservata
+
 # Build numerate Jarvis
 
 Da questa consegna i file hanno numeri progressivi. Ogni versione pubblicata resta disponibile; la prossima sarà006.

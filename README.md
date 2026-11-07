@@ -1,6 +1,8 @@
+> **Versioni e sorgenti:** consulta il [registro autorevole](Download/REGISTRO-VERSIONI.md). La radice di main contiene sorgenti storici e il catalogo dei pacchetti; non coincide con il runtime Gemma distribuito. Il registro distingue pacchetti pubblicati, sorgenti esatti e correzioni ancora in bozza. Le sezioni sottostanti sono cronologia, non un'indicazione univoca dell'ultima versione.
+
 > **Installazione e configurazione aggiornate:** parti da [Prima-installazione/README.md](Prima-installazione/README.md). Per riprendere lo sviluppo leggi [RECUPERO.md](RECUPERO.md) e [l’indice dei sorgenti](docs/INDICE-SORGENTI.md). Le sezioni sottostanti contengono anche aggiornamenti storici: non identificano tutte la versione attuale. 
 
-**Nuova build candidata Windows: [Jarvis 005](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-005.zip)** — richiamo Jarvis obbligatorio e prompt senza memoria vuota; collaudo PC pendente. [Versioni precedenti](Download/REGISTRO-VERSIONI.md).
+**Serie numerata storica: [Jarvis 005](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-005.zip)** — richiamo Jarvis obbligatorio e prompt senza memoria vuota; collaudo PC pendente. [Versioni precedenti](Download/REGISTRO-VERSIONI.md).
 
 
 # Jarvis — Windows 10 (64 bit)
