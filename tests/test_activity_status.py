@@ -5,6 +5,7 @@ Real Tk and app code; no microphone, model, login or user files are used.
 import ast
 from concurrent.futures import Future
 import copy
+import gc
 import os
 from pathlib import Path
 import queue
@@ -38,6 +39,11 @@ class GlobalCallbacks(ast.NodeTransformer):
 
 @unittest.skipUnless(os.name == "nt", "User requires Windows-only runtime tests")
 class ActivityStatusTests(unittest.TestCase):
+    def tearDown(self):
+        # Closed HUD graphs must retire their Tcl objects on the owner thread,
+        # before a later native worker can trigger cyclic garbage collection.
+        gc.collect()
+
     @classmethod
     def setUpClass(cls):
         tree = ast.parse(Path("jarvis.py").read_text(encoding="utf-8"))

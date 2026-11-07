@@ -1,4 +1,5 @@
-"""Animated HUD math and speaker status; no GUI or microphone is opened."""
+"""Windows HUD geometry, GUI lifecycle and speaker status; no microphone."""
+import gc
 import math
 import unittest
 from threading import Event
@@ -12,6 +13,10 @@ from offline_tts import OfflineSpeaker
 
 
 class AnimatedHUDGeometryTests(unittest.TestCase):
+    def tearDown(self):
+        # Tk resources from the closed local HUD belong to this UI thread.
+        gc.collect()
+
     def test_core_uses_a_fixed_blue_to_turquoise_color_transition(self):
         self.assertEqual(interpolate_color(BLUE, TURQUOISE, 0), BLUE)
         self.assertEqual(interpolate_color(BLUE, TURQUOISE, 1), TURQUOISE)

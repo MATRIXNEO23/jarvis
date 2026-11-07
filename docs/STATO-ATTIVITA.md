@@ -1,3 +1,55 @@
+## 7 novembre 2026 — JRV-AUD-021 e022 verificate nei sorgenti in bozza
+
+La voce possiede il solo helper avviato dal runner predefinito: close richiede termine senza aspettare sulla UI, scarta la coda e rifiuta il testo quando la pubblicazione arriva dopo chiusura. Custom runner, lista voci, JSON/cwd, chunk e anti-eco conservati. Se Windows nega la terminazione il worker può aspettare l'uscita effettiva, senza mascherare l'errore primario. Nessun altro processo controllato.
+
+022: quattro grafi di fixture Tk riprodotti in otto figli, ognuno con successo UI prima del fatal su worker GC. Pulizia sul thread principale e rilascio dei riferimenti header corretti nei soli test, assert originali e GC dell'app invariati. Il probe finale conferma immagine reale creata e0residui prima del worker, otto returncode0/stderr vuoto. La risoluzione è limitata alle fixture dimostrate; non certifica ogni possibile ciclo Tk del runtime.
+
+Sourceverde3cd88a04b3a645257bc77c24bfcc9cd5fe5770b4, [bozza51](https://github.com/MATRIXNEO23/jarvis/pull/51). [Run42364574425](https://github.com/MATRIXNEO23/jarvis/actions/runs/42364574425) SUCCESS tentativo1:901test per Python3.11.9 (job128379821296,180.165s) e3.12.10 (job128379821451,208.118s),0failure/errori/skip, tutti16nuoviTTS passati. Sintassi/probe e Searchlive3.12 passati, servizio/fixture ripristinati. Rapporti021/022 ed [evidenza](evidence/jrv-aud-021-fix-20261107.json);022 conserva storia e Red controllato separato.
+
+RedTTS556a4b44/run42362426651:897test/job6failure0errori. Candidata6504/run42363252951:3.11 passa900test/172.068s,3.12 abortisce022 prima deiTTS, nessun conto completo. RedTk5991813f/run42363972403:3.11 completa901test/4failure0errori in171.384s;3.12 stampa quattro figli falliti e poi abortisce ancora, nessun riepilogo assegnato. Fallimenti conservati, nessun retry cieco. Tre metodiTTS e rafforzamenti del probe aggiunti dopo i rispettiviRed, nessun extraRed rivendicato. Review indipendenti senza blocchi residui; hash runtimeTTS invariato dalla6504.
+
+Checkpoint finale solo documenti/evidenze, runtime/test da confrontare col sourceverde prima della conservazione remota. Nessun build/ZIP/merge/release, test funzionale Linux, dipendenza, audio/account/microfono o dato/profilo reale. Windows10/i3/HDD e pacchetto estratto non verificati. Conservate001–011,018,014,015,017,019,021 e022 nel suo ambito. Restano012/013 distribuzione,020 indice,016 funzione separata non implementata e023 timeoutCI non risolto. Prossimo012: eliminare differenze Python introdotte dal builder dopo i test e preparare verifiche del futuro pacchetto; nessuna build automatica.
+
+## JRV-AUD-021/022 — candidata con cleanup delle fixture revisionato
+
+Review indipendente readonly ha verificato i log Red e il fix delle quattro fixture: nessun blocco rilevato, assert originali conservati, GC dell'app immutato e runtime TTS identico a6504. Activity/Animated/NativeHUD raccolgono sul thread principale dopo il metodo; header ritira anche i riferimenti persistenti prima della raccolta. Il probe controlla anche una vera immagine come foglia, con osservatore debole, e conserva diagnostica di timeout. Rafforzamenti del probe successivi al primo Red, nessun ulteriore Red rivendicato.
+
+Prossimo: Green completo Windows3.11/3.12,901test attesi con16nuoviTTS e1metodo/4subtestTk. Non dichiarare completata021 o022 finché entrambe le suite non terminano. Rapporti/evidenze conservano il primo blocco e la riproduzione; nessun build/merge/test funzionale Linux/dato reale,023 distinto aperto.
+
+## JRV-AUD-022 — causa delle fixture riprodotta, pulizia candidata
+
+Red5991813f4c2add224e50f375ea36b8838fd1823b/run42363972403:3.11job128378016116901test171.384s4failure0errori tutti subtestGC;3.12job128378016392 stampa4figli falliti poiabortaancoraDocumentSaveRace, nessuncontofinale. Tutti8figli passanoprimalafixture, poiVariable.__del__/Tcl_AsyncDelete suworker conthreadIDdiverso eexit2147483651. AnimatedHUDincludeImage.__del__realesuentrambeversioni. Confermatodifettodiownershipdei4grafi, nonidentificatioggettisingolidiogniabortostorico. EvidenzacontrollataJSON evecchiorapportopreservati.
+
+Candidata solo4fixturetest: Activity/Animated/NativeHud gc.collect nelteardownmain dopo metodoritornato; header spezzacicloenv/callbackeritiraself.env/hud/root dopodestroyprimaGC. Assertoriginaliinvariati, GCappnonmodificato. Reviewpreventiva rafforza diagnosticaTimeout eImageleafreale/WeakSet nonritentiva, nessunextraRedrivendicato. TTSruntime SHA c02a4a4e invariato6504. Green021/022901testattesi ancoranecessario, reviewmiratarichiesta. Nessunbuild/merge/testfunzionaleLinux/audio/account/datoreale.023 distintoaperto.
+
+## 7 novembre 2026 — JRV-AUD-022 ricomparsa, blocca il Green completo021
+
+Candidata0216504abffe0553461a2f44c07c9833d67a2abf2e1/run42363252951:Python3.11.9 job128375837812 SUCCESS900test in172.068s, tutti16nuovi021 passati. Python3.12.10 job128375837908 abortisce durante DocumentSaveRace prima dei021:Variable.__del__/Image.__del__ RuntimeError main thread is not in main loop, poiTcl_AsyncDelete, nessun riepilogo completo assegnato. Search live3.12 passato con servizio/fixture ripristinati; nessun retry cieco o Green dichiarato per021.
+
+022 viene investigata come correzione distinta nella bozza51 perché dipendenza del collaudo021. Ipotesi: fixture HUD precedenti lasciano cicli Tk chiusi, raccolti poi da workerWin32 senzaTk. Nuovo tests/test_aa_tk_lifetime.py prima di editare teardown: un metodo/quattro figli isolati con fixture vere Activity/Animated/header/nativeHUD, GC automatico disabilitato solo nel figlio e raccolta esplicita da worker dopo fixture, nessun error suppression/skip. Diagnostica stampata prima degli assert per conservarla anche se il resto suite abortisce. Poller di rete intercettato, account/audio/profili reali assenti.901attesi se la suite completa; nessuna conta inventata su abort.
+
+Specifica/piano022 salvati, runtimeTTS invariato6504. ProssimoRed022 e review; cleanup Tk sul mainthread solo se la riproduzione lo dimostra. Nessuna modifica GC globale dell'app, build/merge/test funzionale Linux o dati reali.
+
+## JRV-AUD-021 — Red acquisito, candidata revisionata pronta per Windows
+
+Red556a4b4460287fb41f0bf7e7c1d080c6b81ec993/run42362426651 FALLITO:897test/job6failure0errori nel nuovo021.3.11job128373412696144.361s,3.12job128373412895196.734s. Confermati helper/worker vivi dopo close e invio possibile dopo creazione concorrente; baseline precedente passa. Nessun022/023;Searchlive3.12 passato con servizio/fixture ripristinati.
+
+Candidata solo offline_tts.py: Popen posseduto dal default, attach/close/detach per identità sotto lock breve, terminate fuori lock, payload non inviato se pubblicazione rifiutata, pipe/context cleanup prima del detach. Customrunner2arg/listvoices/JSON/cwd/chunk/anti-eco preservati. Review preventiva rafforza close bounded, terminateOSError, cleanupperrisorsa/markeratomico; reviewruntime richiede conservareerrore primario conkillfallita, corretto connota diagnostica e due subtest.16nuovi/900attesi,3metodi dopoRed senza extraRed rivendicato. Ultimo ricontrollo readonly senza blocchi rilevati.
+
+Green Windows ancora necessario, AST/diff locali soltanto. SeOSnega terminate/kill, worker puòaspettare uscitaeffettiva, UIclose nonattende; nessuna promessa di harddeadline nel cleanup. Nessun audio/SAPI/account/profilo reale, nuova dipendenza, build/merge o test funzionale Linux. Rapporto/spec aggiornati, prossimo collaudo Windows e checkpoint remoto.
+
+## JRV-AUD-021 — review preventiva: chiusura bounded e cleanup rafforzati
+
+Review readonly segnala gap di latenza/erroreterminate e rischio di marker parziale. Tutte le close nei test ora chiamate da osservatore bounded, aggiunti worker trattenuto dopo communicate per provare ritorno prima del rilascio e erroreterminate controllato senza interrompere shutdown. Cleanup rilascia barriere, ritira tutti i figli prima di close e prosegue per risorsa raccogliendo errori. Marker pubblicato conrename atomico dopo JSON completo.15nuovi/899attesi, dopo sourceRed556a4b44/run42362426651 (13nuovi/897attesi), nessun extraRed rivendicato. Runtime ancora019, prime prove Windows in corso; nessun test funzionale Linux/build/merge/audio/account/profilo reale.
+
+## JRV-AUD-021 — tredici prove pronte prima del runtime
+
+Nuovo tests/test_tts_process_lifecycle.py: Popen/pipe/figliWindows reali, eseguibile sostituito solo alla frontiera con helperPython silenzioso temporaneo. Copertura close attivo, chunk/coda scartati, close prima di pubblicazione/testo non inviato, doppio close/figlio già uscito, processo estraneo preservato, JSON/argv/cwd, timeout/exitnonzero/avviofallito, customrunner2arg/anti-eco e lista voci. Cleanup ritira sempre anche figli del Red senza orphan.13nuovi/897attesi, runtime ancora019. Review preventiva indipendente avviata; prossima bozza RedWindows. Nessun audio/SAPI/account/profilo reale, build/merge o test funzionale Linux.
+
+## 7 novembre 2026 — JRV-AUD-021 avviata: processo vocale in chiusura
+
+Base019 e059883a1e446ca71452a2358920b4af02001b69, remoto verificato11file/3moduli uguali al sourceverde; main pulito f147b1a. Ramo021 isolato. Il codice close svuota la coda ma non interrompe subprocess.run attivo: il chunk può continuare fino al termine/timeout90s. Conservare e ritirare solo il Popen creato dal runner vocale, sincronizzando pubblicazione/close senza attese sotto lock. Compatibilità runnercustom2arg, lista voci, JSON/cwd e anti-eco preservati. Nessun taskkill o gestione di app estranee, nessun nuovo mute/microfono. Specifica/piano prima del runtime; prossime prove RedWindows con figli temporanei reali, senza audio/account. Nessuna build/merge/test funzionale Linux/dato reale.
+
 ## 7 novembre 2026 — JRV-AUD-019 verificata nei sorgenti in bozza
 
 Corrette soltanto etichette/testo e docstring: il pannello memoria indica caratteri nel prompt (spazi inclusi), Context Size/Max Output Gemma indicano token, sintesi automatica e suo limite dichiarati non collegati. Nessun tokenizer, attivazione di sintesi o migrazione. ConfrontoAST con la base conferma defaults/schema, budget/validate/save e callbacksave UI identici. Valori e algoritmo non cambiano.

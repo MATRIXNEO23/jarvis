@@ -1,7 +1,7 @@
 {
   "issue": "JRV-AUD-022",
   "severity": "MEDIO",
-  "status": "confirmed_ci_abort_root_cause_to_verify",
+  "status": "verified_fix_for_controlled_closed_Tk_fixture_graphs",
   "component": "Windows CI / Tkinter object finalization",
   "first_observed": {
     "source_commit": "dc1e4f2e6fbcd305034cc9723f182e0bd8c88907",
@@ -18,15 +18,72 @@
     "New JRV-AUD-004 tests had already produced three expected behavioral failures before the abort; no complete test count is assigned to this job."
   ],
   "impact": "At least one full regression job aborted, reducing CI reliability. No conclusion about the installed application or target PC follows from this failure.",
-  "cause_status": "PROBABILE: garbage collection/finalization of earlier Tk objects on a worker thread; exact object ownership/trigger not yet reproduced independently.",
+  "cause_status": "CONFERMATO per quattro grafi di fixture chiuse raccolti su worker; oggetti esatti del vecchio parent abort non attribuiti singolarmente",
   "recommended_next_step": "Isolate Tk object lifetime and thread ownership in the Windows test fixtures; reproduce with controlled finalization before choosing a correction. Preserve the abort log; do not suppress the error or skip the tests.",
   "tests_needed": [
     "Windows3.12 controlled finalization with thread identifiers and isolated test data.",
     "Complete regression suite on both Windows Python versions after a correction."
   ],
-  "fixed": false,
+  "fixed": true,
   "limits": [
     "No runtime change or fixture mitigation bundled into JRV-AUD-004.",
     "No functional Linux execution or target PC test."
-  ]
+  ],
+  "recurrences": [
+    {
+      "source_commit": "6504abffe0553461a2f44c07c9833d67a2abf2e1",
+      "run": 42363252951,
+      "job": 128375837908,
+      "python": "3.12.10",
+      "active_test": "test_document_save_race.DocumentSaveRaceTests.test_clean_close_requires_current_text_to_match_saved_copy",
+      "final_summary_available": false,
+      "new_tts_tests_started": false,
+      "symptom": "Variable/Image finalizers call Tcl from wrong thread; Tcl_AsyncDelete abort",
+      "companion_python311": {
+        "job": 128375837812,
+        "tests": 900,
+        "seconds": 172.068,
+        "conclusion": "success",
+        "new_tts_methods_passed": 16
+      }
+    }
+  ],
+  "controlled_regression": {
+    "file": "tests/test_aa_tk_lifetime.py",
+    "status": "Red and Green acquired; four fixture cleanup fixes verified",
+    "methods": 1,
+    "isolated_fixture_subtests": 4,
+    "automatic_gc_disabled_in_child_only": true,
+    "errors_suppressed": false,
+    "source": "5991813f4c2add224e50f375ea36b8838fd1823b",
+    "run": 42363972403,
+    "evidence": "jrv-aud-022-controlled-red-20261107.json",
+    "all_eight_children_failed_after_fixture_success": true
+  },
+  "resolution": {
+    "source": "3cd88a04b3a645257bc77c24bfcc9cd5fe5770b4",
+    "run": 42364574425,
+    "evidence": "jrv-aud-021-fix-20261107.json",
+    "jobs": [
+      {
+        "id": 128379821296,
+        "python": "3.11.9",
+        "tests": 901,
+        "seconds": 180.165
+      },
+      {
+        "id": 128379821451,
+        "python": "3.12.10",
+        "tests": 901,
+        "seconds": 208.118
+      }
+    ],
+    "isolated_children": 8,
+    "all_returncode_zero": true,
+    "all_stderr_empty": true,
+    "images_created_per_fixture": 1,
+    "images_remaining_before_worker_gc": 0,
+    "runtime_GC_changed": false,
+    "scope": "Four reproduced closed Tk fixture graphs; no universal runtime Tk guarantee"
+  }
 }
