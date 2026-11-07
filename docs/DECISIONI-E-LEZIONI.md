@@ -1,3 +1,9 @@
+## 7 novembre2026 — build006, errore della fixture smoke riprodotto
+
+Run42383777615/source9c6061acc78f6c584232b86a135ed90fb9d605d8:911test verdi per3.11/3.12 (190.426s/133.011s), package fallisce nel controllo positivo. Causa dimostrata dal traceback window_chrome.py:158: il nuovo smoke sostituiva tk.Tk con una funzione, rendendo invalido isinstance(...,(tk.Tk,tk.Toplevel)). La nuova raccolta errori ha rifiutato correttamente l'avvio; prima di essa il vecchio smoke avrebbe potuto dichiarare successo. Correzione solo della fixture: sottoclasse SmokeTk mantiene l'identità di tipo; negative probe/callback gate preservati. AST del codice principale e dei due script smoke valido, nessuna esecuzione Linux. Runtime Jarvis invariato. Review mirata e nuovo dispatch richiesti; nessun artefatto pubblicato dal tentativo fallito.
+
+Nei log della suite emerge lo stesso TypeError solo nella fixture test_telegram_secret_dialog, che patcha tk.Tk con Mock; i911 test risultano comunque OK. Avvisi conservati, non equivalgono a un errore dell'app installata; la fixture storica non viene cambiata in questo passo di build.
+
 ## 7 novembre2026 — review build006, controllo callback Tk
 
 Review indipendente build-only: Node del package ora fissato22.12 come la matrice. Individuato limite del nuovo smoke: Tk stampa le eccezioni callback e può uscire0 dopo la chiusura programmata. Verificato sul sorgente tkinter.CallWrapper/report_callback_exception (sola lettura): non rilancia. Il verificatore raccoglie gli errori callback e rifiuta lo smoke al ritorno da main; normale WM_DELETE e timeout preservati. Non è prova di un guasto runtime di Jarvis. Primo dispatch42383621234/source dcd35a81919cd8fe98dcc7ac3e064418184ba96a annullato per sostituire il gate prima della pubblicazione, nessun risultato completo attribuito. Nuovo dispatch necessario dopo salvataggio e ricontrollo. Runtime invariato; nessun test funzionale Linux o dato reale.

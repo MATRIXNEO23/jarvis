@@ -94,15 +94,16 @@ with tempfile.TemporaryDirectory(prefix='jarvis006-profile-') as profile:
  settings=load_settings();settings.update(auto_listen=False,gpt_enabled=False,telegram_enabled=False,tts_enabled=False)
  save_settings(settings)
  original=tk.Tk
- def create(*args,**kwargs):
-  root=original(*args,**kwargs)
-  def callback_error(exc,value,tb):
-   errors.append(str(value))
-   traceback.print_exception(exc,value,tb)
-  root.report_callback_exception=callback_error
-  root.after(1500,lambda:root.tk.call(root.protocol('WM_DELETE_WINDOW')))
-  return root
- tk.Tk=create
+ class SmokeTk(original):
+  def __init__(self,*args,**kwargs):
+   original.__init__(self,*args,**kwargs)
+   root=self
+   def callback_error(exc,value,tb):
+    errors.append(str(value))
+    traceback.print_exception(exc,value,tb)
+   root.report_callback_exception=callback_error
+   root.after(1500,lambda:root.tk.call(root.protocol('WM_DELETE_WINDOW')))
+ tk.Tk=SmokeTk
  import jarvis
  jarvis.main()
  assert not errors, 'Tk callback errors: '+repr(errors)
@@ -110,8 +111,8 @@ with tempfile.TemporaryDirectory(prefix='jarvis006-profile-') as profile:
 '''
         # Negative acceptance control: the same smoke must reject a real Tk
         # callback exception instead of mistaking normal process exit for success.
-        negative = boot.replace('  root.after(1500,',
-            '  root.after(50,lambda:1/0)\n  root.after(1500,')
+        negative = boot.replace('   root.after(1500,',
+            '   root.after(50,lambda:1/0)\n   root.after(1500,')
         rejected = subprocess.run([sys.executable, '-c', negative], cwd=package,
             capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60,
             env=dict(os.environ, JARVIS_TRIAL_HOME=str(root/'isolated-negative-profile')))
