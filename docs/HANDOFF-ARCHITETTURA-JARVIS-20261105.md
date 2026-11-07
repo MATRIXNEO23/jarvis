@@ -1,3 +1,11 @@
+## JRV-AUD-011 —17test prima del runtime, Red da eseguire
+
+Nuovo test_gpt_timeouts.py:5callback owner reali,4client/reader conpipecontrollata,8bridgeNode reale conSDKfinto temporaneo;17nuovi/809totali attesi. Timeout39/41/179/181s virtuali, busy/doppioni eepoch; timeoutclient richiede cancelsoloIDoriginario senza start/retry/pendingcontrollo, pacchettitardivi epipefallita; Nodecancel in session/models/stream, concorrenza,IDinvalidi/mapcleanup/SDKcheignoraabort/shutdown. Stato connected solo simulato, nessun login/rete/DPAPI/dato utente. Review indipendente preventiva richiesta; runtime invariato010. Prossimo: pubblicazione bozza e RedWindows, poi modifica3file esistenti. Nessun build/merge/testfunzionaleLinux;022/023 aperti.
+
+## 7 novembre2026 — JRV-AUD-011 avviata dopo010 verde
+
+Base010e65b5eb, ramo fix/jrv-aud-011-gpt-timeout-20261107. Prosegue sequenza autorizzata con cambi minimi. Causa verificata: run_gpt assegna40s a typed_conversation invece di180s; client ignora pacchetti tardivi ma non richiede annullamento. SDK fissato0a36fefe supporta già AbortSignal per listModels/streamResponse (types/index/responses verificati in fonte ufficiale). Riutilizzo senza upgrade/dipendenza: cancel_request per ID al bridge già esistente, AbortController per singolo ask, cleanup e abortshutdown. Nessun retry/login/disconnessione automatica o token rimborsati promessi. Specifica/piano011 registrati prima del runtime; testRedWindows da preparare. Nessun test funzionaleLinux, build/ZIP/merge/config/dati/credenziali utente.010 conservata con792test/job;022/023 distinti. Prossimo: prove protocollo/callback e Red.
+
 ## 7 novembre2026 — JRV-AUD-010 verificata nei sorgenti in bozza
 
 Base0096e6b081, source060999046d6b232b4d3c05243c53f53b2b39fbd6, [bozza44](https://github.com/MATRIXNEO23/jarvis/pull/44),001–009 conservate. [Run42350951034](https://github.com/MATRIXNEO23/jarvis/actions/runs/42350951034) SUCCESS al tentativo1:792test Python3.11.9/job128338760673159.067s e792 Python3.12.10/job128338760391137.774s;0failure/errori/skip, tutti24nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-010-20261107.md), [evidenza](evidence/jrv-aud-010-fix-20261107.json).
