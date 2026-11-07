@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 5,
-  "next_build": 6,
+  "latest_build": 6,
+  "next_build": 7,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -75,6 +75,20 @@
       "bytes": 283598,
       "previous_build": 4,
       "git_blob_sha": "7095838dc8fd26f5424d3dcbd79ee0b184a21c41"
+    },
+    {
+      "build_number": 6,
+      "label": "006",
+      "archive": "Jarvis-006.zip",
+      "metadata": "Jarvis-006.json",
+      "date": "2026-11-07",
+      "description": "Gemma e correzioni audit: permessi, memoria, voce, concorrenza e stabilita",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "3e2cc05b0b08fdc5b47054b19593cf3151aff75a",
+      "sha256": "066c6f0cb0af78a9e064119d1a9a39a9317f7524456e14c1716555d9d08f103a",
+      "bytes": 8134642,
+      "previous_build": 5,
+      "git_blob_sha": "f8cf8197b77a4077df3b968f3660c0729cfe74c8"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"

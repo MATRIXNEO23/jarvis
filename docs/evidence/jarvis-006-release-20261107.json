@@ -1,0 +1,77 @@
+{
+  "run_id": 42384228753,
+  "source": "3e2cc05b0b08fdc5b47054b19593cf3151aff75a",
+  "conclusion": "success",
+  "run_attempt": 1,
+  "platform": "windows-2022 x64",
+  "jobs": [
+    {
+      "job_id": 128438128625,
+      "python": "3.11.9",
+      "tests": 911,
+      "seconds": 182.379,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "conclusion": "success"
+    },
+    {
+      "job_id": 128438128858,
+      "python": "3.12.10",
+      "tests": 911,
+      "seconds": 138.055,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "conclusion": "success"
+    },
+    {
+      "job_id": 128439016715,
+      "python": "3.12.10 extracted",
+      "tests": 911,
+      "seconds": 156.659,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "conclusion": "success"
+    }
+  ],
+  "artifact": {
+    "id": 13578298918,
+    "node_id": "MDg6QXJ0aWZhY3QxMzU3ODI5ODkxOA==",
+    "name": "Jarvis-006",
+    "size_in_bytes": 8141357,
+    "url": "https://api.github.com/repos/MATRIXNEO23/jarvis/actions/artifacts/13578298918",
+    "archive_download_url": "https://api.github.com/repos/MATRIXNEO23/jarvis/actions/artifacts/13578298918/zip",
+    "expired": false,
+    "digest": "sha256:cca70e8a98586496360d08786b664dcd44837337b864beb85807295885f7353a",
+    "created_at": "2026-11-07T15:07:30Z",
+    "updated_at": "2026-11-07T15:07:30Z",
+    "expires_at": "2026-12-07T15:07:28Z",
+    "workflow_run": {
+      "id": 42384228753,
+      "repository_id": 1439904951,
+      "head_repository_id": 1439904951,
+      "head_branch": "build/jarvis-006-audit-20261107",
+      "head_sha": "3e2cc05b0b08fdc5b47054b19593cf3151aff75a"
+    }
+  },
+  "windows_search_live_312": {
+    "passed": true,
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "archive": "Jarvis-006.zip",
+  "sha256": "066c6f0cb0af78a9e064119d1a9a39a9317f7524456e14c1716555d9d08f103a",
+  "bytes": 8134642,
+  "files": 118,
+  "independent_build_review": "readonly completed; callback gate corrected and Node pinned; no remaining blockers",
+  "prior_cancelled_run": 42383621234,
+  "prior_failed_package_run": 42383777615,
+  "known_test_warning": "test_telegram_secret_dialog replaces tk.Tk with Mock; callback TypeError logged although unit result OK; clean package smoke uses real subclass and rejects callback errors",
+  "pc_test": "pending",
+  "main_runtime_replaced": false,
+  "old_archives_preserved": true,
+  "linux_functional_tests": false,
+  "public_download_verification": "pending post-publication readback"
+}

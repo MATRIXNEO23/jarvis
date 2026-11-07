@@ -1,3 +1,21 @@
+# Jarvis 006 — Gemma e correzioni audit
+
+**[Scarica Jarvis-006.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-006.zip)**
+
+Correzioni a permessi GPT, separazione dei progetti, memoria locale, documenti, voce, concorrenza Gemma/add-on, timeout, HUD, impostazioni e risorse. Guide operative incluse. Nessun nuovo indice autonomo; causa del timeout intermittente CI ancora da chiarire.
+
+Estrai in una cartella NUOVA, senza sovrascrivere la precedente, e avvia solo `avvia_jarvis.bat` nella cartella `Jarvis-Gemma`. Il launcher conserva il profilo `Jarvis-Gemma-Trial` delle candidate Gemma. Non cancellare i vecchi dati. Python3.11/3.12 x64 e dipendenze devono essere gia predisposti; GGUF e account non inclusi. Se provieni dalla005, il profilo Gemma e distinto: non cancellare o migrare a mano il profilo precedente.
+
+[Verifiche Windows e ZIP estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42384228753):911 test per versione Python nei sorgenti e911 sul runtime estratto; import/DLL/avvio/chiusura in profilo temporaneo verificati. La suite completa dell’estratto usa supporti di sviluppo separati, non distribuiti. Windows10/i3-2100, GGUF, audio e account reali restano da collaudare: candidata, non versione PC certificata.
+
+[Sorgenti esatti](https://github.com/MATRIXNEO23/jarvis/tree/3e2cc05b0b08fdc5b47054b19593cf3151aff75a) · [Consegna e limiti](../docs/CONSEGNA-JARVIS-006-20261107.md) · [Versioni precedenti](REGISTRO-VERSIONI.md).
+
+SHA-256: `066c6f0cb0af78a9e064119d1a9a39a9317f7524456e14c1716555d9d08f103a` — 8134642 byte, 118 file.
+
+---
+
+> **Indice autorevole:** [versioni, commit sorgenti, workflow e hash](REGISTRO-VERSIONI.md). I link sotto conservano la cronologia. Le correzioni audit in bozza non sono automaticamente contenute negli ZIP pubblicati.
+
 # Jarvis Gemma — carattere e stile del modello locale
 
 **[Scarica la candidata Windows](./Jarvis-Gemma-Carattere-e-Stile-61a95f8.zip)**

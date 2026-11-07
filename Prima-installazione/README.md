@@ -1,3 +1,7 @@
+> **Candidata006:** segui [consegna e istruzioni](../docs/CONSEGNA-JARVIS-006-20261107.md) e [registro versioni](../Download/REGISTRO-VERSIONI.md). Usa una cartella nuova; il profilo e quello Gemma-Trial. Le istruzioni sotto sono storiche, specifiche delle versioni indicate.
+
+> **Prima scegli la versione:** [registro autorevole](../Download/REGISTRO-VERSIONI.md). Questa guida conserva istruzioni riferite alle versioni storiche indicate nelle sezioni. La candidata Gemma pubblicata e le correzioni audit in bozza sono riferimenti distinti; scaricare i sorgenti di main non equivale a un pacchetto operativo.
+
 ## Programmi e app — disponibile dalla004
 [Guida del componente](Programmi-e-app.md) e [consegna Windows004](../docs/CONSEGNA-BUILD-004-20261103.md). Inclusa nella004 pubblicata; estrarre il pacchetto completo in cartella nuova. La guida storica sotto riguarda la base precedente; la003 non contiene l’add-on.
 
