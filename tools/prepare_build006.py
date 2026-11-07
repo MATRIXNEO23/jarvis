@@ -10,11 +10,14 @@ import zipfile
 if os.name != 'nt':
     raise SystemExit('Build006 must run on Windows.')
 
+NUMBER = int(os.environ.get('JARVIS_BUILD_NUMBER', '6'))
+assert 6 <= NUMBER <= 999
+LABEL = f'{NUMBER:03d}'
 ROOT = 'Jarvis-Gemma/'
 STAMP = (2026, 11, 7, 0, 0, 0)
 ARCHIVE = Path('Jarvis-Gemma-PROVA-CORRETTA.zip')
-OUT = Path('dist/Jarvis-006.zip')
-NOTICE = '''JARVIS 006 - CANDIDATA CON CORREZIONI AUDIT
+OUT = Path(f'dist/Jarvis-{LABEL}.zip')
+NOTICE = f'''JARVIS {LABEL} - CANDIDATA CON CORREZIONI AUDIT
 Estrai in una cartella nuova e avvia soltanto avvia_jarvis.bat.
 Il launcher conserva il profilo Jarvis-Gemma-Trial delle candidate Gemma.
 Non eliminare o sovrascrivere la cartella e i dati della versione precedente.
@@ -36,14 +39,14 @@ def snapshot():
             assert name.startswith(ROOT) and '\\' not in name
             assert '..' not in PurePosixPath(name).parts
         entries = {name[len(ROOT):]: source.read(name) for name in names}
-    entries['LEGGIMI-BUILD-006.txt'] = NOTICE.encode('utf-8')
+    entries[f'LEGGIMI-BUILD-{LABEL}.txt'] = NOTICE.encode('utf-8')
     return entries
 
 
 def packed(entries, source_sha):
     manifest = {name: hashlib.sha256(data).hexdigest()
                 for name, data in sorted(entries.items())}
-    version = dict(schema_version=1, build_number=6, build_label='006',
+    version = dict(schema_version=1, build_number=NUMBER, build_label=LABEL,
         source_commit=source_sha, package_root=ROOT.rstrip('/'),
         date='2026-11-07', status='candidate_pc_test_pending', files=manifest,
         residual_issues=['JRV-AUD-016', 'JRV-AUD-023'])
@@ -79,7 +82,7 @@ def main():
         assert hashlib.sha256(Path(path).read_bytes()).hexdigest() == digest, path
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_bytes(first)
-    details = dict(schema_version=1, build_number=6, build_label='006',
+    details = dict(schema_version=1, build_number=NUMBER, build_label=LABEL,
         archive=OUT.name, package_root=ROOT.rstrip('/'), source_commit=source_sha,
         sha256=hashlib.sha256(first).hexdigest(), bytes=len(first),
         files=len(version['files'])+1, date='2026-11-07',

@@ -1,0 +1,138 @@
+"""Local, read-only help using the existing command catalogs and Tk widgets."""
+import tkinter as tk
+from tkinter import ttk
+
+
+def help_sections(engine):
+    files = getattr(engine, 'file_access', None)
+    apps = getattr(engine, 'program_apps', None)
+    enabled = False
+    details = []
+    for service in (files, apps):
+        if service is None:
+            continue
+        try:
+            if service is files:
+                enabled = bool(service.available())
+            commands = service.commands()
+            if commands:
+                details.append(commands)
+        except (OSError, ValueError, RuntimeError):
+            details.append('Catalogo del componente non disponibile: controlla le impostazioni.')
+    return {
+        'Inizia qui':
+            'Scrivi nella casella e premi Invio oppure il pulsante di invio.\n'
+            'Scrivi aiuto, help o comandi per riaprire questa guida. Funziona anche con Gemma o GPT attivi.\n\n'
+            'F1 apre la guida. Ctrl+L porta il cursore nella casella. Ctrl+, apre le impostazioni.\n'
+            'La guida non invia richieste ai modelli e non esegue i comandi mostrati.\n'
+            'Le sezioni spiegano esempi e prerequisiti; le funzioni opzionali richiedono attivazione e permessi.',
+        'Comandi locali': engine.available_commands(files_enabled=enabled),
+        'Timer e sveglia':
+            'imposta timer sei minuti\navvia un timer da 6 minuti\ntimer 45 secondi\n'
+            'pausa timer\nriprendi timer\nquanto manca al timer\nferma timer\nreset timer\n\n'
+            'Un timer con durata parte subito. Scrivere solo timer apre la regolazione manuale.\n\n'
+            'metti sveglia alle sette e trenta di mattina\nimposta sveglia alle 07:30\n'
+            'ferma la sveglia\nche ore sono\n\n'
+            'La sveglia richiede la relativa add-on attiva. Se l’orario è passato, vale per domani. '
+            'Per evitare ambiguità puoi usare il formato 24 ore. Gli elenchi di questa guida non vengono letti a voce.',
+        'Voce':
+            'Standby: microfono fermo. Premi per parlare: usa il pulsante dedicato.\n'
+            'Ascolto continuo: accetta le richieste direttamente; può interpretare anche parlato ambientale.\n'
+            'Hey Jarvis: inizia OGNI richiesta con Jarvis, per esempio Jarvis, imposta timer sei minuti. '
+            'Il solo nome Jarvis non abilita la frase successiva.\n\n'
+            'Il pulsante MIC mantiene il controllo manuale. Il riconoscimento offline richiede Vosk e il modello vocale. '
+            'Per installazione e problemi usa docs/VOCE_OFFLINE.md distribuita con Jarvis.',
+        'Modelli e GPT':
+            'La scelta dei modelli non è stata cambiata da questa guida. '
+            'I comandi locali supportati, incluso aiuto, vengono gestiti senza inviare richieste a GPT.\n\n'
+            'Con Gemma configurata, la conversazione ordinaria della console usa Gemma. '
+            'Chiedi a GPT è il pulsante esplicito per una richiesta al GPT collegato; Prova Gemma locale è una prova del modello.\n\n'
+            'GPT richiede abilitazione, collegamento e permesso della funzione. '
+            'Mai: nessun invio per quella funzione. Chiedi autorizzazione: domanda prima dell’invio. '
+            'Autorizzato: evita quella richiesta ripetuta, ma non autorizza automaticamente le azioni.\n'
+            'Pianifica attività propone un piano da approvare. L’autodiagnosi locale è distinta dalla valutazione esterna. '
+            'Le voci Web nei permessi non equivalgono a un navigatore autonomo completo.',
+        'File e app':
+            '\n\n'.join(details) + '\n\n'
+            'Configura Accesso file e Programmi e app nelle impostazioni: scegli cartelle, applicazioni e permessi. '
+            'Un esempio non concede accesso. Gli alias personali dipendono dal catalogo attivo. '
+            'L’indice autonomo di Jarvis non è implementato: ricerca tramite Windows Search e scansione limitata. '
+            'Guide del pacchetto: file_access/LEGGIMI.md e program_apps/LEGGIMI.md.',
+        'Progetti e Telegram':
+            'crea progetto Casa\napri progetto Casa\nelenca progetti\ntorna alla conversazione generale\n\n'
+            'I progetti mantengono contesti separati. Le preferenze memoria controllano il recupero dei ricordi.\n\n'
+            'Telegram richiede attivazione, account collegato e contatti autorizzati. '
+            'Gestisci contatti, cronologia e consensi dalle impostazioni Telegram. '
+            'Non avviare due istanze Telegram contemporaneamente. I messaggi non letti compaiono negli indicatori; '
+            'aprire una conversazione marca solo i messaggi visualizzati. Gli invii restano soggetti ai controlli previsti.',
+        'Tastiera':
+            'F1 — Apri o richiama questa guida.\n'
+            'Ctrl+L — Metti il cursore nella casella di comando, senza inviare nulla.\n'
+            'Invio — Invia il testo nella casella di comando.\n'
+            'Ctrl+, — Apri le impostazioni (scorciatoia già esistente).\n'
+            'Ctrl+Tab / Ctrl+Shift+Tab — Cambia sezione della guida.\n'
+            'Tab — Passa tra i controlli.\n'
+            'Esc nella guida — Chiudi solo la guida.\n\n'
+            'Per problemi: usa Autodiagnosi Jarvis. Un rapporto locale non invia nulla a GPT da solo.',
+    }
+
+
+class HelpWindow(tk.Toplevel):
+    def __init__(self, parent, engine):
+        super().__init__(parent)
+        self.title('Jarvis — Aiuto e comandi')
+        self.geometry('800x550')
+        self.minsize(560, 360)
+        self.notebook = ttk.Notebook(self)
+        self.notebook.pack(fill='both', expand=True, padx=10, pady=10)
+        self.notebook.enable_traversal()
+        self.pages = {}
+        for title, content in help_sections(engine).items():
+            frame = ttk.Frame(self.notebook)
+            text = tk.Text(frame, wrap='word', font=('Segoe UI', 11),
+                           bg='#061421', fg='#d7f6ff', padx=12, pady=12)
+            scroll = ttk.Scrollbar(frame, command=text.yview)
+            text.configure(yscrollcommand=scroll.set)
+            scroll.pack(side='right', fill='y')
+            text.pack(fill='both', expand=True)
+            text.insert('1.0', content)
+            text.configure(state='disabled')
+            self.pages[title] = text
+            self.notebook.add(frame, text=title)
+        ttk.Button(self, text='Chiudi (Esc)', command=self.destroy).pack(pady=(0, 10))
+        self.bind('<Escape>', self.close)
+        self.bind('<Destroy>', lambda event: self._forget(parent, event), add='+')
+
+    def _forget(self, parent, event):
+        if event.widget is self and getattr(parent, '_jarvis_help_window', None) is self:
+            parent._jarvis_help_window = None
+
+    def close(self, event=None):
+        self.destroy()
+        return 'break'
+
+    def refresh(self, engine):
+        for title, content in help_sections(engine).items():
+            text = self.pages[title]
+            text.configure(state='normal')
+            text.delete('1.0', 'end')
+            text.insert('1.0', content)
+            text.configure(state='disabled')
+
+
+def open_help(parent, engine):
+    window = getattr(parent, '_jarvis_help_window', None)
+    if window is not None and window.winfo_exists():
+        window.refresh(engine)
+        window.deiconify()
+        window.lift()
+    else:
+        window = HelpWindow(parent, engine)
+        parent._jarvis_help_window = window
+    return window
+
+
+def bind_help_shortcuts(root, settings_window, show_help, focus_command):
+    root.bind('<F1>', show_help, add='+')
+    settings_window.bind('<F1>', show_help, add='+')
+    root.bind('<Control-l>', focus_command, add='+')

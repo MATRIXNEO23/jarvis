@@ -2410,6 +2410,11 @@ def main() -> None:
         activebackground="#0b344b", activeforeground=WHITE,
         bd=0, relief="flat", cursor="hand2")
     tools_button.pack(side="left")
+    help_button = tk.Button(
+        input_row, text="?", width=2, font=("Segoe UI", 14),
+        bg=PANEL, fg=CYAN, activebackground="#0b344b",
+        activeforeground=WHITE, bd=0, relief="flat", cursor="hand2")
+    help_button.pack(side="left", padx=(3, 0))
     buttons_row = ttk.Frame(hud.command_host)
     # Hidden until the user clicks ⋯, like secondary controls in the concept.
     local_button = ttk.Button(buttons_row, text="Esegui locale")
@@ -2447,7 +2452,7 @@ def main() -> None:
                          font=("Segoe UI", 10, "bold"),
                          spacing1=9)
     hud.attach_console(output)
-    write_line("Jarvis locale pronto. Scrivi 'aiuto' per vedere i comandi disponibili.")
+    write_line("Jarvis locale pronto. Scrivi 'aiuto' o premi F1 per la guida e i comandi.")
 
     try:
         engine = LocalEngine()
@@ -4062,10 +4067,24 @@ def main() -> None:
             STANDBY if voice_mode.get() != STANDBY else GPT_CONVERSATION)
         change_voice_mode()
 
+    def show_help(event=None):
+        from local_help import open_help
+        open_help(root, engine)
+        return "break"
+
+    def focus_command_box(event=None):
+        input_box.focus_set()
+        return "break"
+
     def send_console_input(event=None) -> None:
         message=request.get().strip()
         if not message:
             return
+        if " ".join(message.casefold().strip(" .!?").split()) in (
+                "aiuto", "help", "comandi", "cosa puoi fare", "cosa sai fare"):
+            show_help()
+            request.set("")
+            return "break"
         reconcile_document_session(force=True)
         if try_telegram_voice_send(message):
             request.set("")
@@ -4167,6 +4186,7 @@ def main() -> None:
     addon_settings_button.configure(command=open_addon_settings)
     hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
+    help_button.configure(command=show_help)
     hud_mic_button.configure(command=toggle_hud_microphone)
     hud.set_quick_toggle_handlers(
         microphone=hud_mic_button.invoke,
@@ -4512,6 +4532,8 @@ def main() -> None:
     root.protocol("WM_DELETE_WINDOW", close)
     settings_window.bind("<Escape>", lambda _event: settings_window.withdraw())
     root.bind("<Control-comma>", lambda _event: show_settings())
+    from local_help import bind_help_shortcuts
+    bind_help_shortcuts(root, settings_window, show_help, focus_command_box)
     refresh_buttons()
     input_box.focus_set()
     root.after(120, poll)

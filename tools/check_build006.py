@@ -14,13 +14,16 @@ import zipfile
 if os.name != 'nt':
     raise SystemExit('Only Windows package verification is authorized.')
 
+NUMBER = int(os.environ.get('JARVIS_BUILD_NUMBER', '6'))
+LABEL = f'{NUMBER:03d}'
+EXPECTED_TESTS = int(os.environ.get('JARVIS_EXPECTED_TESTS', '911'))
 SOURCE = Path(__file__).resolve().parents[1]
-ARCHIVE = SOURCE / 'dist/Jarvis-006.zip'
+ARCHIVE = SOURCE / f'dist/Jarvis-{LABEL}.zip'
 DLL_SHA = 'ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba'
 GUIDES = {'docs/VOCE_OFFLINE.md', 'docs/RECUPERO-IMPOSTAZIONI.md',
           'file_access/LEGGIMI.md', 'program_apps/LEGGIMI.md'}
 EXTRA = {'native_engine/koboldcpp.py', 'native_engine/koboldcpp_noavx2.dll',
-         'LEGGIMI-GEMMA-TEST.txt', 'LEGGIMI-BUILD-006.txt'}
+         'LEGGIMI-GEMMA-TEST.txt', f'LEGGIMI-BUILD-{LABEL}.txt'}
 
 
 def digest(path):
@@ -35,7 +38,7 @@ def run(args, cwd, timeout=120):
 def main():
     details = json.loads(ARCHIVE.with_suffix('.json').read_text(encoding='utf-8'))
     assert details['source_commit'] == os.environ['GITHUB_SHA']
-    assert details['build_number'] == 6 and details['build_label'] == '006'
+    assert details['build_number'] == NUMBER and details['build_label'] == LABEL
     assert details['bytes'] == ARCHIVE.stat().st_size and details['sha256'] == digest(ARCHIVE)
     source_tests = sum(1 for _ in (SOURCE/'tests').glob('test_*.py'))
     with tempfile.TemporaryDirectory(prefix='jarvis006-package-') as temporary:
@@ -54,7 +57,7 @@ def main():
         package = root / 'Jarvis-Gemma'
         version = json.loads((package/'VERSIONE.json').read_text(encoding='utf-8'))
         manifest = version['files']
-        assert version['source_commit'] == details['source_commit'] and version['build_number'] == 6
+        assert version['source_commit'] == details['source_commit'] and version['build_number'] == NUMBER
         actual = {p.relative_to(package).as_posix() for p in package.rglob('*') if p.is_file()}
         assert actual == set(manifest) | {'VERSIONE.json'}
         assert GUIDES <= actual
@@ -142,7 +145,7 @@ with tempfile.TemporaryDirectory(prefix='jarvis006-profile-') as profile:
         print(log, flush=True)
         assert result.returncode == 0, 'Extracted-runtime regression suite failed'
         count = re.search(r'Ran (\d+) tests in', log)
-        assert count and int(count.group(1)) == 911, 'Unexpected extracted test count'
+        assert count and int(count.group(1)) == EXPECTED_TESTS, 'Unexpected extracted test count'
         assert not re.search(r'\b(?:FAILED|skipped=)\b', log)
         for name, expected in manifest.items():
             assert digest(package/name) == expected, 'Test mutated operational file: '+name
@@ -151,11 +154,11 @@ with tempfile.TemporaryDirectory(prefix='jarvis006-profile-') as profile:
         clean_imports_native_dll=True, clean_ui_boot_close=True,
         injected_tk_callback_exception_rejected=True,
         required_guides_and_relative_links=True, operational_source_parity=True,
-        full_extracted_runtime_suite=911, test_modules=source_tests,
+        full_extracted_runtime_suite=EXPECTED_TESTS, test_modules=source_tests,
         test_only_overlays=['tests', 'tools', '.github', 'nonoperative docs'],
         overlays_shipped=False, runtime_files_copied_from_checkout=False,
         hardware_windows10_microphone_accounts_gguf='not tested')
-    (SOURCE/'dist/Jarvis-006-validation.json').write_text(json.dumps(evidence, indent=2)+'\n', encoding='utf-8')
+    (SOURCE/f'dist/Jarvis-{LABEL}-validation.json').write_text(json.dumps(evidence, indent=2)+'\n', encoding='utf-8')
     print('VERIFIED_BUILD006='+json.dumps(evidence))
 
 
