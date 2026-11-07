@@ -1,3 +1,19 @@
+## 7 novembre 2026 — JRV-AUD-002 verificata su Windows, non distribuita
+
+Correzione `05926bdc34516624eb3c5ef21321b801cb466586`, [PR draft35](https://github.com/MATRIXNEO23/jarvis/pull/35), dipendente dalla34. [Run42329422636](https://github.com/MATRIXNEO23/jarvis/actions/runs/42329422636) SUCCESS:682 test per Python3.11.9/3.12.10, sintassi/probe nativi e indice Windows live passati; servizio e fixture ripristinati. Red precedente675 test/cinque asserzioni fallite senza errori fixture. [Evidenza](evidence/jrv-aud-002-20261107.json).
+
+Un solo backend, buffer globale di16 scambi partizionati per progetto/generale, nessuna persistenza aggiunta. Solo turni accettati nel poll con epoca/progetto validi entrano nella memoria e nel follow-up app. Verificati ritorno al progetto, revoca voce/testo, contesto catturato prima del worker, budget globale, commit idempotente, poll non bloccato dall'inferenza, isolamento Telegram/picker e conservazione dei ricordi su disco. Review indipendente senza difetti bloccanti; coperte anche le lacune iniziali follow-up/poll concorrente. I blob runtime/test condivisi coincidono col commit remoto. Nessun test account/microfono/GGUF/Pavilion, nuova build, ZIP o merge. Il checkpoint successivo cambia solo documentazione. Prossimo ID003: riprodurre la modifica manuale durante salva e chiudi prima di correggere; il rischio resta da confermare.
+
+## 7 novembre 2026 — JRV-AUD-002, candidata in verifica
+
+Red Windows run42328846716 / job128270410711 su a988b63:675 test, cinque fallimenti comportamentali, nessun errore fixture. Riprodotti contaminazione A→generale/B, turni vocali/scritti revocati ancora ricordati e contesto errato del worker. Piano invariato: un backend,32 messaggi globali, nessun archivio persistente modificato.
+
+Candidata: buffer di16 scambi etichettati per contesto; prepare_turn produce una proposta, il poll UI la accetta solo se epoca/progetto sono correnti. Commit idempotente con lock breve distinto dall'inferenza; follow-up app aggiornato soltanto dopo accettazione. API ask sincrona e chat isolata Telegram/picker conservate. Nuove prove di budget, commit differito/idempotente, metadati non bloccati dall'inferenza e contesto invalido. AST/diff controllati; Green Windows e review indipendente ancora da completare. Nessun test funzionale Linux, GGUF/account reale, build o merge. PR35 dipende da PR34.
+
+## 7 novembre 2026 — JRV-AUD-002, riproduzione in corso
+
+Base53717eb con001 conservata; ramo separato fix/jrv-aud-002-gemma-history-20261107. Piano docs/superpowers/plans/2026-11-07-jrv-aud-002-history.md. Test nuovi dei callback reali con NativeConversationSession e WorkspaceMemory temporanei: progetti/generale, risultato revocato prima del poll, cambio contesto durante inferenza e prima dell'avvio worker, conservazione dati persistenti. Backend controllato senza DLL/GGUF/account. Runtime invariato. Prossimo passo: Red Windows, poi partizionare un buffer globale limitato e inserire nella memoria soltanto risposte accettate dalla UI. Nessun test funzionale Linux, build, ZIP o merge.
+
 ## 7 novembre 2026 — JRV-AUD-001 verificata su Windows, non distribuita
 
 Correzione runtime `daa7a6a8760688f6081bca95ee6c9d6df6ac8ce8`, [PR draft34](https://github.com/MATRIXNEO23/jarvis/pull/34). [Run42327319575](https://github.com/MATRIXNEO23/jarvis/actions/runs/42327319575) SUCCESS: 670 test per Python3.11.9 e3.12.10, sintassi/probe nativi e Windows Search live passati; servizio e fixture ripristinati. I14 test aggiunti coprono policy, revoca, file, diagnosi e planner. Red precedente659 test/cinque asserzioni fallite conservato. Review indipendente in sola lettura: nessun difetto bloccante; lacune iniziali file/diagnosi coperte dai test aggiunti. [Evidenza](evidence/jrv-aud-001-20261107.json).

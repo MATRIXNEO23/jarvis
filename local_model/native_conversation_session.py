@@ -22,11 +22,28 @@ def clean_native_answer(text):
             break
     return "\n".join(lines).strip() or "Puoi ripetere la domanda?"
 
-from threading import RLock
+from threading import Lock, RLock
 
 from .memory_preferences import MemoryPreferences, default_memory_preferences_path
 from .native_config import NativeModelConfig
 from .native_settings import default_native_settings_path
+
+
+class NativeChatTurn:
+    """An answered turn that the owner UI has not yet accepted into history.
+
+    This object is internal data, never a model command or a persistent record.
+    Its default repr deliberately does not expose conversational text.
+    """
+    def __init__(self, session, context_id, question, text):
+        self._session = session
+        self.context_id = context_id
+        self.question = question
+        self.text = text
+        self._committed = False
+
+    def commit(self):
+        return self._session._commit_turn(self)
 
 
 class NativeConversationSession:
@@ -36,13 +53,48 @@ class NativeConversationSession:
             lambda: NativeModelConfig.load(default_native_settings_path()))
         self.memory_loader = memory_loader or (
             lambda: MemoryPreferences.load(default_memory_preferences_path()))
-        self.history = deque(maxlen=32)
+        # Same global budget as before: 32 messages = 16 complete exchanges,
+        # shared across contexts, rather than an unbounded cache per project.
+        self._turns = deque(maxlen=16)
+        self._history_lock = Lock()
         self.prepared = False
         self.lock = RLock()
 
-    def ask(self, question, *, timeout=180):
+    @property
+    def history(self):
+        """Snapshot of general-chat messages, for legacy read-only callers."""
+        return deque(self._messages(None), maxlen=32)
+
+    def _messages(self, context_id):
+        with self._history_lock:
+            turns = tuple(self._turns)
+        return [message for owner, question, answer in turns if owner == context_id
+                for message in (("user", question), ("assistant", answer))]
+
+    def _commit_turn(self, turn):
+        # Only a brief metadata lock: accepting an answer must never wait
+        # behind a Telegram/model generation holding the inference lock.
+        with self._history_lock:
+            if turn._committed:
+                return False
+            self._turns.append((turn.context_id, turn.question, turn.text[:2000]))
+            turn._committed = True
+            return True
+
+    def ask(self, question, *, timeout=180, context_id=None):
+        """Synchronous standalone API; the GUI uses prepare_turn instead."""
+        with self.lock:
+            turn = self.prepare_turn(question, timeout=timeout, context_id=context_id)
+            turn.commit()
+            return turn.text
+
+    def prepare_turn(self, question, *, timeout=180, context_id=None):
+        """Generate locally; the UI must validate its epoch before commit()."""
         if not isinstance(question, str) or not question.strip():
             raise ValueError("Domanda locale vuota.")
+        if context_id is not None and (not isinstance(context_id, str)
+                                      or not re.fullmatch(r"[a-f0-9]{32}", context_id)):
+            raise ValueError("Contesto progetto locale non valido.")
         with self.lock:
             config = self.config_loader().validate()
             memory = self.memory_loader().validate()
@@ -50,7 +102,7 @@ class NativeConversationSession:
                 config.context_size, config.max_output)
             # Conservative character budget: never claim this is a tokenizer.
             latest = question.strip()
-            turns = list(self.history)[-memory.recent_messages:]
+            turns = self._messages(context_id)[-memory.recent_messages:]
             instructions = "Rispondi in italiano in modo diretto, senza analisi o note interne.\n"
             suffix = "Utente: " + latest + "\nJarvis:"
             style = "Stile di risposta: " + " ".join(config.personality.split()) + "\n"
@@ -74,9 +126,7 @@ class NativeConversationSession:
                 self.prepared = True
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             answer = clean_native_answer(result.get("text"))
-            self.history.append(("user", latest))
-            self.history.append(("assistant", answer[:2000]))
-            return answer
+            return NativeChatTurn(self, context_id, latest, answer)
 
     def ask_isolated(self, build_prompt, *, timeout=180):
         """Share the loaded model without reading or changing chat history."""

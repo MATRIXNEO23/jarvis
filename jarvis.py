@@ -4243,6 +4243,7 @@ def main() -> None:
         gemma_button.configure(state="disabled")
         write_line(("GEMMA / DOMANDA > " if typed else "UTENTE / VOCE > ") + spoken)
         voice_epoch = conversation_epoch
+        native_context = active_project_id
 
         def voice_worker():
             try:
@@ -4253,10 +4254,10 @@ def main() -> None:
                     app_id = candidates[index]["id"] if index is not None else None
                     gemma_trial_queue.put(("program_choice", (spoken, app_id), voice_epoch))
                 else:
-                    answer = chat_transport.ask_local_first(
-                        spoken, session=session, timeout=180)
-                    gemma_recent_reply[0] = (voice_epoch, time.monotonic(), spoken[:500] + " " + answer[:500])
-                    gemma_trial_queue.put(("ok" if typed else "voice_ok", answer, voice_epoch))
+                    turn = chat_transport.ask_local_first(
+                        spoken, session=session, timeout=180,
+                        context_id=native_context, defer_history=True)
+                    gemma_trial_queue.put(("ok" if typed else "voice_ok", turn, voice_epoch))
             except Exception as exc:
                 gemma_trial_queue.put(("error" if typed else "voice_error", str(exc)[:350], voice_epoch))
         threading.Thread(target=voice_worker, daemon=True,
@@ -4282,6 +4283,19 @@ def main() -> None:
                 gemma_button.configure(state="normal")
                 if voice_epoch is not None and voice_epoch != conversation_epoch:
                     continue
+                if kind in ("ok", "voice_ok"):
+                    from local_model.native_conversation_session import NativeChatTurn
+                    if isinstance(value, NativeChatTurn):
+                        if closing or value.context_id != active_project_id:
+                            continue
+                        # UI context/epoch cannot change during this synchronous
+                        # acceptance. The metadata commit never waits for native inference.
+                        if not value.commit():
+                            continue
+                        gemma_recent_reply[0] = (
+                            voice_epoch, time.monotonic(),
+                            value.question[:500] + " " + value.text[:500])
+                        value = value.text
                 if kind == "program_choice":
                     spoken, app_id = value
                     if app_id is None:
