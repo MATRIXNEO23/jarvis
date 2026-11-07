@@ -1,3 +1,13 @@
+## 7 novembre 2026 — JRV-AUD-015 verificata nei sorgenti in bozza
+
+La ricerca ora condivide una deadline tra indice Windows e scansione: timeout min(8s,residuo), nessun nuovo budget per il fallback. Risultati validi conservati con copertura parziale time_limit, annullamento/revoca prevalgono, callback legacy a due argomenti senza retry TypeError. Radici e reinclusioni non rimosse,20risultati/5000voci e spunte invariati. Nessun nuovo indice016 o dipendenza.
+
+Base014 4f436630, source verificato bd722353fce33a38647e102778eb585579cb428e, [bozza48](https://github.com/MATRIXNEO23/jarvis/pull/48). [Run42359421674](https://github.com/MATRIXNEO23/jarvis/actions/runs/42359421674) SUCCESS prima candidata runtime:869test per Python3.11.9 (job128364417473,126.668s) e3.12.10 (job128364417195,130.805s),0failure/errori/skip, tutti17nuovi metodi passati. Sintassi/probe passati; Search live3.12 con servizio e fixture ripristinati. [Rapporto](CORREZIONE-JRV-AUD-015-20261107.md), [evidenza](evidence/jrv-aud-015-fix-20261107.json).
+
+Red82379bfe/run42358971980:867test/job,10failure0errori nel nuovo015;3.11job128363078992192.808s e3.12job128363079143181.795s. Causa dimostrata, nessun retry cieco. Review preventiva rafforza TypeError interno e risultato fallback selezionabile dopo scadenza:2metodi aggiunti dopoRed, senza rivendicare altroRed. Review runtime indipendente readonly senza blocchi rilevati.022/023 non osservati, restano aperti.
+
+Checkpoint finale solo documenti/evidenza, runtime/test da confrontare con il source verde prima di dichiarare conservazione remota. Nessuna build/ZIP/merge/release, test funzionale Linux o dato/profilo/credenziale reale modificato. Tempo controllato nei test, non benchmark Windows10/i3/HDD né hard timeout su I/O/callback non cooperativa; Known Folders/policy e localizzazione registrazioni precedono il budget. Prossimo017: indicatore HUD mentre Gemma elabora, senza creare/caricare modello per leggere lo stato. Conservate001–011,018,014,015;016 resta una funzione separata da valutare, build soltanto su richiesta esplicita.
+
 ## JRV-AUD-015 — review runtime completata, Green Windows da acquisire
 
 Review indipendente readonly sul diff esatto dalla014 senza rilievi bloccanti: una deadline, timeout residuo, directory vuote, risultati/cancellazione e protocollo legacy verificati staticamente. Entrambi i gap preventivi recepiti,17nuovi/869attesi. Non è una prova eseguita: suite Windows e probe ancora necessari. Runtime candidata soltanto in file_access/service.py, guida operativa e rapporto aggiornati; nessuna build/estrazione/pubblicazione autorizzata. Main, versioni precedenti, dati e permessi conservati. Prossimo: esito Green, eventuali errori analizzati e checkpoint remoto.

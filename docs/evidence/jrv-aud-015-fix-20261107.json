@@ -1,0 +1,108 @@
+{
+  "issue": "JRV-AUD-015",
+  "date": "2026-11-07",
+  "status": "verified-in-draft-Windows-service-with-controlled-time",
+  "base": "4f436630b3aae935c808b13e798c9b8991fdedc8",
+  "source": "bd722353fce33a38647e102778eb585579cb428e",
+  "branch": "fix/jrv-aud-015-search-deadline-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/48",
+  "command": "python -m unittest discover -s tests -v",
+  "environment": "Windows Server2022x64; real temporary files, policy and service; monotonic/subprocess controlled; native Windows wrapper exercised",
+  "runs": [
+    {
+      "phase": "Red",
+      "source": "82379bfe793aa35938542408ff007a7cc5e02903",
+      "run_id": 42358971980,
+      "conclusion": "failure",
+      "new_methods": 15,
+      "jobs": [
+        {
+          "id": 128363078992,
+          "python": "3.11.9",
+          "tests": 867,
+          "failures": 10,
+          "errors": 0,
+          "seconds": 192.808
+        },
+        {
+          "id": 128363079143,
+          "python": "3.12.10",
+          "tests": 867,
+          "failures": 10,
+          "errors": 0,
+          "seconds": 181.795
+        }
+      ],
+      "cause": "Per-root timeout8 repeated, fallback starts after expiry, empty directories escape budget, false complete coverage; all failures in new015 tests"
+    },
+    {
+      "phase": "Green",
+      "source": "bd722353fce33a38647e102778eb585579cb428e",
+      "run_id": 42359421674,
+      "conclusion": "success",
+      "new_methods": 17,
+      "jobs": [
+        {
+          "id": 128364417473,
+          "python": "3.11.9",
+          "tests": 869,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 126.668
+        },
+        {
+          "id": 128364417195,
+          "python": "3.12.10",
+          "tests": 869,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 130.805
+        }
+      ],
+      "extra_methods_after_red": [
+        "callback internal TypeError never retried",
+        "fallback result kept/selectable at deadline"
+      ],
+      "attempt": 1
+    }
+  ],
+  "review": {
+    "independent_readonly": true,
+    "preventive_gaps_addressed": 2,
+    "runtime_blockers_found": 0,
+    "functional_tests_executed_by_reviewer": false
+  },
+  "other_checks": {
+    "python_syntax": "passed",
+    "javascript_syntax": "passed",
+    "powershell_syntax": "passed",
+    "native_file_access_probe": "passed",
+    "windows_search_live_python312": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "build": "skipped",
+    "extract_package": "skipped",
+    "artifact": "skipped",
+    "publish": "skipped",
+    "linux_functional_tests": "not executed"
+  },
+  "preserved": [
+    "permissions/exclusions/reincluded roots",
+    "valid indexed/fallback hits and numeric selection",
+    "cancellation/revocation",
+    "legacy two-argument callbacks",
+    "20result/5000entry limits",
+    "user profile and existing packages"
+  ],
+  "limits": [
+    "not a hard deadline on process startup/filesystem I/O/uncooperative callback",
+    "Known Folders/policy and installed-location lookup precede index/scan budget",
+    "no new persistent autonomous index016",
+    "no Windows10/i3/HDD benchmark or extracted-package verification",
+    "022 and023 remain open; absent in these runs does not prove fixed"
+  ]
+}
