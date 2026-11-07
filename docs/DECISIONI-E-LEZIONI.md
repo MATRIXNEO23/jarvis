@@ -1,3 +1,13 @@
+## 7 novembre 2026 — JRV-AUD-007 confermato, sola verifica
+
+[Bozza40](https://github.com/MATRIXNEO23/jarvis/pull/40), base7920c4d (001–006 conservate), source2632321c258d9a20d44a7e6cbba8538476505412. [Rapporto](VERIFICA-JRV-AUD-007-20261107.md), [evidenza](evidence/jrv-aud-007-20261107.json), [run42340988254](https://github.com/MATRIXNEO23/jarvis/actions/runs/42340988254): Windows3.11.9/job128308391527 e3.12.10/job128308391854,723 test ciascuno,9 fallimenti comportamentali e0 errori,153.353s/148.019s. Suite rossa attesa:007 CONFERMATO/ALTO, non corretto. Quattro nuovi metodi falliscono (9 sottocasi); tre controlli passano; nessun altro fallimento.
+
+Causa: `_report` verifica generazione prima della coda ma manda solo(kind,value); `poll` usa modo corrente. OFF→ON permette a testo vecchio di arrivare a comando/modello e a status vecchio di sostituire stato nuovo; frase senza hotword GPT diventa locale passando a continuo. Controlli: standby blocca; produttore vecchio non accoda; comando/modello corrente passa una volta. Producer/Queue/callback/loop dispatch reali, audio/azioni/modello controllati; nessun programma o account usato per007.
+
+Errore iniziale della fixture (mock refresh_buttons assente) registrato e superato; aggiunti controlli positivi modello/hotword dopo review indipendente, senza ulteriori rilievi. Nessuna modifica runtime, configurazione/dato utente, merge, build/ZIP/release o test funzionale Linux. Sintassi Python/JS passata; PowerShell/probe file saltati dopo Red; Search live3.12 passata con servizio/fixture ripristinati. Windows10/i3/HDD, microfono/Vosk e modello reale non verificati.022/023 aperti, non riprodotti in questo run.
+
+Prossimo passo soltanto dopo via utente: identità di sessione nell'evento e controllo al consumo prima di qualunque effetto; preservare altri eventi/mode/consensi, rendere verdi i test e rieseguire Windows. Non svuotare tutta la coda condivisa. Checkpoint finale soltanto documentale.
+
 ## JRV-AUD-007 — verifica in corso, 2026-11-07
 
 Richiesta «ok verifica»: soltanto test/documentazione. Base `7920c4d9c32049d49f848aef3af0006a037dfedf`, ramo `verify/jrv-aud-007-voice-queue-20261107`, dipendente dalla bozza39. Ipotesi: evento vocale già in coda reinterpretato dopo cambio modalità/standby. Piano: `docs/superpowers/plans/2026-11-07-jrv-aud-007-verification.md`; test `tests/test_voice_queue_generation.py`. Nessuna correzione runtime applicata. Prova Windows ancora da eseguire; nessun test funzionale Linux, microfono, GPT reale, build o merge. Prossimo passo: Windows CI e confronto tra eventi vecchi e controlli nuovi. 022/023 restano aperti.
