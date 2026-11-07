@@ -23,8 +23,8 @@ class NativeSettingsWindow:
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="Gemma locale - configurazione",
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
-        ttk.Label(frame, text="Salvare non avvia il modello. Le modifiche a contesto, "
-                  "thread e modello richiedono un ricaricamento.",
+        ttk.Label(frame, text="Salvare non avvia il modello. I nuovi valori saranno usati "
+                  "dalla prossima richiesta, con ricaricamento solo se necessario.",
                   wraplength=520).pack(anchor="w", pady=(5, 12))
         self.values = {}
         labels = {
@@ -94,8 +94,8 @@ class NativeSettingsWindow:
             if callable(self.on_save):
                 self.on_save(revised, reload_needed)
             self.status.set("Impostazioni salvate. " + (
-                "Ricaricamento modello necessario." if reload_needed
-                else "Valori applicabili alla prossima generazione."))
+                "Ricaricamento automatico alla prossima richiesta." if reload_needed
+                else "Valori usati dalla prossima generazione."))
             return True
         except (OSError, ValueError, TypeError) as exc:
             messagebox.showerror("Jarvis / Gemma",

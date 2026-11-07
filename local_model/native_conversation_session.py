@@ -3,6 +3,7 @@
 No online fallback, no desktop actions and no model load on import.
 """
 from collections import deque
+from dataclasses import replace
 import json
 import re
 
@@ -58,6 +59,7 @@ class NativeConversationSession:
         self._turns = deque(maxlen=16)
         self._history_lock = Lock()
         self.prepared = False
+        self._prepared_config = None
         self.lock = RLock()
 
     @property
@@ -80,6 +82,17 @@ class NativeConversationSession:
             self._turns.append((turn.context_id, turn.question, turn.text[:2000]))
             turn._committed = True
             return True
+
+    def _prepare(self, config):
+        # Personality is already read into each chat prompt and needs no
+        # native change. Keep all inference values from the same snapshot.
+        snapshot = replace(config, personality="")
+        if self.prepared and snapshot == self._prepared_config:
+            return
+        self.prepared = False
+        self.adapter.prepare(config=config)
+        self._prepared_config = snapshot
+        self.prepared = True
 
     def ask(self, question, *, timeout=180, context_id=None):
         """Synchronous standalone API; the GUI uses prepare_turn instead."""
@@ -121,9 +134,7 @@ class NativeConversationSession:
                     break
                 history = candidate + history
             prompt = instructions + history + suffix
-            if not self.prepared:
-                self.adapter.prepare()
-                self.prepared = True
+            self._prepare(config)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             answer = clean_native_answer(result.get("text"))
             return NativeChatTurn(self, context_id, latest, answer)
@@ -135,9 +146,7 @@ class NativeConversationSession:
             memory = self.memory_loader().validate()
             prompt = build_prompt(memory.available_prompt_tokens(
                 config.context_size, config.max_output))
-            if not self.prepared:
-                self.adapter.prepare()
-                self.prepared = True
+            self._prepare(config)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             return clean_native_answer(result.get("text"))
 
@@ -162,10 +171,9 @@ class NativeConversationSession:
                 raise ValueError("Budget di contesto insufficiente per la prova Gemma.")
             # The old trial loaded a fresh model every time. Preserve that
             # explicit reload, but only after all earlier generations finish.
-            if self.prepared:
-                self.prepared = False
-                self.adapter.stop()
+            self.stop()
             self.adapter.prepare(config=current)
+            self._prepared_config = replace(current, personality="")
             self.prepared = True
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             return clean_native_answer(result.get("text"))
@@ -181,9 +189,7 @@ class NativeConversationSession:
             memory = self.memory_loader().validate()
             if len(prompt) > memory.available_prompt_tokens(config.context_size, config.max_output):
                 raise ValueError("Richiesta o elenco troppo lungo per il contesto Gemma.")
-            if not self.prepared:
-                self.adapter.prepare()
-                self.prepared = True
+            self._prepare(config)
             answer = clean_native_answer(
                 self.adapter.call("ask", prompt=prompt, timeout=timeout).get("text"))
             if re.fullmatch(r"[0-9]{1,2}", answer):
@@ -194,6 +200,8 @@ class NativeConversationSession:
 
     def stop(self):
         with self.lock:
-            if self.prepared:
-                self.adapter.stop()
-                self.prepared = False
+            # Failed reconfiguration can retain an old provider while this
+            # session is unprepared. Revoke state before any abort can fail.
+            self.prepared = False
+            self._prepared_config = None
+            self.adapter.stop()

@@ -3,6 +3,7 @@
 No HTTP service, executable launch or autonomous online fallback. The upstream
 module is an explicit dependency supplied by the installer, not downloaded here.
 """
+from dataclasses import replace
 from pathlib import Path
 import threading
 import time
@@ -46,6 +47,17 @@ class NativeGemmaBridge:
         abort = getattr(handle, "abort_generate", None)
         if callable(abort):
             abort()
+
+    def update_generation_settings(self, config):
+        """Apply samplers without changing the loaded model or bundled DLL."""
+        if not isinstance(config, NativeModelConfig):
+            raise TypeError("Configurazione nativa richiesta.")
+        config.validate()
+        with self._lock:
+            self.config = replace(
+                self.config, max_output=config.max_output,
+                temperature=config.temperature, top_k=config.top_k,
+                top_p=config.top_p, seed=config.seed).validate()
 
     def generate(self, prompt, *, timeout=120):
         if not isinstance(prompt, str) or not prompt.strip():

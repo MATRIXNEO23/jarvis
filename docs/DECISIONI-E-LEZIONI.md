@@ -1,3 +1,29 @@
+## 7 novembre2026 — JRV-AUD-008 verificato nei sorgenti in bozza
+
+Sourceb10453d5ddfda2155f4969dd8f1fa501cdcda8f9, [bozza42](https://github.com/MATRIXNEO23/jarvis/pull/42) dalla41/baseb25f54a,001–007 conservate. [Run42344534309](https://github.com/MATRIXNEO23/jarvis/actions/runs/42344534309) SUCCESS al tentativo1:747test Python3.11.9/job128319288492119.191s e747 Python3.12.10/job128319288706114.697s,0failure/errori/skip. Tutti17nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-008-20261107.md), [evidenza](evidence/jrv-aud-008-fix-20261107.json).
+
+Salva continua senza inferenza/load. Prossima richiesta usa snapshot validato unico per budget e motore; samplers senza reload, modello/thread/batch/context/DLL con sostituzione serializzata. Cache esclude solo carattere, già nel prompt. Bridge conservaDLLbundled anche rawDLLvuoto; stop detacha e revoca readiness/cache prima di abort. Storia RAM/isolamento e permessi conservati. UI e guide allineate; nessuna dipendenza/schema/migrazione nuova.
+
+Red1:6eaf7be/run42343723225,740test/job,16failure008/0errori. Red2:6c62ae9/run42343974322,745test/job,22failure008/0errori. Review indipendente copre gap DLL/loadfail/isolato-picker e trova regressione candidata trial005 con provider trattenuto: corretta e ricontrollata, test dedicato verde. Due nuove coperture stato/recupero dopoRed2 portano747; non rivendicate come Red separati. Nessun altro rilievo statico residuo.
+
+Sintassi/probe passati; Search live3.12 passata con servizio/fixture ripristinati. Nessuna build/ZIP/release/merge o modifica dati/config utente.008 usa Tk/Save/JSON e pipeline reale con ABI controllata; nessun GGUF/account/microfono reale o benchmarkWindows10/i3/HDD. Nessun test funzionale Linux. La suite include il distinto probe006 DLL/export; non inferenza.022/023 non riprodotti e aperti;010/aborttimeout distinto,009memoria duratura non aggiunta. Ultimo checkpoint solo documentazione/evidenze, codice/test identici al sourceverde. Prossimo al via: verifica009 con opt-in e isolamento progetti, niente build automatica.
+
+## JRV-AUD-008 — confermato, candidata in verifica Windows, 2026-11-07
+
+Red1 source6eaf7be/run42343723225:740test/job,16fallimenti/0errori;3.11job128316811765113.998s,3.12job128316811896113.969s. Red2 source6c62ae9/run42343974322:745test/job,22fallimenti/0errori;3.11job128317587284124.310s,3.12job128317587390135.665s. Solo nuovi casi008 falliscono: impostazioni stale, reload assente e snapshot discordante. Nessun errore fixture,022/023 non riprodotti ma aperti.
+
+Candidata: helper sessione passa snapshot a prepare quando cambiano valori di inferenza; chiave esclude il solo carattere, già letto nel prompt. Adapter riusa bridge per samplers e valida candidato prima di sostituire provider per campi reload+DLL. Bridge aggiorna solo5valori sotto lock, preservando DLL bundled; stop revoca stato/cache e detacha prima di abort anche dopo errori. UI/guida e2firme fixture allineate, nessuna asserzione precedente allentata.
+
+Review indipendente:3gap iniziali coperti; trovato e corretto prima del Green un difetto della candidata: Prova005 non ricaricava il provider trattenuto dopo impostazione non caricabile. Ora usa sempre stop sicuro; nuovo test sequenzaA/Bmissing/A/trial e successivo riuso. Aggiunti anche stop pubblico fallito e provider trattenuto. Totale candidato747(17nuovi), ancora da eseguire. Ricontrollo mirato senza rilievi residui; abortcount test reso>=1 per consentire pulizia legittima, serializzazione ancora richiesta. Nessuna build/merge/dati utente/test funzionali Linux. Prossimo: Green Windows747 e checkpoint prove;009 fuori da questo passo.
+
+## JRV-AUD-008 — copertura ampliata prima del runtime, 2026-11-07
+
+Prima review indipendente del contratto/test senza falsi positivi certi. Coperti gap: DLL interna salvata, errore load dopo sostituzione/recupero e reload avviato da isolato/picker. Aggiunti anche stop fallito con recupero e factory realmente trasformata su copia temporanea: DLL bundled conservata quando rawconfig.dll è vuoto. Non è build/ZIP e non esegue DLL reali. Ora15nuovi test/745totali attesi. Red iniziale6eaf7be/run42343723225 ancora da acquisire completo; seconda prova ampliata da eseguire. Runtime invariato. Prossimo: leggere Red e applicare correzione minima;022/023 aperti.
+
+## JRV-AUD-008 — verifica/correzione autorizzata, 2026-11-07
+
+Baseb25f54a/bozza41 con001–007, ramo fix/jrv-aud-008-gemma-settings-20261107. L'utente approva controllo e correzione delle impostazioni salvate non applicate. Codice: sessione rilegge config/budget ma normale prepare soltanto iniziale;005 aggiorna solo Prova esplicita. Nuovi10test Windows in tests/test_native_settings_propagation.py: callback Salva/Tk e JSON reali, sessione/factory/provider/bridge reali, ABI controllata. Salva senza inferenza/load, samplers senza reload, modello/thread/contesto con reload serializzato, flussi isolati/picker/storia, errori/recupero e snapshot. Specifica/piano008 salvati; runtime ancora invariato, Red740atteso da eseguire. Nessuna build/merge/dato utente/test funzionale Linux;022/023 aperti. Prossimo: prova Windows, poi modifica minima solo se confermata.
+
 ## 7 novembre 2026 — JRV-AUD-007: correzione verificata nei sorgenti in bozza
 
 Source425bfc38c1232ca26c5d1939bda7f0f95b07c04e, [bozza41](https://github.com/MATRIXNEO23/jarvis/pull/41) dalla40/basec9d1d29,001–006 conservate. [Run42342496402](https://github.com/MATRIXNEO23/jarvis/actions/runs/42342496402) SUCCESS al tentativo1:730 test Python3.11.9/job128313038365159.103s e730 Python3.12.10/job128313038104113.337s,0 failure/errori/skip. Tutti14metodi007 passano. [Rapporto](CORREZIONE-JRV-AUD-007-20261107.md), [evidenza](evidence/jrv-aud-007-fix-20261107.json).
