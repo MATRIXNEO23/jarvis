@@ -4,7 +4,6 @@ Windows-only project requirement. Uses a temporary workspace, captured prompts
 and explicitly scheduled workers; no DLL, GGUF, account or microphone.
 """
 from collections import deque
-import copy
 import os
 from pathlib import Path
 import queue
@@ -165,3 +164,125 @@ class NativeProjectHistoryTests(unittest.TestCase):
         self.ask("Altro scambio")
         self.assertEqual(self.workspace.recent("project", self.project_a), before)
         self.assertEqual(self.adapter.prepares, 1)
+
+    def test_prepared_reply_is_remembered_only_after_single_acceptance(self):
+        turn = self.session.prepare_turn("Ancora da accettare", context_id=self.project_a)
+        self.session.prepare_turn("Altra domanda", context_id=self.project_a)
+        self.assertNotIn("Ancora da accettare", self.adapter.prompts[-1])
+        self.assertTrue(turn.commit())
+        self.assertFalse(turn.commit())
+        self.session.prepare_turn("Domanda finale", context_id=self.project_a)
+        self.assertEqual(self.adapter.prompts[-1].count("Utente: Ancora da accettare"), 1)
+
+    def test_total_history_budget_remains_shared_between_projects(self):
+        contexts = [format(i, "032x") for i in range(16)]
+        for index, context in enumerate(contexts):
+            self.session.ask("Nota univoca " + str(index), context_id=context)
+        self.session.prepare_turn("Che ricordi?", context_id=contexts[0])
+        self.assertIn("Utente: Nota univoca 0", self.adapter.prompts[-1])
+        self.session.ask("Nuovo scambio generale")
+        self.session.prepare_turn("Che ricordi?", context_id=contexts[0])
+        self.assertNotIn("Utente: Nota univoca 0", self.adapter.prompts[-1])
+        self.assertNotIn("Nuovo scambio generale", self.adapter.prompts[-1])
+        self.assertEqual(self.adapter.prepares, 1)
+
+    def test_isolated_telegram_and_picker_do_not_use_or_change_project_recall(self):
+        self.session.ask("Nota privata A", context_id=self.project_a)
+        self.session.ask("Nota privata B", context_id=self.project_b)
+        self.session.ask_isolated(lambda budget: "Solo il contatto Telegram")
+        self.assertEqual(self.adapter.prompts[-1], "Solo il contatto Telegram")
+        self.session.pick_program("Scrivere una nota", ("Editor", "Posta"))
+        self.assertNotIn("Nota privata", self.adapter.prompts[-1])
+        self.session.prepare_turn("Domanda di A", context_id=self.project_a)
+        self.assertIn("Nota privata A", self.adapter.prompts[-1])
+        self.assertNotIn("Nota privata B", self.adapter.prompts[-1])
+        self.assertNotIn("Solo il contatto Telegram", self.adapter.prompts[-1])
+        self.assertNotIn("Scrivere una nota", self.adapter.prompts[-1])
+
+    def test_poll_acceptance_does_not_wait_for_native_generation_lock(self):
+        import threading
+        self.switch(self.project_a)
+        turn = self.session.prepare_turn("Turno pronto", context_id=self.project_a)
+        self.env["gemma_trial_queue"].put(("ok", turn, self.env["conversation_epoch"]))
+        self.env["gemma_trial_busy"][0] = True
+        entered, release, accepted = threading.Event(), threading.Event(), threading.Event()
+        errors = []
+        def hold_backend():
+            entered.set()
+            if not release.wait(10):
+                raise RuntimeError("Test backend was not released")
+        self.adapter.on_reply = hold_backend
+        def generate():
+            try:
+                self.session.ask_isolated(lambda budget: "Inferenza in corso")
+            except Exception as exc:
+                errors.append(exc)
+        def commit():
+            try:
+                self.env["poll_gemma_trial"]()
+            except Exception as exc:
+                errors.append(exc)
+            finally:
+                accepted.set()
+        inference = threading.Thread(target=generate, daemon=True)
+        metadata = threading.Thread(target=commit, daemon=True)
+        inference.start()
+        try:
+            self.assertTrue(entered.wait(3))
+            metadata.start()
+            self.assertTrue(accepted.wait(3), "UI history acceptance waited for native inference")
+        finally:
+            release.set()
+            inference.join(5)
+            if metadata.ident is not None:
+                metadata.join(5)
+        self.assertFalse(inference.is_alive())
+        self.assertFalse(metadata.is_alive())
+        self.assertEqual(errors, [])
+        self.env["speak_result"].assert_called_once_with(turn.text)
+        self.assertFalse(self.env["gemma_trial_busy"][0])
+
+    def test_invalid_context_never_loads_model(self):
+        for context in ("", "../project", "name", 42):
+            with self.subTest(context=context), self.assertRaises(ValueError):
+                self.session.prepare_turn("Domanda", context_id=context)
+        self.assertEqual(self.adapter.prepares, 0)
+        self.assertEqual(self.adapter.prompts, [])
+
+    def test_poll_rejects_mismatched_context_even_if_epoch_matches(self):
+        self.switch(self.project_a)
+        self.submit("Domanda di A")
+        self.workers.pop()()
+        # Defensive boundary check, independently of the regular epoch change.
+        self.env["active_project_id"] = self.project_b
+        self.env["poll_gemma_trial"]()
+        self.env["active_project_id"] = self.project_a
+        self.assertNotIn("Domanda di A", self.ask("Nuova domanda"))
+
+    def test_app_followup_uses_only_an_accepted_voice_or_typed_turn(self):
+        provider = SimpleNamespace(
+            available=lambda: True,
+            entries=lambda: [dict(id="netflix", name="Netflix", enabled=True, available=True)])
+        submit_local = Mock()
+        self.env.update(engine=SimpleNamespace(program_apps=provider),
+                        save_only_waiting=False, pending_project_name=False,
+                        pending_project_rename_id=None, pending_project_trash_id=None,
+                        submit_local=submit_local)
+        followup = self.harness.callback("try_gemma_app_followup", self.env)
+        self.switch(self.project_a)
+        for typed in (False, True):
+            with self.subTest(typed=typed):
+                self.ask("Vorrei guardare Netflix", typed=typed)
+                self.assertTrue(followup("me lo apri?"))
+                submit_local.assert_called_once_with(
+                    message_override="me lo apri?", source_utterance="me lo apri?",
+                    addon_action_id="addon.programmi_app.avvia",
+                    program_call=("suggest_id", {"query": "netflix"}))
+                submit_local.reset_mock()
+                self.submit("Vorrei guardare Netflix", typed=typed)
+                self.workers.pop()()
+                self.env["conversation_epoch"] += 1
+                self.env["poll_gemma_trial"]()
+                self.assertIsNone(self.env["gemma_recent_reply"][0])
+                self.assertFalse(followup("me lo apri?"))
+                submit_local.assert_not_called()

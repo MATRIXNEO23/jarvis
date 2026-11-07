@@ -32,8 +32,15 @@ class ChatTransport:
             raise PermissionError("Conferma GPT online richiesta per questa operazione.")
         return self.call(action, timeout=timeout, **arguments)
 
-    def ask_local_first(self, prompt, *, session, timeout=180):
+    def ask_local_first(self, prompt, *, session, timeout=180,
+                        context_id=None, defer_history=False):
         """Use a prepared local Gemma session; errors never trigger GPT."""
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Richiesta vuota.")
+        if type(defer_history) is not bool:
+            raise ValueError("Modalità memoria locale non valida.")
+        if defer_history:
+            return session.prepare_turn(prompt, timeout=timeout, context_id=context_id)
+        if context_id is not None:
+            return session.ask(prompt, timeout=timeout, context_id=context_id)
         return session.ask(prompt, timeout=timeout)

@@ -7,7 +7,7 @@ Architettura: un solo NativeConversationSession/backend; turni brevi etichettati
 
 Alternative: cancellare tutto al cambio progetto evita mescolanze ma perde il ricordo breve al ritorno; una sessione/backend per progetto consuma RAM e ricarica il modello. Scelta: turni partizionati nello stesso buffer globale limitato, commit sul thread UI.
 
-- [ ] Riproduzione Windows dei callback reali: A→generale→B→A; risultato in coda revocato; cambio A→B→A durante generazione; contesto catturato prima di avviare il worker.
+- [x] Riproduzione Windows dei callback reali: A→generale→B→A; risultato in coda revocato; cambio A→B→A durante generazione; contesto catturato prima di avviare il worker.
 - [ ] NativeConversationSession: filtro per context_id, limite globale invariato, turno proposto con commit idempotente e lock breve separato dall'inferenza; API ask esistente compatibile.
 - [ ] ChatTransport: selezione locale esplicita con contesto e risposta differita per la GUI. Nessun fallback remoto.
 - [ ] jarvis.py: cattura progetto al submit, poll scarta prima del commit; follow-up app aggiornato solo dal risultato accettato.
@@ -16,3 +16,5 @@ Alternative: cancellare tutto al cambio progetto evita mescolanze ma perde il ri
 
 Rischi: conservare un turno poi revocato; bloccare Tk aspettando il lock nativo; perdere il contesto nel passaggio GUI/trasporto; introdurre buffer non limitati. Recupero: ramo isolato e nessuna modifica al ramo distribuito/profili.
 Stato: test di riproduzione preparati, runtime ancora invariato; attesa Red Windows.
+
+Red Windows: run42328846716, commit a988b63,675 test e cinque fallimenti comportamentali. Candidata runtime preparata; nuovo Green e review ancora non completati.

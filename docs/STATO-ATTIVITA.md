@@ -1,3 +1,9 @@
+## 7 novembre 2026 — JRV-AUD-002, candidata in verifica
+
+Red Windows run42328846716 / job128270410711 su a988b63:675 test, cinque fallimenti comportamentali, nessun errore fixture. Riprodotti contaminazione A→generale/B, turni vocali/scritti revocati ancora ricordati e contesto errato del worker. Piano invariato: un backend,32 messaggi globali, nessun archivio persistente modificato.
+
+Candidata: buffer di16 scambi etichettati per contesto; prepare_turn produce una proposta, il poll UI la accetta solo se epoca/progetto sono correnti. Commit idempotente con lock breve distinto dall'inferenza; follow-up app aggiornato soltanto dopo accettazione. API ask sincrona e chat isolata Telegram/picker conservate. Nuove prove di budget, commit differito/idempotente, metadati non bloccati dall'inferenza e contesto invalido. AST/diff controllati; Green Windows e review indipendente ancora da completare. Nessun test funzionale Linux, GGUF/account reale, build o merge. PR35 dipende da PR34.
+
 ## 7 novembre 2026 — JRV-AUD-002, riproduzione in corso
 
 Base53717eb con001 conservata; ramo separato fix/jrv-aud-002-gemma-history-20261107. Piano docs/superpowers/plans/2026-11-07-jrv-aud-002-history.md. Test nuovi dei callback reali con NativeConversationSession e WorkspaceMemory temporanei: progetti/generale, risultato revocato prima del poll, cambio contesto durante inferenza e prima dell'avvio worker, conservazione dati persistenti. Backend controllato senza DLL/GGUF/account. Runtime invariato. Prossimo passo: Red Windows, poi partizionare un buffer globale limitato e inserire nella memoria soltanto risposte accettate dalla UI. Nessun test funzionale Linux, build, ZIP o merge.
