@@ -8,13 +8,15 @@ Architettura: un solo NativeConversationSession/backend; turni brevi etichettati
 Alternative: cancellare tutto al cambio progetto evita mescolanze ma perde il ricordo breve al ritorno; una sessione/backend per progetto consuma RAM e ricarica il modello. Scelta: turni partizionati nello stesso buffer globale limitato, commit sul thread UI.
 
 - [x] Riproduzione Windows dei callback reali: A→generale→B→A; risultato in coda revocato; cambio A→B→A durante generazione; contesto catturato prima di avviare il worker.
-- [ ] NativeConversationSession: filtro per context_id, limite globale invariato, turno proposto con commit idempotente e lock breve separato dall'inferenza; API ask esistente compatibile.
-- [ ] ChatTransport: selezione locale esplicita con contesto e risposta differita per la GUI. Nessun fallback remoto.
-- [ ] jarvis.py: cattura progetto al submit, poll scarta prima del commit; follow-up app aggiornato solo dal risultato accettato.
-- [ ] Verifica: callback scritti/vocali, riuso backend, memoria limitata e commit non bloccante durante altra inferenza; Telegram/picker non leggono né scrivono turni chat; archivi persistenti invariati.
-- [ ] Review indipendente e suite completa Windows3.11/3.12. Nessun test funzionale Linux o collaudo account/modello reale.
+- [x] NativeConversationSession: filtro per context_id, limite globale invariato, turno proposto con commit idempotente e lock breve separato dall'inferenza; API ask esistente compatibile.
+- [x] ChatTransport: selezione locale esplicita con contesto e risposta differita per la GUI. Nessun fallback remoto.
+- [x] jarvis.py: cattura progetto al submit, poll scarta prima del commit; follow-up app aggiornato solo dal risultato accettato.
+- [x] Verifica: callback scritti/vocali, riuso backend, memoria limitata e commit non bloccante durante altra inferenza; Telegram/picker non leggono né scrivono turni chat; archivi persistenti invariati.
+- [x] Review indipendente e suite completa Windows3.11/3.12. Nessun test funzionale Linux o collaudo account/modello reale.
 
 Rischi: conservare un turno poi revocato; bloccare Tk aspettando il lock nativo; perdere il contesto nel passaggio GUI/trasporto; introdurre buffer non limitati. Recupero: ramo isolato e nessuna modifica al ramo distribuito/profili.
 Stato: test di riproduzione preparati, runtime ancora invariato; attesa Red Windows.
 
 Red Windows: run42328846716, commit a988b63,675 test e cinque fallimenti comportamentali. Candidata runtime preparata; nuovo Green e review ancora non completati.
+
+Verifica completata sul runtime05926bd: run42329422636 SUCCESS,682 test per Python3.11/3.12, probe/indice live passati, package/publisher saltati. Review indipendente senza blocchi, gap follow-up/poll concorrente coperti. Nessun GGUF/account/microfono/Pavilion provato, nessuna distribuzione. Prossimo ID003 da riprodurre.

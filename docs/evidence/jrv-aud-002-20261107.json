@@ -1,0 +1,55 @@
+{
+  "issue": "JRV-AUD-002",
+  "status": "verified_in_windows_ci_not_released",
+  "base_commit": "53717ebe42defdfed6ac7ae3a0e12418123e8c44",
+  "source_commit": "05926bdc34516624eb3c5ef21321b801cb466586",
+  "pull_request": 35,
+  "depends_on_pull_request": 34,
+  "red": {
+    "commit": "a988b63439353e752d18c7146f211bd423810087",
+    "run": 42328846716,
+    "job_read": 128270410711,
+    "python": "3.11.9",
+    "tests": 675,
+    "assertion_failures": 5,
+    "fixture_errors": 0
+  },
+  "green": {
+    "run": 42329422636,
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 128272280261,
+        "python": "3.11.9",
+        "tests": 682,
+        "seconds": 103.273
+      },
+      {
+        "id": 128272280024,
+        "python": "3.12.10",
+        "tests": 682,
+        "seconds": 103.147
+      }
+    ],
+    "windows_search_live": "passed_fixture_removed_and_service_restored",
+    "package_jobs": "skipped"
+  },
+  "behavior": [
+    "One native session/backend retained",
+    "Only matching project/general turns enter prompts",
+    "32 messages/16 exchanges global RAM limit retained",
+    "Only epoch/context-valid UI results enter history or app follow-up",
+    "Metadata acceptance does not wait for ongoing isolated inference",
+    "Standalone ask API and Telegram/picker isolation preserved",
+    "No new persistent chat writes"
+  ],
+  "review": "Independent read-only review of shared working files; no blocking defect found. Added accepted/revoked app follow-up and actual concurrent poll tests after targeted review feedback. Working runtime/test blobs matched remote source commit.",
+  "limits": [
+    "Controlled model adapter, no DLL/GGUF inference",
+    "No account or microphone",
+    "Not a Pavilion performance test",
+    "Durable native chat memory remains JRV-AUD-009",
+    "No package or merge"
+  ],
+  "next": "JRV-AUD-003: reproduce the save-and-close edit race before changing document code."
+}
