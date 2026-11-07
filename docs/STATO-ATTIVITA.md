@@ -1,3 +1,9 @@
+## 7 novembre 2026 — JRV-AUD-012 avviata: parità sorgenti/pacchetto
+
+Base021/0228626d193 verificata remota19file/7runtime-test uguali al sourceverde; main pulito f147b1a. Ramo012 isolato. Il builder riscrive due moduli Python dopo la suite: portare nei sorgenti lo stesso comportamento già presente nel pacchetto, conservando profilo isolato del launcher. Nel workflow futuro hash prima/dopo e stop sul primo comando fallito. Spec/piano salvati prima del runtime.
+
+Sei nuove regressioni pronte: builder reale fermato prima dello ZIP con assets nativi assenti/writer vietato, vero blocco PowerShell in Git temporaneo con pythonstub innocuo, prova UI/fallback DLL dai sorgenti con ABI controllata.907test attesi, runtime ancora021/022. Nessuna build/ZIP prodotto, DLL caricata, test funzionale Linux, merge o dato reale. ProssimoRed Windows/review; verifica del vero pacchetto resterà pendente fino a richiesta esplicita.
+
 ## 7 novembre 2026 — JRV-AUD-021 e022 verificate nei sorgenti in bozza
 
 La voce possiede il solo helper avviato dal runner predefinito: close richiede termine senza aspettare sulla UI, scarta la coda e rifiuta il testo quando la pubblicazione arriva dopo chiusura. Custom runner, lista voci, JSON/cwd, chunk e anti-eco conservati. Se Windows nega la terminazione il worker può aspettare l'uscita effettiva, senza mascherare l'errore primario. Nessun altro processo controllato.
