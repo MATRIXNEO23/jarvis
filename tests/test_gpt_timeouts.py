@@ -3,7 +3,6 @@
 The Node bridge loads a tiny fake SDK in a temporary LOCALAPPDATA. Its connected
 state and inference are simulated explicitly; no OAuth/network/DPAPI is used.
 """
-import io
 import json
 import os
 from pathlib import Path
@@ -77,7 +76,8 @@ class GPTTimeoutOwnerTests(unittest.TestCase):
 
     def test_busy_request_has_no_duplicate_or_automatic_retry_after_timeout(self):
         harness, env, workers, run = self.env()
-        env["service"].call.side_effect = GPTUnavailable("Controlled timeout")
+        reason = "GPT oltre il limite. Annullamento richiesto; risposte tardive ignorate."
+        env["service"].call.side_effect = GPTUnavailable(reason)
         self.assertTrue(run("typed_conversation", prompt="Una richiesta", epoch=7, utterance="Domanda"))
         self.assertFalse(run("typed_conversation", prompt="Duplicata", epoch=7))
         self.assertEqual(len(workers), 1)
@@ -87,6 +87,7 @@ class GPTTimeoutOwnerTests(unittest.TestCase):
         self.assertFalse(workers)
         env["service"].call.assert_called_once()
         self.assertTrue(env["output_queue"].empty())
+        env["write_line"].assert_called_once_with("Conversazione GPT: " + reason)
 
     def test_obsolete_structured_reply_cannot_execute_or_enter_memory(self):
         harness, env, workers, run = self.env()
@@ -142,7 +143,8 @@ class GPTTimeoutClientTests(unittest.TestCase):
         return caught.exception
 
     def test_timeout_sends_one_targeted_cancel_without_pending_or_starting_again(self):
-        self.expire()
+        error = self.expire()
+        self.assertIn("Annullamento richiesto", str(error))
         self.assertEqual([w["action"] for w in self.writes], ["ask", "cancel_request"])
         self.assertEqual(self.writes[1]["request_id"], self.writes[0]["id"])
         self.assertGreater(self.writes[1]["id"], self.writes[0]["id"])
@@ -170,9 +172,32 @@ class GPTTimeoutClientTests(unittest.TestCase):
         self.fail_cancel = True
         error = self.expire()
         self.assertIn("limite", str(error))
+        self.assertIn("Annullamento non inviato", str(error))
         self.assertEqual([w["action"] for w in self.writes], ["ask"])
         self.assertEqual(self.client._pending, {})
         self.start.assert_called_once_with()
+
+    def assert_owner_changed(self, *, detach):
+        replacement = None if detach else SimpleNamespace(poll=lambda: None,
+            stdin=SimpleNamespace(write=Mock(), flush=Mock()))
+        def change_owner(_):
+            self.client._process = replacement
+        self.on_write = change_owner
+        error = self.expire()
+        self.assertIn("Annullamento non inviato", str(error))
+        self.assertIs(self.client._process, replacement)
+        self.assertEqual([w["action"] for w in self.writes], ["ask"])
+        if replacement is not None:
+            replacement.stdin.write.assert_not_called()
+            replacement.stdin.flush.assert_not_called()
+        self.assertEqual(self.client._pending, {})
+        self.start.assert_called_once_with()
+
+    def test_timeout_never_sends_cancel_to_replacement_process(self):
+        self.assert_owner_changed(detach=False)
+
+    def test_timeout_never_restarts_detached_process_to_send_cancel(self):
+        self.assert_owner_changed(detach=True)
 
     def test_noninference_timeout_does_not_send_cancel_or_start_again(self):
         self.expire("status")
@@ -186,12 +211,17 @@ const emit = value => process.stdout.write(JSON.stringify({event:'test_stage', .
 const mode = process.env.JARVIS_TEST_CANCEL_MODE || 'stream';
 export function createChatGPT() {
   let sessions = 0;
+  let releaseSession, releaseLate;
   const connected = {status:'connected', sharing:true};
   return {
     async getSession() {
       if (++sessions > 1) {
         emit({stage:'session'});
-        if (mode === 'session') await new Promise(resolve => setTimeout(resolve, 200));
+        if (sessions === 2 && mode === 'session') {
+          await new Promise(resolve => { releaseSession = resolve; });
+        } else {
+          releaseSession?.(); releaseLate?.(); // Fixture-only status barrier.
+        }
       }
       return connected;
     },
@@ -206,7 +236,7 @@ export function createChatGPT() {
       if (input.startsWith('wait')) await wait(signal, input);
       if (input === 'late') {
         signal?.addEventListener('abort', () => emit({stage:'aborted', prompt:input}), {once:true});
-        await new Promise(resolve => setTimeout(resolve, 200)); // Deliberately ignore abort.
+        await new Promise(resolve => { releaseLate = resolve; }); // Deliberately ignore abort.
       }
       return {text:'answer:' + input};
     },
@@ -273,7 +303,10 @@ class GPTTimeoutNodeBridgeTests(unittest.TestCase):
             if predicate(record):
                 return record
         while True:
-            record = self.packets.get(timeout=3)
+            try:
+                record = self.packets.get(timeout=3)
+            except queue.Empty:
+                self.fail("Bridge did not produce the required protocol response within test bound")
             self.messages.append(record)
             if predicate(record):
                 return record
@@ -290,13 +323,20 @@ class GPTTimeoutNodeBridgeTests(unittest.TestCase):
         self.send(1,"ask",prompt="wait-one")
         stage = self.stage("stream",prompt="wait-one")
         self.assertTrue(stage["hasSignal"])
-        self.send(2,"ask",prompt="fast-two")
+        self.send(2,"ask",prompt="wait-two")
+        self.stage("stream",prompt="wait-two")
         self.send(3,"cancel_request",request_id=1)
         self.assertEqual(self.response(3).get("result"), {"cancelled":True})
         self.assertFalse(self.response(1)["ok"])
-        self.assertEqual(self.response(2).get("result",{}).get("text"), "answer:fast-two")
-        self.send(4,"ask",prompt="fast-three")
-        self.assertTrue(self.response(4)["ok"])
+        self.send(4,"status")
+        self.assertTrue(self.response(4)["ok"])  # Processing barrier, no elapsed-time assertion.
+        self.assertFalse(any(m.get("id")==2 for m in self.messages))
+        self.assertFalse(any(m.get("stage")=="aborted" and m.get("prompt")=="wait-two"
+                             for m in self.messages))
+        self.send(5,"cancel_request",request_id=2)
+        self.assertFalse(self.response(2)["ok"])
+        self.send(6,"ask",prompt="fast-three")
+        self.assertTrue(self.response(6)["ok"])
         self.assertEqual(sum(m.get("stage")=="stream" for m in self.messages),3)
 
     def test_cancel_during_model_lookup_prevents_stream_request(self):
@@ -314,6 +354,8 @@ class GPTTimeoutNodeBridgeTests(unittest.TestCase):
         self.stage("session")
         self.send(2,"cancel_request",request_id=1)
         self.assertEqual(self.response(2).get("result"), {"cancelled":True})
+        self.send(3,"status")  # Explicitly release fixture session lookup after cancel.
+        self.assertTrue(self.response(3)["ok"])
         self.assertFalse(self.response(1)["ok"])
         self.assertFalse(any(m.get("stage") in ("models","stream") for m in self.messages))
 
@@ -342,6 +384,8 @@ class GPTTimeoutNodeBridgeTests(unittest.TestCase):
         self.stage("stream",prompt="late")
         self.send(2,"cancel_request",request_id=1)
         self.assertEqual(self.response(2).get("result"), {"cancelled":True})
+        self.send(3,"status")  # Explicitly release fixture stream ignoring abort.
+        self.assertTrue(self.response(3)["ok"])
         self.assertFalse(self.response(1)["ok"])
 
     def test_shutdown_aborts_pending_streams_and_exits_without_retry(self):
@@ -361,7 +405,7 @@ class GPTTimeoutNodeBridgeTests(unittest.TestCase):
         self.bridge()
         self.send(1,"ask",prompt="wait-one")
         self.stage("stream",prompt="wait-one")
-        for ident, target in enumerate((True,0,-1,"1",1.5,99),2):
+        for ident, target in enumerate((True,0,-1,"1",1.5),2):
             self.send(ident,"cancel_request",request_id=target)
             self.assertFalse(self.response(ident)["ok"])
         self.assertFalse(any(m.get("stage")=="aborted" for m in self.messages))

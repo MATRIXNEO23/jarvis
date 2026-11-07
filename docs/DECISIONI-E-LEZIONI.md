@@ -1,3 +1,7 @@
+## JRV-AUD-011 — review preventiva recepita prima del runtime
+
+Review readonly rileva test99 incoerente conIDvalido ma inesistente: rimosso dagliinvalidi (unknown rimane cancelled:false). Due stream entrambi bloccati ora provano isolamento reale durante cancel; aggiunti2test cambio/detachowner tra send e timeout, wordingannullamento inviato/noninviato epropagazioneUI. FixtureSDK senza finestre200ms: rilascio esplicito attraverso status barriera già nelprotocollo.19nuovi/811attesi. Red1source7a7589f74316959738811e254cf277638fa8223c inbozza45; runtime ancora010, Red ampliato da pubblicare. Nessun testfunzionaleLinux/build/merge/configutente/account/rete. Prossimo: RedWindows e review, poicodice.
+
 ## JRV-AUD-011 —17test prima del runtime, Red da eseguire
 
 Nuovo test_gpt_timeouts.py:5callback owner reali,4client/reader conpipecontrollata,8bridgeNode reale conSDKfinto temporaneo;17nuovi/809totali attesi. Timeout39/41/179/181s virtuali, busy/doppioni eepoch; timeoutclient richiede cancelsoloIDoriginario senza start/retry/pendingcontrollo, pacchettitardivi epipefallita; Nodecancel in session/models/stream, concorrenza,IDinvalidi/mapcleanup/SDKcheignoraabort/shutdown. Stato connected solo simulato, nessun login/rete/DPAPI/dato utente. Review indipendente preventiva richiesta; runtime invariato010. Prossimo: pubblicazione bozza e RedWindows, poi modifica3file esistenti. Nessun build/merge/testfunzionaleLinux;022/023 aperti.
