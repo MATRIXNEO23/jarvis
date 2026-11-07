@@ -77,7 +77,8 @@ class LocalEngine:
             "Comandi disponibili:\n"
             "• aiuto\n"
             "• stato sistema\n"
-            "• mostra download\n"
+            "• apri / mostra download (apre la cartella)\n"
+            "• elenca download (elenco esplicito)\n"
             + ("• cerca file NOME (nelle cartelle autorizzate)\n" if files_enabled else
                "• cerca file NOME (solo nella cartella Download)\n") +
             "• apri blocco note\n"
@@ -85,7 +86,7 @@ class LocalEngine:
             "• apri esplora file\n"
             "• apri disco locale C\n"
             "• apri download\n"
-            "• apri browser\n"
+            "• apri / avvia / lancia browser (predefinito Windows)\n"
             "• cerca nel browser TESTO\n"
             "• ultimi comandi"
         )
@@ -104,6 +105,8 @@ class LocalEngine:
         if len(request) > 300:
             return self._record(TaskResult(uuid4().hex, "validation", "rejected",
                                            "Comando troppo lungo (massimo 300 caratteri)."))
+        from voice_control import speech_to_local_command
+        request = speech_to_local_command(request) or request
         if " ".join(request.casefold().strip(" .!?").split()) in ("aiuto","comandi","help","cosa puoi fare","cosa sai fare"):
             extra = ("\n"+self.file_access.commands()) if self.file_access is not None else ""
             if self.program_apps is not None:

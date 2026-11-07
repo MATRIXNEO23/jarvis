@@ -4119,6 +4119,20 @@ def main() -> None:
                  or pending_project_trash_id is not None) and try_timer_command(message)):
             request.set("")
             return
+        if not (pending_project_name or pending_project_rename_id is not None
+                or pending_project_trash_id is not None):
+            # Same trusted recognition as voice, before the generic app guard
+            # and before either model. Execution retains the existing owner.
+            command = speech_to_local_command(message)
+            if command:
+                if command == "apri blocco note":
+                    document_operation("open", source_utterance=message)
+                elif busy_local:
+                    write_line("Motore locale occupato: riprova.")
+                else:
+                    submit_local(message_override=command, source_utterance=message)
+                request.set("")
+                return
         # Explicit application launches must never become pretend Gemma replies.
         # Only the trusted, user-enabled Programmi e app add-on can launch them.
         if not (pending_project_name or pending_project_rename_id is not None

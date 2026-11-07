@@ -814,6 +814,7 @@ function New-Object {
         calls=[]; projects=[]; request=Mock(); request.get.return_value='apri Foto'
         env={'engine':self.engine,'request':request,'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
              'write_line':lambda *a:None,'speak_result':Mock(),'re':re,'try_timer_command':lambda _:False,
+             'speech_to_local_command':__import__('voice_control').speech_to_local_command,
              'submit_local':lambda **kw:calls.append(kw),
              'reconcile_document_session':lambda **kw:None,'try_telegram_voice_send':lambda s:False,
              'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,

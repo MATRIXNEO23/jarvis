@@ -379,6 +379,8 @@ class FileAccessService:
         if not isinstance(text, str):
             return None
         clean = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+', '', text.strip(), flags=re.I).strip()
+        from voice_control import speech_to_local_command
+        clean = speech_to_local_command(clean) or clean
         low = clean.casefold().strip(' .!?')
         # Explicit project requests retain their existing owner, including project folders.
         if re.match(r'^(?:apri(?:mi)?|mostra(?:mi)?)\s+(?:(?:il|un|un nuovo|nuovo|la cartella del|la cartella di|cartella del|cartella di|cartella)\s+)?progetto\b',low):

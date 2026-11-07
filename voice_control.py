@@ -53,35 +53,44 @@ def speech_to_local_command(text: str) -> str | None:
         return None
     words = " ".join(text.casefold().strip(" .!?").split())
     words = re.sub(r"^(?:(?:ehi|ok)\s+)?jarvis[,\s:]+", "", words)
+    words = re.sub(r"^(?:per favore|gentilmente)\s+", "", words)
+    words = re.sub(r"\s+per favore$", "", words)
+    words = re.sub(r"^(?:mi )?(?:puoi|potresti)\s+", "", words)
     for prefix in ("cerca nel browser ", "cerca su internet "):
         if words.startswith(prefix):
             query = " ".join(words[len(prefix):].split())
             if 1 <= len(query) <= 160 and not any(ord(ch) < 32 for ch in query):
                 return "cerca nel browser " + query
             return None
+    opening = re.fullmatch(r"(?:apri(?:mi)?|avvia(?:mi)?|lancia(?:mi)?)\s+(?:(?:il|la|un|una)\s+)?(.+)", words)
+    if opening:
+        target = {
+            "calcolatrice": "apri calcolatrice", "calc": "apri calcolatrice",
+            "blocco note": "apri blocco note", "notepad": "apri blocco note",
+            "esplora file": "apri esplora file", "esplora risorse": "apri esplora file",
+            "browser": "apri browser", "browser predefinito": "apri browser",
+            "download": "apri download", "cartella download": "apri download",
+            "cartella dei download": "apri download",
+            "disco locale c": "apri disco locale c",
+            "unità c": "apri disco locale c", "unita c": "apri disco locale c",
+        }.get(opening.group(1))
+        if target:
+            return target
+    if re.fullmatch(r"(?:mostra(?:mi)?|visualizza)\s+(?:(?:la cartella dei|la cartella|i)\s+)?download", words):
+        return "apri download"
+    if re.fullmatch(r"(?:mostra(?:mi)?|visualizza|controlla)\s+(?:lo\s+)?stato\s+(?:del\s+)?sistema", words):
+        return "stato sistema"
     exact = {
-        "apri calcolatrice": "apri calcolatrice",
-        "apri calc": "apri calcolatrice",
-        "apri la calcolatrice": "apri calcolatrice",
-        "apri blocco note": "apri blocco note",
-        "apri notepad": "apri blocco note",
-        "apri il blocco note": "apri blocco note",
-        "apri esplora file": "apri esplora file",
-        "apri disco locale c": "apri disco locale c",
-        "apri unità c": "apri disco locale c",
-        "apri unita c": "apri disco locale c",
-        "apri browser": "apri browser",
-        "apri il browser": "apri browser",
-        "apri browser predefinito": "apri browser",
-        "apri esplora risorse": "apri esplora file",
-        "apri download": "apri download",
-        "apri la cartella download": "apri download",
-        "mostra download": "mostra download",
-        "mostra i download": "mostra download",
         "stato sistema": "stato sistema",
+        "stato": "stato sistema",
+        "controlla sistema": "stato sistema",
         "controlla la ram": "stato sistema",
         "ultimi comandi": "ultimi comandi",
+        "cronologia": "ultimi comandi",
+        "elenca download": "elenca download",
+        "lista download": "elenca download",
         "aiuto": "aiuto",
+        "help": "aiuto", "comandi": "aiuto",
     }
     # Deliberately exclude arbitrary file paths, programs, shell and GPT.
     return exact.get(words)

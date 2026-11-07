@@ -65,6 +65,22 @@ class InternalCommandRoutingTests(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertIsNone(speech_to_local_command(phrase))
 
+    def test_synonym_from_console_opens_default_browser_not_program_catalog(self):
+        env, engine = self.environment('avvia il browser predefinito per favore')
+        with patch('local_engine.webbrowser.open', return_value=True) as browser:
+            env['send_console_input']()
+        self.assertEqual(self.actions(engine), [('open_browser', 'completed')])
+        browser.assert_called_once_with('https://www.google.com/', new=2)
+        env['submit_gemma_trial'].assert_not_called()
+
+    def test_show_downloads_requests_explorer_once_instead_of_listing(self):
+        env, engine = self.environment('mostra Download')
+        with patch.object(engine, '_open_app', return_value='Apertura richiesta.') as launch:
+            env['send_console_input']()
+        self.assertEqual(self.actions(engine), [('open_downloads', 'completed')])
+        launch.assert_called_once_with(['explorer.exe', str(engine.download_dir)], 'Cartella Download')
+        env['submit_gemma_trial'].assert_not_called()
+
     def test_pending_document_and_project_keep_ownership(self):
         for pending in ('document', 'project'):
             env, engine = self.environment('stato sistema')
