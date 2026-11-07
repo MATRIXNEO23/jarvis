@@ -62,6 +62,7 @@ class ActivityStatusTests(unittest.TestCase):
         def thread(*, target, **kwargs):
             return SimpleNamespace(start=lambda: workers.append(target))
         env = dict(busy_gpt=False, busy_local=False, document_busy=False,
+                   gemma_session=[None], gemma_trial_busy=[False],
                    gpt_request_action="", closing=False, active_gpt=True,
                    gpt_enabled=Value(True), memory_enabled=Value(True),
                    speaker=SimpleNamespace(is_speaking=lambda: False),

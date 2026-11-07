@@ -1,3 +1,11 @@
+## JRV-AUD-017 — quattordici prove pronte prima del runtime
+
+Nuovo tests/test_native_hud_activity.py riusa fixture factory/bridge/sessione e ABI controllata; provider HUD e callback Telegram reali, UI impostazioni generata solo in temporaneo senzaZIP. Copertura chat/turno differito/Telegram/prova/programmi, preparazione, ask annidato in commit, attesa lock, abort ignorato/timeout e stop, errori/configurazione/close, nessun caricamento da idle, flag GPT/local/documento e stato Tk reale con priorità voce. Osservatore bounded evita blocco se status prendesse inference lock.14nuovi/883attesi; runtime ancora015, fixture ActivityStatus aggiunge solo owner/flag inattivi. Review indipendente preventiva avviata. Prossimo Red Windows, nessun test funzionale Linux/build/merge/dato reale.
+
+## 7 novembre 2026 — JRV-AUD-017 avviata: attività Gemma nel HUD
+
+Base015 558135173a13ca7bdaddfc543c63897730633353, remoto verificato10file e runtime/test uguali al source verde; main pulito f147b1a. Ramo017 isolato. Il provider HUD ignora l'owner nativo condiviso: correggere l'indicatore con metadati della sessione, senza getter che crei o carichi il modello. Contatore delle operazioni attive/in coda con finally, lettura su lock breve e niente I/O; reasoning/thinking includono attività nativa e flag chat pendente. Nessuna nuova fase inventata o poller; priorità voce/GPT/ricerca preservate. Specifica/piano017 salvati prima del runtime. Fixture ActivityStatus aggiunge solo owner/flag inattivi. Prossimo: test Red Windows e review. Nessuna build/merge/test funzionale Linux o dato reale modificato.
+
 ## 7 novembre 2026 — JRV-AUD-015 verificata nei sorgenti in bozza
 
 La ricerca ora condivide una deadline tra indice Windows e scansione: timeout min(8s,residuo), nessun nuovo budget per il fallback. Risultati validi conservati con copertura parziale time_limit, annullamento/revoca prevalgono, callback legacy a due argomenti senza retry TypeError. Radici e reinclusioni non rimosse,20risultati/5000voci e spunte invariati. Nessun nuovo indice016 o dipendenza.
