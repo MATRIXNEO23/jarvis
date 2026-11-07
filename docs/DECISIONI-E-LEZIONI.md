@@ -1,3 +1,11 @@
+## JRV-AUD-018 —17test pronti prima del runtime
+
+Nuovo test_settings_recovery.py:14test parser/persistenza conprofilitemporanei,3owner conprefixmain/Tkvalueassignment/schedulerGPT ecallbackinitial_launch/speak_result/telegram_reconfigure reali, servizi controllati.17nuovi/828attesi. ErroriJSON/UTF8/IO/nondict/flagtipoinvalido; assenti/validi/legacy; warningnonprivato; saveguardoriginal/copied/postloadcorruption/temp/history; ripristinomanualesimulato; bootstrapMIC/GPT/TTSoff ewarninguna volta. Runtime018 ancora invariato. Review indipendente preventiva richiesta; prossimopubblicareRedWindows inbozza su011. Nessun testfunzionaleLinux/build/merge/config/account/datoutente.
+
+## 7 novembre2026 — JRV-AUD-018 prioritaria, preparazione Red
+
+Base0115994d17, ramo fix/jrv-aud-018-settings-recovery-20261107. Anticipata protezione preferenze MIC/GPT rispetto alpackaging012/013. Fonteconferma fallback permissivo su JSON/UTF8/IO eflaginvalidi; save può sostituire originaleilleggibile. Contratto/piano018 registrati: assenza/validi/legacy invariati, fallbackprudente solo suerrori, warningconsole una volta, saveguardanche dictcopiati/corruzionedopoload, nessun reset o fileoriginalemodificato. Recuperomanuale conbackupprivato documentato. Niente nuovo archivio/dipendenza/popup; tipoerratoflag nonvalido da trattareprudente con aggiornamento intenzionale del vecchiotest permissivo. Nessun runtime018 ancora modificato, proveWindows da preparare. Nessun testfunzionaleLinux/build/merge/config/dati/credenzialiutente. Prossimo Red ereview.
+
 ## 7 novembre2026 — JRV-AUD-011 verificata nei sorgenti in bozza
 
 Base010e65b5eb, sourceverde3ca986aaff89c176b684d44999b74e303814839c, [bozza45](https://github.com/MATRIXNEO23/jarvis/pull/45),001–010 conservate. [Run42352732284](https://github.com/MATRIXNEO23/jarvis/actions/runs/42352732284) SUCCESS tentativo1 delsourcecorretto:811test Python3.11.9/job128344138298151.630s e811 Python3.12.10/job128344138543133.249s;0failure/errori/skip, tutti19nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-011-20261107.md), [evidenza](evidence/jrv-aud-011-fix-20261107.json).
