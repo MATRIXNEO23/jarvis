@@ -16,15 +16,19 @@ readme="""JARVIS GEMMA - PROVA ISOLATA
 Il GGUF non e incluso. FunctionGemma 270M non e ancora verificato su Pavilion.
 """
 entries=[Path(os.fsdecode(p)) for p in subprocess.check_output(["git","ls-files","-z"]).split(b"\0") if p]
+OPERATIONAL_GUIDES=frozenset({"docs/VOCE_OFFLINE.md","docs/RECUPERO-IMPOSTAZIONI.md",
+    "file_access/LEGGIMI.md","program_apps/LEGGIMI.md"})
 def include(p):
     parts=p.parts
     if not parts: return False
+    if p.as_posix() in OPERATIONAL_GUIDES:
+        return p.is_file() and not p.is_symlink()
     if parts[0] in {".github","tests","tools","docs","Download","upstream-kobold"}: return False
     if p.name in {"AGENTS.md","RECUPERO.md"}: return False
     if p.suffix.lower() in {".md",".yml",".yaml",".toml"} and p.name!="README.md": return False
     return p.is_file() and not p.is_symlink()
 entries=[p for p in entries if include(p)]
-mandatory={"jarvis.py","avvia_jarvis.bat","local_model/native_ui.py","local_model/native_factory.py"}
+mandatory={"jarvis.py","avvia_jarvis.bat","local_model/native_ui.py","local_model/native_factory.py"}|OPERATIONAL_GUIDES
 assert mandatory.issubset({p.as_posix() for p in entries})
 native=root/"upstream-kobold"
 assert (native/"koboldcpp.py").is_file()

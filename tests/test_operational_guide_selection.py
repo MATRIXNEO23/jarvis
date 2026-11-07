@@ -15,8 +15,10 @@ GUIDES = ('docs/VOCE_OFFLINE.md', 'docs/RECUPERO-IMPOSTAZIONI.md',
 def selector():
     tree = ast.parse(Path('tools/build_gemma_clean_trial.py').read_text(encoding='utf-8'))
     function = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'include')
+    guides = next(n for n in tree.body if isinstance(n, ast.Assign)
+                  and any(isinstance(t, ast.Name) and t.id == 'OPERATIONAL_GUIDES' for t in n.targets))
     namespace = {'Path': Path}
-    exec(compile(ast.Module(body=[function], type_ignores=[]), 'actual-package-selector', 'exec'), namespace)
+    exec(compile(ast.Module(body=[guides, function], type_ignores=[]), 'actual-package-selector', 'exec'), namespace)
     return namespace['include']
 
 
