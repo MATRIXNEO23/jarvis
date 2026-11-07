@@ -1,3 +1,7 @@
+## 7 novembre 2026 — JRV-AUD-003, riproduzione in corso
+
+Base784edad, ramo isolato fix/jrv-aud-003-save-close-20261107 con001/002 conservate. Piano docs/superpowers/plans/2026-11-07-jrv-aud-003-save-close.md. Test Windows: worker/orchestratore/bridge reali, file temporanei e controllo Edit nativo nascosto del solo test; modifica durante I/O e digitazione tra dirty-clear/WM_CLOSE. Runtime ancora invariato, rischio non ancora riprodotto. Prossimo passo Red Windows; poi confronto del testo con blocco temporaneo della digitazione e ripristino in errore. Nessun Notepad personale, test Linux, build o merge.
+
 ## 7 novembre 2026 — JRV-AUD-002 verificata su Windows, non distribuita
 
 Correzione `05926bdc34516624eb3c5ef21321b801cb466586`, [PR draft35](https://github.com/MATRIXNEO23/jarvis/pull/35), dipendente dalla34. [Run42329422636](https://github.com/MATRIXNEO23/jarvis/actions/runs/42329422636) SUCCESS:682 test per Python3.11.9/3.12.10, sintassi/probe nativi e indice Windows live passati; servizio e fixture ripristinati. Red precedente675 test/cinque asserzioni fallite senza errori fixture. [Evidenza](evidence/jrv-aud-002-20261107.json).
