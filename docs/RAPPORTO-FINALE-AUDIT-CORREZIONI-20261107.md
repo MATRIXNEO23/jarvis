@@ -1,3 +1,5 @@
+> **Aggiornamento007:** timer024 e guida025 sono ora inclusi nella [candidata007](CONSEGNA-JARVIS-007-20261107.md). Il rapporto sottostante conserva lo stato della fase precedente alla pubblicazione; vedere consegna/handoff007 per la versione distribuita.
+
 > **Aggiornamento consegna006:** le correzioni descritte sono ora distribuite nella [candidata006](CONSEGNA-JARVIS-006-20261107.md), source `3e2cc05b0b08fdc5b47054b19593cf3151aff75a`, [workflow](https://github.com/MATRIXNEO23/jarvis/actions/runs/42384228753).911 test per versione Python nei sorgenti e911 sul runtime estratto, con supporti di test non distribuiti. 016/023 restano aperti; target reale non collaudato. La fotografia sotto descrive la chiusura dell’audit prima dell’autorizzazione alla build: le diciture “in bozza” e “nessuna build” sono storiche e superate per006 da questa consegna.
 
 # Jarvis — stato finale dell’audit e delle correzioni, 7 novembre 2026

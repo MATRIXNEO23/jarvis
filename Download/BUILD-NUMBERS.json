@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 6,
-  "next_build": 7,
+  "latest_build": 7,
+  "next_build": 8,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -89,6 +89,20 @@
       "bytes": 8134642,
       "previous_build": 5,
       "git_blob_sha": "f8cf8197b77a4077df3b968f3660c0729cfe74c8"
+    },
+    {
+      "build_number": 7,
+      "label": "007",
+      "archive": "Jarvis-007.zip",
+      "metadata": "Jarvis-007.json",
+      "date": "2026-11-07",
+      "description": "Timer scritto, aiuto locale a sezioni e scorciatoie",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "9f8c5f582b98a4ac131c41a4170b194c98abc3fa",
+      "sha256": "a5a24f35b410a45bed3dd08ed2180563d429e82cbe0a878045f4e7157182408f",
+      "bytes": 8138643,
+      "previous_build": 6,
+      "git_blob_sha": "123cf245e45b69128ca1b032c09590e639e8b9d6"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"

@@ -1,0 +1,128 @@
+{
+  "issue": "JRV-AUD-024",
+  "status": "verified-source-not-released",
+  "date": "2026-11-07",
+  "severity": "MEDIO",
+  "base": "3e2cc05b0b08fdc5b47054b19593cf3151aff75a",
+  "source": "f4fbf74e8e0f918cf67c2a879cba92f512b9d16e",
+  "green": {
+    "run": 42418024579,
+    "source": "f4fbf74e8e0f918cf67c2a879cba92f512b9d16e",
+    "conclusion": "success",
+    "attempt": 1,
+    "jobs": [
+      {
+        "id": 128540219645,
+        "python": "3.12.10",
+        "tests": 918,
+        "seconds": 169.013,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "id": 128540219761,
+        "python": "3.11.9",
+        "tests": 918,
+        "seconds": 169.798,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "search": {
+      "native_index_verified": true,
+      "runtime_adapter": "indexed_candidates",
+      "scope_changes": false,
+      "global_reindex": false,
+      "personal_pc_verified": false,
+      "checks": {
+        "available_empty_query": "passed",
+        "created_file_found": "passed",
+        "other_scope_empty": "passed",
+        "rename_observed": "passed",
+        "deletion_observed": "passed",
+        "created_folder_found": "passed",
+        "folder_other_scope_empty": "passed",
+        "folder_deletion_observed": "passed"
+      },
+      "initial_service": {
+        "running": false,
+        "start_mode": "Disabled"
+      },
+      "service_restored": true,
+      "fixture_removed": true
+    }
+  },
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/55",
+  "red": [
+    {
+      "source": "2f51806ec8ef33153445666275bc9461bbbbefca",
+      "run": 42417048902,
+      "tests": 914,
+      "failures": 3,
+      "fixture_errors": 2,
+      "meaning": "Numeric typed timer did not start; spoken six not parsed. Mock alarm return and missing re are fixture errors, not runtime defects.",
+      "jobs": [
+        {
+          "id": 128537307361,
+          "python": "3.12.10",
+          "seconds": 135.131
+        },
+        {
+          "id": 128537307516,
+          "python": "3.11.9",
+          "seconds": 184.837
+        }
+      ]
+    },
+    {
+      "source": "e99200b68cbdf234436944dcf52a43bac51eea27",
+      "run": 42417313290,
+      "tests": 918,
+      "failures": 1,
+      "fixture_errors": 13,
+      "meaning": "Configured-model fixture incomplete Path/re; not full behavioral reproduction for those cases."
+    },
+    {
+      "source": "928ebb9ffb6175f8b4787f4c01e46a8cc9cd9f02",
+      "run": 42417636927,
+      "tests": 918,
+      "failures": 0,
+      "fixture_errors": 1,
+      "meaning": "All seven new methods passed; existing file console fixture lacked timer collaborator; completed without weakening assertions.",
+      "jobs": [
+        {
+          "id": 128539063041,
+          "python": "3.12.10",
+          "seconds": 137.059
+        },
+        {
+          "id": 128539063270,
+          "python": "3.11.9",
+          "seconds": 159.435
+        }
+      ]
+    }
+  ],
+  "independent_review": "readonly runtime/test review; blocking fixture globals completed; no remaining runtime blockers found",
+  "covered": [
+    "real console and shared timer callbacks via AST",
+    "configured native model path in temporary profile; no inference",
+    "typed numeric/spoken360seconds and one start, no Gemma dispatch",
+    "controls and bare timer",
+    "negated/conversational mentions keep configured Gemma path",
+    "document/file/project priority",
+    "morning07:30 today/nextday; invalid morning hour rejected"
+  ],
+  "limits": [
+    "Windows2022 CI, not actual Windows10/i3/audio",
+    "timer window/start and alarm.arm boundary controlled; no audible alarm or real model",
+    "Italian cardinal map reused0–59 plus un/una for duration units; unsupported phrases remain ordinary fallback",
+    "parser now requires explicit supported command; this prevents new accidental actions when broadening console dispatch",
+    "explicit Prova Gemma locale button is a model trial; primary Invio/Invia console corrected",
+    "existing Tk Mock fixture warnings preserved in CI logs; test runner zero errors does not mean all stderr empty",
+    "no functional Linux test, new package, build, merge, main change or user profile mutation"
+  ],
+  "build006": "unchanged; fix not in downloaded006"
+}

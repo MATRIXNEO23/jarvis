@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "build_number": 7,
+  "build_label": "007",
+  "archive": "Jarvis-007.zip",
+  "package_root": "Jarvis-Gemma",
+  "source_commit": "9f8c5f582b98a4ac131c41a4170b194c98abc3fa",
+  "sha256": "a5a24f35b410a45bed3dd08ed2180563d429e82cbe0a878045f4e7157182408f",
+  "bytes": 8138643,
+  "files": 119,
+  "date": "2026-11-07",
+  "status": "candidate_pc_test_pending",
+  "reproducible_different_clock": true,
+  "residual_issues": [
+    "JRV-AUD-016",
+    "JRV-AUD-023"
+  ],
+  "windows_workflow_run": "42420559553",
+  "pc_test": "pending",
+  "validation": "docs/evidence/jarvis-007-package-20261107.json"
+}

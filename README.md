@@ -1,3 +1,5 @@
+> **Ultima candidata: [Jarvis007](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-007.zip)** — timer scritto, aiuto locale e tasti rapidi. [Consegna](docs/CONSEGNA-JARVIS-007-20261107.md), [handoff](docs/HANDOFF-JARVIS-007-20261107.md). Collaudo PC pendente; vecchie versioni conservate.
+
 > **Nuova candidata Windows: [Jarvis 006](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-006.zip)** — correzioni audit con Gemma; [prove e istruzioni](docs/CONSEGNA-JARVIS-006-20261107.md). Collaudo sul PC ancora da fare. Versioni precedenti conservate.
 
 > **Versioni e sorgenti:** consulta il [registro autorevole](Download/REGISTRO-VERSIONI.md). La radice di main contiene sorgenti storici e il catalogo dei pacchetti; non coincide con il runtime Gemma distribuito. Il registro distingue pacchetti pubblicati, sorgenti esatti e correzioni ancora in bozza. Le sezioni sottostanti sono cronologia, non un'indicazione univoca dell'ultima versione.

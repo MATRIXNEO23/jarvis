@@ -1,3 +1,5 @@
+> **007:** [consegna e istruzioni](../docs/CONSEGNA-JARVIS-007-20261107.md). Cartella nuova, profilo Gemma-Trial conservato; guida con F1/aiuto. Sezioni successive storiche.
+
 > **Candidata006:** segui [consegna e istruzioni](../docs/CONSEGNA-JARVIS-006-20261107.md) e [registro versioni](../Download/REGISTRO-VERSIONI.md). Usa una cartella nuova; il profilo e quello Gemma-Trial. Le istruzioni sotto sono storiche, specifiche delle versioni indicate.
 
 > **Prima scegli la versione:** [registro autorevole](../Download/REGISTRO-VERSIONI.md). Questa guida conserva istruzioni riferite alle versioni storiche indicate nelle sezioni. La candidata Gemma pubblicata e le correzioni audit in bozza sono riferimenti distinti; scaricare i sorgenti di main non equivale a un pacchetto operativo.

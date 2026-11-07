@@ -1,3 +1,19 @@
+# Jarvis007 — timer scritto e guida locale
+
+**[Scarica Jarvis-007.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-007.zip)**
+
+«Imposta timer sei minuti» avvia360secondi dalla chat. «Aiuto», «help» o «comandi», il pulsante **?** e **F1** aprono la guida locale a sezioni. **Ctrl+L** torna alla casella di comando anche dalla guida/impostazioni. **Ctrl+,** apre le impostazioni. Nessun cambio alla scelta Gemma/GPT: i comandi base del catalogo indicano quando usare **⋯ → Esegui locale**.
+
+Estrai in una cartella NUOVA e avvia `Jarvis-Gemma/avvia_jarvis.bat`. Profilo Gemma-Trial invariato rispetto alla006, nessuna cancellazione o migrazione dati. GGUF e account non inclusi; Python3.11/3.12 x64 e dipendenze devono essere predisposti.
+
+[Verifiche Windows e runtime estratto](https://github.com/MATRIXNEO23/jarvis/actions/runs/42420559553):922test per versione Python nei sorgenti e922 sull’estratto con supporti di test separati, non distribuiti. Verificati manifest/hash/guide/import/DLL e avvio/chiusura UI. Collaudo Windows10/i3/audio/account/GGUF reali ancora da fare: candidata, non certificazione del PC.
+
+[Sorgenti esatti](https://github.com/MATRIXNEO23/jarvis/tree/9f8c5f582b98a4ac131c41a4170b194c98abc3fa) · [Consegna](../docs/CONSEGNA-JARVIS-007-20261107.md) · [Handoff](../docs/HANDOFF-JARVIS-007-20261107.md) · [Versioni precedenti](REGISTRO-VERSIONI.md).
+
+SHA256 `a5a24f35b410a45bed3dd08ed2180563d429e82cbe0a878045f4e7157182408f` — 8138643 byte, 119 file.
+
+---
+
 # Jarvis 006 — Gemma e correzioni audit
 
 **[Scarica Jarvis-006.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-006.zip)**

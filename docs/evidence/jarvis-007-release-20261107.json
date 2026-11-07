@@ -1,0 +1,132 @@
+{
+  "source": "9f8c5f582b98a4ac131c41a4170b194c98abc3fa",
+  "run": 42420559553,
+  "conclusion": "success",
+  "attempt": 1,
+  "platform": "windows-2022 x64",
+  "jobs": [
+    {
+      "id": 128547855883,
+      "python": "3.11.9",
+      "scope": "source",
+      "tests": 922,
+      "seconds": 135.838,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "id": 128547856153,
+      "python": "3.12.10",
+      "scope": "source",
+      "tests": 922,
+      "seconds": 148.153,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "id": 128548730673,
+      "python": "3.12.10",
+      "scope": "extracted runtime with test-only supports",
+      "tests": 922,
+      "seconds": 152.733,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "search": {
+    "native_index_verified": true,
+    "runtime_adapter": "indexed_candidates",
+    "scope_changes": false,
+    "global_reindex": false,
+    "personal_pc_verified": false,
+    "checks": {
+      "available_empty_query": "passed",
+      "created_file_found": "passed",
+      "other_scope_empty": "passed",
+      "rename_observed": "passed",
+      "deletion_observed": "passed",
+      "created_folder_found": "passed",
+      "folder_other_scope_empty": "passed",
+      "folder_deletion_observed": "passed"
+    },
+    "initial_service": {
+      "running": false,
+      "start_mode": "Disabled"
+    },
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "artifact": {
+    "id": 13593426633,
+    "node_id": "MDg6QXJ0aWZhY3QxMzU5MzQyNjYzMw==",
+    "name": "Jarvis-007",
+    "size_in_bytes": 8145390,
+    "url": "https://api.github.com/repos/MATRIXNEO23/jarvis/actions/artifacts/13593426633",
+    "archive_download_url": "https://api.github.com/repos/MATRIXNEO23/jarvis/actions/artifacts/13593426633/zip",
+    "expired": false,
+    "digest": "sha256:57cbac070ccde8300b11649a686a0e33191b913154bf4e3723a906f3a97d8a18",
+    "created_at": "2026-11-07T22:33:10Z",
+    "updated_at": "2026-11-07T22:33:10Z",
+    "expires_at": "2026-12-07T22:33:08Z",
+    "workflow_run": {
+      "id": 42420559553,
+      "repository_id": 1439904951,
+      "head_repository_id": 1439904951,
+      "head_branch": "fix/local-help-20261107",
+      "head_sha": "9f8c5f582b98a4ac131c41a4170b194c98abc3fa"
+    }
+  },
+  "archive": {
+    "schema_version": 1,
+    "build_number": 7,
+    "build_label": "007",
+    "archive": "Jarvis-007.zip",
+    "package_root": "Jarvis-Gemma",
+    "source_commit": "9f8c5f582b98a4ac131c41a4170b194c98abc3fa",
+    "sha256": "a5a24f35b410a45bed3dd08ed2180563d429e82cbe0a878045f4e7157182408f",
+    "bytes": 8138643,
+    "files": 119,
+    "date": "2026-11-07",
+    "status": "candidate_pc_test_pending",
+    "reproducible_different_clock": true,
+    "residual_issues": [
+      "JRV-AUD-016",
+      "JRV-AUD-023"
+    ],
+    "windows_workflow_run": "42420559553",
+    "pc_test": "pending",
+    "validation": "docs/evidence/jarvis-007-package-20261107.json"
+  },
+  "package_validation": {
+    "source_commit": "9f8c5f582b98a4ac131c41a4170b194c98abc3fa",
+    "archive": "Jarvis-007.zip",
+    "sha256": "a5a24f35b410a45bed3dd08ed2180563d429e82cbe0a878045f4e7157182408f",
+    "manifest_files": 119,
+    "clean_imports_native_dll": true,
+    "clean_ui_boot_close": true,
+    "injected_tk_callback_exception_rejected": true,
+    "required_guides_and_relative_links": true,
+    "operational_source_parity": true,
+    "full_extracted_runtime_suite": 922,
+    "test_modules": 103,
+    "test_only_overlays": [
+      "tests",
+      "tools",
+      ".github",
+      "nonoperative docs"
+    ],
+    "overlays_shipped": false,
+    "runtime_files_copied_from_checkout": false,
+    "hardware_windows10_microphone_accounts_gguf": "not tested"
+  },
+  "readback": "pending",
+  "review": "independent readonly review and focused recheck; no remaining blockers",
+  "prior_cancelled_runs": [
+    42419926302,
+    42420088509
+  ],
+  "help_red_run": 42419450038
+}
