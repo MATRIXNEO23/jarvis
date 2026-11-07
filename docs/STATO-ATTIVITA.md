@@ -1,3 +1,7 @@
+## 7 novembre 2026 — JRV-AUD-002, riproduzione in corso
+
+Base53717eb con001 conservata; ramo separato fix/jrv-aud-002-gemma-history-20261107. Piano docs/superpowers/plans/2026-11-07-jrv-aud-002-history.md. Test nuovi dei callback reali con NativeConversationSession e WorkspaceMemory temporanei: progetti/generale, risultato revocato prima del poll, cambio contesto durante inferenza e prima dell'avvio worker, conservazione dati persistenti. Backend controllato senza DLL/GGUF/account. Runtime invariato. Prossimo passo: Red Windows, poi partizionare un buffer globale limitato e inserire nella memoria soltanto risposte accettate dalla UI. Nessun test funzionale Linux, build, ZIP o merge.
+
 ## 7 novembre 2026 — JRV-AUD-001 verificata su Windows, non distribuita
 
 Correzione runtime `daa7a6a8760688f6081bca95ee6c9d6df6ac8ce8`, [PR draft34](https://github.com/MATRIXNEO23/jarvis/pull/34). [Run42327319575](https://github.com/MATRIXNEO23/jarvis/actions/runs/42327319575) SUCCESS: 670 test per Python3.11.9 e3.12.10, sintassi/probe nativi e Windows Search live passati; servizio e fixture ripristinati. I14 test aggiunti coprono policy, revoca, file, diagnosi e planner. Red precedente659 test/cinque asserzioni fallite conservato. Review indipendente in sola lettura: nessun difetto bloccante; lacune iniziali file/diagnosi coperte dai test aggiunti. [Evidenza](evidence/jrv-aud-001-20261107.json).
