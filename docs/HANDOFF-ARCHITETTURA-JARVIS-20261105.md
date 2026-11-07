@@ -1,3 +1,45 @@
+## 7 novembre 2026 — JRV-AUD-014 verificata nei sorgenti in bozza
+
+L'autodiagnosi ora include le quattro cartelle runtime approvate, con priorità rispetto ai test, senza eseguire o inviare il codice. Mantiene140file/260000byte e limita a140anche le directory enumerate. Profili, cache, modelli, upstream, link/junction e cartelle Hidden Windows sono esclusi; limiti e copertura restano visibili anche dopo molti errori. File spariti o metadati illeggibili non interrompono il resto. Nessun nuovo comando o indice.
+
+Base01876e392f, source verificato d74333ebe09182a8d3aa84f571fc664be405e51f, [bozza47](https://github.com/MATRIXNEO23/jarvis/pull/47). Conservate001–011,018 e014. [Run42357790841](https://github.com/MATRIXNEO23/jarvis/actions/runs/42357790841) SUCCESS al tentativo1 del source corretto:852test per Python3.11.9 (job128359597362,121.214s) e3.12.10 (job128359597262,149.326s),0failure/errori/skip. Tutti23nuovi metodi passati, incluse junction, attributo Hidden e alias8.3 reali. [Rapporto](CORREZIONE-JRV-AUD-014-20261107.md), [evidenza](evidence/jrv-aud-014-fix-20261107.json).
+
+Red1:1d69632/run42355483101,844test/job14failure+2errori; Red2:4ec1a9f/run42355703061,846test/job16failure+2errori. Errori reali di stat/file sparito, nessun022/023. Review preventiva rafforza privacy interna; review runtime trova limite nascosto da molti errori e Hidden Windows, entrambi corretti. Prima candidata f423fdb6/run42357007265 fallisce851test/job1failure+8errori per fixture conTEMP8.3 confrontato con path canonico: radice della fixture risolta, spy rafforzato e caso pubblico GetShortPathNameW aggiunto. Runtime identico alla prima candidata; hash confrontati. Vecchio testo di assenza modulo aggiornato all'inventario accessibile, con caso file davvero assente e0consigli preservato. Ultima review indipendente senza blocchi rilevati.
+
+Sintassi/probe passati, Searchlive3.12 con servizio/fixture ripristinati. Checkpoint finale solo documenti/evidenze, runtime/test uguali al source verde. Nessuna build/ZIP/merge/release, test funzionale Linux, profilo/dato/credenziale reale modificato o nuova dipendenza. Prove statiche su fixture e checkout, non Windows10/i3/HDD, modello, account, microfono o pacchetto estratto. Non è una sandbox contro modifiche malevole concorrenti né audit universale;022/023 restano aperti.
+
+Prossimo015: limite globale delle interrogazioni dell'indice Windows e della passata di ricerca, preservando permessi, cancellazione e risultati validi. Nessun nuovo indice persistente016.012/013 e019/020 restano separati; continuare correzioni mirate autorizzate, build soltanto su richiesta esplicita.
+
+## JRV-AUD-014 — prima candidata fallita per fixture Windows8.3
+
+Sourcef423fdb6/run42357007265 FALLITO:851test per job,1failure+8errori solo nel nuovo014.3.11job128357180996133.861s,3.12job128357181094124.005s. Le fixture confrontavano il TEMP con aliasRUNNER~1 con i percorsi canonici runneradmin restituiti correttamente dall'inventario;8relative_to sollevanoValueError e lo spy della directory negata non scatta. Non è un difetto dimostrato del runtime, né022/023. Nessun retry cieco.
+
+Normalizzata la radice della fixture conresolve(strict=True), mantenendo tutti gli assert e rendendo sensibili gli spy. Rafforzato testmetadata con contatore che prova l'effettiva negazione; aggiunto caso reale GetShortPathNameW suAPIpubblica per stessa copertura eprunatura dati conalias8.3.23nuovi/852attesi. Runtime invariato dalla candidata; nuova verifica Windows necessaria. Revisione indipendente mirata da richiedere prima Green2. Nessun testfunzionaleLinux/build/merge o dati reali, failure conservato nel rapporto/evidenza.
+
+## JRV-AUD-014 — candidata pronta per Green Windows
+
+Due componenti runtime esistenti, nessuna nuova dipendenza o indicizzatore. Inventario approvato e priorità runtime, criteri metadata/esclusione condivisi,140file/140directory e260000byte per file. Limiti visibili anche dopo molti errori, NoModule qualificato senza dichiarare inesistenza del programma. Hidden Windows e junction esclusi prima della lettura. Reviewer ricontrolla gli antenati lessicali prima del resolve; stat/file spariti non interrompono il resto.
+
+Review preventiva e runtime con due correzioni della candidata recepite; ultimo ricontrollo senza blocchi.22nuovi/851attesi,5aggiunti dopoRed2 e vecchio assert di wording aggiornato intenzionalmente con verifica di file realmente assente/0consigli. Rapporto014 e guida operativa aggiornati. Red1/Red2 documentati con tutti esiti e limiti; nessun test funzionale Linux, soloAST/diff locali. Prossimo: Green Windows e checkpoint remoto, niente build/merge, profili o credenziali toccati.022/023 restano aperti.
+
+## JRV-AUD-014 — Red acquisito e rilievi runtime corretti
+
+Red1 source1d69632/run42355483101:844test per job,14failure+2errori;3.11job128352529225154.869s,3.12job128352529347142.961s. Red2 source4ec1a9f/run42355703061:846test per job,16failure+2errori;3.11job128353233323141.023s,3.12job128353233067207.049s. Errori reali di stat/file sparito, tutto nel nuovo014; junction create, nessuno skip e022/023 non osservati.
+
+Candidata nei due componenti esistenti: whitelist runtime ricorsiva, dati/cache/upstream esclusi,140file/260000byte conservati e140directory per alberi vuoti; shared metadata lstat nega reparsepoint e reviewer verifica antenati prima di resolve. DataRoot configurato viene già passato dal caller. Review trova limiti nascosti da oltre8errori e WindowsHidden non escluso: corretti con copertura separata nel dettaglio e filtro attributo0x2; NoModule indica inventario accessibile senza falsa assenza fisica. Aggiornata intenzionalmente vecchia asserzione sul wording, conservando caso file davvero assente e0consigli. Test reali Windows hidden/junction, IO+limiti, modulo oltre limite e budget directory; aggiunto caso sul checkout reale.22nuovi/851attesi,5aggiunti dopoRed2 senza rivendicare altro Red. Runtime/test ancora da verificare suWindows; soloAST/diff locali. Nessun build/merge/testfunzionaleLinux o dato utente modificato. Prossimo: ricontrollo indipendente e Green.
+
+## JRV-AUD-014 — review preventiva: esclusione junction e profili rafforzata
+
+Review readonly richiede due casi mancanti: junction con target interno alla radice e nessuna enumerazione quando dati/codice coincidono. Aggiunte due prove reali: target profiles interno con spy su elenco/lettura e reviewer diretto; alias interno verso codice consentito non attraversato due volte. Il caso data_root==source_root ora rifiuta sia iterdir sia read_text.17nuovi/846attesi. Runtime ancora018, Red1source1d69632f7cb0fa355add17f681450ed95b0e85a6 inbozza47; Red ampliato da pubblicare. Nessuna esecuzione funzionale Linux/build/merge/dati reali. Prossimo: Red e controlli statici di review, poi inventario minimo.
+
+## JRV-AUD-014 —15test pronti prima del runtime
+
+Nuovo test_diagnostic_inventory.py,15nuovi/844totali attesi. Copertura di quattro cartelle runtime e sotto-moduli, raccomandazioni con righe senza esecuzione/literal, priorità runtime con170test e limite140, profili/cache/upstream/modelli esclusi prima di enumerare, data_root esplicito e coincidente, junction Windows reali e contenimento fisico, IO/stat/file sparito, budget byte e selettore modulo storico. Test solo su cartelle temporanee; junction non creabile è skip esplicito, non falsa prova. Runtime invariato018; review indipendente preventiva richiesta. Prossimo: RedWindows in bozza e correzione minima. Nessun build/merge/nuovo indice o test funzionale Linux, nessun accesso dati reali.
+
+## 7 novembre 2026 — JRV-AUD-014 avviata: inventario autodiagnosi
+
+Base01876e392f, ramo fix/jrv-aud-014-diagnostic-inventory-20261107. Il codice conferma che l'inventario legge solo radice e tests, saltando quattro cartelle runtime. Riusare AST e review esistenti, con ricorsione nelle sole local_model/file_access/program_apps/sveglia; runtime prima dei test, limiti140file/260000byte conservati e copertura dichiarata. Escludere dati/profili, cache/upstream/modelli, link/junction.90Python runtime dalla base, nessuna necessità dimostrata di aumentare limiti. Parser/review devono contenere errori di file spariti. Specifica/piano014 salvati prima del codice; runtime invariato, test RedWindows da preparare. Nessuna modifica a comandi/microfono/GPT o dati, nessun nuovo indice/dipendenza, build/merge o test funzionale Linux. Prossimo: test di copertura/esclusione e review.
+
 ## 7 novembre 2026 — JRV-AUD-018 verificata nei sorgenti in bozza
 
 La correzione conserva le preferenze valide e i valori di prima installazione. Se il file esiste ma è illeggibile, l'avvio tiene spenti GPT e ascolto automatico, con un avviso nella console. Il salvataggio ricontrolla il file e rifiuta di sostituirlo prima di qualunque scrittura, anche dopo una copia del dizionario o una corruzione successiva al caricamento. Nessun reset o backup automatico; recupero manuale documentato.
