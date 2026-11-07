@@ -1,3 +1,7 @@
+## JRV-AUD-007 — verifica in corso, 2026-11-07
+
+Richiesta «ok verifica»: soltanto test/documentazione. Base `7920c4d9c32049d49f848aef3af0006a037dfedf`, ramo `verify/jrv-aud-007-voice-queue-20261107`, dipendente dalla bozza39. Ipotesi: evento vocale già in coda reinterpretato dopo cambio modalità/standby. Piano: `docs/superpowers/plans/2026-11-07-jrv-aud-007-verification.md`; test `tests/test_voice_queue_generation.py`. Nessuna correzione runtime applicata. Prova Windows ancora da eseguire; nessun test funzionale Linux, microfono, GPT reale, build o merge. Prossimo passo: Windows CI e confronto tra eventi vecchi e controlli nuovi. 022/023 restano aperti.
+
 ## 7 novembre 2026 — JRV-AUD-006: recupero dipendenza verificato, nessuna build
 
 Sourcec0007689154efa574917ddb2ce23279ddf36c5f8, [PR draft39](https://github.com/MATRIXNEO23/jarvis/pull/39) dipendente dalla38. [Run42339214356](https://github.com/MATRIXNEO23/jarvis/actions/runs/42339214356) SUCCESS: Python3.11.9/job128302928559,716 test/122.394s; Python3.12.10/job128302928433,716 test/131.725s. [Evidenza](evidence/jrv-aud-006-20261107.json), [mappa/provenienza](NATIVE-ENGINE-REFERENCE.md). Red709 test/un fallimento per job per capacità autonoma assente, senza fingere una build attualmente fallita: vecchio artifact ancora valido fino al18 novembre.
