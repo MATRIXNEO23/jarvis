@@ -1,3 +1,41 @@
+## 7 novembre 2026 — JRV-AUD-017 verificata nei sorgenti in bozza
+
+HUD thinking/reasoning include attività dell'owner Gemma già esistente e flag chat pendente, anche con GPT spento e da Telegram/prova impostazioni. La sessione conta operazioni attive/in coda, con finally e metadata lock breve; nessun caricamento/I/O/attesa del lock d'inferenza per leggere is_busy. Nessun nuovo poller o fase dettagliata inventata. Stop/close non dichiarano idle prima dell'uscita effettiva, errori e annidamento scaricano il contatore. Risposte, permessi, memoria e priorità voce preservati.
+
+Base015 55813517, sourceverde d5a58c901f5c7c283ca6369fd6af405592e1996c, [bozza49](https://github.com/MATRIXNEO23/jarvis/pull/49). [Run42360995994](https://github.com/MATRIXNEO23/jarvis/actions/runs/42360995994) SUCCESS prima verifica del source con fixture completa:884test per Python3.11.9 (job128369166220,122.925s) e3.12.10 (job128369166047,130.016s),0failure/errori/skip, tutti15nuovi metodi passati. Sintassi/probe passati; Search live3.12 con servizio/fixture ripristinati. [Rapporto](CORREZIONE-JRV-AUD-017-20261107.md), [evidenza](evidence/jrv-aud-017-fix-20261107.json).
+
+Red5ac6e9d1/run42360223737:883test/job,18failure0errori solo nuovo017/subtest;3.11job128366829486118.761s,3.12job128366829253132.637s. Review rafforza loader spies e stop non cooperativo:1nuovo metodo dopoRed, nessun extraRed rivendicato. Candidata0419b5b7/run42360619718 fallita884test/job0failure3errori nella fixture header: envAST privo di owner/flag, mentre15nuovi017 passano. Completata fixture con stati inattivi, tuttiassert preservati, diagnosi ricontrollata readonly e runtimehash identici prima/dopo. Nessun retry cieco; review runtime senza blocchi rilevati.022/023 non osservati, restano aperti.
+
+Checkpoint finale solo documenti/evidenze, runtime/test da confrontare con il sourceverde prima di dichiarare conservazione remota. Nessuna build/ZIP/merge/release, test funzionale Linux, dipendenza o dato/profilo reale modificato. ABI controllata con componenti veri e UI Tk Windows, non modello/DLL/account/microfono, Windows10/i3/HDD o pacchetto estratto. Conservate001–011,018,014,015,017. Prossimo019: rendere chiare le unità del contesto memoria, mantenendo schema JSON/valori/budget; nessun tokenizer nuovo o sintesi automatica attivata. Build solo su richiesta esplicita.
+
+## JRV-AUD-017 — fixture header ricontrollata, seconda verifica Windows necessaria
+
+Review indipendente readonly conferma diagnosi NameError e modifica di soli due contenitori inattivi nella fixture HeaderQuickControlTests.wire; nessuna asserzione o callback attenuata. Runtime invariato rispetto0419b5b7 e hash da confrontare col prossimo source. Fallimento Green1 conservato, Green2 da acquisire;884test attesi. Nessuna build/merge/test funzionale Linux/dato reale. Prossimo: collaudo e checkpoint remoto.
+
+## JRV-AUD-017 — prima candidata fallita: fixture header da completare
+
+Source0419b5b7d31ca320a1fae9c48becd1f8efad5819/run42360619718 FALLITO:884test per job,0failure3errori.3.11job128368034045157.873s,3.12job128368034166121.567s. Tutti15nuovi metodi017 passano. Tre test header estraggono il provider HUD viaAST con env parziale: NameError gemma_trial_busy (manca anche owner). Nell'app reale entrambi sono inizializzati prima di registrare il provider. Causa fixture dimostrata, non022/023; Search live3.12 passato e stato/fixture ripristinati.
+
+Aggiunti soltanto owner=None eflagFalse a tests/test_hud_quick_toggles.py:wire; tutti gli assert esistenti di clic/persistenza/rollback/memoria conservati, runtime identico alla candidata. Nessun retry cieco o test indebolito. Review mirata su fixture da richiedere e nuova verifica Windows necessaria;884attesi. Nessun build/merge/test funzionale Linux/dato reale. Fallimento conservato nel rapporto017.
+
+## JRV-AUD-017 — Red acquisito e candidata revisionata pronta per Windows
+
+Red source5ac6e9d1e90f4c6ebc02d7d60d37161a4d1d2b5f/run42360223737:883test per job,18failure0errori tutti nel nuovo017 (subtest inclusi);3.11job128366829486118.761s e3.12job128366829253132.637s. Manca lo snapshotBoolean e la veraUI Tk mostra MICROFONO SPENTO durante generazione nativa. Baseline precedente passa, nessun022/023 osservato; Search live3.12 passato con servizio/fixture ripristinati. Nessun retry cieco.
+
+Candidata nei due componenti esistenti: contatore finally e propertyis_busy sul metadata lock nella sessione, provider HUD legge owner già creato e flag chat pendente indipendentemente da GPT. Nessun caricamento/I/O/attesa inference per status, né nuovo poller. Review runtime indipendente readonly senza blocchi rilevati; gap test recepiti,15nuovi/884attesi,1metodo e loader spies aggiunti dopoRed senza rivendicare altroRed. Green Windows ancora necessario; AST/diff locali soltanto. Nessuna build/merge/test funzionale Linux/profilo reale modificato. Prossimo: suite Windows e checkpoint evidenze.
+
+## JRV-AUD-017 — review preventiva recepita nei test
+
+Review readonly senza difetti confermati nella specifica/test; rafforzati due gap: config_loader/memory_loader intercettati negli snapshot idle per vietare I/O implicito, nuovo stop con abort ignorato che resta busy fino all'uscita reale del backend.15nuovi/884attesi; modifiche successive al sourceRed5ac6e9d1/run42360223737 (14nuovi/883attesi), senza rivendicare un ulterioreRed. Cleanup della UI Tk garantito anche se il worker tarda. Runtime ancora015, Green non eseguito. Rapporto017 avviato con limiti; nessun build/merge/test funzionale Linux/dato reale. Prossimo: log Red e correzione minima.
+
+## JRV-AUD-017 — quattordici prove pronte prima del runtime
+
+Nuovo tests/test_native_hud_activity.py riusa fixture factory/bridge/sessione e ABI controllata; provider HUD e callback Telegram reali, UI impostazioni generata solo in temporaneo senzaZIP. Copertura chat/turno differito/Telegram/prova/programmi, preparazione, ask annidato in commit, attesa lock, abort ignorato/timeout e stop, errori/configurazione/close, nessun caricamento da idle, flag GPT/local/documento e stato Tk reale con priorità voce. Osservatore bounded evita blocco se status prendesse inference lock.14nuovi/883attesi; runtime ancora015, fixture ActivityStatus aggiunge solo owner/flag inattivi. Review indipendente preventiva avviata. Prossimo Red Windows, nessun test funzionale Linux/build/merge/dato reale.
+
+## 7 novembre 2026 — JRV-AUD-017 avviata: attività Gemma nel HUD
+
+Base015 558135173a13ca7bdaddfc543c63897730633353, remoto verificato10file e runtime/test uguali al source verde; main pulito f147b1a. Ramo017 isolato. Il provider HUD ignora l'owner nativo condiviso: correggere l'indicatore con metadati della sessione, senza getter che crei o carichi il modello. Contatore delle operazioni attive/in coda con finally, lettura su lock breve e niente I/O; reasoning/thinking includono attività nativa e flag chat pendente. Nessuna nuova fase inventata o poller; priorità voce/GPT/ricerca preservate. Specifica/piano017 salvati prima del runtime. Fixture ActivityStatus aggiunge solo owner/flag inattivi. Prossimo: test Red Windows e review. Nessuna build/merge/test funzionale Linux o dato reale modificato.
+
 ## 7 novembre 2026 — JRV-AUD-015 verificata nei sorgenti in bozza
 
 La ricerca ora condivide una deadline tra indice Windows e scansione: timeout min(8s,residuo), nessun nuovo budget per il fallback. Risultati validi conservati con copertura parziale time_limit, annullamento/revoca prevalgono, callback legacy a due argomenti senza retry TypeError. Radici e reinclusioni non rimosse,20risultati/5000voci e spunte invariati. Nessun nuovo indice016 o dipendenza.

@@ -92,6 +92,7 @@ class HeaderQuickControlTests(unittest.TestCase):
             speaker=SimpleNamespace(is_speaking=lambda: False),
             voice=SimpleNamespace(is_user_speaking=lambda: False, is_listening=lambda: self.stream),
             busy_gpt=False, busy_local=False, document_busy=False, gpt_request_action='',
+            gemma_session=[None], gemma_trial_busy=[False],
             engine=SimpleNamespace(file_access=None), orbit_nodes_cache=())
         env["telegram_gpt_ready"].set()
         for name in ('memory_status_refresh', 'set_telegram_gpt_session', 'toggle_gpt', 'toggle_memory', 'toggle_hud_microphone'):

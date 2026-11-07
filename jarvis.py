@@ -4479,12 +4479,16 @@ def main() -> None:
         "mic_selected": voice_mode.get() != STANDBY,
         "mic_push_to_talk": voice_mode.get() == PUSH_TO_TALK,
         "gpt_enabled": gpt_enabled.get(),
-        "reasoning": (busy_gpt and gpt_enabled.get() and
-                      gpt_request_action in ("ask", "conversation", "typed_conversation")),
+        "reasoning": (gemma_trial_busy[0] or
+                      (gemma_session[0] is not None and gemma_session[0].is_busy) or
+                      (busy_gpt and gpt_enabled.get() and
+                       gpt_request_action in ("ask", "conversation", "typed_conversation"))),
         "searching": (busy_local and engine.file_access is not None and
                       engine.file_access._progress_active and
                       not engine.file_access.cancelled.is_set()),
-        "thinking": (busy_gpt and gpt_enabled.get()) or busy_local or document_busy,
+        "thinking": (gemma_trial_busy[0] or
+                     (gemma_session[0] is not None and gemma_session[0].is_busy) or
+                     (busy_gpt and gpt_enabled.get()) or busy_local or document_busy),
         "connected": active_gpt,
         "memory": memory_enabled.get(),
         "orbit_nodes": orbit_nodes_cache,
