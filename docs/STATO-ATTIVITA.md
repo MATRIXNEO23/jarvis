@@ -1,3 +1,13 @@
+## 7 novembre2026 — JRV-AUD-008 verificato nei sorgenti in bozza
+
+Sourceb10453d5ddfda2155f4969dd8f1fa501cdcda8f9, [bozza42](https://github.com/MATRIXNEO23/jarvis/pull/42) dalla41/baseb25f54a,001–007 conservate. [Run42344534309](https://github.com/MATRIXNEO23/jarvis/actions/runs/42344534309) SUCCESS al tentativo1:747test Python3.11.9/job128319288492119.191s e747 Python3.12.10/job128319288706114.697s,0failure/errori/skip. Tutti17nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-008-20261107.md), [evidenza](evidence/jrv-aud-008-fix-20261107.json).
+
+Salva continua senza inferenza/load. Prossima richiesta usa snapshot validato unico per budget e motore; samplers senza reload, modello/thread/batch/context/DLL con sostituzione serializzata. Cache esclude solo carattere, già nel prompt. Bridge conservaDLLbundled anche rawDLLvuoto; stop detacha e revoca readiness/cache prima di abort. Storia RAM/isolamento e permessi conservati. UI e guide allineate; nessuna dipendenza/schema/migrazione nuova.
+
+Red1:6eaf7be/run42343723225,740test/job,16failure008/0errori. Red2:6c62ae9/run42343974322,745test/job,22failure008/0errori. Review indipendente copre gap DLL/loadfail/isolato-picker e trova regressione candidata trial005 con provider trattenuto: corretta e ricontrollata, test dedicato verde. Due nuove coperture stato/recupero dopoRed2 portano747; non rivendicate come Red separati. Nessun altro rilievo statico residuo.
+
+Sintassi/probe passati; Search live3.12 passata con servizio/fixture ripristinati. Nessuna build/ZIP/release/merge o modifica dati/config utente.008 usa Tk/Save/JSON e pipeline reale con ABI controllata; nessun GGUF/account/microfono reale o benchmarkWindows10/i3/HDD. Nessun test funzionale Linux. La suite include il distinto probe006 DLL/export; non inferenza.022/023 non riprodotti e aperti;010/aborttimeout distinto,009memoria duratura non aggiunta. Ultimo checkpoint solo documentazione/evidenze, codice/test identici al sourceverde. Prossimo al via: verifica009 con opt-in e isolamento progetti, niente build automatica.
+
 ## JRV-AUD-008 — confermato, candidata in verifica Windows, 2026-11-07
 
 Red1 source6eaf7be/run42343723225:740test/job,16fallimenti/0errori;3.11job128316811765113.998s,3.12job128316811896113.969s. Red2 source6c62ae9/run42343974322:745test/job,22fallimenti/0errori;3.11job128317587284124.310s,3.12job128317587390135.665s. Solo nuovi casi008 falliscono: impostazioni stale, reload assente e snapshot discordante. Nessun errore fixture,022/023 non riprodotti ma aperti.

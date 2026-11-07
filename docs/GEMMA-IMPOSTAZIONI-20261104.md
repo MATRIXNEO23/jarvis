@@ -1,6 +1,6 @@
-## Aggiornamento008 — 7 novembre2026, candidata in verifica
+## Aggiornamento008 — 7 novembre2026, correzione verificata nei sorgenti in bozza
 
-Il pannello attuale esiste: modello, thread CPU/batch, contesto, max output, temperatura, top-k/top-p, seed e carattere. Inventario sotto storico; gli altri controlli restano proposte. La correzione008 applica i valori salvati alla prossima richiesta serializzata: samplers senza reload; modello/thread/contesto e DLL interna con reload. Salva non avvia inferenza. [Specifica008](superpowers/specs/2026-11-07-jrv-aud-008-design.md); prova Windows della candidata ancora pendente, nessun nuovo pacchetto.
+Il pannello attuale esiste: modello, thread CPU/batch, contesto, max output, temperatura, top-k/top-p, seed e carattere. Inventario sotto storico; gli altri controlli restano proposte. La correzione008 applica i valori salvati alla prossima richiesta serializzata: samplers senza reload; modello/thread/contesto e DLL interna con reload. Salva non avvia inferenza. [Specifica008](superpowers/specs/2026-11-07-jrv-aud-008-design.md); Windows run42344534309 SUCCESS,747test per Python3.11/3.12. [Rapporto008](CORREZIONE-JRV-AUD-008-20261107.md); nessun nuovo pacchetto.
 
 # Impostazioni configurabili — mappa dal codice KoboldCpp1.121
 

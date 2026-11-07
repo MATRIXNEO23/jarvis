@@ -1,0 +1,568 @@
+{
+  "issue": "JRV-AUD-008",
+  "date": "2026-11-07",
+  "status": "FIX_VERIFIED_WINDOWS_CI_DRAFT_NOT_RELEASED",
+  "severity": "MEDIO",
+  "base_commit": "b25f54ad34534b7446b0a4e12518634071c47049",
+  "source_commit": "b10453d5ddfda2155f4969dd8f1fa501cdcda8f9",
+  "source_tree": "645d540e85d19db37b4b157c4e5b2c946d899abc",
+  "branch": "fix/jrv-aud-008-gemma-settings-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/42",
+  "verified_blobs": {
+    "local_model/native_conversation_session.py": "e2b199e9345903f504796760dd156b1c2d244356",
+    "local_model/native_chat_adapter.py": "ccfce59dfa68408f535ceddd7ec3a622c022fdef",
+    "local_model/native_bridge.py": "8f0f3316f080fde031e1bdd53cb5d21fd7a11ded",
+    "local_model/native_settings.py": "843fa7f9e565a63d00eca53c7a8159cb19a9c07b",
+    "local_model/native_ui.py": "09c6eb49456e1e4b5be7614e46a25ac2ec3dd19d",
+    "tests/test_native_settings_propagation.py": "096f2e39de9eab12da2592352dbab06fefb04d9b"
+  },
+  "source_changed_files": [
+    "docs/DECISIONI-E-LEZIONI.md",
+    "docs/GEMMA-IMPOSTAZIONI-20261104.md",
+    "docs/HANDOFF-ARCHITETTURA-JARVIS-20261105.md",
+    "docs/STATO-ATTIVITA.md",
+    "docs/superpowers/plans/2026-11-07-jrv-aud-008-fix.md",
+    "docs/superpowers/specs/2026-11-07-jrv-aud-008-design.md",
+    "local_model/README.md",
+    "local_model/native_bridge.py",
+    "local_model/native_chat_adapter.py",
+    "local_model/native_conversation_session.py",
+    "local_model/native_settings.py",
+    "local_model/native_ui.py",
+    "tests/test_native_conversation_session.py",
+    "tests/test_native_project_history.py",
+    "tests/test_native_settings_propagation.py"
+  ],
+  "red_runs": [
+    {
+      "job_id": 128316811765,
+      "source": "6eaf7bede1b434f2eb7ac498af191cdc57725c00",
+      "run_id": 42343723225,
+      "python": "3.11.9",
+      "tests": 740,
+      "seconds": 113.998,
+      "failures": 16,
+      "errors": 0,
+      "failure_headers": [
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='threads')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='batch_threads')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='context_size')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='model')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='max_output')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='temperature')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='top_k')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='top_p')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='seed')",
+        "FAIL: test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload)",
+        "FAIL: test_invalid_budget_never_generates_then_valid_settings_recover (test_native_settings_propagation.NativeSettingsPropagationTests.test_invalid_budget_never_generates_then_valid_settings_recover)",
+        "FAIL: test_missing_saved_model_never_falls_back_and_recovery_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_missing_saved_model_never_falls_back_and_recovery_keeps_history)",
+        "FAIL: test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare (test_native_settings_propagation.NativeSettingsPropagationTests.test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare)",
+        "FAIL: test_save_during_inference_updates_only_the_next_queued_request (test_native_settings_propagation.NativeSettingsPropagationTests.test_save_during_inference_updates_only_the_next_queued_request)",
+        "FAIL: test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) (flow='isolated')",
+        "FAIL: test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) (flow='picker')"
+      ],
+      "assertions": [
+        "AssertionError: 1 != 2",
+        "AssertionError: 1 != 3",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 96 != 48 : max_length",
+        "AssertionError: 2048 != 256 : max_context_length",
+        "AssertionError: (<class 'OSError'>, <class 'RuntimeError'>) not raised",
+        "AssertionError: 64 != 128 : max_length",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 128 != 80 : max_length",
+        "AssertionError: 128 != 72 : max_length"
+      ]
+    },
+    {
+      "job_id": 128316811896,
+      "source": "6eaf7bede1b434f2eb7ac498af191cdc57725c00",
+      "run_id": 42343723225,
+      "python": "3.12.10",
+      "tests": 740,
+      "seconds": 113.969,
+      "failures": 16,
+      "errors": 0,
+      "failure_headers": [
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='threads')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='batch_threads')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='context_size')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='model')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='max_output')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='temperature')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='top_k')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='top_p')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='seed')",
+        "FAIL: test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload)",
+        "FAIL: test_invalid_budget_never_generates_then_valid_settings_recover (test_native_settings_propagation.NativeSettingsPropagationTests.test_invalid_budget_never_generates_then_valid_settings_recover)",
+        "FAIL: test_missing_saved_model_never_falls_back_and_recovery_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_missing_saved_model_never_falls_back_and_recovery_keeps_history)",
+        "FAIL: test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare (test_native_settings_propagation.NativeSettingsPropagationTests.test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare)",
+        "FAIL: test_save_during_inference_updates_only_the_next_queued_request (test_native_settings_propagation.NativeSettingsPropagationTests.test_save_during_inference_updates_only_the_next_queued_request)",
+        "FAIL: test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) (flow='isolated')",
+        "FAIL: test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) (flow='picker')"
+      ],
+      "assertions": [
+        "AssertionError: 1 != 2",
+        "AssertionError: 1 != 3",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 96 != 48 : max_length",
+        "AssertionError: 2048 != 256 : max_context_length",
+        "AssertionError: (<class 'OSError'>, <class 'RuntimeError'>) not raised",
+        "AssertionError: 64 != 128 : max_length",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 128 != 80 : max_length",
+        "AssertionError: 128 != 72 : max_length"
+      ]
+    },
+    {
+      "job_id": 128317587284,
+      "source": "6c62ae9cdde6046037dc4893332522d16f2e86d7",
+      "run_id": 42343974322,
+      "python": "3.11.9",
+      "tests": 745,
+      "seconds": 124.31,
+      "failures": 22,
+      "errors": 0,
+      "failure_headers": [
+        "FAIL: test_changed_internal_dll_reloads_from_validated_saved_snapshot (test_native_settings_propagation.NativeSettingsPropagationTests.test_changed_internal_dll_reloads_from_validated_saved_snapshot)",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='threads')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='batch_threads')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='context_size')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='model')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='max_output')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='temperature')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='top_k')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='top_p')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='seed')",
+        "FAIL: test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload)",
+        "FAIL: test_failed_old_provider_stop_cannot_be_reused_as_ready (test_native_settings_propagation.NativeSettingsPropagationTests.test_failed_old_provider_stop_cannot_be_reused_as_ready)",
+        "FAIL: test_invalid_budget_never_generates_then_valid_settings_recover (test_native_settings_propagation.NativeSettingsPropagationTests.test_invalid_budget_never_generates_then_valid_settings_recover)",
+        "FAIL: test_isolated_and_picker_can_initiate_reload_after_save (test_native_settings_propagation.NativeSettingsPropagationTests.test_isolated_and_picker_can_initiate_reload_after_save) (flow='isolated')",
+        "FAIL: test_isolated_and_picker_can_initiate_reload_after_save (test_native_settings_propagation.NativeSettingsPropagationTests.test_isolated_and_picker_can_initiate_reload_after_save) (flow='picker')",
+        "FAIL: test_load_failure_after_replacement_keeps_history_and_can_retry (test_native_settings_propagation.NativeSettingsPropagationTests.test_load_failure_after_replacement_keeps_history_and_can_retry)",
+        "FAIL: test_missing_saved_model_never_falls_back_and_recovery_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_missing_saved_model_never_falls_back_and_recovery_keeps_history)",
+        "FAIL: test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare (test_native_settings_propagation.NativeSettingsPropagationTests.test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare)",
+        "FAIL: test_packaged_factory_preserves_bundled_dll_when_samplers_change (test_native_settings_propagation.NativeSettingsPropagationTests.test_packaged_factory_preserves_bundled_dll_when_samplers_change)",
+        "FAIL: test_save_during_inference_updates_only_the_next_queued_request (test_native_settings_propagation.NativeSettingsPropagationTests.test_save_during_inference_updates_only_the_next_queued_request)",
+        "FAIL: test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) (flow='isolated')",
+        "FAIL: test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) (flow='picker')"
+      ],
+      "assertions": [
+        "AssertionError: 1 != 2",
+        "AssertionError: 1 != 2",
+        "AssertionError: 1 != 3",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 96 != 48 : max_length",
+        "AssertionError: RuntimeError not raised",
+        "AssertionError: 2048 != 256 : max_context_length",
+        "AssertionError: 1 != 2",
+        "AssertionError: 1 != 3",
+        "AssertionError: RuntimeError not raised",
+        "AssertionError: (<class 'OSError'>, <class 'RuntimeError'>) not raised",
+        "AssertionError: 64 != 128 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 128 != 80 : max_length",
+        "AssertionError: 128 != 72 : max_length"
+      ]
+    },
+    {
+      "job_id": 128317587390,
+      "source": "6c62ae9cdde6046037dc4893332522d16f2e86d7",
+      "run_id": 42343974322,
+      "python": "3.12.10",
+      "tests": 745,
+      "seconds": 135.665,
+      "failures": 22,
+      "errors": 0,
+      "failure_headers": [
+        "FAIL: test_changed_internal_dll_reloads_from_validated_saved_snapshot (test_native_settings_propagation.NativeSettingsPropagationTests.test_changed_internal_dll_reloads_from_validated_saved_snapshot)",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='threads')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='batch_threads')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='context_size')",
+        "FAIL: test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) (field='model')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='max_output')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='temperature')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='top_k')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='top_p')",
+        "FAIL: test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) (field='seed')",
+        "FAIL: test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload)",
+        "FAIL: test_failed_old_provider_stop_cannot_be_reused_as_ready (test_native_settings_propagation.NativeSettingsPropagationTests.test_failed_old_provider_stop_cannot_be_reused_as_ready)",
+        "FAIL: test_invalid_budget_never_generates_then_valid_settings_recover (test_native_settings_propagation.NativeSettingsPropagationTests.test_invalid_budget_never_generates_then_valid_settings_recover)",
+        "FAIL: test_isolated_and_picker_can_initiate_reload_after_save (test_native_settings_propagation.NativeSettingsPropagationTests.test_isolated_and_picker_can_initiate_reload_after_save) (flow='isolated')",
+        "FAIL: test_isolated_and_picker_can_initiate_reload_after_save (test_native_settings_propagation.NativeSettingsPropagationTests.test_isolated_and_picker_can_initiate_reload_after_save) (flow='picker')",
+        "FAIL: test_load_failure_after_replacement_keeps_history_and_can_retry (test_native_settings_propagation.NativeSettingsPropagationTests.test_load_failure_after_replacement_keeps_history_and_can_retry)",
+        "FAIL: test_missing_saved_model_never_falls_back_and_recovery_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_missing_saved_model_never_falls_back_and_recovery_keeps_history)",
+        "FAIL: test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare (test_native_settings_propagation.NativeSettingsPropagationTests.test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare)",
+        "FAIL: test_packaged_factory_preserves_bundled_dll_when_samplers_change (test_native_settings_propagation.NativeSettingsPropagationTests.test_packaged_factory_preserves_bundled_dll_when_samplers_change)",
+        "FAIL: test_save_during_inference_updates_only_the_next_queued_request (test_native_settings_propagation.NativeSettingsPropagationTests.test_save_during_inference_updates_only_the_next_queued_request)",
+        "FAIL: test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) (flow='isolated')",
+        "FAIL: test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) (flow='picker')"
+      ],
+      "assertions": [
+        "AssertionError: 1 != 2",
+        "AssertionError: 1 != 2",
+        "AssertionError: 1 != 3",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 96 != 48 : max_length",
+        "AssertionError: RuntimeError not raised",
+        "AssertionError: 2048 != 256 : max_context_length",
+        "AssertionError: 1 != 2",
+        "AssertionError: 1 != 3",
+        "AssertionError: RuntimeError not raised",
+        "AssertionError: (<class 'OSError'>, <class 'RuntimeError'>) not raised",
+        "AssertionError: 64 != 128 : max_length",
+        "AssertionError: 128 != 64 : max_length",
+        "AssertionError: 2048 != 4096 : max_context_length",
+        "AssertionError: 128 != 80 : max_length",
+        "AssertionError: 128 != 72 : max_length"
+      ]
+    }
+  ],
+  "green": {
+    "run": {
+      "id": 42344534309,
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b10453d5ddfda2155f4969dd8f1fa501cdcda8f9",
+      "attempt": 1
+    },
+    "platform": "windows-2022 x64",
+    "command": "python -m unittest discover -s tests -v",
+    "jobs": [
+      {
+        "job_id": 128319288492,
+        "python": "3.11.9",
+        "url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/42344534309/job/128319288492",
+        "tests": 747,
+        "seconds": 119.191,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "propagation_methods": [
+          "test_changed_internal_dll_reloads_from_validated_saved_snapshot (test_native_settings_propagation.NativeSettingsPropagationTests.test_changed_internal_dll_reloads_from_validated_saved_snapshot) ... ok",
+          "test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) ... ok",
+          "test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) ... ok",
+          "test_explicit_trial_reloads_provider_retained_after_invalid_save (test_native_settings_propagation.NativeSettingsPropagationTests.test_explicit_trial_reloads_provider_retained_after_invalid_save) ... ok",
+          "test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload) ... ok",
+          "test_failed_old_provider_stop_cannot_be_reused_as_ready (test_native_settings_propagation.NativeSettingsPropagationTests.test_failed_old_provider_stop_cannot_be_reused_as_ready) ... ok",
+          "test_invalid_budget_never_generates_then_valid_settings_recover (test_native_settings_propagation.NativeSettingsPropagationTests.test_invalid_budget_never_generates_then_valid_settings_recover) ... ok",
+          "test_invalid_ui_value_preserves_saved_bytes_and_working_session (test_native_settings_propagation.NativeSettingsPropagationTests.test_invalid_ui_value_preserves_saved_bytes_and_working_session) ... ok",
+          "test_isolated_and_picker_can_initiate_reload_after_save (test_native_settings_propagation.NativeSettingsPropagationTests.test_isolated_and_picker_can_initiate_reload_after_save) ... ok",
+          "test_load_failure_after_replacement_keeps_history_and_can_retry (test_native_settings_propagation.NativeSettingsPropagationTests.test_load_failure_after_replacement_keeps_history_and_can_retry) ... ok",
+          "test_missing_saved_model_never_falls_back_and_recovery_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_missing_saved_model_never_falls_back_and_recovery_keeps_history) ... ok",
+          "test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare (test_native_settings_propagation.NativeSettingsPropagationTests.test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare) ... ok",
+          "test_packaged_factory_preserves_bundled_dll_when_samplers_change (test_native_settings_propagation.NativeSettingsPropagationTests.test_packaged_factory_preserves_bundled_dll_when_samplers_change) ... ok",
+          "test_save_during_inference_updates_only_the_next_queued_request (test_native_settings_propagation.NativeSettingsPropagationTests.test_save_during_inference_updates_only_the_next_queued_request) ... ok",
+          "test_saved_personality_keeps_model_and_changes_next_chat_prompt (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_personality_keeps_model_and_changes_next_chat_prompt) ... ok",
+          "test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) ... ok",
+          "test_stop_releases_ready_or_retained_provider_after_abort_failure (test_native_settings_propagation.NativeSettingsPropagationTests.test_stop_releases_ready_or_retained_provider_after_abort_failure) ... ok"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Python syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "GPT JavaScript syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "Unit tests (no external login)",
+            "conclusion": "success"
+          },
+          {
+            "name": "PowerShell setup syntax (Windows)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native Windows file access probe",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows Search service observation (CI only)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Live Windows Search integration (isolated CI only)",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Build operational candidate (Windows only)",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Verify extracted candidate on Windows",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "job_id": 128319288706,
+        "python": "3.12.10",
+        "url": "https://github.com/MATRIXNEO23/jarvis/actions/runs/42344534309/job/128319288706",
+        "tests": 747,
+        "seconds": 114.697,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0,
+        "propagation_methods": [
+          "test_changed_internal_dll_reloads_from_validated_saved_snapshot (test_native_settings_propagation.NativeSettingsPropagationTests.test_changed_internal_dll_reloads_from_validated_saved_snapshot) ... ok",
+          "test_each_saved_load_setting_reloads_once_and_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_load_setting_reloads_once_and_keeps_history) ... ok",
+          "test_each_saved_sampler_reaches_next_chat_without_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_each_saved_sampler_reaches_next_chat_without_reload) ... ok",
+          "test_explicit_trial_reloads_provider_retained_after_invalid_save (test_native_settings_propagation.NativeSettingsPropagationTests.test_explicit_trial_reloads_provider_retained_after_invalid_save) ... ok",
+          "test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload (test_native_settings_propagation.NativeSettingsPropagationTests.test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload) ... ok",
+          "test_failed_old_provider_stop_cannot_be_reused_as_ready (test_native_settings_propagation.NativeSettingsPropagationTests.test_failed_old_provider_stop_cannot_be_reused_as_ready) ... ok",
+          "test_invalid_budget_never_generates_then_valid_settings_recover (test_native_settings_propagation.NativeSettingsPropagationTests.test_invalid_budget_never_generates_then_valid_settings_recover) ... ok",
+          "test_invalid_ui_value_preserves_saved_bytes_and_working_session (test_native_settings_propagation.NativeSettingsPropagationTests.test_invalid_ui_value_preserves_saved_bytes_and_working_session) ... ok",
+          "test_isolated_and_picker_can_initiate_reload_after_save (test_native_settings_propagation.NativeSettingsPropagationTests.test_isolated_and_picker_can_initiate_reload_after_save) ... ok",
+          "test_load_failure_after_replacement_keeps_history_and_can_retry (test_native_settings_propagation.NativeSettingsPropagationTests.test_load_failure_after_replacement_keeps_history_and_can_retry) ... ok",
+          "test_missing_saved_model_never_falls_back_and_recovery_keeps_history (test_native_settings_propagation.NativeSettingsPropagationTests.test_missing_saved_model_never_falls_back_and_recovery_keeps_history) ... ok",
+          "test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare (test_native_settings_propagation.NativeSettingsPropagationTests.test_normal_chat_keeps_validated_snapshot_if_file_changes_before_prepare) ... ok",
+          "test_packaged_factory_preserves_bundled_dll_when_samplers_change (test_native_settings_propagation.NativeSettingsPropagationTests.test_packaged_factory_preserves_bundled_dll_when_samplers_change) ... ok",
+          "test_save_during_inference_updates_only_the_next_queued_request (test_native_settings_propagation.NativeSettingsPropagationTests.test_save_during_inference_updates_only_the_next_queued_request) ... ok",
+          "test_saved_personality_keeps_model_and_changes_next_chat_prompt (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_personality_keeps_model_and_changes_next_chat_prompt) ... ok",
+          "test_saved_settings_apply_to_isolated_and_picker_without_history_changes (test_native_settings_propagation.NativeSettingsPropagationTests.test_saved_settings_apply_to_isolated_and_picker_without_history_changes) ... ok",
+          "test_stop_releases_ready_or_retained_provider_after_abort_failure (test_native_settings_propagation.NativeSettingsPropagationTests.test_stop_releases_ready_or_retained_provider_after_abort_failure) ... ok"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Python syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "GPT JavaScript syntax",
+            "conclusion": "success"
+          },
+          {
+            "name": "Unit tests (no external login)",
+            "conclusion": "success"
+          },
+          {
+            "name": "PowerShell setup syntax (Windows)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native Windows file access probe",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows Search service observation (CI only)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Live Windows Search integration (isolated CI only)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build operational candidate (Windows only)",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Verify extracted candidate on Windows",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  "diagnosis": "Normal requests reread saved configuration for prompt/budget, but preparation only happens initially; adapter and bridge retain old settings.005 explicit trial reload did not fix normal propagation.",
+  "change": {
+    "session": "native_conversation_session.py:86-95,_prepare uses validated immutable snapshot; cache excludes personality only, since prompt reads it directly; all3normal flows use helper. Explicit trial and stop consistently revoke state and retained provider.",
+    "adapter": "native_chat_adapter.py:13-33,53-57: same loadfields reuse loaded provider and update generation settings; changed RELOAD_FIELDS orDLL validate/create candidate then detach/stop old provider before load. Abort failure cannot leave old provider marked ready.",
+    "bridge": "native_bridge.py:51-60: update5generation fields under existing lock with validation, preserving effective model/DLL/load settings including packaged bundled DLL.",
+    "ui": "native_ui.py messages state that saving does not load/infer and next request applies changes; native_settings module description aligned.",
+    "compatibility": "Only prepare keyword signature adjusted in2test doubles; prior assertions preserved. Configuration schema, main branch, saved data and consent/microphone rules unchanged."
+  },
+  "checked_by_passing_assertions": {
+    "samplers": {
+      "max_output": 64,
+      "temperature": 0.2,
+      "top_k": 23,
+      "top_p": 0.6,
+      "seed": 17,
+      "no_reload": true
+    },
+    "load_fields": {
+      "threads": 3,
+      "batch_threads": 4,
+      "context_size": 4096,
+      "model": "temporary second fixture",
+      "dll": "temporary second fixture",
+      "one_reload_per_change": true
+    },
+    "flows": [
+      "chat",
+      "isolatedTelegram prompt",
+      "program picker",
+      "explicit generated trial"
+    ],
+    "safety": [
+      "Save no inference/load.",
+      "Current inference keeps original values while next queued request takes new snapshot.",
+      "Save between validation andprepare does not alter that request snapshot; subsequent request uses newfile.",
+      "Invalid UI value preserves bytes; invalid budget/missing model/load failure do not generate/add history; valid config can recover.",
+      "Provider stop failure detaches and clears readiness even for retained oldprovider.",
+      "Explicit trial after failed config reloads as005 requires and leaves model reusable.",
+      "Transformed real factory with rawDLL empty keeps effective bundledDLL on sampler change."
+    ]
+  },
+  "independent_review": {
+    "reviewer": "/root/review_settings",
+    "mode": "Fresh-context read-only workingtree againstb25f54a, exact reviewed blobs match published source; no tests or mutations.",
+    "initial_gaps_addressed": [
+      "InternalDLL reload",
+      "Load failure after replacement/recovery",
+      "Reload initiated byisolated/picker"
+    ],
+    "important_candidate_defect": {
+      "trigger": "WorkingA -> invalid missingB -> failedask retainsA/unprepared -> restoreA -> explicit trial skippedstop and reusedA.",
+      "fix": "Explicit trial now always calls safe session.stop underRLock; added retained-provider sequence test, history/isolation/reuse assertions.",
+      "verification": "Targeted source re-review found no further issue; new test passes in bothGreen jobs. Not claimed as a separate executed Red."
+    },
+    "minor_adjustment": "Allow >=1abort in failed-load recovery test, rather than excluding legitimate extra cleanup; no-overlap assertions remain.",
+    "verdict": "No remaining concrete defect in scoped source delta; WindowsGreen separately verified."
+  },
+  "limits": [
+    "008integration uses realTk/Save/JSON/session/factory/provider/bridge with controlled ABI. No realGGUF, model-quality inference, microphone, GPT/Telegram account or personal data.",
+    "Only source transforms of realbuilderUI/factory in temporary paths; no builder execution, applicationZIP or published package.",
+    "Full inherited suite retains006referenceDLL download/load/export probe;008test itself never loads a realDLL. Do not confuse export probe with inference.",
+    "No Windows10/i3-2100/HDD performance, RAM orCPU measurements; load efficiency checked by controlled ABI counts.",
+    "No functional Linux tests, builds, extracted-package checks, release ormerge. Packaging/bootstrap on extracted delivery remains pending.",
+    "Reload waits behind current native call;010native timeout/abort issue is not fixed.009durable chat memory remains separate.",
+    "Two final state-recovery tests were added after Red2review; original15Red tests retained, whole17Green passed."
+  ],
+  "windows_search_live": {
+    "native_index_verified": true,
+    "runtime_adapter": "indexed_candidates",
+    "scope_changes": false,
+    "global_reindex": false,
+    "personal_pc_verified": false,
+    "checks": {
+      "available_empty_query": "passed",
+      "created_file_found": "passed",
+      "other_scope_empty": "passed",
+      "rename_observed": "passed",
+      "deletion_observed": "passed",
+      "created_folder_found": "passed",
+      "folder_other_scope_empty": "passed",
+      "folder_deletion_observed": "passed"
+    },
+    "initial_service": {
+      "running": false,
+      "start_mode": "Disabled"
+    },
+    "service_restored": true,
+    "fixture_removed": true
+  },
+  "residual_issues": {
+    "JRV_AUD_022": "Open; not reproduced in008runs, no fix claimed.",
+    "JRV_AUD_023": "Open; not reproduced in008runs, no fix claimed."
+  },
+  "preservation": {
+    "main_commit": "f147b1a5faa977e8e4aefe21c9799465a7a8e990",
+    "base_pr_41_unchanged": true,
+    "user_data_changes": false,
+    "build": false,
+    "merge": false,
+    "application_zip": false,
+    "release": false
+  },
+  "next_step": "Stop after008; next user go-ahead can verify009 durable Gemma dialogue memory, with memory opt-in and project isolation. No automatic build."
+}
