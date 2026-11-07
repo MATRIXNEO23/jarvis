@@ -53,6 +53,13 @@ class FileRefinementTests(unittest.TestCase):
                      'real-poll-'+kind,'exec'),env)
 
     def environment(self):
+        from local_model.online_permissions import OnlinePermissionPolicy
+        profile = self.root / "gpt-test-profile"
+        env_patch = patch.dict(os.environ, {"JARVIS_TRIAL_HOME": str(profile)})
+        env_patch.start()
+        self.addCleanup(env_patch.stop)
+        OnlinePermissionPolicy({"files.search": "ask", "chat.conversation": "ask"}).save(
+            profile / "addon-data/modello_locale/online-permissions.json")
         workers=[]
         def thread(*,target,**kwargs):
             return SimpleNamespace(start=lambda:workers.append(target))
@@ -93,6 +100,41 @@ class FileRefinementTests(unittest.TestCase):
         self.assertEqual(result.status,'completed',result.message)
         token=result.file_listing['refinement']
         return token
+
+    def test_refinement_uses_saved_file_policy_before_claiming_request(self):
+        from local_model.online_permissions import OnlinePermissionPolicy, default_online_permissions_path
+        for mode, sends, dialogs in [('never', 0, 0), ('ask', 1, 1), ('allowed', 1, 0)]:
+            with self.subTest(mode=mode):
+                env, workers = self.environment()
+                OnlinePermissionPolicy({'chat.conversation': 'allowed', 'files.search': mode}).save(
+                    default_online_permissions_path())
+                token = self.empty()
+                self.assertEqual(bool(env['start_file_refinement'](token, 'cerca file assente')), bool(sends))
+                self.assertEqual(len(workers), sends)
+                self.assertEqual(env['messagebox'].askyesno.call_count, dialogs)
+                if not sends:
+                    self.assertFalse(self.files._refinement['claimed'])
+                for worker in workers:
+                    worker()
+                self.assertEqual(env['service'].call.call_count, sends)
+
+    def test_preview_explanation_obeys_its_own_policy_in_real_poll(self):
+        from local_model.online_permissions import OnlinePermissionPolicy, default_online_permissions_path
+        for mode, sends, dialogs in [('never', 0, 0), ('ask', 1, 1), ('allowed', 1, 0)]:
+            with self.subTest(mode=mode):
+                env, workers = self.environment()
+                OnlinePermissionPolicy({'chat.conversation': 'allowed', 'files.explain': mode}).save(
+                    default_online_permissions_path())
+                result = self.engine.execute_file('read', {'target': str(self.a), 'explain': True})
+                self.assertEqual(result.status, 'completed', result.message)
+                env['output_queue'].put(('local', result))
+                with patch('file_access.ui.show_preview'):
+                    self.receive('local', env)
+                self.assertEqual(len(workers), sends)
+                self.assertEqual(env['messagebox'].askyesno.call_count, dialogs)
+                for worker in workers:
+                    worker()
+                self.assertEqual(env['service'].call.call_count, sends)
 
     def response(self,env,token,operation='cerca',arguments=None,**override):
         reply=dict(kind='capability',action_id='addon.accesso_file.'+operation,

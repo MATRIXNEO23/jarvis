@@ -101,9 +101,10 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
             messagebox.showwarning("Richiesta non valida", str(exc), parent=window)
             return
         generation = consent_generation()
-        if not confirm_inference(
+        permission = confirm_inference(
             "La richiesta di pianificazione. Potrai decidere separatamente se eseguire il piano."
-        ):
+        )
+        if permission is None or permission is False:
             return
         if closed or generation != consent_generation() or not is_available():
             return
@@ -122,7 +123,8 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
             try:
                 def authorized():
                     return (not abort_event.is_set() and not cancel_event.is_set()
-                            and generation == consent_generation())
+                            and generation == consent_generation()
+                            and callable(permission) and permission())
                 if not authorized():
                     events.put(("error", "Richiesta di pianificazione annullata."))
                     return

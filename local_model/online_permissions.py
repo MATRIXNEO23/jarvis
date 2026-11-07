@@ -95,3 +95,49 @@ def default_online_permissions_path():
     if not local:
         raise RuntimeError("LOCALAPPDATA non disponibile.")
     return Path(local) / "Jarvis" / "addon-data" / "modello_locale" / "online-permissions.json"
+
+
+@dataclass(frozen=True)
+class OnlineRequestGrant:
+    """One function's permission, rechecked before crossing the pipe boundary.
+
+    No saved rule is changed. A change of mode invalidates this request;
+    in particular allowed -> ask cannot inherit an unprompted approval.
+    """
+    capability: str
+    path: Path
+    mode: str
+
+    def __call__(self):
+        try:
+            policy = OnlinePermissionPolicy.load(self.path)
+            return (policy.mode(self.capability) == self.mode
+                    and policy.decide(self.capability, confirmed=True)
+                    == "online_permitted")
+        except (OSError, ValueError, TypeError, RuntimeError):
+            return False
+
+
+def authorize_online_request(capability, *, confirm=None, confirmed=False,
+                             path=None):
+    """Return a revocable grant or None. Never prompts for 'never'/'allowed'.
+
+    The caller owns UI dispatch and runtime/epoch checks. confirmed=True
+    represents prior consent for this request (or the Telegram session),
+    never authority to override a saved denial. Account operations stay
+    separate and do not use this inference gate.
+    """
+    try:
+        target = Path(path) if path is not None else default_online_permissions_path()
+        policy = OnlinePermissionPolicy.load(target)
+        decision = policy.decide(capability, confirmed=confirmed)
+        mode = policy.mode(capability)
+    except (OSError, ValueError, TypeError, RuntimeError):
+        return None
+    if decision == "local_only":
+        return None
+    if decision == "request_consent":
+        if not callable(confirm) or confirm() is not True:
+            return None
+    grant = OnlineRequestGrant(capability, target, mode)
+    return grant if grant() else None

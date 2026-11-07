@@ -1279,18 +1279,22 @@ def main() -> None:
                        "non ho inviato nessun dato.")
             return True
         consent_epoch = conversation_epoch
-        approved=messagebox.askyesno(
-            "JARVIS — valutazione esterna",
-            "Vuoi inviare al GPT collegato soltanto un rapporto tecnico "
-            "ridotto dell'autodiagnosi?\n\n"
-            "Contiene: file sorgenti RELATIVI, righe, segnali statici, "
-            "stati osservati dei componenti e CONTEGGI ANONIMI delle operazioni.\n"
-            "NON contiene codice completo, credenziali, documenti, "
-            "log di sistema, percorsi personali né dati dei progetti.\n"\
-            "Gli errori contati riguardano solo questa istanza.\n\n"
-            "È un'analisi di possibili miglioramenti, NON una verifica "
-            "del corretto funzionamento e non autorizza modifiche.",
-            parent=root, default="no")
+        from local_model.online_permissions import authorize_online_request
+        def confirm_review():
+            return messagebox.askyesno(
+                "JARVIS — valutazione esterna",
+                "Vuoi inviare al GPT collegato soltanto un rapporto tecnico "
+                "ridotto dell'autodiagnosi?\n\n"
+                "Contiene: file sorgenti RELATIVI, righe, segnali statici, "
+                "stati osservati dei componenti e CONTEGGI ANONIMI delle operazioni.\n"
+                "NON contiene codice completo, credenziali, documenti, "
+                "log di sistema, percorsi personali né dati dei progetti.\n"\
+                "Gli errori contati riguardano solo questa istanza.\n\n"
+                "È un'analisi di possibili miglioramenti, NON una verifica "
+                "del corretto funzionamento e non autorizza modifiche.",
+                parent=root, default="no")
+        permission = authorize_online_request("diagnostics.review", confirm=confirm_review)
+        approved = permission is not None
         approved = approved and consent_epoch == conversation_epoch
         if not approved:
             write_line("DIAGNOSTICA > Invio al modello esterno annullato. "
@@ -1317,7 +1321,8 @@ def main() -> None:
             return True
         write_line("DIAGNOSTICA > Consenso ricevuto. Invio SOLO metadati "
                    "della diagnosi locale al GPT esterno per suggerimenti.")
-        run_gpt("ask",prompt=prompt,source="",consent_granted=True)
+        run_gpt("ask",prompt=prompt,source="",
+                capability="diagnostics.review",permission=permission)
         return True
 
     def update_diagnostic_ui() -> None:
@@ -1826,17 +1831,27 @@ def main() -> None:
         session_token = telegram_gpt_session_token
         if not telegram_gpt_ready.is_set() or not bridge.is_enabled():
             return ""
-        if session_token is None:
+        from local_model.online_permissions import authorize_online_request
+
+        def request_consent():
+            nonlocal approved_epoch
             approval = Future()
             output_queue.put(("telegram_gpt_consent", bridge, approval))
             try:
                 approved_epoch = approval.result(timeout=30)
             except TimeoutError:
                 approval.cancel()
-                return ""
+                return False
+            return approved_epoch is not None
+
+        permission = authorize_online_request(
+            "telegram.compose", confirmed=session_token is not None,
+            confirm=request_consent)
+        if permission is None:
+            return ""
 
         def authorized():
-            return (approved_epoch == conversation_epoch and telegram_gpt_ready.is_set()
+            return (permission() and approved_epoch == conversation_epoch and telegram_gpt_ready.is_set()
                     and bridge.is_enabled()
                     and (session_token is None or session_token is telegram_gpt_session_token))
         if not authorized():
@@ -2002,6 +2017,7 @@ def main() -> None:
                 and gpt_enabled.get() and active_gpt and not busy_gpt)
 
     def run_gpt(action: str, *, consent_granted=False,
+                capability="chat.conversation", permission=None,
                 consent_detail="La richiesta e il contesto disponibile.", **params) -> bool:
         nonlocal busy_gpt, gpt_request_action, active_gpt, conversation_epoch
         if busy_gpt or not gpt_enabled.get() or closing:
@@ -2009,7 +2025,13 @@ def main() -> None:
         if action in ("ask", "conversation", "typed_conversation"):
             if not active_gpt:
                 return False
-            if not consent_granted and not confirm_gpt_inference(consent_detail):
+            from local_model.online_permissions import authorize_online_request
+            permission = permission or authorize_online_request(
+                capability, confirmed=consent_granted,
+                confirm=lambda: confirm_gpt_inference(consent_detail))
+            if (permission is None or permission.capability != capability
+                    or not permission()):
+                write_line("GPT > Invio non autorizzato. Controlla Autorizzazioni GPT per funzione.")
                 return False
         if action == "disconnect":
             set_telegram_gpt_session(False)
@@ -2044,7 +2066,8 @@ def main() -> None:
                               if key not in ("epoch", "document_id", "utterance", "source", "file_refinement")}
                 if sdk_action == "ask":
                     def authorized():
-                        return not closing and consent_epoch == conversation_epoch
+                        return (not closing and consent_epoch == conversation_epoch
+                                and permission())
                     if not authorized():
                         raise PermissionError("Autorizzazione GPT revocata.")
                     sdk_params["authorize_send"] = authorized
@@ -2858,6 +2881,7 @@ def main() -> None:
     def submit_plan() -> None:
         if not gpt_enabled.get() or not active_gpt or busy_gpt or closing:
             return
+        from local_model.online_permissions import authorize_online_request
         open_planner(
             root, service, engine,
             lambda: bool(gpt_enabled.get() and active_gpt and not busy_gpt and not closing),
@@ -2865,7 +2889,8 @@ def main() -> None:
             on_approved=journal_plan_approved,
             on_step=journal_plan_step,
             on_finished=journal_plan_finished,
-            confirm_inference=confirm_gpt_inference,
+            confirm_inference=lambda detail: authorize_online_request(
+                "planner.create", confirm=lambda: confirm_gpt_inference(detail)),
             consent_generation=lambda: conversation_epoch,
         )
 
@@ -2922,8 +2947,11 @@ def main() -> None:
         provider=addon_manager.file_service
         if not provider.refinement_live(token):
             return False
-        if not confirm_gpt_inference(
-                "La richiesta di ricerca e gli indizi sul nome del file o della cartella."):
+        from local_model.online_permissions import authorize_online_request
+        permission = authorize_online_request(
+            "files.search", confirm=lambda: confirm_gpt_inference(
+                "La richiesta di ricerca e gli indizi sul nome del file o della cartella."))
+        if permission is None:
             write_line("FILE > Richiesta GPT annullata. Puoi precisare la ricerca localmente.")
             return False
         feedback=provider.refinement_context(token,original,answer=answer)
@@ -2942,7 +2970,7 @@ def main() -> None:
         write_line("FILE > Chiedo al modello di precisare la stessa ricerca.")
         return run_gpt("typed_conversation",prompt=prompt,epoch=conversation_epoch,
                        document_id=snapshot,utterance=original,file_refinement=token,
-                       consent_granted=True)
+                       capability="files.search", permission=permission)
 
     def accept_file_refinement(token, intent) -> bool:
         provider=addon_manager.file_service if addon_manager is not None and addon_manager.files_enabled() else None
@@ -3585,6 +3613,7 @@ def main() -> None:
                                 from file_access.service import explanation_prompt
                                 run_gpt("ask",prompt=explanation_prompt(result.preview),
                                         source="Spiega il file letto su mia richiesta",
+                                        capability="files.explain",
                                         consent_detail="Il testo mostrato nell’anteprima del file.")
                             else:
                                 write_line("FILE > Testo letto. Per spiegarlo collega GPT e ripeti ‘spiega file …’.")
