@@ -1,3 +1,9 @@
+## Timer scritto — candidata minima e review
+
+Correzione: gate timer/sveglia dopo file e prima del guard di avvio app (necessario per «avvia un timer»), con progetto pendente protetto. Rimossa restrizione alle sole sveglie. Parser ora accetta interamente comandi supportati e controlli, non menzioni conversazionali/negate; cifre e parole italiane condividono la mappa esistente importata solo al parse, senza ciclo. Sveglia accetta «di mattina/del mattino» con ore0–11 e rollover già previsto. Nessun modello nuovo/consenso/dipendenza o salvataggio cambiato.
+
+Red iniziale source2f51806e/run42417048902:914test per job,3failure comportamentali (timer scritto/cifra, parola e durata) e2errori di fixture (alarmMock non stringa e re non fornito).3.11 job128537307361135.131s;3.12 job128537307516184.837s. Non attribuire errori fixture all'app. Test rafforzati su modello/config temporanei e fallback; review richiede Path reale nell'ambienteAST oltre a re: completati. Review runtime readonly senza altri blocchi; aggiunte priorità progetto e rollover. Nuova suite Windows918test attesa. Nessuna build nuova;006 resta invariata.
+
 ## Timer scritto — test rafforzati prima del fix
 
 Review readonly segnala rischio: parser vecchio accetta anche «non impostare timer6» e richieste esplicative. Il gate comune deve rifiutare frasi conversazionali/negate e preservare fallback Gemma configurato. Test ora usano config/modello temporanei, submit modello controllato, callback console/timer reali; aggiunti controlli/bare timer e priorità documenti/file. Completa fixture alarm.arm con risposta stringa reale: il Mock generico altrimenti provoca un TypeError di concatenazione, non un difetto dell'app. Numeri italiani riusati con import differito per evitare ciclo sveglia↔timer. Nessun codice runtime modificato; nuovo Red Windows necessario con fixture completa. Nessuna build.

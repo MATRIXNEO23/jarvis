@@ -1,5 +1,6 @@
 """Real console/timer callbacks; no model, microphone or user profiles."""
 import ast
+import re
 import os
 from pathlib import Path
 from types import SimpleNamespace
@@ -23,7 +24,7 @@ class TypedTimerTests(unittest.TestCase):
         request=SimpleNamespace(value=text)
         request.get=lambda:request.value
         request.set=lambda v:setattr(request,'value',v)
-        env=dict(request=request,reconcile_document_session=Mock(),try_telegram_voice_send=lambda _:False,
+        env=dict(Path=Path,re=re,request=request,reconcile_document_session=Mock(),try_telegram_voice_send=lambda _:False,
             save_only_waiting=False,doc_dialog=SimpleNamespace(phase='idle'),parse_simple_save=lambda _:None,
             pending_project_name=False,pending_project_rename_id=None,pending_project_trash_id=None,
             try_file_command=lambda _:False,project_voice_command=lambda _:False,preference_command=lambda _:False,
@@ -57,6 +58,7 @@ class TypedTimerTests(unittest.TestCase):
         e['alarm'].arm.assert_called_once_with('sette e trenta di mattina')
         self.assertEqual(next_alarm('sette e trenta di mattina',datetime(2026,11,7,6)),datetime(2026,11,7,7,30))
         e['submit_gemma_trial'].assert_not_called()
+        self.assertEqual(next_alarm('sette e trenta di mattina',datetime(2026,11,7,8)),datetime(2026,11,8,7,30))
 
     def test_conversational_and_negated_mentions_stay_with_configured_gemma(self):
         for text in ('non impostare timer 6 minuti','spiegami un timer da 6 minuti','non fermare timer','come funziona un timer','raccontami una storia'):
@@ -74,12 +76,14 @@ class TypedTimerTests(unittest.TestCase):
                 e['submit_gemma_trial'].assert_not_called()
 
     def test_pending_document_and_file_handler_keep_priority(self):
-        for kind in ('document','file'):
+        for kind in ('document','file','project'):
             e=self.environment('imposta timer 6 minuti')
             if kind=='document':
                 e['doc_dialog'].phase='awaiting_close';e['handle_document_confirmation']=Mock()
-            else:
+            elif kind=='file':
                 e['try_file_command']=lambda _:True
+            else:
+                e['pending_project_name']='pending';e['project_voice_command']=lambda _:True
             e['send_console_input']()
             e['timer'].start.assert_not_called();e['submit_gemma_trial'].assert_not_called()
 
