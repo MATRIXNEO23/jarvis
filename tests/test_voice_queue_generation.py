@@ -42,6 +42,7 @@ class VoiceQueueGenerationTests(unittest.TestCase):
             dictation_button=Mock(), ptt_button=Mock(), spoken_enabled=voice_fixture.Value(True),
             save_speech_preferences=Mock(), sync_dictation_ui=Mock(),
             mic_status=voice_fixture.Value(""), runtime_events=Mock(), closing=False,
+            refresh_buttons=Mock(),
         )
         self.mode_callback = self.fixture.callback("change_voice_mode")
         self.drain = self.make_dispatch_consumer()
