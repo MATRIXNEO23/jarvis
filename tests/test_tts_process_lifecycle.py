@@ -27,8 +27,11 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         self.helper.write_text(
             'import json,sys,time\nfrom pathlib import Path\n'
             'data=json.loads(sys.stdin.buffer.read().decode("utf-8"))\n'
-            'Path(sys.argv[1]).write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")\n'
+            'marker=Path(sys.argv[1]); temporary=marker.with_suffix(".tmp")\n'
+            'temporary.write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")\n'
+            'temporary.replace(marker)\n'
             'if sys.argv[2]=="hold": time.sleep(15)\n'
+            'if sys.argv[2]=="short": time.sleep(0.15)\n'
             'if sys.argv[2]=="fail": sys.exit(3)\n'
             'if data["mode"]=="list": print(json.dumps(["Fixture Voce"]))\n',
             encoding='utf-8')
@@ -38,7 +41,11 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         self.pause_publication = False
         self.short_timeout = False
         self.fail_launch = False
+        self.communication_error = None
+        self.delay_communication_cleanup = False
         self.created, self.resume = threading.Event(), threading.Event()
+        self.communicated, self.release_communication = threading.Event(), threading.Event()
+        self.close_workers = []
         self.enterContext(patch('offline_tts.subprocess.Popen', side_effect=self.launch))
         self.addCleanup(self.cleanup)
 
@@ -65,6 +72,25 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         child = child_type([sys.executable, '-u', str(self.helper), str(marker), self.mode], **options)
         child.marker = marker
         self.children.append(child)
+        if self.communication_error is not None:
+            def broken_communicate(input=None, timeout=None):
+                if input is not None:
+                    child.stdin.write(input)
+                    child.stdin.close()
+                raise self.communication_error
+            def broken_kill():
+                raise OSError('Controlled kill cleanup failure')
+            child.communicate = broken_communicate
+            child.kill = broken_kill
+        if self.delay_communication_cleanup:
+            communicate = child.communicate
+            def gated_communicate(*args, **kwargs):
+                result = communicate(*args, **kwargs)
+                self.communicated.set()
+                if not self.release_communication.wait(5):
+                    raise OSError('Fixture communicate cleanup gate timed out')
+                return result
+            child.communicate = gated_communicate
         self.created.set()
         if self.pause_publication and not self.resume.wait(5):
             child.terminate()
@@ -100,23 +126,57 @@ class TtsProcessLifecycleTests(unittest.TestCase):
 
     def cleanup(self):
         self.resume.set()
-        for player in self.players:
-            player.close()
+        self.release_communication.set()
+        errors = []
         # Release even on the pre-fix Red path; never leak test children.
         for child in self.children + self.others:
-            if child.poll() is None:
-                child.terminate()
-            child.wait(5)
+            try:
+                if child.poll() is None:
+                    child.terminate()
+                child.wait(5)
+            except Exception as error:
+                errors.append(error)
         for player in self.players:
-            self.joined(player)
+            done, failures = self.start_close(player)
+            if not done.wait(1):
+                errors.append(AssertionError('Fixture close caller did not return'))
+            errors.extend(failures)
+            try:
+                self.joined(player)
+            except Exception as error:
+                errors.append(error)
+        for worker in self.close_workers:
+            worker.join(3)
+            if worker.is_alive():
+                errors.append(AssertionError('Close caller survived cleanup'))
         for child in self.others:
             for stream in (child.stdin, child.stdout, child.stderr):
                 if stream is not None:
                     stream.close()
+        self.assertEqual(errors, [], 'Fixture must retire every resource even after close errors')
+
+    def start_close(self, player):
+        done, errors = threading.Event(), []
+        def close():
+            try:
+                player.close()
+            except Exception as error:
+                errors.append(error)
+            finally:
+                done.set()
+        worker = threading.Thread(target=close, daemon=True)
+        self.close_workers.append(worker)
+        worker.start()
+        return done, errors
+
+    def bounded_close(self, player):
+        done, errors = self.start_close(player)
+        self.assertTrue(done.wait(1), 'close waited for native worker or held a blocking lock')
+        self.assertEqual(errors, [], 'close must allow the remaining app shutdown to continue')
 
     def test_close_stops_the_active_default_helper_and_releases_its_pipes(self):
         player, child, errors = self.active()
-        player.close()
+        self.bounded_close(player)
         self.assertTrue(self.wait_for(lambda: child.poll() is not None, 2), 'close left native helper alive')
         self.joined(player)
         self.assert_pipes_closed(child)
@@ -131,7 +191,7 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         self.assertTrue(player.speak('Terzo messaggio in coda'))
         payload = json.loads(child.marker.read_text(encoding='utf-8'))
         self.assertLessEqual(len(payload['text']), 600)
-        player.close()
+        self.bounded_close(player)
         self.joined(player)
         self.assertEqual(len(self.children), 1)
         self.assert_pipes_closed(child)
@@ -143,7 +203,7 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         self.assertTrue(player.speak('Non inviare al helper dopo close'))
         self.assertTrue(self.created.wait(3))
         child = self.children[0]
-        player.close()
+        self.bounded_close(player)
         self.resume.set()
         self.joined(player)
         self.assertIsNotNone(child.poll())
@@ -154,8 +214,8 @@ class TtsProcessLifecycleTests(unittest.TestCase):
     def test_repeated_close_does_not_terminate_the_same_live_handle_twice(self):
         player, child, errors = self.active()
         with patch.object(child, 'terminate', wraps=child.terminate) as terminate:
-            player.close()
-            player.close()
+            self.bounded_close(player)
+            self.bounded_close(player)
             self.joined(player)
         self.assertEqual(terminate.call_count, 1)
         self.assert_pipes_closed(child)
@@ -170,7 +230,7 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         self.assertTrue(self.wait_for(lambda: child.poll() is not None))
         self.assertTrue(self.wait_for(lambda: not player.is_speaking()))
         with patch.object(child, 'terminate', wraps=child.terminate) as terminate:
-            player.close()
+            self.bounded_close(player)
             self.joined(player)
         terminate.assert_not_called()
         self.assert_pipes_closed(child)
@@ -181,7 +241,7 @@ class TtsProcessLifecycleTests(unittest.TestCase):
                                 creationflags=subprocess.CREATE_NO_WINDOW)
         self.others.append(other)
         player, child, _ = self.active()
-        player.close()
+        self.bounded_close(player)
         self.joined(player)
         self.assertIsNone(other.poll(), 'A process not owned by the speaker was touched')
         self.assertIsNotNone(child.poll())
@@ -198,7 +258,7 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         self.assertEqual(options['cwd'], system_root)
         self.assertEqual(json.loads(child.marker.read_text(encoding='utf-8')),
                          {'mode': 'speak', 'text': text, 'voice': 'Voce fixture'})
-        player.close()
+        self.bounded_close(player)
         self.joined(player)
 
     def test_helper_timeout_keeps_existing_finite_cleanup_and_error_feedback(self):
@@ -209,7 +269,7 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         child = self.children[0]
         self.assertTrue(self.wait_for(lambda: bool(errors), 3))
         self.assertTrue(self.wait_for(lambda: not player.is_speaking()))
-        player.close()
+        self.bounded_close(player)
         self.joined(player)
         self.assert_pipes_closed(child)
         self.assertEqual(len(errors), 1)
@@ -221,7 +281,7 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         self.assertTrue(self.created.wait(3))
         self.assertTrue(self.wait_for(lambda: bool(errors)))
         self.assertTrue(self.wait_for(lambda: not player.is_speaking()))
-        player.close()
+        self.bounded_close(player)
         self.joined(player)
         self.assertEqual(len(errors), 1)
         self.assert_pipes_closed(self.children[0])
@@ -232,7 +292,7 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         self.assertTrue(player.speak('Errore avvio'))
         self.assertTrue(self.wait_for(lambda: bool(errors)))
         self.assertTrue(self.wait_for(lambda: not player.is_speaking()))
-        player.close()
+        self.bounded_close(player)
         self.joined(player)
         self.assertEqual(self.children, [])
         self.assertEqual(len(errors), 1)
@@ -250,7 +310,7 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         player, errors = self.player(runner=runner)
         self.assertTrue(player.speak('Runner custom', 'Fixture'))
         self.assertTrue(entered.wait(2))
-        player.close()
+        self.bounded_close(player)
         self.assertTrue(player.is_speaking(), 'Do not claim uncooperative callable already exited')
         release.set()
         self.joined(player)
@@ -268,8 +328,46 @@ class TtsProcessLifecycleTests(unittest.TestCase):
 
     def test_idle_close_never_launches_a_process(self):
         player, errors = self.player()
-        player.close()
-        player.close()
+        self.bounded_close(player)
+        self.bounded_close(player)
         self.assertFalse(player.speak('Non parte'))
         self.assertEqual(self.launches, [])
         self.assertEqual(errors, [])
+
+    def test_close_returns_before_a_gated_worker_finishes_cleanup(self):
+        self.delay_communication_cleanup = True
+        player, child, errors = self.active()
+        self.bounded_close(player)
+        self.assertTrue(self.wait_for(lambda: child.poll() is not None, 2))
+        self.assertTrue(self.communicated.wait(1))
+        self.assertTrue(player.is_speaking(), 'Worker is deliberately held before finally')
+        self.release_communication.set()
+        self.joined(player)
+        self.assertFalse(player.is_speaking())
+        self.assert_pipes_closed(child)
+        self.assertEqual(errors, [])
+
+    def test_termination_failure_is_reported_without_interrupting_app_shutdown(self):
+        player, child, errors = self.active()
+        with patch.object(child, 'terminate', side_effect=OSError('Controlled termination failure')):
+            self.bounded_close(player)
+            self.assertIsNone(child.poll())
+            self.assertEqual(len(errors), 1, 'Cancellation failure must remain visible')
+        child.terminate()
+        self.joined(player)
+        self.assert_pipes_closed(child)
+        self.assertEqual(len(errors), 1)
+
+    def test_communicate_and_kill_failure_preserve_primary_exception(self):
+        from offline_tts import _invoke
+        self.mode = 'short'
+        for error in (OSError('Primary pipe failure'), subprocess.TimeoutExpired('fixture', 0.1)):
+            with self.subTest(error=type(error).__name__):
+                self.communication_error = error
+                player, errors = self.player()
+                with self.assertRaises(type(error)) as observed:
+                    _invoke({'mode': 'speak', 'text': 'Fixture', 'voice': ''}, owner=player)
+                self.assertIs(observed.exception, error)
+                self.assertTrue(any('helper vocale' in note for note in error.__notes__))
+                self.assert_pipes_closed(self.children[-1])
+                self.assertEqual(errors, [])

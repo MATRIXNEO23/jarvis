@@ -1,3 +1,15 @@
+## JRV-AUD-021 — Red acquisito, candidata revisionata pronta per Windows
+
+Red556a4b4460287fb41f0bf7e7c1d080c6b81ec993/run42362426651 FALLITO:897test/job6failure0errori nel nuovo021.3.11job128373412696144.361s,3.12job128373412895196.734s. Confermati helper/worker vivi dopo close e invio possibile dopo creazione concorrente; baseline precedente passa. Nessun022/023;Searchlive3.12 passato con servizio/fixture ripristinati.
+
+Candidata solo offline_tts.py: Popen posseduto dal default, attach/close/detach per identità sotto lock breve, terminate fuori lock, payload non inviato se pubblicazione rifiutata, pipe/context cleanup prima del detach. Customrunner2arg/listvoices/JSON/cwd/chunk/anti-eco preservati. Review preventiva rafforza close bounded, terminateOSError, cleanupperrisorsa/markeratomico; reviewruntime richiede conservareerrore primario conkillfallita, corretto connota diagnostica e due subtest.16nuovi/900attesi,3metodi dopoRed senza extraRed rivendicato. Ultimo ricontrollo readonly senza blocchi rilevati.
+
+Green Windows ancora necessario, AST/diff locali soltanto. SeOSnega terminate/kill, worker puòaspettare uscitaeffettiva, UIclose nonattende; nessuna promessa di harddeadline nel cleanup. Nessun audio/SAPI/account/profilo reale, nuova dipendenza, build/merge o test funzionale Linux. Rapporto/spec aggiornati, prossimo collaudo Windows e checkpoint remoto.
+
+## JRV-AUD-021 — review preventiva: chiusura bounded e cleanup rafforzati
+
+Review readonly segnala gap di latenza/erroreterminate e rischio di marker parziale. Tutte le close nei test ora chiamate da osservatore bounded, aggiunti worker trattenuto dopo communicate per provare ritorno prima del rilascio e erroreterminate controllato senza interrompere shutdown. Cleanup rilascia barriere, ritira tutti i figli prima di close e prosegue per risorsa raccogliendo errori. Marker pubblicato conrename atomico dopo JSON completo.15nuovi/899attesi, dopo sourceRed556a4b44/run42362426651 (13nuovi/897attesi), nessun extraRed rivendicato. Runtime ancora019, prime prove Windows in corso; nessun test funzionale Linux/build/merge/audio/account/profilo reale.
+
 ## JRV-AUD-021 — tredici prove pronte prima del runtime
 
 Nuovo tests/test_tts_process_lifecycle.py: Popen/pipe/figliWindows reali, eseguibile sostituito solo alla frontiera con helperPython silenzioso temporaneo. Copertura close attivo, chunk/coda scartati, close prima di pubblicazione/testo non inviato, doppio close/figlio già uscito, processo estraneo preservato, JSON/argv/cwd, timeout/exitnonzero/avviofallito, customrunner2arg/anti-eco e lista voci. Cleanup ritira sempre anche figli del Red senza orphan.13nuovi/897attesi, runtime ancora019. Review preventiva indipendente avviata; prossima bozza RedWindows. Nessun audio/SAPI/account/profilo reale, build/merge o test funzionale Linux.
