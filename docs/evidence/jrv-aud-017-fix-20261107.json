@@ -1,0 +1,137 @@
+{
+  "issue": "JRV-AUD-017",
+  "date": "2026-11-07",
+  "status": "verified-in-draft-Windows-controlled-native-and-real-Tk",
+  "base": "558135173a13ca7bdaddfc543c63897730633353",
+  "source": "d5a58c901f5c7c283ca6369fd6af405592e1996c",
+  "branch": "fix/jrv-aud-017-native-hud-20261107",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/49",
+  "command": "python -m unittest discover -s tests -v",
+  "environment": "Windows Server2022x64/Python3.11.9 and3.12.10; real native session/factory/bridge with controlled ABI, real HUD/Telegram callbacks and Tk widgets; isolated temporary profiles",
+  "runs": [
+    {
+      "phase": "Red",
+      "source": "5ac6e9d1e90f4c6ebc02d7d60d37161a4d1d2b5f",
+      "run_id": 42360223737,
+      "conclusion": "failure",
+      "new_methods": 14,
+      "jobs": [
+        {
+          "id": 128366829486,
+          "python": "3.11.9",
+          "tests": 883,
+          "failures": 18,
+          "errors": 0,
+          "seconds": 118.761
+        },
+        {
+          "id": 128366829253,
+          "python": "3.12.10",
+          "tests": 883,
+          "failures": 18,
+          "errors": 0,
+          "seconds": 132.637
+        }
+      ],
+      "cause": "No Boolean busy metadata, native activity not shown by real Tk provider; all failures in new017 tests/subtests"
+    },
+    {
+      "phase": "Candidate1-failed-incomplete-header-fixture",
+      "source": "0419b5b7d31ca320a1fae9c48becd1f8efad5819",
+      "run_id": 42360619718,
+      "conclusion": "failure",
+      "new_methods": 15,
+      "jobs": [
+        {
+          "id": 128368034045,
+          "python": "3.11.9",
+          "tests": 884,
+          "failures": 0,
+          "errors": 3,
+          "seconds": 157.873
+        },
+        {
+          "id": 128368034166,
+          "python": "3.12.10",
+          "tests": 884,
+          "failures": 0,
+          "errors": 3,
+          "seconds": 121.567
+        }
+      ],
+      "cause": "HeaderQuickControlTests.wire AST environment lacks gemma_trial_busy/gemma_session; NameError in provider; real app initializes both before provider binding",
+      "correction": "Only fixture adds inactive owner/flag; all original assertions preserved, no runtime change"
+    },
+    {
+      "phase": "Green2",
+      "source": "d5a58c901f5c7c283ca6369fd6af405592e1996c",
+      "run_id": 42360995994,
+      "conclusion": "success",
+      "attempt": 1,
+      "new_methods": 15,
+      "jobs": [
+        {
+          "id": 128369166220,
+          "python": "3.11.9",
+          "tests": 884,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 122.925
+        },
+        {
+          "id": 128369166047,
+          "python": "3.12.10",
+          "tests": 884,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 130.016
+        }
+      ]
+    }
+  ],
+  "extra_coverage_after_red": [
+    "loader spies prohibit implicit settings/memory IO",
+    "noncooperative stop stays busy until actual operation exit"
+  ],
+  "runtime_unchanged_candidate1_to_green2": true,
+  "review": {
+    "independent_readonly": true,
+    "preventive_gaps_addressed": 2,
+    "runtime_blockers_found": 0,
+    "header_fixture_diagnosis_rechecked": true,
+    "functional_tests_executed_by_reviewer": false
+  },
+  "checks": {
+    "python_syntax": "passed",
+    "javascript_syntax": "passed",
+    "powershell_syntax": "passed",
+    "native_file_access_probe": "passed",
+    "windows_search_live_python312": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "build": "skipped",
+    "extract": "skipped",
+    "artifact": "skipped",
+    "publish": "skipped",
+    "linux_functional_tests": "not executed"
+  },
+  "preserved": [
+    "native answer/history/persistence semantics",
+    "cancellation and serialization",
+    "GPT/local/document HUD states",
+    "voice/microphone visual priorities",
+    "all header settings/persistence assertions",
+    "existing packages and user data"
+  ],
+  "limits": [
+    "controlled native ABI, no actual GGUF/DLL inference",
+    "no Telegram account/microphone/personal profile",
+    "no Windows10/i3/HDD or extracted package verification",
+    "generic native work state, no invented detailed loading/inference phase",
+    "022/023 remain open, not proven fixed"
+  ]
+}

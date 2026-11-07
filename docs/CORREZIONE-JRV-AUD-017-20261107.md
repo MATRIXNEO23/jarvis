@@ -1,6 +1,6 @@
 # JRV-AUD-017 — attività Gemma nel HUD
 
-Stato: candidata implementata e revisionata staticamente, Green Windows da acquisire. Nessuna nuova build.
+Stato: verificata nei sorgenti in bozza; nessuna nuova build. Sourceverde `d5a58c901f5c7c283ca6369fd6af405592e1996c`.
 Base015 `558135173a13ca7bdaddfc543c63897730633353`, [bozza49](https://github.com/MATRIXNEO23/jarvis/pull/49).
 [Specifica](superpowers/specs/2026-11-07-jrv-aud-017-design.md), [piano](superpowers/plans/2026-11-07-jrv-aud-017-fix.md).
 
@@ -31,3 +31,11 @@ Review runtime indipendente readonly senza rilievi bloccanti: contatore bilancia
 Source `0419b5b7d31ca320a1fae9c48becd1f8efad5819`, run42360619718 FALLITO.884test/job,0failure/3errori: Python3.11.9 job128368034045157.873s; Python3.12.10 job128368034166121.567s. Tutti15nuovi metodi017 passano, ma tre test header eseguono il provider estratto viaAST con un ambiente che non inizializza gemma_trial_busy/gemma_session: NameError nella lambda. L'app reale inizializza entrambi prima della registrazione del provider. Non è022/023 e non è una prova che i pulsanti runtime siano guasti.
 
 Corretta solo la fixture test_hud_quick_toggles.wire: owner=None/flagFalse, come nella vera inizializzazione e nella fixture ActivityStatus già aggiornata. Tutti gli assert di clic, salvataggio/rollback e conservazione memoria restano identici; runtime della candidata invariato. Il primo fallimento è conservato, niente retry cieco. Serve nuova verifica Windows del source con la fixture completa; nessun Green dichiarato.
+
+## Green2 Windows e checkpoint
+
+[Run42360995994](https://github.com/MATRIXNEO23/jarvis/actions/runs/42360995994) SUCCESS, source `d5a58c901f5c7c283ca6369fd6af405592e1996c`, prima verifica di questo source con fixture completa. Python3.11.9 job128369166220:884test in122.925s; Python3.12.10 job128369166047:884test in130.016s. Zero failure/errori/skip, tutti15nuovi017 passati, compresa veraUI Tk e callback Telegram con generazione controllata. Tutti i test dei pulsanti tornati verdi senza cambiare gli assert. Runtime identico alla prima candidata0419b5b7: hash dei due moduli confrontati sulle API Git.
+
+Sintassi Python/JavaScript/PowerShell e probe nativo passati. Searchlive3.12 passato, servizio ripristinato e fixture rimossa. Build, estrazione, artifact e publisher saltati. Nessun test funzionale Linux.022/023 non osservati, restano aperti senza una riproduzione causale risolta.
+
+[JSON evidenza](evidence/jrv-aud-017-fix-20261107.json) conserva Red, prima candidata fallita, causa fixture e Green2. Checkpoint finale solo documenti/evidenza; runtime/test da confrontare col source verde prima di dichiarare conservazione remota. Prossimo019: chiarire unità del budget memoria senza cambiare valori/salvataggi o introdurre un tokenizer.
