@@ -1,3 +1,33 @@
+## 7 novembre 2026 — JRV-AUD-018 verificata nei sorgenti in bozza
+
+La correzione conserva le preferenze valide e i valori di prima installazione. Se il file esiste ma è illeggibile, l'avvio tiene spenti GPT e ascolto automatico, con un avviso nella console. Il salvataggio ricontrolla il file e rifiuta di sostituirlo prima di qualunque scrittura, anche dopo una copia del dizionario o una corruzione successiva al caricamento. Nessun reset o backup automatico; recupero manuale documentato.
+
+Base 011:5994d17, source verificato 5fbb77d83b433c9c2f37694ac8bc96fb2f4b3dd0, [bozza46](https://github.com/MATRIXNEO23/jarvis/pull/46). Conservate 001–011 e018; gli altri ID restano distinti. [Run42354230043](https://github.com/MATRIXNEO23/jarvis/actions/runs/42354230043) SUCCESS al tentativo1:829 test per Python3.11.9 (job128348670591,140.607s) e3.12.10 (job128348670440,163.114s),0fallimenti/errori/skip. Tutti18nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-018-20261107.md), [evidenza](evidence/jrv-aud-018-fix-20261107.json), [recupero](RECUPERO-IMPOSTAZIONI.md).
+
+Red1 c021a84/run42353608784:828test e34failure per job; Red2 59c6d3f/run42353743362:829test e37failure per job,0errori. Tutti i fallimenti appartengono ai nuovi controlli018, incluse le attese sul collector warning ancora assente; autorun MIC/GPT e perdita del file sono riprodotti indipendentemente. Review indipendente: tre lacune nei test coperte, nessun difetto residuo rilevato nel codice. Una vecchia asserzione che accettava un flag di tipoerrato come GPTTrue è intenzionalmente corretta e rafforzata con la verifica dell'originale intatto.
+
+Sintassi e probe passati; Searchlive3.12 con servizio ripristinato e fixture rimossa.022/023 non riprodotti e ancora aperti. Checkpoint finale solo documenti/evidenze, runtime e test identici al source verde. Nessuna build, ZIP, merge, release o modifica ai dati/configurazioni/credenziali dell'utente. Nessun test funzionale Linux. Prove su profili temporanei e callback con servizi controllati: Windows10/i3/HDD, account, microfono e pacchetto estratto restano da collaudare. Nessuna garanzia CAS contro modifiche esterne dopo il controllo; file assente mantiene i valori iniziali, che possono abilitare MIC/GPT.
+
+Prossimo014: includere le cartelle di codice runtime nell'inventario dell'autodiagnosi, escludendo profili/cache/upstream e mantenendo i limiti.012/013 richiedono anche futura verifica del pacchetto;016 resta una funzionalità incompleta da valutare, senza introdurre un indice duplicato. Continuare soltanto correzioni mirate autorizzate; build solo su richiesta esplicita.
+
+## JRV-AUD-018 — Red acquisito, candidata revisionata
+
+Red1sourcec021a84/run42353608784:828test/job34failure0errori;3.11job128346803002125.779s,3.12job128346802760133.185s. Red2source59c6d3f/run42353743362:829test/job37failure0errori;3.11job128347198453128.708s,3.12job128347198635139.055s. Tutti018 inclsubtest, collectorAPIassente fallisce esplicitamente; coreMIC/GPTautorun eperditafile al save riprodotti indipendentemente.022/023 nonriprodotti/aperti.
+
+Candidata settings.py condivideloadparser eguardiasave prima diogni mutazione; fileassente separato, fileesistenteinvalido prudentOFF6flag, warningopzionale senza metadatisalvati ocontenutofile. jarvismaincollector/initiallaunchdrainonce, callbackTelegramgestisceerroresave. Vecchiotesttipoinvalido permissivo aggiornatoFalse+autoFalse+preservazionebytes, assertvalidi/legacy invariati. Review indipendente copre3gaptest e runtime senza difetti rilevati.18nuovi/829attesi; nessun testfunzionaleLinux, soloAST/diff. GuidaRECUPERO-IMPOSTAZIONI e rapporto018 pronti: recuperomanuale conbackupprivato, nessun reset/backupautomatico; assenza file usa defaultiniziali epuòabilitaremic/GPT, raceeditoresternaCAS nongarantita, HDDnonmisurato. Prossimo GreenWindows echeckpoint remoto, nessuna build/merge/config/account/datiutente.
+
+## JRV-AUD-018 — review preventiva: compatibilità e guardia rafforzate
+
+Review indipendente senza blocchi di contratto,3gaptest recepiti: profilo valido{} echiavimancanti confrontati coninteriDEFAULTS normalizzati; flagcriticiinvalidi conTTS/memoria/Telegram/keepawakeTrue perprovareOFFditutteautomazioni; nuovo test verifica rifiuto prima dimkdir/write_text/replace. Ora18nuovi/829attesi. Tutti callerssavegestisconoOSError/ValueError salvotelegram_reconfigure individuato nelpiano. Red1sourcec021a84bce5eb67d71c04d6d91f358569cda301f inbozza46, runtime ancora011. Redampliatodapubblicare, nessun testfunzionaleLinux/build/merge/configutente. Prossimo: RedWindows, poicorrezioneminima.
+
+## JRV-AUD-018 —17test pronti prima del runtime
+
+Nuovo test_settings_recovery.py:14test parser/persistenza conprofilitemporanei,3owner conprefixmain/Tkvalueassignment/schedulerGPT ecallbackinitial_launch/speak_result/telegram_reconfigure reali, servizi controllati.17nuovi/828attesi. ErroriJSON/UTF8/IO/nondict/flagtipoinvalido; assenti/validi/legacy; warningnonprivato; saveguardoriginal/copied/postloadcorruption/temp/history; ripristinomanualesimulato; bootstrapMIC/GPT/TTSoff ewarninguna volta. Runtime018 ancora invariato. Review indipendente preventiva richiesta; prossimopubblicareRedWindows inbozza su011. Nessun testfunzionaleLinux/build/merge/config/account/datoutente.
+
+## 7 novembre2026 — JRV-AUD-018 prioritaria, preparazione Red
+
+Base0115994d17, ramo fix/jrv-aud-018-settings-recovery-20261107. Anticipata protezione preferenze MIC/GPT rispetto alpackaging012/013. Fonteconferma fallback permissivo su JSON/UTF8/IO eflaginvalidi; save può sostituire originaleilleggibile. Contratto/piano018 registrati: assenza/validi/legacy invariati, fallbackprudente solo suerrori, warningconsole una volta, saveguardanche dictcopiati/corruzionedopoload, nessun reset o fileoriginalemodificato. Recuperomanuale conbackupprivato documentato. Niente nuovo archivio/dipendenza/popup; tipoerratoflag nonvalido da trattareprudente con aggiornamento intenzionale del vecchiotest permissivo. Nessun runtime018 ancora modificato, proveWindows da preparare. Nessun testfunzionaleLinux/build/merge/config/dati/credenzialiutente. Prossimo Red ereview.
+
 ## 7 novembre2026 — JRV-AUD-011 verificata nei sorgenti in bozza
 
 Base010e65b5eb, sourceverde3ca986aaff89c176b684d44999b74e303814839c, [bozza45](https://github.com/MATRIXNEO23/jarvis/pull/45),001–010 conservate. [Run42352732284](https://github.com/MATRIXNEO23/jarvis/actions/runs/42352732284) SUCCESS tentativo1 delsourcecorretto:811test Python3.11.9/job128344138298151.630s e811 Python3.12.10/job128344138543133.249s;0failure/errori/skip, tutti19nuovi metodi passati. [Rapporto](CORREZIONE-JRV-AUD-011-20261107.md), [evidenza](evidence/jrv-aud-011-fix-20261107.json).

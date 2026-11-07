@@ -86,7 +86,8 @@ from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK,
 
 
 def main() -> None:
-    settings = load_settings()
+    settings_load_warnings = []
+    settings = load_settings(warnings=settings_load_warnings)
     root = tk.Tk()
     from window_chrome import install_window_chrome
     install_window_chrome(root)
@@ -1956,7 +1957,10 @@ def main() -> None:
         telegram_status.set(
             "Contatti selezionati: "+str(len(selected_telegram_contacts()))+
             "; risposte automatiche spente.")
-        save_settings(settings)
+        try:
+            save_settings(settings)
+        except (OSError, ValueError) as exc:
+            telegram_status.set("Impossibile salvare Telegram: " + str(exc)[:130])
 
     def telegram_open_setup():
         if os.name!="nt":
@@ -4489,6 +4493,9 @@ def main() -> None:
         """App-only autostart: never adds Windows login/run-at-boot entries."""
         if closing:
             return
+        for warning in settings_load_warnings:
+            write_line("IMPOSTAZIONI > " + warning)
+        settings_load_warnings.clear()
         if auto_listen_enabled.get():
             voice_mode.set(GPT_CONVERSATION)
             change_voice_mode()
