@@ -183,7 +183,7 @@ def main() -> None:
     def open_native_model_settings():
         try:
             from local_model.native_ui import NativeSettingsWindow
-            NativeSettingsWindow(settings_window)
+            NativeSettingsWindow(settings_window, get_session=get_gemma_session)
         except (OSError, ValueError, RuntimeError, ImportError) as exc:
             messagebox.showerror("Jarvis / Gemma", str(exc), parent=settings_window)
 

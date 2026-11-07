@@ -141,6 +141,35 @@ class NativeConversationSession:
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             return clean_native_answer(result.get("text"))
 
+    def test_generation(self, *, config=None, timeout=180):
+        """Explicit isolated trial, serialized with chat/Telegram and reload.
+
+        Keep this session's ownership and history. The saved configuration
+        snapshot is passed into prepare so another UI save cannot change the
+        model between validation and the native load.
+        """
+        with self.lock:
+            current = self.config_loader().validate()
+            if config is not None and config != current:
+                raise ValueError("Impostazioni Gemma cambiate: ripeti la prova.")
+            memory = self.memory_loader().validate()
+            budget = memory.available_prompt_tokens(current.context_size, current.max_output)
+            prompt = "Presentati con una breve frase in italiano."
+            style = "Stile di risposta: " + " ".join(current.personality.split()) + "\n"
+            if current.personality.strip() and len(style) + len(prompt) <= budget:
+                prompt = style + prompt
+            if len(prompt) > budget:
+                raise ValueError("Budget di contesto insufficiente per la prova Gemma.")
+            # The old trial loaded a fresh model every time. Preserve that
+            # explicit reload, but only after all earlier generations finish.
+            if self.prepared:
+                self.prepared = False
+                self.adapter.stop()
+            self.adapter.prepare(config=current)
+            self.prepared = True
+            result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
+            return clean_native_answer(result.get("text"))
+
     def pick_program(self, question, names, *, timeout=180):
         """Return the index of a suggested app, or None, without chat history."""
         prompt = ("Scegli un programma per la richiesta. Rispondi solo con il numero "

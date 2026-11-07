@@ -1,3 +1,33 @@
+## 7 novembre 2026 — JRV-AUD-005 verificata in CI con ABI controllata, non distribuita
+
+Checkpoint357c65122bb0faa0b07871c8b59cb65692831b93, runtimee20e4b88451541d650d0a9160f536290a6daaa25, [PR draft38](https://github.com/MATRIXNEO23/jarvis/pull/38) dipendente dalla37. [Run42337129314](https://github.com/MATRIXNEO23/jarvis/actions/runs/42337129314) SUCCESS: Python3.11.9/job128296467283,708 test/114.337s; Python3.12.10/job128296467507,708 test/106.014s. [Evidenza](evidence/jrv-aud-005-20261107.json).
+
+Red700 test/tre fallimenti per job ha dimostrato chat+trial e due pannelli con picco2 generazioni, reload e abort concorrenti al confine ABI controllato. Il builder aggiungeva un proprietario separato alla UI del pacchetto. Ora il getter condiviso passa al pannello senza attivazione automatica; prova, chat e Telegram usano lo stesso proprietario/lock. Reload esplicito e generazione isolata nella sessione, storico invariato, nessuno stop finale del proprietario condiviso. Adapter.prepare riceve snapshot validato; richieste obsolete in coda rifiutate, ulteriori salvataggi non cambiano il modello già acquisito.
+
+Dieci nuove prove, callback apertura reale, trasformazione UI effettiva su copia temporanea senza ZIP. Review indipendente senza blocchi; lacuna getter/lock corretta con osservatore del tentativo reale e ricontrollata, confronti DOS/canonici corretti con samefile senza rimuovere verifiche modello/parametri. CI intermedie706/708 fallite solo per quelle fixture, conservate nei riferimenti. Sette blob runtime/test recensiti uguali ai remoti. Sintassi/probe nativi e Windows Search live passati, servizio/fixture ripristinati; package/publisher skipped.
+
+Non è una prova di crash risolto con C/DLL/GGUF reali: nessun modello reale, target Windows10/i3-2100/HDD, account Telegram o microfono collaudato; nessuna build, ZIP, merge, chiamata GPT o modifica dati/configurazioni personali.022/023 restano aperti. Il checkpoint seguente cambia solo documentazione. Prossimo JRV-AUD-006: dipendenza da artifact nativo in scadenza il18 novembre, da risolvere prima di quella data senza build automatica.
+
+## 7 novembre 2026 — JRV-AUD-005, correzione della fixture percorsi Windows
+
+Run42336668228 sul runtimee20e4b8:706 test per Python3.11/3.12, un fallimento della nuova prova per confronto testuale fra percorso DOS RUNNER~1 e nome completo runneradmin del medesimo GGUF. Difetto della fixture, non del runtime. Corretti solo confronti con numero di load e os.path.samefile, mantenendo verifiche modello/parametri. La lezione sui nomi Windows era già presente e va applicata anche alle prove nuove.
+
+Review finale runtime senza blocchi; gap queued-settings ora coperto da osservatore sul tentativo reale del RLock (non solo getter), ricontrollato indipendentemente. Anche prova snapshot→prepare aggiunta. Nessuna ulteriore modifica runtime; prossimo controllo:708 test Windows sul checkpoint di test corretto. Nessuna build/ZIP/merge, prova DLL/GGUF reale o test funzionale Linux.022/023 restano aperti.
+
+## 7 novembre 2026 — JRV-AUD-005, review e due nuove prove mirate
+
+Candidata runtimee20e4b8 recensita indipendentemente: nessun difetto bloccante. Rilievo minore: manca prova del cambio configurazione durante attesa del lock. Aggiunti test deterministici del callback trial mentre chat è bloccata, poi salvataggio; e dello snapshot letto prima di un ulteriore salvataggio, verificando modello/parametri effettivi e file nuovo preservato. Runtime invariato; le nuove prove richiedono CI Windows aggiornata. Nessun test funzionale Linux, DLL/GGUF reale, build, ZIP o merge.
+
+## 7 novembre 2026 — JRV-AUD-005 confermata al confine ABI, candidata in verifica
+
+Red728ef2d / run42336282687/job128293840609:700 test/tre fallimenti senza errori. Trial generato dal builder insieme alla chat o a un altro pannello: ABI controllata registra picco2 generazioni, ricaricamento e abort sovrapposti; callback apertura senza owner. Dimostrato il difetto di ownership, non un crash C/DLL reale.
+
+Candidata: get_gemma_session trasmesso al pannello senza invocarlo; test_model generato chiama test_generation sul proprietario app esistente, senza stop finale. La sessione attende il lock, valida snapshot/configurazione, esegue reload esplicito e prova isolata, lascia backend pronto a chat/Telegram senza cambiare lo storico. NativeChatAdapter.prepare accetta lo snapshot per impedire cambi di modello fra validazione e caricamento. Nuove prove per stile/storia, modello/parametri appena salvati, configurazione obsoleta, errore, Telegram concorrente e pannello senza owner. AST/diff controllati; Green Windows e review indipendente pendenti. Nessun test funzionale Linux, DLL/GGUF/Pavilion reale, build/ZIP, merge o dati personali.022/023 restano aperti.
+
+## 7 novembre 2026 — JRV-AUD-005, riproduzione in corso
+
+Basefa4eec2 con001–004 conservate; ramo fix/jrv-aud-005-native-owner-20261107, piano dedicato. La root UI non ha Prova generazione: il builder la aggiunge nel pacchetto creando una seconda sessione, mentre chat/Telegram già condividono get_gemma_session. Test Windows preparati: stessa trasformazione UI su copia temporanea (nessun ZIP), callback generato e factory/bridge/adapter/session reali con ABI controllata; chat+prova e due pannelli, reload/abort durante altra generazione. Ingresso impostazioni reale verificato senza attivazione automatica. Runtime invariato, Red da eseguire; nessun crash DLL/GGUF reale dichiarato, test funzionale Linux, build, merge o dato personale. Proposta: riusare il proprietario esistente e una prova isolata con reload serializzato.
+
 ## 7 novembre 2026 — JRV-AUD-004 verificata nei sorgenti, non distribuita
 
 Runtime8557ddb9b23c34c11aaee7a1b65bf57470dfd7f5, [PR draft37](https://github.com/MATRIXNEO23/jarvis/pull/37), dipendente dalla36. [Run42332441469](https://github.com/MATRIXNEO23/jarvis/actions/runs/42332441469) SUCCESS dopo un retry del solo job3.12: Python3.11.9/job128281773601,698 test/90.906s; Python3.12.10/job128282998223,698 test/113.115s. [Evidenza completa](evidence/jrv-aud-004-20261107.json).

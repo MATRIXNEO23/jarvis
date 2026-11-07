@@ -17,18 +17,16 @@ s += '''
                 return
             if not self.current.model or not Path(self.current.model).is_file():
                 raise ValueError("Seleziona prima un file GGUF esistente.")
+            get_session = self.get_session
+            if not callable(get_session):
+                raise ValueError("Sessione Gemma di Jarvis non disponibile.")
+            config = self.current
             self.test_button.configure(state="disabled")
             self.status.set("Caricamento DLL e GGUF in corso...")
             def worker():
                 try:
-                    from .native_chat_adapter import NativeChatAdapter
-                    from .native_conversation_session import NativeConversationSession
-                    source = Path(__file__).resolve().parent.parent / "native_engine" / "koboldcpp.py"
-                    session = NativeConversationSession(NativeChatAdapter(source))
-                    try:
-                        answer = session.ask("Presentati con una breve frase.", timeout=180)
-                    finally:
-                        session.stop()
+                    session = get_session()
+                    answer = session.test_generation(config=config, timeout=180)
                     result = "TEST RIUSCITO. Risposta: " + str(answer)[:200]
                 except Exception as exc:
                     result = "TEST FALLITO: " + str(exc)[:300]

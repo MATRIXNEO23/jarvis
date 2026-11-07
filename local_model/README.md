@@ -16,8 +16,16 @@ Il file `addon-data/modello_locale/online-permissions.json` è nel profilo Jarvi
 
 ## Memoria breve Gemma
 
-La conversazione generale e ogni progetto hanno ricordi brevi separati nella stessa sessione. Il modello viene caricato una sola volta. Il limite resta globale:32 messaggi, cioè16 scambi completi; gli scambi più vecchi escono dalla sola memoria RAM quando arrivano i nuovi. Tornando a un progetto si ritrovano i suoi scambi ancora nel limite, senza importare quelli degli altri.
+La conversazione generale e ogni progetto hanno ricordi brevi separati nella stessa sessione. La chat riusa il modello caricato; una Prova generazione esplicita può ricaricarlo in modo serializzato. Il limite resta globale:32 messaggi, cioè16 scambi completi; gli scambi più vecchi escono dalla sola memoria RAM quando arrivano i nuovi. Tornando a un progetto si ritrovano i suoi scambi ancora nel limite, senza importare quelli degli altri.
 
 Una risposta generata entra in memoria solo quando la UI la accetta nello stesso contesto ed epoca della richiesta. Se nel frattempo cambia progetto, modalità o autorizzazione, la risposta revocata non viene ricordata. Telegram e selettore programmi non leggono né scrivono questa memoria chat.
 
 Non vengono modificati database, cronologie o file di progetto. Questa correzione non aggiunge persistenza al dialogo Gemma: il collegamento alla memoria duratura resta il distinto JRV-AUD-009.
+
+## Proprietario della prova Gemma — JRV-AUD-005
+
+Nel pacchetto Gemma il pulsante Prova generazione usa la stessa sessione della chat e di Telegram. Aprire il pannello o salvare le impostazioni non carica il modello. La prova esplicita attende le altre richieste, ricarica con lo snapshot delle impostazioni salvate e genera senza usare o modificare i ricordi della chat. Alla fine lascia il modello pronto alle richieste successive; non ferma un'altra sessione.
+
+Se le impostazioni cambiano mentre la prova aspetta, la richiesta vecchia viene rifiutata e va ripetuta. Un salvataggio successivo all'acquisizione dello snapshot non cambia il modello che quella prova sta caricando. La prova non invia richieste online e non esegue azioni sul PC.
+
+Il pulsante resta aggiunto dal builder Gemma; i sorgenti root del pannello sono l'editor di configurazione. Le verifiche Windows usano il callback generato reale con ABI controllata, senza produrre un archivio. Il collaudo con DLL/GGUF reali sul PC di riferimento resta necessario.
