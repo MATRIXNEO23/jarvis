@@ -1,3 +1,7 @@
+## JRV-AUD-008 — copertura ampliata prima del runtime, 2026-11-07
+
+Prima review indipendente del contratto/test senza falsi positivi certi. Coperti gap: DLL interna salvata, errore load dopo sostituzione/recupero e reload avviato da isolato/picker. Aggiunti anche stop fallito con recupero e factory realmente trasformata su copia temporanea: DLL bundled conservata quando rawconfig.dll è vuoto. Non è build/ZIP e non esegue DLL reali. Ora15nuovi test/745totali attesi. Red iniziale6eaf7be/run42343723225 ancora da acquisire completo; seconda prova ampliata da eseguire. Runtime invariato. Prossimo: leggere Red e applicare correzione minima;022/023 aperti.
+
 ## JRV-AUD-008 — verifica/correzione autorizzata, 2026-11-07
 
 Baseb25f54a/bozza41 con001–007, ramo fix/jrv-aud-008-gemma-settings-20261107. L'utente approva controllo e correzione delle impostazioni salvate non applicate. Codice: sessione rilegge config/budget ma normale prepare soltanto iniziale;005 aggiorna solo Prova esplicita. Nuovi10test Windows in tests/test_native_settings_propagation.py: callback Salva/Tk e JSON reali, sessione/factory/provider/bridge reali, ABI controllata. Salva senza inferenza/load, samplers senza reload, modello/thread/contesto con reload serializzato, flussi isolati/picker/storia, errori/recupero e snapshot. Specifica/piano008 salvati; runtime ancora invariato, Red740atteso da eseguire. Nessuna build/merge/dato utente/test funzionale Linux;022/023 aperti. Prossimo: prova Windows, poi modifica minima solo se confermata.

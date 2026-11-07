@@ -3,10 +3,13 @@
 Tk, JSON persistence, factory/provider/bridge are real. Native initialization
 and inference use the existing controlled ABI; no real DLL/GGUF or account.
 """
+import ast
 from dataclasses import replace
 import os
+from pathlib import Path
 import threading
 import tkinter as tk
+from types import ModuleType
 import unittest
 from unittest.mock import patch
 
@@ -31,6 +34,7 @@ class NativeSettingsPropagationTests(unittest.TestCase):
         def initialize(module, config, source):
             self.initialized.append(config)
             self.abi.initialize(module, config, source)
+        self.initialize = initialize
         self.enterContext(patch("local_model.native_factory.initialize_kobold_cpu",
                                 side_effect=initialize))
         self.abort = self.enterContext(patch.object(self.abi, "abort", wraps=self.abi.abort))
@@ -224,3 +228,103 @@ class NativeSettingsPropagationTests(unittest.TestCase):
         self.assert_parameters(config)
         self.assertEqual(len(self.abi.loads), 2)
         self.assertEqual(list(self.session.history), history)
+
+    def test_changed_internal_dll_reloads_from_validated_saved_snapshot(self):
+        self.session.ask("Prima domanda")
+        dll = self.harness.root / "second-noavx2.dll"
+        dll.write_bytes(b"fixture: never loaded")
+        config = replace(NativeModelConfig.load(default_native_settings_path()), dll=str(dll))
+        config.save(default_native_settings_path())
+        self.session.ask("Dopo cambio DLL controllato")
+        self.assertEqual(len(self.abi.loads), 2)
+        self.assertEqual(self.initialized[-1], config)
+        self.assertTrue(os.path.samefile(self.session.adapter.provider.bridge.config.dll, dll))
+
+    def test_load_failure_after_replacement_keeps_history_and_can_retry(self):
+        self.session.ask("Ricordo controllato")
+        history, calls = list(self.session.history), len(self.abi.calls)
+        config = self.save(context_size=4096)
+        original_load = self.abi.load
+        def failed_load(path):
+            original_load(path)
+            return False
+        with patch.object(self.abi, "load", side_effect=failed_load):
+            with self.assertRaises(RuntimeError):
+                self.session.ask("Caricamento fallito")
+        self.assertEqual(len(self.abi.calls), calls)
+        self.assertEqual(list(self.session.history), history)
+        self.assertEqual(self.abort.call_count, 1)
+        self.session.ask("Riprova dopo errore")
+        self.assert_parameters(config)
+        self.assertEqual(len(self.abi.calls), calls + 1)
+        self.assertIn("Ricordo controllato", self.abi.calls[-1]["prompt"])
+        self.harness.assert_serialized()
+
+    def test_failed_old_provider_stop_cannot_be_reused_as_ready(self):
+        self.session.ask("Ricordo controllato")
+        history, calls = list(self.session.history), len(self.abi.calls)
+        config = self.save(threads=3)
+        with patch.object(self.abi, "abort", side_effect=RuntimeError("Controlled stop failure")):
+            with self.assertRaises(RuntimeError):
+                self.session.ask("Stop fallito")
+        self.assertEqual(len(self.abi.calls), calls)
+        self.assertEqual(list(self.session.history), history)
+        self.session.ask("Riprendi dopo stop fallito")
+        self.assert_parameters(config)
+        self.assertEqual(len(self.abi.calls), calls + 1)
+        self.assertEqual(len(self.abi.loads), 2)
+
+    def test_isolated_and_picker_can_initiate_reload_after_save(self):
+        self.session.ask("Nota privata controllata")
+        history = list(self.session.history)
+        for count, (name, changes, generate) in enumerate((
+            ("isolated", dict(context_size=4096),
+             lambda: self.session.ask_isolated(lambda _: "Messaggio controllato")),
+            ("picker", dict(threads=3),
+             lambda: self.session.pick_program("Film", ("Posta", "Video"))),
+        ), 2):
+            with self.subTest(flow=name):
+                config = self.save(**changes)
+                generate()
+                self.assertEqual(len(self.abi.loads), count)
+                self.assertEqual(self.initialized[-1], config)
+                self.assert_parameters(config)
+                self.assertNotIn("Nota privata", self.abi.calls[-1]["prompt"])
+                self.assertEqual(list(self.session.history), history)
+
+    def test_packaged_factory_preserves_bundled_dll_when_samplers_change(self):
+        # Apply only the real factory source transform in a temporary tree.
+        # No builder invocation, archive, real DLL or model load is performed.
+        target = self.harness.root / "local_model" / "native_factory.py"
+        target.write_text(Path("local_model/native_factory.py").read_text(encoding="utf-8"),
+                          encoding="utf-8")
+        tree = ast.parse(Path("tools/build_gemma_clean_trial.py").read_text(encoding="utf-8"))
+        nodes, started = [], False
+        for node in tree.body:
+            if isinstance(node, ast.Assign):
+                names = [n.id for n in node.targets if isinstance(n, ast.Name)]
+                if "launcher" in names:
+                    break
+                if "factory" in names:
+                    started = True
+            if started:
+                nodes.append(node)
+        self.assertTrue(nodes, "Actual factory transformation required")
+        exec(compile(ast.Module(body=nodes, type_ignores=[]), "factory-transform", "exec"),
+             {"root": self.harness.root, "Path": Path})
+        module = ModuleType("local_model._settings_packaged_factory")
+        module.__file__, module.__package__ = str(target), "local_model"
+        exec(compile(target.read_text(encoding="utf-8"), str(target), "exec"), module.__dict__)
+        self.enterContext(patch.object(module, "initialize_kobold_cpu", side_effect=self.initialize))
+        self.enterContext(patch("local_model.native_chat_adapter.create_native_provider",
+                                module.create_native_provider))
+        config = replace(self.harness.config, dll="")
+        config.save(default_native_settings_path())
+        self.panel.current = config
+        self.session.ask("Prima domanda nel runtime trasformato")
+        config = self.save(max_output=64)
+        self.session.ask("Dopo Salva nel runtime trasformato")
+        self.assert_parameters(config)
+        self.assertEqual(len(self.abi.loads), 1)
+        self.assertTrue(os.path.samefile(self.session.adapter.provider.bridge.config.dll,
+                                        self.harness.config.dll))
