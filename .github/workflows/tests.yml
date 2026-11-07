@@ -16,6 +16,9 @@ on:
       - '**.ps1'
       - '**.bat'
       - '.github/workflows/tests.yml'
+      - 'tools/native_model/engine-reference.json'
+      - '.github/workflows/gemma-windows-test-package.yml'
+      - '.github/workflows/native-*.yml'
   pull_request:
     paths:
       - '**.py'
@@ -23,6 +26,9 @@ on:
       - '**.ps1'
       - '**.bat'
       - '.github/workflows/tests.yml'
+      - 'tools/native_model/engine-reference.json'
+      - '.github/workflows/gemma-windows-test-package.yml'
+      - '.github/workflows/native-*.yml'
 
 permissions:
   contents: read

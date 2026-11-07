@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "repository": "MATRIXNEO23/jarvis",
+  "git_commit": "f147b1a5faa977e8e4aefe21c9799465a7a8e990",
+  "archive_path": "Download/Jarvis-Gemma-Carattere-e-Stile-61a95f8.zip",
+  "archive_bytes": 8103631,
+  "archive_sha256": "c38806cf12574e7ae142a8eef2cebe2afec6244c92db0a195c507d6bade6041a",
+  "dll_member": "Jarvis-Gemma/native_engine/koboldcpp_noavx2.dll",
+  "dll_bytes": 19010560,
+  "dll_sha256": "ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba",
+  "upstream_commit": "7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759",
+  "upstream_python_sha256": "17e234e20c410e770858a58bfe5b3a84f15374e8ed462e2b884faeb653369d96"
+}

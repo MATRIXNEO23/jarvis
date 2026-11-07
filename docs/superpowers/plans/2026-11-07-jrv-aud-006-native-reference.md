@@ -8,10 +8,12 @@ Scelta: piccolo strumento di build tools/native_model/restore_engine.py e riferi
 
 Alternative: allungare retention sposta il problema; pubblicare una nuova release è fuori scopo; duplicare19MB di DLL non serve perché i byte sono già in Git; ricompilare C++ cambia potenzialmente l'hash e richiede un nuovo collaudo non autorizzato. Non usare main/latest come indirizzo variabile, non modificare i vecchi ZIP. La riproducibilità qui è recupero identico del componente, non compilazione C++ bit-per-bit.
 
-- [ ] Red Windows della nuova capacità: destinazione vuota e nessun artifact/token Actions fornito; il baseline manca di acquisizione autonoma. Se il helper non esiste la destinazione resta vuota e l'asserzione sulla DLL fallisce, senza errori di import. È riproduzione di capacità mancante, non simulazione della cancellazione reale dell'artifact.
-- [ ] Helper+manifest con soli moduli standard, verifiche dimensione/hash, ZIP senza estrazione generale, protezione file esistenti e cleanup temporanei; nessuna esecuzione nativa automatica nel helper.
-- [ ] Aggiornare quattro consumer; Python disponibile prima dello strumento. Aggiungere percorsi manifest/workflow ai trigger della suite senza modificare guardie build/publisher.
+- [x] Red Windows della nuova capacità: baseline senza helper, destinazione vuota e nessun artifact/token Actions fornito. Run42338424815/job128300496475,709 test/un fallimento comportamentale senza errori. Non è simulazione della cancellazione reale dell'artifact.
+- [x] Helper+manifest con soli moduli standard, verifiche dimensione/hash, ZIP senza estrazione generale, protezione file esistenti e cleanup temporanei; nessuna esecuzione nativa automatica nel helper.
+- [x] Quattro consumer aggiornati; Python disponibile prima dello strumento. Percorsi manifest/workflow aggiunti ai trigger della suite senza modificare guardie build/publisher.
 - [ ] Test Windows: download reale dal commit senza artifact, hash originale, vecchio probe DLL (caricamento/export, nessuna inferenza); archivi corrotti/membro errato/hash errato/output preesistente e idempotenza con file temporanei; nessun test Linux.
 - [ ] Review indipendente, suite3.11/3.12 e prove native esistenti; evidenza/continuità/mappa strumenti. Build completa/GGUF/Pavilion non eseguiti, dichiararli.
 
 Review focus: nessun riferimento temporale residuo nei consumer; commit/hash immutabili; gestione errori rete/zip/troncamento; nessuna sovrascrittura dati o credenziale; verifiche esistenti e guardie build preservate. Recupero: ramo separato; runtime, download pubblicati e dati personali invariati.022/023 restano aperti.
+
+Prima review statica senza difetti bloccanti. Archivio/DLL/provenienza verificati indipendentemente dal revisore; gap minore: guardia sorgente prima testata solo con fixture. Prova reale estesa ai byte upstream del medesimo commit di checkout, validati con SHA indipendente, e poi al recupero/probe DLL. Test non esegue l'action checkout né la build completa: questi collegamenti sono recensiti staticamente. Otto prove preparate; Green Windows pendente. Mappa docs/NATIVE-ENGINE-REFERENCE.md.

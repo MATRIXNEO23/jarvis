@@ -1,3 +1,9 @@
+## 7 novembre 2026 — JRV-AUD-006, candidata di preparazione build in verifica
+
+Red2da23de / run42338424815/job128300496475:709 test/un fallimento senza errori per capacità autonoma assente, non una build dichiarata fallita oggi. Implementati tools/native_model/restore_engine.py e manifest: archivio Git f147b1a, streaming limitato/hash archivio e DLL, membro unico, staging senza sovrascrivere file diversi, archivio locale identico facoltativo. Quattro consumer ora usano il helper dopo setup Python; pin upstream e hash esistenti conservati, guardie build/publisher invariate. Trigger suite estesi a manifest e workflow. Runtime Jarvis invariato.
+
+Review indipendente iniziale senza blocchi: archivio e DLL verificati anche dal revisore. Gap minore coperto estendendo il recupero reale al sorgente upstream fissato, oltre alle fixture; source normalizzato identico al blob Git7805cd49. Otto prove preparate: download reale senza artifact, probe DLL/export senza GGUF, ZIP sintetici corrotti/duplicati/dimensione/hash, file preesistenti/idempotenza, source ABI e download troncato. Nuova mappa docs/NATIVE-ENGINE-REFERENCE.md. AST/JSON/diff controllati; Green Windows ancora pendente. Nessuna compilazione/build/ZIP applicativo, release, esecuzione modello o test funzionale Linux;022/023 aperti.
+
 ## 7 novembre 2026 — JRV-AUD-006, recupero dipendenza in preparazione
 
 Base649d1a0 con001–005 conservate; ramo fix/jrv-aud-006-native-reference-20261107. Artifact13339099748/run41860087656 non ancora scaduto, scadenza verificata18 novembre2026 ore15:49:03UTC. Quattro workflow lo consumano. Identica DLL già presente nello ZIP61a95f8 in Git al commitf147b1a, hashac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba; nessun binario nuovo necessario.
