@@ -1,3 +1,13 @@
+## 7 novembre 2026 — JRV-AUD-007: correzione verificata nei sorgenti in bozza
+
+Source425bfc38c1232ca26c5d1939bda7f0f95b07c04e, [bozza41](https://github.com/MATRIXNEO23/jarvis/pull/41) dalla40/basec9d1d29,001–006 conservate. [Run42342496402](https://github.com/MATRIXNEO23/jarvis/actions/runs/42342496402) SUCCESS al tentativo1:730 test Python3.11.9/job128313038365159.103s e730 Python3.12.10/job128313038104113.337s,0 failure/errori/skip. Tutti14metodi007 passano. [Rapporto](CORREZIONE-JRV-AUD-007-20261107.md), [evidenza](evidence/jrv-aud-007-fix-20261107.json).
+
+Eventi vocali ora portano la generazione originaria; `poll` la verifica prima di effetti UI/log/memoria/dettatura/comandi/modello. Payload malformati o scaduti scartati senza svuotare coda o perdere risultati non vocali. Confermati vecchio+nuovo, TTS intermedio, close, status/errori correnti e una sola esecuzione per frase nuova. Nessuna dipendenza/processo/migrazione. Review indipendente senza difetti runtime residui; gap dettaturaCONT e errore corrente risolti e ricontrollati.
+
+Red ampliato887e3db/run42342113095:729 test/job,24 fallimenti007 in entrambi;3.11 anche1errore023/fixtureExplorerTimeout15s,3.12 zeroerrori. Test nuovi completati a730 dopo review; riproduttori originali conservati. Sintassi/probe passati, Windows Search live3.12 passata con servizio/fixture ripristinati.022 non riprodotto;023 ricomparso nel Red e non corretto. Entrambi aperti.
+
+Nessuna build/ZIP/release/merge, modifica configurazioni/dati utente o test funzionale Linux. Nessun microfono/Vosk acustico/GPT reale né prova Windows10/i3/HDD; non coperti interleaving modali dopo controllo, cambio progetto e PTT nella stessa modalità. Ultimo checkpoint soltanto documentale; sorgenti/test identici alla run verde. Prossimo solo al via: verificare008/parametri Gemma dopo005, senza supporre che l'audit storico sia ancora attuale.
+
 ## JRV-AUD-007 — Red ampliato acquisito, candidata in verifica, 2026-11-07
 
 Red887e3db1eddaf734c440348d628b6702399eb943, run42342113095:729 test/job,24 fallimenti comportamentali007 in entrambi. Python3.11.9/job128311857151153.433s ha anche1errore023, TimeoutExpired15s nella fixture Explorer (test_file_access.py793/787); Python3.12.10/job128311857388167.838s ha0errori. Nessun errore fixture007, nessun Green dichiarato. Vecchia ipotesi confermata e prove storiche conservate.

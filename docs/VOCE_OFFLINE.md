@@ -1,4 +1,4 @@
-> **Correzione007 in revisione — 7/11/2026:** il ramo di correzione scarta frasi e avvisi rimasti in attesa dalla sessione precedente dopo cambio modalità o spegnimento/riaccensione. Non richiede nuove dipendenze, reinstallazione vocale o modifiche alle impostazioni. Verifica Windows della correzione ancora pendente; nessun nuovo pacchetto installabile pubblicato. Le istruzioni storiche sull'avvio sotto non descrivono automaticamente il ramo corrente: consultare lo stato della versione distribuita.
+> **Correzione007 in revisione — 7/11/2026:** il ramo di correzione scarta frasi e avvisi rimasti in attesa dalla sessione precedente dopo cambio modalità o spegnimento/riaccensione. Non richiede nuove dipendenze, reinstallazione vocale o modifiche alle impostazioni. Verifica Windows della correzione superata:730 test per Python3.11/3.12, run42342496402. Nessun nuovo pacchetto installabile pubblicato. Le istruzioni storiche sull'avvio sotto non descrivono automaticamente il ramo corrente: consultare lo stato della versione distribuita.
 
 # Jarvis: prima versione comando vocale offline (alpha)
 
