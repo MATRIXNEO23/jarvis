@@ -39,8 +39,12 @@ def parse_timer_command(text: str) -> TimerCommand | None:
     value = re.sub(r"^(?:ehi\s+)?jarvis\s*[,.:]?\s*", "", value)
     if not re.search(r"\btimer\b", value):
         return None
-    if re.search(r"-\s*\d", value):
-        return None
+    # Import only while parsing: sveglia already imports this module for audio.
+    from sveglia.service import _SPOKEN_NUMBERS
+    value = re.sub(r"\b[^\W\d_]+\b",
+                   lambda m: _SPOKEN_NUMBERS.get(m.group(), m.group()),
+                   value.replace("tré", "tre"))
+    value = re.sub(r"\b(?:un|una)(?=\s+(?:ora|ore|minuto|minuti|secondo|secondi)\b)", "1", value)
     for action, expressions in (
         ("pause", ("pausa", "metti in pausa", "sospendi")),
         ("resume", ("riprendi", "continua")),
@@ -48,26 +52,30 @@ def parse_timer_command(text: str) -> TimerCommand | None:
         ("reset", ("reset", "azzera", "reimposta")),
         ("remaining", ("quanto manca", "tempo rimasto")),
     ):
-        if any(expression in value for expression in expressions):
+        verbs = "(?:" + "|".join(re.escape(e) for e in expressions) + ")"
+        if (re.fullmatch(verbs + r"(?: (?:al|il|un))? timer", value)
+                or re.fullmatch(r"(?:(?:metti|porta) )?(?:il )?timer (?:in )?" + verbs, value)):
             return TimerCommand(action)
-    # An unqualified "timer" opens the manual editor without starting it.
-    parts = re.findall(r"(\d{1,3})\s*(ore?|minuti?|min|secondi?|sec)", value)
+    # Only an explicit command may cause an action. Conversational or negated
+    # mentions must remain eligible for ordinary chat instead of starting a timer.
+    match = re.fullmatch(
+        r"(?:(?:imposta|avvia|metti|apri|mostra|crea|inizia|fai partire) "
+        r"(?:(?:un|il) )?)?timer(?: (.+))?", value)
+    if match is None:
+        return None
+    duration = re.sub(r"^(?:di|da|per) ", "", match.group(1) or "")
     seconds = 0
-    if parts:
-        for number, unit in parts:
+    unit = r"(?:ora|ore|minuto|minuti|min|secondo|secondi|sec)"
+    if not duration:
+        return TimerCommand("open")
+    if re.fullmatch(r"\d+", duration):
+        seconds = int(duration) * 60
+    elif re.fullmatch(r"\d{1,3}\s*" + unit + r"(?: (?:e )?\d{1,3}\s*" + unit + r")*", duration):
+        for number, unit_name in re.findall(r"(\d{1,3})\s*(ora|ore|minuto|minuti|min|secondo|secondi|sec)", duration):
             quantity = int(number)
-            if unit.startswith("or"):
-                seconds += quantity * 3600
-            elif unit.startswith("min"):
-                seconds += quantity * 60
-            else:
-                seconds += quantity
+            seconds += quantity * (3600 if unit_name.startswith("or") else 60 if unit_name.startswith("min") else 1)
     else:
-        numbers = re.findall(r"\d+", value)
-        if len(numbers) == 1:
-            seconds = int(numbers[0]) * 60
-        elif numbers:
-            return None
+        return None
     if not 0 < seconds <= 99 * 3600 + 59 * 60 + 59:
         return TimerCommand("open") if seconds == 0 else None
     return TimerCommand("start", seconds)

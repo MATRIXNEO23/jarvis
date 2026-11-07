@@ -36,13 +36,15 @@ _SPOKEN_NUMBERS = _spoken_numbers()
 
 
 def next_alarm(value, now):
+    morning = bool(re.search(r"\s+(?:di mattina|del mattino)$", value.strip().casefold()))
+    value = re.sub(r"\s+(?:di mattina|del mattino)$", "", value.strip(), flags=re.I)
     words = value.strip().casefold().replace("tré", "tre").replace(" e ", " ").split()
     value = " ".join(_SPOKEN_NUMBERS.get(word, word) for word in words)
     match = re.fullmatch(r"([0-9]{1,2})(?:[:. ]([0-9]{1,2}))?", value.strip())
     if not match:
         raise ValueError("Indica un orario come 07:30.")
     hour, minute = int(match.group(1)), int(match.group(2) or 0)
-    if hour > 23 or minute > 59:
+    if hour > 23 or minute > 59 or (morning and hour > 11):
         raise ValueError("Orario non valido. Usa un valore tra 00:00 e 23:59.")
     target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
     return target if target > now else target + timedelta(days=1)

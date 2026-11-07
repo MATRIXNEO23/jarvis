@@ -4094,6 +4094,10 @@ def main() -> None:
                  or pending_project_trash_id is not None) and try_file_command(message)):
             request.set("")
             return
+        if (not (pending_project_name or pending_project_rename_id is not None
+                 or pending_project_trash_id is not None) and try_timer_command(message)):
+            request.set("")
+            return
         # Explicit application launches must never become pretend Gemma replies.
         # Only the trusted, user-enabled Programmi e app add-on can launch them.
         if not (pending_project_name or pending_project_rename_id is not None
@@ -4123,10 +4127,6 @@ def main() -> None:
             request.set("")
             return
         if maybe_queue_telegram_note(message):
-            request.set("")
-            return
-        from sveglia.service import parse_command as alarm_command
-        if alarm_command(message) is not None and try_timer_command(message):
             request.set("")
             return
         # Configured local model takes priority for conversational text.
