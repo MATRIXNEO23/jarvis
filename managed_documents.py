@@ -117,12 +117,12 @@ class ManagedDocuments:
                         "per non sovrascrivere la versione precedente.")
                 note.saved_path = save_new_text(dest, text)
         try:
-            self.bridge.close(note, discard_confirmed=True)
+            self.bridge.close(note, discard_confirmed=False, saved_text=text)
         except (OSError, ValueError) as exc:
             return DocumentOperation(
                 "saved_but_open",
-                "Il documento è stato salvato in " + str(note.saved_path)
-                + ", ma Blocco note non si è chiuso: " + str(exc),
+                "Una copia del testo è stata salvata in " + str(note.saved_path)
+                + ". Blocco note resta aperto: " + str(exc),
                 note.ident, note.saved_path)
         self.current = None
         return DocumentOperation(
@@ -141,8 +141,11 @@ class ManagedDocuments:
 
     def close_clean(self, ident: str) -> DocumentOperation:
         note = self._note(ident)
-        # Only the UI's explicitly verified clean document can use this path.
-        self.bridge.close(note, discard_confirmed=True)
+        # The UI's earlier clean flag cannot authorize discarding later edits.
+        if note.saved_path is None:
+            raise NotepadUnavailable("Il documento non ha una copia salvata verificabile.")
+        saved_text = note.saved_path.read_text(encoding="utf-8")
+        self.bridge.close(note, discard_confirmed=False, saved_text=saved_text)
         self.current = None
         return DocumentOperation("closed", "Documento chiuso.", ident)
 

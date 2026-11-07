@@ -21,6 +21,9 @@ WM_SETTEXT = 0x000C
 WM_GETTEXT = 0x000D
 WM_GETTEXTLENGTH = 0x000E
 EM_SETMODIFY = 0x00B9
+EM_SETREADONLY = 0x00CF
+GWL_STYLE = -16
+ES_READONLY = 0x0800
 _MAX_TEXT = 64_000
 _TIMEOUT_MS = 1200
 
@@ -75,6 +78,8 @@ class ClassicNotepadBridge:
         u.GetWindowTextW.restype = ctypes.c_int
         u.IsChild.argtypes = [wintypes.HWND, wintypes.HWND]
         u.IsChild.restype = wintypes.BOOL
+        u.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
+        u.GetWindowLongW.restype = wintypes.LONG
         u.GetWindowThreadProcessId.argtypes = [
             wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
         u.GetWindowThreadProcessId.restype = wintypes.DWORD
@@ -173,7 +178,7 @@ class ClassicNotepadBridge:
         except (OSError, ValueError, TypeError):
             return "uncertain"
 
-    def _verify(self, note: NotepadSession):
+    def _verify(self, note: NotepadSession, *, check_title: bool = True):
         u = self._user32()
         if (note.process.poll() is not None
                 or not u.IsWindow(wintypes.HWND(note.hwnd))
@@ -183,7 +188,7 @@ class ClassicNotepadBridge:
                 or _class_of(u, note.hwnd) != "Notepad"
                 or _class_of(u, note.edit) != "Edit"
                 or not u.IsChild(wintypes.HWND(note.hwnd), wintypes.HWND(note.edit))
-                or _title_of(u, note.hwnd) != note.original_title):
+                or (check_title and _title_of(u, note.hwnd) != note.original_title)):
             raise NotepadUnavailable(
                 "La finestra Blocco note associata a questo documento è cambiata. "
                 "Nessuna azione eseguita.")
@@ -226,26 +231,66 @@ class ClassicNotepadBridge:
             raise NotepadUnavailable("La verifica del testo inserito in Blocco note è fallita.")
         self._message(u, note.edit, EM_SETMODIFY, 1)
 
-    def close(self, note: NotepadSession, *, discard_confirmed: bool) -> None:
+    def close(self, note: NotepadSession, *, discard_confirmed: bool,
+              saved_text: str | None = None) -> None:
         """Close only the verified owned window after policy authorization.
 
-        Prevent a native unsaved prompt by clearing the Edit dirty bit ONLY
-        after confirmed save or a separate explicit discard confirmation.
+        A saved snapshot is not permission to discard subsequent edits. Hold
+        Edit read-only from the final comparison until WM_CLOSE completes,
+        preventing interactive typing/paste/undo in the comparison/close gap.
+        Explicit discard remains a separate authorized operation.
         """
-        if not discard_confirmed:
+        if not discard_confirmed and saved_text is None:
             raise ValueError("La chiusura richiede un salvataggio verificato o consenso.")
+        if saved_text is not None and (
+                discard_confirmed or not isinstance(saved_text, str)
+                or len(saved_text) > _MAX_TEXT or "\x00" in saved_text):
+            raise ValueError("Contenuto salvato o consenso di chiusura non valido.")
         u = self._verify(note)
-        self._message(u, note.edit, EM_SETMODIFY, 0)
-        if not u.PostMessageW(wintypes.HWND(note.hwnd), WM_CLOSE, 0, 0):
-            self._message(u, note.edit, EM_SETMODIFY, 1)
-            raise NotepadUnavailable("Impossibile richiedere la chiusura del documento.")
-        deadline = time.monotonic() + 3
-        while time.monotonic() < deadline:
-            if not u.IsWindow(wintypes.HWND(note.hwnd)):
-                return
-            time.sleep(0.1)
-        # If still open, never report a success; preserve the dirty bit.
-        if u.IsWindow(wintypes.HWND(note.edit)):
-            self._message(u, note.edit, EM_SETMODIFY, 1)
-        raise NotepadUnavailable(
-            "Blocco note non ha confermato la chiusura: finestra lasciata aperta.")
+        closed = False
+        lock_attempted = False
+        was_read_only = False
+        try:
+            if saved_text is not None:
+                ctypes.set_last_error(0)
+                style = u.GetWindowLongW(wintypes.HWND(note.edit), GWL_STYLE)
+                if style == 0 and ctypes.get_last_error():
+                    raise NotepadUnavailable("Impossibile verificare lo stato del documento.")
+                was_read_only = bool(style & ES_READONLY)
+                # A timeout can occur AFTER Windows applied the style. Always
+                # attempt restoration when the original controls remain ours.
+                lock_attempted = True
+                if not self._message(u, note.edit, EM_SETREADONLY, 1):
+                    raise NotepadUnavailable("Impossibile proteggere il testo durante la chiusura.")
+                if self.read(note) != saved_text.replace("\r\n", "\n"):
+                    raise NotepadUnavailable(
+                        "Il testo è cambiato dopo il salvataggio. "
+                        "Le nuove modifiche restano aperte: salvale prima di chiudere.")
+            self._message(u, note.edit, EM_SETMODIFY, 0)
+            if not u.PostMessageW(wintypes.HWND(note.hwnd), WM_CLOSE, 0, 0):
+                raise NotepadUnavailable("Impossibile richiedere la chiusura del documento.")
+            deadline = time.monotonic() + 3
+            while time.monotonic() < deadline:
+                if not u.IsWindow(wintypes.HWND(note.hwnd)):
+                    closed = True
+                    return
+                time.sleep(0.1)
+            raise NotepadUnavailable(
+                "Blocco note non ha confermato la chiusura: finestra lasciata aperta.")
+        finally:
+            if not closed:
+                try:
+                    # Renaming/saving manually may change the title; restore
+                    # only the verified original process and controls, even so.
+                    self._verify(note, check_title=False)
+                except NotepadUnavailable:
+                    pass
+                else:
+                    try:
+                        self._message(u, note.edit, EM_SETMODIFY, 1)
+                    finally:
+                        if lock_attempted:
+                            if not self._message(u, note.edit, EM_SETREADONLY,
+                                                 int(was_read_only)):
+                                raise NotepadUnavailable(
+                                    "Documento aperto: impossibile ripristinare lo stato di modifica.")

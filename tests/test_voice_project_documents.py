@@ -37,8 +37,8 @@ class FakeNotepadBridge:
     def write(self,note,text):
         self.notes[note.ident]=text
 
-    def close(self,note,*,discard_confirmed):
-        assert discard_confirmed
+    def close(self,note,*,discard_confirmed,saved_text=None):
+        assert discard_confirmed or self.read(note)==saved_text
         self.closed.append(note.ident)
         del self.notes[note.ident]
 

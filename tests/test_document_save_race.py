@@ -19,7 +19,7 @@ from unittest.mock import patch
 from document_execution import run_document_worker
 from document_store import save_new_text
 from managed_documents import ManagedDocuments
-from notepad_controller import ClassicNotepadBridge, NotepadSession
+from notepad_controller import ClassicNotepadBridge, NotepadSession, NotepadUnavailable
 
 
 class OwnedEditWindow:
@@ -164,4 +164,147 @@ class DocumentSaveRaceTests(unittest.TestCase):
             self.assertEqual(result.kind, "saved_and_closed")
             self.assertEqual(path.read_text(encoding="utf-8"), "Testo completo")
             self.assertIsNone(docs.current)
+
+    def test_failed_close_restores_dirty_and_editability(self):
+        for failure in ("post", "timeout", "lock", "lock_timeout", "read"):
+            with self.subTest(failure=failure), OwnedEditWindow() as win:
+                with TemporaryDirectory() as tmp:
+                    docs = ManagedDocuments(win.bridge)
+                    docs.current = win.note
+                    win.bridge.write(win.note, "Da conservare")
+                    original = win.bridge._message
+                    injected = []
+
+                    def fail(u, hwnd, code, wp=0, lp=0):
+                        if code == 0x00CF and wp == 1:  # EM_SETREADONLY
+                            injected.append("lock")
+                            if failure == "lock":
+                                return 0
+                            value = original(u, hwnd, code, wp, lp)
+                            if failure == "lock_timeout":
+                                raise NotepadUnavailable("Timeout dopo lock")
+                            return value
+                        if failure == "read" and injected and code == 0x000E:
+                            raise NotepadUnavailable("Lettura non disponibile")
+                        return original(u, hwnd, code, wp, lp)
+
+                    # Substitute failed delivery/time only; preserve real Edit APIs.
+                    from contextlib import ExitStack
+                    with ExitStack() as stack:
+                        stack.enter_context(patch.object(
+                            win.bridge, "_user32", return_value=win.u))
+                        stack.enter_context(patch.object(
+                            win.bridge, "_message", side_effect=fail))
+                        if failure in ("post", "timeout"):
+                            stack.enter_context(patch.object(
+                                win.u, "PostMessageW", return_value=failure == "timeout"))
+                        if failure == "timeout":
+                            stack.enter_context(patch(
+                                "notepad_controller.time.monotonic", side_effect=[0, 4]))
+                        result = docs.save_and_close(
+                            win.note.ident, Path(tmp) / "copia.txt")
+                    self.assertEqual(result.kind, "saved_but_open")
+                    self.assertIs(docs.current, win.note)
+                    self.assertEqual(win.bridge.read(win.note), "Da conservare")
+                    self.assertEqual(original(win.u, win.edit, 0x00B8), 1)  # dirty
+                    original(win.u, win.edit, 0x0102, ord("!"))
+                    self.assertIn("!", win.bridge.read(win.note))
+                    self.assertEqual(result.saved_path.read_text(encoding="utf-8"),
+                                     "Da conservare")
+
+    def test_original_read_only_style_survives_failed_close(self):
+        with OwnedEditWindow() as win, TemporaryDirectory() as tmp:
+            docs = ManagedDocuments(win.bridge)
+            docs.current = win.note
+            win.bridge.write(win.note, "Testo protetto")
+            win.bridge._message(win.u, win.edit, 0x00CF, 1)
+            with patch.object(win.bridge, "_user32", return_value=win.u):
+                with patch.object(win.u, "PostMessageW", return_value=False):
+                    result = docs.save_and_close(win.note.ident, Path(tmp) / "nota.txt")
+            self.assertEqual(result.kind, "saved_but_open")
+            win.bridge._message(win.u, win.edit, 0x0102, ord("!"))
+            self.assertEqual(win.bridge.read(win.note), "Testo protetto")
+
+    def test_renamed_owned_window_is_unlocked_after_failed_close(self):
+        with OwnedEditWindow() as win, TemporaryDirectory() as tmp:
+            docs = ManagedDocuments(win.bridge)
+            docs.current = win.note
+            win.bridge.write(win.note, "Da conservare")
+
+            def rename_instead_of_close(*_):
+                title = ctypes.create_unicode_buffer("Rinominato")
+                win.bridge._message(win.u, win.hwnd, 0x000C, 0,
+                                    int(ctypes.cast(title, ctypes.c_void_p).value))
+                return False
+
+            with patch.object(win.bridge, "_user32", return_value=win.u):
+                with patch.object(win.u, "PostMessageW", side_effect=rename_instead_of_close):
+                    result = docs.save_and_close(win.note.ident, Path(tmp) / "nota.txt")
+            self.assertEqual(result.kind, "saved_but_open")
+            win.note.original_title = "Rinominato"  # fixture adopts its own title
+            win.bridge._message(win.u, win.edit, 0x0102, ord("!"))
+            self.assertIn("!", win.bridge.read(win.note))
+
+    def test_explicit_discard_still_closes_unsaved_text(self):
+        with OwnedEditWindow() as win:
+            docs = ManagedDocuments(win.bridge)
+            docs.current = win.note
+            win.bridge.write(win.note, "Scarto autorizzato")
+            self.assertEqual(docs.discard_and_close(win.note.ident).kind,
+                             "closed_without_saving")
+            self.assertIsNone(docs.current)
+            self.assertFalse(win.u.IsWindow(wintypes.HWND(win.hwnd)))
+
+    def test_clean_close_requires_current_text_to_match_saved_copy(self):
+        with OwnedEditWindow() as win, TemporaryDirectory() as tmp:
+            docs = ManagedDocuments(win.bridge)
+            docs.current = win.note
+            win.bridge.write(win.note, "Testo ancora non salvato")
+            with self.assertRaises(NotepadUnavailable):
+                docs.close_clean(win.note.ident)
+            path = Path(tmp) / "nota.txt"
+            docs.save_only(win.note.ident, path)
+            win.bridge.write(win.note, "Modifica manuale")
+            with self.assertRaises(NotepadUnavailable):
+                docs.close_clean(win.note.ident)
+            self.assertIs(docs.current, win.note)
+            self.assertEqual(win.bridge.read(win.note), "Modifica manuale")
+            self.assertEqual(path.read_text(encoding="utf-8"), "Testo ancora non salvato")
+            win.bridge.write(win.note, "Testo ancora non salvato")
+            self.assertEqual(docs.close_clean(win.note.ident).kind, "closed")
+            self.assertIsNone(docs.current)
+
+    def test_close_without_authorization_or_with_wrong_identity_is_rejected(self):
+        from dataclasses import replace
+        with OwnedEditWindow() as win:
+            win.bridge.write(win.note, "Non toccare")
+            with self.assertRaises(ValueError):
+                win.bridge.close(win.note, discard_confirmed=False)
+            foreign = replace(win.note, pid=win.note.pid + 1000)
+            with self.assertRaises(NotepadUnavailable):
+                win.bridge.close(foreign, discard_confirmed=True)
+            self.assertEqual(win.bridge.read(win.note), "Non toccare")
+            self.assertEqual(win.bridge._message(win.u, win.edit, 0x00B8), 1)
+
+    def test_failed_second_save_preserves_both_versions_and_later_edit(self):
+        with OwnedEditWindow() as win, TemporaryDirectory() as tmp:
+            docs = ManagedDocuments(win.bridge)
+            docs.current = win.note
+            win.bridge.write(win.note, "Prima versione")
+            old = Path(tmp) / "prima.txt"
+            fresh = Path(tmp) / "seconda.txt"
+            docs.save_only(win.note.ident, old)
+            win.bridge.write(win.note, "Seconda versione")
+
+            def save_with_edit(dest, text):
+                saved = save_new_text(dest, text)
+                win.bridge.write(win.note, "Terza versione ancora aperta")
+                return saved
+
+            with patch("managed_documents.save_new_text", side_effect=save_with_edit):
+                result = docs.save_and_close(win.note.ident, fresh)
+            self.assertEqual(result.kind, "saved_but_open")
+            self.assertEqual(old.read_text(encoding="utf-8"), "Prima versione")
+            self.assertEqual(fresh.read_text(encoding="utf-8"), "Seconda versione")
+            self.assertEqual(win.bridge.read(win.note), "Terza versione ancora aperta")
 
