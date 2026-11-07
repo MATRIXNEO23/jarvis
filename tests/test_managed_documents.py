@@ -102,10 +102,12 @@ class FakeNotepadBridge:
         self.read(note)
         self.notes[note.ident] = content
 
-    def close(self, note, *, discard_confirmed):
-        self.read(note)
-        if not discard_confirmed:
+    def close(self, note, *, discard_confirmed, saved_text=None):
+        current = self.read(note)
+        if not discard_confirmed and saved_text is None:
             raise AssertionError("Closing without authorization")
+        if saved_text is not None and current != saved_text:
+            raise NotepadUnavailable("Documento modificato dopo il salvataggio.")
         if self.fail_close:
             raise NotepadUnavailable("Finestra ancora aperta.")
         self.closed.append(note.ident)

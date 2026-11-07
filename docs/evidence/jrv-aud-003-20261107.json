@@ -1,0 +1,120 @@
+{
+  "issue": "JRV-AUD-003",
+  "status": "verified_in_windows_ci_not_released",
+  "base_commit": "784edad7dc128783f5bee7729c5c6f6e6e0170f8",
+  "source_commit": "4dabf48fd71e433d43a6b97ae1a057730b1ee3b8",
+  "pull_request": 36,
+  "depends_on_pull_request": 35,
+  "red": {
+    "commit": "f92eef2ddf2fe7f2bf8de151a3458727a819f21f",
+    "run": 42330339439,
+    "jobs": [
+      {
+        "id": 128275185038,
+        "python": "3.11.9",
+        "tests": 684,
+        "seconds": 124.493,
+        "assertion_failures": 2,
+        "fixture_errors": 0
+      },
+      {
+        "id": 128275184831,
+        "python": "3.12.10",
+        "tests": 684,
+        "seconds": 142.654,
+        "assertion_failures": 2,
+        "fixture_errors": 0
+      }
+    ],
+    "evidence": [
+      "A late edit injected after real exclusive disk save was closed instead of returning saved_but_open.",
+      "WM_CHAR inserted ! after dirty-clear and before WM_CLOSE; actual observed editor text was !Testo completo."
+    ]
+  },
+  "green": {
+    "run": 42330792141,
+    "conclusion": "success",
+    "runner": "windows-2022",
+    "command": "python -m unittest discover -s tests -v",
+    "jobs": [
+      {
+        "id": 128276596649,
+        "python": "3.11.9",
+        "tests": 691,
+        "seconds": 111.881,
+        "conclusion": "success"
+      },
+      {
+        "id": 128276596974,
+        "python": "3.12.10",
+        "tests": 691,
+        "seconds": 82.551,
+        "conclusion": "success"
+      }
+    ],
+    "new_test_methods": 9,
+    "syntax_and_native_file_probe": "passed",
+    "windows_search_live": "passed_fixture_removed_and_service_restored",
+    "package_jobs": "skipped"
+  },
+  "coverage": [
+    "Real ManagedDocuments and document worker using ClassicNotepadBridge and native hidden Windows Edit control.",
+    "Late edits during disk save; interactive typing between dirty-clear and close.",
+    "Failed readonly request, timeout after application, failed read, failed PostMessage and close timeout.",
+    "Original readonly style and changed-title cleanup; explicit discard; wrong identity and no authorization.",
+    "Save-only followed by immutable new-version save, preserving both copies and later unsaved editor text; close_clean snapshot comparison."
+  ],
+  "substitutions": [
+    "Test-owned hidden parent of class Notepad uses DefWindowProc: no installed Notepad process or native save dialog.",
+    "Delivery/clock/Win32 failures injected at native boundaries; disk files and Edit/message dispatch real.",
+    "No accounts, models, microphones or user profile files involved."
+  ],
+  "independent_review": {
+    "scope": "read-only working tree against base; targeted recheck after changed-title test and documentation update",
+    "verdict": "no_confirmed_blocking_runtime_defect",
+    "initial_gaps_addressed": [
+      "changed-title cleanup test",
+      "current candidate continuity notes"
+    ],
+    "tests_executed_by_reviewer": false,
+    "blob_identity": [
+      {
+        "path": "managed_documents.py",
+        "sha": "74a012af792503186d07c8b46012d1e427a50e64",
+        "remote": "74a012af792503186d07c8b46012d1e427a50e64",
+        "match": true
+      },
+      {
+        "path": "notepad_controller.py",
+        "sha": "626d5c93964c00f59bae58adfa15e0e6f535c3e4",
+        "remote": "626d5c93964c00f59bae58adfa15e0e6f535c3e4",
+        "match": true
+      },
+      {
+        "path": "tests/test_document_save_race.py",
+        "sha": "005ca75bd1b2734d97385be99e6bb9b77fe2c6c2",
+        "remote": "005ca75bd1b2734d97385be99e6bb9b77fe2c6c2",
+        "match": true
+      },
+      {
+        "path": "tests/test_managed_documents.py",
+        "sha": "46b015a327bd53e629517b27576d0e759571b302",
+        "remote": "46b015a327bd53e629517b27576d0e759571b302",
+        "match": true
+      },
+      {
+        "path": "tests/test_voice_project_documents.py",
+        "sha": "54fac22d89c5b87bfbc04bc9ea5874b2e9601129",
+        "remote": "54fac22d89c5b87bfbc04bc9ea5874b2e9601129",
+        "match": true
+      }
+    ]
+  },
+  "limits": [
+    "Installed classic Notepad on Windows10 and target i3-2100/HDD hardware require manual verification.",
+    "EM_SETREADONLY blocks interactive editor changes, not arbitrary programmatic writes by unrelated automation.",
+    "Restoration is attempted on verified owned live controls; a hung process may fail Win32 messages.",
+    "No functional Linux tests, new package, build, merge, release or user-data/configuration changes."
+  ],
+  "next_issue": "JRV-AUD-004: reproduce lock inversion during add-on disable/file request before modifying code."
+}

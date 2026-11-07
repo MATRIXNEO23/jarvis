@@ -1,3 +1,19 @@
+## 7 novembre 2026 — JRV-AUD-003 verificata su Windows, non distribuita
+
+Correzione4dabf48fd71e433d43a6b97ae1a057730b1ee3b8, [PR draft36](https://github.com/MATRIXNEO23/jarvis/pull/36), dipendente dalla35. [Run42330792141](https://github.com/MATRIXNEO23/jarvis/actions/runs/42330792141) SUCCESS:691 test per Python3.11.9/3.12.10; nove test nuovi con Edit Windows nativo e file temporanei. Red precedente684 test/due asserzioni fallite senza errori per ciascun job. [Evidenza](evidence/jrv-aud-003-20261107.json).
+
+Salva e chiudi ora distingue snapshot salvato e scarto esplicito. La chiusura verifica il testo sotto blocco temporaneo della digitazione; modifiche sopraggiunte lasciano aperti editor/sessione e copia salvata. Ripristino dirty/stile originale anche dopo lock parzialmente applicato, lettura/PostMessage/timeout e cambio titolo. close_clean confronta la copia su disco; save_only, scarto autorizzato e versioni immutabili conservati. Review indipendente senza difetti bloccanti, lacune iniziali titolo/documentazione risolte e ricontrollate; cinque blob runtime/test identici ai remoti.
+
+Sintassi/probe nativi e Windows Search live passati, servizio ripristinato/fixture rimossa; package/publisher skipped. Nessun test funzionale Linux, Notepad installato/Windows10/Pavilion, nuova build, ZIP, merge o modifica dati/configurazioni utente. Il parent nascosto di test non replica il dialogo Save di Notepad. Readonly tutela la digitazione, non scritture programmatiche di automazioni estranee; un processo bloccato può impedire anche il tentativo di ripristino. Checkpoint successivo solo documentale. Prossimo JRV-AUD-004: riprodurre la possibile inversione dei lock add-on/file con barriere, ancora da confermare.
+
+## 7 novembre 2026 — JRV-AUD-003 confermata, candidata in verifica
+
+Red f92eef2 / run42330339439:684 test per Python3.11/3.12, due fallimenti comportamentali senza errori. La finestra Edit reale accetta digitazione dopo dirty-clear; modifica durante I/O chiusa e scartata. Candidata: salva e chiudi passa lo snapshot salvato anziché consenso allo scarto; bridge protegge Edit in sola lettura dal confronto finale alla chiusura, ripristina dirty/stile originale in errore. close_clean richiede copia salvata corrispondente. Scarto esplicito e save_only preservati. Test aggiunti per lock rifiutato/timeout dopo applicazione, lettura, PostMessage, chiusura non confermata, stile iniziale readonly, titolo rinominato, versioni immutabili e identità estranea. AST/diff controllati, Green Windows e review indipendente pendenti; nessun test funzionale Linux, Notepad/Pavilion personale, build o merge.
+
+## 7 novembre 2026 — JRV-AUD-003, riproduzione in corso
+
+Base784edad, ramo isolato fix/jrv-aud-003-save-close-20261107 con001/002 conservate. Piano docs/superpowers/plans/2026-11-07-jrv-aud-003-save-close.md. Test Windows: worker/orchestratore/bridge reali, file temporanei e controllo Edit nativo nascosto del solo test; modifica durante I/O e digitazione tra dirty-clear/WM_CLOSE. Runtime ancora invariato, rischio non ancora riprodotto. Prossimo passo Red Windows; poi confronto del testo con blocco temporaneo della digitazione e ripristino in errore. Nessun Notepad personale, test Linux, build o merge.
+
 ## 7 novembre 2026 — JRV-AUD-002 verificata su Windows, non distribuita
 
 Correzione `05926bdc34516624eb3c5ef21321b801cb466586`, [PR draft35](https://github.com/MATRIXNEO23/jarvis/pull/35), dipendente dalla34. [Run42329422636](https://github.com/MATRIXNEO23/jarvis/actions/runs/42329422636) SUCCESS:682 test per Python3.11.9/3.12.10, sintassi/probe nativi e indice Windows live passati; servizio e fixture ripristinati. Red precedente675 test/cinque asserzioni fallite senza errori fixture. [Evidenza](evidence/jrv-aud-002-20261107.json).
