@@ -1,5 +1,6 @@
 """Console routing regressions: real parser/engine, controlled OS boundaries."""
 import os
+import ast
 import sqlite3
 import unittest
 from pathlib import Path
@@ -101,3 +102,30 @@ class InternalCommandRoutingTests(unittest.TestCase):
         env['try_file_command'].assert_called_once_with('apri Netflix')
         env['submit_gemma_trial'].assert_not_called()
         self.assertEqual(self.actions(engine), [])
+
+    def test_saved_project_answer_named_like_command_keeps_clarification_owner(self):
+        from dialogue_focus import PendingProjectReference, normalized_utterance
+        from project_voice import parse_project_voice, find_existing_project
+        from workspace_memory import WorkspaceMemory, WorkspaceError
+        for name in ('Cronologia', 'Stato sistema'):
+            with self.subTest(name=name):
+                env, engine = self.environment(name)
+                workspace = WorkspaceMemory(engine.db_path.with_name('projects.db'))
+                ident = workspace.create_project(name)
+                pending = PendingProjectReference(question='Come procede questo progetto?')
+                selected = []
+                env.update(workspace=workspace, pending_project_reference=pending,
+                    normalized_utterance=normalized_utterance,
+                    parse_project_voice=parse_project_voice, find_existing_project=find_existing_project,
+                    switch_context=lambda value: selected.append(value) or True,
+                    WorkspaceError=WorkspaceError, sqlite3=sqlite3, busy_gpt=False,
+                    active_project_id=None)
+                main = next(n for n in ast.parse(Path('jarvis.py').read_text(encoding='utf-8')).body
+                            if isinstance(n, ast.FunctionDef) and n.name == 'main')
+                callback = next(n for n in main.body if isinstance(n, ast.FunctionDef)
+                                and n.name == 'handle_project_reference')
+                exec(compile(ast.Module(body=[callback], type_ignores=[]), 'actual-project-reference', 'exec'), env)
+                env['send_console_input']()
+                self.assertEqual(selected, [ident])
+                self.assertEqual(self.actions(engine), [])
+                env['submit_gemma_trial'].assert_not_called()

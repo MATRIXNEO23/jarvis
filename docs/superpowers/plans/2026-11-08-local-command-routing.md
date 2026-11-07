@@ -42,3 +42,5 @@ Riutilizzare il riconoscimento locale e il protocollo di capacità esistente. Sc
 ## Stato corrente
 
 Requisiti confermati, analisi sorgenti svolta. Nessuna modifica runtime, nessun test nuovo eseguito, nessun pacchetto creato. Prossimo passo: regressione Windows del percorso console.
+
+Aggiornamenti successivi: [verifiche, source, review e prossimo passo](../../COMANDI-INTERNI-VERIFICA-20261108.md). Lo stato iniziale sopra è storico; leggere questo registro prima di proseguire.
