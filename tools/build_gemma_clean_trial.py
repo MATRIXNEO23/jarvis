@@ -3,51 +3,6 @@ from pathlib import Path
 import hashlib, os, subprocess, zipfile
 
 root=Path(".")
-ui=root/"local_model/native_ui.py"
-s=ui.read_text(encoding="utf-8")
-assert 'def test_model(self):' not in s
-s=s.replace("import tkinter as tk\n", "import tkinter as tk\nimport threading\nfrom pathlib import Path\n",1)
-s=s.replace('self.status = tk.StringVar(value="Modello disattivato finché non viene attivato esplicitamente.")','self.status = tk.StringVar(value="Salva il GGUF, poi premi Prova generazione. Nessun invio online.")')
-s=s.replace('ttk.Button(buttons, text="Salva", command=self.save).pack(side="left")','ttk.Button(buttons, text="Salva", command=self.save).pack(side="left")\n        self.test_button = ttk.Button(buttons, text="Prova generazione", command=self.test_model)\n        self.test_button.pack(side="left", padx=6)')
-s += '''
-    def test_model(self):
-        """Run one real native generation without using GPT online."""
-        try:
-            if not self.save():
-                return
-            if not self.current.model or not Path(self.current.model).is_file():
-                raise ValueError("Seleziona prima un file GGUF esistente.")
-            get_session = self.get_session
-            if not callable(get_session):
-                raise ValueError("Sessione Gemma di Jarvis non disponibile.")
-            config = self.current
-            self.test_button.configure(state="disabled")
-            self.status.set("Caricamento DLL e GGUF in corso...")
-            def worker():
-                try:
-                    session = get_session()
-                    answer = session.test_generation(config=config, timeout=180)
-                    result = "TEST RIUSCITO. Risposta: " + str(answer)[:200]
-                except Exception as exc:
-                    result = "TEST FALLITO: " + str(exc)[:300]
-                def finish():
-                    if self.window.winfo_exists():
-                        self.status.set(result)
-                        self.test_button.configure(state="normal")
-                try:
-                    self.window.after(0, finish)
-                except RuntimeError:
-                    pass
-            threading.Thread(target=worker, daemon=True, name="jarvis-gemma-test").start()
-        except (OSError, ValueError, TypeError) as exc:
-            self.status.set("TEST FALLITO: " + str(exc))
-'''
-ui.write_text(s,encoding="utf-8")
-factory=root/"local_model/native_factory.py"
-s=factory.read_text(encoding="utf-8")
-s=s.replace("import importlib.util\n","import importlib.util\nfrom dataclasses import replace\n",1)
-s=s.replace("    source = Path(upstream_source).resolve(strict=True)","    if not config.dll:\n        bundled = Path(__file__).resolve().parent.parent / 'native_engine' / 'koboldcpp_noavx2.dll'\n        if not bundled.is_file():\n            raise FileNotFoundError('DLL KoboldCpp inclusa non trovata: ' + str(bundled))\n        config = replace(config, dll=str(bundled))\n    source = Path(upstream_source).resolve(strict=True)",1)
-factory.write_text(s,encoding="utf-8")
 launcher=root/"avvia_jarvis.bat"
 s=launcher.read_text(encoding="utf-8")
 s=s.replace("Jarvis-AccessoFile-Trial","Jarvis-Gemma-Trial").replace("JARVIS // ACCESSO FILE","JARVIS // GEMMA")

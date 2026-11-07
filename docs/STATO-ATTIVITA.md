@@ -1,3 +1,13 @@
+## JRV-AUD-012 — candidata revisionata pronta per Windows
+
+Red1af0f654/run42377060724:907test per versione,4failure1errore tutti nuovo012;3.11job128416727551170.282s,3.12job128416727411157.150s. Fallback DLL realmente assente nei sorgenti, UI e gate parità mancanti;022 passa,023 non osservato,Searchlive3.12 ripristinato. Candidata sposta esatto Python già generato nei moduli e rimuove riscritture, profili/launcher sorgente invariati. Parità del testo verificata staticamente. Workflow futuro con hash e fail-fast; helper test diretti e assert conservati. Review indipendente readonly senza rilievi bloccanti, rafforzamenti preventivi recepiti.7nuovi/908attesi, un metodo dopoRed senza extraRed rivendicato.
+
+Nessun build/ZIP dell'app, DLL reale o test funzionale Linux. I test del workflow eseguono stub innocuo al posto di python; builder fermato prima di ZIP con writer vietato. Green Windows necessario, estrazione/build vera ancora da autorizzare. Prossimo esiti/checkpoint, poi013.
+
+## JRV-AUD-012 — review preventiva recepita
+
+Rafforzato il test pre-ZIP: deve raggiungere git ls-files, evitando il falso verde dell'assert iniziale dopo spostamento della UI. Il blocco workflow viene ora verificato con pwsh come in CI, su PY/MJS/PS1 e con fallimento py_compile oltre al builder.7nuovi/908attesi, un metodo e questi rafforzamenti dopo il sourceRed1af0f654/run42377060724 (6nuovi/907attesi), nessun ulterioreRed rivendicato. Runtime ancora021/022, nessun build/ZIP/test funzionale Linux; prossimi logRed, spostamento minimo e review finale.
+
 ## 7 novembre 2026 — JRV-AUD-012 avviata: parità sorgenti/pacchetto
 
 Base021/0228626d193 verificata remota19file/7runtime-test uguali al sourceverde; main pulito f147b1a. Ramo012 isolato. Il builder riscrive due moduli Python dopo la suite: portare nei sorgenti lo stesso comportamento già presente nel pacchetto, conservando profilo isolato del launcher. Nel workflow futuro hash prima/dopo e stop sul primo comando fallito. Spec/piano salvati prima del runtime.

@@ -4,6 +4,7 @@ import builtins
 from contextlib import chdir
 from dataclasses import replace
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -49,12 +50,13 @@ class PackageSourceParityTests(unittest.TestCase):
                 exec(compile(builder, 'actual-builder-no-native-assets', 'exec'),
                      {'__builtins__': dict(vars(builtins), __import__=imported)})
             archive.assert_not_called()
+            git.check_output.assert_called_once_with(['git', 'ls-files', '-z'])
             self.assertFalse((root / 'Jarvis-Gemma-PROVA-CORRETTA.zip').exists())
             for name in names:
                 if name.endswith('.py'):
                     self.assertEqual((root / name).read_bytes(), sources[name], name)
 
-    def workflow(self, *, mutate=False, builder_exit=0):
+    def workflow(self, *, mutate=False, builder_exit=0, compile_exit=0, target='sample.py'):
         block = build_workflow_script()
         stub = r'''
 [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)
@@ -62,12 +64,18 @@ function python {
     if ($args[0] -eq 'tools/build_gemma_clean_trial.py') {
         Write-Output 'FIXTURE_BUILDER'
         if ($env:JRV_AUD012_MUTATE -eq '1') {
-            [IO.File]::WriteAllText((Join-Path $PWD 'sample.py'), "x = 2`n")
+            [IO.File]::WriteAllText((Join-Path $PWD $env:JRV_AUD012_TARGET), "changed fixture`n")
         }
         $global:LASTEXITCODE=[int]$env:JRV_AUD012_EXIT
     } else {
         Write-Output 'FIXTURE_OTHER_PYTHON'
-        $global:LASTEXITCODE=0
+        if ($args[0] -eq '-m' -and $args[1] -eq 'py_compile') {
+            Write-Output 'FIXTURE_COMPILE'
+            $global:LASTEXITCODE=[int]$env:JRV_AUD012_COMPILE_EXIT
+        } else {
+            Write-Output 'FIXTURE_UNITTEST'
+            $global:LASTEXITCODE=0
+        }
     }
 }
 '''
@@ -75,14 +83,18 @@ function python {
         with tempfile.TemporaryDirectory(prefix='jarvis-package-workflow-') as temporary:
             root = Path(temporary).resolve()
             (root / 'sample.py').write_text('x = 1\n', encoding='utf-8')
+            (root / 'sample.mjs').write_text('export const x = 1;\n', encoding='utf-8')
+            (root / 'sample.ps1').write_text('$x = 1\n', encoding='utf-8')
             subprocess.run(['git', 'init', '--quiet', str(root)], check=True, capture_output=True)
-            subprocess.run(['git', '-C', str(root), 'add', '--', 'sample.py'], check=True, capture_output=True)
-            powershell = Path(os.environ['SystemRoot']) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
+            subprocess.run(['git', '-C', str(root), 'add', '--', 'sample.py', 'sample.mjs', 'sample.ps1'], check=True, capture_output=True)
+            powershell = shutil.which('pwsh')
+            self.assertIsNotNone(powershell, 'This workflow contract requires the CI pwsh host')
             encoded = base64.b64encode(script.encode('utf-16-le')).decode('ascii')
             run = subprocess.run([str(powershell), '-NoProfile', '-NonInteractive', '-EncodedCommand', encoded],
                 capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30,
                 cwd=root, creationflags=subprocess.CREATE_NO_WINDOW,
-                env=dict(os.environ, JRV_AUD012_MUTATE='1' if mutate else '0', JRV_AUD012_EXIT=str(builder_exit)))
+                env=dict(os.environ, JRV_AUD012_MUTATE='1' if mutate else '0', JRV_AUD012_EXIT=str(builder_exit),
+                         JRV_AUD012_COMPILE_EXIT=str(compile_exit), JRV_AUD012_TARGET=target))
         self.assertIn('FIXTURE_BUILDER', run.stdout, run.stderr)
         return run
 
@@ -92,15 +104,23 @@ function python {
         self.assertIn('FIXTURE_OTHER_PYTHON', run.stdout)
 
     def test_workflow_rejects_builder_mutation_of_verified_script(self):
-        run = self.workflow(mutate=True)
-        self.assertNotEqual(run.returncode, 0, 'Workflow accepted altered tested source')
-        self.assertIn('sample.py', run.stderr)
+        for target in ('sample.py', 'sample.mjs', 'sample.ps1'):
+            with self.subTest(target=target):
+                run = self.workflow(mutate=True, target=target)
+                self.assertNotEqual(run.returncode, 0, 'Workflow accepted altered tested source')
+                self.assertIn(target, run.stderr)
 
     def test_workflow_stops_on_builder_failure_before_other_python_commands(self):
         run = self.workflow(builder_exit=7)
         self.assertNotEqual(run.returncode, 0, 'Later commands hid the builder failure')
         self.assertIn('build', run.stderr.lower())
         self.assertNotIn('FIXTURE_OTHER_PYTHON', run.stdout)
+
+    def test_workflow_stops_on_compile_failure_before_successful_unittest(self):
+        run = self.workflow(compile_exit=9)
+        self.assertNotEqual(run.returncode, 0, 'Unittest hid a compile failure')
+        self.assertIn('FIXTURE_COMPILE', run.stdout)
+        self.assertNotIn('FIXTURE_UNITTEST', run.stdout)
 
 
 @unittest.skipUnless(os.name == 'nt', 'Windows-only project requirement')

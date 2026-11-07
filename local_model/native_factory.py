@@ -1,5 +1,6 @@
 """Opt-in factory for native Gemma. Never changes existing Jarvis defaults."""
 import importlib.util
+from dataclasses import replace
 from pathlib import Path
 
 from .native_bridge import NativeGemmaBridge
@@ -13,6 +14,11 @@ def create_native_provider(config, *, upstream_source):
     if not isinstance(config, NativeModelConfig):
         raise TypeError("Configurazione nativa non valida.")
     config.validate()
+    if not config.dll:
+        bundled = Path(__file__).resolve().parent.parent / 'native_engine' / 'koboldcpp_noavx2.dll'
+        if not bundled.is_file():
+            raise FileNotFoundError('DLL KoboldCpp inclusa non trovata: ' + str(bundled))
+        config = replace(config, dll=str(bundled))
     source = Path(upstream_source).resolve(strict=True)
     if source.name.lower() != "koboldcpp.py":
         raise ValueError("Sorgente ABI non riconosciuto.")
