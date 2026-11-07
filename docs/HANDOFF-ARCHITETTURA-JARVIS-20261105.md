@@ -1,3 +1,7 @@
+## 007 — consegna riletta e handoff completato
+
+[Handoff finale](HANDOFF-JARVIS-007-20261107.md), [download verificato](evidence/jarvis-007-download-20261107.json). Main0149be28 pubblica007: file/hash/metadata/link verificati dopo download;53vecchi ZIP immutati,001–006/Gemma61/base riscaricati e coerenti. Nessun ulteriore intervento automatico: attendere prova PC.
+
 ## CONSEGNATA candidata007 — 7 novembre2026
 
 [Download007](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-007.zip), [consegna](CONSEGNA-JARVIS-007-20261107.md), [handoff richiesto](HANDOFF-JARVIS-007-20261107.md). Source `9f8c5f582b98a4ac131c41a4170b194c98abc3fa`, run42420559553 SUCCESS,922test per Python Windows3.11/3.12 e922 sul runtime estratto; manifest/hash/guide/import/DLL/UI/clock diverso verificati. Timer024 e aiuto025 inclusi, guidaF1/? e Ctrl+L; scelta modelli invariata. Vecchie versioni e dati conservati, main senza copia del runtime evoluto. Windows10/hardware/audio/account/GGUF reali non provati,016/023 aperti. Pubblicazione esplicitamente autorizzata; prossimo passo consegna e prova PC, non nuove modifiche. [Evidenza](evidence/jarvis-007-release-20261107.json).

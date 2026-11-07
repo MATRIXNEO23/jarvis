@@ -122,7 +122,13 @@
     "runtime_files_copied_from_checkout": false,
     "hardware_windows10_microphone_accounts_gguf": "not tested"
   },
-  "readback": "pending",
+  "readback": {
+    "passed": true,
+    "evidence": "jarvis-007-download-20261107.json",
+    "publication_commit": "0149be28e900d255037a8334f28e6862ef80a8cc",
+    "previous_archives_downloaded": 8,
+    "all_53_old_zip_blobs_unchanged": true
+  },
   "review": "independent readonly review and focused recheck; no remaining blockers",
   "prior_cancelled_runs": [
     42419926302,

@@ -1,3 +1,7 @@
+## Pubblicazione e download verificati
+
+Main0149be28e900d255037a8334f28e6862ef80a8cc pubblica007. Download pubblico007 verificato:8138643byte, SHA256 a5a24f35b410a45bed3dd08ed2180563d429e82cbe0a878045f4e7157182408f,119file. Riscaricati anche001–006,Gemma61 e base TimerAudioFix2, hash/byte invariati. Metadata, registro latest7/next8 e link riletti;007 uguale tra commit immutabile e main. Tree conserva53vecchi ZIP e runtime storico main. [Evidenza download](evidence/jarvis-007-download-20261107.json). Il precedente readback pending è superato. Nessuna ulteriore build o test app nel checkpoint documentale finale.
+
 # Handoff Jarvis007 — 7 novembre2026
 
 ## Punto di ripresa
