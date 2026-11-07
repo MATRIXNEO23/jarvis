@@ -1,3 +1,15 @@
+## JRV-AUD-021/022 — candidata con cleanup delle fixture revisionato
+
+Review indipendente readonly ha verificato i log Red e il fix delle quattro fixture: nessun blocco rilevato, assert originali conservati, GC dell'app immutato e runtime TTS identico a6504. Activity/Animated/NativeHUD raccolgono sul thread principale dopo il metodo; header ritira anche i riferimenti persistenti prima della raccolta. Il probe controlla anche una vera immagine come foglia, con osservatore debole, e conserva diagnostica di timeout. Rafforzamenti del probe successivi al primo Red, nessun ulteriore Red rivendicato.
+
+Prossimo: Green completo Windows3.11/3.12,901test attesi con16nuoviTTS e1metodo/4subtestTk. Non dichiarare completata021 o022 finché entrambe le suite non terminano. Rapporti/evidenze conservano il primo blocco e la riproduzione; nessun build/merge/test funzionale Linux/dato reale,023 distinto aperto.
+
+## JRV-AUD-022 — causa delle fixture riprodotta, pulizia candidata
+
+Red5991813f4c2add224e50f375ea36b8838fd1823b/run42363972403:3.11job128378016116901test171.384s4failure0errori tutti subtestGC;3.12job128378016392 stampa4figli falliti poiabortaancoraDocumentSaveRace, nessuncontofinale. Tutti8figli passanoprimalafixture, poiVariable.__del__/Tcl_AsyncDelete suworker conthreadIDdiverso eexit2147483651. AnimatedHUDincludeImage.__del__realesuentrambeversioni. Confermatodifettodiownershipdei4grafi, nonidentificatioggettisingolidiogniabortostorico. EvidenzacontrollataJSON evecchiorapportopreservati.
+
+Candidata solo4fixturetest: Activity/Animated/NativeHud gc.collect nelteardownmain dopo metodoritornato; header spezzacicloenv/callbackeritiraself.env/hud/root dopodestroyprimaGC. Assertoriginaliinvariati, GCappnonmodificato. Reviewpreventiva rafforza diagnosticaTimeout eImageleafreale/WeakSet nonritentiva, nessunextraRedrivendicato. TTSruntime SHA c02a4a4e invariato6504. Green021/022901testattesi ancoranecessario, reviewmiratarichiesta. Nessunbuild/merge/testfunzionaleLinux/audio/account/datoreale.023 distintoaperto.
+
 ## 7 novembre 2026 — JRV-AUD-022 ricomparsa, blocca il Green completo021
 
 Candidata0216504abffe0553461a2f44c07c9833d67a2abf2e1/run42363252951:Python3.11.9 job128375837812 SUCCESS900test in172.068s, tutti16nuovi021 passati. Python3.12.10 job128375837908 abortisce durante DocumentSaveRace prima dei021:Variable.__del__/Image.__del__ RuntimeError main thread is not in main loop, poiTcl_AsyncDelete, nessun riepilogo completo assegnato. Search live3.12 passato con servizio/fixture ripristinati; nessun retry cieco o Green dichiarato per021.

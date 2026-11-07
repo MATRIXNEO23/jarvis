@@ -4,6 +4,7 @@ No real model, Telegram account or microphone. Every worker is gated, released
 and joined by the existing ownership fixture, including on the Red revision.
 """
 import os
+import gc
 import threading
 from types import SimpleNamespace
 import unittest
@@ -17,6 +18,9 @@ import test_native_trial_ownership as ownership
 @unittest.skipUnless(os.name == 'nt', 'Windows-only project requirement')
 class NativeHudActivityTests(unittest.TestCase):
     worker = cancellation.NativeCancellationTests.worker
+
+    def tearDown(self):
+        gc.collect()
 
     def setUp(self):
         self.harness = ownership.NativeTrialOwnershipTests()

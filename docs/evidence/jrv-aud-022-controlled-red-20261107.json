@@ -1,0 +1,119 @@
+{
+  "issue": "JRV-AUD-022",
+  "phase": "controlled-Red",
+  "source": "5991813f4c2add224e50f375ea36b8838fd1823b",
+  "run_id": 42363972403,
+  "environment": "Windows2022; real closed Tk fixtures; automatic GC disabled only in child; worker gc.collect after fixture success",
+  "jobs": [
+    {
+      "id": 128378016116,
+      "python": "3.11.9",
+      "tests": 901,
+      "seconds": 171.384,
+      "failures": 4,
+      "errors": 0,
+      "complete_summary": true
+    },
+    {
+      "id": 128378016392,
+      "python": "3.12.10",
+      "tests": null,
+      "seconds": null,
+      "complete_summary": false,
+      "note": "Parent suite aborts in DocumentSaveRace after all four isolated child failures were printed"
+    }
+  ],
+  "children": [
+    {
+      "id": 128378016116,
+      "probes": [
+        {
+          "fixture": "test_activity_status.ActivityStatusTests.test_existing_tk_status_row_follows_real_phases_and_voice_priority",
+          "returncode": 2147483651,
+          "fixturePassed": true,
+          "workerStarted": true,
+          "variableError": true,
+          "imageError": false,
+          "tclAbort": true
+        },
+        {
+          "fixture": "test_animated_hud.AnimatedHUDGeometryTests.test_reference_hud_widgets_when_tk_display_available",
+          "returncode": 2147483651,
+          "fixturePassed": true,
+          "workerStarted": true,
+          "variableError": true,
+          "imageError": true,
+          "tclAbort": true
+        },
+        {
+          "fixture": "test_hud_quick_toggles.HeaderQuickControlTests.test_settings_and_header_share_state_without_false_live_status",
+          "returncode": 2147483651,
+          "fixturePassed": true,
+          "workerStarted": true,
+          "variableError": true,
+          "imageError": false,
+          "tclAbort": true
+        },
+        {
+          "fixture": "test_native_hud_activity.NativeHudActivityTests.test_real_tk_status_shows_native_reasoning_and_keeps_voice_priority",
+          "returncode": 2147483651,
+          "fixturePassed": true,
+          "workerStarted": true,
+          "variableError": true,
+          "imageError": false,
+          "tclAbort": true
+        }
+      ]
+    },
+    {
+      "id": 128378016392,
+      "probes": [
+        {
+          "fixture": "test_activity_status.ActivityStatusTests.test_existing_tk_status_row_follows_real_phases_and_voice_priority",
+          "returncode": 2147483651,
+          "fixturePassed": true,
+          "workerStarted": true,
+          "variableError": true,
+          "imageError": false,
+          "tclAbort": true
+        },
+        {
+          "fixture": "test_animated_hud.AnimatedHUDGeometryTests.test_reference_hud_widgets_when_tk_display_available",
+          "returncode": 2147483651,
+          "fixturePassed": true,
+          "workerStarted": true,
+          "variableError": true,
+          "imageError": true,
+          "tclAbort": true
+        },
+        {
+          "fixture": "test_hud_quick_toggles.HeaderQuickControlTests.test_settings_and_header_share_state_without_false_live_status",
+          "returncode": 2147483651,
+          "fixturePassed": true,
+          "workerStarted": true,
+          "variableError": true,
+          "imageError": false,
+          "tclAbort": true
+        },
+        {
+          "fixture": "test_native_hud_activity.NativeHudActivityTests.test_real_tk_status_shows_native_reasoning_and_keeps_voice_priority",
+          "returncode": 2147483651,
+          "fixturePassed": true,
+          "workerStarted": true,
+          "variableError": true,
+          "imageError": false,
+          "tclAbort": true
+        }
+      ]
+    }
+  ],
+  "interpretation": "All four actual UI fixtures pass first, then each isolated child aborts on foreign-thread collection. Confirms ownership defects in closed fixture graphs; exact object from each historical parent abort not individually attributed.",
+  "later_probe_strengthening": [
+    "Timeout diagnostics printed before rethrow",
+    "Representative real PhotoImage leaf/weak observer ensures coverage independent of async raster cache"
+  ],
+  "extra_red_claimed": false,
+  "runtime_tts_sha": "c02a4a4ebb339b93a1eade0cc37b054d19c385e2",
+  "linux_functional_tests": false,
+  "build": false
+}

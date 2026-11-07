@@ -1,6 +1,6 @@
 # JRV-AUD-022 — ownership degli oggetti Tk nelle fixture Windows
 
-Stato: riproduzione controllata da acquisire, causa ancora probabile. Nessuna nuova build.
+Stato: difetto delle quattro fixture riprodotto e candidata di pulizia pronta; Green Windows da acquisire. Nessuna nuova build.
 Compagna della021 nella [bozza51](https://github.com/MATRIXNEO23/jarvis/pull/51), per dipendenza del collaudo; runtimeTTS invariato dalla candidata `6504abffe0553461a2f44c07c9833d67a2abf2e1`.
 [Specifica](superpowers/specs/2026-11-07-jrv-aud-022-design.md), [piano](superpowers/plans/2026-11-07-jrv-aud-022-fix.md).
 
@@ -19,3 +19,13 @@ Diagnostica immediata con stadio e ID thread, stderr del figlio e timeout45s; un
 ## Limiti
 
 La riproduzione proposta riguarda ownership delle fixture, non certifica ogni possibile ciclo del runtime Tk. Non attribuisce a priori tutte le vecchie interruzioni a un unico oggetto. Non cambia comandi, dati, microfono, modelli o stato Windows dell'utente. Nessuna esecuzione funzionale Linux, build/ZIP/merge/release, disabilitazione test o nuova dipendenza.023 distinto e aperto.
+
+## Red controllato e correzione delle fixture
+
+Source `5991813f4c2add224e50f375ea36b8838fd1823b`, run42363972403. Python3.11.9 job128378016116:901test in171.384s,4failure0errori, tutti i quattro subtest di finalizzazione. Python3.12.10 job128378016392 stampa gli stessi quattro figli falliti, poi il padre abortisce di nuovo durante DocumentSaveRace: nessun riepilogo finale attribuito. Tutti gli8figli completano prima la fixture con successo e poi abortiscono (2147483651) sul worker GC, con Variable.__del__/Tcl_AsyncDelete; AnimatedHUD mostra anche Image.__del__ reale su entrambe le versioni. [Evidenza controllata](evidence/jrv-aud-022-controlled-red-20261107.json). Difetto dei quattro grafi confermato; non viene identificata retroattivamente l'identità di ogni oggetto del vecchio aborto.
+
+Correzione limitata a quattro file test. ActivityStatus/AnimatedHUD/NativeHud raccolgono nel teardown sul thread principale, dopo che i riferimenti locali del metodo sono usciti. Header ha anche il ciclo self/env/callback e campi self.hud/root: chiude HUD, sostituisce provider, svuota env, distrugge root e ritira i riferimenti prima della raccolta. Tutte le asserzioni originali rimangono; nessuna modifica al GC globale dell'app o al runtime grafico.
+
+Review preventiva rafforza diagnosticaTimeout e copertura Image: il probe finale assegna una PhotoImage reale1x1 come foglia al HUD, osservata soltanto con WeakSet/contatore, senza aggiungere cicli o trattenere il proprietario. Richiede creazione e assenza dopoGC. È una prova deterministica di risorsa Image, non della prontezza del renderer raster asincrono. Questi rafforzamenti seguono il primo sourceRed, senza rivendicare un altroRed. RuntimeTTS SHA c02a4a4ebb339b93a1eade0cc37b054d19c385e2 invariato da6504. Green completo021/022 ancora necessario.
+
+Review correttiva indipendente readonly completata: log Red letti, cleanup sul thread principale e rilascio dei riferimenti header giudicati coerenti, nessun blocco rilevato. Nessun test eseguito dal reviewer; Green ancora necessario.

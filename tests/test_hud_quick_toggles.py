@@ -5,6 +5,7 @@ hardware and thread scheduling are controlled: no account or live audio.
 """
 import ast
 import copy
+import gc
 import os
 from pathlib import Path
 import sqlite3
@@ -36,9 +37,21 @@ class HeaderQuickControlTests(unittest.TestCase):
         self.requests, self.modes, self.errors, self.stops = [], [], [], []
 
     def tearDown(self):
-        self.hud.close()
-        self.root.update_idletasks()
-        self.root.destroy()
+        try:
+            self.hud.close()
+            self.hud.set_state_provider(lambda: {})
+            environment = getattr(self, 'env', None)
+            if environment is not None:
+                environment.clear()
+            self.root.update_idletasks()
+        finally:
+            try:
+                self.root.destroy()
+            finally:
+                self.env = None
+                self.hud = None
+                self.root = None
+                gc.collect()
 
     def callback(self, name, env):
         node = copy.deepcopy(next(n for n in self.main.body
