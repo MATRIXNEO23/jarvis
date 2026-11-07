@@ -1,0 +1,173 @@
+{
+  "issue": "JRV-AUD-010",
+  "date": "2026-11-07",
+  "status": "verified-in-draft-controlled-ABI-Windows",
+  "base": "6e6b0813789adc87435995a663cabaa4d0d48f6b",
+  "source": "060999046d6b232b4d3c05243c53f53b2b39fbd6",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/44",
+  "branch": "fix/jrv-aud-010-native-cancel-20261107",
+  "environment": "Windows Server 2022 x64; GitHub Actions; Python 3.11.9 and 3.12.10",
+  "command": "python -m unittest discover -s tests -v",
+  "runs": [
+    {
+      "phase": "Red1",
+      "source": "5b6ca6d485ef2f4ca9508a205a3eef6134a04f98",
+      "run_id": 42350310207,
+      "jobs": [
+        {
+          "id": 128336832048,
+          "python": "3.11.9",
+          "tests": 784,
+          "failures": 16,
+          "errors": 3,
+          "seconds": 150.209
+        },
+        {
+          "id": 128336832319,
+          "python": "3.12.10",
+          "tests": 784,
+          "failures": 16,
+          "errors": 3,
+          "seconds": 132.052
+        }
+      ]
+    },
+    {
+      "phase": "Red2",
+      "source": "2a1e5ee92881c0f3130bc0c6e6fd9663ad8600ce",
+      "run_id": 42350462062,
+      "jobs": [
+        {
+          "id": 128337282836,
+          "python": "3.11.9",
+          "tests": 789,
+          "failures": 21,
+          "errors": 3,
+          "seconds": 127.965
+        },
+        {
+          "id": 128337283043,
+          "python": "3.12.10",
+          "tests": 789,
+          "failures": 21,
+          "errors": 3,
+          "seconds": 152.894
+        }
+      ]
+    },
+    {
+      "phase": "Green",
+      "source": "060999046d6b232b4d3c05243c53f53b2b39fbd6",
+      "run_id": 42350951034,
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "id": 128338760673,
+          "python": "3.11.9",
+          "tests": 792,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 159.067,
+          "new_tests_passed": 24
+        },
+        {
+          "id": 128338760391,
+          "python": "3.12.10",
+          "tests": 792,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 137.774,
+          "new_tests_passed": 24
+        }
+      ]
+    }
+  ],
+  "Red_errors": "All failures/errors in new010tests. Three errors are wrong RuntimeError rather than ValueError for True/NaN/Inf reaching ABI, not fixture setup errors.",
+  "new_test_methods": 24,
+  "added_after_Red2": 3,
+  "review": {
+    "mode": "independent readonly; no functional execution",
+    "preventive": [
+      "Scope generated UI threading facade instead of replacing stdlib Thread",
+      "Strengthen stale callback while next ABI active",
+      "Cover queued stop, initialization, watchdog join, ABI errors"
+    ],
+    "runtime_findings_corrected": [
+      "Stable provider reference in adapter.prepare under concurrent detach",
+      "Cancellation/deadline check after Timer.start before C entry"
+    ],
+    "targeted_recheck": "No residual blockers reported before Green"
+  },
+  "source_files": {
+    "jarvis.py": {
+      "blob": "b12f60c501f57e9148864b2f788e9313936e68df",
+      "sha256": "8c3d64e71c5dda4dd1e0350e24b7f0b5fd9da1055315c083a15af0127fd66434"
+    },
+    "local_model/native_bridge.py": {
+      "blob": "e58c04c3dec28ee3e49f6e1272f182a507d796a4",
+      "sha256": "4d3af0e175a7de2868bf73339e091a0c495320300f2c5197b8f315b8e22dca34"
+    },
+    "local_model/native_provider.py": {
+      "blob": "86e04c71aab52d6f7853ed65eb475040cf590df8",
+      "sha256": "589bf1253af462a6e32a075cc59fc1d825c390eedbb45cd07b8fb2b85fa2fc3d"
+    },
+    "local_model/native_chat_adapter.py": {
+      "blob": "bb2cd99953087c4e9beb91b914f618e8b46d97da",
+      "sha256": "c5abc38edc1db145bcaacfebf3f8447ad52d623726784ed9c0db83c6389aca0b"
+    },
+    "local_model/native_conversation_session.py": {
+      "blob": "ddd129c3bb8398ac0e0fbf6315099c6f259660ef",
+      "sha256": "9944b701852c83696decab36392f56521bf8061f2d6c5d9735d40108082fac05"
+    },
+    "tests/test_native_cancellation.py": {
+      "blob": "641964189738b4a92b796c835fd29fe19e6e6b8b",
+      "sha256": "d33804f9db598ac445c37bcc7ec786c1e1fb33bc3988a34667ea7759439a43ba"
+    },
+    "tests/test_native_trial_ownership.py": {
+      "blob": "9a7680c36345fbedcfd1d4a7bfe58572c031a4cc",
+      "sha256": "a4f2e59071936fb1d7dcf5d16f14246a702a2ce8902a569e0f2e4170eb52c90e"
+    }
+  },
+  "preserved": [
+    "accepted history and persistent data",
+    "001-009 behavior under full regression suite",
+    "explicit serialized trial reload",
+    "opt-in model routing; no online fallback",
+    "main and prior worktrees/packages"
+  ],
+  "limitations": [
+    "controlled ABI inference only for010",
+    "real GGUF/DLL cancellation and actual process shutdown not exercised",
+    "no Windows10 i3-2100/HDD benchmark or microphone/accounts",
+    "deadline applies to generate, not queue/load; no hard C-process timeout",
+    "cooperative native abort itself may have backend-specific latency",
+    "022/023 remain open"
+  ],
+  "actions_not_taken": [
+    "functional Linux tests",
+    "app build or ZIP",
+    "merge",
+    "release or package publication",
+    "user configuration/data changes",
+    "new dependencies/paid services"
+  ],
+  "checks": {
+    "python_syntax": "passed-both",
+    "javascript_syntax": "passed-both",
+    "powershell_syntax": "passed-both",
+    "native_file_access_probe": "passed-both",
+    "live_windows_search_3_12": {
+      "passed": true,
+      "service_restored": true,
+      "fixture_removed": true
+    },
+    "build": "skipped",
+    "package_extraction": "skipped",
+    "publication": "skipped",
+    "unrelated_022_023": "not-reproduced-still-open"
+  }
+}

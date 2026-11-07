@@ -46,7 +46,7 @@ Cancellare il Second Brain generale revoca anche i turni generali Gemma in attes
 
 Correzione verificata su Windows:768test per Python3.11/3.12, run42347553638. Nessuna nuova build installabile. Non sono attivati riassunti automatici in inattività né nuovi archivi o servizi.
 
-## Timeout e chiusura Gemma — candidata010
+## Timeout e chiusura Gemma — correzione010 verificata nei sorgenti
 
 Il limite di tempo della generazione richiede l'annullamento cooperativo al
 motore nativo. Risposte annullate/tardive non vengono accettate nella memoria.
@@ -61,3 +61,7 @@ Non è garantito un arresto entro un tempo massimo del processo nativo. Un
 timer esiste soltanto durante ciascuna generazione ed è congiunto prima del
 riuso; nessun servizio residente o dipendenza aggiunta. Collaudo GGUF/DLL reale
 e reattività Windows10/i3/HDD ancora necessari. Nessuna nuova build pubblicata.
+
+Verifica010:792test per Python3.11/3.12 su Windows2022,
+run42350951034, inclusi24nuovi controlli di annullamento con ABI simulata.
+Nessuna build o aggiornamento automatico del PC.
