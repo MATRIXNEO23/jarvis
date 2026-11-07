@@ -1,3 +1,7 @@
+## JRV-AUD-007 — correzione autorizzata in preparazione, 2026-11-07
+
+Dopo spiegazione semplice l'utente dà «ok»: applicare007, un solo passo. Basec9d1d29 (bozza40), ramo fix/jrv-aud-007-voice-generation-20261107. Specifica docs/superpowers/specs/2026-11-07-jrv-aud-007-design.md e piano docs/superpowers/plans/2026-11-07-jrv-aud-007-fix.md. Red già valido2632321/run42340988254,723 test/job,9 fallimenti e0 errori. Aggiunti6 test di confine (effetti vecchi, misti, malformed, close, stato nuovo); runtime ancora invariato, nuovo Red da acquisire prima del fix. Scelta minima: numero sessione nell'evento, check nel consumer prima degli effetti; nessuna coda parallela/svuotamento globale. Nessun build/merge/dato utente/test funzionale Linux.022/023 aperti. Prossimo: Windows Red ampliato, poi implementazione e Green.
+
 ## 7 novembre 2026 — JRV-AUD-007 confermato, sola verifica
 
 [Bozza40](https://github.com/MATRIXNEO23/jarvis/pull/40), base7920c4d (001–006 conservate), source2632321c258d9a20d44a7e6cbba8538476505412. [Rapporto](VERIFICA-JRV-AUD-007-20261107.md), [evidenza](evidence/jrv-aud-007-20261107.json), [run42340988254](https://github.com/MATRIXNEO23/jarvis/actions/runs/42340988254): Windows3.11.9/job128308391527 e3.12.10/job128308391854,723 test ciascuno,9 fallimenti comportamentali e0 errori,153.353s/148.019s. Suite rossa attesa:007 CONFERMATO/ALTO, non corretto. Quattro nuovi metodi falliscono (9 sottocasi); tre controlli passano; nessun altro fallimento.
