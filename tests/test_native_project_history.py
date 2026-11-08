@@ -32,6 +32,9 @@ class CapturedAdapter:
         self.prepares = 0
         self.on_reply = None
 
+    def stop(self):
+        pass
+
     def prepare(self, *, config=None):
         self.prepares += 1
 

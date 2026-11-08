@@ -4427,7 +4427,7 @@ def main() -> None:
                                     if (save_only_waiting or document_busy or doc_dialog.phase.startswith('awaiting_')
                                             or pending_project_name or pending_project_rename_id is not None
                                             or pending_project_trash_id is not None
-                                            or pending_project_reference.question):
+                                            or pending_project_reference.question or telegram_voice_dialog.pending):
                                         raise ConversationRejected('Un altro dialogo richiede la tua risposta.')
                                     if value.accept_action():
                                         dispatch_model_capability(intent.capability, value.question,

@@ -33,3 +33,7 @@ Il catalogo di sistema ha spazio separato dal budget dei dati conversazionali ma
 Aggiunte prove per JSON malformato, stop dopo generazione, proposta su frase negata, nuovo dialogo, documento cambiato, add-on revocato e contesto piccolo. Totale previsto945test. Prossimo passo: Windows della candidata e review indipendente del solo raccordo. Nessuna build o garanzia di accuratezza del GGUF reale.
 
 Review indipendente readonly del raccordo4d678fa..9b3c0b5: un rilievo concreto, manca il dialogo Telegram pendente nel gate che rifiuta una vecchia proposta nativa dopo un nuovo dialogo. Esteso il test del callback con Telegram che diventa pendente fra generazione e polling; previsto946test. Red del caso prima del fix. Nessun altro difetto concreto nei confini esaminati; bookkeeping submit_local e accuratezza GGUF restano limiti distinti. Il dispatcher GPT estratto risulta equivalente nei rami esaminati.
+
+
+### Correzione dei tre fallimenti della candidata
+Il run 42430228966 termina con 946 test, un fallimento e due errori. Il callback GPT nel test file viene ora selezionato dentro poll, evitando il nuovo callback nativo; il fake adapter implementa stop; la proposta nativa viene respinta durante un dialogo Telegram pendente. Sintassi AST e diff verificati; verifica funzionale Windows da eseguire. Richiesta utente: arrivare alla build dopo verifica.
