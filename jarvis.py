@@ -2181,6 +2181,12 @@ def main() -> None:
             return
         if try_self_diagnostic(spoken):
             return
+        if (chat_notebook.select() == str(chat_local_tab)
+                and gpt_enabled.get()):
+            chat_sessions_panel.report_error(
+                "GPT online non è collegato alle chat isolate F2. Disattiva GPT.")
+            write_line("CHAT > Non ho inviato il messaggio a GPT: istanza locale isolata.")
+            return
         if not gpt_enabled.get():
             submit_gemma_voice(spoken)
             return
@@ -3383,6 +3389,11 @@ def main() -> None:
     def submit_gpt() -> None:
         if closing:
             return
+        if chat_notebook.select() == str(chat_local_tab):
+            write_line("CHAT > Invio GPT bloccato: questa istanza è solo locale.")
+            chat_sessions_panel.report_error(
+                "F2: seleziona Console per inviare a GPT online.")
+            return
         message = request.get().strip()
         if not message:
             return
@@ -3410,7 +3421,8 @@ def main() -> None:
         if handle_project_reference(message):
             request.set("")
             return
-        if handle_unanchored_short_reply(message):
+        if (chat_notebook.select() != str(chat_local_tab)
+                and handle_unanchored_short_reply(message)):
             request.set("")
             return
         if len(message) > 5000:
@@ -4318,7 +4330,8 @@ def main() -> None:
         if handle_project_reference(message):
             request.set("")
             return
-        if handle_unanchored_short_reply(message):
+        if (chat_notebook.select() != str(chat_local_tab)
+                and handle_unanchored_short_reply(message)):
             request.set("")
             return
         if try_self_diagnostic(message):
@@ -4594,11 +4607,6 @@ def main() -> None:
                 write_line("GEMMA > File sorgente non valido. Nessun invio online.")
                 return False
             gemma_source[0] = source
-        gemma_trial_busy[0] = True
-        gemma_recent_reply[0] = None
-        gemma_button.configure(state="disabled")
-        write_line(("GEMMA / DOMANDA > " if typed else "UTENTE / VOCE > ") + spoken)
-        voice_epoch = conversation_epoch
         native_context = chat_target[0] if chat_target is not None else active_project_id
         native_document = documents.current.ident if documents.current else None
         native_actions = () if explicit else active_addon_actions()
@@ -4607,9 +4615,15 @@ def main() -> None:
                 None, None, gemma_memory_revision, [])
         elif chat_target is not None:
             from local_model.chat_context import make_chat_history_reader
-            reader = make_chat_history_reader(
-                chat_sessions_panel.store, chat_target[0],
-                project_id=chat_target[1])
+            try:
+                reader = make_chat_history_reader(
+                    chat_sessions_panel.store, chat_target[0],
+                    project_id=chat_target[1])
+            except (OSError, sqlite3.Error, ValueError) as exc:
+                write_line("CHAT > Archivio locale non disponibile: " + type(exc).__name__)
+                chat_sessions_panel.report_error(
+                    "Archivio chat non accessibile. Nessuna richiesta inviata.")
+                return False
             # The sole memory source of a chat instance is its own history.
             # No automatic global/project Second Brain recall in F2.
             memory_owner, memory_revision, memory_warnings = (
@@ -4617,6 +4631,13 @@ def main() -> None:
         else:
             reader, memory_owner, memory_revision, memory_warnings = (
                 native_memory_request(active_project_id, spoken))
+        # Make the session busy only after the selected chat and its reader
+        # are valid: errors cannot strand the Gemma UI in a busy state.
+        gemma_trial_busy[0] = True
+        gemma_recent_reply[0] = None
+        gemma_button.configure(state="disabled")
+        write_line(("GEMMA / DOMANDA > " if typed else "UTENTE / VOCE > ") + spoken)
+        voice_epoch = conversation_epoch
 
         def voice_worker():
             try:
