@@ -89,6 +89,7 @@ class NativeConversationSession:
         self._active_operations = 0
         self._prompt_diagnostic_armed = False
         self._last_prompt_diagnostic = None
+        self._prompt_diagnostic_generation = 0
 
     @property
     def is_busy(self):
@@ -123,6 +124,7 @@ class NativeConversationSession:
             if self._closed or self._stopping:
                 raise RuntimeError("Sessione Gemma non disponibile.")
             self._last_prompt_diagnostic = None
+            self._prompt_diagnostic_generation += 1
             self._prompt_diagnostic_armed = True
 
     def prompt_diagnostic(self):
@@ -132,6 +134,7 @@ class NativeConversationSession:
     def clear_prompt_diagnostic(self):
         with self._state_lock:
             self._prompt_diagnostic_armed = False
+            self._prompt_diagnostic_generation += 1
             self._last_prompt_diagnostic = None
 
     @property
@@ -350,6 +353,7 @@ class NativeConversationSession:
                 raise ValueError("Prompt oltre il contesto configurato.")
             with self._state_lock:
                 inspect_prompt = self._prompt_diagnostic_armed
+                capture_generation = self._prompt_diagnostic_generation
                 self._prompt_diagnostic_armed = False
             self._prepare(config, revision)
             self._check_revision(revision)
@@ -393,7 +397,9 @@ class NativeConversationSession:
                     report = ("Diagnostica non disponibile: " + type(exc).__name__
                               + ". Risposta Gemma invariata.")
                 with self._state_lock:
-                    if not self._closed and not self._stopping and revision == self._revision:
+                    if (not self._closed and not self._stopping
+                            and revision == self._revision
+                            and capture_generation == self._prompt_diagnostic_generation):
                         self._last_prompt_diagnostic = report
             answer = clean_native_answer(result.get("text"))
             turn = NativeChatTurn(self, context_id, latest, answer, revision)
@@ -490,6 +496,7 @@ class NativeConversationSession:
             self.prepared = False
             self._prepared_config = None
             self._prompt_diagnostic_armed = False
+            self._prompt_diagnostic_generation += 1
             self._last_prompt_diagnostic = None
         self.adapter.stop()
 
@@ -501,6 +508,7 @@ class NativeConversationSession:
             self.prepared = False
             self._prepared_config = None
             self._prompt_diagnostic_armed = False
+            self._prompt_diagnostic_generation += 1
             self._last_prompt_diagnostic = None
         try:
             self.adapter.stop()
