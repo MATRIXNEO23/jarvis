@@ -97,6 +97,21 @@ class PromptDiagnosticTests(unittest.TestCase):
         self.assertNotIn("DIAGNOSTICA PROMPT", str(list(session.history)))
         self.assertNotIn("DIAGNOSTICA PROMPT", adapter.calls[-1])
 
+    def test_discard_during_inference_revokes_inflight_capture(self):
+        session, adapter = self.make_session()
+        original = adapter.call
+
+        def discard_then_answer(*args, **kwargs):
+            session.clear_prompt_diagnostic()
+            return original(*args, **kwargs)
+
+        adapter.call = discard_then_answer
+        session.arm_prompt_diagnostic()
+        self.assertEqual(session.ask("Messaggio da non conservare nel report"),
+                         "risposta 1")
+        self.assertIsNone(session.prompt_diagnostic())
+        self.assertEqual(len(adapter.calls), 1)
+
     def test_clear_stop_close_do_not_keep_private_prompt(self):
         session, _ = self.make_session()
         session.arm_prompt_diagnostic()
