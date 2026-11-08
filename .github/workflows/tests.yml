@@ -104,7 +104,7 @@ jobs:
 
   gemma-candidate:
     needs: unit
-    if: github.event_name == 'pull_request' && github.head_ref == 'fix/model-selection-session-20261108' && github.event.pull_request.number == 57 && github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ false }} # Build009 delivered; automatic packaging disabled.
     permissions:
       contents: read
       actions: read
@@ -429,7 +429,7 @@ jobs:
   publish-verified-009:
     name: Publish verified immutable build 009
     needs: [unit, gemma-candidate]
-    if: github.event_name == 'pull_request' && github.head_ref == 'fix/model-selection-session-20261108' && github.event.pull_request.number == 57 && github.event.pull_request.head.repo.full_name == github.repository && github.repository == 'MATRIXNEO23/jarvis'
+    if: ${{ false }} # Build009 published; another build requires a new request.
     runs-on: windows-2022
     permissions:
       contents: write
