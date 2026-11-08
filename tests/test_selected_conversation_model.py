@@ -170,3 +170,49 @@ class SelectedConversationModelTests(unittest.TestCase):
         env['start_conversation_gpt']('Parliamo')
         env['write_line'].assert_called_once()
         env['submit_gemma_voice'].assert_not_called()
+
+    def test_ptt_free_speech_routes_without_overwriting_console_draft(self):
+        import test_voice_corrections_review as fixture
+        from voice_control import PUSH_TO_TALK
+        fixture.VoiceCorrectionReviewTests.setUpClass()
+        harness = fixture.VoiceCorrectionReviewTests()
+        self.addCleanup(harness.doCleanups)
+        harness.setUp()
+        harness.voice_environment(PUSH_TO_TALK)
+        env = harness.env
+        env['request'] = fixture.Value('Bozza da conservare')
+        harness.receive_voice('Parliamo della giornata')
+        env['start_conversation_gpt'].assert_called_once_with('Parliamo della giornata')
+        self.assertEqual(env['request'].get(), 'Bozza da conservare')
+
+    def test_pending_telegram_message_has_priority_in_console_and_voice(self):
+        import test_activity_status as callbacks
+        import test_typed_timer_routing as typed
+        import test_voice_corrections_review as voice
+        from voice_control import GPT_CONVERSATION
+        callbacks.ActivityStatusTests.setUpClass()
+        voice.VoiceCorrectionReviewTests.setUpClass()
+        for channel in ('console','voice'):
+            with self.subTest(channel=channel):
+                if channel == 'console':
+                    harness = typed.TypedTimerTests()
+                    self.addCleanup(harness.doCleanups)
+                    env = harness.environment('usa GPT')
+                else:
+                    harness = voice.VoiceCorrectionReviewTests()
+                    self.addCleanup(harness.doCleanups)
+                    harness.setUp()
+                    harness.voice_environment(GPT_CONVERSATION)
+                    env = harness.env
+                env.update(closing=False, document_busy=False, pending_project_name=False,
+                           pending_project_rename_id=None, pending_project_trash_id=None,
+                           telegram_voice_dialog=SimpleNamespace(pending=True),
+                           gpt_enabled=callbacks.Value(False), toggle_gpt=Mock(),
+                           try_telegram_voice_send=Mock(return_value=True))
+                callbacks.ActivityStatusTests().callback('try_model_switch',env)
+                if channel == 'console':
+                    env['send_console_input']()
+                else:
+                    harness.receive_voice('Jarvis usa GPT')
+                env['try_telegram_voice_send'].assert_called_once_with('usa GPT')
+                env['toggle_gpt'].assert_not_called()
