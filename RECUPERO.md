@@ -1,4 +1,4 @@
-Audit corrente012: [docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md](docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md). Audit richiesto, nessuna modifica runtime o nuova build.
+Audit latenza012 concluso: [docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md](docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md). Nessuna modifica runtime o nuova build. Proposta minima da concordare, prova Windows reale completata.
 
 # Ripresa Jarvis — ultima consegna 012
 

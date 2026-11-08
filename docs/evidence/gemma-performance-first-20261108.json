@@ -1,0 +1,428 @@
+{
+  "audit": "Jarvis_012_native_prompt_performance",
+  "cases": [
+    {
+      "case": "catalog_three_pairs_cold",
+      "model_loads": 1,
+      "model_load_seconds": 2.547907799999848,
+      "generations": 1,
+      "selection_during_generate": 0,
+      "selection_seconds_including_counts": 0.003823700000111785,
+      "memory_read_seconds": 0,
+      "tokenizer": {
+        "before_generate": {
+          "calls": 7,
+          "seconds": 0.007809300000189978
+        },
+        "during_generate": {
+          "calls": 0,
+          "seconds": 0
+        }
+      },
+      "native_generate_seconds": 22.88858129999994,
+      "prompt_tokens": 419,
+      "completion_tokens": 13,
+      "backend": {
+        "last_input_count": 419,
+        "last_token_count": 13,
+        "process_seconds": 21.10299963760376,
+        "eval_seconds": 1.7800000457763672
+      },
+      "prepare_turn_seconds": 25.985336499999903,
+      "context": {
+        "whole": 3,
+        "extracted": 0,
+        "omitted": 0,
+        "input_size": 419,
+        "budget": 768,
+        "unit": "tokens",
+        "output_reserved": 128,
+        "safety_reserved": 128,
+        "restored": 0
+      },
+      "common_prefix_with_previous_request_tokens": 0,
+      "identical_to_previous_request": false
+    },
+    {
+      "case": "catalog_three_pairs_identical_warm",
+      "model_loads": 0,
+      "model_load_seconds": 0,
+      "generations": 1,
+      "selection_during_generate": 0,
+      "selection_seconds_including_counts": 0.003372000000126718,
+      "memory_read_seconds": 0,
+      "tokenizer": {
+        "before_generate": {
+          "calls": 7,
+          "seconds": 0.006776900000204478
+        },
+        "during_generate": {
+          "calls": 0,
+          "seconds": 0
+        }
+      },
+      "native_generate_seconds": 1.8223818999999821,
+      "prompt_tokens": 419,
+      "completion_tokens": 13,
+      "backend": {
+        "last_input_count": 419,
+        "last_token_count": 13,
+        "process_seconds": 52.794000000000004,
+        "eval_seconds": 1.694000015258789
+      },
+      "prepare_turn_seconds": 1.8303744999998344,
+      "context": {
+        "whole": 3,
+        "extracted": 0,
+        "omitted": 0,
+        "input_size": 419,
+        "budget": 768,
+        "unit": "tokens",
+        "output_reserved": 128,
+        "safety_reserved": 128,
+        "restored": 0
+      },
+      "common_prefix_with_previous_request_tokens": 419,
+      "identical_to_previous_request": true
+    },
+    {
+      "case": "catalog_latest_pair_warm",
+      "model_loads": 0,
+      "model_load_seconds": 0,
+      "generations": 1,
+      "selection_during_generate": 0,
+      "selection_seconds_including_counts": 0.001070699999900171,
+      "memory_read_seconds": 0,
+      "tokenizer": {
+        "before_generate": {
+          "calls": 5,
+          "seconds": 0.004005799999958981
+        },
+        "during_generate": {
+          "calls": 0,
+          "seconds": 0
+        }
+      },
+      "native_generate_seconds": 7.13547490000019,
+      "prompt_tokens": 278,
+      "completion_tokens": 17,
+      "backend": {
+        "last_input_count": 278,
+        "last_token_count": 17,
+        "process_seconds": 14.971392936706543,
+        "eval_seconds": 2.3400000915527346
+      },
+      "prepare_turn_seconds": 7.140536699999984,
+      "context": {
+        "whole": 1,
+        "extracted": 0,
+        "omitted": 0,
+        "input_size": 278,
+        "budget": 768,
+        "unit": "tokens",
+        "output_reserved": 128,
+        "safety_reserved": 128,
+        "restored": 0
+      },
+      "common_prefix_with_previous_request_tokens": 189,
+      "identical_to_previous_request": false
+    },
+    {
+      "case": "plain_latest_pair_control_warm",
+      "model_loads": 0,
+      "model_load_seconds": 0,
+      "generations": 1,
+      "selection_during_generate": 0,
+      "selection_seconds_including_counts": 0.000354999999899519,
+      "memory_read_seconds": 0,
+      "tokenizer": {
+        "before_generate": {
+          "calls": 5,
+          "seconds": 0.0011462000002211425
+        },
+        "during_generate": {
+          "calls": 0,
+          "seconds": 0
+        }
+      },
+      "native_generate_seconds": 6.163403600000038,
+      "prompt_tokens": 107,
+      "completion_tokens": 13,
+      "backend": {
+        "last_input_count": 107,
+        "last_token_count": 13,
+        "process_seconds": 5.110823505401611,
+        "eval_seconds": 1.2899999618530273
+      },
+      "prepare_turn_seconds": 6.165421700000024,
+      "context": {
+        "whole": 1,
+        "extracted": 0,
+        "omitted": 0,
+        "input_size": 107,
+        "budget": 768,
+        "unit": "tokens",
+        "output_reserved": 128,
+        "safety_reserved": 128,
+        "restored": 0
+      },
+      "common_prefix_with_previous_request_tokens": 5,
+      "identical_to_previous_request": false
+    },
+    {
+      "case": "archive_A_warm",
+      "model_loads": 0,
+      "model_load_seconds": 0,
+      "generations": 1,
+      "selection_during_generate": 0,
+      "selection_seconds_including_counts": 0.0011812000000190892,
+      "memory_read_seconds": 9.000000318337698e-7,
+      "tokenizer": {
+        "before_generate": {
+          "calls": 6,
+          "seconds": 0.005387099999779821
+        },
+        "during_generate": {
+          "calls": 0,
+          "seconds": 0
+        }
+      },
+      "native_generate_seconds": 15.912744400000065,
+      "prompt_tokens": 297,
+      "completion_tokens": 12,
+      "backend": {
+        "last_input_count": 297,
+        "last_token_count": 12,
+        "process_seconds": 14.569273910522462,
+        "eval_seconds": 1.5860000610351563
+      },
+      "prepare_turn_seconds": 15.919285300000183,
+      "context": {
+        "whole": 1,
+        "extracted": 0,
+        "omitted": 0,
+        "input_size": 297,
+        "budget": 768,
+        "unit": "tokens",
+        "output_reserved": 128,
+        "safety_reserved": 128,
+        "restored": 0
+      },
+      "common_prefix_with_previous_request_tokens": 5,
+      "identical_to_previous_request": false
+    },
+    {
+      "case": "archive_A_identical_warm",
+      "model_loads": 0,
+      "model_load_seconds": 0,
+      "generations": 1,
+      "selection_during_generate": 0,
+      "selection_seconds_including_counts": 0.001041699999859702,
+      "memory_read_seconds": 0.0000010000001111620804,
+      "tokenizer": {
+        "before_generate": {
+          "calls": 6,
+          "seconds": 0.00488529999961429
+        },
+        "during_generate": {
+          "calls": 0,
+          "seconds": 0
+        }
+      },
+      "native_generate_seconds": 1.7829330999998092,
+      "prompt_tokens": 297,
+      "completion_tokens": 12,
+      "backend": {
+        "last_input_count": 297,
+        "last_token_count": 12,
+        "process_seconds": 54.648,
+        "eval_seconds": 1.5969999389648437
+      },
+      "prepare_turn_seconds": 1.7889494000000923,
+      "context": {
+        "whole": 1,
+        "extracted": 0,
+        "omitted": 0,
+        "input_size": 297,
+        "budget": 768,
+        "unit": "tokens",
+        "output_reserved": 128,
+        "safety_reserved": 128,
+        "restored": 0
+      },
+      "common_prefix_with_previous_request_tokens": 297,
+      "identical_to_previous_request": true
+    },
+    {
+      "case": "archive_B_warm",
+      "model_loads": 0,
+      "model_load_seconds": 0,
+      "generations": 1,
+      "selection_during_generate": 0,
+      "selection_seconds_including_counts": 0.000730799999928422,
+      "memory_read_seconds": 6.000000212225132e-7,
+      "tokenizer": {
+        "before_generate": {
+          "calls": 6,
+          "seconds": 0.003438199999891367
+        },
+        "during_generate": {
+          "calls": 0,
+          "seconds": 0
+        }
+      },
+      "native_generate_seconds": 6.64460639999993,
+      "prompt_tokens": 297,
+      "completion_tokens": 14,
+      "backend": {
+        "last_input_count": 297,
+        "last_token_count": 14,
+        "process_seconds": 15.343924060821534,
+        "eval_seconds": 1.8890000305175783
+      },
+      "prepare_turn_seconds": 6.649008999999978,
+      "context": {
+        "whole": 1,
+        "extracted": 0,
+        "omitted": 0,
+        "input_size": 297,
+        "budget": 768,
+        "unit": "tokens",
+        "output_reserved": 128,
+        "safety_reserved": 128,
+        "restored": 0
+      },
+      "common_prefix_with_previous_request_tokens": 205,
+      "identical_to_previous_request": false
+    },
+    {
+      "case": "oversized_latest_pair_warm",
+      "model_loads": 0,
+      "model_load_seconds": 0,
+      "generations": 1,
+      "selection_during_generate": 0,
+      "selection_seconds_including_counts": 0.004895500000202446,
+      "memory_read_seconds": 0,
+      "tokenizer": {
+        "before_generate": {
+          "calls": 7,
+          "seconds": 0.006005800000366435
+        },
+        "during_generate": {
+          "calls": 0,
+          "seconds": 0
+        }
+      },
+      "native_generate_seconds": 9.42727560000003,
+      "prompt_tokens": 346,
+      "completion_tokens": 12,
+      "backend": {
+        "last_input_count": 346,
+        "last_token_count": 12,
+        "process_seconds": 17.34187203979492,
+        "eval_seconds": 1.5560000610351563
+      },
+      "prepare_turn_seconds": 9.435399700000062,
+      "context": {
+        "whole": 0,
+        "extracted": 1,
+        "omitted": 0,
+        "input_size": 346,
+        "budget": 768,
+        "unit": "tokens",
+        "output_reserved": 128,
+        "safety_reserved": 128,
+        "restored": 0
+      },
+      "common_prefix_with_previous_request_tokens": 189,
+      "identical_to_previous_request": false
+    }
+  ],
+  "model_loads": 1,
+  "platform": "Windows-2022Server-10.0.20348-SP0",
+  "source_commit": "88baf15a41765c1067dc9f1343d6c6cb13830323",
+  "model_source": {
+    "repository": "bartowski/gemma-2-2b-it-GGUF",
+    "revision": "855f67caed130e1befc571b52bd181be2e858883",
+    "file": "gemma-2-2b-it-Q4_K_M.gguf",
+    "sha256": "e0aee85060f168f0f2d8473d7ea41ce2f3230c1bc1374847505ea599288a7787",
+    "bytes": 1708582752,
+    "matches_user_file": "not_verified"
+  },
+  "limits": [
+    "Windows runner is not Pavilion; no extrapolated latency.",
+    "Native path only; no Telegram queue, DB/fsync, UI or TTS.",
+    "Nested timings must not be added.",
+    "Fixed order, synthetic uncommitted repetitions; not a dialogue quality test."
+  ],
+  "console_native_measurements": [
+    {
+      "processed_tokens": 419,
+      "process_seconds": 21.1,
+      "processed_tokens_per_second": 19.85,
+      "generated_tokens": 13,
+      "output_limit": 128,
+      "generation_seconds": 1.78
+    },
+    {
+      "processed_tokens": 1,
+      "process_seconds": 0.13,
+      "processed_tokens_per_second": 7.94,
+      "generated_tokens": 13,
+      "output_limit": 128,
+      "generation_seconds": 1.69
+    },
+    {
+      "processed_tokens": 89,
+      "process_seconds": 4.79,
+      "processed_tokens_per_second": 18.57,
+      "generated_tokens": 17,
+      "output_limit": 128,
+      "generation_seconds": 2.34
+    },
+    {
+      "processed_tokens": 102,
+      "process_seconds": 4.87,
+      "processed_tokens_per_second": 20.94,
+      "generated_tokens": 13,
+      "output_limit": 128,
+      "generation_seconds": 1.29
+    },
+    {
+      "processed_tokens": 292,
+      "process_seconds": 14.32,
+      "processed_tokens_per_second": 20.39,
+      "generated_tokens": 12,
+      "output_limit": 128,
+      "generation_seconds": 1.59
+    },
+    {
+      "processed_tokens": 1,
+      "process_seconds": 0.18,
+      "processed_tokens_per_second": 5.43,
+      "generated_tokens": 12,
+      "output_limit": 128,
+      "generation_seconds": 1.6
+    },
+    {
+      "processed_tokens": 92,
+      "process_seconds": 4.75,
+      "processed_tokens_per_second": 19.36,
+      "generated_tokens": 14,
+      "output_limit": 128,
+      "generation_seconds": 1.89
+    },
+    {
+      "processed_tokens": 157,
+      "process_seconds": 7.87,
+      "processed_tokens_per_second": 19.95,
+      "generated_tokens": 12,
+      "output_limit": 128,
+      "generation_seconds": 1.56
+    }
+  ],
+  "interpretation_warnings": [
+    "backend.process_seconds in this first-run report is an invalid elapsed-time estimate under prefix reuse; use console_native_measurements and native_generate_seconds instead.",
+    "Native DLL telemetry counts full input while average process time applies to newly processed tokens. Raw observations retained unchanged."
+  ]
+}
