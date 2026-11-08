@@ -89,7 +89,7 @@ class SelectedConversationModelTests(unittest.TestCase):
                            closing=False, document_busy=False)
                 # Compile new handler only when present, so the baseline really
                 # follows the old console routing instead of a missing symbol.
-                main = next(n for n in ast.parse(Path('jarvis.py').read_text()).body
+                main = next(n for n in ast.parse(Path('jarvis.py').read_text(encoding='utf-8')).body
                             if isinstance(n, ast.FunctionDef) and n.name == 'main')
                 handler = next((n for n in main.body if isinstance(n, ast.FunctionDef)
                                 and n.name == 'try_model_switch'), None)
