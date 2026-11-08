@@ -1,3 +1,5 @@
+Audit corrente012: [docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md](docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md). Audit richiesto, nessuna modifica runtime o nuova build.
+
 # Ripresa Jarvis — ultima consegna 012
 
 Leggere prima AGENTS.md e [l’handoff corrente](docs/HANDOFF-RIPRESA-JARVIS-012-20261108.md), poi docs/STATO-ATTIVITA.md e la scheda pertinente. Build012 pubblicata; diagnosi del problema Telegram sul PC ancora in attesa del rapporto locale. L’utente ha chiesto di fermarsi dopo pubblicazione: questo checkpoint non autorizza altre modifiche o build.

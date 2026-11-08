@@ -1,3 +1,6 @@
+## Audit latenza012 in corso — 8 novembre 2026
+Nuova richiesta utente: audit del sovraccarico memoria/possibile compressione durante generazione; non una nuova build. Fatti, piano e limiti in [AUDIT-PRESTAZIONI-GEMMA-20261108.md](AUDIT-PRESTAZIONI-GEMMA-20261108.md). Nessun runtime modificato. Aggiunti probe sintetico e workflow Windows per conteggi/load/selelezione/inferenza: esito pendente. Solo controllo AST qui, nessun test funzionale Linux.012 resta la consegna corrente. Prossimo passo: esiti Windows e rapporto, poi proposta minima sulla base delle misure.
+
 ## Handoff di ripresa corrente — build012
 [HANDOFF-RIPRESA-JARVIS-012-20261108.md](HANDOFF-RIPRESA-JARVIS-012-20261108.md) contiene stato, ramo, consegna, vincoli e prossimo controllo Telegram. Richiesta utente: handoff nel repo; nessun nuovo intervento runtime o build. Fermarsi in attesa del rapporto o di nuova istruzione.
 
