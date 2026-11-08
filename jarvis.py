@@ -229,6 +229,7 @@ def main() -> None:
     telegram_status=tk.StringVar(value="Telegram: disattivato.")
     active_context_label=tk.StringVar(value="Contesto: GENERALE")
     active_project_id=None
+    chat_sessions_panel=None
     workspace=None
     try:
         workspace=WorkspaceMemory()
@@ -852,7 +853,15 @@ def main() -> None:
 
     def switch_context(project_id=None) -> bool:
         nonlocal active_project_id,conversation_epoch,pending_preference
-        if busy_gpt or busy_local or document_busy:
+        try:
+            local_chat_active = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            local_chat_active = False  # Legacy project routing remains unchanged.
+        # Do not reject the existing Console->progetto change while Gemma is
+        # busy; its epoch check already revokes the old reply. Only F2 local
+        # chat switching is blocked during generation.
+        if (busy_gpt or busy_local or document_busy
+                or (local_chat_active and gemma_trial_busy[0])):
             write_line("JARVIS > Finisco questa operazione prima di cambiare progetto.")
             return False
         if documents.current is not None or doc_dialog.phase != "idle":
@@ -874,6 +883,17 @@ def main() -> None:
         active_context_label.set(
             "Contesto: "+project["name"][:35] if project_id else "Contesto: GENERALE")
         active_project_id=project_id
+        # Existing project memory persists; only the opted-in chat pane
+        # switches to its separate, project-scoped conversation.
+        try:
+            chat_view_available = (chat_sessions_panel is not None
+                                   and chat_notebook.select() == str(chat_local_tab))
+        except NameError:
+            chat_view_available = False  # Standalone legacy route/unit harness.
+        if chat_view_available:
+            if not chat_sessions_panel.scope_changed():
+                write_line("CHAT > Nuovo contesto non disponibile; apri Console.")
+                chat_notebook.select(chat_console_tab)
         if addon_manager is not None and addon_manager._file_service is not None:
             addon_manager.file_service.reset(project_id)
         if addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None:
@@ -2173,6 +2193,15 @@ def main() -> None:
             return
         if try_self_diagnostic(spoken):
             return
+        try:
+            chat_is_visible = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            chat_is_visible = False
+        if chat_is_visible and gpt_enabled.get():
+            chat_sessions_panel.report_error(
+                "GPT online non è collegato alle chat isolate F2. Disattiva GPT.")
+            write_line("CHAT > Non ho inviato il messaggio a GPT: istanza locale isolata.")
+            return
         if not gpt_enabled.get():
             submit_gemma_voice(spoken)
             return
@@ -2549,7 +2578,16 @@ def main() -> None:
 
     # Native Tk text with a dark ttk scrollbar matches the concept's
     # streamlined chat panel without third-party UI or web technologies.
-    chat_panel = ttk.Frame(hud.console_host)
+    # The original action/log console is retained as-is. Local chat instances
+    # live in a separate tab and never steal its existing output sink.
+    chat_notebook = ttk.Notebook(hud.console_host)
+    chat_notebook.pack(fill="both", expand=True)
+    chat_local_tab = ttk.Frame(chat_notebook)
+    chat_console_tab = ttk.Frame(chat_notebook)
+    chat_notebook.add(chat_local_tab, text="Chat locali")
+    chat_notebook.add(chat_console_tab, text="Console")
+    chat_notebook.select(chat_console_tab)
+    chat_panel = ttk.Frame(chat_console_tab)
     chat_panel.pack(fill="both", expand=True)
     output = tk.Text(
         chat_panel, height=12, wrap="word", state="disabled",
@@ -2571,6 +2609,15 @@ def main() -> None:
                          font=("Segoe UI", 10, "bold"),
                          spacing1=9)
     hud.attach_console(output)
+    from local_model.chat_ui import ChatSessionsPanel
+    chat_sessions_panel = ChatSessionsPanel(
+        chat_local_tab,
+        store_path=default_path().with_name("jarvis_chat_sessions.sqlite3"),
+        get_project_id=lambda: active_project_id,
+        can_change=lambda: chat_navigation_possible(),
+        on_change=lambda old, new: chat_selection_changed(old, new),
+        on_settings=open_native_model_settings)
+    chat_sessions_panel.frame.pack(fill="both", expand=True)
     write_line("Jarvis locale pronto. Scrivi 'aiuto' o premi F1 per la guida e i comandi.")
 
     try:
@@ -3356,6 +3403,15 @@ def main() -> None:
 
     def submit_gpt() -> None:
         if closing:
+            return
+        try:
+            chat_is_visible = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            chat_is_visible = False
+        if chat_is_visible:
+            write_line("CHAT > Invio GPT bloccato: questa istanza è solo locale.")
+            chat_sessions_panel.report_error(
+                "F2: seleziona Console per inviare a GPT online.")
             return
         message = request.get().strip()
         if not message:
@@ -4212,6 +4268,10 @@ def main() -> None:
         message=request.get().strip()
         if not message:
             return
+        try:
+            chat_is_visible = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            chat_is_visible = False  # Standalone legacy router tests.
         if " ".join(message.casefold().strip(" .!?").split()) in (
                 "aiuto", "help", "comandi", "cosa puoi fare", "cosa sai fare"):
             show_help()
@@ -4292,7 +4352,7 @@ def main() -> None:
         if handle_project_reference(message):
             request.set("")
             return
-        if handle_unanchored_short_reply(message):
+        if not chat_is_visible and handle_unanchored_short_reply(message):
             request.set("")
             return
         if try_self_diagnostic(message):
@@ -4300,6 +4360,13 @@ def main() -> None:
             return
         if maybe_queue_telegram_note(message):
             request.set("")
+            return
+        # F2 chat instances are Gemma-only. Never transmit their private
+        # message to GPT silently; other existing console routes stay intact.
+        if chat_is_visible and gpt_enabled.get():
+            chat_sessions_panel.report_error(
+                "Chat isolate F2: disattiva GPT per usare Gemma locale.")
+            write_line("CHAT > Chat isolate: disattiva GPT per parlare con Gemma.")
             return
         # Selection is distinct from connection and local model configuration.
         if gpt_enabled.get():
@@ -4323,6 +4390,11 @@ def main() -> None:
             except (OSError, ValueError) as exc:
                 write_line("GEMMA / CONFIGURAZIONE > " + str(exc))
                 return
+        if chat_is_visible:
+            chat_sessions_panel.report_error(
+                "Nessun GGUF locale pronto. Configura Gemma nelle impostazioni.")
+            write_line("CHAT > Nessun modello locale configurato.")
+            return
         if gpt_enabled.get() and active_gpt:
             if busy_gpt:
                 write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
@@ -4381,6 +4453,59 @@ def main() -> None:
             return gemma_session[0]
 
     gemma_recent_reply = [None]
+
+    def chat_navigation_possible():
+        return not (
+            closing or busy_gpt or busy_local or gemma_trial_busy[0]
+            or document_busy or save_only_waiting
+            or doc_dialog.phase.startswith("awaiting_")
+            or pending_project_name or pending_project_rename_id is not None
+            or pending_project_trash_id is not None
+            or bool(pending_conversation))
+
+    def chat_selection_changed(_old, _new):
+        nonlocal conversation_epoch
+        # One shared inference owner, but separate chat IDs. Revoke prior
+        # follow-up shortcuts after a switch, never erase durable transcripts.
+        conversation_epoch += 1
+        gemma_recent_reply[0] = None
+        # Navigation is refused while follow-ups are queued. Never silently
+        # discard them merely because a new tab or instance was selected.
+
+    previous_chat_tab = [str(chat_console_tab)]
+    changing_chat_tab = [False]
+
+    def on_chat_tab_change(_event=None):
+        if changing_chat_tab[0]:
+            return
+        selected = chat_notebook.select()
+        if selected == previous_chat_tab[0]:
+            return
+        if not chat_navigation_possible():
+            changing_chat_tab[0] = True
+            chat_notebook.select(previous_chat_tab[0])
+            changing_chat_tab[0] = False
+            write_line("CHAT > Termina la richiesta corrente prima di cambiare vista.")
+            return
+        if selected == str(chat_local_tab):
+            if not chat_sessions_panel.activate():
+                changing_chat_tab[0] = True
+                chat_notebook.select(chat_console_tab)
+                changing_chat_tab[0] = False
+                return
+        else:
+            chat_selection_changed(None, None)
+        previous_chat_tab[0] = selected
+
+    chat_notebook.bind("<<NotebookTabChanged>>", on_chat_tab_change)
+
+    def selected_chat_target():
+        if chat_notebook.select() != str(chat_local_tab):
+            return None
+        target = chat_sessions_panel.current_target()
+        if target is None or target[1] != active_project_id:
+            return None
+        return target
 
     def try_gemma_app_followup(utterance):
         from program_apps.service import normalized
@@ -4474,6 +4599,14 @@ def main() -> None:
     def submit_gemma_voice(spoken, *, typed=False):
         if closing or gemma_trial_busy[0]:
             return False
+        try:
+            chat_tab_active = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            chat_tab_active = False
+        chat_target = selected_chat_target() if chat_tab_active else None
+        if chat_tab_active and chat_target is None:
+            write_line("CHAT > Impossibile identificare la conversazione corrente.")
+            return False
         explicit = re.match(r"^con gemma(?:[ ,:]+)(.+)$", spoken, re.I)
         candidates = ()
         if explicit:
@@ -4500,17 +4633,37 @@ def main() -> None:
                 write_line("GEMMA > File sorgente non valido. Nessun invio online.")
                 return False
             gemma_source[0] = source
+        native_context = chat_target[0] if chat_target is not None else active_project_id
+        native_document = documents.current.ident if documents.current else None
+        native_actions = () if explicit else active_addon_actions()
+        if explicit:
+            reader, memory_owner, memory_revision, memory_warnings = (
+                None, None, gemma_memory_revision, [])
+        elif chat_target is not None:
+            from local_model.chat_context import make_chat_history_reader
+            try:
+                reader = make_chat_history_reader(
+                    chat_sessions_panel.store, chat_target[0],
+                    project_id=chat_target[1])
+            except (OSError, sqlite3.Error, ValueError) as exc:
+                write_line("CHAT > Archivio locale non disponibile: " + type(exc).__name__)
+                chat_sessions_panel.report_error(
+                    "Archivio chat non accessibile. Nessuna richiesta inviata.")
+                return False
+            # The sole memory source of a chat instance is its own history.
+            # No automatic global/project Second Brain recall in F2.
+            memory_owner, memory_revision, memory_warnings = (
+                None, gemma_memory_revision, [])
+        else:
+            reader, memory_owner, memory_revision, memory_warnings = (
+                native_memory_request(active_project_id, spoken))
+        # Make the session busy only after the selected chat and its reader
+        # are valid: errors cannot strand the Gemma UI in a busy state.
         gemma_trial_busy[0] = True
         gemma_recent_reply[0] = None
         gemma_button.configure(state="disabled")
         write_line(("GEMMA / DOMANDA > " if typed else "UTENTE / VOCE > ") + spoken)
         voice_epoch = conversation_epoch
-        native_context = active_project_id
-        native_document = documents.current.ident if documents.current else None
-        native_actions = () if explicit else active_addon_actions()
-        reader, memory_owner, memory_revision, memory_warnings = (
-            (None, None, gemma_memory_revision, []) if explicit
-            else native_memory_request(native_context, spoken))
 
         def voice_worker():
             try:
@@ -4538,6 +4691,8 @@ def main() -> None:
                         turn.memory_revision = memory_revision
                         turn.memory_warning = " ".join(memory_warnings)
                         turn.document_snapshot = native_document
+                        turn.chat_target = chat_target
+                        turn.project_snapshot = active_project_id
                     gemma_trial_queue.put(("ok" if typed else "voice_ok", turn, voice_epoch))
             except Exception as exc:
                 gemma_trial_queue.put(("error" if typed else "voice_error", str(exc)[:350], voice_epoch))
@@ -4567,7 +4722,14 @@ def main() -> None:
                 if kind in ("ok", "voice_ok"):
                     from local_model.native_conversation_session import NativeChatTurn
                     if isinstance(value, NativeChatTurn):
-                        if closing or value.context_id != active_project_id:
+                        chat_target = getattr(value, "chat_target", None)
+                        if closing or getattr(value, "project_snapshot", active_project_id) != active_project_id:
+                            continue
+                        if chat_target is not None:
+                            if (value.context_id != chat_target[0]
+                                    or selected_chat_target() != chat_target):
+                                continue
+                        elif value.context_id != active_project_id:
                             continue
                         if (value.context_id is None and value.memory_revision is not None
                                 and value.memory_revision != gemma_memory_revision):
@@ -4618,7 +4780,8 @@ def main() -> None:
                             value.restored_history = ()
                         if not value.commit():
                             continue
-                        # Discrete state-change notice; no persistent transcript log.
+                        # Distinct transcripts are stored only in the opted-in
+                        # chat DB, never in the general Second Brain.
                         context_state = (value.intent_warning, value.context_note)
                         if getattr(value._session, "_last_context_notice", None) != context_state:
                             value._session._last_context_notice = context_state
@@ -4631,7 +4794,17 @@ def main() -> None:
                         can_save = owner is not None and (
                             owner is workspace if value.context_id is not None else
                             owner is durable_brain and memory_enabled.get())
-                        if can_save and remember_exchange(value.question, value.text, "chat") is False:
+                        if chat_target is not None:
+                            try:
+                                chat_sessions_panel.persist_answer(
+                                    chat_target[0], value.question, value.text,
+                                    project_id=chat_target[1])
+                            except (OSError, sqlite3.Error, ValueError) as exc:
+                                write_line("CHAT > Risposta non archiviata: "
+                                           + type(exc).__name__)
+                                chat_sessions_panel.report_error(
+                                    "Errore di salvataggio chat. Non chiudere prima del recupero.")
+                        elif can_save and remember_exchange(value.question, value.text, "chat") is False:
                             write_line("MEMORIA > Scambio non archiviato.")
                         gemma_recent_reply[0] = (
                             voice_epoch, time.monotonic(),
