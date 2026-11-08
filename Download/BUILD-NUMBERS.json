@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 10,
-  "next_build": 11,
+  "latest_build": 11,
+  "next_build": 12,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -145,6 +145,20 @@
       "bytes": 8143340,
       "previous_build": 9,
       "git_blob_sha": "43ac18b1e26eb4f3cc6b729b5651b3d01d8fe5a2"
+    },
+    {
+      "build_number": 11,
+      "label": "011",
+      "archive": "Jarvis-011.zip",
+      "metadata": "Jarvis-011.json",
+      "date": "2026-11-08",
+      "description": "Contesto Gemma in token, recupero scambi recenti e fix listener Telegram",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "eacf527f2a809ec9f05a0343a7b1175e727378de",
+      "sha256": "8d388afe774b62d034c4fc8b7a836493654fa7baee201b4b004df37c39815250",
+      "bytes": 8148551,
+      "previous_build": 10,
+      "git_blob_sha": "9b7ff3623e57ea50477641861bd23cb76ff8532f"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"

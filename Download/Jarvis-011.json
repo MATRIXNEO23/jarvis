@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "build_number": 11,
+  "build_label": "011",
+  "archive": "Jarvis-011.zip",
+  "package_root": "Jarvis-Gemma",
+  "source_commit": "eacf527f2a809ec9f05a0343a7b1175e727378de",
+  "sha256": "8d388afe774b62d034c4fc8b7a836493654fa7baee201b4b004df37c39815250",
+  "bytes": 8148551,
+  "files": 120,
+  "date": "2026-11-07",
+  "status": "candidate_pc_test_pending",
+  "reproducible_different_clock": true,
+  "residual_issues": [
+    "JRV-AUD-016",
+    "JRV-AUD-023"
+  ],
+  "windows_workflow_run": "42455562664",
+  "pc_test": "pending"
+}

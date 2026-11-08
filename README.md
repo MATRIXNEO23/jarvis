@@ -1,3 +1,5 @@
+**Nuova candidata Windows: [Jarvis 011](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-011.zip)** — verificata su Windows, collaudo PC pendente.
+
 **Nuova candidata Windows: [Jarvis 010](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-010.zip)** — verificata su Windows, collaudo PC pendente.
 
 **Nuova candidata Windows: [Jarvis 009](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-009.zip)** — verificata su Windows, collaudo PC pendente.
