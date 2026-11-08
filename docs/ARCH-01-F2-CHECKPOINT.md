@@ -1,5 +1,5 @@
 # ARCH-01 F2 — implementazione incrementale UI chat + sicurezza del contesto
-**Stato:** START / implementazione isolata; nessuna release.
+**Stato:** F2 IMPLEMENTATA E WINDOWS CI VERIFICATA; nessuna build o release.
 **Baseline F1 verificata:** modulo chat SHA `2f3c8d207ab1aff41d578fca6e48d606f7cd00d3`, ramo checkpoint `a5149e0eed1238821b5c2c184426e6e44079d699`, [PR #62](https://github.com/MATRIXNEO23/jarvis/pull/62), Windows 1022 test/job [42529275925](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529275925); 014 originale `88c2934cbd6081f94fb33fba5f87f1800b07ebc0` sempre disponibile. Branch **F2** `feature/jarvis-kobold-chat-f2-20261108` (separato da F1 e diagnostica PR#61).
 
 ## Contratto e gate
@@ -14,11 +14,11 @@
 ## Avanzamento
 | Sottofase | Stato | Evidenza |
 |---|---|---|
-| F2-0 revisione punti di integrazione e piano | IN CORSO | jarvis.py linee console/speech/Gemma/Second Brain lette |
-| F2-1 test e modulo UI locale | DA FARE | — |
-| F2-2 routing chat + isolamento Gemma | DA FARE | — |
-| F2-3 suite Windows, compare e review | DA FARE | — |
-| F2-4 checkpoint/piano aggiornato | DA FARE | — |
+| F2-0 revisione punti di integrazione e piano | FATTO | punti di routing e modalità native/legacy verificati |
+| F2-1 test e modulo UI locale | FATTO | chat_ui.py e tests/test_chat_ui.py, Tk Windows |
+| F2-2 routing chat + isolamento Gemma | FATTO | context_id=chat_id, reader scoped, console preservata |
+| F2-3 suite Windows, compare e review | FATTO | [42532269337](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269337), 1030 test/job |
+| F2-4 checkpoint/piano aggiornato | FATTO | questo documento + main RECUPERO/registro/piano |
 
 ## Rischi particolari
 - `NativeConversationSession.prepare_turn` accetta `context_id` solo come ID hex 32, quindi **usare l'ID della chat come partizione nativa**, non stringhe speciali.
@@ -42,5 +42,11 @@
 - [42531259734](https://github.com/MATRIXNEO23/jarvis/actions/runs/42531259734): 58 ERROR Windows per riferimenti non protetti ai nuovi widget in test legacy che estraggono i gestori senza costruire tutta la UI. Corretto con `try/except NameError` nei soli accessi opzionali; non alterati dispatch legacy o source dei test.
 - [42531814491](https://github.com/MATRIXNEO23/jarvis/actions/runs/42531814491): 2 errori Windows per l'iniziale blocco globale di cambio progetto mentre Gemma era attiva; ripristinata la semantica originale Console, mantenuto blocco solo per chat F2. Non ignorare questi RED: sono registrati per motivare la correzione.
 - [42532269371](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269371): Native tokenizer/owner SUCCESS su sorgente F2 `026f15095`.
-- [42532269337](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269337): suite Windows completa dell'ultimo HEAD F2 **IN CORSO** all'ultima verifica. Non promuovere la fase a GREEN fino a due job success.
+- [42532269337](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269337): suite Windows completa dell'ultimo HEAD F2 **SUCCESS**, 1030 test PASS su ciascuno dei due job Windows (Python 3.11 e 3.12), inclusi test di chat Tk, voce/conversazione, parser comandi e servizi. Log 243.0s e 262.3s rispettivamente. Pubblicazione SKIPPED. Stato F2: GREEN sui sorgenti CI, non collaudo PC.
 - Nessun test Windows10/Pavilion reale, nessun avvio dell'app sul PC dell'utente e nessun ZIP creato/pubblicato.
+
+## Gate finale F2 e ripristino
+**GREEN documentato:** [CI Windows unità/GUI/protocolli 42532269337](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269337) SUCCESS, 1030 test per job Windows 3.11/3.12 e diagnostica servizi PASS. [KoboldCpp tokenizer/owner 42532269371](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269371) SUCCESS. **Fonte esatta verificata:** `026f150953962bffe39404fb62312e1ec5dc8239`; successivi commit solo documentazione e [skip ci]. Delta vs F1: `jarvis.py`, nuovi `local_model/chat_context.py`, `local_model/chat_ui.py`, `tests/test_chat_ui.py` e documenti, niente modifiche a `second_brain.py`, `workspace_memory.py`, `native_provider.py`, `native_bridge.py`, `telegram_bridge.py` o DLL.
+**Residui:** confronto grafico con KoboldAI Lite sul display reale non fatto, nessuna prova Pavilion di audio/mic/TTS/UI/prestazioni, vecchi messaggi possono essere presenti nell'archivio legacy ma NON migrati nella nuova chat, il tasto mostra solo gli ultimi 32 scambi (i più vecchi rimangono nel DB), profilo singolo Gemma soltanto. PR #61 diagnostica non fusa, Qwen e adapter multi-provider API non ancora implementati.
+**Rollback:** chiudere nuova build sperimentale (non pubblicata) e usare fonte F1 per riprendere i lavori oppure estrarre/avviare ZIP014 immutabile. Non cancellare `jarvis_chat_sessions.sqlite3`, Second Brain, progetti o profili. Nessun file del PC utente è stato toccato. **Nessun ZIP/numero versione consumato**.
+**Prossimo gate:** integrazione collaudo visivo e diagnostica prompt F3, poi scegliere in base a dati comparabili se conservare ABI o introdurre KoboldCpp server opzionale. F8 provider API future con credenziali personali è solo pianificata.
