@@ -31,3 +31,17 @@ Data di avvio: 2026-11-08. Questo registro è append-only: correggere le inesatt
 **Specifiche, task, test e gate:** docs/superpowers/plans/2026-11-08-jarvis-014-coerenza-e-prestazioni.md.
 **Rollback previsto:** non promuovere 014 se test semantici/sicurezza falliscono; conservare 012/013 e profilo. Se pubblicata, tornare a ZIP precedente verificato solo dopo backup profilo e confronto differenze schema.
 **Prossimo aggiornamento obbligatorio:** indicare file/simboli realmente cambiati, motivo per ogni modifica, commit, prove RED/GREEN, misure su runner/PC, esito e codice di rollback prima di pubblicare.
+
+
+## JRV-CHANGE-014 — Primo intervento di routing, 8 novembre 2026 (ancora in verifica)
+**Stato:** implementata una prima correzione nei SORGENTI ISOLATI, non in una build pubblicata. PR draft https://github.com/MATRIXNEO23/jarvis/pull/60, ramo fix/jarvis014-native-chat-routing-20261108, base sorgenti 013 b9db9e0dc158b07f0c057cffa7b5c97a6f9ff974.
+**Perché:** domande informative come «Cos'è un buco nero?» e «Consigliami una serie TV» entravano nel parser JSON del catalogo Windows; lo stesso percorso può produrre falsi `system.status` o errori JSON anche nella 012.
+**Cosa cambiato:**
+- tests/test_native_informational_routing.py aggiunto prima del fix: prima CI RED 42513947407, test non importabile perché la funzione richiesta non esisteva (errore previsto; suite preesistente altrimenti in verde).
+- conversation_router.py: nuova funzione conservativa `native_intent_context_for_request` per omettere catalogo/JSON nelle richieste univocamente informative; azioni e richieste ambigue rimangono nel percorso originale.
+- jarvis.py: usa la selezione del formato PRIMA della generazione, senza una seconda chiamata al modello e senza modificare le protezioni di esecuzione.
+- Prima CI dopo fix 42514115267: regressioni individuate in richiesta `Dimmi come sta il computer` e negazione `Non aprire il browser`. Corretto in 07eb750806e48f914a19bd04bc29707ccc2ad69a e test aggiornati in ecf5e1069809e99db00c6ec813c759db166fca3a. Una nuova CI è in esecuzione (42514495366); NON dichiarare GREEN fino al termine.
+**Cosa non cambiato:** parser `parse_native_conversation_intent`, `capability_registry.py`, `action_planner.py`, GGUF/DLL, impostazioni, file dei ricordi, Telegram, add-on e pacchetti 012/013. Nessuna migrazione o cancellazione profilo.
+**Limiti:** classificatore conservativo per frasi informative riconoscibili, non comprensione semantica generale; nessun test locale GGUF sul Pavilion. Il calo di prefill è plausibile (catalogo omesso in chat) ma prestazioni reali e coerenza non ancora misurate.
+**Rollback:** non incorporare il branch nel runtime; 012/013 restano immutabili. Per annullare il prototipo, tornare al source SHA b9db9e0 e non importare i due cambi runtime. Nessun dato utente da migrare.
+**Gate:** accettare solo con test Windows senza regressioni; dopo questa prima fase servono prove reali comparabili e task restanti del piano. Non pubblicare automaticamente.
