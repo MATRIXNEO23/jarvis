@@ -1,3 +1,5 @@
+Correzione prompt Gemma autorizzata e in verifica: [docs/CORREZIONE-PROMPT-GEMMA-20261108.md](docs/CORREZIONE-PROMPT-GEMMA-20261108.md). Leggere stato/handoff per esiti più recenti; nessuna build autorizzata. Questo aggiornamento supera la precedente attesa dopo audit.
+
 Audit latenza012 concluso: [docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md](docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md). Nessuna modifica runtime o nuova build. Proposta minima da concordare, prova Windows reale completata.
 
 # Ripresa Jarvis — ultima consegna 012
