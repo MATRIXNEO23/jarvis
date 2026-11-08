@@ -4501,10 +4501,10 @@ def main() -> None:
                                 and value.memory_revision != gemma_memory_revision):
                             continue
                         if value.allowed_actions is not None:
-                            from conversation_router import parse_conversation_intent, ConversationRejected
+                            from conversation_router import parse_native_conversation_intent, ConversationRejected
                             from dialogue_focus import is_ambiguous_short_reply
                             try:
-                                intent = parse_conversation_intent(
+                                intent = parse_native_conversation_intent(
                                     value.text, utterance=value.question,
                                     has_document=value.document_snapshot is not None,
                                     addon_resolver=(addon_manager.resolve if addon_manager is not None else None))
@@ -4528,8 +4528,8 @@ def main() -> None:
                                     raise ConversationRejected('Formato di risposta locale non supportato.')
                                 value.text = intent.reply
                             except ConversationRejected as exc:
-                                write_line('GEMMA > Nessuna azione eseguita: ' + str(exc))
-                                speak_result('Non ho capito con sicurezza. Puoi precisare la richiesta?')
+                                write_line('GEMMA > Risposta non interpretabile: ' + str(exc))
+                                speak_result('Non riesco a interpretare la risposta di Gemma. Puoi riprovare?')
                                 continue
                         # UI context/epoch cannot change during this synchronous
                         # acceptance. The metadata commit never waits for native inference.

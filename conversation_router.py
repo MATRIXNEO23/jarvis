@@ -336,6 +336,27 @@ def parse_conversation_intent(
     raise ConversationRejected("Tipo di intenzione GPT non consentito.")
 
 
+def parse_native_conversation_intent(raw: str, **kwargs) -> ConversationIntent:
+    """Accept local prose as chat only; structured proposals stay strictly validated.
+
+    This adapter never executes text, repairs JSON or extracts embedded actions.
+    The online parser remains strict and unchanged.
+    """
+    try:
+        if not isinstance(raw, str) or not raw.strip() or len(raw) > MAX_GPT_JSON:
+            raise ConversationRejected("Risposta Gemma non valida o troppo lunga.")
+        text = raw.strip()
+        structured = (text.startswith(("{", "[", "```"))
+                      or "{" in text or "}" in text
+                      or re.search(r'(?i)\b(?:kind|action_id|arguments|tool_id|steps)\s*["\x27]?\s*:', text))
+        if not structured:
+            return ConversationIntent(
+                kind="chat", reply=_plain_text(text, MAX_REPLY, allow_newlines=True))
+        return parse_conversation_intent(raw, **kwargs)
+    except ConversationRejected as exc:
+        raise ConversationRejected(str(exc).replace("GPT", "Gemma")) from exc
+
+
 def _search_scope_question(utterance: str) -> str:
     """A bare search is not permission to pick the browser over the PC."""
     text = normalized_utterance(utterance)
