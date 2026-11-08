@@ -9,7 +9,7 @@ permissions:
 jobs:
   publish:
     name: Publish verified immutable build 014
-    if: github.repository == 'MATRIXNEO23/jarvis' && github.ref == 'refs/heads/main' && github.event.head_commit.message == 'release: publish verified Jarvis 014 once'
+    if: ${{ github.repository == 'MATRIXNEO23/jarvis' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'publish verified Jarvis 014 once') }}
     runs-on: windows-2022
     permissions:
       contents: write
