@@ -214,5 +214,6 @@ class SelectedConversationModelTests(unittest.TestCase):
                     env['send_console_input']()
                 else:
                     harness.receive_voice('Jarvis usa GPT')
-                env['try_telegram_voice_send'].assert_called_once_with('usa GPT')
+                env['try_telegram_voice_send'].assert_called_once_with(
+                    'usa GPT' if channel == 'console' else 'usa gpt')
                 env['toggle_gpt'].assert_not_called()
