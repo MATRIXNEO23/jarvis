@@ -118,11 +118,12 @@ def main():
     session = NativeConversationSession(
         adapter, config_loader=lambda: config, memory_loader=MemoryPreferences)
 
-    def run(name, history, *, intent=catalog, recall=None):
+    def run(name, history, *, intent=catalog, recall=None, history_budget=600):
         nonlocal current, previous_prompt
         # Keep the real session/provider warm. Only reset synthetic RAM history;
         # never clear or reload the native engine/cache between audit cases.
         session.forget_context()
+        session.memory_loader = lambda: MemoryPreferences(history_max_tokens=history_budget)
         # Accepted synthetic fixtures use the production commit path. We do not
         # accept generated answers, so repeated cases have identical inputs.
         for user, answer in history:
@@ -164,6 +165,7 @@ def main():
             raise RuntimeError("Production inference count, phase or budget mismatch.")
         rows.append(current)
         print("NATIVE_PROMPT_PERFORMANCE_CASE=" + json.dumps(current), flush=True)
+        return prompt
 
     try:
         run("catalog_three_pairs_cold", fixtures)
@@ -185,17 +187,25 @@ def main():
         if not 690 <= rows[-1]["prompt_tokens"] <= 715 or rows[-1]["context"]["whole"] != 3:
             raise RuntimeError("Dense fixture did not reproduce a near-701-token whole history.")
         run("catalog_near_701_tokens_identical_warm", dense)
+        bounded = run("bounded_250_same_history", dense, history_budget=250)
+        if (rows[-1]["prompt_tokens"] >= rows[-2]["prompt_tokens"]
+                or rows[-1]["context"]["history_budget"] != 250
+                or rows[-1]["context"]["whole"] < 1
+                or "scatola blu" not in bounded):
+            raise RuntimeError("Bounded context lost its last reference or failed to reduce input.")
         run("catalog_latest_pair_warm", fixtures[-1:])
         run("plain_latest_pair_control_warm", fixtures[-1:], intent=None)
         run("archive_A_warm", fixtures[-1:], recall='{"project":"magazzino A"}')
         run("archive_A_identical_warm", fixtures[-1:], recall='{"project":"magazzino A"}')
         run("archive_B_warm", fixtures[-1:], recall='{"project":"magazzino B"}')
+        if rows[-1]["common_prefix_with_previous_request_tokens"] < 250:
+            raise RuntimeError("Variable recall invalidated the earlier conversation prefix.")
         run("oversized_latest_pair_warm", [(fixtures[-1][0], fixtures[-1][1] * 20)])
         if total_loads != 1 or not rows[1]["identical_to_previous_request"]:
             raise RuntimeError("Unexpected reload or unstable identical fixture.")
         if not rows[-1]["context"].get("extracted"):
             raise RuntimeError("Oversized fixture did not exercise extraction.")
-        report = dict(audit="Jarvis_012_native_prompt_performance", cases=rows,
+        report = dict(audit="Jarvis_bounded_native_prompt_performance", cases=rows,
                       model_loads=total_loads, platform=platform.platform(),
                       source_commit=os.environ.get("AUDIT_SOURCE_SHA", "unspecified"),
                       model_source=json.loads(Path("probe-model-source.json").read_text()),

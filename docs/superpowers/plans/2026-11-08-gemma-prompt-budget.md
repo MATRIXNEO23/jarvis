@@ -31,8 +31,8 @@
 
 ### Task1: regressioni e RED Windows
 **Files:** tests/test_native_prompt_policy.py; .github/workflows/native-context-proof.yml.
-- [ ] Aggiungere regressioni su default, override live128/600, riferimento lungo, collocazione/sanificazione ricordi, profilo legacy/sidecar invalido e UI reale Salva/Reset.
-- [ ] Eseguire prima di cambiare runtime: `python -m unittest discover -s tests -p test_native_prompt_policy.py -v` su Windows; documentare failure comportamentali.
+- [x] Aggiungere regressioni su default, override live128/600, riferimento lungo, collocazione/sanificazione ricordi, profilo legacy/sidecar invalido e UI reale Salva/Reset.
+- [x] Eseguire prima di cambiare runtime: `python -m unittest discover -s tests -p test_native_prompt_policy.py -v` su Windows; documentare failure comportamentali.
 
 ### Task2: modifica minima e GREEN
 **Files:** local_model/memory_preferences.py, native_conversation_session.py, memory_ui.py; local_model/README.md.
@@ -46,3 +46,6 @@
 - [ ] Conservare casi audit600 espliciti; aggiungere stesso input sintetico con250 e confronto prefisso con richiamo A/B. Assert budget con tokenizer reale, ultimo riferimento conservato,1load,1generazione/richiesta.
 - [ ] Review indipendente dei diff esatti e recheck mirato. Prova nativa Windows, tempi come osservazioni del runner e non garanzie Pavilion.
 - [ ] Salvare risultati e limiti nella repo, distinguere sorgente verificato da pacchetto non ancora pubblicato; nessun nuovo ZIP.
+
+## RED osservato e stato della modifica
+628e908, run42499660390/job128789426794:7test,2failure (storia oltre250 e primo turno alterato da richiamo),4errori per nuovo campo API/UI assente,1controllo ruoli già OK. Comando focused del piano, Windows. Nessun import/sintassi mancante. Correzione runtime ora presente nel worktree:3file responsabili e prova nativa aggiornata per confronto600/250; GREEN e review pendenti. Nessun nuovo ZIP.
