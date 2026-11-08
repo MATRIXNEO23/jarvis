@@ -159,7 +159,7 @@ class KoboldServerCanary:
         loaded = self.probe()
         if loaded != expected_model:
             raise KoboldCanaryError(
-                "Modello server diverso da quello selezionato: invio bloccato.")
+                "Il modello del server è diverso da quello selezionato: invio bloccato.")
         result = self._request(
             "/api/v1/generate",
             payload={
