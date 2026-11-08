@@ -1,0 +1,4 @@
+# Gemma: risposta testuale rifiutata come JSON
+Segnalazione: Gemma risponde alla domanda conversazionale «rispondimi al contesto» con un errore «GPT non ha restituito un JSON valido». Fonte009: poll_gemma_trial usa parse_conversation_intent per tutti i turni con allowed_actions impostato; il parser comune pretende JSON ed emette messaggi GPT. Il punto non prova assenza di memoria.
+Correzione autorizzata e circoscritta: accettare testo libero come sola chat locale, mantenendo validazione stretta per ogni payload strutturato e ogni azione. Test callback reale, sessione reale, nessuna inferenza o account; output del modello controllato. Non intervenire qui su riassunti, budget o persistenza, che restano questioni distinte.
+Fase Red: aggiunta tests/test_native_plain_reply.py prima di cambiare runtime. Verifica Windows da leggere. Nessun nuovo pacchetto o pubblicazione autorizzato da «Correggi»;009 immutabile.
