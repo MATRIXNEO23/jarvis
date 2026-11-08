@@ -1,0 +1,86 @@
+{
+  "tested_commit": "ae3649d37da23d446871fbb6c6dbcead2edb72e8",
+  "runtime_commit": "53c711c561c092175c7c732ca58af605b9ae9e45",
+  "pull_request": "https://github.com/MATRIXNEO23/jarvis/pull/57",
+  "workflow_run": 42439513080,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 128605523113,
+      "python": "3.11",
+      "tests": 962,
+      "failures": 0,
+      "errors": 0,
+      "conclusion": "success"
+    },
+    {
+      "id": 128605523168,
+      "python": "3.12",
+      "tests": 962,
+      "failures": 0,
+      "errors": 0,
+      "conclusion": "success"
+    }
+  ],
+  "windows_search_live": "passed job128605523168",
+  "native_reference_probe": {
+    "dll_sha256": "ac834f409855bd7e12a0f0c0ffc8601a663b036b2403d74af4b6b3d3afd49bba",
+    "load_exports_only": true,
+    "real_inference_verified": false
+  },
+  "red_runs": [
+    {
+      "id": 42438204627,
+      "tests": 951,
+      "failures": 8,
+      "errors": 0
+    },
+    {
+      "id": 42438698661,
+      "tests": 958,
+      "failures": 5,
+      "errors": 0
+    }
+  ],
+  "candidate_failures": [
+    {
+      "run": 42439040155,
+      "tests": 960,
+      "failures": 1,
+      "cause": "fixture expected no instructions between first user role and question; corrected without weakening role/history checks"
+    },
+    {
+      "run": 42439173937,
+      "tests": 962,
+      "failures": 2,
+      "cause": "same initial-user assertion and voice expectation uppercase despite established wake-gate lowercase normalization"
+    }
+  ],
+  "review": "independent static review, findings addressed; no runtime tests by reviewer",
+  "verified_scope": [
+    "selected GPT voice/chat/PTT routing",
+    "conversation session consent and policy revocation",
+    "model-switch synonyms and negative mentions",
+    "pending Telegram message routing",
+    "no local fallback for disconnected selected GPT",
+    "queued old ask replies/errors ignored",
+    "Gemma alternating roles and complete exchanges",
+    "isolated contexts and deferred history commits",
+    "serialized character budgets including catalog allowance"
+  ],
+  "pending": [
+    "identity and tokenizer.chat_template of user GGUF",
+    "comparison with actual model Jinja",
+    "real Pavilion microphone/account/GGUF quality and performance",
+    "new package request/build/publication"
+  ],
+  "model_template_sources": [
+    "https://ai.google.dev/gemma/docs/core/prompt-structure",
+    "https://developers.googleblog.com/introducing-gemma3/",
+    "https://github.com/LostRuins/koboldcpp/blob/7e0eb2dc4a23f1a0fc42a7660ad43be7a4b9e759/koboldcpp.py"
+  ],
+  "upstream_python_blob": "7805cd49cd1f7a8f0101aba52721af7a771067af",
+  "new_runtime_dependency": false,
+  "linux_functional_tests_run": false,
+  "new_zip_published": false
+}
