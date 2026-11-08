@@ -89,3 +89,24 @@ class ServiceDiagnosticsUITests(unittest.TestCase):
         env['inspect_jarvis'].assert_not_called()
         for phrase in ('non aprire diagnostica servizi','cosa è la diagnostica servizi?'):
             self.assertIsNone(diagnostic_request(phrase))
+
+    def test_actual_open_callback_reuses_view_and_reopens_after_close(self):
+        import test_activity_status as fixture
+        import tkinter as tk
+        fixture.ActivityStatusTests.setUpClass()
+        root=tk.Tk();root.withdraw();self.addCleanup(root.destroy)
+        settings=tk.Toplevel(root);settings.withdraw();self.addCleanup(settings.destroy)
+        getter=Mock(return_value='Rapporto')
+        env=dict(root=root,settings_window=settings,snapshot_services_report=getter)
+        callback=fixture.ActivityStatusTests().callback('open_service_diagnostics',env)
+        callback();first=root._jarvis_services_diagnostic
+        root.update()
+        callback();self.assertIs(root._jarvis_services_diagnostic,first)
+        first.window.event_generate('<Escape>');root.update()
+        self.assertFalse(first.window.winfo_exists())
+        callback();second=root._jarvis_services_diagnostic
+        self.addCleanup(second.window.destroy)
+        root.update()
+        self.assertIsNot(first,second)
+        self.assertIn('Rapporto',second.text.get('1.0','end'))
+        self.assertFalse(bool(settings.winfo_viewable()))

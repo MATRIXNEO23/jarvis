@@ -8,8 +8,10 @@ import test_telegram_listener_lifecycle as listener
 class ServiceDiagnosticsTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.f = listener.ListenerTests()
+        self.f.addCleanup = self.addCleanup
+        self.f.enterContext = self.enterContext
         await self.f.asyncSetUp()
-        self.addCleanup(self.f.doCleanups)
+        self.terminal_expected = False
 
     def snapshot(self):
         reader = getattr(self.f.bridge, 'diagnostic_snapshot', None)
@@ -25,7 +27,12 @@ class ServiceDiagnosticsTests(unittest.IsolatedAsyncioTestCase):
             await asyncio.sleep(0)
         async def cleanup():
             self.f.bridge.stop()
-            await asyncio.wait_for(task, 2)
+            try:
+                await asyncio.wait_for(task, 2)
+            except listener.TelegramBridgeError:
+                if not self.terminal_expected:
+                    raise
+        self.task = task
         self.addAsyncCleanup(cleanup)
         return client
 
@@ -62,6 +69,19 @@ class ServiceDiagnosticsTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(report['last_error'], 'model_failed')
         self.assertNotIn('PRIVATE_EXCEPTION', str(report))
         self.assertEqual(client.sent, [])
+
+    async def test_disconnect_after_empty_answer_is_a_listener_error_not_a_model_error(self):
+        client = await self.launch()
+        self.f.bridge.reply_with_context = lambda *args:''
+        await client.callback(SimpleNamespace(sender_id=44,is_private=True,out=False,
+            message=SimpleNamespace(id=12,voice=False,message='Ciao')))
+        self.assertEqual(self.snapshot()['last_error'],'reply_empty')
+        self.terminal_expected = True
+        client._disconnected.set_result(None)
+        with self.assertRaises(listener.TelegramBridgeError):
+            await asyncio.wait_for(self.task,2)
+        self.assertEqual(self.snapshot()['last_error'],'listener_failed')
+        self.assertEqual(self.snapshot()['error_phase'],'listening')
 
 
 class ServiceReportTests(unittest.TestCase):
