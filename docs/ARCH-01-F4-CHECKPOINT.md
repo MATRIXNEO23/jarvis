@@ -22,3 +22,12 @@
 | F4.1 GREEN CI Windows | DA FARE | risultati e SHA obbligatori |
 | F4.2 confronto Pavilion | NON ESEGUITO | protocollo F3 e prova utente |
 | Migrazione DLL→server | NON APPROVATA | richiede dati e gate separato |
+
+
+## Implementazione F4.1 e difetti intercettati dai test (9 novembre 2026)
+- **RED** [42534308393](https://github.com/MATRIXNEO23/jarvis/actions/runs/42534308393): test prima del modulo, errore atteso di import per `local_model.kobold_server_canary` mancante. Nessun file Jarvis modificato.
+- Primo candidato `0f590c0dbe025ff244e86988c2397490fd7c255e`: modulo opt-in senza wiring, primo test [42534398145](https://github.com/MATRIXNEO23/jarvis/actions/runs/42534398145) ha segnalato due problematiche **di test/formulazione**, non un trasferimento reale del prompt: errore case-sensitive nel messaggio «modello» e presenza supposta del `ProxyHandler({})` nella lista degli handler. Python può omettere handler vuoti: la sicurezza si verifica accertando che **nessun proxy attivo** sia configurato.
+- Correzioni mirate: `2fe2562b...` messaggio safe, `dacddf7c...` server protetto deve bloccare il tentativo prima di POST, `782f5563...` relativo test, `ce5dfd07bd51229ac3f251c57af2ae3e74da8183` asserzione sul mancato uso dei proxy. Nessun cambio a prompt/formati/route della 014/F3, né altra funzione.
+- **Ultima prova da accertare:** [42534821947](https://github.com/MATRIXNEO23/jarvis/actions/runs/42534821947) suite Windows 3.11/3.12, [42534821971](https://github.com/MATRIXNEO23/jarvis/actions/runs/42534821971) tokenizer nativo. Non usare risultati di commit precedenti per dichiarare green questo HEAD.
+- **Uso previsto solo in laboratorio:** Jarvis/embedded GGUF non deve essere in esecuzione assieme al server standalone su Pavilion; l'app corrente non carica né collega il canary. Avviare manualmente KoboldCpp su `127.0.0.1:5001`, poi richiedere solo `probe()`/lettura `perf()`; una `generate` invia il **prompt raw letterale** solo dopo confronto esatto del nome modello e chiamata esplicita. Non usare testo privato nella prova; il client non salva il contenuto ma il server può stampare output in console.
+- Limite tecnico: test mock dell'interfaccia HTTP non equivalgono al benchmark umano sul PC, né dimostrano che la DLL embedded sia più lenta del server; nessun percorso di rollback degli archivi viene attivato dalla sola importazione del canary.
