@@ -77,3 +77,11 @@ La separazione conversazione/comandi va applicata nel punto più piccolo e sicur
 - Benchmark reale runner Windows, stesso GGUF/seed/output41token buco nero: vecchio prompt258token e22.47s, 014 89token e9.78s. Non sono tempi sul Pavilion.
 - Test unitari Windows [42516477569](https://github.com/MATRIXNEO23/jarvis/actions/runs/42516477569): 1013 test per Python3.11/3.12 SUCCESS. [Workflow release candidata 014](https://github.com/MATRIXNEO23/jarvis/actions/runs/42516477567) verifica GGUF finale superata; test ZIP estratto ancora in corso al momento di questa nota.
 - Source congelato per questo gate: `88c2934cbd6081f94fb33fba5f87f1800b07ebc0`. Nessuna promozione prima del SUCCESS dello ZIP estratto e del download pubblico verificato. Collaudo PC reale resta separato.
+
+
+## Consegna candidata 014 — gate Windows chiusi, collaudo PC aperto
+- `Jarvis-014.zip` pubblicata e verificata: https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-014.zip .
+- Source SHA completo `88c2934cbd6081f94fb33fba5f87f1800b07ebc0`; hash ZIP SHA-256 `f9c9cd92d1443774e48be89674ce04d9897f47d003df0ad11972ab7815d671c0` (8156653 byte).
+- Windows suite 1013 test per Python 3.11 e 3.12 [42516477569](https://github.com/MATRIXNEO23/jarvis/actions/runs/42516477569) SUCCESS; nativo GGUF e ZIP estratto 1013 test più avvio/chiusura [42516477567](https://github.com/MATRIXNEO23/jarvis/actions/runs/42516477567) SUCCESS; pubblicazione/remoto [42517254541](https://github.com/MATRIXNEO23/jarvis/actions/runs/42517254541) SUCCESS.
+- Per una domanda sul buco nero, test reale con output di 41 token identico: prompt catalogo258token/22.47s contro prompt chat014 89token/9.78s sul runner Windows. Ricorda che l'i3-2100 locale non è stato misurato. Falsi JSON evitati sulla serie TV, ma richieste operative ambigue possono richiedere ancora chiarimento.
+- Il completamento del piano significa build CANDIDATA verificata, non garanzia di qualità e velocità sul PC. Prossimo gate: prova reale Pavilion con configurazioni note, eventuale diagnosi mirata se problemi; mantenere i dati e le versioni precedenti. Nessuna nuova build automatica.
