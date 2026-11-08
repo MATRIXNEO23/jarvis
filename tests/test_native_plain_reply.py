@@ -59,6 +59,22 @@ class NativePlainReplyTests(unittest.TestCase):
                 self.assertIn('Gemma', message)
                 self.assertNotIn('GPT', message)
 
+    def test_length_truncation_is_reported_without_execution_or_memory(self):
+        harness, env = self.environment()
+        turn = NativeChatTurn(harness.session, None, "Apri browser",
+                              '{"kind":"capability","action_id":"browser.open",', 0)
+        turn.allowed_actions = frozenset({"browser.open"})
+        turn.finish_reason = "length"
+        turn.completion_tokens = 128
+        env['gemma_trial_queue'].put(('ok', turn, env['conversation_epoch']))
+        env['poll_gemma_trial']()
+        self.assertEqual(list(harness.session.history), [])
+        env['dispatch_model_capability'].assert_not_called()
+        self.assertTrue(any(
+            'limite Max Output raggiunto' in str(call)
+            for call in env['write_line'].call_args_list))
+        self.assertFalse(turn.commit())
+
     def test_invalid_structured_schema_is_still_rejected(self):
         harness, env = self.environment()
         self.deliver(harness, env, '{"kind":"chat","reply":"Ciao","action_id":"browser.open"}')
