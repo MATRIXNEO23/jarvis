@@ -80,9 +80,9 @@ _NATIVE_INFORMATION_START = re.compile(
     r"consigliami\b|mi\s+consigli\b|"
     r"spiegami\b|raccontami\b|parlami\b|"
     r"ti\s+ricordi\b|ricordi\b|"
-    r"mi\s+(?:dici|spieghi)\s+(?:che|come|cosa|perch[eéè])\b|"
-    r"dimmi\s+(?:come|perch[eéè]|che\s+cosa)\b|"
-    r"se\s+(?:dico|scrivo)\b|non\s+(?:aprire|avviare|inviare|mandare)\b|"
+    r"mi\s+spieghi\b|"
+    r"dimmi\s+(?:come\s+(?:funzion\w*|si\s+\w+)|perch[eéè]|che\s+cosa)\b|"
+    r"se\s+(?:dico|scrivo)\b|"
     r"ciao\b|salve\b|buongiorno\b|buonasera\b|grazie\b|"
     r"continua\b|prosegui\b|e\s+(?:poi|perch[eéè])\b"
     r")", re.I,
