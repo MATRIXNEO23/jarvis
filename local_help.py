@@ -27,7 +27,17 @@ def help_sections(engine):
             'F1 apre la guida. Ctrl+L porta il cursore nella casella. Ctrl+, apre le impostazioni.\n'
             'La guida non invia richieste ai modelli e non esegue i comandi mostrati.\n'
             'Le sezioni spiegano esempi e prerequisiti; le funzioni opzionali richiedono attivazione e permessi.',
-        'Comandi locali': 'Per questi comandi usa ⋯ → Esegui locale. Invio/Invia usa il percorso conversazione, salvo i comandi intercettati localmente.\n\n' + engine.available_commands(files_enabled=enabled),
+        'Comandi locali':
+            'Scrivi e premi Invio/Invia: i comandi riconosciuti vengono eseguiti prima di Gemma o GPT. '
+            'Esegui locale resta una scelta facoltativa.\n\n'
+            'apri / avvia / lancia la calcolatrice\n'
+            'apri / avvia / lancia il browser predefinito\n'
+            'stato sistema / mostrami lo stato del sistema / controlla la RAM\n'
+            'apri / mostra Download — apre la cartella in Esplora file\n'
+            'elenca Download — elenco esplicitamente richiesto\n\n'
+            'Apri browser usa il browser predefinito di Windows e non richiede Programmi e app. '
+            'Apri Chrome o apri Edge usa invece il modulo Programmi e app e i suoi permessi.\n\n'
+            + engine.available_commands(files_enabled=enabled),
         'Timer e sveglia':
             'imposta timer sei minuti\navvia un timer da 6 minuti\ntimer 45 secondi\n'
             'pausa timer\nriprendi timer\nquanto manca al timer\nferma timer\nreset timer\n\n'
@@ -45,8 +55,13 @@ def help_sections(engine):
             'Per installazione e problemi usa docs/VOCE_OFFLINE.md distribuita con Jarvis.',
         'Modelli e GPT':
             'La scelta dei modelli non è stata cambiata da questa guida. '
-            'Aiuto, timer e sveglia sono intercettati localmente nella console; file e app seguono i rispettivi controlli. Per gli altri comandi del catalogo locale usa ⋯ → Esegui locale.\n\n'
+            'I comandi locali riconosciuti vengono intercettati nella console prima dei modelli; file e app seguono i rispettivi controlli.\n\n'
             'Con Gemma configurata, la conversazione ordinaria della console usa Gemma. '
+            'Le altre formulazioni possono essere interpretate da Gemma come azioni del catalogo: '
+            'il motore le valida ed esegue, oppure chiede un chiarimento. '
+            'Risposte non valide o annullate non eseguono azioni. '
+            'Se il catalogo non entra nel contesto configurato, compare un avviso: '
+            'restano disponibili chat e comandi diretti, senza cambiare automaticamente le impostazioni. '
             'Chiedi a GPT è il pulsante esplicito per una richiesta al GPT collegato; Prova Gemma locale è una prova del modello.\n\n'
             'GPT richiede abilitazione, collegamento e permesso della funzione. '
             'Mai: nessun invio per quella funzione. Chiedi autorizzazione: domanda prima dell’invio. '
@@ -56,6 +71,8 @@ def help_sections(engine):
         'File e app':
             '\n\n'.join(details) + '\n\n'
             'Configura Accesso file e Programmi e app nelle impostazioni: scegli cartelle, applicazioni e permessi. '
+            'Con Accesso file attivo e Download autorizzata: apri Download, poi apri Foto (nome di una sottocartella), '
+            'poi torna indietro di una cartella. La vista Explorer deve essere identificabile senza ambiguità. '
             'Un esempio non concede accesso. Gli alias personali dipendono dal catalogo attivo. '
             'L’indice autonomo di Jarvis non è implementato: ricerca tramite Windows Search e scansione limitata. '
             'Guide del pacchetto: file_access/LEGGIMI.md e program_apps/LEGGIMI.md.',

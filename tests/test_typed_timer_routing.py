@@ -8,6 +8,7 @@ import unittest
 import tempfile
 from unittest.mock import Mock, patch
 from jarvis_timer import parse_timer_command
+from voice_control import speech_to_local_command
 from sveglia.service import parse_command, next_alarm
 from datetime import datetime
 
@@ -24,7 +25,8 @@ class TypedTimerTests(unittest.TestCase):
         request=SimpleNamespace(value=text)
         request.get=lambda:request.value
         request.set=lambda v:setattr(request,'value',v)
-        env=dict(Path=Path,re=re,request=request,reconcile_document_session=Mock(),try_telegram_voice_send=lambda _:False,
+        env=dict(Path=Path,re=re,speech_to_local_command=speech_to_local_command,
+            request=request,reconcile_document_session=Mock(),try_telegram_voice_send=lambda _:False,
             save_only_waiting=False,doc_dialog=SimpleNamespace(phase='idle'),parse_simple_save=lambda _:None,
             pending_project_name=False,pending_project_rename_id=None,pending_project_trash_id=None,
             try_file_command=lambda _:False,project_voice_command=lambda _:False,preference_command=lambda _:False,

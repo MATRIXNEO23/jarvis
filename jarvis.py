@@ -3144,6 +3144,97 @@ def main() -> None:
                     "Errore locale ("+type(exc).__name__+"): operazione non completata.")))
         threading.Thread(target=worker, daemon=True).start()
 
+    def dispatch_model_capability(cap, original_phrase, doc_snapshot, refinement_token=None):
+        """Shared validated capability dispatch for online and native replies."""
+        current_id = (documents.current.ident
+                      if documents.current else None)
+        if cap is None:
+            announce_document("Azione non disponibile.")
+        elif cap.handler == 'program_apps':
+            from program_apps.service import blocked, protected
+            if (blocked(original_phrase) or protected(original_phrase)
+                    or save_only_waiting or document_busy
+                    or doc_dialog.phase.startswith('awaiting_')
+                    or doc_dialog.phase=='executing'):
+                speak_result('Nessuna app avviata: richiesta negata o altro dialogo in corso.')
+            elif addon_manager is None or not addon_manager.is_active(cap.action_id):
+                speak_result('Programmi e app non è più attivo.')
+            elif not busy_local:
+                submit_local(message_override=original_phrase,
+                    source_utterance=original_phrase,addon_action_id=cap.action_id,
+                    program_call=('launch',{'query':cap.target}))
+            else:
+                speak_result('Operazione locale in corso, riprova.')
+        elif cap.handler == "file_access":
+            if (addon_manager is None or not addon_manager.is_active(cap.action_id)):
+                speak_result("Accesso file non è più attivo.")
+            elif not busy_local:
+                submit_local(message_override=original_phrase,
+                    source_utterance=original_phrase,addon_action_id=cap.action_id,
+                    file_call=(cap.file_operation,
+                        addon_manager.file_service.arguments_for_utterance(
+                            cap.file_operation,dict(cap.file_arguments),original_phrase),
+                        refinement_token) if refinement_token else (cap.file_operation,
+                        addon_manager.file_service.arguments_for_utterance(
+                            cap.file_operation,dict(cap.file_arguments),original_phrase)))
+            else:
+                speak_result("Operazione file già in corso.")
+        elif cap.handler == "local" and cap.plan is not None:
+            # A GPT proposal cannot retain permission after
+            # a local add-on is disabled or uninstalled.
+            if (cap.action_id.startswith("addon.") and
+                    (addon_manager is None or not
+                     addon_manager.is_active(cap.action_id))):
+                speak_result("L'add-on non è più attivo.")
+            elif not busy_local:
+                submit_local(
+                    message_override=cap.plan.steps[0].command,
+                    source_utterance=original_phrase,
+                    addon_action_id=(cap.action_id if
+                        cap.action_id.startswith("addon.")
+                        else ""))
+            else:
+                speak_result("Operazione in corso, riprova.")
+        elif cap.handler == "telegram_voice_dialog":
+            # GPT proposes a name, it never authorizes
+            # a contact or sends audio. Local selection
+            # and two-step owner confirmation are final.
+            try_telegram_voice_send(
+                "manda un messaggio a "+cap.recipient)
+        elif cap.handler == "document_open":
+            if current_id is None:
+                document_operation(
+                    "open", source_utterance=original_phrase)
+            else:
+                announce_document(
+                    "C'è già un Blocco note gestito da Jarvis. "
+                    "Dimmi cosa vuoi scriverci.")
+        elif cap.handler == "document_close":
+            if (doc_snapshot is not None
+                    and current_id == doc_snapshot):
+                ask_to_close_document(original_phrase)
+            else:
+                announce_document(
+                    "Il documento è cambiato; non chiudo nulla.")
+        elif cap.handler == "document_write":
+            if cap.target == "selected_document" and (
+                    doc_snapshot is None
+                    or current_id != doc_snapshot):
+                announce_document(
+                    "La finestra è cambiata: nessun testo inserito.")
+            elif cap.target == "new_notepad" and current_id:
+                announce_document(
+                    "C'è già un documento aperto. "
+                    "Vuoi aggiungere il testo a quello?")
+            else:
+                document_operation(
+                    "compose", content=cap.content,
+                    target=cap.target,
+                    close_after=cap.close_after,
+                    source_utterance=original_phrase)
+        else:
+            announce_document("Azione del catalogo non attiva.")
+
     def submit_gpt() -> None:
         if closing:
             return
@@ -3831,95 +3922,8 @@ def main() -> None:
                                 remember_exchange(original_phrase, intent.reply,
                                                   intent.kind)
                             elif intent.kind == "capability":
-                                cap = intent.capability
-                                current_id = (documents.current.ident
-                                              if documents.current else None)
-                                if cap is None:
-                                    announce_document("Azione non disponibile.")
-                                elif cap.handler == 'program_apps':
-                                    from program_apps.service import blocked, protected
-                                    if (blocked(original_phrase) or protected(original_phrase)
-                                            or save_only_waiting or document_busy
-                                            or doc_dialog.phase.startswith('awaiting_')
-                                            or doc_dialog.phase=='executing'):
-                                        speak_result('Nessuna app avviata: richiesta negata o altro dialogo in corso.')
-                                    elif addon_manager is None or not addon_manager.is_active(cap.action_id):
-                                        speak_result('Programmi e app non è più attivo.')
-                                    elif not busy_local:
-                                        submit_local(message_override=original_phrase,
-                                            source_utterance=original_phrase,addon_action_id=cap.action_id,
-                                            program_call=('launch',{'query':cap.target}))
-                                    else:
-                                        speak_result('Operazione locale in corso, riprova.')
-                                elif cap.handler == "file_access":
-                                    if (addon_manager is None or not addon_manager.is_active(cap.action_id)):
-                                        speak_result("Accesso file non è più attivo.")
-                                    elif not busy_local:
-                                        submit_local(message_override=original_phrase,
-                                            source_utterance=original_phrase,addon_action_id=cap.action_id,
-                                            file_call=(cap.file_operation,
-                                                addon_manager.file_service.arguments_for_utterance(
-                                                    cap.file_operation,dict(cap.file_arguments),original_phrase),
-                                                refinement_token) if refinement_token else (cap.file_operation,
-                                                addon_manager.file_service.arguments_for_utterance(
-                                                    cap.file_operation,dict(cap.file_arguments),original_phrase)))
-                                    else:
-                                        speak_result("Operazione file già in corso.")
-                                elif cap.handler == "local" and cap.plan is not None:
-                                    # A GPT proposal cannot retain permission after
-                                    # a local add-on is disabled or uninstalled.
-                                    if (cap.action_id.startswith("addon.") and
-                                            (addon_manager is None or not
-                                             addon_manager.is_active(cap.action_id))):
-                                        speak_result("L'add-on non è più attivo.")
-                                    elif not busy_local:
-                                        submit_local(
-                                            message_override=cap.plan.steps[0].command,
-                                            source_utterance=original_phrase,
-                                            addon_action_id=(cap.action_id if
-                                                cap.action_id.startswith("addon.")
-                                                else ""))
-                                    else:
-                                        speak_result("Operazione in corso, riprova.")
-                                elif cap.handler == "telegram_voice_dialog":
-                                    # GPT proposes a name, it never authorizes
-                                    # a contact or sends audio. Local selection
-                                    # and two-step owner confirmation are final.
-                                    try_telegram_voice_send(
-                                        "manda un messaggio a "+cap.recipient)
-                                elif cap.handler == "document_open":
-                                    if current_id is None:
-                                        document_operation(
-                                            "open", source_utterance=original_phrase)
-                                    else:
-                                        announce_document(
-                                            "C'è già un Blocco note gestito da Jarvis. "
-                                            "Dimmi cosa vuoi scriverci.")
-                                elif cap.handler == "document_close":
-                                    if (doc_snapshot is not None
-                                            and current_id == doc_snapshot):
-                                        ask_to_close_document(original_phrase)
-                                    else:
-                                        announce_document(
-                                            "Il documento è cambiato; non chiudo nulla.")
-                                elif cap.handler == "document_write":
-                                    if cap.target == "selected_document" and (
-                                            doc_snapshot is None
-                                            or current_id != doc_snapshot):
-                                        announce_document(
-                                            "La finestra è cambiata: nessun testo inserito.")
-                                    elif cap.target == "new_notepad" and current_id:
-                                        announce_document(
-                                            "C'è già un documento aperto. "
-                                            "Vuoi aggiungere il testo a quello?")
-                                    else:
-                                        document_operation(
-                                            "compose", content=cap.content,
-                                            target=cap.target,
-                                            close_after=cap.close_after,
-                                            source_utterance=original_phrase)
-                                else:
-                                    announce_document("Azione del catalogo non attiva.")
+                                dispatch_model_capability(
+                                    intent.capability, original_phrase, doc_snapshot, refinement_token)
                             elif intent.kind == "tool":
                                 if intent.plan is None or busy_local:
                                     speak_result("Sono occupato, riprova.")
@@ -4119,6 +4123,23 @@ def main() -> None:
                  or pending_project_trash_id is not None) and try_timer_command(message)):
             request.set("")
             return
+        if not (pending_project_name or pending_project_rename_id is not None
+                or pending_project_trash_id is not None):
+            # Same trusted recognition as voice, before the generic app guard
+            # and before either model. Execution retains the existing owner.
+            command = speech_to_local_command(message)
+            if command:
+                if handle_project_reference(message):
+                    request.set("")
+                    return
+                if command == "apri blocco note":
+                    document_operation("open", source_utterance=message)
+                elif busy_local:
+                    write_line("Motore locale occupato: riprova.")
+                else:
+                    submit_local(message_override=command, source_utterance=message)
+                request.set("")
+                return
         # Explicit application launches must never become pretend Gemma replies.
         # Only the trusted, user-enabled Programmi e app add-on can launch them.
         if not (pending_project_name or pending_project_rename_id is not None
@@ -4326,6 +4347,8 @@ def main() -> None:
         write_line(("GEMMA / DOMANDA > " if typed else "UTENTE / VOCE > ") + spoken)
         voice_epoch = conversation_epoch
         native_context = active_project_id
+        native_document = documents.current.ident if documents.current else None
+        native_actions = () if explicit else active_addon_actions()
         reader, memory_owner, memory_revision, memory_warnings = (
             (None, None, gemma_memory_revision, []) if explicit
             else native_memory_request(native_context, spoken))
@@ -4339,15 +4362,19 @@ def main() -> None:
                     app_id = candidates[index]["id"] if index is not None else None
                     gemma_trial_queue.put(("program_choice", (spoken, app_id), voice_epoch))
                 else:
+                    from conversation_router import build_native_intent_context
+                    intent_context = build_native_intent_context(
+                        has_document=native_document is not None, addon_actions=native_actions)
                     turn = chat_transport.ask_local_first(
                         spoken, session=session, timeout=180,
                         context_id=native_context, defer_history=True,
-                        memory_context=reader)
+                        memory_context=reader, intent_context=intent_context)
                     from local_model.native_conversation_session import NativeChatTurn
                     if isinstance(turn, NativeChatTurn):
                         turn.memory_owner = memory_owner
                         turn.memory_revision = memory_revision
                         turn.memory_warning = " ".join(memory_warnings)
+                        turn.document_snapshot = native_document
                     gemma_trial_queue.put(("ok" if typed else "voice_ok", turn, voice_epoch))
             except Exception as exc:
                 gemma_trial_queue.put(("error" if typed else "voice_error", str(exc)[:350], voice_epoch))
@@ -4382,10 +4409,43 @@ def main() -> None:
                         if (value.context_id is None and value.memory_revision is not None
                                 and value.memory_revision != gemma_memory_revision):
                             continue
+                        if value.allowed_actions is not None:
+                            from conversation_router import parse_conversation_intent, ConversationRejected
+                            from dialogue_focus import is_ambiguous_short_reply
+                            try:
+                                intent = parse_conversation_intent(
+                                    value.text, utterance=value.question,
+                                    has_document=value.document_snapshot is not None,
+                                    addon_resolver=(addon_manager.resolve if addon_manager is not None else None))
+                                if intent.kind == 'capability':
+                                    from program_apps.service import blocked
+                                    if (intent.capability is None or
+                                            intent.capability.action_id not in value.allowed_actions
+                                            or is_ambiguous_short_reply(value.question)
+                                            or blocked(value.question)):
+                                        raise ConversationRejected('Richiesta di azione non identificata.')
+                                    if (save_only_waiting or document_busy or doc_dialog.phase.startswith('awaiting_')
+                                            or pending_project_name or pending_project_rename_id is not None
+                                            or pending_project_trash_id is not None
+                                            or pending_project_reference.question or telegram_voice_dialog.pending):
+                                        raise ConversationRejected('Un altro dialogo richiede la tua risposta.')
+                                    if value.accept_action():
+                                        dispatch_model_capability(intent.capability, value.question,
+                                                                  value.document_snapshot)
+                                    continue
+                                if intent.kind not in ('chat', 'clarify'):
+                                    raise ConversationRejected('Formato di risposta locale non supportato.')
+                                value.text = intent.reply
+                            except ConversationRejected as exc:
+                                write_line('GEMMA > Nessuna azione eseguita: ' + str(exc))
+                                speak_result('Non ho capito con sicurezza. Puoi precisare la richiesta?')
+                                continue
                         # UI context/epoch cannot change during this synchronous
                         # acceptance. The metadata commit never waits for native inference.
                         if not value.commit():
                             continue
+                        if value.intent_warning:
+                            write_line('GEMMA > ' + value.intent_warning)
                         if value.memory_warning:
                             write_line("MEMORIA > " + value.memory_warning)
                         owner = value.memory_owner

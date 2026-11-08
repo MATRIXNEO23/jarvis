@@ -29,7 +29,7 @@ class LocalEngineTests(TestCase):
 
     def test_list_and_find_downloads(self):
         (self.downloads / "documento prova.txt").write_text("ciao", encoding="utf-8")
-        self.assertIn("documento prova.txt", self.engine.execute("mostra download").message)
+        self.assertIn("documento prova.txt", self.engine.execute("elenca download").message)
         found = self.engine.execute("cerca file prova")
         self.assertEqual(found.status, "completed")
         self.assertIn("documento prova.txt", found.message)
@@ -37,7 +37,7 @@ class LocalEngineTests(TestCase):
     def test_large_download_listing_is_bounded_and_reports_remainder(self):
         for n in range(55):
             (self.downloads / ("file-%03d.txt" % n)).touch()
-        result=self.engine.execute("mostra download")
+        result=self.engine.execute("elenca download")
         self.assertEqual(result.status,"completed")
         self.assertIn("... e altri 25 elementi.",result.message)
         self.assertIn("file-000.txt",result.message)

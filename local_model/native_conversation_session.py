@@ -48,9 +48,18 @@ class NativeChatTurn:
         self.memory_owner = None
         self.memory_revision = None
         self.memory_warning = ""
+        self.allowed_actions = None
+        self.document_snapshot = None
+        self.intent_warning = ""
 
     def commit(self):
         return self._session._commit_turn(self)
+
+    def accept_action(self):
+        """Consume one validated proposal without remembering unexecuted JSON."""
+        if self.allowed_actions is None:
+            return False
+        return self._session._commit_turn(self, store_history=False)
 
 
 class NativeConversationSession:
@@ -117,7 +126,7 @@ class NativeConversationSession:
             self._turns = deque((row for row in self._turns if row[0] != context_id),
                                 maxlen=16)
 
-    def _commit_turn(self, turn):
+    def _commit_turn(self, turn, *, store_history=True):
         # Only a brief metadata lock: accepting an answer must never wait
         # behind a Telegram/model generation holding the inference lock.
         with self._state_lock:
@@ -126,7 +135,8 @@ class NativeConversationSession:
             with self._history_lock:
                 if turn._committed:
                     return False
-                self._turns.append((turn.context_id, turn.question, turn.text[:2000]))
+                if store_history:
+                    self._turns.append((turn.context_id, turn.question, turn.text[:2000]))
                 turn._committed = True
                 return True
 
@@ -160,7 +170,8 @@ class NativeConversationSession:
                 raise RuntimeError("Richiesta Gemma annullata.")
             return turn.text
 
-    def prepare_turn(self, question, *, timeout=180, context_id=None, memory_context=None):
+    def prepare_turn(self, question, *, timeout=180, context_id=None, memory_context=None,
+                     intent_context=None):
         """Generate locally; the UI must validate its epoch before commit()."""
         if not isinstance(question, str) or not question.strip():
             raise ValueError("Domanda locale vuota.")
@@ -179,6 +190,27 @@ class NativeConversationSession:
             turns = self._messages(context_id)[-memory.recent_messages:]
             instructions = "Rispondi in italiano in modo diretto, senza analisi o note interne.\n"
             suffix = "Utente: " + latest + "\nJarvis:"
+            allowed_actions = None
+            intent_warning = ""
+            if intent_context is not None:
+                if (not isinstance(intent_context, tuple) or len(intent_context) != 2
+                        or not isinstance(intent_context[0], str)
+                        or len(intent_context[0]) > 10000
+                        or not isinstance(intent_context[1], tuple)
+                        or any(not isinstance(aid, str) for aid in intent_context[1])):
+                    raise ValueError('Contesto intenzioni locali non valido.')
+                # Reserve system catalog space, keeping the existing data budget
+                # and the model's context/output margin. Saved settings do not change.
+                model_budget = replace(memory, prompt_max_tokens=8192).available_prompt_tokens(
+                    config.context_size, config.max_output)
+                routed_budget = min(model_budget, budget + len(intent_context[0]))
+                if len(intent_context[0]) + len(suffix) <= routed_budget:
+                    instructions = intent_context[0]
+                    budget = routed_budget
+                    allowed_actions = frozenset(intent_context[1])
+                else:
+                    intent_warning = ('Contesto insufficiente per interpretare azioni: '
+                                      'chat e comandi diretti restano disponibili.')
             style = "Stile di risposta: " + " ".join(config.personality.split()) + "\n"
             if config.personality.strip() and len(instructions) + len(style) + len(suffix) <= budget:
                 instructions += style
@@ -208,7 +240,10 @@ class NativeConversationSession:
             self._check_revision(revision)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             answer = clean_native_answer(result.get("text"))
-            return NativeChatTurn(self, context_id, latest, answer, revision)
+            turn = NativeChatTurn(self, context_id, latest, answer, revision)
+            turn.allowed_actions = allowed_actions
+            turn.intent_warning = intent_warning
+            return turn
 
     def ask_isolated(self, build_prompt, *, timeout=180):
         """Share the loaded model without reading or changing chat history."""

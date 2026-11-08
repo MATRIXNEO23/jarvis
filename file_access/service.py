@@ -379,6 +379,8 @@ class FileAccessService:
         if not isinstance(text, str):
             return None
         clean = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+', '', text.strip(), flags=re.I).strip()
+        from voice_control import speech_to_local_command
+        clean = speech_to_local_command(clean) or clean
         low = clean.casefold().strip(' .!?')
         # Explicit project requests retain their existing owner, including project folders.
         if re.match(r'^(?:apri(?:mi)?|mostra(?:mi)?)\s+(?:(?:il|un|un nuovo|nuovo|la cartella del|la cartella di|cartella del|cartella di|cartella)\s+)?progetto\b',low):
@@ -426,7 +428,7 @@ class FileAccessService:
             return ('locate', {'query':app_answer})
         if low in ('annulla ricerca', 'ferma ricerca', 'interrompi ricerca'):
             return ('cancel', {})
-        if low in ('mostra download', 'elenca download', 'lista download'):
+        if low in ('elenca download', 'lista download'):
             return ('list', {'target': 'download'})
         if low in ('apri download', 'apri cartella download'):
             return ('open', {'target': 'download'})

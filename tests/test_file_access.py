@@ -648,7 +648,8 @@ class FileAccessTests(unittest.TestCase):
         folder=self.docs/'Foto'; folder.mkdir()
         intent=parse_conversation_intent(json.dumps({'kind':'clarify','reply':'Quale cartella vuoi aprire?'}))
         tree=ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
-        branch=next(n for n in ast.walk(tree) if isinstance(n,ast.If)
+        poll=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='poll')
+        branch=next(n for n in ast.walk(poll) if isinstance(n,ast.If)
             and isinstance(n.test,ast.Compare) and isinstance(n.test.left,ast.Attribute)
             and n.test.left.attr=='kind' and isinstance(n.test.comparators[0],ast.Tuple)
             and [v.value for v in n.test.comparators[0].elts if isinstance(v,ast.Constant)]==['chat','clarify'])
@@ -712,6 +713,19 @@ class FileAccessTests(unittest.TestCase):
             self.assertEqual(result.status,'completed',result.message)
             self.assertEqual(nav.call_count,4)
             launch.assert_not_called()
+
+    def test_show_download_opens_with_active_file_service_and_respects_revocation(self):
+        with patch('file_access.service.known_folder', return_value=self.docs), patch('subprocess.Popen') as launch:
+            result = self.engine.execute('mostra Download')
+            self.assertEqual(result.status, 'completed', result.message)
+            self.assertEqual(result.action, 'files_open')
+            self.assertIsNone(result.file_listing)
+            self.assertEqual(launch.call_count, 1)
+            self.assertEqual(launch.call_args.args[0][1], str(self.docs))
+            self.files.policy.configure([(self.hidden, True)])
+            result = self.engine.execute('mostra Download')
+            self.assertEqual(result.status, 'rejected', result.message)
+            self.assertEqual(launch.call_count, 1)
 
     def test_explorer_missing_child_does_not_search_and_ambiguous_view_does_not_guess(self):
         self.explorer.return_value={'status':'ok','hwnd':101,'path':str(self.docs),'selected':[]}
@@ -814,6 +828,7 @@ function New-Object {
         calls=[]; projects=[]; request=Mock(); request.get.return_value='apri Foto'
         env={'engine':self.engine,'request':request,'addon_manager':self.manager,'active_project_id':None,'busy_local':False,
              'write_line':lambda *a:None,'speak_result':Mock(),'re':re,'try_timer_command':lambda _:False,
+             'speech_to_local_command':__import__('voice_control').speech_to_local_command,
              'submit_local':lambda **kw:calls.append(kw),
              'reconcile_document_session':lambda **kw:None,'try_telegram_voice_send':lambda s:False,
              'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,

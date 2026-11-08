@@ -90,7 +90,7 @@ class FileRefinementTests(unittest.TestCase):
             online_consent_pending=False,
             messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
         env['chat_transport'] = ChatTransport(env['service'], native=None)
-        for name in ('confirm_gpt_inference','run_gpt','start_file_refinement','accept_file_refinement','submit_local','try_file_command','submit_gpt'):
+        for name in ('confirm_gpt_inference','run_gpt','start_file_refinement','accept_file_refinement','submit_local','try_file_command','dispatch_model_capability','submit_gpt'):
             self.callback(name,env)
         return env,workers
 
