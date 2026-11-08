@@ -54,7 +54,7 @@ def help_sections(engine):
             'Il pulsante MIC mantiene il controllo manuale. Il riconoscimento offline richiede Vosk e il modello vocale. '
             'Per installazione e problemi usa docs/VOCE_OFFLINE.md distribuita con Jarvis.',
         'Modelli e GPT':
-            'GPT ON seleziona GPT per voce, chat e Telegram; GPT OFF seleziona Gemma. '
+            'GPT ON seleziona GPT per voce (anche Premi per parlare), chat e Telegram; GPT OFF seleziona Gemma. '
             'I comandi locali riconosciuti vengono intercettati nella console prima dei modelli; file e app seguono i rispettivi controlli.\n\n'
             'Al primo invio conversazionale a GPT confermi il consenso per la sessione, condiviso fra voce e chat. Un errore di connessione non seleziona Gemma. Torna a Gemma quando lo scegli tu. '
             'Le altre formulazioni possono essere interpretate da Gemma come azioni del catalogo: '

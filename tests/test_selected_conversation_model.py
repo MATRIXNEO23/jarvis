@@ -17,7 +17,7 @@ class SelectedConversationModelTests(unittest.TestCase):
         gemma = Mock(return_value=True)
         online = Mock(return_value=True)
         env = dict(closing=False, voice_mode=SimpleNamespace(get=lambda: 'conversation'),
-                   GPT_CONVERSATION='conversation', CONTINUOUS='continuous',
+                   GPT_CONVERSATION='conversation', CONTINUOUS='continuous', PUSH_TO_TALK='premi_per_parlare',
                    gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=True,
                    busy_gpt=False, try_self_diagnostic=Mock(return_value=False),
                    submit_gemma_voice=gemma, run_gpt=online,

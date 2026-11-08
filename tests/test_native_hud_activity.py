@@ -89,7 +89,7 @@ class NativeHudActivityTests(unittest.TestCase):
         from telegram_bridge import telegram_assistant_prompt, telegram_local_prompt
         self.env.update(get_gemma_session=Mock(return_value=self.session),
                         ask_telegram_gpt=Mock(), telegram_assistant_prompt=telegram_assistant_prompt,
-                        telegram_local_prompt=telegram_local_prompt, settings={})
+                        telegram_local_prompt=telegram_local_prompt, settings={"gpt_enabled": False})
         reply = self.callbacks.callback('ask_telegram_reply', self.env)
         bridge = SimpleNamespace(is_enabled=lambda: True)
         job = self.active(lambda: reply('Ciao', '', bridge, 123))

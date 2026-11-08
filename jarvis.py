@@ -2121,7 +2121,7 @@ def main() -> None:
 
     def start_conversation_gpt(spoken: str) -> None:
         """Use the owner's selected model; connection failure never selects Gemma."""
-        if closing or voice_mode.get() not in (GPT_CONVERSATION, CONTINUOUS):
+        if closing or voice_mode.get() not in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
             return
         if try_self_diagnostic(spoken):
             return
@@ -3606,7 +3606,7 @@ def main() -> None:
                         from voice_control import model_switch_target
                         if model_switch_target(spoken) is not None and try_model_switch(spoken):
                             continue
-                        if voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS):
+                        if voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
                             write_line("TU > " + spoken)
                             if try_file_command(spoken):
                                 continue
@@ -3958,7 +3958,7 @@ def main() -> None:
                     refinement_token=channels[1] if len(channels)>1 else None
                     if (epoch == conversation_epoch and
                             (channel=="typed_conversation" or
-                             voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS)) and
+                             voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK)) and
                             gpt_enabled.get() and active_gpt):
                         try:
                             latest=current_capability_snapshot(documents.current is not None)
@@ -4045,7 +4045,7 @@ def main() -> None:
                         continue
                     if (epoch == conversation_epoch and (
                             channel=="typed_conversation" or
-                            voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS))):
+                            voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK))):
                         write_line("Conversazione GPT: " + reason)
                         speak_result("GPT non è disponibile. Puoi riprovare.")
                         remember_exchange(original_phrase, "GPT non disponibile, riprova.",

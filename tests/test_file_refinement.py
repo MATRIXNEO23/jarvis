@@ -68,7 +68,7 @@ class FileRefinementTests(unittest.TestCase):
             addon_manager=self.manager,engine=self.engine,active_project_id=None,
             documents=SimpleNamespace(current=None),conversation_epoch=7,
             voice_mode=Value(GPT_CONVERSATION),GPT_CONVERSATION=GPT_CONVERSATION,
-            CONTINUOUS=CONTINUOUS,STANDBY=STANDBY,
+            PUSH_TO_TALK="premi_per_parlare",CONTINUOUS=CONTINUOUS,STANDBY=STANDBY,
             speaker=SimpleNamespace(is_audible=lambda:False),speech_lexicon=None,
             memory_enabled=Value(True),last_voice_sample=Value(''),wake_gate=WakeWordGate(),
             refresh_buttons=Mock(),write_line=Mock(),speak_result=Mock(),

@@ -1,3 +1,6 @@
+## Ultimo passo Gemma — 8 novembre 2026
+Scelta modello candidata78d66c2, Windows42438583283 pendente; Red ruoli/coppie/PTT09ebdff, Windows42438698661 pendente. Correzioni formato Gemma in lavorazione dopo avviso, fonti upstream pin e Google lette; piano e lista completa in docs/CORREZIONI-POST-008-20261108.md. Nessun nuovo ZIP/pubblicazione né test Linux.
+
 ## Scelta modello e consenso — candidata in preparazione
 
 Red run42437808013:950test,4failure attese e0errori (voce, chat, consenso ripetuto, Telegram). Ramo fix/model-selection-session-20261108, PR57. Riutilizzati toggle e grant revocabile; modello selezionato distinto dalla connessione. Candidata locale ancora da verificare Windows; nessuna nuova build. Formato/contesto Gemma per ultimi, avvisare prima. Elenco completo in CORREZIONI-POST-008-20261108.md.

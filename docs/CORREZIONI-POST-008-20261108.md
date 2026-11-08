@@ -36,3 +36,8 @@ Formato e contesto Gemma per ultimi. Prima: instradamento voce/chat secondo GPT 
 
 ## Ripresa: Red Windows verificato
 Run42437319811:947 test, un solo failure: GPT selezionato richiama Gemma. Aggiunte prove chat con Gemma configurato, consenso condiviso e revoca, Telegram disconnesso. Runtime invariato; nuovo Red da leggere.
+
+## Checkpoint 8 novembre — candidata e ultimo passo
+Red Windows completo run42438204627:951 test,8 failure di asserzione,0 errori. Gli otto failure includono i quattro sinonimi: il baseline non cambia selezione. Corretto il solo errore UTF-8 della fixture prima di questa prova.
+Candidata scelta/consenso/sinonimi/Telegram:78d66c2, run42438583283 in corso. Revisione indipendente ha trovato due ulteriori problemi: vecchi ask GPT in coda dopo doppio cambio modello e frasi di cambio modello consumate durante composizione Telegram; corretti con epoch e priorità del dialogo pendente, regressioni incluse. Non è una nuova build.
+Ultimo passo avviato dopo avviso: formato/context Gemma2/3. Red aggiuntivo09ebdff, run42438698661 in corso, tre regressioni per ruoli/coppie/PTT. Analisi fonti e soluzione documentate nel piano. Nessun risultato positivo dichiarato prima di leggere Windows.
