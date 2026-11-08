@@ -42,7 +42,7 @@ jobs:
           details=json.loads((home/'Jarvis-014.json').read_text(encoding='utf-8'))
           proof=json.loads((home/'Jarvis-014-validation.json').read_text(encoding='utf-8'))
           expected=hashlib.sha256(archive.read_bytes()).hexdigest()
-          assert details['build_number']==13 and details['sha256']==expected
+          assert details['build_number']==14 and details['sha256']==expected
           assert details['source_commit']==os.environ['VERIFIED_SOURCE']
           assert details['bytes']==archive.stat().st_size
           assert expected=='f9c9cd92d1443774e48be89674ce04d9897f47d003df0ad11972ab7815d671c0', 'Unexpected verified ZIP hash'
@@ -54,13 +54,13 @@ jobs:
           with zipfile.ZipFile(archive) as z:
               assert z.testzip() is None
               version=json.loads(z.read('Jarvis-Gemma/VERSIONE.json'))
-              assert version['source_commit']==details['source_commit'] and version['build_number']==13
+              assert version['source_commit']==details['source_commit'] and version['build_number']==14
           registry_path=Path('Download/BUILD-NUMBERS.json')
           registry=json.loads(registry_path.read_text(encoding='utf-8'))
           for release in registry['releases']:
               assert hashlib.sha256(Path('Download',release['archive']).read_bytes()).hexdigest()==release['sha256']
           target=Path('Download/Jarvis-014.zip')
-          existing=next((r for r in registry['releases'] if r['build_number']==13),None)
+          existing=next((r for r in registry['releases'] if r['build_number']==14),None)
           if existing:
               assert existing['sha256']==expected and hashlib.sha256(target.read_bytes()).hexdigest()==expected, 'Build 014 is immutable'
           else:
@@ -73,7 +73,7 @@ jobs:
               details.update(windows_workflow_run=run,pc_test='pending')
               Path('Download/Jarvis-014.json').write_text(json.dumps(details,indent=2)+'\n',encoding='utf-8')
               Path('Download/Jarvis-014-validation.json').write_text(json.dumps(proof,indent=2)+'\n',encoding='utf-8')
-              registry['releases'].append(dict(build_number=13,label='014',archive=target.name,metadata='Jarvis-014.json',date='2026-11-08',description='Gemma conversazione naturale e routing sicuro con diagnostica stopreason',status='candidate_pc_test_pending',source_commit=details['source_commit'],sha256=expected,bytes=archive.stat().st_size,previous_build=13,git_blob_sha=subprocess.check_output(['git','hash-object',str(target)],text=True).strip()))
+              registry['releases'].append(dict(build_number=14,label='014',archive=target.name,metadata='Jarvis-014.json',date='2026-11-08',description='Gemma conversazione naturale e routing sicuro con diagnostica stopreason',status='candidate_pc_test_pending',source_commit=details['source_commit'],sha256=expected,bytes=archive.stat().st_size,previous_build=13,git_blob_sha=subprocess.check_output(['git','hash-object',str(target)],text=True).strip()))
               registry.update(latest_build=14,next_build=15)
               registry_path.write_text(json.dumps(registry,indent=2)+'\n',encoding='utf-8')
               url='https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-014.zip'
