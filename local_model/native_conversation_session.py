@@ -249,7 +249,11 @@ class NativeConversationSession:
                     archived_pairs.append(canonical)
                 restored = len(archived_pairs)
                 pairs = archived_pairs[-pair_limit:]
-            instructions = ("Rispondi in italiano in testo naturale, non JSON; "+"senza analisi interne. Dai risposte pertinenti e, se consigli qualcosa, "+"spiega brevemente perché.\\n")
+            instructions = (
+                "Rispondi in italiano in testo naturale, non JSON; "
+                "senza analisi interne. Dai risposte pertinenti e, se consigli qualcosa, "
+                "spiega brevemente perché.\n"
+            )
             allowed_actions = None
             intent_warning = ""
 
