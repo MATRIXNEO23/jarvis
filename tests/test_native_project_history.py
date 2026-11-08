@@ -40,7 +40,9 @@ class CapturedAdapter:
         if self.on_reply is not None:
             callback, self.on_reply = self.on_reply, None
             callback()
-        return {"text": "Risposta locale " + str(len(self.prompts))}
+        reply = "Risposta locale " + str(len(self.prompts))
+        return {"text": (json.dumps({'kind':'chat','reply':reply})
+                         if 'ID consentiti:' in prompt else reply)}
 
 
 @unittest.skipUnless(os.name == "nt", "Windows-only project requirement")
@@ -86,6 +88,7 @@ class NativeProjectHistoryTests(unittest.TestCase):
             memory_status=callbacks.Value(""), memory_status_refresh=Mock())
         self.harness = callbacks.ActivityStatusTests()
         for name in ("switch_context", "native_memory_request", "remember_exchange",
+                     "active_addon_actions", "dispatch_model_capability",
                      "submit_gemma_voice", "poll_gemma_trial"):
             self.harness.callback(name, self.env)
 

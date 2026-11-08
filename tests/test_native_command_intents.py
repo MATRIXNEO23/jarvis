@@ -2,11 +2,13 @@
 import json
 import os
 import sqlite3
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
 import test_native_project_history as fixture
 from local_engine import LocalEngine
+from dialogue_focus import PendingProjectReference
 
 
 @unittest.skipUnless(os.name == 'nt', 'Windows-only project')
@@ -24,6 +26,7 @@ class NativeCommandIntentTests(unittest.TestCase):
         self.env.update(engine=self.engine, save_only_waiting=False,
             pending_project_name=False, pending_project_rename_id=None,
             pending_project_trash_id=None, announce_document=Mock(),
+            pending_project_reference=PendingProjectReference(),
             document_operation=Mock(), try_telegram_voice_send=Mock(return_value=False))
         def submit_local(*, message_override, **kwargs):
             self.engine.execute(message_override)
@@ -92,3 +95,75 @@ class NativeCommandIntentTests(unittest.TestCase):
         self.assertEqual(self.actions(), [])
         self.assertEqual(list(self.owner.session.history), [
             ('user','Parliamo di cinema'), ('assistant','Parliamo pure di cinema.')])
+
+    def test_malformed_native_reply_never_executes_or_becomes_chat_history(self):
+        with patch.object(self.owner.adapter, 'call', return_value={
+                'text':'{"kind":"capability","action_id":"browser.open",'}):
+            self.ask('Mi serve una finestra per navigare')
+        self.assertEqual(self.actions(), [])
+        self.assertEqual(list(self.owner.session.history), [])
+        self.owner.online.call.assert_not_called()
+
+    def test_session_stop_revokes_already_generated_action(self):
+        with self.model('system.status'):
+            self.owner.submit('Dimmi come sta il computer')
+            self.owner.workers.pop()()
+        self.owner.session.stop()
+        self.env['poll_gemma_trial']()
+        self.assertEqual(self.actions(), [])
+        self.assertEqual(list(self.owner.session.history), [])
+
+    def test_negated_request_cannot_authorize_model_proposal(self):
+        with self.model('browser.open'), patch('local_engine.webbrowser.open') as browser:
+            self.ask('Non aprire il browser')
+        browser.assert_not_called()
+        self.assertEqual(self.actions(), [])
+        self.assertEqual(list(self.owner.session.history), [])
+
+    def test_new_pending_dialogue_blocks_generated_action(self):
+        with self.model('system.status'):
+            self.owner.submit('Dimmi come sta il computer')
+            self.owner.workers.pop()()
+        self.env['document_busy'] = True
+        self.env['poll_gemma_trial']()
+        self.assertEqual(self.actions(), [])
+        self.assertEqual(list(self.owner.session.history), [])
+
+    def test_changed_document_cannot_be_closed_by_old_proposal(self):
+        close = self.env['ask_to_close_document'] = Mock()
+        self.env['documents'].current = SimpleNamespace(ident='old-document')
+        with self.model('notepad.close'):
+            self.owner.submit('Chiudi il documento che avevi aperto')
+            self.owner.workers.pop()()
+        self.env['documents'].current = SimpleNamespace(ident='new-document')
+        self.env['poll_gemma_trial']()
+        close.assert_not_called()
+        self.env['announce_document'].assert_called_once()
+        self.assertEqual(list(self.owner.session.history), [])
+
+    def test_revoked_addon_is_rechecked_before_native_dispatch(self):
+        from addon_manager import AddonManager
+        from live_capabilities import LiveCapabilityRegistry
+        from pathlib import Path
+        manager = AddonManager(LiveCapabilityRegistry(), self.owner.workspace.path.parent/'addons')
+        manager.install(Path('examples/addons/DiagnosticaSistema.jaddon'))
+        manager.set_enabled('diagnostica_sistema', True)
+        self.env['addon_manager'] = manager
+        with self.model('addon.diagnostica_sistema.stato'):
+            self.owner.submit('Controlla lo stato del PC')
+            self.owner.workers.pop()()
+        manager.set_enabled('diagnostica_sistema', False)
+        self.env['poll_gemma_trial']()
+        self.assertEqual(self.actions(), [])
+        self.assertEqual(list(self.owner.session.history), [])
+
+    def test_small_context_preserves_chat_without_adding_action_authority(self):
+        from local_model.native_config import NativeModelConfig
+        self.owner.session.config_loader = lambda: NativeModelConfig(context_size=512, max_output=128)
+        self.ask('Parliamo di cinema')
+        self.assertEqual(self.actions(), [])
+        self.assertEqual(list(self.owner.session.history), [
+            ('user','Parliamo di cinema'), ('assistant','Risposta locale 1')])
+        self.assertLessEqual(len(self.owner.adapter.prompts[-1]), 256)
+        self.assertTrue(any('Contesto insufficiente' in str(call)
+                            for call in self.env['write_line'].call_args_list))

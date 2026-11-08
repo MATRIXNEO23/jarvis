@@ -99,6 +99,8 @@ class ActivityStatusTests(unittest.TestCase):
         return env[name]
 
     def receive(self, kind, env):
+        if kind == 'conversation_ok' and 'dispatch_model_capability' not in env:
+            self.callback('dispatch_model_capability', env)
         actual, *data = env["output_queue"].get_nowait()
         self.assertEqual(actual, kind)
         branch = next(n for n in ast.walk(self.poll) if isinstance(n, ast.If)

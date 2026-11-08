@@ -245,7 +245,9 @@ class NativeDurableMemoryTests(unittest.TestCase):
         prompt = self.ask("Che ricordi della nebulosa?")
         self.assertIn("‹start_of_turn›system", prompt)
         self.assertNotIn("<start_of_turn>system", prompt)
-        self.assertLessEqual(len(prompt), 1200)
+        # Routing instructions have their own system allocation; model context
+        # still reserves 128 output tokens and the existing 128 margin.
+        self.assertLessEqual(len(prompt), 1792)
         self.fixture.session.config_loader = lambda: NativeModelConfig(context_size=512, max_output=128)
         question = "Q" * 200
         prompt = self.ask(question)
