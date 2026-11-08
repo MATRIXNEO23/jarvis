@@ -1,0 +1,1 @@
+Build 008 pubblicata in Download con hash verificato. Fonte: workflow 42431542519, 946 test per versione Python e 946 sul pacchetto estratto. Nessun file runtime su main modificato; build precedenti preservate. Collaudo PC reale pendente.

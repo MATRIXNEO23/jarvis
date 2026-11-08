@@ -1,3 +1,11 @@
+## Build 008 — Comandi interni e Gemma
+
+[Scarica Jarvis-008.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-008.zip)
+
+Comandi interni con sinonimi, browser predefinito, help aggiornato e interpretazioni Gemma collegate agli esecutori esistenti. Due job Windows e 946 test sullo ZIP estratto superati. Estrai in una cartella nuova; collaudo Pavilion, microfono e GGUF reale pendente.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42431542519). SHA-256: `63c1d46e4402229a20a0849c0d91266ce81e7075d74cba65160c10f08bfceea4`.
+
 # Jarvis007 — timer scritto e guida locale
 
 **[Scarica Jarvis-007.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-007.zip)**

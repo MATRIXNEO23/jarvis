@@ -1,3 +1,11 @@
+## Build 008 — Comandi interni e Gemma
+
+[Scarica Jarvis-008.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-008.zip)
+
+Comandi interni con sinonimi, browser predefinito, help aggiornato e interpretazioni Gemma collegate agli esecutori esistenti. Due job Windows e 946 test sullo ZIP estratto superati. Estrai in una cartella nuova; collaudo Pavilion, microfono e GGUF reale pendente.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42431542519). SHA-256: `63c1d46e4402229a20a0849c0d91266ce81e7075d74cba65160c10f08bfceea4`.
+
 # Registro autorevole — versioni, sorgenti e pacchetti
 
 Aggiornamento documentale del 7 novembre 2026. Questo è l'ingresso per scegliere una versione: la radice di main è storica e non coincide con il runtime Gemma. Le sezioni successive conservano la cronologia. 001–005 appartengono alla serie precedente.006 prosegue la numerazione includendo il runtime Gemma e le correzioni audit; il profilo resta Gemma-Trial.

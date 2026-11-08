@@ -1,3 +1,5 @@
+**Nuova candidata Windows: [Jarvis 008](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-008.zip)** — verificata su Windows, collaudo PC pendente.
+
 > **Ultima candidata: [Jarvis007](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-007.zip)** — timer scritto, aiuto locale e tasti rapidi. [Consegna](docs/CONSEGNA-JARVIS-007-20261107.md), [handoff](docs/HANDOFF-JARVIS-007-20261107.md). Collaudo PC pendente; vecchie versioni conservate.
 
 > **Nuova candidata Windows: [Jarvis 006](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-006.zip)** — correzioni audit con Gemma; [prove e istruzioni](docs/CONSEGNA-JARVIS-006-20261107.md). Collaudo sul PC ancora da fare. Versioni precedenti conservate.

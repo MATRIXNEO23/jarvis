@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 7,
-  "next_build": 8,
+  "latest_build": 8,
+  "next_build": 9,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -103,6 +103,20 @@
       "bytes": 8138643,
       "previous_build": 6,
       "git_blob_sha": "123cf245e45b69128ca1b032c09590e639e8b9d6"
+    },
+    {
+      "build_number": 8,
+      "label": "008",
+      "archive": "Jarvis-008.zip",
+      "metadata": "Jarvis-008.json",
+      "date": "2026-11-08",
+      "description": "Comandi interni e sinonimi, browser predefinito, help e raccordo Gemma alle azioni",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "a2d982b6deae1d4e39f16a0dcbe4ba8c7d35f988",
+      "sha256": "63c1d46e4402229a20a0849c0d91266ce81e7075d74cba65160c10f08bfceea4",
+      "bytes": 8141102,
+      "previous_build": 7,
+      "git_blob_sha": "cfe7990ee5511522cbe90df8ef25f5538d5f98ee"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"
