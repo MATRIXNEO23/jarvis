@@ -9,8 +9,8 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 25
     env:
-      JARVIS_BUILD_NUMBER: '8'
-      JARVIS_EXPECTED_TESTS: '946'
+      JARVIS_BUILD_NUMBER: '9'
+      JARVIS_EXPECTED_TESTS: '962'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -53,13 +53,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Packaged Python syntax failed' }
           python -m unittest discover -s tests -p test_native_conversation_session.py -v
           if ($LASTEXITCODE -ne 0) { throw 'Packaged Gemma tests failed' }
-      - name: Prepare numbered candidate 008 without changing runtime scripts
+      - name: Prepare numbered candidate 009 without changing runtime scripts
         run: python tools/prepare_build006.py
-      - name: Verify actual extracted candidate 008 on Windows
+      - name: Verify actual extracted candidate 009 on Windows
         run: python tools/check_build006.py
       - uses: actions/upload-artifact@v4
         with:
-          name: Jarvis-008
+          name: Jarvis-009
           path: dist/*
           retention-days: 30
           if-no-files-found: error
