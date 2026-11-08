@@ -90,3 +90,11 @@ Il riferimento *grafico* al frontend upstream non autorizza a copiarne sorgenti 
 - Se un passaggio peggiora la qualità/coerenza, sbaglia tag Qwen, mischia istanze o rompe sicurezza delle azioni, si ferma e si torna al commit precedente.
 - Nessun nuovo costo, account o API remota; l'accesso HTTP, se introdotto, resta loopback isolato.
 - L'autorizzazione dell'utente copre l'avvio dell'implementazione passo passo e salvataggio del piano, **non autorizza automaticamente nuove release** né riscritture invasive.
+
+
+## Stato di avanzamento e checkpoint verificato — 8 novembre 2026
+- F0: **COMPLETATA**. Piano versionato su main, source 014 congelato e branch isolato.
+- F1: **COMPLETATA NEI SORGENTI**. PR draft [#62](https://github.com/MATRIXNEO23/jarvis/pull/62), modulo `local_model/chat_sessions.py` e test, source `2f3c8d207ab1aff41d578fca6e48d606f7cd00d3`. RED [42529168718](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529168718), GREEN [42529275925](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529275925) **1022 test PASS per Windows 3.11 e 3.12**, prova nativa [42529275993](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529275993) SUCCESS. Documentazione verificabile `docs/ARCH-01-F1-CHECKPOINT.md` sul ramo.
+- F2: **PROSSIMA**, non iniziata. Deve mantenere le stesse garanzie e leggere il checkpoint; non collegare il Second Brain globale alla nuova chat senza rispettare i confini. La chat nuova non appare ancora nella UI di Jarvis 014.
+- F3–F7: **NON INIZIATE**. Diagnostica prompt PR#61 resta separata.
+- Release: **NESSUN nuovo ZIP**, 014 intatta; nessun test utente Pavilion attribuito a F1.
