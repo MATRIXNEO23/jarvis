@@ -90,3 +90,26 @@ Il riferimento *grafico* al frontend upstream non autorizza a copiarne sorgenti 
 - Se un passaggio peggiora la qualità/coerenza, sbaglia tag Qwen, mischia istanze o rompe sicurezza delle azioni, si ferma e si torna al commit precedente.
 - Nessun nuovo costo, account o API remota; l'accesso HTTP, se introdotto, resta loopback isolato.
 - L'autorizzazione dell'utente copre l'avvio dell'implementazione passo passo e salvataggio del piano, **non autorizza automaticamente nuove release** né riscritture invasive.
+
+
+## Stato di avanzamento e checkpoint verificato — 8 novembre 2026
+- F0: **COMPLETATA**. Piano versionato su main, source 014 congelato e branch isolato.
+- F1: **COMPLETATA NEI SORGENTI**. PR draft [#62](https://github.com/MATRIXNEO23/jarvis/pull/62), modulo `local_model/chat_sessions.py` e test, source `2f3c8d207ab1aff41d578fca6e48d606f7cd00d3`. RED [42529168718](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529168718), GREEN [42529275925](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529275925) **1022 test PASS per Windows 3.11 e 3.12**, prova nativa [42529275993](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529275993) SUCCESS. Documentazione verificabile `docs/ARCH-01-F1-CHECKPOINT.md` sul ramo.
+- F2: **PROSSIMA**, non iniziata. Deve mantenere le stesse garanzie e leggere il checkpoint; non collegare il Second Brain globale alla nuova chat senza rispettare i confini. La chat nuova non appare ancora nella UI di Jarvis 014.
+- F3–F7: **NON INIZIATE**. Diagnostica prompt PR#61 resta separata.
+- Release: **NESSUN nuovo ZIP**, 014 intatta; nessun test utente Pavilion attribuito a F1.
+
+
+## Requisito aggiuntivo ARCH-01 / F8 — provider online con chiavi API (richiesta 8 novembre 2026, durante la F2)
+**Stato: progettato, non implementato in F2.** L'utente desidera aggiungere, oltre a GPT e ai GGUF locali, un selettore di più provider online utilizzando chiavi API personali, compresi endpoint con piano gratuito quando effettivamente disponibile. Evitare di promettere gratuità permanente o compatibilità con ogni provider.
+
+**Contratto proposto per F8, dopo F2 e i gate modelli F5:**
+1. Estendere lo stesso selettore modelli/provider della chat: `Locale KoboldCpp`, `GPT collegato`, `API provider`, con configurazione separata per ogni provider e modello. Supportare un adapter standard OpenAI-compatible **solo quando** gli endpoint sono realmente compatibili; adapter specifico per gli altri.
+2. Parametri per provider `base_url`, `model_id`, `max_output`, `context`, `temperature`, timeout, budget/limiti e capabilities, senza convertire automaticamente JSON o tool calling fra formati eterogenei.
+3. Credenziali archiviate mediante Windows Credential Manager o protezione equivalente del sistema, non in JSON plaintext, log, prompt, clipboard automatica, SQLite chat o repository. Import/export profili **senza segreti**. Connessioni HTTPS verso endpoint ufficiali, no HTTP non locale, nessuna esecuzione arbitraria di URL suggeriti dal modello.
+4. Ogni chat con provider/modello selezionato; costo e privacy visibili prima dell'invio. Nessun fallback invisibile dal locale a provider online e nessun invio di Second Brain/documenti/progetti senza consenso esplicito e policy per fonte. Separare le conversazioni e gli spazi di progetto anche fra servizi.
+5. Il piano gratuito, rate limit, accesso API e condizioni cambiano: catalogo solo da fonti ufficiali e ricontrollo al momento dell'integrazione; non trattare abbonamento ChatGPT come credito API.
+6. Errori quota, rete, autorizzazione e provider gestiti senza perdere il messaggio e senza eseguire azioni. Nessuna esecuzione azioni locali da testo del provider senza attuale validatore e permessi.
+7. Mock test offline (chiavi mai vere in CI), test di concorrenza/cancellazione, protezione credenziali, backup non distruttivo e controllo consumi. Nessun nuovo SDK obbligatorio per chi usa solo Gemma.
+
+**Ordine:** F2 chat/console e isolamento → F3 diagnostica/benchmark → F4/F5 motore/template e picker → F6 memoria/caching → F8 adapter API online (può precedere la F7 di rilascio finale, ma non entra nella build F2). **Rollback:** disattivare adapter e usare percorso locale 014; non cancellare le credenziali o le chat salvo richiesta esplicita. Nessuna implementazione o account API creati in questa fase.
