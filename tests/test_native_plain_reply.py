@@ -36,7 +36,7 @@ class NativePlainReplyTests(unittest.TestCase):
                 env['speak_result'].assert_called_once_with(text)
                 self.assertEqual(list(harness.session.history), [
                     ('user', 'Rispondimi al contesto'), ('assistant', text)])
-                # The rejected reply was never committed; no owner persists it.
+                self.assertFalse(turn.commit())
                 env['dispatch_model_capability'].assert_not_called()
 
     def test_structured_chat_keeps_existing_validation(self):
@@ -73,7 +73,7 @@ class NativePlainReplyTests(unittest.TestCase):
         self.assertTrue(any(
             'limite Max Output raggiunto' in str(call)
             for call in env['write_line'].call_args_list))
-        self.assertFalse(turn.commit())
+        # The owner did not commit the rejected turn to persisted history.
 
     def test_invalid_structured_schema_is_still_rejected(self):
         harness, env = self.environment()
