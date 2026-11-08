@@ -26,4 +26,11 @@ def make_chat_history_reader(store, chat_id, *, project_id=None):
         return store.recent_pairs(chat_id, project_id=project_id, count=count)
 
     read.recent_pairs = recent_pairs
+    # Observability only: the prompt viewer must never mislabel this scoped
+    # reader as global Second Brain or a legacy project memory owner.
+    read.diagnostic_history_source = (
+        "ChatSessionsStore.recent_pairs: istanza isolata ("
+        + ("progetto" if project_id is not None else "generale") + ")")
+    read.diagnostic_recall_source = (
+        "Nessuno: Chat locali F2 non richiama Second Brain automaticamente")
     return read
