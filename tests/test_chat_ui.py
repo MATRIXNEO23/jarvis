@@ -44,6 +44,56 @@ class ScopedGemmaReaderTests(unittest.TestCase):
             make_chat_history_reader(self.store, general.id, project_id=p)
 
 
+class NativeScopedHistoryTests(unittest.TestCase):
+    def test_jarvis_native_gemma_reuses_only_selected_chat_context(self):
+        from local_model.memory_preferences import MemoryPreferences
+        from local_model.native_config import NativeModelConfig
+        from local_model.native_conversation_session import NativeConversationSession
+        from test_native_conversation_session import FakeAdapter
+
+        class CountingAdapter(FakeAdapter):
+            def context_token_counter(self):
+                return lambda text: max(1, (len(text) + 3) // 4)
+
+        with tempfile.TemporaryDirectory() as temp:
+            store = ChatSessionStore(Path(temp) / "scoped.sqlite3")
+            alpha = store.create_chat("Stelle")
+            beta = store.create_chat("Musica")
+            adapter = CountingAdapter()
+            def new_session():
+                return NativeConversationSession(
+                    adapter,
+                    config_loader=lambda: NativeModelConfig(
+                        context_size=1024, max_output=256),
+                    memory_loader=lambda: MemoryPreferences(
+                        recent_messages=8, history_max_tokens=250))
+            session = new_session()
+            reader_a = make_chat_history_reader(store, alpha.id)
+            reader_b = make_chat_history_reader(store, beta.id)
+            answer_a = session.ask("La stella Arturo", context_id=alpha.id,
+                                   memory_context=reader_a)
+            store.append_exchange(alpha.id, "La stella Arturo", answer_a)
+            answer_b = session.ask("Il violino Stradivari", context_id=beta.id,
+                                   memory_context=reader_b)
+            store.append_exchange(beta.id, "Il violino Stradivari", answer_b)
+            session.ask("Approfondisci Arturo", context_id=alpha.id,
+                        memory_context=reader_a)
+            self.assertIn("La stella Arturo", adapter.calls[-1])
+            self.assertNotIn("Stradivari", adapter.calls[-1])
+            # With new Gemma owner, recovery reads only that chat from SQLite.
+            session.close()
+            adapter = CountingAdapter()
+            session = new_session()
+            reopened = ChatSessionStore(Path(temp) / "scoped.sqlite3")
+            session.ask("Cosa dicevamo di Arturo?", context_id=alpha.id,
+                        memory_context=make_chat_history_reader(reopened, alpha.id))
+            self.assertIn("La stella Arturo", adapter.calls[-1])
+            self.assertNotIn("Stradivari", adapter.calls[-1])
+            self.assertNotIn("Ricordi salvati", adapter.calls[-1])
+            self.assertEqual(len(adapter.calls), 1)
+            session.close()
+
+
 class ChatPanelTests(unittest.TestCase):
     def setUp(self):
         try:
