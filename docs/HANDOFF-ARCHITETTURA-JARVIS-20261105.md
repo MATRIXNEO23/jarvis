@@ -1,4 +1,7 @@
 
+## 2026-11-08 — Telegram: indagine ricezione, test RED
+Utente: invio manuale funziona, nessun «Ricevuto» nella console quando arriva un messaggio. Nessuna sessione/account disponibile per collaudo live. Difetto statico riproducibile: TelegramBridge._run attende solo shutdown manuale e ignora client.disconnected; dopo fine riconnessioni può restare falsamente attivo. Preparati test con vera pipeline listener/handler/WorkspaceMemory, boundary Telegram e audio controllati, nessun messaggio reale. Prima RED Windows poi fix limitato al lifecycle, nessuna modifica a Gemma, credenziali, contatti o invio manuale; nessuna build. Non è ancora dimostrato che sia l'unica causa sul PC.
+
 ## 2026-11-08 — M1 e M2 completate in sequenza e verificate
 Sorgentea81bf4f2541cf6d8f3ca4f0c78ebc0b0ae031f91:983 test OK per Windows/Python3.11 e3.12, run42452818179 SUCCESS. Prova Gemma2 2B IT Q4_K_M/DLL42452818064 SUCCESS:1 load,3 richieste/3 generazioni, token29/47/82 coincidenti; ripristino SQLite con riferimento tardivo nell'input nativo. Review indipendenti e recheck conclusi senza blocchi confermati. Dettagli, decisioni, RED/GREEN, limiti e prossimo passo: docs/VERIFICA-CONTINUITA-GEMMA-20261108.md. Nessun test funzionale Linux, benchmark Pavilion o promessa di qualità universale. Nessuna build/merge/nuovo ZIP;010 immutabile. Prossimo passo soltanto eventuale candidata su nuova richiesta, poi collaudo PC.
 
