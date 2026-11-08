@@ -104,7 +104,7 @@ jobs:
 
   gemma-candidate:
     needs: [unit, services-focused]
-    if: ${{ false }} # Build012 delivered; another package requires a new request.
+    if: ${{ github.repository == 'MATRIXNEO23/jarvis' && github.event_name == 'pull_request' && github.event.pull_request.number == 59 && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'audit/native-prompt-performance-20261108' }} # User authorized build013; disable after publication.
     permissions:
       contents: read
       actions: read
@@ -693,10 +693,10 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_service_diagnostics*.py' -v
 
 
-  publish-verified-012:
-    name: Publish verified immutable build 012
+  publish-verified-013:
+    name: Publish verified immutable build 013
     needs: [unit, gemma-candidate]
-    if: ${{ false }} # Build012 delivered; another package requires a new request.
+    if: ${{ github.repository == 'MATRIXNEO23/jarvis' && github.event_name == 'pull_request' && github.event.pull_request.number == 59 && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'audit/native-prompt-performance-20261108' }} # User authorized build013; disable after publication.
     runs-on: windows-2022
     permissions:
       contents: write
@@ -709,69 +709,69 @@ jobs:
           python-version: '3.12'
       - uses: actions/download-artifact@v4
         with:
-          name: Jarvis-012
-          path: ${{ runner.temp }}/verified012
+          name: Jarvis-013
+          path: ${{ runner.temp }}/verified013
       - name: Validate and register the same-run verified artifact
         shell: python
         env:
-          ARTIFACT_HOME: ${{ runner.temp }}/verified012
+          ARTIFACT_HOME: ${{ runner.temp }}/verified013
         run: |
           import hashlib,json,os,shutil,subprocess,zipfile
           from pathlib import Path
           home=Path(os.environ['ARTIFACT_HOME'])
-          archive=home/'Jarvis-012.zip'
-          details=json.loads((home/'Jarvis-012.json').read_text(encoding='utf-8'))
-          proof=json.loads((home/'Jarvis-012-validation.json').read_text(encoding='utf-8'))
+          archive=home/'Jarvis-013.zip'
+          details=json.loads((home/'Jarvis-013.json').read_text(encoding='utf-8'))
+          proof=json.loads((home/'Jarvis-013-validation.json').read_text(encoding='utf-8'))
           expected=hashlib.sha256(archive.read_bytes()).hexdigest()
-          assert details['build_number']==12 and details['sha256']==expected
+          assert details['build_number']==13 and details['sha256']==expected
           assert details['source_commit']==os.environ['GITHUB_SHA']
           assert details['bytes']==archive.stat().st_size
           assert proof['source_commit']==details['source_commit'] and proof['sha256']==expected
-          assert proof['full_extracted_runtime_suite']==999
+          assert proof['full_extracted_runtime_suite']==1006
           for key in ['clean_imports_native_dll','clean_ui_boot_close','injected_tk_callback_exception_rejected','required_guides_and_relative_links','operational_source_parity']:
               assert proof[key] is True, key
           assert proof['overlays_shipped'] is False and proof['runtime_files_copied_from_checkout'] is False
           with zipfile.ZipFile(archive) as z:
               assert z.testzip() is None
               version=json.loads(z.read('Jarvis-Gemma/VERSIONE.json'))
-              assert version['source_commit']==details['source_commit'] and version['build_number']==12
+              assert version['source_commit']==details['source_commit'] and version['build_number']==13
           registry_path=Path('Download/BUILD-NUMBERS.json')
           registry=json.loads(registry_path.read_text(encoding='utf-8'))
           for release in registry['releases']:
               assert hashlib.sha256(Path('Download',release['archive']).read_bytes()).hexdigest()==release['sha256']
-          target=Path('Download/Jarvis-012.zip')
-          existing=next((r for r in registry['releases'] if r['build_number']==12),None)
+          target=Path('Download/Jarvis-013.zip')
+          existing=next((r for r in registry['releases'] if r['build_number']==13),None)
           if existing:
-              assert existing['sha256']==expected and hashlib.sha256(target.read_bytes()).hexdigest()==expected, 'Build 012 is immutable'
+              assert existing['sha256']==expected and hashlib.sha256(target.read_bytes()).hexdigest()==expected, 'Build 013 is immutable'
           else:
-              assert registry['next_build']==12 and registry['latest_build']==11
+              assert registry['next_build']==13 and registry['latest_build']==12
               assert not target.exists()
               shutil.copyfile(archive,target)
               run=os.environ['GITHUB_RUN_ID']
               run_url='https://github.com/MATRIXNEO23/jarvis/actions/runs/'+run
               details.update(windows_workflow_run=run,pc_test='pending')
-              Path('Download/Jarvis-012.json').write_text(json.dumps(details,indent=2)+'\n',encoding='utf-8')
-              Path('Download/Jarvis-012-validation.json').write_text(json.dumps(proof,indent=2)+'\n',encoding='utf-8')
-              registry['releases'].append(dict(build_number=12,label='012',archive=target.name,metadata='Jarvis-012.json',date='2026-11-08',description='Diagnostica servizi nelle impostazioni e fasi Telegram osservabili',status='candidate_pc_test_pending',source_commit=details['source_commit'],sha256=expected,bytes=archive.stat().st_size,previous_build=11,git_blob_sha=subprocess.check_output(['git','hash-object',str(target)],text=True).strip()))
-              registry.update(latest_build=12,next_build=13)
+              Path('Download/Jarvis-013.json').write_text(json.dumps(details,indent=2)+'\n',encoding='utf-8')
+              Path('Download/Jarvis-013-validation.json').write_text(json.dumps(proof,indent=2)+'\n',encoding='utf-8')
+              registry['releases'].append(dict(build_number=13,label='013',archive=target.name,metadata='Jarvis-013.json',date='2026-11-08',description='Contesto Gemma alleggerito e configurabile, riferimento recente preservato',status='candidate_pc_test_pending',source_commit=details['source_commit'],sha256=expected,bytes=archive.stat().st_size,previous_build=12,git_blob_sha=subprocess.check_output(['git','hash-object',str(target)],text=True).strip()))
+              registry.update(latest_build=13,next_build=14)
               registry_path.write_text(json.dumps(registry,indent=2)+'\n',encoding='utf-8')
-              url='https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-012.zip'
-              entry='## Build 012 — Diagnostica servizi e Telegram\n\n[Scarica Jarvis-012.zip]('+url+')\n\nImpostazioni > Progetti e servizi > Apri diagnostica servizi, oppure comando vocale e scritto diagnostica servizi. Rapporto aggiornabile e copiabile con stato dei componenti e fasi Telegram, prima dei filtri fino al modello, sintesi e invio. Registro RAM limitato senza contenuti dei messaggi, nomi o credenziali; nessun invio di prova o avvio dei modelli. Include le correzioni della011. Due job Windows e 999 test sullo ZIP estratto superati. Estrai in una cartella nuova; collaudo sul Pavilion e causa della mancata ricezione sull’account reale ancora da verificare con il rapporto.\n\n[Verifiche Windows]('+run_url+'). SHA-256: `'+expected+'`.\n\n'
+              url='https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-013.zip'
+              entry='## Build 013 — Contesto Gemma leggero e configurabile\n\n[Scarica Jarvis-013.zip]('+url+')\n\nNel pannello Memoria e inattività, Token cronologia e ricordi (Gemma):250 iniziali, regolabili da128 a600. Ultimo riferimento preservato con estrazione locale se necessario; scambi esclusi dal solo prompt, senza cancellare gli archivi. Ricordi variabili vicini alla domanda per favorire il riuso del contesto. Impostazioni legacy compatibili, nessun riassuntore generativo o aumento automatico della finestra del modello. Include le funzioni della012. Due job Windows e1006test sullo ZIP estratto superati. Estrai in una cartella nuova e conserva012 e profilo; prestazioni sul Pavilion e account Telegram reale ancora da collaudare.\n\n[Verifiche Windows]('+run_url+'). SHA-256: `'+expected+'`.\n\n'
               for name in ['Download/README.md','Download/REGISTRO-VERSIONI.md']:
                   p=Path(name)
                   p.write_text(entry+p.read_text(encoding='utf-8'),encoding='utf-8')
               p=Path('README.md')
-              p.write_text('**Nuova candidata Windows: [Jarvis 012]('+url+')** — verificata su Windows, collaudo PC pendente.\n\n'+p.read_text(encoding='utf-8'),encoding='utf-8')
-              Path('docs/PUBBLICAZIONE-012.md').write_text(entry,encoding='utf-8')
+              p.write_text('**Nuova candidata Windows: [Jarvis 013]('+url+')** — verificata su Windows, collaudo PC pendente.\n\n'+p.read_text(encoding='utf-8'),encoding='utf-8')
+              Path('docs/PUBBLICAZIONE-013.md').write_text(entry,encoding='utf-8')
       - name: Publish verified files on main
         shell: pwsh
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Download README.md docs/PUBBLICAZIONE-012.md
+          git add Download README.md docs/PUBBLICAZIONE-013.md
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 1) {
-            git commit -m 'Publish verified immutable Jarvis build 012'
+            git commit -m 'Publish verified immutable Jarvis build 013'
             if ($LASTEXITCODE -ne 0) { throw 'Commit failed' }
             git push origin HEAD:main
             if ($LASTEXITCODE -ne 0) { throw 'Publication failed; no force push' }
