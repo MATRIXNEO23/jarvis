@@ -14,3 +14,6 @@ Review focus: conteggio con special token, budget finale, ruoli, antecedente rec
 5. M2 RED: riapertura archivio, richiamo di dettaglio oltre i vecchi tagli, progetti separati, cancellazione, memoria disattiva.
 6. M2 GREEN: retention recente limitata e recupero prima dei ricordi correlati, medesima selezione/budget M1. Preservare vecchi record e filtri. Non ricostruire testi già troncati.
 7. M2 verifica: suite Windows, review; aggiornare stato/handoff/lezioni con SHA e prove effettive. Nessuna affermazione di prestazioni sul Pavilion senza collaudo.
+
+## Esito
+M1 completata e verificata prima di M2; entrambe concluse. Evidenze e limiti: docs/VERIFICA-CONTINUITA-GEMMA-20261108.md. Nessuna nuova build autorizzata o creata.

@@ -1,3 +1,5 @@
+> Aggiornamento esecuzione: proposta approvata dall'utente con «Fai entrambi prima uno poi l'altro». M1 e M2 completate e verificate in sequenza; stato corrente in docs/VERIFICA-CONTINUITA-GEMMA-20261108.md. Il testo seguente conserva la proposta storica e i suoi gate iniziali. Migrazione D1 adeguata senza nuova chiave JSON per preservare la lettura strict della010; schema legacy intatto, politica token separata esplicita nella UI.
+
 # Dialogo Gemma: contesto recente protetto e budget reale
 Data ricerca:8 novembre2026. Stato: proposta sottoposta a revisione, NON implementata. Baseline ispezionata091e73cc2a7939a1145a2e7d5666512e3ac15c07; pacchetto010 resta immutabile.
 
