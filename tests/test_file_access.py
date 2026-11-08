@@ -713,6 +713,19 @@ class FileAccessTests(unittest.TestCase):
             self.assertEqual(nav.call_count,4)
             launch.assert_not_called()
 
+    def test_show_download_opens_with_active_file_service_and_respects_revocation(self):
+        with patch('file_access.service.known_folder', return_value=self.docs), patch('subprocess.Popen') as launch:
+            result = self.engine.execute('mostra Download')
+            self.assertEqual(result.status, 'completed', result.message)
+            self.assertEqual(result.action, 'files_open')
+            self.assertIsNone(result.file_listing)
+            self.assertEqual(launch.call_count, 1)
+            self.assertEqual(launch.call_args.args[0][1], str(self.docs))
+            self.files.policy.configure([(self.hidden, True)])
+            result = self.engine.execute('mostra Download')
+            self.assertEqual(result.status, 'rejected', result.message)
+            self.assertEqual(launch.call_count, 1)
+
     def test_explorer_missing_child_does_not_search_and_ambiguous_view_does_not_guess(self):
         self.explorer.return_value={'status':'ok','hwnd':101,'path':str(self.docs),'selected':[]}
         with patch.object(self.files,'index',side_effect=AssertionError('Do not broaden scope')),patch('file_access.service.navigate_explorer') as nav,patch('subprocess.Popen') as launch:

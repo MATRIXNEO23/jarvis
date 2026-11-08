@@ -428,7 +428,7 @@ class FileAccessService:
             return ('locate', {'query':app_answer})
         if low in ('annulla ricerca', 'ferma ricerca', 'interrompi ricerca'):
             return ('cancel', {})
-        if low in ('mostra download', 'elenca download', 'lista download'):
+        if low in ('elenca download', 'lista download'):
             return ('list', {'target': 'download'})
         if low in ('apri download', 'apri cartella download'):
             return ('open', {'target': 'download'})

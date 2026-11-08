@@ -4125,6 +4125,9 @@ def main() -> None:
             # and before either model. Execution retains the existing owner.
             command = speech_to_local_command(message)
             if command:
+                if handle_project_reference(message):
+                    request.set("")
+                    return
                 if command == "apri blocco note":
                     document_operation("open", source_utterance=message)
                 elif busy_local:

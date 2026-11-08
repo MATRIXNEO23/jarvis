@@ -132,7 +132,7 @@ class LocalEngine:
                 action, message = "help", self.available_commands()
             elif cmd in ("stato", "stato sistema", "controlla sistema"):
                 action, message = "system_status", self._system_status()
-            elif cmd in ("mostra download", "elenca download", "lista download"):
+            elif cmd in ("elenca download", "lista download"):
                 action, message = "list_downloads", self._list_downloads()
             elif cmd.startswith("cerca file "):
                 action, message = "find_download", self._find_download(cmd[len("cerca file "):])

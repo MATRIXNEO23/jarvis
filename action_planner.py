@@ -50,7 +50,7 @@ class ApprovedPlan:
 # Every command goes to LocalEngine.execute, which enforces its own allowlist.
 _READ_ONLY = {
     "system_status": ("stato sistema", "Controlla CPU e RAM", "Mostra informazioni di sistema"),
-    "list_downloads": ("mostra download", "Elenca la cartella Download", "Mostra i primi elementi di Download"),
+    "list_downloads": ("elenca download", "Elenca la cartella Download", "Mostra i primi elementi di Download"),
     "history": ("ultimi comandi", "Mostra le attività precedenti", "Mostra le ultime attività registrate"),
 }
 _OPEN_APPS = {
