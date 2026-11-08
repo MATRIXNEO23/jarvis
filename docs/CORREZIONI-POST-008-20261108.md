@@ -33,3 +33,6 @@ Analisi: ask_telegram_reply sceglie gia GPT quando telegram_gpt_ready è imposta
 ## Ordine aggiornato dall’utente
 
 Formato e contesto Gemma per ultimi. Prima: instradamento voce/chat secondo GPT selezionato, consenso e permanenza per la sessione; cambio modello con sinonimi; Telegram secondo scelta esplicita e permessi. Poi formato/template/budget/continuita Gemma. Help e prove accompagnano ciascun passo, verifica completa e pacchetto soltanto alla fine. Nessun requisito rimosso.
+
+## Ripresa: Red Windows verificato
+Run42437319811:947 test, un solo failure: GPT selezionato richiama Gemma. Aggiunte prove chat con Gemma configurato, consenso condiviso e revoca, Telegram disconnesso. Runtime invariato; nuovo Red da leggere.

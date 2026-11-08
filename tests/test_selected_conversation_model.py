@@ -25,3 +25,46 @@ class SelectedConversationModelTests(unittest.TestCase):
         env['start_conversation_gpt']('Parliamo della giornata')
         gemma.assert_not_called()
         online.assert_called_once()
+
+    def test_console_selected_gpt_wins_over_configured_gemma(self):
+        import test_typed_timer_routing as fixture
+        harness = fixture.TypedTimerTests()
+        self.addCleanup(harness.doCleanups)
+        env = harness.environment('Parliamo della giornata')
+        env.update(gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=True,
+                   busy_gpt=False, submit_gpt=Mock())
+        env['send_console_input']()
+        env['submit_gemma_trial'].assert_not_called()
+        env['submit_gpt'].assert_called_once()
+
+    def test_conversation_consent_reused_but_other_functions_stay_separate(self):
+        import test_activity_status as fixture
+        fixture.ActivityStatusTests.setUpClass()
+        harness = fixture.ActivityStatusTests()
+        self.addCleanup(harness.doCleanups)
+        env, workers, _ = harness.environment()
+        env['gpt_conversation_session_grant'] = None
+        run = harness.callback('run_gpt', env)
+        for channel in ('typed_conversation', 'conversation'):
+            self.assertTrue(run(channel, prompt='Dialogo', utterance='Ciao', epoch=7))
+            workers.pop()()
+            env['busy_gpt'] = False
+        self.assertEqual(env['messagebox'].askyesno.call_count, 1)
+        from local_model.online_permissions import OnlinePermissionPolicy, default_online_permissions_path
+        policy = OnlinePermissionPolicy.load(default_online_permissions_path())
+        policy.set_mode('chat.conversation', 'never')
+        policy.save(default_online_permissions_path())
+        self.assertFalse(run('conversation', prompt='Non inviare'))
+        self.assertEqual(workers, [])
+
+    def test_telegram_selected_but_disconnected_does_not_use_local_model(self):
+        import test_activity_status as fixture
+        fixture.ActivityStatusTests.setUpClass()
+        harness = fixture.ActivityStatusTests()
+        self.addCleanup(harness.doCleanups)
+        env, _, _ = harness.environment()
+        env.update(get_gemma_session=Mock(), ask_telegram_gpt=Mock(),
+                   telegram_assistant_prompt=lambda *a: 'prompt')
+        reply = harness.callback('ask_telegram_reply', env)
+        self.assertEqual(reply('Ciao', '', SimpleNamespace(is_enabled=lambda: True)), '')
+        env['get_gemma_session'].assert_not_called()
