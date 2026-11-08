@@ -62,7 +62,7 @@ jobs:
     timeout-minutes: 35
     env:
       JARVIS_BUILD_NUMBER: '14'
-      JARVIS_EXPECTED_TESTS: '1012'
+      JARVIS_EXPECTED_TESTS: '1013'
       JARVIS_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@v4
