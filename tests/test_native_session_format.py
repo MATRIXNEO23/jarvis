@@ -62,6 +62,7 @@ class SessionFormatTests(unittest.TestCase):
         import tempfile
         from pathlib import Path
         bridge = Mock()
+        bridge.upstream = None  # This boundary fixture has no native tokenizer.
         bridge.generate.return_value = 'Risposta'
         adapter = NativeChatAdapter('unused')
         adapter.config = NativeModelConfig(context_size=2048)

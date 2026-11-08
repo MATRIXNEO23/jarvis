@@ -200,7 +200,7 @@ def main() -> None:
     def open_memory_preferences():
         try:
             from local_model.memory_ui import MemoryPreferencesWindow
-            MemoryPreferencesWindow(settings_window)
+            MemoryPreferencesWindow(settings_window, get_session=get_gemma_session)
         except (OSError, ValueError, RuntimeError, ImportError) as exc:
             messagebox.showerror("Jarvis / Memoria", str(exc), parent=settings_window)
 
@@ -4535,8 +4535,13 @@ def main() -> None:
                         # acceptance. The metadata commit never waits for native inference.
                         if not value.commit():
                             continue
-                        if value.intent_warning:
-                            write_line('GEMMA > ' + value.intent_warning)
+                        # Discrete state-change notice; no persistent transcript log.
+                        context_state = (value.intent_warning, value.context_note)
+                        if getattr(value._session, "_last_context_notice", None) != context_state:
+                            value._session._last_context_notice = context_state
+                            for notice in context_state:
+                                if notice:
+                                    write_line('GEMMA > ' + notice)
                         if value.memory_warning:
                             write_line("MEMORIA > " + value.memory_warning)
                         owner = value.memory_owner

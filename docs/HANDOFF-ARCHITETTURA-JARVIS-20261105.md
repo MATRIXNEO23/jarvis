@@ -1,4 +1,7 @@
 
+## 2026-11-08 — M1 implementata, verifica GREEN in corso
+Baseline23be2b1; RED311a62d, run42451445590: Python3.12 970 test, le quattro nuove regressioni falliscono (3 failure/1 error) sul comportamento atteso. Prova DLL reale42451445591 riuscita: tokenize_ids(prompt,True) e prompt_tokens coincidono15/25. Correzione M1 nel worker: conteggio reale, budget fisico C-O-128, ultimo scambio protetto/estratto, storia massima600 token; nessuna generazione aggiuntiva. Vecchio schema e prompt_max_tokens conservati come caratteri legacy, UI chiarisce nuova politica e rollback010. Questa scelta sostituisce la proposta di nuova chiave JSON per non rompere la lettura strict della010. Nuova integrazione owner/DLL e suite Windows ancora da eseguire; M2 NON iniziata, nessuna build.
+
 ## 2026-11-08 — M1/M2 autorizzate, prima prova M1
 Utente: «Fai entrambi prima uno poi l'altro». Piano docs/superpowers/plans/2026-11-08-context-dialogue.md. Prima nuove regressioni RED e prova tokenizer Windows su DLL/modello reali, poi correzione M1; M2 soltanto dopo M1 verificata. Nessuna build richiesta o avviata. 010 invariata. Questo checkpoint contiene prove ancora da eseguire, non una correzione runtime.
 ## Ricerca approfondita contesto — 8 novembre2026

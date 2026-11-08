@@ -48,6 +48,13 @@ class NativeLocalProvider:
             self.bridge.load()
             return self.bridge.generate(prompt, timeout=timeout)
 
+    def count_tokens(self, prompt):
+        with self._lock:
+            if self._stopped:
+                raise RuntimeError("Modello locale arrestato.")
+            self.bridge.load()
+            return self.bridge.count_tokens(prompt)
+
     def stop(self):
         # Request cooperative abort without acquiring the ask/load lock.
         self._stopped = True

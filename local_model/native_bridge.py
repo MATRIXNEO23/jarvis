@@ -73,6 +73,21 @@ class NativeGemmaBridge:
                 temperature=config.temperature, top_k=config.top_k,
                 top_p=config.top_p, seed=config.seed).validate()
 
+    def count_tokens(self, prompt):
+        """Same special-token mode as generate; never run another inference."""
+        with self._lock:
+            self._check_cancelled()
+            if not self._loaded:
+                raise RuntimeError("Modello non caricato.")
+            tokenizer = getattr(self.upstream, "tokenize_ids", None)
+            if not callable(tokenizer):
+                raise RuntimeError("Tokenizer nativo non disponibile.")
+            ids = tokenizer(prompt, True)
+            self._check_cancelled()
+            if not isinstance(ids, (list, tuple)) or not ids:
+                raise RuntimeError("Conteggio token nativo non valido.")
+            return len(ids)
+
     def generate(self, prompt, *, timeout=120):
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Prompt vuoto.")

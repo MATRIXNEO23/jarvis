@@ -1,7 +1,7 @@
 name: Native context tokenizer proof (Windows)
 on:
   pull_request:
-    paths: ['tools/probe_native_context_tokens.py','.github/workflows/native-context-proof.yml']
+    paths: ['tools/probe_native_context*.py','local_model/*.py','.github/workflows/native-context-proof.yml']
 permissions:
   contents: read
   actions: read
@@ -33,10 +33,16 @@ jobs:
           PYTHONIOENCODING: utf-8
           PYTHONUTF8: '1'
         run: python tools/probe_native_context_tokens.py upstream-kobold probe-model.gguf
+      - name: Jarvis native context owner integration
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: '1'
+        run: python tools/probe_native_context_integration.py upstream-kobold probe-model.gguf
       - uses: actions/upload-artifact@v4
         with:
           name: native-context-token-proof
           path: |
             native-context-tokens-report.json
+            native-context-integration-report.json
             probe-model-source.json
           retention-days: 14

@@ -33,6 +33,14 @@ class NativeChatAdapter:
         self.provider = provider
         self.config = config
 
+    def context_token_counter(self):
+        provider = self.provider
+        if provider is None:
+            raise RuntimeError("Native model not prepared")
+        if not callable(getattr(getattr(getattr(provider, "bridge", None), "upstream", None), "tokenize_ids", None)):
+            return None
+        return provider.count_tokens
+
     def call(self, action, *, timeout=120, prompt_budget=None, **arguments):
         if action != "ask":
             raise ValueError("Native adapter supports ask only")
@@ -46,20 +54,20 @@ class NativeChatAdapter:
         budget = memory.available_prompt_tokens(
             self.config.context_size, self.config.max_output)
         if prompt_budget is not None:
-            from dataclasses import replace
-            ceiling = replace(memory, prompt_max_tokens=8192).available_prompt_tokens(
-                self.config.context_size, self.config.max_output)
+            ceiling = self.config.context_size - self.config.max_output - 128
             if type(prompt_budget) is not int or not budget <= prompt_budget <= ceiling:
                 raise ValueError("Budget locale non valido.")
             budget = prompt_budget
+        counter = self.context_token_counter()
+        measure = counter if counter is not None else len
         if arguments.get("messages") is not None:
             from .native_provider import format_gemma_messages
-            if len(format_gemma_messages(arguments["messages"])) > budget:
+            if measure(format_gemma_messages(arguments["messages"])) > budget:
                 raise ValueError("Messaggi oltre il budget locale configurato.")
         prompt = arguments.get("prompt")
         if isinstance(prompt, str):
             from .native_provider import format_gemma_messages
-            if len(format_gemma_messages([{"role": "user", "content": prompt}])) > budget:
+            if measure(format_gemma_messages([{"role": "user", "content": prompt}])) > budget:
                 raise ValueError("Prompt oltre il budget locale configurato.")
         result = provider.ask(timeout=timeout, **arguments)
         return {"text": result}

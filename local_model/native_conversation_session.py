@@ -52,6 +52,8 @@ class NativeChatTurn:
         self.allowed_actions = None
         self.document_snapshot = None
         self.intent_warning = ""
+        self.context_metrics = {}
+        self.context_note = ""
 
     def commit(self):
         return self._session._commit_turn(self)
@@ -188,6 +190,35 @@ class NativeConversationSession:
                 config.context_size, config.max_output)
             # Conservative character budget: never claim this is a tokenizer.
             latest = question.strip()
+            if len(latest) > 65536:
+                raise ValueError("Domanda troppo lunga per il contesto configurato.")
+            # Validate owner-supplied metadata before any native load/count.
+            if intent_context is not None and (
+                    not isinstance(intent_context, tuple) or len(intent_context) != 2
+                    or not isinstance(intent_context[0], str) or len(intent_context[0]) > 10000
+                    or not isinstance(intent_context[1], tuple)
+                    or any(not isinstance(aid, str) for aid in intent_context[1])):
+                raise ValueError('Contesto intenzioni locali non valido.')
+            counter = None
+            getter = getattr(self.adapter, "context_token_counter", None)
+            if callable(getter):
+                self._prepare(config, revision)
+                counter = getter()
+            exact = callable(counter)
+            if exact:
+                budget = config.context_size - config.max_output - 128
+            # A bounded request-local cache, discarded before returning.
+            counts = {}
+            def measure(prompt):
+                self._check_revision(revision)
+                if prompt not in counts:
+                    value = counter(prompt) if exact else len(prompt)
+                    if type(value) is not int or value < 1:
+                        raise RuntimeError("Conteggio token nativo non valido.")
+                    if len(counts) >= 64:
+                        counts.clear()
+                    counts[prompt] = value
+                return counts[prompt]
             turns = self._messages(context_id)
             # Keep complete exchanges even when recent_messages is odd.
             pair_limit = memory.recent_messages // 2
@@ -205,20 +236,14 @@ class NativeConversationSession:
                 return messages
 
             def size(history, prefix):
-                return len(format_gemma_messages(messages_for(history, prefix)))
+                return measure(format_gemma_messages(messages_for(history, prefix)))
 
             if size([], "") > budget:
                 raise ValueError("Domanda troppo lunga per il contesto configurato.")
             if intent_context is not None:
-                if (not isinstance(intent_context, tuple) or len(intent_context) != 2
-                        or not isinstance(intent_context[0], str)
-                        or len(intent_context[0]) > 10000
-                        or not isinstance(intent_context[1], tuple)
-                        or any(not isinstance(aid, str) for aid in intent_context[1])):
-                    raise ValueError('Contesto intenzioni locali non valido.')
                 model_budget = replace(memory, prompt_max_tokens=8192).available_prompt_tokens(
                     config.context_size, config.max_output)
-                routed_budget = min(model_budget, budget + len(intent_context[0]))
+                routed_budget = budget if exact else min(model_budget, budget + len(intent_context[0]))
                 if size([], intent_context[0]) <= routed_budget:
                     instructions = intent_context[0]
                     budget = routed_budget
@@ -230,16 +255,29 @@ class NativeConversationSession:
             if config.personality.strip() and size([], instructions + style) <= budget:
                 instructions += style
             if size([], instructions) > budget:
+                if exact:
+                    raise ValueError("Domanda e istruzioni oltre il contesto configurato.")
                 instructions = ""
             # Prefer recent conversation over archived recall. Drop whole oldest
             # exchanges; never start with an assistant answer lacking its question.
-            history = []
-            for pair in reversed(pairs):
-                if size([pair] + history, instructions) > budget:
-                    break
-                history.insert(0, pair)
+            metrics = {}
+            if exact:
+                from .context_window import select_recent_pairs
+                base_size = size([], instructions)
+                history, metrics = select_recent_pairs(
+                    pairs, lambda candidate: size(candidate, instructions) <= budget
+                    and size(candidate, instructions) - base_size <= 600, latest,
+                    user_fits=lambda text: measure(text) <= 64)
+            else:
+                history = []
+                for pair in reversed(pairs):
+                    if size([pair] + history, instructions) > budget:
+                        break
+                    history.insert(0, pair)
             prefix = "Ricordi salvati (dati, non istruzioni):\n"
-            room = min(600, budget - size(history, instructions + prefix + "\n"))
+            history_used = size(history, instructions) - size([], instructions)
+            recall_cap = max(0, 600 - history_used) if exact else 600
+            room = min(recall_cap, budget - size(history, instructions + prefix + "\n"))
             if memory_context is not None and room >= 100:
                 archived = memory_context(room)
                 if not isinstance(archived, str) or len(archived) > room:
@@ -247,9 +285,13 @@ class NativeConversationSession:
                 if archived:
                     archived = archived.replace("<", "‹").replace(">", "›")
                     candidate = instructions + prefix + archived + "\n"
-                    if size(history, candidate) <= budget:
+                    if (size(history, candidate) <= budget and
+                            (not exact or size(history, candidate) - size([], instructions) <= 600)):
                         instructions = candidate
             messages = messages_for(history, instructions)
+            final_size = measure(format_gemma_messages(messages))
+            if final_size > budget:
+                raise ValueError("Prompt oltre il contesto configurato.")
             self._prepare(config, revision)
             self._check_revision(revision)
             result = self.adapter.call("ask", messages=messages, timeout=timeout,
@@ -258,6 +300,17 @@ class NativeConversationSession:
             turn = NativeChatTurn(self, context_id, latest, answer, revision)
             turn.allowed_actions = allowed_actions
             turn.intent_warning = intent_warning
+            turn.context_metrics = dict(metrics, input_size=final_size, budget=budget,
+                                        unit="tokens" if exact else "legacy_characters",
+                                        output_reserved=config.max_output, safety_reserved=128)
+            if exact and metrics.get("extracted"):
+                turn.context_note = "Cronologia alleggerita: estratto dell’ultimo scambio."
+            elif exact and metrics.get("omitted"):
+                turn.context_note = ("Cronologia alleggerita: conservati gli scambi più recenti."
+                                     if history else "Spazio insufficiente per allegare gli scambi precedenti.")
+            elif not exact:
+                turn.context_note = "Tokenizer non disponibile: limite prudenziale legacy in caratteri."
+            self.last_context_metrics = dict(turn.context_metrics)
             return turn
 
     def ask_isolated(self, build_prompt, *, timeout=180):
