@@ -87,6 +87,9 @@ class NativeConversationSession:
         self._closed = False
         self._stopping = 0
         self._active_operations = 0
+        self._prompt_diagnostic_armed = False
+        self._last_prompt_diagnostic = None
+        self._prompt_diagnostic_generation = 0
 
     @property
     def is_busy(self):
@@ -114,6 +117,25 @@ class NativeConversationSession:
         finally:
             with self._state_lock:
                 self._active_operations -= 1
+
+    def arm_prompt_diagnostic(self):
+        """One opt-in capture for the next chat turn; no automatic logging."""
+        with self._state_lock:
+            if self._closed or self._stopping:
+                raise RuntimeError("Sessione Gemma non disponibile.")
+            self._last_prompt_diagnostic = None
+            self._prompt_diagnostic_generation += 1
+            self._prompt_diagnostic_armed = True
+
+    def prompt_diagnostic(self):
+        with self._state_lock:
+            return self._last_prompt_diagnostic
+
+    def clear_prompt_diagnostic(self):
+        with self._state_lock:
+            self._prompt_diagnostic_armed = False
+            self._prompt_diagnostic_generation += 1
+            self._last_prompt_diagnostic = None
 
     @property
     def history(self):
@@ -252,6 +274,7 @@ class NativeConversationSession:
             instructions = "Rispondi in italiano, senza JSON né analisi. Se consigli, spiega perché.\n"
             allowed_actions = None
             intent_warning = ""
+            base_instruction_source = "local_model.native_conversation_session: chat naturale"
 
             def messages_for(history, prefix, recall=""):
                 messages = [{"role": role, "content": text}
@@ -272,18 +295,24 @@ class NativeConversationSession:
                 routed_budget = budget if exact else min(model_budget, budget + len(intent_context[0]))
                 if size([], intent_context[0]) <= routed_budget:
                     instructions = intent_context[0]
+                    base_instruction_source = "conversation_router.build_native_intent_context: catalogo azioni"
                     budget = routed_budget
                     allowed_actions = frozenset(intent_context[1])
                 else:
                     intent_warning = ('Contesto insufficiente per interpretare azioni: '
                                       'chat e comandi diretti restano disponibili.')
+            base_instructions = instructions
+            applied_personality = ""
             style = "Stile di risposta: " + " ".join(config.personality.split()) + "\n"
             if config.personality.strip() and size([], instructions + style) <= budget:
                 instructions += style
+                applied_personality = style
             if size([], instructions) > budget:
                 if exact:
                     raise ValueError("Domanda e istruzioni oltre il contesto configurato.")
                 instructions = ""
+                base_instructions = ""
+                applied_personality = ""
             # Prefer recent conversation over archived recall. Drop whole oldest
             # exchanges; never start with an assistant answer lacking its question.
             metrics = {}
@@ -322,10 +351,68 @@ class NativeConversationSession:
             final_size = measure(format_gemma_messages(messages))
             if final_size > budget:
                 raise ValueError("Prompt oltre il contesto configurato.")
+            with self._state_lock:
+                inspect_prompt = self._prompt_diagnostic_armed
+                capture_generation = self._prompt_diagnostic_generation
+                self._prompt_diagnostic_armed = False
             self._prepare(config, revision)
             self._check_revision(revision)
             result = self.adapter.call("ask", messages=messages, timeout=timeout,
                                        prompt_budget=budget)
+            if inspect_prompt:
+                # Inspect after generation to avoid touching native prefill timings.
+                # Never execute, persist or transmit the report.
+                try:
+                    from .prompt_diagnostics import render_prompt_diagnostic
+                    # A context_id may represent a project (legacy) OR a
+                    # newly scoped chat ID (F2). Let its trusted reader label
+                    # the origin instead of assuming every ID is a project.
+                    restored_source = getattr(
+                        memory_context, "diagnostic_history_source", None)
+                    history_source = (
+                        restored_source if restored and isinstance(restored_source, str)
+                        else "Archivio legacy / Second Brain: recent_pairs" if restored
+                        else "NativeConversationSession._turns: RAM (ambito isolato)"
+                    )
+                    source_label = getattr(
+                        memory_context, "diagnostic_recall_source", None)
+                    memory_source = (
+                        source_label if isinstance(source_label, str)
+                        else "Nessuna sorgente memoria" if memory_context is None
+                        else "jarvis.native_memory_request: progetto (legacy)" if context_id is not None
+                        else "jarvis.native_memory_request: Second Brain (legacy)"
+                    )
+                    sections = [
+                        ("Istruzioni / catalogo", base_instruction_source, base_instructions),
+                        ("Personalità", "NativeModelConfig.personality: impostazioni",
+                         applied_personality),
+                    ]
+                    for number, pair in enumerate(history, 1):
+                        sections.append(("Cronologia #" + str(number) + " utente",
+                                         history_source, pair[0][1]))
+                        sections.append(("Cronologia #" + str(number) + " Gemma",
+                                         history_source, pair[1][1]))
+                    sections.extend([
+                        ("Ricordi recuperati", memory_source, recall),
+                        ("Domanda corrente", "jarvis.submit_gemma_voice: voce o testo", latest),
+                    ])
+                    report = render_prompt_diagnostic(
+                        messages=messages, sections=sections,
+                        count=counter if exact else None, total_tokens=final_size,
+                        budget=budget, context_size=config.context_size,
+                        max_output=config.max_output,
+                        history_limit=memory.history_max_tokens,
+                        mode="chat" if allowed_actions is None else "azioni",
+                        restored=restored, selection_metrics=metrics,
+                        warning=intent_warning)
+                except Exception as exc:
+                    report = ("Diagnostica non disponibile: " + type(exc).__name__
+                              + ". Risposta Gemma invariata.")
+                with self._state_lock:
+                    if (not self._closed and not self._stopping
+                            and revision == self._revision
+                            and capture_generation == self._prompt_diagnostic_generation):
+                        self._last_prompt_diagnostic = report
             answer = clean_native_answer(result.get("text"))
             turn = NativeChatTurn(self, context_id, latest, answer, revision)
             # Generation telemetry informs errors only; it is never a grant
@@ -420,6 +507,9 @@ class NativeConversationSession:
         with self._state_lock:
             self.prepared = False
             self._prepared_config = None
+            self._prompt_diagnostic_armed = False
+            self._prompt_diagnostic_generation += 1
+            self._last_prompt_diagnostic = None
         self.adapter.stop()
 
     def stop(self):
@@ -429,6 +519,9 @@ class NativeConversationSession:
             self._stopping += 1
             self.prepared = False
             self._prepared_config = None
+            self._prompt_diagnostic_armed = False
+            self._prompt_diagnostic_generation += 1
+            self._last_prompt_diagnostic = None
         try:
             self.adapter.stop()
         finally:
