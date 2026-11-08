@@ -128,6 +128,9 @@ class KoboldServerCanary:
         name = answer.get("result")
         if type(name) is not str or not 1 <= len(name) <= 256 or not name.strip():
             raise KoboldCanaryError("Identità modello KoboldCpp non disponibile.")
+        if name == "koboldcpp/protected-model":
+            raise KoboldCanaryError(
+                "Server protetto: modello non verificabile senza password locale.")
         return name
 
     def perf(self):
