@@ -2,6 +2,8 @@
 
 Leggere AGENTS.md e [docs/HANDOFF-RIPRESA-JARVIS-013-20261108.md](docs/HANDOFF-RIPRESA-JARVIS-013-20261108.md), poi STATO-ATTIVITA.013pubblicata e verificata; fermarsi in attesa del collaudo o di nuova istruzione. Ramo evoluto audit/native-prompt-performance-20261108, PR59draft; main contiene Download e sorgenti storici, nessun merge indiscriminato.012e profilo conservati.
 
+Attività futura annotata, senza implementazione: [domande sui ricordi e distinzione dai comandi](docs/MEMORIA-RICORDI-COMANDI-DA-RISOLVERE-20261108.md). Handoff013aggiornato; attendere nuova istruzione per correggere.
+
 ## Riferimenti precedenti
 
 Correzione prompt Gemma verificata nei sorgenti: [docs/CORREZIONE-PROMPT-GEMMA-20261108.md](docs/CORREZIONE-PROMPT-GEMMA-20261108.md). Budget configurabile250/128–600, ultimo riferimento preservato. Tutti i controlli Windows conclusi; nessuna build nuova autorizzata o pubblicata. Handoff/stato riportano commit, run e prossimo passo.
