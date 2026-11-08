@@ -1,3 +1,7 @@
+## Modello confermato dall’utente — Gemma 2 2B IT Q4_K_M
+L’utente conferma la famiglia Gemma2 2B IT e chiede di applicare la correzione necessaria. Si procede con la serializzazione standard Gemma2 IT già corretta e verificata sul commit ae3649d37da23d446871fbb6c6dbcead2edb72e8 (run42439513080 SUCCESS,962 test per job Windows3.11/3.12). Non occorrono ulteriori cambi runtime sulla sola base del nome: il codice già usa user/model, istruzioni nel primo user, coppie complete e budget comprensivo dei delimitatori. Restano preservati scelta GPT, consenso sessione, sinonimi e Telegram.
+La conferma identifica la famiglia/quantizzazione, non autore/revisione né tokenizer.chat_template del singolo GGUF. Il confronto byte per byte del file utente resta non eseguito e non è presentato come completato; non blocca la correzione standard richiesta. Nessuna garanzia di qualità semantica o benchmark sul Pavilion senza collaudo reale. Nuovo ZIP ancora non generato/pubblicato: build solo su richiesta esplicita, come da AGENTS. Questa annotazione non cambia runtime o test già verdi.
+
 # Correzioni richieste dopo il collaudo 008 — 8 novembre 2026
 
 Requisiti confermati dall'utente durante il collaudo. Nessuno dei punti seguenti è ancora dichiarato corretto.
