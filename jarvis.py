@@ -853,7 +853,15 @@ def main() -> None:
 
     def switch_context(project_id=None) -> bool:
         nonlocal active_project_id,conversation_epoch,pending_preference
-        if busy_gpt or busy_local or document_busy or gemma_trial_busy[0]:
+        try:
+            local_chat_active = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            local_chat_active = False  # Legacy project routing remains unchanged.
+        # Do not reject the existing Console->progetto change while Gemma is
+        # busy; its epoch check already revokes the old reply. Only F2 local
+        # chat switching is blocked during generation.
+        if (busy_gpt or busy_local or document_busy
+                or (local_chat_active and gemma_trial_busy[0])):
             write_line("JARVIS > Finisco questa operazione prima di cambiare progetto.")
             return False
         if documents.current is not None or doc_dialog.phase != "idle":
