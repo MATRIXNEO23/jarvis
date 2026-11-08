@@ -66,6 +66,61 @@ def build_native_intent_context(*, has_document=False, addon_actions=()):
     return instructions, tuple(ids)
 
 
+# Only unambiguously conversational requests skip the expensive native action
+# catalog.  Everything else continues through the original validated router.
+# This is not a permission classifier: it only removes executable proposals.
+_NATIVE_INFORMATION_START = re.compile(
+    r"^(?:"
+    r"(?:che\s+)?cos(?:'|\s+)[eè]\b|(?:che\s+)?cosa\s+[eè]\b|"
+    r"cosa\s+(?:sono|significa|ricordi|pensi|succede)\b|"
+    r"chi\s+(?:[eè]|era|sono)\b|"
+    r"qual[e']?\s+[eè]\b|quali\s+sono\b|"
+    r"perch[eéè]\b|"
+    r"come\s+(?:funzion\w*|stai|mai|si\s+\w+|posso|faccio|va)\b|"
+    r"consigliami\b|mi\s+consigli\b|"
+    r"spiegami\b|raccontami\b|parlami\b|"
+    r"ti\s+ricordi\b|ricordi\b|"
+    r"mi\s+(?:dici|spieghi)\s+(?:che|come|cosa|perch[eéè])\b|"
+    r"dimmi\s+(?:come|perch[eéè]|che\s+cosa)\b|"
+    r"se\s+(?:dico|scrivo)\b|non\s+(?:aprire|avviare|inviare|mandare)\b|"
+    r"ciao\b|salve\b|buongiorno\b|buonasera\b|grazie\b|"
+    r"continua\b|prosegui\b|e\s+(?:poi|perch[eéè])\b"
+    r")", re.I,
+)
+
+# A compound user request cannot be downgraded to chat if it explicitly adds
+# an executable operation. It stays on the original catalog/allowlist path.
+_NATIVE_FOLLOWING_ACTION = re.compile(
+    r"(?:[,;.!?]\s*|\b(?:e|poi|quindi)\s+)"
+    r"(?:per\s+favore\s+)?"
+    r"(?:apri|aprimi|avvia|avviami|chiudi|cerca|cercami|trova|"
+    r"scrivi|salva|invia|manda|elenca|leggi|esegui|"
+    r"cancella|rimuovi|sposta|rinomina)\b",
+    re.I,
+)
+
+
+def native_intent_context_for_request(
+    utterance: str, *, has_document: bool = False, addon_actions=()
+):
+    """Choose only the *format* of the next native turn, never an action.
+
+    Clear information requests get the existing natural-language Gemma chat
+    session (with context and persona but no action catalog/JSON parser).
+    Possible commands retain the unchanged structured catalog and validators.
+    Existing deterministic desktop routing still runs before this function.
+    """
+    if not isinstance(utterance, str) or not utterance.strip():
+        raise ConversationRejected("Richiesta Gemma vuota o non valida.")
+    text = " ".join(utterance.replace("\u2019", "'").casefold().split())
+    text = re.sub(r"^(?:ehi\s+|ok\s+)?jarvis[,:\s]+", "", text)
+    if (_NATIVE_INFORMATION_START.match(text)
+            and not _NATIVE_FOLLOWING_ACTION.search(text)):
+        return None
+    return build_native_intent_context(
+        has_document=has_document, addon_actions=addon_actions)
+
+
 def build_conversation_prompt(
     utterance: str, *, has_document: bool = False,
     memory_context: str = "", telegram_send_ready: bool = False,
