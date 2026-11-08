@@ -49,7 +49,6 @@ class NativeInformationRoutingTests(unittest.TestCase):
             "Parlami di astronomia",
             "Ciao", "Grazie", "Continua",
             "Se dico apri browser cosa succede?",
-            "Non aprire il browser",
             "Dimmi come funziona la calcolatrice",
         ):
             with self.subTest(question=question):
@@ -68,6 +67,8 @@ class NativeInformationRoutingTests(unittest.TestCase):
             "manda un messaggio Telegram a Marco",
             "consigliami una serie TV e apri Netflix",
             "dimmi lo stato del sistema",
+            "Dimmi come sta il computer",
+            "Non aprire il browser",
         ):
             with self.subTest(question=question):
                 context = native_intent_context_for_request(question)
