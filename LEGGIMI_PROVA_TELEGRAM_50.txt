@@ -74,3 +74,13 @@ risposte automatiche. Non e' necessario installare SDK o account nuovi.
 
 Se compare un errore, NON reinstallare o eliminare dati senza prima
 leggere il messaggio. Riporta l'errore e il passaggio in cui si verifica.
+
+DIAGNOSTICA LOCALE DEI SERVIZI
+Impostazioni > Progetti e servizi > Apri diagnostica servizi.
+Oppure scrivi «diagnostica servizi» o pronuncia «Jarvis, diagnostica servizi».
+Dopo un messaggio reale da un contatto autorizzato, premi Aggiorna e Copia rapporto.
+Il rapporto distingue avvio/connessione/sessione/contatti/listener, aggiornamenti grezzi, filtri, modello, sintesi e invio.
+Aggiornamenti grezzi includono eventi che non sono messaggi. Un listener registrato non prova la ricezione.
+Il registro contiene al massimo 64 eventi in RAM con codici/orari/conteggi: niente testo, contatti, ID, credenziali o file privati.
+Nessun messaggio di prova automatico. Si azzera riavviando Jarvis o sostituendo il listener; copia il rapporto prima se serve.
+La diagnostica non avvia Gemma, non apre il microfono, non invia a GPT e non ripara automaticamente i collegamenti.

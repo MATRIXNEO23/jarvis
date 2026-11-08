@@ -33,6 +33,9 @@ class Client:
 
     def on(self, event_filter):
         def register(callback):
+            if event_filter == 'raw':
+                self.raw_callback = callback
+                return callback
             self.callback = callback
             if self.disconnect_early:
                 loop = asyncio.get_running_loop()
@@ -67,7 +70,7 @@ class ListenerTests(unittest.IsolatedAsyncioTestCase):
     def boundary(self, client):
         module = ModuleType('telethon')
         module.TelegramClient = lambda *args, **kwargs: client
-        module.events = SimpleNamespace(NewMessage=lambda **kwargs:kwargs)
+        module.events = SimpleNamespace(NewMessage=lambda **kwargs:kwargs, Raw="raw")
         sessions = ModuleType('telethon.sessions')
         sessions.StringSession = lambda value:value
         async def contacts(_client):

@@ -134,6 +134,9 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
     phrase=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
                   text.strip(" ,.!?;:"),flags=re.I).casefold()
     phrase=" ".join(phrase.split())
+    if re.fullmatch(r"(?:(?:apri|mostra|avvia)\s+(?:la\s+)?)?"
+                    r"(?:diagnostica|diagnosi|stato)\s+(?:dei\s+)?servizi", phrase):
+        return ("services", "")
     # Vosk commonly separates auto/diagnosi or inserts an article.
     # Normalize these precise forms, not arbitrary speech about diagnosis.
     phrase=re.sub(r"\bauto[\s-]+diagnos[ie]\b","autodiagnosi",phrase)

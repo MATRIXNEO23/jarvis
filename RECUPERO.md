@@ -1,3 +1,11 @@
+# Ripresa Jarvis — ultima consegna 012
+
+Leggere prima AGENTS.md e [l’handoff corrente](docs/HANDOFF-RIPRESA-JARVIS-012-20261108.md), poi docs/STATO-ATTIVITA.md e la scheda pertinente. Build012 pubblicata; diagnosi del problema Telegram sul PC ancora in attesa del rapporto locale. L’utente ha chiesto di fermarsi dopo pubblicazione: questo checkpoint non autorizza altre modifiche o build.
+
+Il ramo evoluto è fix/service-diagnostics-20261108, PR58; main contiene Download e sorgenti storici. Verificare ramo/HEAD prima di lavorare.
+
+## Riferimento storico Accesso file
+
 # Ripresa sviluppo Accesso file
 
 Leggere AGENTS.md e docs/ACCESSO-FILE-STATO.md. Regole e piano autorevoli aggiornati in main: docs/implementabili/ACCESSO-FILE-CONTRATTO.md. Questo ramo parte dalla base utente b936879, non dalla radice storica main.

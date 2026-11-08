@@ -36,6 +36,10 @@ def accepted_private_message(sender_id,is_private,outgoing,allowed_peer):
             and is_private is True and outgoing is False)
 
 
+class _TerminalDisconnect(TelegramBridgeError):
+    """Known end of transport; do not attribute it to a stale message phase."""
+
+
 def telegram_assistant_prompt(user_text,context="",pending=()):
     """A note is explicitly owner-authorized; no general/project recall."""
     if not isinstance(user_text,str) or not user_text.strip():
@@ -149,10 +153,19 @@ class TelegramBridge:
         self._loop=None
         self._shutdown=None
         self._last_sent={}
+        from runtime_diagnostics import ServiceEventLog
+        self._diagnostics = ServiceEventLog()
+
+    def diagnostic_snapshot(self):
+        return self._diagnostics.snapshot()
+
+    def _observe(self, code):
+        self._diagnostics.record(code)
 
     def start(self):
         if self._thread is not None and self._thread.is_alive():
             return False
+        self._observe("starting")
         self._enabled.set()
         self._thread=threading.Thread(
             target=self._thread_main,daemon=True,
@@ -177,12 +190,16 @@ class TelegramBridge:
             asyncio.run(self._run())
         except (TelegramBridgeError,TelegramVoiceError,
                 TelegramAuthError,OSError,ValueError,RuntimeError) as exc:
+            if not isinstance(exc, _TerminalDisconnect):
+                self._diagnostics.failed()
             self.notify(("telegram_status",
                          "Telegram: "+str(exc)[:165]))
         except Exception:
+            self._diagnostics.failed()
             self.notify(("telegram_status",
                          "Telegram: collegamento interrotto."))
         finally:
+            self._observe("stopped")
             self._enabled.clear()
             self._loop=None
             self._shutdown=None
@@ -191,12 +208,14 @@ class TelegramBridge:
     async def _run(self):
         if not self._enabled.is_set():
             return
+        self._observe("dependency")
         try:
             from telethon import TelegramClient,events
             from telethon.sessions import StringSession
         except ImportError as exc:
             raise TelegramBridgeError(
                 "Telethon assente. Esegui installa_telegram.bat.") from exc
+        self._observe("credentials")
         creds=self.credential_loader()
         self._loop=asyncio.get_running_loop()
         self._shutdown=asyncio.Event()
@@ -206,18 +225,22 @@ class TelegramBridge:
             auto_reconnect=True,connection_retries=3,
             receive_updates=True)
         try:
+            self._observe("connecting")
             await client.connect()
+            self._observe("connected")
             if not await client.is_user_authorized():
                 raise TelegramBridgeError(
                     "Sessione Telegram scaduta. Riconfigura l'account.")
             # StringSession does not cache entities: resolve actual Telegram
             # users again for every session. Never trust names or guessed IDs.
+            self._observe("authorized")
             available=await verified_contact_entities(client)
             peers={pid:available[pid][1] for pid in self.allowed_contacts
                    if pid in available}
             if not peers:
                 raise TelegramBridgeError(
                     "Nessun contatto selezionato trovato nelle chat/rubrica Telegram.")
+            self._observe("contacts_ready")
             self.notify(("telegram_status",
                          "Telegram: risposte attive per "+str(len(peers))+
                          " contatti autorizzati."))
@@ -226,6 +249,14 @@ class TelegramBridge:
             # notes or bypass the outgoing rate limit.
             processing_lock=asyncio.Lock()
 
+            @client.on(events.Raw)
+            async def observe_update(update):
+                if self._enabled.is_set():
+                    self._observe("update")
+                    if type(update).__name__ in ("UpdateNewMessage", "UpdateShortMessage",
+                            "UpdateNewChannelMessage", "UpdateShortChatMessage"):
+                        self._observe("message_update")
+
             @client.on(events.NewMessage(incoming=True))
             async def receive(event):
                 if not self._enabled.is_set():
@@ -233,6 +264,9 @@ class TelegramBridge:
                 if not accepted_private_message(
                         event.sender_id,bool(event.is_private),
                         bool(event.out),peers):
+                    self._observe("filtered_outgoing" if event.out else
+                                  "filtered_non_private" if not event.is_private else
+                                  "filtered_contact")
                     return
                 try:
                     async with processing_lock:
@@ -240,12 +274,15 @@ class TelegramBridge:
                             await self._handle(client,peers[event.sender_id],event)
                 except (TelegramBridgeError,TelegramVoiceError,
                         WorkspaceError,OSError,ValueError) as exc:
+                    self._diagnostics.failed()
                     self.notify(("telegram_status",
                                  "Telegram: "+str(exc)[:160]))
                 except Exception:
+                    self._diagnostics.failed()
                     self.notify(("telegram_status",
                                  "Telegram: errore di elaborazione."))
 
+            self._observe("listening")
             # Telethon already owns reconnect/retry. A resolved disconnected
             # future means those retries ended: do not keep a dead listener
             # labelled active while waiting forever for the user's Stop.
@@ -260,7 +297,8 @@ class TelegramBridge:
                 if disconnected in done and not disconnected.cancelled():
                     disconnected.exception()
                 if not self._shutdown.is_set() and disconnected in done:
-                    raise TelegramBridgeError(
+                    self._observe("listener_failed")
+                    raise _TerminalDisconnect(
                         "Connessione Telegram terminata. Riattiva le risposte automatiche; "
                         "nessun messaggio viene reinviato automaticamente.")
             finally:
@@ -284,7 +322,9 @@ class TelegramBridge:
         # must not cause duplicate outgoing messages.
         if not self.workspace.telegram_event(
                 peer_id,"incoming",message.id,kind,incoming_text):
+            self._observe("duplicate")
             return
+        self._observe("received")
         self.notify(("telegram_received",peer_name,kind))
         if is_voice:
             size=getattr(getattr(message,"file",None),"size",0) or 0
@@ -298,16 +338,20 @@ class TelegramBridge:
                     message,file=str(Path(folder)/"incoming.ogg"))
                 if not target:
                     return
+                self._observe("transcribing")
                 incoming_text=await asyncio.to_thread(
                     transcribe_incoming_voice,Path(target))
                 if incoming_text:
                     self.workspace.telegram_transcript(
                         peer_id,message.id,incoming_text)
         if not incoming_text or not self._enabled.is_set():
+            if not incoming_text:
+                self._observe("input_empty")
             return
         # Anti-spam: at most one reply per 8s. Other incoming events remain
         # visible and searchable, never marked as answered.
         if time.monotonic()-self._last_sent.get(peer_id,0.0)<8:
+            self._observe("rate_limited")
             self.notify(("telegram_status",
                          "Telegram: messaggio ricevuto, nessuna risposta per limite frequenza."))
             return
@@ -325,6 +369,7 @@ class TelegramBridge:
             reply=relay
         else:
             context=self.workspace.telegram_recent_context(peer_id,message.id)
+            self._observe("model_started")
             if self.reply_with_context is None:
                 answer = await asyncio.to_thread(
                     self.ask_gpt, telegram_assistant_prompt(incoming_text, context))
@@ -334,13 +379,17 @@ class TelegramBridge:
                 answer,
                 incoming_text,already_introduced=not needs_intro)
         if not reply or not self._enabled.is_set():
+            if not reply:
+                self._observe("reply_empty")
             return
+        self._observe("reply_ready")
         if needs_intro and not reply.casefold().lstrip().startswith(
                 ("sono jarvis","ciao, sono jarvis","ciao sono jarvis")):
             reply="Ciao, sono Jarvis, l'assistente di Alberto. "+reply
         if len(reply)>500:
             raise TelegramBridgeError("Risposta Telegram oltre il limite.")
         with tempfile.TemporaryDirectory(prefix="jarvis-tg-out-") as folder:
+            self._observe("synthesis_started")
             audio_path=await asyncio.to_thread(
                 make_telegram_voice,reply,Path(folder),self.voice_name)
             if not self._enabled.is_set():
@@ -349,6 +398,7 @@ class TelegramBridge:
             if note_ids:
                 self.workspace.reserve_notes(peer_id,note_ids)
             try:
+                self._observe("send_started")
                 sent=await client.send_file(peer,str(audio_path),
                                             voice_note=True)
             except Exception:
@@ -367,4 +417,5 @@ class TelegramBridge:
                 self.workspace.telegram_mark_introduced(peer_id)
             if note_ids:
                 self.workspace.finish_notes(peer_id,note_ids,sent.id)
+            self._observe("sent")
             self.notify(("telegram_sent",peer_name))
