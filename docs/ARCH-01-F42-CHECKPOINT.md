@@ -20,3 +20,11 @@ La F4.2 serve a raccogliere dati comparabili; non conferisce autorizzazione a so
 - Non stampare né salvare chat, ricordi, token API o prompt integrali. Nessun invio a GPT online.
 
 **Stato test iniziale:** da creare. **F4.2 benchmark Pavilion:** NON ESEGUITO. **Migrazione DLL → server:** NON APPROVATA.
+
+
+## F4.2 — Tracciamento RED e correzione minima
+- **Test scritti prima del codice:** `tests/test_f42_benchmark.py` commit `8404bf459b4b5f70bca3c70396abac6df0aa9e9e`. Non importabile fino al nuovo modulo, per definizione fase RED.
+- **Primo codice:** `tools/f42_benchmark.py` commit `d94d1ad0e84c3140126fbf5b23f2f7a9734d1411`; [CI 42536104201](https://github.com/MATRIXNEO23/jarvis/actions/runs/42536104201) 1064 test eseguiti su Windows per job, **3 fallimenti** esclusivamente in test F4.2: (i) verso del rapporto tra tempi, (ii) arrotondamento troppo presto del tasso token/s, (iii) clock monotono catturato nei default e non intercettabile dalla simulazione del CLI. Nessuna regressione motorica o di sicurezza identificata.
+- **Fix puntuale:** commit `fccc4f357d5cbb6f4e8e043b909783906d6dae32`: confronto esplicitamente `secondo/primo`, tps non arrotondati prima del confronto, orologio iniettato dopo ingresso; inoltre rifiuto input JSON con tipi imprevisti per campi enum. [CI di revisione 42536455043](https://github.com/MATRIXNEO23/jarvis/actions/runs/42536455043) in corso: non dichiarare GREEN prima della fine dei due job.
+- **Conferma invarianti:** nessuna modifica a `jarvis.py`, provider nativo, prompt, Second Brain, stato chat, profili, credenziali o ZIP pubblicati. Esecuzione server solo con flag esplicito, proxy e redirect proibiti dal canary F4.1; il report non registra prompt o risposte.
+- **Guida per quando ci sarà una release autorizzata o checkout di prova:** [ARCH-01-F42-PROVA-PAVILION.md](ARCH-01-F42-PROVA-PAVILION.md), comandi `python -m tools.f42_benchmark template|probe|server|compare`. La prova reale sul Pavilion **non è stata fatta**. Incomparabilità segnalata invece di sostenere speed-up ingiustificati.
