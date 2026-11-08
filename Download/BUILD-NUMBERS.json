@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 9,
-  "next_build": 10,
+  "latest_build": 10,
+  "next_build": 11,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -131,6 +131,20 @@
       "bytes": 8143033,
       "previous_build": 8,
       "git_blob_sha": "b06adaa36b5f9e82e32dfcfc4c0a4fc224928d5a"
+    },
+    {
+      "build_number": 10,
+      "label": "010",
+      "archive": "Jarvis-010.zip",
+      "metadata": "Jarvis-010.json",
+      "date": "2026-11-08",
+      "description": "Risposte Gemma in testo libero e corretta attribuzione degli errori",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "9a5fa201f67a5f85e38dea9a14d07a0ea2b387b5",
+      "sha256": "c71c4442969ded771bf7db4fe823196814e742b65ceec3b092949b46d0b98aae",
+      "bytes": 8143340,
+      "previous_build": 9,
+      "git_blob_sha": "43ac18b1e26eb4f3cc6b729b5651b3d01d8fe5a2"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"
