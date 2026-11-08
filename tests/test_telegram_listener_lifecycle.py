@@ -103,3 +103,19 @@ class ListenerTests(unittest.IsolatedAsyncioTestCase):
             self.bridge.stop()
             await asyncio.wait_for(task,2)
         self.assertTrue(client.closed)
+
+    async def test_terminal_disconnect_clears_enabled_flag_and_reports_stop(self):
+        client = Client(self.bridge)
+        self.boundary(client)
+        module = sys.modules['telethon']
+        module.TelegramClient = lambda *args, **kwargs: Client(self.bridge, disconnect_early=True)
+        task = asyncio.create_task(asyncio.to_thread(self.bridge._thread_main))
+        try:
+            done,_ = await asyncio.wait({task},timeout=2)
+            self.assertIn(task,done)
+        finally:
+            self.bridge.stop()
+            await asyncio.wait_for(task,2)
+        self.assertFalse(self.bridge.is_enabled())
+        self.assertTrue(any(e[0]=='telegram_status' and 'terminata' in e[1] for e in self.events))
+        self.assertTrue(any(e[0]=='telegram_stopped' for e in self.events))
