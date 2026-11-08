@@ -26,3 +26,21 @@
 - La pagina `Console` rimane quella dell'app per le azioni; se la UI chat è fallita o disabilitata, la console deve ancora funzionare.
 - Il parser di output JSON dei comandi e le autorizzazioni Windows non sono modificati. Un'azione rifiutata non viene salvata come risposta valida.
 - Nuove API online richieste dall'utente: registrate come F8 nel piano principale, **nessuna API/chiave integra in F2**.
+
+
+## Implementazione e correzioni eseguite — checkpoint di sicurezza
+**Codice F2:** `jarvis.py` (solo innesti UI/dispatch chat), nuovi `local_model/chat_ui.py`, `local_model/chat_context.py`, test `tests/test_chat_ui.py`; nessuna modifica al provider GGUF `native_bridge.py`, `native_provider.py`, `second_brain.py` o `workspace_memory.py`. HEAD codice più recente `026f150953962bffe39404fb62312e1ec5dc8239`.
+- Notebook nella vecchia area console: schede `Chat locali` e `Console`. Il vecchio `output` e `hud.attach_console(output)` sono **conservati**. La pagina Chat è solo Tk (niente WebView/browser, server o modello extra), con nuova/sele­ziona/rinomina, impostazioni Gemma legacy e transcript di ultimi 32 scambi; tutti gli scambi sono persistenti nel DB, nessun limite di retention distruttiva.
+- Creazione sidecar ritardata fino all'apertura esplicita della chat; store `%LOCALAPPDATA%/Jarvis/jarvis_chat_sessions.sqlite3` oppure `JARVIS_TRIAL_HOME/jarvis_chat_sessions.sqlite3`.
+- Domande chat Gemma `NativeConversationSession.prepare_turn` per `context_id=chat_id` già validato 32hex; reader `make_chat_history_reader` con soli `recent_pairs` della chat corrente, richiamo ricordi generali ritorna stringa vuota: nuova chat non eredita automaticamente Second Brain né scambi di altre istanze; legacy Console mantiene routing storico e recupero Second Brain.
+- Risposta accettata in chat: prima validazione JSON/azioni invariata, poi `NativeChatTurn.commit`, poi persistenza `ChatSessionStore.append_exchange`; azioni non-accettate, JSON malformato e comandi eseguiti non si fingono risposte chat. Voce e testo Gemma nel tab Chat puntano allo stesso chat_id; switching interdetto se modello occupato.
+- Nessuna spedizione accidentale a GPT online dal tab Chat: verifica per invio digitato, pulsante `Chiedi a GPT` e conversazione vocale. GPT e Telegram legacy restano disponibili dalla Console senza modifica trasporti.
+- Conservazione lavoro pendente: tab/chat non cambia durante generazione o presenza di follow-up già in coda; non li cancella. Il cambio progetto legacy nella Console mantiene la revoca tramite epoch che i test esistenti si aspettano.
+- Impostazioni KoboldCpp avanzate, Qwen e altri GGUF sono F5; provider con chiavi API gratuite/eventuali F8; diagnostica prompt PR #61 è ramo separato.
+
+### RED e regressioni intermediate
+- [42531259734](https://github.com/MATRIXNEO23/jarvis/actions/runs/42531259734): 58 ERROR Windows per riferimenti non protetti ai nuovi widget in test legacy che estraggono i gestori senza costruire tutta la UI. Corretto con `try/except NameError` nei soli accessi opzionali; non alterati dispatch legacy o source dei test.
+- [42531814491](https://github.com/MATRIXNEO23/jarvis/actions/runs/42531814491): 2 errori Windows per l'iniziale blocco globale di cambio progetto mentre Gemma era attiva; ripristinata la semantica originale Console, mantenuto blocco solo per chat F2. Non ignorare questi RED: sono registrati per motivare la correzione.
+- [42532269371](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269371): Native tokenizer/owner SUCCESS su sorgente F2 `026f15095`.
+- [42532269337](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269337): suite Windows completa dell'ultimo HEAD F2 **IN CORSO** all'ultima verifica. Non promuovere la fase a GREEN fino a due job success.
+- Nessun test Windows10/Pavilion reale, nessun avvio dell'app sul PC dell'utente e nessun ZIP creato/pubblicato.
