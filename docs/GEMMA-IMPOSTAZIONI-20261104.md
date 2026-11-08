@@ -1,4 +1,4 @@
-## Correzione budget chat — 8 novembre 2026, in verifica
+## Correzione budget chat — 8 novembre 2026, verificata nei sorgenti
 Pannello esistente Memoria e inattività: nuovo limite cronologia/ricordi128–600token,250iniziali, applicato dopo Salva alla domanda successiva senza reload. Campo legacy in caratteri conservato; compatibilità del profilo tramite memory.native.json accanto al vecchio memory.json. Nessuna dipendenza o installazione aggiuntiva; dettagli e gestione errori in [local_model/README.md](../local_model/README.md). Nessun pacchetto nuovo ancora pubblicato.
 
 ## Aggiornamento019 — 7 novembre 2026, unità chiarite nei sorgenti in bozza

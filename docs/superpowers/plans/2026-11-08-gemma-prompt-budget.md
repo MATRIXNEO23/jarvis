@@ -36,19 +36,22 @@
 
 ### Task2: modifica minima e GREEN
 **Files:** local_model/memory_preferences.py, native_conversation_session.py, memory_ui.py; local_model/README.md.
-- [ ] Nuovo campo e compatibilità/persistenza descritti sopra. Nessuna migrazione automatica o scrittura su load.
-- [ ] Sostituire600hardcoded solo nel budget nativo di history+recall. Spostare ricordi variabili, evitare la misura del prefisso se manca callback/spazio; non saltare validazione finale.
-- [ ] Campo UI numerico e help aggiornati, spiegazione del compromesso e default; mantenere gli altri controlli.
-- [ ] Eseguire focused + suite Windows completa; affrontare ogni regressione dimostrata.
+- [x] Nuovo campo e compatibilità/persistenza descritti sopra. Nessuna migrazione automatica o scrittura su load.
+- [x] Sostituire600hardcoded solo nel budget nativo di history+recall. Spostare ricordi variabili, evitare la misura del prefisso se manca callback/spazio; non saltare validazione finale.
+- [x] Campo UI numerico e help aggiornati, spiegazione del compromesso e default; mantenere gli altri controlli.
+- [x] Eseguire focused + suite Windows completa; affrontare ogni regressione dimostrata.
 
 ### Task3: prova nativa, review, checkpoint
 **Files:** tools/probe_native_prompt_performance.py, .github/workflows/native-prompt-performance.yml; documenti di stato/handoff/lezioni.
-- [ ] Conservare casi audit600 espliciti; aggiungere stesso input sintetico con250 e confronto prefisso con richiamo A/B. Assert budget con tokenizer reale, ultimo riferimento conservato,1load,1generazione/richiesta.
-- [ ] Review indipendente dei diff esatti e recheck mirato. Prova nativa Windows, tempi come osservazioni del runner e non garanzie Pavilion.
-- [ ] Salvare risultati e limiti nella repo, distinguere sorgente verificato da pacchetto non ancora pubblicato; nessun nuovo ZIP.
+- [x] Conservare casi audit600 espliciti; aggiungere stesso input sintetico con250 e confronto prefisso con richiamo A/B. Assert budget con tokenizer reale, ultimo riferimento conservato,1load,1generazione/richiesta.
+- [x] Review indipendente dei diff esatti e recheck mirato. Prova nativa Windows, tempi come osservazioni del runner e non garanzie Pavilion.
+- [x] Salvare risultati e limiti nella repo, distinguere sorgente verificato da pacchetto non ancora pubblicato; nessun nuovo ZIP.
 
 ## RED osservato e stato della modifica
 628e908, run42499660390/job128789426794:7test,2failure (storia oltre250 e primo turno alterato da richiamo),4errori per nuovo campo API/UI assente,1controllo ruoli già OK. Comando focused del piano, Windows. Nessun import/sintassi mancante. Correzione runtime ora presente nel worktree:3file responsabili e prova nativa aggiornata per confronto600/250; GREEN e review pendenti. Nessun nuovo ZIP.
 
 ## Prima GREEN e review
 58b8059:focused7test e integrazione nativa42499942818SUCCESS, prestazioni42499942823SUCCESS. Review indipendente in sola lettura senza blocchi runtime; aggiunto assert esplicito storia+recall<=budget con tokenizer reale e caso riferimento tardivo128. Recheck strumentazione/test necessario, nessun runtime aggiuntivo modificato. Dati runner non sono promessa di velocità sul Pavilion.
+
+## Chiusura verificata
+Recheck c91ebb5:7focused+DLL42500290904SUCCESS,11richieste native con contributi token espliciti42500290988SUCCESS,1006test per ciascun Python Windows3.11/3.12nel run42500291039SUCCESS. Review indipendente e recheck statico conclusi senza rilievi residui. Rapporto canonico docs/CORREZIONE-PROMPT-GEMMA-20261108.md ed evidenza JSONpersistente. Nessuna build pubblicata, successivo passo solo su richiesta.
