@@ -221,7 +221,7 @@ SERVICE_EVENTS = {
     'model_failed': (None, 'Elaborazione modello fallita'),
     'synthesis_failed': (None, 'Creazione del vocale fallita'),
     'send_failed': (None, 'Invio del vocale fallito o incerto'),
-    'listener_failed': (None, 'Listener interrotto'),
+    'listener_failed': ('listening', 'Collegamento listener interrotto'),
     'processing_failed': (None, 'Elaborazione del messaggio fallita'),
 }
 _PHASE_FAILURE = {'dependency': 'dependency_failed', 'credentials': 'credentials_failed',

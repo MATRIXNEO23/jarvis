@@ -36,6 +36,10 @@ def accepted_private_message(sender_id,is_private,outgoing,allowed_peer):
             and is_private is True and outgoing is False)
 
 
+class _TerminalDisconnect(TelegramBridgeError):
+    """Known end of transport; do not attribute it to a stale message phase."""
+
+
 def telegram_assistant_prompt(user_text,context="",pending=()):
     """A note is explicitly owner-authorized; no general/project recall."""
     if not isinstance(user_text,str) or not user_text.strip():
@@ -186,7 +190,8 @@ class TelegramBridge:
             asyncio.run(self._run())
         except (TelegramBridgeError,TelegramVoiceError,
                 TelegramAuthError,OSError,ValueError,RuntimeError) as exc:
-            self._diagnostics.failed()
+            if not isinstance(exc, _TerminalDisconnect):
+                self._diagnostics.failed()
             self.notify(("telegram_status",
                          "Telegram: "+str(exc)[:165]))
         except Exception:
@@ -292,7 +297,8 @@ class TelegramBridge:
                 if disconnected in done and not disconnected.cancelled():
                     disconnected.exception()
                 if not self._shutdown.is_set() and disconnected in done:
-                    raise TelegramBridgeError(
+                    self._observe("listener_failed")
+                    raise _TerminalDisconnect(
                         "Connessione Telegram terminata. Riattiva le risposte automatiche; "
                         "nessun messaggio viene reinviato automaticamente.")
             finally:

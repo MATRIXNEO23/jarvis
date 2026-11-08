@@ -1287,12 +1287,16 @@ def main() -> None:
             telegram = bridge.diagnostic_snapshot() if bridge is not None else None
         except (RuntimeError, AttributeError):
             telegram = None
+        try:
+            telethon = importlib.util.find_spec("telethon") is not None
+        except (ImportError, ValueError):
+            telethon = None
         report = format_service_report(evidence, telegram=telegram,
             automatic=bool(telegram_auto.get()), credentials=credentials_present(),
             contacts=len(selected_telegram_contacts()),
             selected="GPT" if gpt_enabled.get() else "Gemma", gemma=state,
             memory=bool(memory_enabled.get()),
-            telethon=importlib.util.find_spec("telethon") is not None,
+            telethon=telethon,
             ffmpeg=shutil.which("ffmpeg") is not None)
         if not evidence.checks:
             report += "\nStato generale parzialmente non disponibile; registro Telegram separato."

@@ -102,6 +102,7 @@ class ServiceDiagnosticsUITests(unittest.TestCase):
         callback();first=root._jarvis_services_diagnostic
         root.update()
         callback();self.assertIs(root._jarvis_services_diagnostic,first)
+        first.window.focus_force();root.update()
         first.window.event_generate('<Escape>');root.update()
         self.assertFalse(first.window.winfo_exists())
         callback();second=root._jarvis_services_diagnostic
