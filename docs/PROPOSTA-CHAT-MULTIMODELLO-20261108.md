@@ -46,3 +46,31 @@ Rischi: auto-detection imprecisa, meta GGUF mancante, modelli specializzati thin
 ## Rilascio
 
 La build 014 e l'archivio restano immutabili. La PR #61 NON include queste funzioni. Nessun ZIP 015 o successivo senza autorizzazione, review, test Windows, prova su GGUF e regole canoniche di versione.
+
+
+## Revisione architetturale — KoboldCpp vs Jarvis (richiesta utente successiva, 8 novembre 2026)
+
+**Stato: valutazione, non approvazione di riscrittura, nessuna modifica runtime e nessuna build.** Questa sezione aggiorna l'ordine consigliato delle fasi precedenti dopo la richiesta di valutare se costruire Jarvis attorno a KoboldCpp oppure il contrario.
+
+### Evidenze (sorgenti della 014 e manuali upstream)
+- Jarvis 014 usa **KoboldCpp embedded** con `native_initializer.py`, `native_bridge.py`, `native_provider.py`; non avvia il server HTTP né il web UI KoboldAI Lite. `native_bridge.generate` passa una stringa già formattata, con tag e sequenza di stop Gemma.
+- KoboldCpp standalone ufficiale include **KoboldAI Lite in http://localhost:5001**: New Session, Save/Load, Context e schede Settings (General, GUI, Samplers, Tokens, Tools, Misc, Media). Una nuova sessione non equivale automaticamente alla navigazione di più schede persistenti stile ChatGPT: richiede persistenza e un selettore di conversazione aggiuntivi.
+- KoboldCpp serve API locali `/api/v1/generate`, `/v1/chat/completions` ecc. e gestisce formati di chat mediante AutoGuess/Jinja. Un client può scegliere il modello tramite Admin / Router Mode, che carica il modello richiesto al bisogno, non più modelli simultaneamente per default.
+- KoboldCpp: FastForwarding e ContextShift attivi di default, SmartCache disattivo (ha costo in RAM); la verifica di efficacia della cache va fatta su sequenze reali perché i prompt di Jarvis cambiano con storia/ricordi/routing. Il riuso di prefissi identici può aiutare, ma non azzera il tempo per gli altri token.
+- In Jarvis `SecondBrain.prompt_context` può riportare dati recenti e correlati anche se `NativeConversationSession.prepare_turn` ha già inviato la cronologia: **duplicazione possibile, non quantificata**; gli errori JSON operativi richiedono traccia separata.
+- Su i3-2100/10GB RAM evitare il doppio caricamento del GGUF. In modalità server impostare bind `127.0.0.1`, non esporre in LAN; username/password admin se usato. La versione attuale KoboldCpp è AGPLv3: eventuale fork o integrazione/copia del frontend richiede verifica degli obblighi di licenza. L'uso tramite API è distinto dal copiare il codice.
+- Riferimenti: https://koboldcpp.net/docs/features/lite/ ; https://koboldcpp.net/docs/api/overview/ ; https://koboldcpp.net/docs/settings/context-size/ ; https://koboldcpp.net/docs/settings/admin-mode/ ; https://koboldcpp.net/docs/hardware/old-and-cpu-only/ ; https://github.com/LostRuins/koboldcpp (licenza).
+
+### Scelta di progetto raccomandata (condizionata alle prove)
+**Jarvis = orchestratore/sicurezza/voce/progetti/memoria; KoboldCpp = motore GGUF e gestione template/sampler; Lite = frontend di riferimento o base riutilizzabile, da valutare con test.** Non infilare tutte le capacità Jarvis dentro il codice KoboldCpp e non ricostruire alla cieca l'intero Lite in Tk. Il percorso server HTTP loopback sostituirebbe *opzionalmente* l'attuale chiamata DLL in-process, ma introdurrebbe un processo gestito, connessioni, start/stop, incompatibilità versione e UI browser. Non promettere automaticamente prestazioni superiori senza benchmark confrontabile. Il vecchio percorso DLL resta modalità rollback.
+
+Per le chat: un **chat_id** locale per scheda, contenuti, modello e preferenze isolati; **un solo server/GGUF in RAM** per tutte le chat, con generazioni serializzate. Second Brain globale non deve mescolare spontaneamente il contesto di chat nuove: eventuali ricordi globali vanno recuperati solo su scelta/autorizzazione e pertinenza; i dati restano sul disco e i progetti ancora isolati. La console tecnica Jarvis resta accessibile, azioni Windows sempre validate dal motore Jarvis, non direttamente autorizzate da testo/HTML/LLM di Lite.
+
+### Test decisivo prima di scegliere la migrazione
+
+1. Raccogliere con la diagnostica PR #61 il **prompt esatto** e la ripartizione delle fonti della 014, soprattutto quando Second Brain è attivo.
+2. Misurare KoboldCpp originale e Jarvis 014 **sullo stesso GGUF, stessa quantizzazione, context 1024, output 256, threads 2/2 e domanda/cronologia confrontabili**, includendo la seconda domanda per testare cache. Raccogliere prompt tokens, Processed tokens e s, Generated tokens e s, RAM e qualità di continuità.
+3. Prova locale non distruttiva: KoboldCpp standalone come server **loopback** + piccola connessione *sperimentale*, senza sostituire il provider attuale né avviare due GGUF. Verificare modelli Gemma e Qwen concreti, template/stop, start/stop, timeout, port in use e nessuna esecuzione azioni dal solo output modello.
+4. Solo se prestazioni/coerenza e compatibilità passano: elaborare il frontend chat stile Lite con schede/Save&Load e le impostazioni equivalenti, preservando console/voce/add-on e memoria; decidere se interfaccia nel browser locale con Jarvis integrato oppure finestra dedicata. L'integrazione dentro la console Tk può richiedere componente web e RAM extra: misurare prima di sceglierlo.
+
+**Gate:** la 014 rimane disponibile; PR #61 solo diagnostica; nessun code change per questa decisione e nessuna build fino al consenso e ai test. 
