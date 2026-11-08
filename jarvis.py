@@ -4600,8 +4600,14 @@ def main() -> None:
                                     raise ConversationRejected('Formato di risposta locale non supportato.')
                                 value.text = intent.reply
                             except ConversationRejected as exc:
-                                write_line('GEMMA > Risposta non interpretabile: ' + str(exc))
-                                speak_result('Non riesco a interpretare la risposta di Gemma. Puoi riprovare?')
+                                if value.finish_reason == 'length':
+                                    write_line('GEMMA > Risposta incompleta: limite Max Output raggiunto; '
+                                               'azione non eseguita. ' + str(exc))
+                                    speak_result('La risposta di Gemma è stata interrotta dal limite di output. '
+                                                 'Non ho eseguito alcuna azione.')
+                                else:
+                                    write_line('GEMMA > Risposta non interpretabile: ' + str(exc))
+                                    speak_result('Non riesco a interpretare la risposta di Gemma. Puoi riprovare?')
                                 continue
                         # UI context/epoch cannot change during this synchronous
                         # acceptance. The metadata commit never waits for native inference.
