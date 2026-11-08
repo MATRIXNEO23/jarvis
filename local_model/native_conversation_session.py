@@ -348,10 +348,55 @@ class NativeConversationSession:
             final_size = measure(format_gemma_messages(messages))
             if final_size > budget:
                 raise ValueError("Prompt oltre il contesto configurato.")
+            with self._state_lock:
+                inspect_prompt = self._prompt_diagnostic_armed
+                self._prompt_diagnostic_armed = False
             self._prepare(config, revision)
             self._check_revision(revision)
             result = self.adapter.call("ask", messages=messages, timeout=timeout,
                                        prompt_budget=budget)
+            if inspect_prompt:
+                # Inspect after generation to avoid touching native prefill timings.
+                # Never execute, persist or transmit the report.
+                try:
+                    from .prompt_diagnostics import render_prompt_diagnostic
+                    history_source = ("Archivio Second Brain: recent_pairs"
+                                      if restored else
+                                      "NativeConversationSession._turns: RAM")
+                    memory_source = ("jarvis.native_memory_request: progetto"
+                                     if context_id is not None else
+                                     "jarvis.native_memory_request: Second Brain")
+                    sections = [
+                        ("Istruzioni / catalogo", base_instruction_source, base_instructions),
+                        ("Personalità", "NativeModelConfig.personality: impostazioni",
+                         applied_personality),
+                    ]
+                    for number, pair in enumerate(history, 1):
+                        sections.append(("Cronologia #" + str(number) + " utente",
+                                         history_source, pair[0][1]))
+                        sections.append(("Cronologia #" + str(number) + " Gemma",
+                                         history_source, pair[1][1]))
+                    sections.extend([
+                        ("Ricordi recuperati", memory_source, recall),
+                        ("Domanda corrente", "jarvis.submit_gemma_voice: voce o testo", latest),
+                        ("Template e ruoli", "native_provider.format_gemma_messages",
+                         "(vedi prompt effettivo in fondo)"),
+                    ])
+                    report = render_prompt_diagnostic(
+                        messages=messages, sections=sections,
+                        count=counter if exact else None, total_tokens=final_size,
+                        budget=budget, context_size=config.context_size,
+                        max_output=config.max_output,
+                        history_limit=memory.history_max_tokens,
+                        mode="chat" if allowed_actions is None else "azioni",
+                        restored=restored, selection_metrics=metrics,
+                        warning=intent_warning)
+                except Exception as exc:
+                    report = ("Diagnostica non disponibile: " + type(exc).__name__
+                              + ". Risposta Gemma invariata.")
+                with self._state_lock:
+                    if not self._closed and not self._stopping and revision == self._revision:
+                        self._last_prompt_diagnostic = report
             answer = clean_native_answer(result.get("text"))
             turn = NativeChatTurn(self, context_id, latest, answer, revision)
             # Generation telemetry informs errors only; it is never a grant
@@ -446,6 +491,8 @@ class NativeConversationSession:
         with self._state_lock:
             self.prepared = False
             self._prepared_config = None
+            self._prompt_diagnostic_armed = False
+            self._last_prompt_diagnostic = None
         self.adapter.stop()
 
     def stop(self):
@@ -455,6 +502,8 @@ class NativeConversationSession:
             self._stopping += 1
             self.prepared = False
             self._prepared_config = None
+            self._prompt_diagnostic_armed = False
+            self._last_prompt_diagnostic = None
         try:
             self.adapter.stop()
         finally:
