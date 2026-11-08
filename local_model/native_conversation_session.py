@@ -379,8 +379,6 @@ class NativeConversationSession:
                     sections.extend([
                         ("Ricordi recuperati", memory_source, recall),
                         ("Domanda corrente", "jarvis.submit_gemma_voice: voce o testo", latest),
-                        ("Template e ruoli", "native_provider.format_gemma_messages",
-                         "(vedi prompt effettivo in fondo)"),
                     ])
                     report = render_prompt_diagnostic(
                         messages=messages, sections=sections,
