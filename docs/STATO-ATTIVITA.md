@@ -1,4 +1,7 @@
 
+## 2026-11-08 — Telegram: fix lifecycle completato e verificato
+Sintomo confermato: messaggi da altro account/contatto spuntato, nessun Ricevuto; manuale funziona. Difetto riprodotto: listener rimane falsamente attivo quando termina la connessione. Fix runtime solo telegram_bridge.py: attende Stop o Future disconnected catturato una volta, consuma eventuale eccezione senza divulgarla, riusa cleanup e disattivazione esistenti. Nessun retry/replay nuovo o modifica Gemma/manuale. Sorgente24b3ef7;987 test OK per Windows3.11/3.12, run42454285936 SUCCESS;4 test mirati42454285903 SUCCESS; prova nativa Gemma42454285900 SUCCESS. Review indipendente conclusa. Nessun account live verificato: causa esatta sul PC ancora da confermare, non dichiarare ricezione universale risolta. Handoff tecnico/evidenze/limiti: docs/TELEGRAM-RICEZIONE-20261108.md. Nessuna build/merge/nuovoZIP;010 immutabile.
+
 ## 2026-11-08 — Telegram: indagine ricezione, test RED
 Utente: invio manuale funziona, nessun «Ricevuto» nella console quando arriva un messaggio. Nessuna sessione/account disponibile per collaudo live. Difetto statico riproducibile: TelegramBridge._run attende solo shutdown manuale e ignora client.disconnected; dopo fine riconnessioni può restare falsamente attivo. Preparati test con vera pipeline listener/handler/WorkspaceMemory, boundary Telegram e audio controllati, nessun messaggio reale. Prima RED Windows poi fix limitato al lifecycle, nessuna modifica a Gemma, credenziali, contatti o invio manuale; nessuna build. Non è ancora dimostrato che sia l'unica causa sul PC.
 

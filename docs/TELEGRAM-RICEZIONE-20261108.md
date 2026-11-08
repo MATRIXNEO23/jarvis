@@ -1,3 +1,16 @@
+## Esito finale — fix mirato verificato
+Sorgente24b3ef7509e84ecf60e023763671a303b0230633. Suite completa run42454285936 SUCCESS:987 test OK su ciascuna versione Python3.11/3.12 Windows; job128649889463181.021s, job128649889593150.959s. Test listener run42454285903 SUCCESS:4 test,0.800s. Prova nativa Gemma di regressione42454285900 SUCCESS. Build/pubblicazione saltate;010 invariata.
+
+Conferma utente ulteriore: il messaggio arriva da un altro account, contatto spuntato, non da se stesso. Rimane non dimostrato che la disconnessione terminale sia l'unica causa sul PC: nessun accesso a log/sessione reale. Il fix elimina il listener falsamente attivo e segnala l'uscita quando i retry interni Telethon terminano; non introduce riavvio automatico o recupero retroattivo dei messaggi persi. Per ripartire da una disconnessione terminale si riattivano le risposte automatiche.
+
+Revisione indipendente: corretti anche identità del Future Telethon (property restituisce shield, va catturato una volta) ed eccezioni terminali da consumare senza divulgarne i dettagli. Recheck finale: nessun importante difetto residuo confermato. Test coprono Future shield, chiusura normale, errore terminale senza warning, flag enabled/thread, handler contatto autorizzato, esclusione uscenti/non autorizzati e duplicati. Audio e rete controllati, archivio reale temporaneo. Nessun test funzionale Linux o messaggio reale inviato.
+
+Modifiche runtime limitate a telegram_bridge.py (+20 righe circa); nessun cambiamento a modello, invio manuale, credenziali, contatti o dati storici. L'invio manuale è coperto anche dalla suite completa esistente.
+
+[Suite Windows finale](https://github.com/MATRIXNEO23/jarvis/actions/runs/42454285936) · [Test listener](https://github.com/MATRIXNEO23/jarvis/actions/runs/42454285903) · [Commit verificato](https://github.com/MATRIXNEO23/jarvis/commit/24b3ef7509e84ecf60e023763671a303b0230633)
+
+Segue indagine storica e piano iniziale. I GREEN indicati sopra sostituiscono lo stato pendente riportato nel checkpoint iniziale.
+
 # Telegram: listener inattivo dopo disconnessione terminale
 
 Sintomo utente: invio manuale funziona, messaggi in ingresso non producono nemmeno «Ricevuto». Causa sul PC non ancora provata: nessun account/log live accessibile.
