@@ -1,0 +1,16 @@
+name: Service diagnostics regression (Windows)
+on:
+  pull_request:
+    paths: ['runtime_diagnostics*.py','telegram_bridge.py','jarvis.py','tests/test_service_diagnostics*.py','.github/workflows/service-diagnostics.yml']
+permissions:
+  contents: read
+jobs:
+  services:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Local diagnostics and actual Tk boundaries
+        run: python -m unittest discover -s tests -p 'test_service_diagnostics*.py' -v
