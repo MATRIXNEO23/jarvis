@@ -45,12 +45,12 @@ class SavedPolicyIntegrationTests(unittest.TestCase):
                 env["service"].call.assert_not_called()
                 env["messagebox"].askyesno.assert_not_called()
 
-    def test_saved_allowed_avoids_dialog_and_revocation_before_worker_blocks_send(self):
+    def test_saved_allowed_still_confirms_session_and_revocation_blocks_send(self):
         self.policy(**{"chat.conversation": "allowed"})
         env, workers, _ = self.harness.environment(permissions=False)
         run = self.harness.callback("run_gpt", env)
         self.assertTrue(run("ask", prompt="Dati di prova"))
-        env["messagebox"].askyesno.assert_not_called()
+        env["messagebox"].askyesno.assert_called_once()
         self.policy(**{"chat.conversation": "never"})
         workers.pop()()
         env["service"].call.assert_not_called()

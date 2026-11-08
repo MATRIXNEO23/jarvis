@@ -54,15 +54,15 @@ def help_sections(engine):
             'Il pulsante MIC mantiene il controllo manuale. Il riconoscimento offline richiede Vosk e il modello vocale. '
             'Per installazione e problemi usa docs/VOCE_OFFLINE.md distribuita con Jarvis.',
         'Modelli e GPT':
-            'La scelta dei modelli non è stata cambiata da questa guida. '
+            'GPT ON seleziona GPT per voce, chat e Telegram; GPT OFF seleziona Gemma. '
             'I comandi locali riconosciuti vengono intercettati nella console prima dei modelli; file e app seguono i rispettivi controlli.\n\n'
-            'Con Gemma configurata, la conversazione ordinaria della console usa Gemma. '
+            'Al primo invio conversazionale a GPT confermi il consenso per la sessione, condiviso fra voce e chat. Un errore di connessione non seleziona Gemma. Torna a Gemma quando lo scegli tu. '
             'Le altre formulazioni possono essere interpretate da Gemma come azioni del catalogo: '
             'il motore le valida ed esegue, oppure chiede un chiarimento. '
             'Risposte non valide o annullate non eseguono azioni. '
             'Se il catalogo non entra nel contesto configurato, compare un avviso: '
             'restano disponibili chat e comandi diretti, senza cambiare automaticamente le impostazioni. '
-            'Chiedi a GPT è il pulsante esplicito per una richiesta al GPT collegato; Prova Gemma locale è una prova del modello.\n\n'
+            'Passa a GPT / torna a Gemma / usa GPT / attiva Gemma / avvia GPT cambiano lo stesso interruttore, anche a voce. In Hey Jarvis anteponi Jarvis. Telegram mantiene autorizzazione e consenso specifici. Prova Gemma locale resta una prova esplicita del modello.\n\n'
             'GPT richiede abilitazione, collegamento e permesso della funzione. '
             'Mai: nessun invio per quella funzione. Chiedi autorizzazione: domanda prima dell’invio. '
             'Autorizzato: evita quella richiesta ripetuta, ma non autorizza automaticamente le azioni.\n'

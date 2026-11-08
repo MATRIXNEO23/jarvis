@@ -86,7 +86,8 @@ class SelectedConversationModelTests(unittest.TestCase):
                 import test_activity_status as callbacks
                 callbacks.ActivityStatusTests.setUpClass()
                 env.update(gpt_enabled=callbacks.Value(not selected), toggle_gpt=Mock(),
-                           closing=False, document_busy=False)
+                           closing=False, document_busy=False,
+                           telegram_voice_dialog=SimpleNamespace(pending=False))
                 # Compile new handler only when present, so the baseline really
                 # follows the old console routing instead of a missing symbol.
                 main = next(n for n in ast.parse(Path('jarvis.py').read_text(encoding='utf-8')).body
@@ -99,3 +100,59 @@ class SelectedConversationModelTests(unittest.TestCase):
                 env['toggle_gpt'].assert_called_once()
                 self.assertEqual(env['gpt_enabled'].get(), selected)
                 env['submit_gemma_trial'].assert_not_called()
+
+    def test_switch_mentions_and_negations_do_not_change_selection(self):
+        from voice_control import model_switch_target
+        for text in ('non usare GPT', 'come si attiva GPT?', 'se dico usa Gemma',
+                     'GPT è interessante', 'attiva GPT e apri browser'):
+            self.assertIsNone(model_switch_target(text), text)
+        self.assertTrue(model_switch_target('Jarvis, passa a GPT'))
+        self.assertFalse(model_switch_target('Jarvis torna a Gemma'))
+
+    def test_console_disconnected_gpt_keeps_selection_and_does_not_use_gemma(self):
+        import test_typed_timer_routing as fixture
+        harness = fixture.TypedTimerTests()
+        self.addCleanup(harness.doCleanups)
+        env = harness.environment('Parliamo ancora')
+        env.update(gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=False,
+                   busy_gpt=False, submit_gpt=Mock())
+        env['send_console_input']()
+        env['submit_gemma_trial'].assert_not_called()
+        env['submit_gpt'].assert_not_called()
+        self.assertTrue(env['gpt_enabled'].get())
+        self.assertIn('non connesso', env['write_line'].call_args.args[0])
+
+    def test_queued_ask_result_and_error_are_discarded_after_model_switch(self):
+        import test_activity_status as fixture
+        fixture.ActivityStatusTests.setUpClass()
+        for failed in (False, True):
+            with self.subTest(failed=failed):
+                harness = fixture.ActivityStatusTests()
+                self.addCleanup(harness.doCleanups)
+                env, workers, _ = harness.environment()
+                if failed:
+                    env['service'].call.side_effect = RuntimeError('Vecchia richiesta')
+                else:
+                    env['service'].call.return_value = {'text': 'Vecchia risposta'}
+                self.assertTrue(harness.callback('run_gpt', env)('ask', prompt='Testo lungo', source='Testo'))
+                workers.pop()()
+                env['conversation_epoch'] += 2  # GPT -> Gemma -> GPT
+                env['active_gpt'] = False
+                harness.receive('gpt_error' if failed else 'gpt_ok', env)
+                env['speak_result'].assert_not_called()
+                env['remember_exchange'].assert_not_called()
+                self.assertFalse(env['active_gpt'])
+
+    def test_pending_telegram_dialog_keeps_model_phrase_as_message(self):
+        import test_activity_status as fixture
+        fixture.ActivityStatusTests.setUpClass()
+        harness = fixture.ActivityStatusTests()
+        env = dict(closing=False, document_busy=False, save_only_waiting=False,
+                   doc_dialog=SimpleNamespace(phase='idle'), pending_project_name=False,
+                   pending_project_rename_id=None, pending_project_trash_id=None,
+                   telegram_voice_dialog=SimpleNamespace(pending=True),
+                   gpt_enabled=fixture.Value(False), toggle_gpt=Mock())
+        callback = harness.callback('try_model_switch', env)
+        for text in ('usa GPT', 'torna a Gemma'):
+            self.assertFalse(callback(text))
+        env['toggle_gpt'].assert_not_called()

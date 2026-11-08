@@ -1,3 +1,7 @@
+## Scelta modello e consenso — candidata in preparazione
+
+Red run42437808013:950test,4failure attese e0errori (voce, chat, consenso ripetuto, Telegram). Ramo fix/model-selection-session-20261108, PR57. Riutilizzati toggle e grant revocabile; modello selezionato distinto dalla connessione. Candidata locale ancora da verificare Windows; nessuna nuova build. Formato/contesto Gemma per ultimi, avvisare prima. Elenco completo in CORREZIONI-POST-008-20261108.md.
+
 ## Comandi interni — Red Windows e prima correzione candidata
 
 Checkpoint di riproduzione remoto e4641bea24f8c2439d0b52e48c5de78aa8d9fa26 (stesso tree del locale iniziale2e84436); PR56, run42426651526. Job128566260418:928test Windows,7fallimenti attesi nei nuovi casi stato/browser/sinonimi,0errori; gli altri test passati nel job. Secondo job ancora da leggere. Nessun nuovo risultato sul GGUF o PC personale.

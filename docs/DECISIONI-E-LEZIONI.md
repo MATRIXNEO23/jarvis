@@ -1,3 +1,7 @@
+## Scelta modello e consenso — candidata in preparazione
+
+Red run42437808013:950test,4failure attese e0errori (voce, chat, consenso ripetuto, Telegram). Ramo fix/model-selection-session-20261108, PR57. Riutilizzati toggle e grant revocabile; modello selezionato distinto dalla connessione. Candidata locale ancora da verificare Windows; nessuna nuova build. Formato/contesto Gemma per ultimi, avvisare prima. Elenco completo in CORREZIONI-POST-008-20261108.md.
+
 ## Aiuto007 — callback senza ritenzione del root distrutto
 
 Review lifecycle conferma ciclo forte root→callbackfocus→root/input. Non è un crash osservato, ma ritarda il rilascio Tk fino aGC. Sostituito solo il riferimento registrato con weakref.ref; durante l'uso callback ancora mantenuto da main/binding. Test tastiera reale ora verifica anche rilascio del callback dopo destroy e rimozione dei riferimenti della fixture, senza GC dell'app modificato. Sourceb38/run42420088509 aveva922test verdi per matrice; package sostituito prima della pubblicazione per includere il fix minimo lifecycle. Nuova verifica finale richiesta, nessun vecchio artefatto promosso. Scelta modelli/profili invariata.
