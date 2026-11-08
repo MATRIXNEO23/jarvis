@@ -22,3 +22,7 @@ Foto diagnostica: input701/768token, output riservato128, margine128,3scambi int
 
 ## File da aggiungere; prossimo controllo
 Strumento tools/probe_native_prompt_performance.py, workflow .github/workflows/native-prompt-performance.yml, questo rapporto e checkpoint nei documenti di stato/handoff/lezioni. Prima controllo sintassi statico, poi esecuzione Windows e rilettura dei risultati. Nessun test funzionale Linux. Esito ancora pendente.
+
+## Prima prova Windows: checkpoint e controllo aggiuntivo
+Run42464366606, sorgente88baf15:SUCCESS,8richieste/8generazioni,1load. Sette conteggi con3scambi: circa7ms; selezione con estrazione circa5ms. Prompt419token: primo totale25,985s (load2,548s), identico1,830s; ricordo A297token1,789s alla ripetizione identica contro6,649s per ricordo B297token (output12/14token). Sono prove sintetiche, non spiegazione dei105s sul PC.
+Scoperto un limite della telemetria upstream: media per token moltiplicata per input completo riporta52,794s di process quando generate dura1,822s. Non usare backend.process_seconds come durata reale con riuso cache; walltime affidabile. Strumento aggiornato per conservare medie grezze, senza questa moltiplicazione. Aggiunti2casi vicini ai701token reali della foto. Importazione/creazione provider escluse dal caso cold; misurato il load nativo. Entrambe le deviazioni della review preventiva corrette (checkout SHA e unica sessione persistente). Nuova verifica Windows giustificata da questi rilievi, non nuova revisione globale. Nessun runtime cambiato, nessuna build.

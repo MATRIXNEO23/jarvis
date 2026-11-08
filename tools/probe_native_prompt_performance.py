@@ -21,6 +21,7 @@ from local_model.memory_preferences import MemoryPreferences
 from local_model.native_chat_adapter import NativeChatAdapter
 from local_model.native_config import NativeModelConfig
 from local_model.native_conversation_session import NativeChatTurn, NativeConversationSession
+from local_model.native_provider import format_gemma_messages
 
 
 def main():
@@ -82,14 +83,15 @@ def main():
             generating = False
         current["prompt_tokens"] = result["prompt_tokens"]
         current["completion_tokens"] = result["completion_tokens"]
-        # Use the pinned upstream's /api/extra/perf conversion. This is native
-        # telemetry, not an assertion that all input tokens were reprocessed.
+        # Preserve raw telemetry. Multiplying average process time by the full
+        # input count (as upstream /api/extra/perf does) overstates elapsed time
+        # when prefix tokens are reused; wall time is the reliable comparison.
         h = k.handle
         inputs, outputs = h.get_last_input_count(), h.get_last_token_count()
         current["backend"] = dict(
             last_input_count=inputs, last_token_count=outputs,
-            process_seconds=h.get_last_process_time() * inputs * 0.001,
-            eval_seconds=h.get_last_eval_time() * outputs * 0.001)
+            raw_process_ms_per_token=h.get_last_process_time(),
+            raw_eval_ms_per_token=h.get_last_eval_time())
         # Analysis tokenization is explicitly excluded from the request timing
         # and tokenizer counters; performed only after the production call.
         current["_prompt"] = arguments["prompt"]
@@ -166,6 +168,23 @@ def main():
     try:
         run("catalog_three_pairs_cold", fixtures)
         run("catalog_three_pairs_identical_warm", fixtures)
+        # Fit a synthetic three-pair prompt near the user's 701-token input.
+        # This audit-only setup is outside request timing and native counters.
+        dense = list(fixtures)
+        while True:
+            messages = [{"role": role, "content": text}
+                        for user, answer in dense
+                        for role, text in (("user", user), ("assistant", answer))]
+            messages[0]["content"] = catalog[0] + messages[0]["content"]
+            messages.append({"role": "user", "content": question})
+            if len(original_tokenize(format_gemma_messages(messages), True)) >= 695:
+                break
+            user, answer = dense[0]
+            dense[0] = user, answer + " Conserva le etichette e controlla ogni ripiano."
+        run("catalog_near_701_tokens_warm", dense)
+        if not 690 <= rows[-1]["prompt_tokens"] <= 715 or rows[-1]["context"]["whole"] != 3:
+            raise RuntimeError("Dense fixture did not reproduce a near-701-token whole history.")
+        run("catalog_near_701_tokens_identical_warm", dense)
         run("catalog_latest_pair_warm", fixtures[-1:])
         run("plain_latest_pair_control_warm", fixtures[-1:], intent=None)
         run("archive_A_warm", fixtures[-1:], recall='{"project":"magazzino A"}')
@@ -183,6 +202,8 @@ def main():
                       limits=["Windows runner is not Pavilion; no extrapolated latency.",
                               "Native path only; no Telegram queue, DB/fsync, UI or TTS.",
                               "Nested timings must not be added.",
+                              "Provider creation/import precedes first request; cold measures native load.",
+                              "Raw backend averages cannot be multiplied by full input under prefix reuse.",
                               "Fixed order, synthetic uncommitted repetitions; not a dialogue quality test."])
         Path("native-prompt-performance-report.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
