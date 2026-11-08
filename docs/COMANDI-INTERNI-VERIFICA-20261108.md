@@ -15,3 +15,11 @@ Prossimo passo: leggere Red del caso review, poi conservare la priorità del ris
 - Aggiunta caratterizzazione servizio file attivo: mostra Download apre una sola volta, non produce listing, revoca della cartella blocca la nuova apertura. Rimossi alias mostra dai rami di elenco ormai superati; il riconoscitore condiviso determina l'apertura.
 
 Prossimo controllo: nuova suite Windows della candidata, ricontrollo mirato della review. Raccordo Gemma ancora pendente, nessuna build.
+
+## Primo passo verificato; avvio raccordo Gemma
+
+Source949f31df5993f284f08e2ec4f5a0400822da1080 (tree equivalente localef112a3c), run42427784373 SUCCESS. Python3.11/job128569691692:932test/152.957s/OK; Python3.12/job128569691484:932test/185.997s/OK. Sintassi/probe e integrazione Windows Search nel workflow verificati dal successo dei job. Review mirata readonly non ha trovato ulteriori difetti nelle correzioni. Nessun pacchetto creato, nessuna inferenza su GGUF/microfono personali.
+
+Passo seguente autorizzato: proposta Gemma in formato del protocollo già esistente → validatore esistente → esecutore esistente, senza nuove azioni o seconda inferenza automatica. Preparati6test del callback owner reale e della sessione con inferenza controllata: stato/browser, capacità sconosciuta, duplicati, revoca e chat strutturata. Runtime di questo secondo passo ancora invariato. Red Windows da eseguire prima dell'implementazione.
+
+Implementazione prevista: catalogo compatto dalle fonti esistenti, riuso del dispatcher delle capacità già usato da GPT, accettazione una sola volta senza salvare JSON d'azione come risposta chat. Conservare memoria/contesto e stop/epoch. Prompt entro i limiti configurati: se il catalogo non entra, preservare la chat esistente e segnalare che l'interpretazione azioni non è disponibile con quel contesto; nessuna modifica automatica delle preferenze. Nessun nuovo processo o dipendenza. Verificare separatamente la correttezza strutturale e l'accuratezza del modello reale, che qui non è provata.
