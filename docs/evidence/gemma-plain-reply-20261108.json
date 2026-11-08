@@ -1,0 +1,44 @@
+{
+  "source_commit": "94963dd90add0663c5f42024f968ba7611810029",
+  "run": 42446248740,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 128625680064,
+      "python": "3.12",
+      "tests": 966,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "id": 128625680212,
+      "python": "3.11",
+      "tests": 966,
+      "failures": 0,
+      "errors": 0
+    }
+  ],
+  "red": {
+    "source": "286d94d65f74d7f5c1fb7112b697a3d3e7e58d96",
+    "run": 42445972822,
+    "tests": 966,
+    "failures": 5,
+    "errors": 0
+  },
+  "coverage": [
+    "real poll callback and native session, controlled response boundary",
+    "plain prose displays, speaks, commits once in both channels",
+    "valid structured chat still parses",
+    "malformed/prefixed/fenced proposals and extra fields remain rejected",
+    "online parser unchanged"
+  ],
+  "review": "Independent read-only static review: no blocking defect; limits and broader checks recorded",
+  "limits": [
+    "Actual user model output unavailable; not proof of its exact format",
+    "Real Pavilion/GGUF/microphone/account not tested",
+    "Malformed structured JSON still rejected, no repair",
+    "No summary or persistent-memory changes",
+    "No new ZIP;009 unchanged"
+  ],
+  "windows_search_live": "passed job128625680064"
+}
