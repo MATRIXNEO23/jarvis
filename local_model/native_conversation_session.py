@@ -87,6 +87,8 @@ class NativeConversationSession:
         self._closed = False
         self._stopping = 0
         self._active_operations = 0
+        self._prompt_diagnostic_armed = False
+        self._last_prompt_diagnostic = None
 
     @property
     def is_busy(self):
@@ -114,6 +116,23 @@ class NativeConversationSession:
         finally:
             with self._state_lock:
                 self._active_operations -= 1
+
+    def arm_prompt_diagnostic(self):
+        """One opt-in capture for the next chat turn; no automatic logging."""
+        with self._state_lock:
+            if self._closed or self._stopping:
+                raise RuntimeError("Sessione Gemma non disponibile.")
+            self._last_prompt_diagnostic = None
+            self._prompt_diagnostic_armed = True
+
+    def prompt_diagnostic(self):
+        with self._state_lock:
+            return self._last_prompt_diagnostic
+
+    def clear_prompt_diagnostic(self):
+        with self._state_lock:
+            self._prompt_diagnostic_armed = False
+            self._last_prompt_diagnostic = None
 
     @property
     def history(self):
@@ -252,6 +271,7 @@ class NativeConversationSession:
             instructions = "Rispondi in italiano, senza JSON né analisi. Se consigli, spiega perché.\n"
             allowed_actions = None
             intent_warning = ""
+            base_instruction_source = "local_model.native_conversation_session: chat naturale"
 
             def messages_for(history, prefix, recall=""):
                 messages = [{"role": role, "content": text}
@@ -272,18 +292,24 @@ class NativeConversationSession:
                 routed_budget = budget if exact else min(model_budget, budget + len(intent_context[0]))
                 if size([], intent_context[0]) <= routed_budget:
                     instructions = intent_context[0]
+                    base_instruction_source = "conversation_router.build_native_intent_context: catalogo azioni"
                     budget = routed_budget
                     allowed_actions = frozenset(intent_context[1])
                 else:
                     intent_warning = ('Contesto insufficiente per interpretare azioni: '
                                       'chat e comandi diretti restano disponibili.')
+            base_instructions = instructions
+            applied_personality = ""
             style = "Stile di risposta: " + " ".join(config.personality.split()) + "\n"
             if config.personality.strip() and size([], instructions + style) <= budget:
                 instructions += style
+                applied_personality = style
             if size([], instructions) > budget:
                 if exact:
                     raise ValueError("Domanda e istruzioni oltre il contesto configurato.")
                 instructions = ""
+                base_instructions = ""
+                applied_personality = ""
             # Prefer recent conversation over archived recall. Drop whole oldest
             # exchanges; never start with an assistant answer lacking its question.
             metrics = {}
