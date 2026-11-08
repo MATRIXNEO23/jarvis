@@ -1,6 +1,13 @@
 # Piano operativo Jarvis 014 — coerenza, instradamento e prefill
-Data: 2026-11-08. Stato: PIANIFICATO; nessuna modifica runtime né ZIP 014 creata o pubblicata.
+Data: 2026-11-08. Stato: prima patch implementata su ramo isolato, verifica Windows in corso; nessuno ZIP 014 creato o pubblicato.
 Protocollo obbligatorio: docs/PROTOCOLLO-CANONICO-VERSIONI-JARVIS.md; registro: docs/REGISTRO-DELTA-VERSIONI-JARVIS.md.
+
+## Sviluppo avviato — 8 novembre 2026
+- Prima patch isolata su [PR 60](https://github.com/MATRIXNEO23/jarvis/pull/60), branch `fix/jarvis014-native-chat-routing-20261108` dal source esatto 013. Nessuna build 014 creata o pubblicata.
+- Task 1: test di distinzione domanda informativa/comando inseriti PRIMA del codice. RED Windows 42513947407: nuovo test non importabile come previsto, funzione mancante. Task 2: aggiunto routing deterministico conservativo in `conversation_router.py`, applicato in `jarvis.py` prima di Gemma; chat informativa senza catalogo e senza JSON di azioni; comandi invariati.
+- Primo GREEN 42514115267 ha trovato cinque regressioni della suite esistente: `Dimmi come sta il computer` e `Non aprire il browser` richiedono mantenimento del percorso protetto. Corrette in source 07eb750 e test ecf5e106; nuova CI Windows 42514495366 attualmente da verificare.
+- Restano aperti: completamento CI, diagnosi del JSON tronco sui comandi non espliciti, benchmark comparabile su PC, integrazione memoria/Telegram/comandi, aggiornamento della scheda definitiva e pubblicazione solo su approvazione. Non dichiarare corretta la qualità GGUF dai test simulati.
+- Registro dettagliato e rollback: docs/REGISTRO-DELTA-VERSIONI-JARVIS.md.
 
 ## Scopo e non-obiettivi
 Ripristinare un dialogo coerente e affidabile quanto il miglior comportamento riferito sulla 012, mantenere le ottimizzazioni utili della 013 e ridurre il tempo di lettura del prompt. Non introdurre nuove API, altri LLM, riassunti generativi, dipendenze, servizi o permessi Windows. Nessuna cancellazione di ricordi, progetti, preferenze o ZIP.
