@@ -1,5 +1,5 @@
 # Piano operativo Jarvis 014 — coerenza, instradamento e prefill
-Data: 2026-11-08. Stato: prima patch implementata su ramo isolato, verifica Windows in corso; nessuno ZIP 014 creato o pubblicato.
+Data: 2026-11-08. Stato: prima patch verificata su Windows; nessuno ZIP 014 creato o pubblicato, collaudo PC pendente.
 Protocollo obbligatorio: docs/PROTOCOLLO-CANONICO-VERSIONI-JARVIS.md; registro: docs/REGISTRO-DELTA-VERSIONI-JARVIS.md.
 
 ## Sviluppo avviato — 8 novembre 2026
@@ -62,3 +62,10 @@ Chiudere Jarvis, fare una copia con data del profilo %LOCALAPPDATA%/Jarvis e del
 
 ## Decisione ancora da prendere con evidenze
 La separazione conversazione/comandi va applicata nel punto più piccolo e sicuro del routing esistente. La proposta è un'ipotesi architetturale da provare con test RED/GREEN, non un fix già implementato.
+
+## Verifica completata della prima patch — 8 novembre 2026
+- Source `ecf5e1069809e99db00c6ec813c759db166fca3a`; [PR draft 60](https://github.com/MATRIXNEO23/jarvis/pull/60); base esatta 013 archiviata `b9db9e0dc158b07f0c057cffa7b5c97a6f9ff974`.
+- RED Windows: [42513947407](https://github.com/MATRIXNEO23/jarvis/actions/runs/42513947407), nuovo test falliva per API assente. Primo GREEN [42514115267](https://github.com/MATRIXNEO23/jarvis/actions/runs/42514115267) ha intercettato 5 violazioni dei contratti preesistenti; corrette mantenendo negazioni e richieste sullo stato del PC nel percorso protetto.
+- GREEN finale: [42514495366](https://github.com/MATRIXNEO23/jarvis/actions/runs/42514495366) SUCCESS, **1010 test per ciascun job Python 3.11/3.12** su Windows + focused service diagnostics PASS. Correzione minima su due file runtime e uno test; nessuna modifica engine/model/config/memoria. Escluso il catalogo azioni solo per domande linguisticamente riconoscibili come informative.
+- NON sono stati effettuati benchmark reali sul Pavilion, prova con GGUF reale delle risposte a buco nero/serie TV, né test del packaging 014. La correttezza generale del JSON nei comandi lunghi resta da diagnosticare. Non dichiarare la 014 pubblicata e non creare una release senza nuova richiesta.
+- Prossimi task: diagnostica strutturata del motivo di fine generazione per JSON nel percorso operativo; misura prefill a parità di contesto/modello/seed; test mirati di memoria e semantica reale; eventuale build candidata dopo prove e autorizzazione.
