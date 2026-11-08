@@ -31,3 +31,23 @@
 - **Ultima prova da accertare:** [42534821947](https://github.com/MATRIXNEO23/jarvis/actions/runs/42534821947) suite Windows 3.11/3.12, [42534821971](https://github.com/MATRIXNEO23/jarvis/actions/runs/42534821971) tokenizer nativo. Non usare risultati di commit precedenti per dichiarare green questo HEAD.
 - **Uso previsto solo in laboratorio:** Jarvis/embedded GGUF non deve essere in esecuzione assieme al server standalone su Pavilion; l'app corrente non carica né collega il canary. Avviare manualmente KoboldCpp su `127.0.0.1:5001`, poi richiedere solo `probe()`/lettura `perf()`; una `generate` invia il **prompt raw letterale** solo dopo confronto esatto del nome modello e chiamata esplicita. Non usare testo privato nella prova; il client non salva il contenuto ma il server può stampare output in console.
 - Limite tecnico: test mock dell'interfaccia HTTP non equivalgono al benchmark umano sul PC, né dimostrano che la DLL embedded sia più lenta del server; nessun percorso di rollback degli archivi viene attivato dalla sola importazione del canary.
+
+
+## Protocollo di prova manuale (non eseguito)
+**Prerequisito:** prima misurare prompt/tempi con la F3 sul Pavilion, poi eventualmente confrontare con il canary senza tenere due GGUF caricati. Eseguire KoboldCpp originale standalone con **un solo GGUF** sulla porta 5001, bind 127.0.0.1, stesso Context Size/Max Output/threads e modello. Non aprire contemporaneamente la modalità Gemma embedded di Jarvis.
+```python
+from local_model.kobold_server_canary import KoboldServerCanary
+canary = KoboldServerCanary("http://127.0.0.1:5001")
+model = canary.probe()  # solo identità GGUF, NON genera
+stats_before = canary.perf()  # opzionale; campi dipendono dalla versione
+# Solo con prompt sintetico e non privato, e solo se autorizzato:
+answer = canary.generate(
+    "<start_of_turn>user\\nCos'è un buco nero?<end_of_turn>\\n<start_of_turn>model\\n".replace("\\n", "\n"),
+    expected_model=model,
+    max_context_length=1024,
+    max_length=256,
+    stop_sequence=("<end_of_turn>",),
+)
+stats_after = canary.perf()
+```
+`generate` non interpreta gli output come azioni Jarvis e non salva cronologia; questo snippet è un esempio per i testatori, NON una feature con pulsante disponibile nella 014. Durante i test CI viene simulato un server e **non** parte alcuna generazione GGUF, LAN, provider API o servizio online. Se non è possibile attestare che il server ha il modello corretto, nessun invio prompt.
