@@ -95,8 +95,8 @@ Il riferimento *grafico* al frontend upstream non autorizza a copiarne sorgenti 
 ## Stato di avanzamento e checkpoint verificato — 8 novembre 2026
 - F0: **COMPLETATA**. Piano versionato su main, source 014 congelato e branch isolato.
 - F1: **COMPLETATA NEI SORGENTI**. PR draft [#62](https://github.com/MATRIXNEO23/jarvis/pull/62), modulo `local_model/chat_sessions.py` e test, source `2f3c8d207ab1aff41d578fca6e48d606f7cd00d3`. RED [42529168718](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529168718), GREEN [42529275925](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529275925) **1022 test PASS per Windows 3.11 e 3.12**, prova nativa [42529275993](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529275993) SUCCESS. Documentazione verificabile `docs/ARCH-01-F1-CHECKPOINT.md` sul ramo.
-- F2: **PROSSIMA**, non iniziata. Deve mantenere le stesse garanzie e leggere il checkpoint; non collegare il Second Brain globale alla nuova chat senza rispettare i confini. La chat nuova non appare ancora nella UI di Jarvis 014.
-- F3–F7: **NON INIZIATE**. Diagnostica prompt PR#61 resta separata.
+- F2: **IMPLEMENTATA NEI SORGENTI E VERIFICATA DA CI WINDOWS**. [PR draft #63](https://github.com/MATRIXNEO23/jarvis/pull/63), runtime commit `026f150953962bffe39404fb62312e1ec5dc8239`, suite [42532269337](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269337) SUCCESS con 1030 test per job (Python Windows 3.11/3.12), tokenizer nativo [42532269371](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269371) SUCCESS. UI Chat locali/Console in HUD, istanze persistent scoped, routed voice/typed Gemma con reader soltanto per chat attiva. Non ingloba la PR #61, non attiva server KCPP, Qwen o API online, non cambia il Second Brain legacy. **Nessuna build 015/ZIP nuova, nessun collaudo Pavilion**, ZIP014 immutabile.
+- F3–F7: **NON INIZIATE**. Diagnostica prompt PR#61 resta separata. F8 provider API personali è pianificata separatamente, non implementata.
 - Release: **NESSUN nuovo ZIP**, 014 intatta; nessun test utente Pavilion attribuito a F1.
 
 
