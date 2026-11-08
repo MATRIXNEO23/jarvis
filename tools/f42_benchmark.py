@@ -95,14 +95,15 @@ def validate_measurement(value):
         raise BenchmarkError(
             "Schema benchmark non valido. Inserire solo i campi previsti.")
     result = dict(value)
-    if result["engine"] not in ENGINES or result["scenario"] not in SCENARIOS:
+    if (type(result["engine"]) is not str or type(result["scenario"]) is not str
+            or result["engine"] not in ENGINES or result["scenario"] not in SCENARIOS):
         raise BenchmarkError("Motore o scenario non consentito.")
     for name in ("model", "sampler"):
         v = result[name]
         if type(v) is not str or not 1 <= len(v) <= 128 or (
                 any(ord(ch) < 32 for ch in v)):
             raise BenchmarkError("Configurazione modello non valida.")
-    if result["cache_state"] not in CACHE_STATES:
+    if type(result["cache_state"]) is not str or result["cache_state"] not in CACHE_STATES:
         raise BenchmarkError("Stato cache non valido.")
     for key in ("context_size", "max_output", "threads", "blas_threads"):
         _num(result[key], integer=True, positive=True)
@@ -127,7 +128,7 @@ def validate_measurement(value):
 def _rate(tokens, seconds):
     if tokens is None or seconds is None or seconds <= 0:
         return None
-    return round(tokens / seconds, 3)
+    return tokens / seconds
 
 
 def analyze(dataset):
@@ -171,8 +172,9 @@ def analyze(dataset):
             "scenario": left["scenario"],
             "controlled": not reasons,
             "reasons": reasons,
+            # "right / left": values > 1 mean the second engine took longer.
             "time_ratio": round(
-                left["total_seconds"] / right["total_seconds"], 3),
+                right["total_seconds"] / left["total_seconds"], 3),
         })
     return {"rows": output, "comparisons": comparisons}
 
@@ -211,13 +213,15 @@ def _perf_number(data, key, *, integer=False):
 
 
 def run_server_trial(canary, *, expected_model, scenario="prima",
-                     clock=time.perf_counter, prior_answer=None,
+                     clock=None, prior_answer=None,
                      answer_sink=None):
     """One explicit synthetic generation; return metrics ONLY, never text.
 
     /api/extra/perf last_token_count is kept RAW because its interpretation
     can vary. Never claim it is "processed_tokens" or "generated_tokens".
     """
+    if clock is None:
+        clock = time.perf_counter
     prompt = _synthetic_prompt(scenario, prior_answer=prior_answer)
     model = canary.probe()
     if model != expected_model:
@@ -285,7 +289,7 @@ def _format_summary(report):
                  else "NON CONFRONTABILE: " + ",".join(c["reasons"]))
         lines.append(c["engines"][0] + " vs " + c["engines"][1]
                      + " | " + c["scenario"] + " | " + label
-                     + " | rapporto tempi: " + str(c["time_ratio"]))
+                     + " | tempo secondo/primo: " + str(c["time_ratio"]))
     if not report["comparisons"]:
         lines.append("Nessun confronto fra due motori nello stesso scenario.")
     return "\n".join(lines)
