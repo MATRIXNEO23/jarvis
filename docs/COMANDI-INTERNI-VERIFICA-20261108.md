@@ -37,3 +37,11 @@ Review indipendente readonly del raccordo4d678fa..9b3c0b5: un rilievo concreto, 
 
 ### Correzione dei tre fallimenti della candidata
 Il run 42430228966 termina con 946 test, un fallimento e due errori. Il callback GPT nel test file viene ora selezionato dentro poll, evitando il nuovo callback nativo; il fake adapter implementa stop; la proposta nativa viene respinta durante un dialogo Telegram pendente. Sintassi AST e diff verificati; verifica funzionale Windows da eseguire. Richiesta utente: arrivare alla build dopo verifica.
+
+
+### Candidata 008: sorgenti verdi, pacchetto in verifica
+Sorgenti remoti af2c1a7f56b0b4c50fda7b95d79c6c14f9a16464, run 42431542519. Entrambi i job Windows completati con successo: 128581338804, 946 test /166.514s; 128581338991, 946 test /147.772s. Passano sintassi e probe file; integrazione Windows Search nel job previsto. Configurato il job pacchetto 008 dopo i due job unit, senza pubblicazione su main. Job 128582259072: ZIP pulito preparato, numerazione/verifica estratto ancora in corso al checkpoint. Nessun collaudo GGUF/microfono/Pavilion reale.
+
+
+### Esito finale candidata 008
+Run 42431542519 completato: job pacchetto 128582259072 SUCCESS. ZIP estratto: 946 test /150.932s; import e DLL nativa, avvio/chiusura UI, parita sorgenti, guide e riproducibilita verificati. Artifact 13597458023 Jarvis-008. ZIP Jarvis-008.zip: 8141102 byte, SHA256 63c1d46e4402229a20a0849c0d91266ce81e7075d74cba65160c10f08bfceea4. Sorgente di integrazione PR a2d982b6deae1d4e39f16a0dcbe4ba8c7d35f988 (head af2c1a7f56b0b4c50fda7b95d79c6c14f9a16464). Disponibile dal workflow GitHub. Collaudo Pavilion/Windows10, audio, account e inferenza GGUF reale ancora pendente. Nessuna modifica alla 007 consegnata o merge su main.
