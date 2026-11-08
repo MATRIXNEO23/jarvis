@@ -85,6 +85,14 @@ class CanaryTests(unittest.TestCase):
         self.assertIsNone(req.data)
         self.assertLessEqual(timeout, 10)
 
+    def test_protected_model_identity_requires_local_password(self):
+        fake = FakeOpener([{"result": "koboldcpp/protected-model"}])
+        canary = KoboldServerCanary(opener=fake)
+        with self.assertRaisesRegex(KoboldCanaryError, "password"):
+            canary.generate("NON INVIARE", expected_model="koboldcpp/protected-model")
+        self.assertEqual(len(fake.requests), 1)
+        self.assertEqual(fake.requests[0][0].get_method(), "GET")
+
     def test_model_mismatch_blocks_generation_without_sending_prompt(self):
         fake = FakeOpener([{"result": "not-the-requested-model"}])
         client = KoboldServerCanary(opener=fake)
