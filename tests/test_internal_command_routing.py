@@ -41,6 +41,12 @@ class InternalCommandRoutingTests(unittest.TestCase):
         self.assertEqual(self.actions(engine), [('system_status', 'completed')])
         env['submit_gemma_trial'].assert_not_called()
 
+    def test_status_synonym_from_console_does_not_invoke_gemma(self):
+        env, engine = self.environment('Dimmi come sta il computer')
+        env['send_console_input']()
+        self.assertEqual(self.actions(engine), [('system_status', 'completed')])
+        env['submit_gemma_trial'].assert_not_called()
+
     def test_default_browser_needs_no_program_apps_and_opens_once(self):
         env, engine = self.environment('apri browser')
         with patch('local_engine.webbrowser.open', return_value=True) as browser:
@@ -54,6 +60,8 @@ class InternalCommandRoutingTests(unittest.TestCase):
             ('avvia la calcolatrice', 'apri calcolatrice'),
             ('lancia la calcolatrice', 'apri calcolatrice'),
             ('mostrami lo stato del sistema', 'stato sistema'),
+            ('dimmi come sta il computer', 'stato sistema'),
+            ('dimmi lo stato del sistema', 'stato sistema'),
             ('mostra Download', 'apri download'),
             ('apri il browser predefinito', 'apri browser'),
         ):

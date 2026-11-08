@@ -70,7 +70,10 @@ class NativeChatAdapter:
             if measure(format_gemma_messages([{"role": "user", "content": prompt}])) > budget:
                 raise ValueError("Prompt oltre il budget locale configurato.")
         result = provider.ask(timeout=timeout, **arguments)
-        return {"text": result}
+        bridge = getattr(provider, "bridge", None)
+        return {"text": result,
+                "finish_reason": getattr(bridge, "last_generation_finish", "unknown"),
+                "completion_tokens": getattr(bridge, "last_generation_tokens", None)}
 
     def stop(self):
         # An abort failure must not leave a stopped provider reusable as ready.

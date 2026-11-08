@@ -52,6 +52,8 @@ class NativeChatTurn:
         self.allowed_actions = None
         self.document_snapshot = None
         self.intent_warning = ""
+        self.finish_reason = "unknown"
+        self.completion_tokens = None
         self.restored_history = ()
         self.context_metrics = {}
         self.context_note = ""
@@ -247,7 +249,7 @@ class NativeConversationSession:
                     archived_pairs.append(canonical)
                 restored = len(archived_pairs)
                 pairs = archived_pairs[-pair_limit:]
-            instructions = "Rispondi in italiano in modo diretto, senza analisi o note interne.\n"
+            instructions = "Rispondi in italiano, senza JSON né analisi. Se consigli, spiega perché.\n"
             allowed_actions = None
             intent_warning = ""
 
@@ -326,6 +328,12 @@ class NativeConversationSession:
                                        prompt_budget=budget)
             answer = clean_native_answer(result.get("text"))
             turn = NativeChatTurn(self, context_id, latest, answer, revision)
+            # Generation telemetry informs errors only; it is never a grant
+            # to execute model-produced commands.
+            finish = result.get("finish_reason", "unknown")
+            turn.finish_reason = finish if finish in ("stop", "length") else "unknown"
+            tokens = result.get("completion_tokens")
+            turn.completion_tokens = tokens if type(tokens) is int and tokens >= 0 else None
             turn.restored_history = tuple(archived_pairs) if restored else ()
             turn.allowed_actions = allowed_actions
             turn.intent_warning = intent_warning

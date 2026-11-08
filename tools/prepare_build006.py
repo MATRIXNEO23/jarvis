@@ -48,7 +48,7 @@ def packed(entries, source_sha):
                 for name, data in sorted(entries.items())}
     version = dict(schema_version=1, build_number=NUMBER, build_label=LABEL,
         source_commit=source_sha, package_root=ROOT.rstrip('/'),
-        date='2026-11-07', status='candidate_pc_test_pending', files=manifest,
+        date=('2026-11-08' if NUMBER == 14 else '2026-11-07'), status='candidate_pc_test_pending', files=manifest,
         residual_issues=['JRV-AUD-016', 'JRV-AUD-023'])
     contents = dict(entries)
     contents['VERSIONE.json'] = (json.dumps(version, indent=2, sort_keys=True)+'\n').encode()
@@ -66,7 +66,7 @@ def packed(entries, source_sha):
 
 def main():
     source_sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-    assert source_sha == os.environ['GITHUB_SHA'], 'Checkout differs from workflow source'
+    assert source_sha == os.environ.get('JARVIS_SOURCE_SHA', os.environ['GITHUB_SHA']), 'Checkout differs from workflow source'
     first, version = packed(snapshot(), source_sha)
     scripts = subprocess.check_output(['git', 'ls-files', '-z', '--', '*.py', '*.mjs', '*.ps1']).split(b'\0')
     hashes = {os.fsdecode(p): hashlib.sha256(Path(os.fsdecode(p)).read_bytes()).hexdigest()
@@ -85,7 +85,7 @@ def main():
     details = dict(schema_version=1, build_number=NUMBER, build_label=LABEL,
         archive=OUT.name, package_root=ROOT.rstrip('/'), source_commit=source_sha,
         sha256=hashlib.sha256(first).hexdigest(), bytes=len(first),
-        files=len(version['files'])+1, date='2026-11-07',
+        files=len(version['files'])+1, date=('2026-11-08' if NUMBER == 14 else '2026-11-07'),
         status='candidate_pc_test_pending', reproducible_different_clock=True,
         residual_issues=version['residual_issues'])
     OUT.with_suffix('.json').write_text(json.dumps(details, indent=2)+'\n', encoding='utf-8')

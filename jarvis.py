@@ -4521,9 +4521,13 @@ def main() -> None:
                     app_id = candidates[index]["id"] if index is not None else None
                     gemma_trial_queue.put(("program_choice", (spoken, app_id), voice_epoch))
                 else:
-                    from conversation_router import build_native_intent_context
-                    intent_context = build_native_intent_context(
-                        has_document=native_document is not None, addon_actions=native_actions)
+                    from conversation_router import native_intent_context_for_request
+                    # Informational questions use ordinary Gemma chat: no Windows
+                    # catalog and no JSON action parser. Executable requests keep
+                    # the existing strict validated-intent path.
+                    intent_context = native_intent_context_for_request(
+                        spoken, has_document=native_document is not None,
+                        addon_actions=native_actions)
                     turn = chat_transport.ask_local_first(
                         spoken, session=session, timeout=180,
                         context_id=native_context, defer_history=True,
@@ -4596,8 +4600,14 @@ def main() -> None:
                                     raise ConversationRejected('Formato di risposta locale non supportato.')
                                 value.text = intent.reply
                             except ConversationRejected as exc:
-                                write_line('GEMMA > Risposta non interpretabile: ' + str(exc))
-                                speak_result('Non riesco a interpretare la risposta di Gemma. Puoi riprovare?')
+                                if value.finish_reason == 'length':
+                                    write_line('GEMMA > Risposta incompleta: limite Max Output raggiunto; '
+                                               'azione non eseguita. ' + str(exc))
+                                    speak_result('La risposta di Gemma è stata interrotta dal limite di output. '
+                                                 'Non ho eseguito alcuna azione.')
+                                else:
+                                    write_line('GEMMA > Risposta non interpretabile: ' + str(exc))
+                                    speak_result('Non riesco a interpretare la risposta di Gemma. Puoi riprovare?')
                                 continue
                         # UI context/epoch cannot change during this synchronous
                         # acceptance. The metadata commit never waits for native inference.
