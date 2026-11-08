@@ -23,6 +23,7 @@ def help_sections(engine):
     return {
         'Inizia qui':
             'Scrivi nella casella e premi Invio oppure il pulsante di invio.\n'
+            'Diagnostica servizi apre il rapporto locale, anche da voce con Jarvis. Lo trovi anche in Impostazioni > Progetti e servizi. Aggiorna e Copia rapporto non inviano messaggi o richieste ai modelli.\n'
             'Scrivi aiuto, help o comandi per riaprire questa guida. Funziona anche con Gemma o GPT attivi.\n\n'
             'F1 apre la guida. Ctrl+L porta il cursore nella casella. Ctrl+, apre le impostazioni.\n'
             'La guida non invia richieste ai modelli e non esegue i comandi mostrati.\n'

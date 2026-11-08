@@ -1268,6 +1268,47 @@ def main() -> None:
             counters=runtime_events,
         )
 
+    def snapshot_services_report():
+        from runtime_diagnostics import format_service_report, RuntimeEvidence
+        import importlib.util
+        import shutil
+        try:
+            evidence = snapshot_runtime_evidence()
+        except Exception:
+            # One unavailable observation must not hide Telegram's journal.
+            evidence = RuntimeEvidence((), ())
+        current = gemma_session[0]
+        try:
+            state = "non_loaded" if current is None else "busy" if current.is_busy else "ready"
+        except (RuntimeError, AttributeError):
+            state = "unavailable"
+        bridge = telegram_bridge
+        try:
+            telegram = bridge.diagnostic_snapshot() if bridge is not None else None
+        except (RuntimeError, AttributeError):
+            telegram = None
+        report = format_service_report(evidence, telegram=telegram,
+            automatic=bool(telegram_auto.get()), credentials=credentials_present(),
+            contacts=len(selected_telegram_contacts()),
+            selected="GPT" if gpt_enabled.get() else "Gemma", gemma=state,
+            memory=bool(memory_enabled.get()),
+            telethon=importlib.util.find_spec("telethon") is not None,
+            ffmpeg=shutil.which("ffmpeg") is not None)
+        if not evidence.checks:
+            report += "\nStato generale parzialmente non disponibile; registro Telegram separato."
+        return report
+
+    def open_service_diagnostics():
+        from runtime_diagnostics_ui import ServiceDiagnosticsWindow
+        current = getattr(root, "_jarvis_services_diagnostic", None)
+        if current is not None and current.window.winfo_exists():
+            current.refresh()
+            current.window.deiconify()
+            current.window.lift()
+            return
+        root._jarvis_services_diagnostic = ServiceDiagnosticsWindow(
+            settings_window, get_report=snapshot_services_report)
+
     def offer_external_diagnostic_review() -> bool:
         """Explicitly confirm sending *redacted findings*, not local files."""
         if last_diagnostic_audit is None:
@@ -1375,6 +1416,9 @@ def main() -> None:
         if request_kind is None:
             return False
         mode,module=request_kind
+        if mode=="services":
+            open_service_diagnostics()
+            return True
         if mode=="paths":
             source=Path(__file__).resolve().parent
             data=(workspace.path.parent if workspace is not None
@@ -4614,6 +4658,13 @@ def main() -> None:
     diagnostic_button.configure(
         command=lambda: try_self_diagnostic("Jarvis, fai un'autodiagnosi"))
     diagnostic_cancel_button.configure(command=cancel_diagnostic)
+    service_diagnostic_box = ttk.LabelFrame(integrations_settings_frame, text="Diagnostica servizi")
+    service_diagnostic_box.pack(fill="x", padx=8, pady=8)
+    ttk.Label(service_diagnostic_box, wraplength=540,
+              text="Stato locale di GPT, voce, Gemma, memoria e Telegram, con ultimi eventi. "
+                   "Aggiornamento a richiesta: nessun messaggio di prova o avvio del modello.").pack(anchor="w", padx=8, pady=5)
+    ttk.Button(service_diagnostic_box, text="Apri diagnostica servizi...",
+               command=open_service_diagnostics).pack(anchor="w", padx=8, pady=6)
     dictation_button.configure(command=toggle_dictation)
     voice_correction_button.configure(command=show_voice_corrections)
     choose_save_button.configure(command=choose_save_destination)

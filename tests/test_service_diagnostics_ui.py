@@ -73,3 +73,19 @@ class ServiceDiagnosticsUITests(unittest.TestCase):
             self.assertIn('non avviato', report)
             self.assertNotIn('SECRET', report)
             env['get_gemma_session'].assert_not_called()
+
+    def test_shared_diagnostic_command_opens_services_instead_of_running_static_audit(self):
+        import test_activity_status as fixture
+        from self_diagnostics import diagnostic_request
+        fixture.ActivityStatusTests.setUpClass()
+        harness=fixture.ActivityStatusTests()
+        env=dict(is_external_review_request=lambda _:False,diagnostic_request=diagnostic_request,
+                 open_service_diagnostics=Mock(),inspect_jarvis=Mock(),write_line=Mock(),
+                 diagnostic_busy=False,pending_external_review=False,last_diagnostic_audit=None,
+                 last_runtime_evidence=None)
+        callback=harness.callback('try_self_diagnostic',env)
+        self.assertTrue(callback('Jarvis, apri diagnostica servizi'))
+        env['open_service_diagnostics'].assert_called_once()
+        env['inspect_jarvis'].assert_not_called()
+        for phrase in ('non aprire diagnostica servizi','cosa è la diagnostica servizi?'):
+            self.assertIsNone(diagnostic_request(phrase))
