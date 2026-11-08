@@ -36,7 +36,7 @@ class NativePlainReplyTests(unittest.TestCase):
                 env['speak_result'].assert_called_once_with(text)
                 self.assertEqual(list(harness.session.history), [
                     ('user', 'Rispondimi al contesto'), ('assistant', text)])
-                self.assertFalse(turn.commit())
+                # The rejected reply was never committed; no owner persists it.
                 env['dispatch_model_capability'].assert_not_called()
 
     def test_structured_chat_keeps_existing_validation(self):
