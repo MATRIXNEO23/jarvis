@@ -156,3 +156,17 @@ class SelectedConversationModelTests(unittest.TestCase):
         for text in ('usa GPT', 'torna a Gemma'):
             self.assertFalse(callback(text))
         env['toggle_gpt'].assert_not_called()
+
+    def test_push_to_talk_can_start_selected_gpt_conversation(self):
+        tree = ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
+        main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'main')
+        callback = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'start_conversation_gpt')
+        env = dict(closing=False, voice_mode=SimpleNamespace(get=lambda: 'premi_per_parlare'),
+                   GPT_CONVERSATION='conversation', CONTINUOUS='continuous', PUSH_TO_TALK='premi_per_parlare',
+                   gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=False,
+                   try_self_diagnostic=Mock(return_value=False), submit_gemma_voice=Mock(),
+                   write_line=Mock(), speak_result=Mock())
+        exec(compile(ast.Module(body=[callback], type_ignores=[]), 'actual-ptt', 'exec'), env)
+        env['start_conversation_gpt']('Parliamo')
+        env['write_line'].assert_called_once()
+        env['submit_gemma_voice'].assert_not_called()
