@@ -1,3 +1,15 @@
+# CHECKPOINT — ARCH-01 F4 canary KoboldCpp locale, 9 novembre 2026
+
+**Stato:** nuovo esperimento F4 isolato, **NON un cambio del motore Jarvis e NON distribuito**. Base F3 GREEN source `b8828f0facca6fb916ccd341e313670627e67a1d` [PR #64](https://github.com/MATRIXNEO23/jarvis/pull/64), CI [42533254766](https://github.com/MATRIXNEO23/jarvis/actions/runs/42533254766) 1040 test/job PASS e nativo [42533254794](https://github.com/MATRIXNEO23/jarvis/actions/runs/42533254794) SUCCESS. F4 su `feature/jarvis-kobold-chat-f4-canary-20261109`, [PR draft #65](https://github.com/MATRIXNEO23/jarvis/pull/65).
+
+**Nuovi file F4:** `local_model/kobold_server_canary.py` e `tests/test_kobold_server_canary.py`, checkpoint [docs/ARCH-01-F4-CHECKPOINT.md](https://github.com/MATRIXNEO23/jarvis/blob/feature/jarvis-kobold-chat-f4-canary-20261109/docs/ARCH-01-F4-CHECKPOINT.md). Adapter opt-in per KoboldCpp *già avviato manualmente* su `127.0.0.1`, senza import in `jarvis.py`, senza secondo GGUF, modifica dei prompt/ricordi, auto-retry, invio remoto, fallback GPT o permessi per azioni. `probe` verifica modello, `perf` legge dati velocità disponibili, `generate` richiede prompt + nome del modello espliciti e rifiuta mismatch o server protetto senza password. Proxy e redirect disattivati. Nessuna chiave API F8 implementata.
+
+**Test:** modulo e test aggiunti, ultima suite Windows [42534655648](https://github.com/MATRIXNEO23/jarvis/actions/runs/42534655648) **IN CORSO** all'ultima rilevazione; prova nativa [42534655564](https://github.com/MATRIXNEO23/jarvis/actions/runs/42534655564) **IN CORSO**. Non dichiarare GREEN senza controllare job Windows 3.11 e 3.12, test count e delta. Il benchmark diretto sul Pavilion in F3 è ancora **NON ESEGUITO**: vietato promuovere DLL→server o inferire aumenti di velocità.
+
+**Ripristino:** abbandonare PR #65 e continuare dalla F3 `b8828f...`; per installazione stabile continuare ZIP014 originale source `88c2934cbd6081f94fb33fba5f87f1800b07ebc0`. Non eliminare profili, `jarvis_chat_sessions.sqlite3`, Second Brain, progetti o credenziali. **Nessuna build/ZIP F4 creata o pubblicata.**
+
+---
+
 # CHECKPOINT — ARCH-01 F3, diagnostica prompt integrata nel ramo F2 (8 novembre 2026)
 
 **Ripresa da F2 green**: [PR #63](https://github.com/MATRIXNEO23/jarvis/pull/63), source F2 `566db0b8e2583d07c499f4db455ca3ffcde65ae4`, test Windows [42532269337](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269337) SUCCESS **1030 test/job**, nativo [42532269371](https://github.com/MATRIXNEO23/jarvis/actions/runs/42532269371) SUCCESS. La 014 installabile rimane intatta, source `88c2934cbd6081f94fb33fba5f87f1800b07ebc0`.
