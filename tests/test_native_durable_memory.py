@@ -251,7 +251,7 @@ class NativeDurableMemoryTests(unittest.TestCase):
         self.fixture.session.config_loader = lambda: NativeModelConfig(context_size=512, max_output=128)
         question = "Q" * 200
         prompt = self.ask(question)
-        self.assertTrue(prompt.endswith("Utente: " + question + "\nJarvis:"))
+        self.assertTrue(prompt.endswith(question + "<end_of_turn>\n<start_of_turn>model\n"))
         self.assertLessEqual(len(prompt), 256)
 
     def test_secret_filter_and_isolated_paths_do_not_create_durable_chat_turns(self):

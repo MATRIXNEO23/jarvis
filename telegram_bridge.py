@@ -246,7 +246,26 @@ class TelegramBridge:
                     self.notify(("telegram_status",
                                  "Telegram: errore di elaborazione."))
 
-            await self._shutdown.wait()
+            # Telethon already owns reconnect/retry. A resolved disconnected
+            # future means those retries ended: do not keep a dead listener
+            # labelled active while waiting forever for the user's Stop.
+            shutdown = asyncio.create_task(self._shutdown.wait())
+            try:
+                disconnected = client.disconnected
+                done, _ = await asyncio.wait(
+                    (shutdown, disconnected),
+                    return_when=asyncio.FIRST_COMPLETED)
+                # Retrieve terminal failures without exposing network exception
+                # details or leaving an unhandled Future warning behind.
+                if disconnected in done and not disconnected.cancelled():
+                    disconnected.exception()
+                if not self._shutdown.is_set() and disconnected in done:
+                    raise TelegramBridgeError(
+                        "Connessione Telegram terminata. Riattiva le risposte automatiche; "
+                        "nessun messaggio viene reinviato automaticamente.")
+            finally:
+                shutdown.cancel()
+                await asyncio.gather(shutdown, return_exceptions=True)
         finally:
             await client.disconnect()
 

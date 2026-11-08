@@ -15,7 +15,10 @@ class FakeAdapter:
     def prepare(self, *, config=None):
         self.prepares += 1
 
-    def call(self, action, *, prompt, timeout):
+    def call(self, action, *, prompt=None, messages=None, timeout, prompt_budget=None):
+        if messages is not None:
+            from local_model.native_provider import format_gemma_messages
+            prompt = format_gemma_messages(messages)
         self.calls.append(prompt)
         if self.fail:
             raise RuntimeError("offline failure")
@@ -43,7 +46,7 @@ class SessionTests(unittest.TestCase):
         config = NativeModelConfig(context_size=512, max_output=128, personality="x" * 240)
         session.ask("Q" * 100)
         self.assertLessEqual(len(adapter.calls[-1]), 256)
-        self.assertTrue(adapter.calls[-1].endswith("Q" * 100 + "\nJarvis:"))
+        self.assertTrue(adapter.calls[-1].endswith("Q" * 100 + "<end_of_turn>\n<start_of_turn>model\n"))
 
     def make_session(self, adapter):
         return NativeConversationSession(
@@ -77,8 +80,9 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(session.ask("ciao"), "risposta 1")
         self.assertEqual(session.ask("come va"), "risposta 2")
         self.assertEqual(adapter.prepares, 1)
-        self.assertIn("Utente: ciao", adapter.calls[1])
-        self.assertIn("Jarvis: risposta 1", adapter.calls[1])
+        self.assertTrue(adapter.calls[1].startswith("<start_of_turn>user\n"))
+        self.assertIn("ciao<end_of_turn>", adapter.calls[1])
+        self.assertIn("model\nrisposta 1<end_of_turn>", adapter.calls[1])
         session.stop()
         self.assertEqual(adapter.stops, 1)
 

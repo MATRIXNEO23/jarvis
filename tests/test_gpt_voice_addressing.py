@@ -62,6 +62,7 @@ class GPTVoiceAddressingTests(unittest.TestCase):
         self.env['start_conversation_gpt'].assert_not_called()
 
     def test_busy_gemma_rejects_only_addressed_requests(self):
+        self.env['gpt_enabled'].set(False)
         self.env['gemma_trial_busy'][0] = True
         self.receive('mi racconti qualcosa')
         self.receive('Jarvis mi racconti qualcosa')

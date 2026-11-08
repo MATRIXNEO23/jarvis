@@ -200,7 +200,7 @@ def main() -> None:
     def open_memory_preferences():
         try:
             from local_model.memory_ui import MemoryPreferencesWindow
-            MemoryPreferencesWindow(settings_window)
+            MemoryPreferencesWindow(settings_window, get_session=get_gemma_session)
         except (OSError, ValueError, RuntimeError, ImportError) as exc:
             messagebox.showerror("Jarvis / Memoria", str(exc), parent=settings_window)
 
@@ -532,6 +532,7 @@ def main() -> None:
     busy_local = False
     busy_gpt = False
     online_consent_pending = False
+    gpt_conversation_session_grant = None
     gpt_request_action = ""
     local_execution_lock = threading.Lock()
     planner_abort_event = threading.Event()
@@ -1870,15 +1871,21 @@ def main() -> None:
     def ask_telegram_reply(message, context, bridge, peer_id=None):
         if not bridge.is_enabled():
             return ""
-        if telegram_gpt_ready.is_set():
+        if settings["gpt_enabled"]:
+            if not telegram_gpt_ready.is_set():
+                output_queue.put(("telegram_status",
+                                  "Telegram: GPT selezionato ma non connesso. Nessuna risposta locale sostitutiva."))
+                return ""
             return ask_telegram_gpt(telegram_assistant_prompt(message, context), bridge)
+        local_epoch = conversation_epoch
         try:
             session = get_gemma_session()
             profile = (settings.get("telegram_contact_profiles", {}).get(str(peer_id), "")
                        if peer_id is not None else "")
             answer = session.ask_isolated(
                 lambda budget: telegram_local_prompt(message, context, budget, profile))
-            return answer if bridge.is_enabled() else ""
+            return answer if (bridge.is_enabled() and not settings["gpt_enabled"]
+                              and local_epoch == conversation_epoch) else ""
         except (OSError, ValueError, RuntimeError):
             if bridge.is_enabled():
                 output_queue.put(("telegram_status",
@@ -2027,20 +2034,39 @@ def main() -> None:
                 capability="chat.conversation", permission=None,
                 consent_detail="La richiesta e il contesto disponibile.", **params) -> bool:
         nonlocal busy_gpt, gpt_request_action, active_gpt, conversation_epoch
+        nonlocal gpt_conversation_session_grant
         if busy_gpt or not gpt_enabled.get() or closing:
             return False
         if action in ("ask", "conversation", "typed_conversation"):
             if not active_gpt:
                 return False
             from local_model.online_permissions import authorize_online_request
-            permission = permission or authorize_online_request(
-                capability, confirmed=consent_granted,
-                confirm=lambda: confirm_gpt_inference(consent_detail))
+            if capability == "chat.conversation":
+                if (gpt_conversation_session_grant is not None
+                        and not gpt_conversation_session_grant()):
+                    gpt_conversation_session_grant = None
+                permission = permission or gpt_conversation_session_grant
+                if permission is None:
+                    # Check saved denial before asking. Even saved 'allowed'
+                    # requires this app-session's explicit conversational consent.
+                    candidate = authorize_online_request(capability, confirmed=True)
+                    if candidate is not None and (consent_granted or confirm_gpt_inference(
+                            "Conversazione GPT per questa sessione, da voce e chat. "
+                            "Il consenso termina scegliendo Gemma o chiudendo Jarvis.\n\n"
+                            + consent_detail)):
+                        permission = candidate
+            else:
+                permission = permission or authorize_online_request(
+                    capability, confirmed=consent_granted,
+                    confirm=lambda: confirm_gpt_inference(consent_detail))
             if (permission is None or permission.capability != capability
                     or not permission()):
                 write_line("GPT > Invio non autorizzato. Controlla Autorizzazioni GPT per funzione.")
                 return False
+            if capability == "chat.conversation":
+                gpt_conversation_session_grant = permission
         if action == "disconnect":
+            gpt_conversation_session_grant = None
             set_telegram_gpt_session(False)
             conversation_epoch += 1
             active_gpt = False
@@ -2083,26 +2109,49 @@ def main() -> None:
                     output_queue.put(("conversation_ok", epoch, doc_snapshot,
                                       user_utterance, result, action, params.get("file_refinement")))
                 else:
-                    output_queue.put(("gpt_ok", action, result, typed_question))
+                    output_queue.put(("gpt_ok", action, result, typed_question, consent_epoch))
             except Exception as exc:
                 if structured:
                     output_queue.put(("conversation_error", epoch, user_utterance,
                                       str(exc)[:220], action, params.get("file_refinement")))
                 else:
-                    output_queue.put(("gpt_error", action, str(exc)[:400]))
+                    output_queue.put(("gpt_error", action, str(exc)[:400], consent_epoch))
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
         return True
 
     def start_conversation_gpt(spoken: str) -> None:
-        """Voice conversation uses Gemma locally; never escalates to GPT."""
-        if closing or voice_mode.get() not in (GPT_CONVERSATION, CONTINUOUS):
+        """Use the owner's selected model; connection failure never selects Gemma."""
+        if closing or voice_mode.get() not in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
             return
         if try_self_diagnostic(spoken):
             return
-        submit_gemma_voice(spoken)
+        if not gpt_enabled.get():
+            submit_gemma_voice(spoken)
+            return
+        if not active_gpt:
+            write_line("GPT > GPT selezionato ma non connesso. Connetti ChatGPT nelle impostazioni.")
+            speak_result("GPT non è connesso. La scelta del modello resta GPT.")
+            return
+        if busy_gpt:
+            write_line("GPT > Sto già elaborando. Attendi la risposta.")
+            return
+        snapshot = documents.current.ident if documents.current else None
+        try:
+            live = current_capability_snapshot(snapshot is not None)
+            prompt = build_conversation_prompt(
+                spoken, has_document=snapshot is not None,
+                memory_context=recent_memory_for_gpt(spoken),
+                telegram_send_ready=live["telegram_voice_send"],
+                runtime_info=capability_status_prompt(live),
+                addon_actions=active_addon_actions())
+        except (ValueError, ConversationRejected) as exc:
+            write_line("GPT > " + str(exc))
+            return
+        run_gpt("conversation", prompt=prompt, epoch=conversation_epoch,
+                document_id=snapshot, utterance=spoken)
 
     def toggle_gpt() -> None:
-        nonlocal active_gpt, conversation_epoch
+        nonlocal active_gpt, conversation_epoch, gpt_conversation_session_grant
         previous = settings["gpt_enabled"]
         try:
             settings["gpt_enabled"] = bool(gpt_enabled.get())
@@ -2112,13 +2161,15 @@ def main() -> None:
             gpt_enabled.set(previous)
             messagebox.showerror("Impossibile salvare", str(exc), parent=root)
             return
+        # Revoke queued replies from the previous selected model on either switch.
+        conversation_epoch += 1
+        pending_conversation.clear()
         if gpt_enabled.get():
             gpt_status.set("GPT: attivo nelle impostazioni; controllo collegamento...")
             run_gpt("status")
         else:
+            gpt_conversation_session_grant = None
             set_telegram_gpt_session(False)
-            conversation_epoch += 1
-            pending_conversation.clear()
             doc_dialog.revoke_pending()
             planner_abort_event.set()
             active_gpt = False
@@ -2126,6 +2177,26 @@ def main() -> None:
             gpt_status.set("GPT: disattivato manualmente")
             threading.Thread(target=service.stop, daemon=True).start()
             refresh_buttons()
+
+    def try_model_switch(spoken: str) -> bool:
+        from voice_control import model_switch_target
+        selected = model_switch_target(spoken)
+        if (selected is None or closing or document_busy or save_only_waiting
+                or doc_dialog.phase.startswith("awaiting_")
+                or doc_dialog.phase == "executing" or pending_project_name
+                or pending_project_rename_id is not None
+                or pending_project_trash_id is not None
+                or telegram_voice_dialog.pending):
+            return False
+        if bool(gpt_enabled.get()) != selected:
+            gpt_enabled.set(selected)
+            toggle_gpt()
+        # toggle_gpt restores the old setting if persistence fails.
+        model = "GPT" if gpt_enabled.get() else "Gemma"
+        message = "Modello selezionato: " + model + "."
+        write_line("JARVIS > " + message)
+        speak_result(message)
+        return True
 
     def toggle_memory() -> None:
         nonlocal durable_brain, speech_lexicon
@@ -3532,7 +3603,10 @@ def main() -> None:
                         if route_type == "dictation":
                             sync_dictation_ui(dictation.insert(spoken))
                             continue
-                        if voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS):
+                        from voice_control import model_switch_target
+                        if model_switch_target(spoken) is not None and try_model_switch(spoken):
+                            continue
+                        if voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
                             write_line("TU > " + spoken)
                             if try_file_command(spoken):
                                 continue
@@ -3610,7 +3684,7 @@ def main() -> None:
                                 else:
                                     write_line("Motore locale occupato: riprova.")
                             else:
-                                if gemma_trial_busy[0]:
+                                if not gpt_enabled.get() and gemma_trial_busy[0]:
                                     write_line("GEMMA > Sto ancora elaborando. "
                                                "Ripeti la frase al termine.")
                                 else:
@@ -3884,7 +3958,7 @@ def main() -> None:
                     refinement_token=channels[1] if len(channels)>1 else None
                     if (epoch == conversation_epoch and
                             (channel=="typed_conversation" or
-                             voice_mode.get() == GPT_CONVERSATION) and
+                             voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK)) and
                             gpt_enabled.get() and active_gpt):
                         try:
                             latest=current_capability_snapshot(documents.current is not None)
@@ -3971,7 +4045,7 @@ def main() -> None:
                         continue
                     if (epoch == conversation_epoch and (
                             channel=="typed_conversation" or
-                            voice_mode.get() == GPT_CONVERSATION)):
+                            voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK))):
                         write_line("Conversazione GPT: " + reason)
                         speak_result("GPT non è disponibile. Puoi riprovare.")
                         remember_exchange(original_phrase, "GPT non disponibile, riprova.",
@@ -3979,6 +4053,8 @@ def main() -> None:
                 elif kind == "gpt_ok":
                     action, result, *rest = data
                     busy_gpt = False
+                    if action == "ask" and len(rest) > 1 and rest[1] != conversation_epoch:
+                        continue
                     if gpt_enabled.get():
                         if action == "ask":
                             write_line("GPT > " + result.get("text", "(nessuna risposta)"))
@@ -4011,8 +4087,10 @@ def main() -> None:
                     refresh_voices_button.configure(state="normal")
                 elif kind == "gpt_error":
                     runtime_events.record("gpt_failure")
-                    action, reason = data
+                    action, reason, *request_epoch = data
                     busy_gpt = False
+                    if action == "ask" and request_epoch and request_epoch[0] != conversation_epoch:
+                        continue
                     active_gpt = False if action != "ask" else active_gpt
                     if gpt_enabled.get():
                         gpt_status.set("GPT: collegamento non disponibile o richiesta fallita.")
@@ -4091,6 +4169,10 @@ def main() -> None:
             show_help()
             request.set("")
             return "break"
+        from voice_control import model_switch_target
+        if model_switch_target(message) is not None and try_model_switch(message):
+            request.set("")
+            return
         reconcile_document_session(force=True)
         if try_telegram_voice_send(message):
             request.set("")
@@ -4171,7 +4253,16 @@ def main() -> None:
         if maybe_queue_telegram_note(message):
             request.set("")
             return
-        # Configured local model takes priority for conversational text.
+        # Selection is distinct from connection and local model configuration.
+        if gpt_enabled.get():
+            if not active_gpt:
+                write_line("GPT > GPT selezionato ma non connesso. Connetti ChatGPT nelle impostazioni.")
+            elif busy_gpt:
+                write_line("GPT > Sto già elaborando. Attendi la risposta.")
+            else:
+                submit_gpt()
+            return
+        # GPT is explicitly off: use the configured local model.
         from local_model.native_config import NativeModelConfig
         from local_model.native_settings import default_native_settings_path
         native_path = default_native_settings_path()
@@ -4310,6 +4401,26 @@ def main() -> None:
                                 + type(exc).__name__ + ").")
                 return ""
 
+        def recent_pairs(count):
+            if closing or owner is None:
+                return ()
+            try:
+                if context_id is None:
+                    if owner is not durable_brain or revision != gemma_memory_revision:
+                        return ()
+                    pairs = owner.dialogue_pairs(count)
+                    if closing or owner is not durable_brain or revision != gemma_memory_revision:
+                        return ()
+                    return pairs
+                if owner is not workspace:
+                    return ()
+                pairs = owner.dialogue_pairs("project", context_id, count)
+                return () if closing or owner is not workspace else pairs
+            except (OSError, sqlite3.Error, ValueError) as exc:
+                warnings.append("Scambi recenti non disponibili (" + type(exc).__name__ + ").")
+                return ()
+
+        read.recent_pairs = recent_pairs
         return (read if owner is not None else None), owner, revision, warnings
 
     def submit_gemma_voice(spoken, *, typed=False):
@@ -4410,10 +4521,10 @@ def main() -> None:
                                 and value.memory_revision != gemma_memory_revision):
                             continue
                         if value.allowed_actions is not None:
-                            from conversation_router import parse_conversation_intent, ConversationRejected
+                            from conversation_router import parse_native_conversation_intent, ConversationRejected
                             from dialogue_focus import is_ambiguous_short_reply
                             try:
-                                intent = parse_conversation_intent(
+                                intent = parse_native_conversation_intent(
                                     value.text, utterance=value.question,
                                     has_document=value.document_snapshot is not None,
                                     addon_resolver=(addon_manager.resolve if addon_manager is not None else None))
@@ -4437,15 +4548,25 @@ def main() -> None:
                                     raise ConversationRejected('Formato di risposta locale non supportato.')
                                 value.text = intent.reply
                             except ConversationRejected as exc:
-                                write_line('GEMMA > Nessuna azione eseguita: ' + str(exc))
-                                speak_result('Non ho capito con sicurezza. Puoi precisare la richiesta?')
+                                write_line('GEMMA > Risposta non interpretabile: ' + str(exc))
+                                speak_result('Non riesco a interpretare la risposta di Gemma. Puoi riprovare?')
                                 continue
                         # UI context/epoch cannot change during this synchronous
                         # acceptance. The metadata commit never waits for native inference.
+                        # A memory switch preserves the current live dialogue,
+                        # but must not newly hydrate a revoked durable owner.
+                        if (value.context_id is None and value.memory_owner is not None
+                                and (value.memory_owner is not durable_brain or not memory_enabled.get())):
+                            value.restored_history = ()
                         if not value.commit():
                             continue
-                        if value.intent_warning:
-                            write_line('GEMMA > ' + value.intent_warning)
+                        # Discrete state-change notice; no persistent transcript log.
+                        context_state = (value.intent_warning, value.context_note)
+                        if getattr(value._session, "_last_context_notice", None) != context_state:
+                            value._session._last_context_notice = context_state
+                            for notice in context_state:
+                                if notice:
+                                    write_line('GEMMA > ' + notice)
                         if value.memory_warning:
                             write_line("MEMORIA > " + value.memory_warning)
                         owner = value.memory_owner

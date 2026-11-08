@@ -23,7 +23,7 @@ class AdapterBudgetTests(unittest.TestCase):
                        return_value=prefs_path):
                 self.assertEqual(adapter.call("ask", prompt="ciao")["text"], "risposta")
                 with self.assertRaises(ValueError):
-                    adapter.call("ask", prompt="x" * 257)
+                    adapter.call("ask", prompt="x" * 256)
 
 
 if __name__ == "__main__":

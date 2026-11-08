@@ -63,12 +63,12 @@ class FileRefinementTests(unittest.TestCase):
         workers=[]
         def thread(*,target,**kwargs):
             return SimpleNamespace(start=lambda:workers.append(target))
-        env=dict(busy_gpt=False,busy_local=False,closing=False,active_gpt=True,
+        env=dict(gpt_conversation_session_grant=None,busy_gpt=False,busy_local=False,closing=False,active_gpt=True,
             gpt_enabled=Value(True),gpt_request_action='',gpt_status=Value(''),
             addon_manager=self.manager,engine=self.engine,active_project_id=None,
             documents=SimpleNamespace(current=None),conversation_epoch=7,
             voice_mode=Value(GPT_CONVERSATION),GPT_CONVERSATION=GPT_CONVERSATION,
-            CONTINUOUS=CONTINUOUS,STANDBY=STANDBY,
+            PUSH_TO_TALK="premi_per_parlare",CONTINUOUS=CONTINUOUS,STANDBY=STANDBY,
             speaker=SimpleNamespace(is_audible=lambda:False),speech_lexicon=None,
             memory_enabled=Value(True),last_voice_sample=Value(''),wake_gate=WakeWordGate(),
             refresh_buttons=Mock(),write_line=Mock(),speak_result=Mock(),

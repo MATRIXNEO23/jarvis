@@ -1,0 +1,3 @@
+## Build 011 — pubblicazione autorizzata, in preparazione
+Richiesta utente: «pubblicala». Runtime invariato rispetto alla verifica Telegram24b3ef7 (987 test Windows per3.11/3.12), include M1/M2 già verificate. Riutilizzo builder e collaudo ZIP estratto, numero11 e987test. Gate PR57 same-repo, artefatto dello stesso run, prova/hash/sorgente verificati prima di copiare in Download su main. Vecchie versioni immutabili. Nessuna inferenza aggiuntiva per comprimere il contesto; account Telegram reale non collaudato, difetto listener dimostrato ma causa PC non universalmente confermata. Pubblicazione non ancora eseguita; prossimo passo leggere esiti Windows e ZIP, poi rileggere archivio/metadati remoti e disattivare gate.
+

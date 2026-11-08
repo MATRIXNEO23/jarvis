@@ -87,6 +87,12 @@ class WorkspaceMemory:
                 kind TEXT NOT NULL, time_utc TEXT NOT NULL)""")
             db.execute("""CREATE INDEX IF NOT EXISTS msg_scope_recent
                 ON messages(scope,scope_id,id DESC)""")
+            db.execute("""CREATE TABLE IF NOT EXISTS recent_dialogue(
+                turn_id INTEGER PRIMARY KEY, user_text TEXT NOT NULL, reply TEXT NOT NULL)""")
+            db.execute("""CREATE TRIGGER IF NOT EXISTS recent_dialogue_delete
+                AFTER DELETE ON messages BEGIN
+                DELETE FROM recent_dialogue WHERE turn_id=OLD.id; END""")
+            db.execute("DELETE FROM recent_dialogue WHERE turn_id NOT IN (SELECT id FROM messages)")
             db.execute("""CREATE TABLE IF NOT EXISTS telegram_events(
                 peer_id INTEGER NOT NULL, direction TEXT NOT NULL
                 CHECK(direction IN('incoming','outgoing')),
@@ -494,13 +500,38 @@ class WorkspaceMemory:
         if not u or not a:
             return False
         with self._db() as db:
-            db.execute("INSERT INTO messages(scope,scope_id,user_text,reply,kind,time_utc)"
+            cursor = db.execute("INSERT INTO messages(scope,scope_id,user_text,reply,kind,time_utc)"
                        " VALUES(?,?,?,?,?,?)",(scope,scope_id,u,a,kind,_now()))
+            if kind in ("chat", "clarify"):
+                db.execute("INSERT INTO recent_dialogue VALUES(?,?,?)",
+                           (cursor.lastrowid, user.strip()[:16384], reply.strip()[:16384]))
+                db.execute("DELETE FROM recent_dialogue WHERE turn_id IN "
+                           "(SELECT id FROM messages WHERE scope=? AND scope_id=?) "
+                           "AND turn_id NOT IN (SELECT id FROM messages WHERE scope=? "
+                           "AND scope_id=? AND kind IN ('chat','clarify') ORDER BY id DESC LIMIT 16)",
+                           (scope,scope_id,scope,scope_id))
             if scope=="project":
                 db.execute("UPDATE projects SET updated_utc=? WHERE id=?",(_now(),scope_id))
         if scope=="project":
             self._save_snapshot(scope_id, steps_changed=False)
         return True
+
+    def dialogue_pairs(self, scope, scope_id, count=16):
+        if scope == "telegram":
+            return ()
+        if scope == "project":
+            project = self.project(scope_id)
+            if project is None or project["trashed"]:
+                return ()
+        elif scope != "general" or scope_id != "general":
+            raise WorkspaceError("Contesto di memoria non valido.")
+        with self._db() as db:
+            rows = db.execute(
+                "SELECT COALESCE(r.user_text,m.user_text),COALESCE(r.reply,m.reply) "
+                "FROM messages m LEFT JOIN recent_dialogue r ON r.turn_id=m.id "
+                "WHERE m.scope=? AND m.scope_id=? AND m.kind IN ('chat','clarify') "
+                "ORDER BY m.id DESC LIMIT ?", (scope,scope_id,min(16,max(0,int(count))))).fetchall()
+        return tuple((("user", u), ("assistant", a)) for u, a in reversed(rows))
 
     def recent(self,scope,scope_id,limit=6):
         with self._db() as db:

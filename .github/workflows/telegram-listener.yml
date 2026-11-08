@@ -1,0 +1,16 @@
+name: Telegram listener regression (Windows)
+on:
+  pull_request:
+    paths: ['telegram_bridge.py','tests/test_telegram_listener_lifecycle.py','.github/workflows/telegram-listener.yml']
+permissions:
+  contents: read
+jobs:
+  listener:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Real listener with controlled Telegram and audio boundaries
+        run: python -m unittest discover -s tests -p test_telegram_listener_lifecycle.py -v

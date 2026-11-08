@@ -268,7 +268,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             engine=SimpleNamespace(program_apps=None),
             voice_mode=Value(mode), memory_enabled=Value(memory),
             STANDBY=STANDBY, GPT_CONVERSATION=GPT_CONVERSATION,
-            CONTINUOUS=CONTINUOUS, speaker=SimpleNamespace(is_audible=lambda: False),
+            PUSH_TO_TALK=PUSH_TO_TALK, CONTINUOUS=CONTINUOUS, speaker=SimpleNamespace(is_audible=lambda: False),
             wake_gate=WakeWordGate(), dictation=SimpleNamespace(enabled=False),
             dictation_voice_action=dictation_voice_action,
             telegram_voice_dialog=SimpleNamespace(pending=False), addon_manager=None,

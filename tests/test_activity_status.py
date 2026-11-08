@@ -79,10 +79,10 @@ class ActivityStatusTests(unittest.TestCase):
                    output_queue=queue.Queue(), write_line=Mock(), speak_result=Mock(),
                    remember_exchange=Mock(), runtime_events=Mock(),
                    conversation_epoch=7, voice_mode=Value(GPT_CONVERSATION),
-                   GPT_CONVERSATION=GPT_CONVERSATION, STANDBY=STANDBY,
+                   GPT_CONVERSATION=GPT_CONVERSATION, CONTINUOUS="ascolto_continuo", STANDBY=STANDBY,
                    PUSH_TO_TALK=PUSH_TO_TALK)
         env['chat_transport'] = ChatTransport(env['service'], native=None)
-        env.update(root=None, online_consent_pending=False,
+        env.update(root=None, online_consent_pending=False, gpt_conversation_session_grant=None,
                    telegram_gpt_ready=threading.Event(), planner_abort_event=threading.Event(),
                    telegram_gpt_session_token=None, telegram_gpt_session_choice=Value(False),
                    messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
@@ -245,7 +245,7 @@ class ActivityStatusTests(unittest.TestCase):
         self.assertEqual(ask("Bridge fermo", bridge), "")
         self.assertEqual(env["service"].call.call_count, 3)
 
-    def test_telegram_uses_gemma_only_when_gpt_is_unavailable(self):
+    def test_telegram_uses_gemma_only_when_gpt_is_switched_off(self):
         from telegram_bridge import telegram_assistant_prompt, telegram_local_prompt
         env, _, _ = self.environment()
         ready = env["telegram_gpt_ready"]
@@ -260,7 +260,7 @@ class ActivityStatusTests(unittest.TestCase):
                    ask_telegram_gpt=Mock(return_value=""),
                    telegram_assistant_prompt=telegram_assistant_prompt,
                    telegram_local_prompt=telegram_local_prompt,
-                   settings={"telegram_contact_profiles": {"123": "Usa il tu", "456": "Usa il lei"}})
+                   settings={"gpt_enabled": False, "telegram_contact_profiles": {"123": "Usa il tu", "456": "Usa il lei"}})
         reply = self.callback("ask_telegram_reply", env)
         self.assertEqual(reply("Ciao", "Contesto privato", bridge, 123),
                          "Ciao, come posso aiutarti?")
@@ -275,6 +275,7 @@ class ActivityStatusTests(unittest.TestCase):
         self.assertNotIn("Usa il tu", prompts[2])
         env["ask_telegram_gpt"].assert_not_called()
 
+        env["settings"]["gpt_enabled"] = True
         ready.set()
         self.assertEqual(reply("Ciao", "", bridge, 123), "")
         env["ask_telegram_gpt"].assert_called_once()

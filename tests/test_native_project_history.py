@@ -38,7 +38,10 @@ class CapturedAdapter:
     def prepare(self, *, config=None):
         self.prepares += 1
 
-    def call(self, action, *, prompt, timeout):
+    def call(self, action, *, prompt=None, messages=None, timeout, prompt_budget=None):
+        if messages is not None:
+            from local_model.native_provider import format_gemma_messages
+            prompt = format_gemma_messages(messages)
         self.prompts.append(prompt)
         if self.on_reply is not None:
             callback, self.on_reply = self.on_reply, None
@@ -187,17 +190,17 @@ class NativeProjectHistoryTests(unittest.TestCase):
         self.assertTrue(turn.commit())
         self.assertFalse(turn.commit())
         self.session.prepare_turn("Domanda finale", context_id=self.project_a)
-        self.assertEqual(self.adapter.prompts[-1].count("Utente: Ancora da accettare"), 1)
+        self.assertEqual(self.adapter.prompts[-1].count("Ancora da accettare<end_of_turn>"), 1)
 
     def test_total_history_budget_remains_shared_between_projects(self):
         contexts = [format(i, "032x") for i in range(16)]
         for index, context in enumerate(contexts):
             self.session.ask("Nota univoca " + str(index), context_id=context)
         self.session.prepare_turn("Che ricordi?", context_id=contexts[0])
-        self.assertIn("Utente: Nota univoca 0", self.adapter.prompts[-1])
+        self.assertIn("Nota univoca 0<end_of_turn>", self.adapter.prompts[-1])
         self.session.ask("Nuovo scambio generale")
         self.session.prepare_turn("Che ricordi?", context_id=contexts[0])
-        self.assertNotIn("Utente: Nota univoca 0", self.adapter.prompts[-1])
+        self.assertNotIn("Nota univoca 0<end_of_turn>", self.adapter.prompts[-1])
         self.assertNotIn("Nuovo scambio generale", self.adapter.prompts[-1])
         self.assertEqual(self.adapter.prepares, 1)
 

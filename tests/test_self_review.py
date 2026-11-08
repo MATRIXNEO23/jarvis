@@ -71,7 +71,7 @@ class SelfReviewTests(unittest.TestCase):
         start=start.split("    def toggle_gpt(",1)[0]
         self.assertLess(start.index("try_self_diagnostic(spoken)"),
                         start.index("submit_gemma_voice(spoken)"))
-        self.assertNotIn("run_gpt(",start)
+        self.assertLess(start.index("try_self_diagnostic(spoken)"), start.index("run_gpt("))
         ask=source.split("    def submit_gpt() -> None:",1)[1]
         ask=ask.split("    def poll() -> None:",1)[0]
         self.assertLess(ask.index("try_self_diagnostic(message)"),

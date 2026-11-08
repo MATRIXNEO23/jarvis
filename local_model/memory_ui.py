@@ -7,26 +7,27 @@ from .memory_preferences import MemoryPreferences, default_memory_preferences_pa
 
 
 class MemoryPreferencesWindow:
-    def __init__(self, parent, *, path=None):
+    def __init__(self, parent, *, path=None, get_session=None):
+        self.get_session = get_session
         self.path = path or default_memory_preferences_path()
         self.current = MemoryPreferences.load(self.path)
         self.window = tk.Toplevel(parent)
         self.window.title("Jarvis // Memoria e inattivita")
-        self.window.geometry("590x490")
-        self.window.minsize(480, 440)
+        self.window.geometry("590x610")
+        self.window.minsize(480, 550)
         frame = ttk.Frame(self.window, padding=14)
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="Memoria locale - impostazioni",
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
-        ttk.Label(frame, text="Contesto Gemma: limite in caratteri, spazi inclusi. "
-                  "La sintesi automatica non è ancora collegata.",
+        ttk.Label(frame, text="Nuova chat Gemma: conteggio nativo, fino a 600 token di storia entro il contesto scelto. Il limite sotto resta in caratteri per i percorsi legacy. "
+                  "Recupero: massimo 16 scambi recenti per chat/progetto, 16384 caratteri per testo. La sintesi automatica non è ancora collegata.",
                   wraplength=530).pack(anchor="w", pady=8)
         fields = (
             ("idle_seconds", "Inattivita prima sintesi (secondi)"),
-            ("recent_messages", "Ultimi messaggi conservati"),
+            ("recent_messages", "Messaggi recenti nel prompt"),
             ("summarize_every", "Sintesi ogni N messaggi"),
             ("summary_max_tokens", "Limite riassunto (non collegato)"),
-            ("prompt_max_tokens", "Caratteri massimi nel prompt"),
+            ("prompt_max_tokens", "Caratteri prompt legacy (conservato)"),
             ("max_background_jobs", "Lavori simultanei (max 1)"),
         )
         self.values = {}
@@ -48,6 +49,8 @@ class MemoryPreferencesWindow:
         self.status = tk.StringVar(value="Le modifiche non avviano alcuna sintesi.")
         ttk.Label(frame, textvariable=self.status, wraplength=520).pack(
             anchor="w", pady=8)
+        ttk.Button(frame, text="Dettagli ultimo contesto Gemma",
+                   command=self.show_context_metrics).pack(anchor="w", pady=3)
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x")
         ttk.Button(buttons, text="Salva", command=self.save).pack(side="left")
@@ -55,6 +58,19 @@ class MemoryPreferencesWindow:
                    command=self.reset).pack(side="left", padx=6)
         ttk.Button(buttons, text="Chiudi",
                    command=self.window.destroy).pack(side="right")
+
+    def show_context_metrics(self):
+        try:
+            metrics = getattr(self.get_session(), "last_context_metrics", {}) if callable(self.get_session) else {}
+            if not metrics:
+                self.status.set("Nessuna richiesta Gemma misurata in questa sessione.")
+                return
+            self.status.set(
+                "Input: {input_size}/{budget} {unit}; risposta riservata: {output_reserved}; "
+                "margine: {safety_reserved}. Scambi interi: {whole}, estratti: {extracted}, "
+                "omessi: {omitted}; recuperati: {restored}.".format(**({"whole": 0, "extracted": 0, "omitted": 0, "restored": 0} | metrics)))
+        except (OSError, ValueError, RuntimeError) as exc:
+            self.status.set(str(exc))
 
     def reset(self):
         defaults = MemoryPreferences()
