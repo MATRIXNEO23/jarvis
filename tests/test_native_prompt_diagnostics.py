@@ -97,6 +97,56 @@ class PromptDiagnosticTests(unittest.TestCase):
         self.assertNotIn("DIAGNOSTICA PROMPT", str(list(session.history)))
         self.assertNotIn("DIAGNOSTICA PROMPT", adapter.calls[-1])
 
+    def test_f2_chat_recall_is_not_misidentified_as_second_brain(self):
+        import tempfile
+        from pathlib import Path
+        from local_model.chat_sessions import ChatSessionStore
+        from local_model.chat_context import make_chat_history_reader
+
+        with tempfile.TemporaryDirectory() as folder:
+            store = ChatSessionStore(Path(folder) / "separate.sqlite3")
+            first = store.create_chat("Astronomia")
+            second = store.create_chat("Musica")
+            store.append_exchange(first.id, "Parliamo di Orione", "Orione è una costellazione")
+            store.append_exchange(second.id, "Parliamo di Mozart", "Mozart è compositore")
+            session, adapter = self.make_session(TokenAdapter())
+            session.arm_prompt_diagnostic()
+            session.ask("Che mi dicevi?", context_id=first.id,
+                        memory_context=make_chat_history_reader(store, first.id))
+            report = session.prompt_diagnostic()
+            self.assertIn("ChatSessionsStore.recent_pairs: istanza isolata", report)
+            self.assertIn("Nessuno: Chat locali F2", report)
+            self.assertIn("Orione", report)
+            self.assertNotIn("Mozart", report)
+            self.assertNotIn("jarvis.native_memory_request: progetto", report)
+            self.assertNotIn("jarvis.native_memory_request: Second Brain", report)
+            self.assertIn(adapter.calls[-1], report)
+            session.close()
+
+    def test_manual_capture_does_not_change_exact_generated_prompt(self):
+        import tempfile
+        from pathlib import Path
+        from local_model.chat_sessions import ChatSessionStore
+        from local_model.chat_context import make_chat_history_reader
+
+        with tempfile.TemporaryDirectory() as folder:
+            store = ChatSessionStore(Path(folder) / "same.sqlite3")
+            chat = store.create_chat("Prova")
+            store.append_exchange(chat.id, "Lo spazio", "La galassia")
+            reader = make_chat_history_reader(store, chat.id)
+            first, adapter_first = self.make_session(TokenAdapter())
+            second, adapter_second = self.make_session(TokenAdapter())
+            first.ask("Approfondisci la galassia", context_id=chat.id,
+                      memory_context=reader)
+            second.arm_prompt_diagnostic()
+            second.ask("Approfondisci la galassia", context_id=chat.id,
+                       memory_context=reader)
+            self.assertEqual(adapter_first.calls, adapter_second.calls)
+            self.assertEqual(len(adapter_first.calls), 1)
+            self.assertIn(adapter_second.calls[-1], second.prompt_diagnostic())
+            first.close()
+            second.close()
+
     def test_discard_during_inference_revokes_inflight_capture(self):
         session, adapter = self.make_session()
         original = adapter.call
