@@ -877,8 +877,12 @@ def main() -> None:
         active_project_id=project_id
         # Existing project memory persists; only the opted-in chat pane
         # switches to its separate, project-scoped conversation.
-        if (chat_sessions_panel is not None
-                and chat_notebook.select() == str(chat_local_tab)):
+        try:
+            chat_view_available = (chat_sessions_panel is not None
+                                   and chat_notebook.select() == str(chat_local_tab))
+        except NameError:
+            chat_view_available = False  # Standalone legacy route/unit harness.
+        if chat_view_available:
             if not chat_sessions_panel.scope_changed():
                 write_line("CHAT > Nuovo contesto non disponibile; apri Console.")
                 chat_notebook.select(chat_console_tab)
@@ -2181,8 +2185,11 @@ def main() -> None:
             return
         if try_self_diagnostic(spoken):
             return
-        if (chat_notebook.select() == str(chat_local_tab)
-                and gpt_enabled.get()):
+        try:
+            chat_is_visible = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            chat_is_visible = False
+        if chat_is_visible and gpt_enabled.get():
             chat_sessions_panel.report_error(
                 "GPT online non è collegato alle chat isolate F2. Disattiva GPT.")
             write_line("CHAT > Non ho inviato il messaggio a GPT: istanza locale isolata.")
@@ -3389,7 +3396,11 @@ def main() -> None:
     def submit_gpt() -> None:
         if closing:
             return
-        if chat_notebook.select() == str(chat_local_tab):
+        try:
+            chat_is_visible = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            chat_is_visible = False
+        if chat_is_visible:
             write_line("CHAT > Invio GPT bloccato: questa istanza è solo locale.")
             chat_sessions_panel.report_error(
                 "F2: seleziona Console per inviare a GPT online.")
@@ -3421,8 +3432,7 @@ def main() -> None:
         if handle_project_reference(message):
             request.set("")
             return
-        if (chat_notebook.select() != str(chat_local_tab)
-                and handle_unanchored_short_reply(message)):
+        if handle_unanchored_short_reply(message):
             request.set("")
             return
         if len(message) > 5000:
@@ -4250,6 +4260,10 @@ def main() -> None:
         message=request.get().strip()
         if not message:
             return
+        try:
+            chat_is_visible = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            chat_is_visible = False  # Standalone legacy router tests.
         if " ".join(message.casefold().strip(" .!?").split()) in (
                 "aiuto", "help", "comandi", "cosa puoi fare", "cosa sai fare"):
             show_help()
@@ -4330,8 +4344,7 @@ def main() -> None:
         if handle_project_reference(message):
             request.set("")
             return
-        if (chat_notebook.select() != str(chat_local_tab)
-                and handle_unanchored_short_reply(message)):
+        if not chat_is_visible and handle_unanchored_short_reply(message):
             request.set("")
             return
         if try_self_diagnostic(message):
@@ -4342,7 +4355,7 @@ def main() -> None:
             return
         # F2 chat instances are Gemma-only. Never transmit their private
         # message to GPT silently; other existing console routes stay intact.
-        if chat_notebook.select() == str(chat_local_tab) and gpt_enabled.get():
+        if chat_is_visible and gpt_enabled.get():
             chat_sessions_panel.report_error(
                 "Chat isolate F2: disattiva GPT per usare Gemma locale.")
             write_line("CHAT > Chat isolate: disattiva GPT per parlare con Gemma.")
@@ -4369,7 +4382,7 @@ def main() -> None:
             except (OSError, ValueError) as exc:
                 write_line("GEMMA / CONFIGURAZIONE > " + str(exc))
                 return
-        if chat_notebook.select() == str(chat_local_tab):
+        if chat_is_visible:
             chat_sessions_panel.report_error(
                 "Nessun GGUF locale pronto. Configura Gemma nelle impostazioni.")
             write_line("CHAT > Nessun modello locale configurato.")
@@ -4576,7 +4589,10 @@ def main() -> None:
     def submit_gemma_voice(spoken, *, typed=False):
         if closing or gemma_trial_busy[0]:
             return False
-        chat_tab_active = chat_notebook.select() == str(chat_local_tab)
+        try:
+            chat_tab_active = chat_notebook.select() == str(chat_local_tab)
+        except NameError:
+            chat_tab_active = False
         chat_target = selected_chat_target() if chat_tab_active else None
         if chat_tab_active and chat_target is None:
             write_line("CHAT > Impossibile identificare la conversazione corrente.")
