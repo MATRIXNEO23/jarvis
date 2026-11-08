@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 8,
-  "next_build": 9,
+  "latest_build": 9,
+  "next_build": 10,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -117,6 +117,20 @@
       "bytes": 8141102,
       "previous_build": 7,
       "git_blob_sha": "cfe7990ee5511522cbe90df8ef25f5538d5f98ee"
+    },
+    {
+      "build_number": 9,
+      "label": "009",
+      "archive": "Jarvis-009.zip",
+      "metadata": "Jarvis-009.json",
+      "date": "2026-11-08",
+      "description": "Scelta GPT e consenso sessione, Telegram, formato e contesto Gemma2 IT",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "90ae5059b02127f293f0cf683fdd41f41b428c3e",
+      "sha256": "c17224c0de53c92942e6e2b79d76d02fb9bd9f3592ad9fb185634d1e0afa5a45",
+      "bytes": 8143033,
+      "previous_build": 8,
+      "git_blob_sha": "b06adaa36b5f9e82e32dfcfc4c0a4fc224928d5a"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"
