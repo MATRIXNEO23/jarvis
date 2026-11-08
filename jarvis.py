@@ -4460,7 +4460,8 @@ def main() -> None:
             or document_busy or save_only_waiting
             or doc_dialog.phase.startswith("awaiting_")
             or pending_project_name or pending_project_rename_id is not None
-            or pending_project_trash_id is not None)
+            or pending_project_trash_id is not None
+            or bool(pending_conversation))
 
     def chat_selection_changed(_old, _new):
         nonlocal conversation_epoch
@@ -4468,7 +4469,8 @@ def main() -> None:
         # follow-up shortcuts after a switch, never erase durable transcripts.
         conversation_epoch += 1
         gemma_recent_reply[0] = None
-        pending_conversation.clear()
+        # Navigation is refused while follow-ups are queued. Never silently
+        # discard them merely because a new tab or instance was selected.
 
     previous_chat_tab = [str(chat_console_tab)]
     changing_chat_tab = [False]
