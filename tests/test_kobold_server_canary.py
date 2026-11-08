@@ -67,7 +67,9 @@ class CanaryTests(unittest.TestCase):
         client = KoboldServerCanary()
         handlers = client._opener.handlers
         proxies = [h.proxies for h in handlers if isinstance(h, ProxyHandler)]
-        self.assertEqual(proxies, [{}])
+        # CPython can omit an explicitly empty ProxyHandler from the opener.
+        # The security property is that no handler contains proxy targets.
+        self.assertFalse(any(proxies))
         redirects = [h for h in handlers if isinstance(h, HTTPRedirectHandler)]
         self.assertEqual(len(redirects), 1)
         with self.assertRaises(KoboldCanaryError):
