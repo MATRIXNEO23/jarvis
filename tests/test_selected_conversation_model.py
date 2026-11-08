@@ -20,7 +20,13 @@ class SelectedConversationModelTests(unittest.TestCase):
                    GPT_CONVERSATION='conversation', CONTINUOUS='continuous',
                    gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=True,
                    busy_gpt=False, try_self_diagnostic=Mock(return_value=False),
-                   submit_gemma_voice=gemma, run_gpt=online)
+                   submit_gemma_voice=gemma, run_gpt=online,
+                   documents=SimpleNamespace(current=None), conversation_epoch=7,
+                   current_capability_snapshot=lambda _: {'telegram_voice_send': False},
+                   build_conversation_prompt=__import__('conversation_router').build_conversation_prompt,
+                   recent_memory_for_gpt=lambda _: '', capability_status_prompt=lambda _: '',
+                   active_addon_actions=lambda: (), ConversationRejected=ValueError,
+                   write_line=Mock(), speak_result=Mock())
         exec(compile(ast.Module(body=[callback], type_ignores=[]), 'real-voice-router', 'exec'), env)
         env['start_conversation_gpt']('Parliamo della giornata')
         gemma.assert_not_called()
@@ -64,7 +70,32 @@ class SelectedConversationModelTests(unittest.TestCase):
         self.addCleanup(harness.doCleanups)
         env, _, _ = harness.environment()
         env.update(get_gemma_session=Mock(), ask_telegram_gpt=Mock(),
-                   telegram_assistant_prompt=lambda *a: 'prompt')
+                   telegram_assistant_prompt=lambda *a: 'prompt', settings={'gpt_enabled': True})
         reply = harness.callback('ask_telegram_reply', env)
         self.assertEqual(reply('Ciao', '', SimpleNamespace(is_enabled=lambda: True)), '')
         env['get_gemma_session'].assert_not_called()
+
+    def test_switch_synonyms_change_existing_toggle_without_model_inference(self):
+        import test_typed_timer_routing as fixture
+        for phrase, selected in [('passa a GPT', True), ('torna a Gemma', False),
+                                 ('usa GPT', True), ('avvia Gemma', False)]:
+            with self.subTest(phrase=phrase):
+                harness = fixture.TypedTimerTests()
+                self.addCleanup(harness.doCleanups)
+                env = harness.environment(phrase)
+                import test_activity_status as callbacks
+                callbacks.ActivityStatusTests.setUpClass()
+                env.update(gpt_enabled=callbacks.Value(not selected), toggle_gpt=Mock(),
+                           closing=False, document_busy=False)
+                # Compile new handler only when present, so the baseline really
+                # follows the old console routing instead of a missing symbol.
+                main = next(n for n in ast.parse(Path('jarvis.py').read_text()).body
+                            if isinstance(n, ast.FunctionDef) and n.name == 'main')
+                handler = next((n for n in main.body if isinstance(n, ast.FunctionDef)
+                                and n.name == 'try_model_switch'), None)
+                if handler:
+                    exec(compile(ast.Module(body=[handler],type_ignores=[]),'model-switch','exec'),env)
+                env['send_console_input']()
+                env['toggle_gpt'].assert_called_once()
+                self.assertEqual(env['gpt_enabled'].get(), selected)
+                env['submit_gemma_trial'].assert_not_called()
