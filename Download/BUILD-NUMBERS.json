@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 12,
-  "next_build": 13,
+  "latest_build": 13,
+  "next_build": 14,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -173,6 +173,20 @@
       "bytes": 8153869,
       "previous_build": 11,
       "git_blob_sha": "c774928ac05e3d4cd8f5539e637bba298aa67312"
+    },
+    {
+      "build_number": 13,
+      "label": "013",
+      "archive": "Jarvis-013.zip",
+      "metadata": "Jarvis-013.json",
+      "date": "2026-11-08",
+      "description": "Contesto Gemma alleggerito e configurabile, riferimento recente preservato",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "b9db9e0dc158b07f0c057cffa7b5c97a6f9ff974",
+      "sha256": "1926bb5b65d98bb78d1c829cd9143b1e39773c8c14581f6f63a8d0d9454ed781",
+      "bytes": 8154995,
+      "previous_build": 12,
+      "git_blob_sha": "da83fd2601e4ac31b9cb5dcd509ee38d1e7a577f"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"
