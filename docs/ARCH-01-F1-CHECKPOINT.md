@@ -25,3 +25,14 @@ Il runtime 014 non viene alterato; non eseguire merge né installare nuovi file 
 - Diagnostica prompt separata PR #61 (F3) da integrare solo con scelta tracciata.
 - KoboldCpp server e template Qwen non ancora validati (F4/F5).
 - Confinamento recall Second Brain per nuova chat non ancora implementato (F6).
+
+
+## Esito F1 — verifica dei sorgenti Windows completata (8 novembre 2026)
+
+- **RED:** commit `742fea63d28ffabe095d80b541d58769cb130d34`, solo test: [run 42529168718](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529168718), due job Windows FAILED per un unico errore atteso `ModuleNotFoundError: local_model.chat_sessions` (1014 test scoperti; la nuova suite non era ancora importabile). Nessun altro difetto attribuito a questa fase.
+- **GREEN:** commit runtime `2f3c8d207ab1aff41d578fca6e48d606f7cd00d3`: nuovo modulo `local_model/chat_sessions.py`, F1 isolata; [run 42529275925](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529275925) SUCCESS, **1022 test per job** Windows Python 3.11/3.12; suite servizi SUCCESS. [Prova tokenizer nativo 42529275993](https://github.com/MATRIXNEO23/jarvis/actions/runs/42529275993) SUCCESS.
+- **Diff vs 014:** solo `local_model/chat_sessions.py` aggiunto come nuova capacità opt-in (nessun import nel codice Jarvis), test `tests/test_chat_sessions.py`, documentazione. `jarvis.py`, motore GGUF, prompt, store Second Brain, Telegram, wakeword, mic e autorizzazioni **invariati**. Nessuna cartella/profile utente toccato; test SQLite su `TemporaryDirectory` Windows.
+- **Funzioni realmente implementate:** crea chat e la ritrova dopo riavvio dello store, elenco per ambito, selezione attiva per generale/progetto, rinomina, salvataggio atomico di coppie utente/assistant, lettura recente con limite ma senza eliminare storico; ID validati e scope rispettato; chiavi SQL parametrizzate; scritture serializzate per istanza store. Non contiene cancellazione e non crea alcun nuovo processo.
+- **Cosa NON è pronto:** nessuna nuova scheda/pannello nell'app; nessuna condivisione con Second Brain, nessun cambio sorgenti di chat ancora, nessuna selezione modelli/template, nessun colloquio col server KoboldCpp. F2 è il prossimo intervento; la 014 consegnata resta identica.
+- **Rollback:** chiudere/ignorare il ramo e riutilizzare il source 014 + ZIP immutabile. Nessun DB nuovo viene creato dall'app attuale; in futuro un DB di chat creato non dovrà essere cancellato dal rollback. **Nessuna build 015 o altra ZIP creata/pubblicata**.
+- **Gate F1:** PASS nei test dei sorgenti Windows; non affermare collaudo sul Pavilion, microfono, account, app avviata o JSON reale di Qwen. F2 richiederà test di integrazione e UI dedicati.
