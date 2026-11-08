@@ -27,6 +27,7 @@ class NativeCommandIntentTests(unittest.TestCase):
             pending_project_name=False, pending_project_rename_id=None,
             pending_project_trash_id=None, announce_document=Mock(),
             pending_project_reference=PendingProjectReference(),
+            telegram_voice_dialog=SimpleNamespace(pending=None),
             document_operation=Mock(), try_telegram_voice_send=Mock(return_value=False))
         def submit_local(*, message_override, **kwargs):
             self.engine.execute(message_override)
@@ -125,6 +126,15 @@ class NativeCommandIntentTests(unittest.TestCase):
             self.owner.submit('Dimmi come sta il computer')
             self.owner.workers.pop()()
         self.env['document_busy'] = True
+        self.env['poll_gemma_trial']()
+        self.assertEqual(self.actions(), [])
+        self.assertEqual(list(self.owner.session.history), [])
+
+    def test_new_telegram_dialogue_keeps_ownership_over_generated_action(self):
+        with self.model('system.status'):
+            self.owner.submit('Dimmi come sta il computer')
+            self.owner.workers.pop()()
+        self.env['telegram_voice_dialog'].pending = {'recipient':'contatto controllato'}
         self.env['poll_gemma_trial']()
         self.assertEqual(self.actions(), [])
         self.assertEqual(list(self.owner.session.history), [])
