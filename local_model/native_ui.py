@@ -65,6 +65,95 @@ class NativeSettingsWindow:
         ttk.Button(buttons, text="Ripristina campi", command=self.reset).pack(
             side="left", padx=6)
         ttk.Button(buttons, text="Chiudi", command=self.window.destroy).pack(side="right")
+        ttk.Button(buttons, text="Diagnostica prompt...", command=self.open_prompt_diagnostics).pack(
+            side="right", padx=5)
+
+    def open_prompt_diagnostics(self):
+        """Manual one-turn RAM capture; opening this UI never loads a GGUF."""
+        dialog = tk.Toplevel(self.window)
+        dialog.title("Jarvis // Diagnostica prompt Gemma")
+        dialog.geometry("840x620")
+        dialog.minsize(570, 380)
+        frame = ttk.Frame(dialog, padding=10)
+        frame.pack(fill="both", expand=True)
+        ttk.Label(frame, text=(
+            "Chi costruisce il prompt, da dove proviene ogni parte, "
+            "quanti token occupa e testo esatto inviato al modello."),
+            wraplength=780).pack(anchor="w")
+        ttk.Label(frame, text=(
+            "Cattura manuale della PROSSIMA domanda normale a Gemma. "
+            "Nessun file, rete, log automatico o nuova generazione. "
+            "NON include il pulsante Prova generazione e le risposte Telegram."),
+            wraplength=780).pack(anchor="w", pady=(5, 8))
+        status = tk.StringVar(value="Non attiva: premi Acquisisci, poi fai una domanda a Gemma.")
+        row = ttk.Frame(frame)
+        row.pack(fill="x")
+        viewframe = ttk.Frame(frame)
+        viewframe.pack(fill="both", expand=True, pady=8)
+        view = tk.Text(viewframe, wrap="word", font=("Consolas", 10),
+                       bg="#031522", fg="#d7f6ff", insertbackground="#d7f6ff")
+        scroll = ttk.Scrollbar(viewframe, orient="vertical", command=view.yview)
+        view.configure(yscrollcommand=scroll.set, state="disabled")
+        scroll.pack(side="right", fill="y")
+        view.pack(side="left", fill="both", expand=True)
+
+        def session():
+            if not callable(self.get_session):
+                raise RuntimeError("Sessione Gemma non disponibile.")
+            return self.get_session()
+
+        def display(value):
+            view.configure(state="normal")
+            view.delete("1.0", "end")
+            view.insert("1.0", value)
+            view.configure(state="disabled")
+
+        def arm():
+            try:
+                session().arm_prompt_diagnostic()
+                display("")
+                status.set("Pronta: fai UNA domanda a Gemma e premi Aggiorna.")
+            except Exception as exc:
+                status.set("Cattura non disponibile: " + type(exc).__name__)
+
+        def refresh():
+            try:
+                report = session().prompt_diagnostic()
+                if report is None:
+                    status.set("Nessun prompt catturato. Attiva, invia una domanda e aggiorna.")
+                    return
+                display(report)
+                status.set("Prompt acquisito. Contiene potenzialmente dati personali.")
+            except Exception as exc:
+                status.set("Lettura non disponibile: " + type(exc).__name__)
+
+        def discard():
+            try:
+                session().clear_prompt_diagnostic()
+                display("")
+                status.set("Cattura cancellata dalla RAM; nessun dato salvato.")
+            except Exception as exc:
+                status.set("Cancellazione non disponibile: " + type(exc).__name__)
+
+        def copy():
+            content = view.get("1.0", "end-1c")
+            if not content.strip():
+                status.set("Nessun report da copiare.")
+                return
+            if not messagebox.askyesno(
+                    "Jarvis / Prompt privato",
+                    "Il report può contenere conversazioni e ricordi privati. "
+                    "Vuoi copiarlo negli appunti di Windows?", parent=dialog):
+                return
+            dialog.clipboard_clear()
+            dialog.clipboard_append(content)
+            status.set("Copiato negli appunti. Incolla solo dove vuoi condividerlo.")
+
+        ttk.Button(row, text="Acquisisci prossima domanda", command=arm).pack(side="left")
+        ttk.Button(row, text="Aggiorna", command=refresh).pack(side="left", padx=5)
+        ttk.Button(row, text="Scarta", command=discard).pack(side="left")
+        ttk.Button(row, text="Copia con conferma", command=copy).pack(side="right")
+        ttk.Label(frame, textvariable=status, wraplength=780).pack(anchor="w", pady=4)
 
     def browse(self):
         selected = filedialog.askopenfilename(
