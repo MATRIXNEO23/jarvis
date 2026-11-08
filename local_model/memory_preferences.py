@@ -17,6 +17,7 @@ class MemoryPreferences:
     conversation_priority: bool = True
     pause_on_heavy_load: bool = True
     background_summaries: bool = True
+    history_max_tokens: int = 250
 
     def validate(self):
         for key, minimum, maximum in (
@@ -26,6 +27,7 @@ class MemoryPreferences:
             ("summary_max_tokens", 32, 1024),
             ("prompt_max_tokens", 128, 8192),
             ("max_background_jobs", 1, 1),
+            ("history_max_tokens", 128, 600),
         ):
             value = getattr(self, key)
             if type(value) is not int or not minimum <= value <= maximum:
@@ -45,9 +47,18 @@ class MemoryPreferences:
             return cls()
         try:
             obj = json.loads(path.read_text(encoding="utf-8"))
-            if not isinstance(obj, dict) or set(obj) != set(cls.__dataclass_fields__):
+            legacy_keys = set(cls.__dataclass_fields__) - {"history_max_tokens"}
+            if not isinstance(obj, dict) or set(obj) != legacy_keys:
                 raise ValueError("Schema memoria non valido.")
-            return cls(**obj).validate()
+            # Older releases reject additional keys in memory.json. Keep the
+            # token policy in a small sidecar; loading never migrates/writes.
+            native_path = path.with_suffix(".native.json")
+            native = {}
+            if native_path.exists():
+                native = json.loads(native_path.read_text(encoding="utf-8"))
+                if not isinstance(native, dict) or set(native) != {"history_max_tokens"}:
+                    raise ValueError("Schema budget cronologia non valido.")
+            return cls(**obj, **native).validate()
         except (OSError, UnicodeError, TypeError, json.JSONDecodeError) as exc:
             raise ValueError("Impostazioni memoria danneggiate.") from exc
 
@@ -71,21 +82,29 @@ class MemoryPreferences:
     def save(self, path):
         self.validate()
         path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temp = None
-        try:
-            with tempfile.NamedTemporaryFile(
-                mode="w", encoding="utf-8", dir=path.parent,
-                prefix=path.name + ".", suffix=".tmp", delete=False
-            ) as stream:
-                temp = Path(stream.name)
-                json.dump(asdict(self), stream, indent=2)
-                stream.flush()
-                os.fsync(stream.fileno())
-            os.replace(temp, path)
-        finally:
-            if temp is not None and temp.exists():
-                temp.unlink()
+        legacy = asdict(self)
+        native = {"history_max_tokens": legacy.pop("history_max_tokens")}
+        _save_json(path, legacy)
+        _save_json(path.with_suffix(".native.json"), native)
+
+
+def _save_json(path, data):
+    """Atomic per file; I/O errors propagate to the existing settings UI."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=path.parent,
+            prefix=path.name + ".", suffix=".tmp", delete=False
+        ) as stream:
+            temp = Path(stream.name)
+            json.dump(data, stream, indent=2)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp, path)
+    finally:
+        if temp is not None and temp.exists():
+            temp.unlink()
 
 
 def default_memory_preferences_path():

@@ -13,16 +13,19 @@ class MemoryPreferencesWindow:
         self.current = MemoryPreferences.load(self.path)
         self.window = tk.Toplevel(parent)
         self.window.title("Jarvis // Memoria e inattivita")
-        self.window.geometry("590x610")
+        self.window.geometry("590x650")
         self.window.minsize(480, 550)
         frame = ttk.Frame(self.window, padding=14)
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="Memoria locale - impostazioni",
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
-        ttk.Label(frame, text="Nuova chat Gemma: conteggio nativo, fino a 600 token di storia entro il contesto scelto. Il limite sotto resta in caratteri per i percorsi legacy. "
+        ttk.Label(frame, text="Chat Gemma: budget di cronologia e ricordi regolabile da 128 a 600 token, inizialmente 250. "
+                  "Un valore maggiore conserva più dialogo e può rallentare la risposta. L’ultimo scambio viene conservato o estratto entro il limite. "
+                  "Il limite legacy resta in caratteri. "
                   "Recupero: massimo 16 scambi recenti per chat/progetto, 16384 caratteri per testo. La sintesi automatica non è ancora collegata.",
                   wraplength=530).pack(anchor="w", pady=8)
         fields = (
+            ("history_max_tokens", "Token cronologia e ricordi (Gemma)"),
             ("idle_seconds", "Inattivita prima sintesi (secondi)"),
             ("recent_messages", "Messaggi recenti nel prompt"),
             ("summarize_every", "Sintesi ogni N messaggi"),
