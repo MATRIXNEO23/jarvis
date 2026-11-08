@@ -14,10 +14,15 @@ from test_telegram_no_network import fake_voice
 class Client:
     def __init__(self, bridge, *, disconnect_early=False):
         self.bridge = bridge
-        self.disconnected = asyncio.get_running_loop().create_future()
+        self._disconnected = asyncio.get_running_loop().create_future()
         self.disconnect_early = disconnect_early
         self.closed = False
         self.sent = []
+
+    @property
+    def disconnected(self):
+        # A property may return a fresh shield Future on each read.
+        return asyncio.shield(self._disconnected)
 
     async def connect(self):
         pass
@@ -29,7 +34,7 @@ class Client:
         def register(callback):
             self.callback = callback
             if self.disconnect_early:
-                asyncio.get_running_loop().call_soon(self.disconnected.set_result, None)
+                asyncio.get_running_loop().call_soon(self._disconnected.set_result, None)
             return callback
         return register
 
@@ -39,8 +44,8 @@ class Client:
 
     async def disconnect(self):
         self.closed = True
-        if not self.disconnected.done():
-            self.disconnected.set_result(None)
+        if not self._disconnected.done():
+            self._disconnected.set_result(None)
 
 
 class ListenerTests(unittest.IsolatedAsyncioTestCase):

@@ -251,10 +251,11 @@ class TelegramBridge:
             # labelled active while waiting forever for the user's Stop.
             shutdown = asyncio.create_task(self._shutdown.wait())
             try:
+                disconnected = client.disconnected
                 done, _ = await asyncio.wait(
-                    (shutdown, client.disconnected),
+                    (shutdown, disconnected),
                     return_when=asyncio.FIRST_COMPLETED)
-                if not self._shutdown.is_set() and client.disconnected in done:
+                if not self._shutdown.is_set() and disconnected in done:
                     raise TelegramBridgeError(
                         "Connessione Telegram terminata. Riattiva le risposte automatiche; "
                         "nessun messaggio viene reinviato automaticamente.")
