@@ -1,0 +1,22 @@
+{
+  "source_commit": "88c2934cbd6081f94fb33fba5f87f1800b07ebc0",
+  "archive": "Jarvis-014.zip",
+  "sha256": "f9c9cd92d1443774e48be89674ce04d9897f47d003df0ad11972ab7815d671c0",
+  "manifest_files": 121,
+  "clean_imports_native_dll": true,
+  "clean_ui_boot_close": true,
+  "injected_tk_callback_exception_rejected": true,
+  "required_guides_and_relative_links": true,
+  "operational_source_parity": true,
+  "full_extracted_runtime_suite": 1013,
+  "test_modules": 115,
+  "test_only_overlays": [
+    "tests",
+    "tools",
+    ".github",
+    "nonoperative docs"
+  ],
+  "overlays_shipped": false,
+  "runtime_files_copied_from_checkout": false,
+  "hardware_windows10_microphone_accounts_gguf": "not tested"
+}

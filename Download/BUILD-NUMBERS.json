@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 13,
-  "next_build": 14,
+  "latest_build": 14,
+  "next_build": 15,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -187,6 +187,20 @@
       "bytes": 8154995,
       "previous_build": 12,
       "git_blob_sha": "da83fd2601e4ac31b9cb5dcd509ee38d1e7a577f"
+    },
+    {
+      "build_number": 14,
+      "label": "014",
+      "archive": "Jarvis-014.zip",
+      "metadata": "Jarvis-014.json",
+      "date": "2026-11-08",
+      "description": "Gemma conversazione naturale e routing sicuro con diagnostica stopreason",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "88c2934cbd6081f94fb33fba5f87f1800b07ebc0",
+      "sha256": "f9c9cd92d1443774e48be89674ce04d9897f47d003df0ad11972ab7815d671c0",
+      "bytes": 8156653,
+      "previous_build": 13,
+      "git_blob_sha": "ebfdc0b58530691afe28891744478ca3222cabcd"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"
