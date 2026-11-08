@@ -37,7 +37,7 @@ def run(args, cwd, timeout=120):
 
 def main():
     details = json.loads(ARCHIVE.with_suffix('.json').read_text(encoding='utf-8'))
-    assert details['source_commit'] == os.environ['GITHUB_SHA']
+    assert details['source_commit'] == os.environ.get('JARVIS_SOURCE_SHA', os.environ['GITHUB_SHA'])
     assert details['build_number'] == NUMBER and details['build_label'] == LABEL
     assert details['bytes'] == ARCHIVE.stat().st_size and details['sha256'] == digest(ARCHIVE)
     source_tests = sum(1 for _ in (SOURCE/'tests').glob('test_*.py'))
