@@ -104,7 +104,7 @@ jobs:
 
   gemma-candidate:
     needs: [unit, services-focused]
-    if: ${{ github.repository == 'MATRIXNEO23/jarvis' && github.event_name == 'pull_request' && github.event.pull_request.number == 59 && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'audit/native-prompt-performance-20261108' }} # User authorized build013; disable after publication.
+    if: ${{ false }} # Build013 delivered; another package requires a new request.
     permissions:
       contents: read
       actions: read
@@ -696,7 +696,7 @@ jobs:
   publish-verified-013:
     name: Publish verified immutable build 013
     needs: [unit, gemma-candidate]
-    if: ${{ github.repository == 'MATRIXNEO23/jarvis' && github.event_name == 'pull_request' && github.event.pull_request.number == 59 && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'audit/native-prompt-performance-20261108' }} # User authorized build013; disable after publication.
+    if: ${{ false }} # Build013 delivered; another package requires a new request.
     runs-on: windows-2022
     permissions:
       contents: write

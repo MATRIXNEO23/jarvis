@@ -45,3 +45,6 @@ Ramo audit/native-prompt-performance-20261108, [PR59](https://github.com/MATRIXN
 
 ## Pubblicazione autorizzata
 Nuova richiesta esplicita «Me la pubblichi?». In preparazione013dal sorgente76054b7; gate limitato PR59,1006test attesi per ZIP estratto,012immutabile e profilo preservato. Esiti e pubblicazione ancora da verificare.
+
+## Build013 pubblicata — stato finale
+Autorizzazione «Me la pubblichi?» completata, [Scarica Jarvis-013.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-013.zip). Run42501645142SUCCESS:1006test per ciascun job Windows3.11/3.12e1006sulloZIPestratto; UI/DLL/manifest e parità sorgenti verificati. Checkout b9db9e0dc158b07f0c057cffa7b5c97a6f9ff974, ramo752bd84, pubblicazione main5037f77.8154995byte,121file,SHA2561926bb5b65d98bb78d1c829cd9143b1e39773c8c14581f6f63a8d0d9454ed781. Copia pubblica scaricata, hash/manifest/versione/indici verificati; registro13/14 e012immutata. Evidenza [JSON](evidence/jarvis013-public-verification-20261108.json), [handoff013](HANDOFF-RIPRESA-JARVIS-013-20261108.md). Gate build/publisher disattivati dopo la consegna; nessuna modifica runtime dopo i test. Colloquio/prestazioni PC e Telegram reale da collaudare, senza attribuire alla CI copertura del Pavilion.
