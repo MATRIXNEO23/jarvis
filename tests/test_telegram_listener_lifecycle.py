@@ -12,10 +12,11 @@ from test_telegram_no_network import fake_voice
 
 
 class Client:
-    def __init__(self, bridge, *, disconnect_early=False):
+    def __init__(self, bridge, *, disconnect_early=False, disconnect_error=False):
         self.bridge = bridge
         self._disconnected = asyncio.get_running_loop().create_future()
         self.disconnect_early = disconnect_early
+        self.disconnect_error = disconnect_error
         self.closed = False
         self.sent = []
 
@@ -34,7 +35,11 @@ class Client:
         def register(callback):
             self.callback = callback
             if self.disconnect_early:
-                asyncio.get_running_loop().call_soon(self._disconnected.set_result, None)
+                loop = asyncio.get_running_loop()
+                if self.disconnect_error:
+                    loop.call_soon(self._disconnected.set_exception, ConnectionError('Controlled transport failure'))
+                else:
+                    loop.call_soon(self._disconnected.set_result, None)
             return callback
         return register
 
@@ -124,3 +129,20 @@ class ListenerTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(self.bridge.is_enabled())
         self.assertTrue(any(e[0]=='telegram_status' and 'terminata' in e[1] for e in self.events))
         self.assertTrue(any(e[0]=='telegram_stopped' for e in self.events))
+
+    async def test_terminal_exception_is_consumed_without_unhandled_future_warning(self):
+        client = Client(self.bridge, disconnect_early=True, disconnect_error=True)
+        self.boundary(client)
+        loop = asyncio.get_running_loop()
+        previous = loop.get_exception_handler()
+        warnings = []
+        loop.set_exception_handler(lambda loop, context: warnings.append(context))
+        try:
+            with self.assertRaises(TelegramBridgeError) as caught:
+                await asyncio.wait_for(self.bridge._run(),2)
+            self.assertNotIn('Controlled transport failure', str(caught.exception))
+            await asyncio.sleep(0)
+            self.assertEqual(warnings, [])
+        finally:
+            loop.set_exception_handler(previous)
+        self.assertFalse(client._disconnected.cancelled())
