@@ -149,6 +149,10 @@ def main():
         current["context"] = turn.context_metrics
         prompt = current.pop("_prompt")
         tokens = original_tokenize(prompt, True)
+        instructions = intent[0] if intent is not None else (
+            "Rispondi in italiano in modo diretto, senza analisi o note interne.\n")
+        base = format_gemma_messages([{"role": "user", "content": instructions + question}])
+        current["history_and_recall_added_tokens"] = len(tokens) - len(original_tokenize(base, True))
         prefix = 0
         if previous_prompt is not None:
             for left, right in zip(previous_prompt, tokens):
@@ -161,6 +165,7 @@ def main():
         if (current["generations"] != 1 or current["selection_during_generate"]
                 or len(tokens) != current["prompt_tokens"]
                 or len(tokens) != turn.context_metrics["input_size"]
+                or current["history_and_recall_added_tokens"] > history_budget
                 or len(tokens) + config.max_output + 128 > config.context_size):
             raise RuntimeError("Production inference count, phase or budget mismatch.")
         rows.append(current)

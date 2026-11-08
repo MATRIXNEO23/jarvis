@@ -49,3 +49,6 @@
 
 ## RED osservato e stato della modifica
 628e908, run42499660390/job128789426794:7test,2failure (storia oltre250 e primo turno alterato da richiamo),4errori per nuovo campo API/UI assente,1controllo ruoli già OK. Comando focused del piano, Windows. Nessun import/sintassi mancante. Correzione runtime ora presente nel worktree:3file responsabili e prova nativa aggiornata per confronto600/250; GREEN e review pendenti. Nessun nuovo ZIP.
+
+## Prima GREEN e review
+58b8059:focused7test e integrazione nativa42499942818SUCCESS, prestazioni42499942823SUCCESS. Review indipendente in sola lettura senza blocchi runtime; aggiunto assert esplicito storia+recall<=budget con tokenizer reale e caso riferimento tardivo128. Recheck strumentazione/test necessario, nessun runtime aggiuntivo modificato. Dati runner non sono promessa di velocità sul Pavilion.

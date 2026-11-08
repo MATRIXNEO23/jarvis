@@ -29,13 +29,17 @@ class NativePromptPolicyTests(unittest.TestCase):
 
     def test_default_bounds_long_history_and_preserves_late_reference(self):
         answer = 'Dettagli sul magazzino. ' * 70 + 'La corona verde è una metafora finale.'
-        session, adapter = self.session(answer)
-        turn = session.prepare_turn('Perché hai detto "corona verde"?')
-        self.assertEqual(turn.context_metrics['extracted'], 1)
-        self.assertIn('Parliamo della scatola blu', adapter.calls[-1])
-        self.assertIn('corona verde', adapter.calls[-1].split('<start_of_turn>model\n')[1])
-        self.assertLess(len(adapter.calls[-1]), 1300)
-        self.assertEqual(len(adapter.calls), 1)
+        for budget in (250, 128):
+            with self.subTest(budget=budget):
+                session, adapter = self.session(answer)
+                if budget == 128:
+                    session.memory_loader = lambda: MemoryPreferences(history_max_tokens=128)
+                turn = session.prepare_turn('Perché hai detto "corona verde"?')
+                self.assertEqual(turn.context_metrics['extracted'], 1)
+                self.assertIn('Parliamo della scatola blu', adapter.calls[-1])
+                self.assertIn('corona verde', adapter.calls[-1].split('<start_of_turn>model\n')[1])
+                self.assertLess(len(adapter.calls[-1]), 1300)
+                self.assertEqual(len(adapter.calls), 1)
 
     def test_budget_override_applies_next_request_without_reload_or_history_loss(self):
         answer = 'Risposta sullo scaffale. ' * 75
