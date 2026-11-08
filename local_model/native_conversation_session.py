@@ -364,12 +364,24 @@ class NativeConversationSession:
                 # Never execute, persist or transmit the report.
                 try:
                     from .prompt_diagnostics import render_prompt_diagnostic
-                    history_source = ("Archivio Second Brain: recent_pairs"
-                                      if restored else
-                                      "NativeConversationSession._turns: RAM")
-                    memory_source = ("jarvis.native_memory_request: progetto"
-                                     if context_id is not None else
-                                     "jarvis.native_memory_request: Second Brain")
+                    # A context_id may represent a project (legacy) OR a
+                    # newly scoped chat ID (F2). Let its trusted reader label
+                    # the origin instead of assuming every ID is a project.
+                    restored_source = getattr(
+                        memory_context, "diagnostic_history_source", None)
+                    history_source = (
+                        restored_source if restored and isinstance(restored_source, str)
+                        else "Archivio legacy / Second Brain: recent_pairs" if restored
+                        else "NativeConversationSession._turns: RAM (ambito isolato)"
+                    )
+                    source_label = getattr(
+                        memory_context, "diagnostic_recall_source", None)
+                    memory_source = (
+                        source_label if isinstance(source_label, str)
+                        else "Nessuna sorgente memoria" if memory_context is None
+                        else "jarvis.native_memory_request: progetto (legacy)" if context_id is not None
+                        else "jarvis.native_memory_request: Second Brain (legacy)"
+                    )
                     sections = [
                         ("Istruzioni / catalogo", base_instruction_source, base_instructions),
                         ("Personalità", "NativeModelConfig.personality: impostazioni",
