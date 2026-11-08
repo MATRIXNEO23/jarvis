@@ -42,6 +42,31 @@ class NativeBridgeTests(unittest.TestCase):
             self.assertEqual(fake.calls[0]["max_length"], 256)
             self.assertEqual(fake.calls[0]["sampler_seed"], 12)
 
+    def test_stopreason_is_exposed_only_as_diagnostic_metadata(self):
+        with tempfile.TemporaryDirectory() as folder:
+            dll = Path(folder) / "engine.dll"
+            model = Path(folder) / "model.gguf"
+            dll.write_bytes(b"test-only")
+            model.write_bytes(b"test-only")
+            fake = FakeUpstream()
+            bridge = NativeGemmaBridge(NativeModelConfig(
+                dll=str(dll), model=str(model)), fake,
+                initialize=lambda upstream, config: None)
+            bridge.load()
+            def cut(arguments):
+                return {"status": 1, "text": '{"kind":"capability",',
+                        "stopreason": 0, "completion_tokens": 128}
+            fake.generate = cut
+            self.assertEqual(bridge.generate("un comando"), '{"kind":"capability",')
+            self.assertEqual(bridge.last_generation_finish, "length")
+            self.assertEqual(bridge.last_generation_tokens, 128)
+            fake.generate = lambda arguments: {
+                "status": 1, "text": "Fine.", "stopreason": 1,
+                "completion_tokens": 12}
+            self.assertEqual(bridge.generate("risposta breve"), "Fine.")
+            self.assertEqual(bridge.last_generation_finish, "stop")
+            self.assertEqual(bridge.last_generation_tokens, 12)
+
     def test_missing_initializer_prevents_native_load(self):
         with tempfile.TemporaryDirectory() as folder:
             dll = Path(folder) / "engine.dll"
