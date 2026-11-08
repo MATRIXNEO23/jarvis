@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "latest_build": 11,
-  "next_build": 12,
+  "latest_build": 12,
+  "next_build": 13,
   "filename_template": "Jarvis-{build_number:03d}.zip",
   "immutable": true,
   "releases": [
@@ -159,6 +159,20 @@
       "bytes": 8148551,
       "previous_build": 10,
       "git_blob_sha": "9b7ff3623e57ea50477641861bd23cb76ff8532f"
+    },
+    {
+      "build_number": 12,
+      "label": "012",
+      "archive": "Jarvis-012.zip",
+      "metadata": "Jarvis-012.json",
+      "date": "2026-11-08",
+      "description": "Diagnostica servizi nelle impostazioni e fasi Telegram osservabili",
+      "status": "candidate_pc_test_pending",
+      "source_commit": "5820b00623ec1632df86028c8bd9ac0341c5dc7d",
+      "sha256": "57c8fa161d36020207a46e2a6eee45f5fec8f0987546ae601e3abe1b6881c680",
+      "bytes": 8153869,
+      "previous_build": 11,
+      "git_blob_sha": "c774928ac05e3d4cd8f5539e637bba298aa67312"
     }
   ],
   "historical_unnumbered": "Existing packages retain their original names in REGISTRO-VERSIONI.md"
