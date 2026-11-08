@@ -4401,6 +4401,26 @@ def main() -> None:
                                 + type(exc).__name__ + ").")
                 return ""
 
+        def recent_pairs(count):
+            if closing or owner is None:
+                return ()
+            try:
+                if context_id is None:
+                    if owner is not durable_brain or revision != gemma_memory_revision:
+                        return ()
+                    pairs = owner.dialogue_pairs(count)
+                    if closing or owner is not durable_brain or revision != gemma_memory_revision:
+                        return ()
+                    return pairs
+                if owner is not workspace:
+                    return ()
+                pairs = owner.dialogue_pairs("project", context_id, count)
+                return () if closing or owner is not workspace else pairs
+            except (OSError, sqlite3.Error, ValueError) as exc:
+                warnings.append("Scambi recenti non disponibili (" + type(exc).__name__ + ").")
+                return ()
+
+        read.recent_pairs = recent_pairs
         return (read if owner is not None else None), owner, revision, warnings
 
     def submit_gemma_voice(spoken, *, typed=False):
@@ -4533,6 +4553,11 @@ def main() -> None:
                                 continue
                         # UI context/epoch cannot change during this synchronous
                         # acceptance. The metadata commit never waits for native inference.
+                        # A memory switch preserves the current live dialogue,
+                        # but must not newly hydrate a revoked durable owner.
+                        if (value.context_id is None and value.memory_owner is not None
+                                and (value.memory_owner is not durable_brain or not memory_enabled.get())):
+                            value.restored_history = ()
                         if not value.commit():
                             continue
                         # Discrete state-change notice; no persistent transcript log.

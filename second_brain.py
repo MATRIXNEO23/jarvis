@@ -118,9 +118,16 @@ class SecondBrain:
                            "proof_kind TEXT NOT NULL DEFAULT 'legacy_unassessed'")
             db.execute("CREATE INDEX IF NOT EXISTS receipts_time ON action_receipts(time_utc)")
             db.execute("CREATE INDEX IF NOT EXISTS conversations_time ON conversations(time_utc)")
+            db.execute("""CREATE TABLE IF NOT EXISTS recent_dialogue(
+                turn_id INTEGER PRIMARY KEY, user_text TEXT NOT NULL, reply TEXT NOT NULL)""")
+            # Triggers also apply when an older Jarvis clears the parent table.
+            db.execute("""CREATE TRIGGER IF NOT EXISTS recent_dialogue_delete
+                AFTER DELETE ON conversations BEGIN
+                DELETE FROM recent_dialogue WHERE turn_id=OLD.id; END""")
+            db.execute("DELETE FROM recent_dialogue WHERE turn_id NOT IN (SELECT id FROM conversations)")
 
     def remember_turn(self, user: str, reply: str, kind: str = "chat") -> bool:
-        """Persist only small utterances; never auto-save secrets or file bodies."""
+        """Persist brief episodes and bounded recent chat; never auto-import file bodies."""
         if kind not in ("chat", "clarify", "action", "error"):
             raise BrainError("Tipo episodio non valido.")
         if _SENSITIVE.search(str(user)) or _SENSITIVE.search(str(reply)):
@@ -130,8 +137,13 @@ class SecondBrain:
         if not u or not a:
             return False
         with self._db() as db:
-            db.execute("INSERT INTO conversations(time_utc,user_text,reply,kind)"
+            cursor = db.execute("INSERT INTO conversations(time_utc,user_text,reply,kind)"
                        " VALUES(?,?,?,?)", (_now(), u, a, kind))
+            if kind in ("chat", "clarify"):
+                db.execute("INSERT INTO recent_dialogue VALUES(?,?,?)",
+                           (cursor.lastrowid, user.strip()[:16384], reply.strip()[:16384]))
+                db.execute("DELETE FROM recent_dialogue WHERE turn_id NOT IN "
+                           "(SELECT turn_id FROM recent_dialogue ORDER BY turn_id DESC LIMIT 16)")
         return True
 
     def record_completed_action(self, action_id: str, application: str,
@@ -199,6 +211,16 @@ class SecondBrain:
             metadata={"recipient": recipient, "subject": subject},
             verified=verified,proof_kind="provider_receipt",
         )
+
+    def dialogue_pairs(self, count=16):
+        """Recent chat in original roles; old truncated records remain usable."""
+        count = min(16, max(0, int(count)))
+        with self._db() as db:
+            rows = db.execute(
+                "SELECT COALESCE(r.user_text,c.user_text),COALESCE(r.reply,c.reply) "
+                "FROM conversations c LEFT JOIN recent_dialogue r ON r.turn_id=c.id "
+                "WHERE c.kind IN ('chat','clarify') ORDER BY c.id DESC LIMIT ?", (count,)).fetchall()
+        return tuple((("user", u), ("assistant", a)) for u, a in reversed(rows))
 
     def recent_turns(self, count: int = 4) -> tuple[dict, ...]:
         count = min(max(int(count), 0), 8)

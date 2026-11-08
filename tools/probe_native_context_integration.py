@@ -49,6 +49,29 @@ try:
         raise RuntimeError('Extra model load or generation.')
     if 'Saluta brevemente in italiano.' not in generations[1][0]:
         raise RuntimeError('Immediate history missing from actual native input.')
+    # Reopen a bounded SQLite archive and a fresh session, using the same native
+    # owner: tests restoration without a redundant model allocation.
+    from tempfile import TemporaryDirectory
+    from second_brain import SecondBrain
+    with TemporaryDirectory() as folder:
+        path = Path(folder) / 'brain.sqlite3'
+        SecondBrain(path).remember_turn('Parliamo di Mussolini',
+            'Una spiegazione storica dettagliata. ' * 90 + 'Clown era una metafora conclusiva.')
+        brain = SecondBrain(path)
+        def read(budget):
+            return ''
+        read.recent_pairs = brain.dialogue_pairs
+        restored = NativeConversationSession(adapter, config_loader=lambda: config,
+                                            memory_loader=MemoryPreferences)
+        turn = restored.prepare_turn('Perché hai detto clown?', memory_context=read)
+        prompt, result = generations[-1]
+        if 'clown era una metafora' not in prompt.casefold() or 'Parliamo di Mussolini' not in prompt:
+            raise RuntimeError('Restored reference missing from actual native input.')
+        if turn.context_metrics['input_size'] != result['prompt_tokens']:
+            raise RuntimeError('Restored prompt tokenizer mismatch.')
+        if len(loads) != 1 or len(generations) != 3 or not turn.commit():
+            raise RuntimeError('Restoration added a model load/generation or failed acceptance.')
+        metrics.append(turn.context_metrics)
     report = dict(proof='Jarvis_native_context_integration', model_loads=len(loads),
                   generations=len(generations), metrics=metrics, pavilion_verified=False)
     Path('native-context-integration-report.json').write_text(

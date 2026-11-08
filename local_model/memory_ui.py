@@ -20,11 +20,11 @@ class MemoryPreferencesWindow:
         ttk.Label(frame, text="Memoria locale - impostazioni",
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
         ttk.Label(frame, text="Nuova chat Gemma: conteggio nativo, fino a 600 token di storia entro il contesto scelto. Il limite sotto resta in caratteri per i percorsi legacy. "
-                  "La sintesi automatica non è ancora collegata.",
+                  "Recupero: massimo 16 scambi recenti per chat/progetto, 16384 caratteri per testo. La sintesi automatica non è ancora collegata.",
                   wraplength=530).pack(anchor="w", pady=8)
         fields = (
             ("idle_seconds", "Inattivita prima sintesi (secondi)"),
-            ("recent_messages", "Ultimi messaggi conservati"),
+            ("recent_messages", "Messaggi recenti nel prompt"),
             ("summarize_every", "Sintesi ogni N messaggi"),
             ("summary_max_tokens", "Limite riassunto (non collegato)"),
             ("prompt_max_tokens", "Caratteri prompt legacy (conservato)"),
@@ -68,7 +68,7 @@ class MemoryPreferencesWindow:
             self.status.set(
                 "Input: {input_size}/{budget} {unit}; risposta riservata: {output_reserved}; "
                 "margine: {safety_reserved}. Scambi interi: {whole}, estratti: {extracted}, "
-                "omessi: {omitted}.".format(**({"whole": 0, "extracted": 0, "omitted": 0} | metrics)))
+                "omessi: {omitted}; recuperati: {restored}.".format(**({"whole": 0, "extracted": 0, "omitted": 0, "restored": 0} | metrics)))
         except (OSError, ValueError, RuntimeError) as exc:
             self.status.set(str(exc))
 

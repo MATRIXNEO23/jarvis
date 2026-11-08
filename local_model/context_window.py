@@ -17,14 +17,14 @@ def _fragment(text, limit):
 def _anchored_fragment(text, limit, question):
     if len(text) <= limit:
         return text
-    folded = text.casefold()
     quotes = re.findall(r'["«“]([^"»”]{1,200})["»”]', question)
-    positions = [(folded.rfind(q.casefold()), len(q)) for q in quotes
-                 if q.casefold() in folded]
+    positions = [(m.start(), len(m.group())) for q in quotes
+                 for m in re.finditer(re.escape(q), text, re.IGNORECASE)]
     if not positions:
         terms = set(re.findall(r'\w{4,}', question.casefold())) - _STOP
-        positions = [(m.start(), len(m.group())) for m in re.finditer(r'\w{4,}', folded)
-                     if m.group() in terms]
+        positions = [(m.start(), len(m.group())) for m in re.finditer(r'\w{4,}', text)
+                     if m.group().casefold() in terms]
+    positions.sort()
     at, length = positions[-1] if positions else (0, 0)
     start = max(0, min(len(text)-limit, at - max(0, (limit-length)//2)))
     end = min(len(text), start+limit)

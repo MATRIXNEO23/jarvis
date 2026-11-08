@@ -52,6 +52,7 @@ class NativeChatTurn:
         self.allowed_actions = None
         self.document_snapshot = None
         self.intent_warning = ""
+        self.restored_history = ()
         self.context_metrics = {}
         self.context_note = ""
 
@@ -139,7 +140,10 @@ class NativeConversationSession:
                 if turn._committed:
                     return False
                 if store_history:
-                    self._turns.append((turn.context_id, turn.question, turn.text[:2000]))
+                    if not any(row[0] == turn.context_id for row in self._turns):
+                        for user, answer in turn.restored_history:
+                            self._turns.append((turn.context_id, user[1], answer[1]))
+                    self._turns.append((turn.context_id, turn.question[:16384], turn.text[:16384]))
                 turn._committed = True
                 return True
 
@@ -223,6 +227,26 @@ class NativeConversationSession:
             # Keep complete exchanges even when recent_messages is odd.
             pair_limit = memory.recent_messages // 2
             pairs = [(turns[i], turns[i + 1]) for i in range(0, len(turns), 2)][-pair_limit:]
+            restored = 0
+            recent_reader = getattr(memory_context, "recent_pairs", None)
+            if exact and not pairs and callable(recent_reader):
+                self._check_revision(revision)
+                previous = recent_reader(pair_limit)
+                self._check_revision(revision)
+                if not isinstance(previous, (tuple, list)) or len(previous) > pair_limit:
+                    raise ValueError("Scambi recenti non validi.")
+                archived_pairs = []
+                for pair in previous:
+                    if (not isinstance(pair, (tuple, list)) or len(pair) != 2
+                            or any(not isinstance(msg, (tuple, list)) or len(msg) != 2
+                                   or msg[0] != role or not isinstance(msg[1], str)
+                                   or not msg[1].strip() or len(msg[1]) > 16384
+                                   for msg, role in zip(pair, ("user", "assistant")))):
+                        raise ValueError("Ruoli degli scambi recenti non validi.")
+                    canonical = tuple(tuple(msg) for msg in pair)
+                    archived_pairs.append(canonical)
+                restored = len(archived_pairs)
+                pairs = archived_pairs[-pair_limit:]
             instructions = "Rispondi in italiano in modo diretto, senza analisi o note interne.\n"
             allowed_actions = None
             intent_warning = ""
@@ -298,11 +322,13 @@ class NativeConversationSession:
                                        prompt_budget=budget)
             answer = clean_native_answer(result.get("text"))
             turn = NativeChatTurn(self, context_id, latest, answer, revision)
+            turn.restored_history = tuple(archived_pairs) if restored else ()
             turn.allowed_actions = allowed_actions
             turn.intent_warning = intent_warning
             turn.context_metrics = dict(metrics, input_size=final_size, budget=budget,
                                         unit="tokens" if exact else "legacy_characters",
-                                        output_reserved=config.max_output, safety_reserved=128)
+                                        output_reserved=config.max_output, safety_reserved=128,
+                                        restored=restored)
             if exact and metrics.get("extracted"):
                 turn.context_note = "Cronologia alleggerita: estratto dell’ultimo scambio."
             elif exact and metrics.get("omitted"):
