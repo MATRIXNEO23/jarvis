@@ -22,6 +22,8 @@ class NativeGemmaBridge:
         self._lock = threading.Lock()
         self._loaded = False
         self._stop_requested = threading.Event()
+        self.last_generation_finish = "unknown"
+        self.last_generation_tokens = None
 
     def load(self):
         """Load once. Caller must supply a verified, pinned upstream adapter."""
@@ -101,6 +103,8 @@ class NativeGemmaBridge:
             if not self._loaded:
                 raise RuntimeError("Modello non caricato.")
             c = self.config
+            self.last_generation_finish = "unknown"
+            self.last_generation_tokens = None
             started = time.monotonic()
             expired = threading.Event()
             deadline_lock = threading.Lock()
@@ -158,6 +162,15 @@ class NativeGemmaBridge:
                 raise RuntimeError(
                     "Generazione nativa fallita (status=" + str(status)[:20]
                     + ", stopreason=" + str(reason)[:40] + ").")
+            # KoboldCpp stopreason: 1=stop, other successful values=length.
+            # The metadata is non-authoritative; never allow it to grant an
+            # action or modify a malformed model response.
+            stop = result.get("stopreason")
+            self.last_generation_finish = (
+                "stop" if type(stop) is int and stop == 1 else
+                "length" if type(stop) is int and stop >= 0 else "unknown")
+            tokens = result.get("completion_tokens")
+            self.last_generation_tokens = tokens if type(tokens) is int and tokens >= 0 else None
             value = result.get("text")
             if not isinstance(value, str) or not value.strip():
                 raise RuntimeError("Generazione nativa vuota.")
