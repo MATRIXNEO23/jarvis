@@ -1,3 +1,15 @@
+# CHECKPOINT — ARCH-01 F4.2 benchmark locale ripetibile (9 novembre 2026)
+
+**Stato:** F4.2 strumento sviluppato su ramo isolato, test finali Windows ancora da confermare; **benchmark Pavilion NON eseguito**. Source base F4.1 `0d7e0105c35fd94dba1f64a4f3d137c650745a97`, code Windows-green F4.1 `ce5dfd07bd51229ac3f251c57af2ae3e74da8183`, [PR #65](https://github.com/MATRIXNEO23/jarvis/pull/65). F4.2 [PR draft #66](https://github.com/MATRIXNEO23/jarvis/pull/66), branch `feature/jarvis-kobold-f42-benchmark-20261109`. Source dopo fix `fccc4f357d5cbb6f4e8e043b909783906d6dae32`, [CI ultima revisione 42536455043](https://github.com/MATRIXNEO23/jarvis/actions/runs/42536455043) in corso.
+
+**Nuovi file:** `tools/f42_benchmark.py` e `tests/test_f42_benchmark.py`, [checkpoint](https://github.com/MATRIXNEO23/jarvis/blob/feature/jarvis-kobold-f42-benchmark-20261109/docs/ARCH-01-F42-CHECKPOINT.md) e [guida Pavilion](https://github.com/MATRIXNEO23/jarvis/blob/feature/jarvis-kobold-f42-benchmark-20261109/docs/ARCH-01-F42-PROVA-PAVILION.md). CLI: `python -m tools.f42_benchmark template`, `compare <file>`, `probe` (nessuna generazione), `server --model MODELLO --allow-generation [--turns 2] [--output percorso]` (genera SOLO prompt sintetici su server GIÀ avviato in loopback, niente dati privati). Solo metriche numeriche, confronto controllato richiede stessi prompt+template+config+qualità; endpoint `/api/extra/perf` conserva `last_token_count` raw senza equipararlo a Processed/Generated. **Nessun collegamento al runtime `jarvis.py`, motore DLL, Second Brain, chat UI, voce o Telegram.**
+
+**RED** [42536104201](https://github.com/MATRIXNEO23/jarvis/actions/runs/42536104201): 1064 test/job Windows, tre errori nel nuovo tool (verso ratio, arrotondamento tps, clock mock); fix mirato `fccc4f357...`, verificare ultimo esito [42536455043](https://github.com/MATRIXNEO23/jarvis/actions/runs/42536455043) prima di promuovere. La prova reale di latenza e qualità sul Pavilion è ancora da svolgere, nessuna decisione DLL→server.
+
+**Rollback:** ignorare PR#66 → F4.1 `0d7e010...` → F3 `b8828f...` → ZIP014 immutabile source `88c2934cbd6081f94fb33fba5f87f1800b07ebc0`. Nessuna cancellazione o migrazione dati, nessun ZIP/versione nuova prodotta o pubblicata. F5 GGUF Gemma/Qwen e F8 API online restano pianificate, NON parte di F4.2.
+
+---
+
 # CHECKPOINT — ARCH-01 F4 canary KoboldCpp locale, 9 novembre 2026
 
 **Stato:** F4.1 canary GREEN nei test Windows, **NON un cambio del motore Jarvis e NON distribuito**. Base F3 GREEN source `b8828f0facca6fb916ccd341e313670627e67a1d` [PR #64](https://github.com/MATRIXNEO23/jarvis/pull/64), CI [42533254766](https://github.com/MATRIXNEO23/jarvis/actions/runs/42533254766) 1040 test/job PASS e nativo [42533254794](https://github.com/MATRIXNEO23/jarvis/actions/runs/42533254794) SUCCESS. F4 su `feature/jarvis-kobold-chat-f4-canary-20261109`, [PR draft #65](https://github.com/MATRIXNEO23/jarvis/pull/65).
