@@ -88,3 +88,5 @@ Una volta attiva, errore del contatore non porta a un invio con budget dichiarat
 
 ## Stato conclusivo della ricerca
 Ricerca e proposta completate; nessuna prova nuova di runtime/qualità/prestazioni eseguita e nessuna build creata per questa fase. Decisioni D1-D4 da recepire nel piano soltanto dopo approvazione della proposta. Non presentare questi dettagli come comportamento della010 già installabile.
+
+Revisione finale indipendente sulla versione7f4fa101: D1-D4 sufficienti per pianificare M1, nessuna contraddizione concreta; fattibilità tokenizer reale resta primo gate. Nessun test o modifica eseguito dal revisore. Conferma utente ancora da ottenere prima del runtime.
