@@ -513,6 +513,7 @@ class JarvisHUD:
         memory=bool(state.get("memory",False))
         mic_enabled=bool(state.get("mic_enabled",listening))
         mode=core_mode(speaking=speaking,listening=listening)
+        self._last_mode=mode
         title=(
             f"MIC  {'ATTIVO' if mic_enabled else 'OFF'}    /    "
             f"GPT  {'ON' if connected else 'OFF'}    /    "

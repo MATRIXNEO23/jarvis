@@ -34,7 +34,7 @@ def include(p):
     if parts[0] in {".github", "tests", "tools", "docs", "Download", "upstream-kobold",
                     "koboldcpp-src", "probe-models", "dist", ".agents", "superpowers"}:
         return False
-    if p.name in {"AGENTS.md", "RECUPERO.md", ".gitignore"}:
+    if p.name in {"AGENTS.md", "RECUPERO.md", ".gitignore", "lumi_originale.png"}:
         return False
     if p.suffix.lower() in {".md", ".yml", ".yaml", ".toml"} and p.name != "README.md":
         return False

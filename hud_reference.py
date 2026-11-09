@@ -175,6 +175,7 @@ class ReactorArt:
         self.arc_items=[]
         self.pulse_items=[]
         self.core_name=None
+        self.avatar=None
         self.core_fill=[]
         self.rim=None
         self.system_lamps=[]
@@ -284,6 +285,18 @@ class ReactorArt:
                                      text="LUMI",
                                      fill="#d9f8ff",
                                      font=("Segoe UI",max(16,int(r*.24)),"bold"))
+        # Il volto di LUMI sostituisce la scritta nel nucleo; la scritta
+        # resta solo se le immagini dell'avatar non sono disponibili.
+        try:
+            from lumi_avatar import AvatarFace
+            face=AvatarFace()
+            if face.attach(c,cx,cy,r*.66):
+                c.itemconfigure(self.core_name,state="hidden")
+                self.avatar=face
+            else:
+                self.avatar=None
+        except Exception:
+            self.avatar=None
         # Tiny status lines below the reactor (never "ASCOLTO" inside it).
         c.create_text(cx,cy+r*.61,text="◈  ARCHITETTURA VOCALE",
                       fill="#4093b8",font=("Consolas",max(7,int(r*.052))))
@@ -339,6 +352,11 @@ class ReactorArt:
         for item,enabled in zip(self.system_lamps,
                                 (listening,connected,memory)):
             c.itemconfigure(item,fill=GREEN if enabled else "#2a5161")
+        if self.avatar is not None:
+            try:
+                self.avatar.tick(mode)
+            except Exception:
+                self.avatar=None
 
 
 def clip_coast(poly,turn,radius):
