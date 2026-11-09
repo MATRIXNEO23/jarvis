@@ -1,3 +1,36 @@
+# Prima installazione di Lumi (build di prova 023 e successive)
+
+Lumi è il nuovo nome di Jarvis. Guida per Windows 10 x64 (riferimento: HP Pavilion i3-2100, 10 GB RAM). Il pacchetto si scarica da [Download](../Download/README.md): prendi la build più alta in cima alla pagina.
+
+## Passi, in ordine
+1. **Python** 3.11 o 3.12 a 64 bit con Tcl/Tk e launcher `py` → [Requisiti](01-Requisiti.md). È l'unica installazione obbligatoria.
+2. **Estrai lo ZIP** `Lumi-0xx-PROVA.zip` in una cartella NUOVA (per esempio Documenti\Lumi-023). Non avviare dallo ZIP e non sovrascrivere la cartella di una build precedente.
+3. **Modello locale (GGUF)**: Lumi include già il motore (KoboldCpp, cartella `native_engine`) ma non il modello. Serve un file `.gguf` istruito: Gemma 2 2B, Qwen2.5 (1.5B/3B) o Qwen3 (1.7B), quantizzazione Q4_K_M consigliata per il Pavilion. Mettilo in una cartella fissa.
+4. **Avvia** `avvia_lumi.bat` (doppio clic). Usa il profilo dati `%LOCALAPPDATA%\Jarvis-Gemma-Trial`: impostazioni, chat e memoria restano da una build all'altra.
+5. **Scegli il modello**: ingranaggio → GPT e memoria → «Configura Gemma locale...» → Sfoglia il file `.gguf` → Salva → **chiudi e riapri Lumi** (il modello si carica una sola volta per avvio). La famiglia (Gemma/Qwen) viene riconosciuta dal file.
+6. **Voce che risponde**: ingranaggio → Voce → «Scarica Paola» o «Scarica Serena» → scegli la voce → «Prova voce». Il motore voce è già incluso, non serve installare nulla → [Voce](03-Voce.md).
+7. Facoltativi, solo se li usi:
+   - **Microfono** (riconoscimento offline): `installa_voce.bat` → [Voce](03-Voce.md).
+   - **Voci Microsoft Edge** (online, gratuite): `installa_voce_edge.bat` → [Voce](03-Voce.md).
+   - **Telegram**: `installa_telegram.bat`, poi configurazione → [Telegram](04-Telegram.md).
+   - **GPT esterno** (account ChatGPT): Node.js + `installa_gpt.bat` → [GPT](02-GPT.md).
+
+Se qualcosa non va: [Componenti mancanti](07-Componenti-mancanti.md). Per reinstallare senza perdere dati: [Reinstallazione e dati](06-Reinstallazione-e-dati.md).
+
+## Dove si trovano le cose (build 023)
+| Elemento | Dove |
+|---|---|
+| Programma | Cartella dove hai estratto lo ZIP |
+| Dati (impostazioni, chat, memoria, accesso Telegram) | `%LOCALAPPDATA%\Jarvis-Gemma-Trial` |
+| Voci Paola/Serena scaricate | `%LOCALAPPDATA%\Jarvis-Gemma-Trial\voci` |
+| Motore del modello e motore voce | `native_engine` e `voce_engine` nella cartella del programma |
+| SDK e account GPT | `%LOCALAPPDATA%\Jarvis\runtime` e `gpt_account` |
+| Modello microfono | `%LOCALAPPDATA%\Jarvis\models\vosk-model-small-it-0.22` |
+
+Per aprire un percorso: Windows+R, incolla, Invio.
+
+---
+## Storico (versioni Jarvis precedenti)
 > **007:** [consegna e istruzioni](../docs/CONSEGNA-JARVIS-007-20261107.md). Cartella nuova, profilo Gemma-Trial conservato; guida con F1/aiuto. Sezioni successive storiche.
 
 > **Candidata006:** segui [consegna e istruzioni](../docs/CONSEGNA-JARVIS-006-20261107.md) e [registro versioni](../Download/REGISTRO-VERSIONI.md). Usa una cartella nuova; il profilo e quello Gemma-Trial. Le istruzioni sotto sono storiche, specifiche delle versioni indicate.

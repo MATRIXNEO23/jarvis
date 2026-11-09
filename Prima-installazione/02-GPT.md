@@ -1,13 +1,16 @@
 # 2. Collegare il GPT esterno
+
+> Facoltativo: Lumi risponde anche solo con il modello locale. GPT serve per le richieste che il modello locale non gestisce.
+
 Occorrono Python, Node.js con npm e un account ChatGPT autorizzato. Il modello resta esterno: non devi scaricare un modello GPT sul PC.
 
 ## Prima configurazione
-1. Chiudi Jarvis.
+1. Chiudi Lumi.
 2. Dalla cartella del programma avvia installa_gpt.bat con doppio clic.
 3. Attendi la conclusione. Lo script scarica il sorgente SDK fissato al commit 0a36fefeb913055c8c7a1a29b63d82b96b2e841a e compila il solo workspace locale con npm.
 4. Il risultato atteso è la presenza di:
    %LOCALAPPDATA%\Jarvis\runtime\siwc\packages\local\dist\index.js
-5. Avvia avvia_jarvis.bat.
+5. Avvia avvia_lumi.bat (nelle build Jarvis precedenti: avvia_jarvis.bat).
 6. Apri ingranaggio → GPT e memoria → Connessione ChatGPT. Lascia abilitato il collegamento e premi Connetti ChatGPT.
 7. Completa l'accesso nel browser aperto dal flusso di login. Non incollare password o token nella console di Jarvis.
 8. Attendi lo stato «connesso». Scrivi una domanda breve e usa Chiedi a GPT. Una risposta pertinente è la prima prova reale; lo stato abilitato da solo non basta.

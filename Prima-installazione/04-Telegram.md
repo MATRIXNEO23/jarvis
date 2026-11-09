@@ -26,12 +26,15 @@ Fonte della procedura: [documentazione Telegram](https://core.telegram.org/api/o
 Se il sito rifiuta la creazione, conserva l'errore esatto; non inventare credenziali né condividere hash/codici nel repository.
 
 ## Configurare l'account nel profilo giusto
-1. Avvia Jarvis col launcher del pacchetto che stai usando.
+
+> **Lumi 023 e successive:** avvia Lumi con `avvia_lumi.bat` e usa il pulsante «Configura Telegram (accesso sicuro)» in ingranaggio → Progetti e servizi: così l'accesso viene salvato nel profilo `%LOCALAPPDATA%\Jarvis-Gemma-Trial` letto da Lumi. Nella 023, `configura_telegram.bat` aperto da Esplora file salva invece nel profilo base e Lumi non lo vede (corretto dalla build successiva, che mostra il profilo usato e rilegge le credenziali dopo il salvataggio). L'errore «Formato credenziali non riconosciuto» delle build 019-022 è corretto nella 023.
+
+1. Avvia Lumi col launcher del pacchetto che stai usando.
 2. Apri ingranaggio → Progetti e servizi → Configura Telegram (accesso sicuro).
 3. Inserisci API ID; nella finestra protetta incolla API hash con Ctrl+V o Incolla. Il codice accetta 32 caratteri esadecimali.
 4. Inserisci il numero con prefisso internazionale, per esempio +39, poi il codice ricevuto da Telegram. Se richiesto, inserisci la password di verifica in due passaggi.
 5. Attendi «Accesso Telegram salvato con cifratura Windows DPAPI». Nessun messaggio viene inviato dalla configurazione.
-6. Torna in Jarvis e premi Rileggi configurazione Telegram.
+6. Torna in Lumi e premi Rileggi configurazione Telegram.
 
 **Profilo Trial:** il riferimento esaminato usa %LOCALAPPDATA%\Jarvis-Telegram50-Trial. La configurazione deve scrivere nello stesso profilo. Se lanci configura_telegram.bat separatamente da Esplora file, senza il contesto del launcher, può usare il profilo base. Non confondere una configurazione nel posto sbagliato con credenziali perse.
 
