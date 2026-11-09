@@ -462,9 +462,30 @@ class NativeConversationSession:
             overhead = len(_format_family([{"role": "user", "content": "x"}], model_family(config.model))) - 1
             if budget <= overhead:
                 raise ValueError("Budget insufficiente per il template Gemma.")
-            prompt = build_prompt(budget - overhead)
             self._prepare(config, revision)
             self._check_revision(revision)
+            # 9/11 Telegram fix: ``budget`` is in model tokens, but builders
+            # count characters (~3-4 per token). With the native tokenizer,
+            # build with a character allowance and verify the real size,
+            # shrinking only if needed; otherwise keep the legacy char rule.
+            counter = None
+            try:
+                counter = self.adapter.context_token_counter()
+            except (RuntimeError, AttributeError):
+                counter = None
+            family = model_family(config.model)
+            if callable(counter):
+                allowance = (budget - overhead) * 3
+                for _ in range(5):
+                    prompt = build_prompt(allowance)
+                    if counter(_format_family([{"role": "user", "content": prompt}],
+                                              family)) <= budget:
+                        break
+                    allowance = int(allowance * 0.8)
+                else:
+                    raise ValueError("Prompt isolato oltre il contesto del modello.")
+            else:
+                prompt = build_prompt(budget - overhead)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             return clean_native_answer(result.get("text"))
 
