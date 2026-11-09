@@ -1,0 +1,4 @@
+
+# Bytecode generato localmente
+__pycache__/
+*.pyc
