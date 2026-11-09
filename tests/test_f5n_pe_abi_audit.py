@@ -83,7 +83,7 @@ class TestF5N3PEABI(unittest.TestCase):
 
                     def parse_data_directories(self, *, directories):
                         assert directories == [0, 1]
-                        name = self.filename.replace("\\\\", "/")
+                        name = self.filename.replace(chr(92), "/")
                         exports = _metadata()[next(x for x in FILES if name.endswith(x))]
                         names = exports["exports"]
                         self.DIRECTORY_ENTRY_EXPORT = SimpleNamespace(
