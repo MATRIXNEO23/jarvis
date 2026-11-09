@@ -37,15 +37,23 @@ class PiperVoiceTests(unittest.TestCase):
         self.dir = Path(temp.name)
 
     def catalog(self, onnx=b"ONNX", meta=b"{}", tamper=False):
+        import zipfile
         files = {"it_IT-paola-medium.onnx": onnx, "it_IT-paola-medium.onnx.json": meta}
-        entries = {n: {"sha256": hashlib.sha256(d).hexdigest(), "bytes": len(d),
-                       "url": "https://x/" + n} for n, d in files.items()}
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as z:
+            for name, data in files.items():
+                z.writestr(name, data)
+            z.writestr("../evil.txt", b"never extracted")
+        blob = buffer.getvalue()
+        entries = {n: {"sha256": hashlib.sha256(d).hexdigest(), "bytes": len(d)}
+                   for n, d in files.items()}
         if tamper:
             entries["it_IT-paola-medium.onnx"]["sha256"] = "0" * 64
-        cat = {"voices": {"paola": {"files": entries, "license": "L", "attribution": "A"}}}
-        urls = {"https://x/" + n: d for n, d in files.items()}
-        urls["https://cat"] = json.dumps(cat).encode()
-        return Opener(urls)
+        cat = {"voices": {"paola": {"files": entries, "license": "L", "attribution": "A",
+                                    "zip": {"url": "https://x/Voce-Paola.zip", "bytes": len(blob),
+                                            "sha256": hashlib.sha256(blob).hexdigest()}}}}
+        return Opener({"https://x/Voce-Paola.zip": blob,
+                       "https://cat": json.dumps(cat).encode()})
 
     def test_download_verifies_hash_and_lists_voice(self):
         model = piper_voice.download_voice("paola", catalog_url="https://cat",
@@ -61,6 +69,7 @@ class PiperVoiceTests(unittest.TestCase):
                                        opener=self.catalog(tamper=True))
         self.assertEqual(piper_voice.installed_piper_voices(self.dir), [])
         self.assertFalse(list(self.dir.glob("*.part")))
+        self.assertFalse((self.dir.parent / "evil.txt").exists())
 
     def test_synthesis_failure_in_child_raises_clear_error(self):
         piper_voice.download_voice("paola", catalog_url="https://cat",

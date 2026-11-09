@@ -67,38 +67,49 @@ def engine_available(runner=subprocess.run) -> bool:
 
 def download_voice(key: str, *, catalog_url: str = CATALOG_URL, folder: Path | None = None,
                    opener=urllib.request.urlopen, progress=None) -> Path:
-    """Download one voice listed in the repository catalog, verifying SHA-256."""
+    """Download one voice ZIP listed in the repository catalog and extract it.
+
+    The ZIP hash and every extracted file hash are verified; only the files
+    named in the catalog are extracted (no paths from the archive are used).
+    """
+    import zipfile
     folder = folder or voices_dir()
     folder.mkdir(parents=True, exist_ok=True)
     with opener(catalog_url, timeout=30) as response:
         catalog = json.load(response)
     voice = catalog.get("voices", {}).get(key)
-    if not voice:
+    if not voice or "zip" not in voice:
         raise PiperVoiceError("Voce non presente nel catalogo: " + key)
-    for name, info in voice["files"].items():
-        if "/" in name or "\\" in name or not name.startswith(f"it_IT-{key}-"):
-            raise PiperVoiceError("Nome file voce non valido.")
-        target = folder / name
-        if target.is_file() and _sha256(target) == info["sha256"]:
-            continue
-        partial = target.with_suffix(target.suffix + ".part")
-        digest, count = hashlib.sha256(), 0
-        with opener(info["url"], timeout=180) as response, partial.open("wb") as out:
+    package = voice["zip"]
+    partial = folder / (key + ".zip.part")
+    digest, count = hashlib.sha256(), 0
+    try:
+        with opener(package["url"], timeout=180) as response, partial.open("wb") as out:
             while True:
                 chunk = response.read(1 << 20)
                 if not chunk:
                     break
                 count += len(chunk)
-                if count > info["bytes"]:
+                if count > package["bytes"]:
                     break
                 digest.update(chunk)
                 out.write(chunk)
                 if progress:
-                    progress(name, count, info["bytes"])
-        if count != info["bytes"] or digest.hexdigest() != info["sha256"]:
-            partial.unlink(missing_ok=True)
-            raise PiperVoiceError("Download voce non integro: " + name)
-        os.replace(partial, target)
+                    progress(key, count, package["bytes"])
+        if count != package["bytes"] or digest.hexdigest() != package["sha256"]:
+            raise PiperVoiceError("Download voce non integro: " + key)
+        with zipfile.ZipFile(partial) as archive:
+            for name, info in voice["files"].items():
+                if "/" in name or "\\" in name or not name.startswith(f"it_IT-{key}-"):
+                    raise PiperVoiceError("Nome file voce non valido.")
+                data = archive.read(name)
+                if hashlib.sha256(data).hexdigest() != info["sha256"]:
+                    raise PiperVoiceError("File voce non integro: " + name)
+                temp = folder / (name + ".part")
+                temp.write_bytes(data)
+                os.replace(temp, folder / name)
+    finally:
+        partial.unlink(missing_ok=True)
     (folder / f"{key}-attribuzione.txt").write_text(
         voice.get("attribution", "") + "\n" + voice.get("license", "") + "\n", encoding="utf-8")
     model = _model(key, folder)
