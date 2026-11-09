@@ -1,3 +1,6 @@
+## F5N.3 — Fix suite Windows: test path Windows errato (9 novembre 2026)
+Test unit/protocollo Windows fallito nella sola fixture PE F5N.3 (StopIteration: doppio backslash nel `replace`, contro percorsi Windows con singolo backslash). Fix test-only commit `5c401f28...`, normalizzazione con `chr(92)`; CI nuova 42562880082 in coda, non ancora validata. Diagnostica e tokenizer verdi. Build/ABI candidato ancora in verifica separata run 42562880047. [Dettagli](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 invariata.
+
 ## F5N.3 — Fix cap parser PE 8192 simboli (9 novembre 2026)
 Due run candidati F5N.3 rossi (42559582501 e 42559697598), mentre build DLL, unit test Jarvis, tokenizer e diagnostica superati. Confermato limite `pefile.MAX_SYMBOL_EXPORT_COUNT = 0x2000`, usato come default dal costruttore: vengono letti solo i primi 8192 export. Nuova chiamata `PE(..., max_symbol_exports=65536)` con controllo integrità `NumberOfNames` e test regressione; CI nuova ancora da confermare. [Report](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 non modificata.
 
