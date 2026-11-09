@@ -1,4 +1,4 @@
-"""Natural Italian voices (Piper) for Lumi/Lumi, with optional digital effect.
+"""Natural Italian voices (Piper) for Lumi, with optional digital effect.
 
 Synthesis runs in a child process (``python -m piper``): if the neural runtime
 cannot run on this CPU, only the child fails and the caller falls back to the

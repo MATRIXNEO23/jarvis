@@ -264,7 +264,7 @@ class GPTTimeoutNodeBridgeTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         home = Path(temporary.name)
-        sdk = home / "Lumi/runtime/siwc/packages/local/dist"
+        sdk = home / "Jarvis/runtime/siwc/packages/local/dist"
         sdk.mkdir(parents=True)
         (sdk / "package.json").write_text('{"type":"module"}', encoding="utf-8")
         (sdk / "index.js").write_text(FAKE_SDK, encoding="utf-8")

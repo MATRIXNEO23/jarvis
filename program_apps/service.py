@@ -29,7 +29,7 @@ def blocked(text):
 
 def launch_query(text):
     value = normalized(text)
-    value = re.sub(r'^(?:(?:ehi|hey) )?jarvis\s+', '', value)
+    value = re.sub(r'^(?:(?:ehi|hey) )?lumi\s+', '', value)
     value = value.removesuffix(' per favore')
     match = re.fullmatch(r'(?:(?:per favore|gentilmente) )?'
         r'(?:(?:mi )?(?:puoi|potresti|vorrei|voglio)(?: che tu)? )?(?:mi )?'

@@ -18,7 +18,7 @@ def dictation_voice_action(phrase: str) -> str | None:
     if not isinstance(phrase, str):
         return None
     words = " ".join(phrase.casefold().strip(" ,.!?").split())
-    words = re.sub(r"^(?:(?:ehi|ok)\s+)?jarvis[,\s:]+", "", words)
+    words = re.sub(r"^(?:(?:ehi|ok)\s+)?lumi[,\s:]+", "", words)
     if words in ("attiva dettatura", "attiva dettatura vocale",
                  "inizia dettatura", "inizia dettatura vocale"):
         return "start"

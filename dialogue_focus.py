@@ -37,7 +37,7 @@ def normalized_utterance(value: str) -> str:
     if not isinstance(value,str):
         return ""
     text=unicodedata.normalize("NFKC",value).strip(" ,.!?;:")
-    return re.sub(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+",
+    return re.sub(r"^(?:(?:ehi|hey|ok)\s+)?lumi[\s,.:;-]+",
                   "",text,flags=re.I).strip(" ,.!?;:")
 
 

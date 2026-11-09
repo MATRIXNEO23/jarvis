@@ -18,7 +18,7 @@ class ProjectVoiceCommand:
     target: str = ""
 
 
-_PREFIX = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]*", re.I)
+_PREFIX = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?lumi[\s,.:;-]*", re.I)
 _CREATE = re.compile(
     r"^(?:(?:per favore|puoi|potresti|vorrei|voglio|mi piacerebbe)\s+)?"
     r"(?:crea(?:mi|re)?|inizia(?:re)?|avvia(?:re)?|facciamo|"

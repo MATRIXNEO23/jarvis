@@ -36,7 +36,7 @@ _SELF_REVIEW_COMPOUND = re.compile(
     r"(?:funzionamento|codice|programma|file|sorgenti))"
     r"(?:\s+(?:del|della|dei|delle|sul|sui|di)\s+"
     r"(?:(?:tuo|tuoi|tua|tue)\s+)?"
-    r"(?:funzionamento|codice|programma|file|sorgenti|funzioni|moduli|jarvis))?"
+    r"(?:funzionamento|codice|programma|file|sorgenti|funzioni|moduli|lumi))?"
     r"(?:\s+e\s+(?:"
     r"(?:proponi|suggerisci|dimmi|indicami|consigliami)\s+"
     r"(?:(?:eventuali|possibili|dei|delle|qualche)\s+)*"
@@ -131,7 +131,7 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
     """Recognize deliberate local self-analysis requests, not general questions."""
     if not isinstance(text,str) or len(text)>450:
         return None
-    phrase=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
+    phrase=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?lumi[\s,.:;-]+","",
                   text.strip(" ,.!?;:"),flags=re.I).casefold()
     phrase=" ".join(phrase.split())
     if re.fullmatch(r"(?:(?:apri|mostra|avvia)\s+(?:la\s+)?)?"
@@ -146,7 +146,7 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
     if re.fullmatch(
             r"(?:dove\s+(?:sono|tieni)\s+(?:i\s+)?tuoi\s+file|"
             r"mostra(?:mi)?\s+(?:i\s+)?tuoi\s+file|"
-            r"(?:dove|in\s+quale\s+cartella)\s+(?:si\s+trova|è)\s+jarvis|"
+            r"(?:dove|in\s+quale\s+cartella)\s+(?:si\s+trova|è)\s+lumi|"
             r"apri\s+la\s+cartella\s+(?:del\s+)?programma)",phrase):
         return ("paths","")
     if re.fullmatch(
@@ -169,7 +169,7 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
     if re.fullmatch(
             r"(?:analizza|esamina|controlla|verifica|studia)\s+"
             r"(?:(?:il|i)\s+)?(?:tuo\s+)?(?:codice|programma|file|sorgenti)"
-            r"(?:\s+(?:di\s+jarvis))?"
+            r"(?:\s+(?:di\s+lumi))?"
             r"|(?:fai|esegui|prepara)\s+(?:una\s+)?"
             r"(?:diagnosi|analisi|revisione)\s+(?:del\s+)?"
             r"(?:tuo\s+)?(?:codice|programma|sorgenti)"

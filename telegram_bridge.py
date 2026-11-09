@@ -151,10 +151,10 @@ def clean_generated_reply(answer,user_text="",already_introduced=False):
     # GPT may ignore the no-reintroduction instruction; enforce it locally,
     # except when the contact explicitly asks who is speaking.
     if already_introduced and not re.search(
-            r"\b(?:chi sei|con chi parlo|sei jarvis)\b",
+            r"\b(?:chi sei|con chi parlo|sei lumi)\b",
             str(user_text),re.I):
         answer=re.sub(
-            r"^(?:ciao[,!.\s]*)?(?:sono|qui (?:è|parla))\s+jarvis\b"
+            r"^(?:ciao[,!.\s]*)?(?:sono|qui (?:è|parla))\s+lumi\b"
             r"[,!.\s:;-]*(?:l['’]assistente(?: personale)? di alberto"
             r"[,!.\s:;-]*)?",
             "",answer,flags=re.I).strip()
@@ -429,7 +429,7 @@ class TelegramBridge:
             return
         self._observe("reply_ready")
         if needs_intro and not reply.casefold().lstrip().startswith(
-                ("sono jarvis","ciao, sono jarvis","ciao sono jarvis")):
+                ("sono lumi","ciao, sono lumi","ciao sono lumi")):
             reply="Ciao, sono Lumi, l'assistente di Alberto. "+reply
         if len(reply)>500:
             raise TelegramBridgeError("Risposta Telegram oltre il limite.")

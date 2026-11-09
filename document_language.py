@@ -25,7 +25,7 @@ _META_START = re.compile(
     r"^(?:se\b|quando\b|come\b|cosa\b|perch[eé]\b|"
     r"mi\s+spieghi\b|che\s+succede\b|"
     r"che\s+significa\b|ti\s+chiedo\s+se\b)")
-_WAKE = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?jarvis\s+")
+_WAKE = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?lumi\s+")
 
 
 def clean_speech(utterance: str) -> str:
