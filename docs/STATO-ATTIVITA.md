@@ -1,3 +1,6 @@
+## F5.3b.2 — Correzione CI (9 novembre 2026)
+Il run Windows 42543240218 è FALLITO (4 fail, 1 error, Python 3.11 e 3.12) per mock erroneamente attivo prima di start in `tests/test_owned_kobold_lab_f5.py`. Sistemato il mock al commit `96c76a39...`, senza modifiche al controller produttivo. Nuova verifica Windows pendente; F5.3b.3 bloccata fino a esito verde. [Checkpoint F5](ARCH-01-F5-CHECKPOINT.md).
+
 ## ARCH-01 F5.3b.2 — Controller laboratorio KoboldCpp (9 novembre 2026)
 Creato `local_model/owned_kobold_lab_f5.py` + test `tests/test_owned_kobold_lab_f5.py`. Avvio solo esplicito da codice attendibile, preflight porta loopback, probe identità modello, cleanup del processo posseduto e blocco in caso di release non verificata. **Non integrato nel runtime; nessuna generazione, prova GGUF reale o prova Pavilion.** Il preflight porta e probe non garantiscono ownership del listener, quindi nessun prompt privato o hot-switch. CI Windows da verificare. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67, rollback 014.
 
