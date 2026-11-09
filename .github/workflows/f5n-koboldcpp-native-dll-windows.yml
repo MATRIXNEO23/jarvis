@@ -54,11 +54,11 @@ jobs:
           echo "F5N_STAGE=submodules"
           git submodule update --init --recursive
           echo "F5N_STAGE=compile"
-          # PrefetchVirtualMemory uses Win8+ types; keep Windows 10 compatibility.
-          # Define the Windows SDK baseline without modifying upstream files.
-          export CFLAGS="${CFLAGS:-} -D_WIN32_WINNT=0x0602 -DWINVER=0x0602"
-          export CXXFLAGS="${CXXFLAGS:-} -D_WIN32_WINNT=0x0602 -DWINVER=0x0602"
-          make -j2 koboldcpp_noavx2 LLAMA_PORTABLE=1 LLAMA_NOAVX2=1
+          # The upstream Makefile resets CFLAGS/CXXFLAGS, so environment flags are lost.
+          # Set Win8+ target via compiler command while preserving upstream ISA flags.
+          make -j2 koboldcpp_noavx2 LLAMA_PORTABLE=1 LLAMA_NOAVX2=1 \
+            CC='gcc -D_WIN32_WINNT=0x0602 -DWINVER=0x0602' \
+            CXX='g++ -D_WIN32_WINNT=0x0602 -DWINVER=0x0602'
           test -f koboldcpp_common.dll
           test -f koboldcpp_default.dll
           test -f koboldcpp_noavx2.dll
