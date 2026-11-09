@@ -1,3 +1,11 @@
+## Build 017 PROVA — risposte Telegram locali corrette
+
+[Scarica Jarvis-017-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-017-PROVA.zip)
+
+Come la 016, più la correzione Telegram: il prompt della risposta automatica era misurato in caratteri invece che in token, e con contesto piccolo Jarvis rinunciava prima di chiamare il modello (ValueError: Contesto Gemma insufficiente). Ora usa il tokenizer reale del modello. Estrai in una cartella NUOVA; 014 resta la stabile. Verificati in CI Windows: test unitari, ZIP estratto, avvio UI e risposta del motore incluso. Telegram reale da collaudare sul Pavilion.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42655550438). SHA-256: `0325874986b00d2f7a228a1d53a0883245e808f8e275d938f94b605b204fa514`.
+
 ## Build 016 PROVA — chat stile ChatGPT, cronologia completa, prompt più leggero
 
 [Scarica Jarvis-016-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-016-PROVA.zip)
