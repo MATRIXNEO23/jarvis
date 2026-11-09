@@ -1,3 +1,11 @@
+## Build 018 PROVA — tasto riduci a icona e conversazioni Telegram più fluide
+
+[Scarica Jarvis-018-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-018-PROVA.zip)
+
+Come la 017, più: il tasto «–» riduce Jarvis a icona nella barra delle applicazioni invece di farlo sparire; su Telegram il modello locale ricorda gli ultimi 3 scambi con ogni contatto come vera conversazione e risponde in massimo 2-3 frasi, con istruzioni più corte. Estrai in una cartella NUOVA; 014 resta la stabile. Verificati in CI Windows: test unitari (incluso il tasto riduci a icona), ZIP estratto, avvio UI e risposta del motore incluso. Telegram reale e Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42665758452). SHA-256: `d9167de4a9ef834bdbd77c10aa0ae500ad0ccb326ed5b2e66d09fb60b6bd8762`.
+
 ## Build 017 PROVA — risposte Telegram locali corrette
 
 [Scarica Jarvis-017-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-017-PROVA.zip)
