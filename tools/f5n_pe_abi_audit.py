@@ -86,14 +86,15 @@ def inspect_pe(root, *, pe_module=None):
     # Increase the read ceiling ONLY in this standalone research audit.
     # A hard maximum keeps malformed PE headers from demanding huge scans.
     cap = 65536
-    if hasattr(pe_module, "MAX_SYMBOL_EXPORT_COUNT"):
-        pe_module.MAX_SYMBOL_EXPORT_COUNT = cap
+    # Pass explicitly: pefile binds the default limit at PE.__init__ definition
+    # time; changing the module constant afterwards does not change it.
     metadata = {}
     for relative in FILES:
         target = Path(root).joinpath(*relative.split("/"))
         pe = None
         try:
-            pe = pe_module.PE(str(target), fast_load=True)
+            pe = pe_module.PE(str(target), fast_load=True,
+                              max_symbol_exports=cap)
             pe.parse_data_directories(
                 directories=[
                     pe_module.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_EXPORT"],
