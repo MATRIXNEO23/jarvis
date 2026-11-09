@@ -253,7 +253,12 @@ class NativeConversationSession:
             pairs = [(turns[i], turns[i + 1]) for i in range(0, len(turns), 2)][-pair_limit:]
             restored = 0
             recent_reader = getattr(memory_context, "recent_pairs", None)
-            if exact and not pairs and callable(recent_reader):
+            # Review bug 2 (9/11): the RAM buffer is shared by all contexts
+            # (maxlen 16), so a chat can keep only part of its exchanges after
+            # another chat was used. For isolated chats/projects the archive
+            # is authoritative: re-read it whenever RAM holds fewer pairs.
+            partial = context_id is not None and 0 < len(pairs) < pair_limit
+            if exact and (not pairs or partial) and callable(recent_reader):
                 self._check_revision(revision)
                 previous = recent_reader(pair_limit)
                 self._check_revision(revision)
@@ -355,10 +360,19 @@ class NativeConversationSession:
                 inspect_prompt = self._prompt_diagnostic_armed
                 capture_generation = self._prompt_diagnostic_generation
                 self._prompt_diagnostic_armed = False
-            self._prepare(config, revision)
-            self._check_revision(revision)
-            result = self.adapter.call("ask", messages=messages, timeout=timeout,
-                                       prompt_budget=budget)
+            try:
+                self._prepare(config, revision)
+                self._check_revision(revision)
+                result = self.adapter.call("ask", messages=messages, timeout=timeout,
+                                           prompt_budget=budget)
+            except BaseException:
+                # Review bug 5 (9/11): a failed generation must not silently
+                # consume the armed capture; keep it for the next question.
+                if inspect_prompt:
+                    with self._state_lock:
+                        if capture_generation == self._prompt_diagnostic_generation:
+                            self._prompt_diagnostic_armed = True
+                raise
             if inspect_prompt:
                 # Inspect after generation to avoid touching native prefill timings.
                 # Never execute, persist or transmit the report.

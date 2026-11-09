@@ -94,6 +94,44 @@ class NativeScopedHistoryTests(unittest.TestCase):
             session.close()
 
 
+    def test_partially_evicted_chat_history_is_restored_from_archive(self):
+        # Review bug 2 (9/11): shared RAM buffer (16 rows) evicted part of a
+        # chat after using another one; the archive must fill the gap.
+        from local_model.memory_preferences import MemoryPreferences
+        from local_model.native_config import NativeModelConfig
+        from local_model.native_conversation_session import NativeConversationSession
+        from test_native_conversation_session import FakeAdapter
+
+        class CountingAdapter(FakeAdapter):
+            def context_token_counter(self):
+                return lambda text: max(1, (len(text) + 3) // 4)
+
+        with tempfile.TemporaryDirectory() as temp:
+            store = ChatSessionStore(Path(temp) / "evict.sqlite3")
+            alpha, beta = store.create_chat("A"), store.create_chat("B")
+            adapter = CountingAdapter()
+            session = NativeConversationSession(
+                adapter,
+                config_loader=lambda: NativeModelConfig(context_size=4096, max_output=256),
+                memory_loader=lambda: MemoryPreferences(
+                    recent_messages=8, history_max_tokens=600))
+            reader_a = make_chat_history_reader(store, alpha.id)
+            reader_b = make_chat_history_reader(store, beta.id)
+            for n in range(4):
+                q = f"Alfa{n}"
+                store.append_exchange(alpha.id, q, session.ask(q, context_id=alpha.id,
+                                                               memory_context=reader_a))
+            for n in range(13):
+                q = f"Beta{n}"
+                store.append_exchange(beta.id, q, session.ask(q, context_id=beta.id,
+                                                              memory_context=reader_b))
+            session.ask("Riprendi alfa", context_id=alpha.id, memory_context=reader_a)
+            for n in range(4):
+                self.assertIn(f"Alfa{n}", adapter.calls[-1])
+            self.assertNotIn("Beta", adapter.calls[-1])
+            session.close()
+
+
 class ChatPanelTests(unittest.TestCase):
     def setUp(self):
         try:
@@ -174,6 +212,56 @@ class ChatPanelTests(unittest.TestCase):
         self.panel.activate()
         self.panel.settings_button.invoke()
         self.assertEqual(self.settings_calls, [True])
+
+
+    def test_sidebar_autotitle_and_full_history_after_reopen(self):
+        # 9/11 request: ChatGPT-style list, full transcript after restart.
+        self.panel.activate()
+        first = self.panel.current_target()[0]
+        for n in range(40):
+            self.panel.persist_answer(first, f"Domanda {n} sul mare", f"Risposta {n}")
+        self.assertEqual(self.panel.store.get_chat(first).title, "Domanda 0 sul mare")
+        second = self.panel.create_new()
+        self.panel.persist_answer(second, "Ricetta della carbonara", "Guanciale.")
+        titles = list(self.panel.chat_list.get(0, "end"))
+        self.assertEqual(titles[0], "Ricetta della carbonara")
+        self.assertIn("Domanda 0 sul mare", titles)
+        # Restart: new panel on the same file shows the whole transcript.
+        reopened = ChatSessionsPanel(
+            self.root, store_path=self.path, get_project_id=lambda: None,
+            can_change=lambda: True, on_change=lambda old, new: None,
+            on_settings=lambda: None)
+        self.assertTrue(reopened.activate())
+        reopened.chat_list.selection_clear(0, "end")
+        reopened.chat_list.selection_set(titles.index("Domanda 0 sul mare"))
+        reopened._on_list_select()
+        text = reopened.view.get("1.0", "end")
+        self.assertIn("Domanda 0 sul mare", text)
+        self.assertIn("Risposta 39", text)
+        self.assertNotIn("GEMMA", text)
+        self.assertFalse(reopened.toggle_sidebar())
+        self.assertFalse(reopened.sidebar.winfo_manager())
+        self.assertTrue(reopened.toggle_sidebar())
+        self.assertEqual(reopened.sidebar.winfo_manager(), "pack")
+
+
+    def test_failed_save_is_retried_in_order_on_next_answer(self):
+        # Review bug 3 (9/11): no silent loss of an unsaved exchange.
+        import sqlite3
+        from unittest import mock
+        self.panel.activate()
+        chat = self.panel.current_target()[0]
+        original = self.panel.store.append_exchange
+        with mock.patch.object(self.panel.store, "append_exchange",
+                               side_effect=sqlite3.OperationalError("locked")):
+            with self.assertRaises(sqlite3.Error):
+                self.panel.persist_answer(chat, "Prima", "Uno")
+        self.assertEqual(self.panel.pending_count, 1)
+        self.panel.persist_answer(chat, "Seconda", "Due")
+        self.assertEqual(self.panel.pending_count, 0)
+        self.assertEqual([p[0][1] for p in self.panel.store.recent_pairs(chat)],
+                         ["Prima", "Seconda"])
+        self.assertIs(self.panel.store.append_exchange.__func__, original.__func__)
 
 
 if __name__ == "__main__":

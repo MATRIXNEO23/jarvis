@@ -189,5 +189,22 @@ class PromptDiagnosticTests(unittest.TestCase):
         self.assertEqual(len(adapter.calls), 2)
 
 
+    def test_failed_generation_keeps_capture_armed_for_next_question(self):
+        # Review bug 5 (9/11): capture was consumed even when generation failed.
+        class FailingOnce(TokenAdapter):
+            def call(self, *args, **kwargs):
+                if not getattr(self, "failed", False):
+                    self.failed = True
+                    raise RuntimeError("Controlled native failure")
+                return super().call(*args, **kwargs)
+        session, adapter = self.make_session(FailingOnce())
+        session.arm_prompt_diagnostic()
+        with self.assertRaises(RuntimeError):
+            session.prepare_turn("Prima domanda")
+        self.assertIsNone(session.prompt_diagnostic())
+        session.prepare_turn("Seconda domanda")
+        self.assertIn("Seconda domanda", session.prompt_diagnostic())
+
+
 if __name__ == "__main__":
     unittest.main()

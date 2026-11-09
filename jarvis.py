@@ -4819,7 +4819,10 @@ def main() -> None:
                                 write_line("CHAT > Risposta non archiviata: "
                                            + type(exc).__name__)
                                 chat_sessions_panel.report_error(
-                                    "Errore di salvataggio chat. Non chiudere prima del recupero.")
+                                    "Risposta non salvata su disco ("
+                                    + str(chat_sessions_panel.pending_count)
+                                    + " in attesa): nuovo tentativo al prossimo messaggio. "
+                                    "Se chiudi Jarvis prima, andranno perse.")
                         elif can_save and remember_exchange(value.question, value.text, "chat") is False:
                             write_line("MEMORIA > Scambio non archiviato.")
                         gemma_recent_reply[0] = (
