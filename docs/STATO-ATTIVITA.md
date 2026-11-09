@@ -1,3 +1,6 @@
+## ARCH-01 F5.3b.3 — Jarvis unico programma e template Qwen2.5 (9 novembre 2026)
+Vincolo confermato: unica app/interfaccia Jarvis, engine interno invisibile e gestito da Jarvis. Gate Windows F5.3b.2 ora SUCCESS (runs 42544915058, 42544915314, 42544915068). Creati `local_model/qwen25_template_f5.py` e `tests/test_qwen25_template_f5.py`: serializer ChatML Qwen2.5 text-only isolato, nessun collegamento runtime. CI nuova da verificare; Qwen GGUF reale e Pavilion non ancora provati. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67, ZIP014 invariata.
+
 ## F5.3b.2 — Correzione CI (9 novembre 2026)
 Il run Windows 42543240218 è FALLITO (4 fail, 1 error, Python 3.11 e 3.12) per mock erroneamente attivo prima di start in `tests/test_owned_kobold_lab_f5.py`. Sistemato il mock al commit `96c76a39...`, senza modifiche al controller produttivo. Nuova verifica Windows pendente; F5.3b.3 bloccata fino a esito verde. [Checkpoint F5](ARCH-01-F5-CHECKPOINT.md).
 
