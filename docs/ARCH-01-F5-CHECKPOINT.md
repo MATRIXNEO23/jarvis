@@ -28,3 +28,10 @@ PR #66; 1064 test/job Windows riferiti GREEN, prova Pavilion assente. Guida: `do
 
 ## Ripresa
 Leggere AGENTS.md, RECUPERO.md, docs/STATO-ATTIVITA.md, docs/DECISIONI-E-LEZIONI.md, questo file, PR F4.2 e PR F5. Riprendere dal gate F5.0; integrare la UI soltanto dopo revisione del codice effettivo e decisione sul backend.
+
+## F5.1 — Implementazione di rilevamento isolato (9 novembre 2026)
+Aggiunti `local_model/model_availability_f5.py` e `tests/test_model_availability_f5.py`. L'API `inspect_embedded` controlla soltanto l'esistenza dei file GGUF e DLL esplicitamente forniti; **non** identifica famiglia, quantizzazione, compatibilità ABI o possibilità di caricare il modello. La risposta `files_present_not_loaded` è intenzionalmente prudente. `inspect_koboldcpp` riutilizza il client canary F4.1, effettua solo GET `/api/v1/model`, verifica per uguaglianza esatta un identificatore modello fornito dal chiamante, e restituisce `model_mismatch` o `server_unavailable_or_unverified` senza testo privato. Nessuna generazione, switch, modifica runtime, rete su import, cartella scandita, salvataggio o persistenza.
+
+**Verifiche:** aggiunti test mock e filesystem temporaneo; la CI Windows relativa alla nuova implementazione resta da verificare. Il gate F5.0 precedente disponeva di workflow Windows completati con successo sul commit `8fe4990...` ([unit protocol 42538543827](https://github.com/MATRIXNEO23/jarvis/actions/runs/42538543827), [tokenizer nativo 42538544094](https://github.com/MATRIXNEO23/jarvis/actions/runs/42538544094)); questi workflow non verificano automaticamente le modifiche F5.1. Corretto anche il controllo valori NaN/infinito in `model_profiles_f5.py`.
+
+**Prossimo gate:** CI Windows F5.1 e revisione; dopo il verde, progettare F5.2 UI con opzione di scelta modello, senza usare `files_present_not_loaded` come prova di modello eseguibile. Qwen richiede template testato e provider confermato, e il passaggio embedded/server attende le prove Pavilion F4.2. Il rollback resta ZIP014; nessuna build nuova.
