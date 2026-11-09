@@ -125,3 +125,18 @@ Primo run F5N.4 fallito: unit test Windows confronto tra short/long path tempora
 **Prova Windows nuova:** `tools/f5n_initializer_smoke.py`, figlio isolato, initializer di produzione su sorgente+bundle 6d2fedf, argv ostile presente; verifica libname noavx2, common+route caricati, argomenti, callables e funzioni handle. Nessun GGUF.
 **Rischio aperto:** Jarvis non verifica che `koboldcpp.py` e DLL provengano dallo stesso commit (il dialogo permette di scegliere un `koboldcpp.py` qualsiasi): con strutture ctypes diverse il risultato è imprevedibile. Proposta per la fase pacchetto: manifest con SHA di sorgente e DLL verificato prima di `init_library`.
 **Rollback:** revert di 74e06e3 (fix+smoke) e 1b38581 (test). cf68d2a rimuove solo bytecode committato per errore.
+
+## F5N.6 — GGUF reali su bundle diviso: Gemma 2, Qwen2.5, Qwen3 (Claude, 9 novembre 2026)
+**Richiesta utente:** supportare entrambe le famiglie Qwen oltre a Gemma, modelli adatti al Pavilion. Aggiunto `local_model/qwen3_template_f5.py` (ChatML, ragionamento spento con blocco `<think>` vuoto come `enable_thinking=False`), non collegato al runtime.
+**Prova:** `tools/fetch_probe_models.py` (revisione e SHA-256 dall'editore, download verificato) + `tools/f5n_gguf_smoke.py` (un processo figlio per modello; factory/initializer/bridge di produzione). Run [42619548396](https://github.com/MATRIXNEO23/jarvis/actions/runs/42619548396) SUCCESS, unit 42619548294 SUCCESS.
+
+| Modello CI (Q4_K_M) | Revisione | Risposta | Stop | Token | Carico/gen. runner |
+|---|---|---|---|---|---|
+| bartowski gemma-2-2b-it | vedi log | «La capitale d'Italia è Roma.» | stop | 11 | 3,66 s / 3,47 s |
+| Qwen2.5-1.5B-Instruct (ufficiale) | vedi log | stessa | 1 | 10 | 2,50 s / 3,12 s |
+| bartowski Qwen3-1.7B | vedi log | stessa | 1 | 10 | 2,61 s / 2,27 s |
+
+Nessun marcatore di template nel testo. **Annullamento Gemma** con il watchdog di `NativeGemmaBridge`: richiesta da 512 token, scadenza 3 s, ritorno in 3,03 s (`abort_verified: true`). Tempi del runner GitHub (CPU con AVX2), **non** indicativi del Pavilion.
+**Non verificato:** file personali dell'utente, unload/cambio modello nello stesso processo, annullamento sui percorsi Qwen, prestazioni Pavilion. Routing runtime Qwen non collegato: `NativeGemmaBridge.generate` usa ancora stop fisso `<end_of_turn>`.
+**Da correggere quando si collegano i profili:** `default_profiles()` assegna a Qwen backend `koboldcpp` (server), contrario alla decisione di motore incorporato.
+**Rollback:** revert di d116883. Nessuna modifica runtime Jarvis.
