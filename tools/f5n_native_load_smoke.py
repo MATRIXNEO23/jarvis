@@ -13,6 +13,7 @@ from pathlib import Path
 import subprocess
 import sys
 import shutil
+from contextlib import ExitStack
 
 from .f5n_bundle_audit import inspect_bundle
 from .f5n_pe_abi_audit import REQUIRED_COMMON_EXPORTS
@@ -77,8 +78,16 @@ def load_worker(root):
     if os.name != "nt" or not hasattr(os, "add_dll_directory"):
         raise NativeSmokeError("Windows DLL directories required")
     paths = expected_paths(root)
-    with os.add_dll_directory(str(paths["root"])), os.add_dll_directory(str(paths["route"].parent)):
-        # Identical load sequence to pinned upstream koboldcpp.py:init_library.
+    # MinGW-built DLLs depend on libgcc_s_seh-1/libstdc++/libwinpthread.
+    # os.add_dll_directory (unlike PATH) is consulted for ctypes.CDLL on
+    # Python 3.8+. Keep this CI-only addition scoped to the child process.
+    compiler = shutil.which("g++.exe")
+    with ExitStack() as directories:
+        directories.enter_context(os.add_dll_directory(str(paths["root"])))
+        directories.enter_context(os.add_dll_directory(str(paths["route"].parent)))
+        if compiler:
+            directories.enter_context(os.add_dll_directory(str(Path(compiler).resolve().parent)))
+        # Identical selected-route -> common load order to pinned upstream.
         route_handle = ctypes.CDLL(str(paths["route"]))
         try:
             common_handle = ctypes.CDLL(str(paths["common"]))
