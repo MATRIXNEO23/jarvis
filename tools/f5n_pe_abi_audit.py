@@ -37,7 +37,13 @@ def verify_abi_metadata(bundle, metadata):
     common_exports = set(metadata[COMMON_FILE]["exports"])
     missing = sorted(REQUIRED_COMMON_EXPORTS - common_exports)
     if missing:
-        raise PeAbiError("Common DLL missing required native API: " + ", ".join(missing))
+        # Fail closed, but report the actual PE names to distinguish export
+        # visibility from unexpected naming or a parsing problem.
+        sample = sorted(common_exports)[:25]
+        raise PeAbiError("Common DLL missing required native API: "
+                         + ", ".join(missing)
+                         + "; common export count=" + str(len(common_exports))
+                         + "; first exports=" + repr(sample))
     if "unload_model" in common_exports:
         # Not asserting safety: merely report that a symbol exists.
         unload_present = True
