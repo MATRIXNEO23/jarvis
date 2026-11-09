@@ -1,3 +1,6 @@
+## ARCH-01 F5.1 — Discovery locale read-only (9 novembre 2026)
+Aggiunto modulo `local_model/model_availability_f5.py` con controlli puramente espliciti dei file embedded GGUF/DLL e probe KoboldCpp F4.1 con identità esatta; test `tests/test_model_availability_f5.py`, checkpoint [F5](ARCH-01-F5-CHECKPOINT.md). **CI nuova ancora da confermare**; nessuna UI, switch, generazione, runtime Jarvis, Second Brain o ZIP modificati. F4.2 su Pavilion pendente, rollback 014. Corretto il rifiuto NaN/infinito nei sampler F5.0.
+
 ## ARCH-01 F5.0 — Profili Gemma/Qwen isolati (9 novembre 2026)
 Branch `feature/jarvis-kobold-f5-profiles-20261109`, derivato da F4.2: contratto profili `local_model/model_profiles_f5.py`, test `tests/test_model_profiles_f5.py` e [checkpoint](ARCH-01-F5-CHECKPOINT.md). **NON ancora verificato da CI**; nessuna UI, wiring/runtime, build, modifica memoria o provider API. La prova F4.2 sul Pavilion resta pendente. Prossimo passo: gate test Windows e ispezione integrazione prima di F5.1. Rollback utente ZIP014, sorgenti F4.2 conservati.
 
