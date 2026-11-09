@@ -1,3 +1,6 @@
+## ARCH-01 F5.3a — Gate cambio modello sicuro (9 novembre 2026)
+Audit: Gemma embedded ha abort cooperativo ma nessuna prova di unload/deallocazione; Qwen non ha template chat convalidato. Implementato esclusivamente `local_model/model_switch_gate_f5.py` e `tests/test_model_switch_gate_f5.py`: barriera su busy, disponibilità, template, rilascio modello precedente e startup target, senza integrare il runtime. CI Windows da confermare; nessuna prova Pavilion né release. [Checkpoint F5](ARCH-01-F5-CHECKPOINT.md), PR #67, rollback 014.
+
 ## ARCH-01 F5.2 — Anteprima multimodello visibile (9 novembre 2026)
 Aggiunta finestra opzionale Gemma/Qwen da Impostazioni > GPT e memoria, con bozze di parametri in RAM soltanto; `local_model/multimodel_ui_f5.py`, nuovo bottone lazy import in `jarvis.py`, tests `tests/test_multimodel_ui_f5.py`. Nessun cambio di motore, nessun salvataggio, nessuna build e nessuna modifica a chat/Second Brain/Telegram. Gate Windows CI e prova visuale ancora pendenti. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67, rollback 014.
 
