@@ -36,7 +36,7 @@ def parse_timer_command(text: str) -> TimerCommand | None:
     if not isinstance(text, str) or not (0 < len(text) <= 200):
         return None
     value = " ".join(text.casefold().strip(" .,!?").split())
-    value = re.sub(r"^(?:ehi\s+)?jarvis\s*[,.:]?\s*", "", value)
+    value = re.sub(r"^(?:ehi\s+)?lumi\s*[,.:]?\s*", "", value)
     if not re.search(r"\btimer\b", value):
         return None
     # Import only while parsing: sveglia already imports this module for audio.

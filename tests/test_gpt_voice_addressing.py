@@ -117,7 +117,7 @@ class GPTVoiceAddressingTests(unittest.TestCase):
 
     def test_continuous_mode_accepts_an_optional_name(self):
         self.fixture.voice_environment(CONTINUOUS)
-        self.receive('Jarvis')
+        self.receive('Lumi')
         self.env['write_line'].assert_not_called()
         self.receive('Lumi apri browser')
         self.env['submit_local'].assert_called_once_with(

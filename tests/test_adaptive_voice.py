@@ -63,9 +63,9 @@ class VoiceCorrectionTests(unittest.TestCase):
     def test_no_command_confirmation_negation_or_wake_rewrite(self):
         unsafe = (
             ("non", "salva"), ("chiudi", "apri"),
-            ("salva", "cancella"), ("ehi", "jarvis"),
+            ("salva", "cancella"), ("ehi", "lumi"),
             ("blocco moto", "chiudi senza salvare"),
-            ("blocco moto", "jarvis"),
+            ("blocco moto", "lumi"),
             ("non salvare", "salva"), ("apri note", "blocco note"),
             ("password", "documenti"), ("download", "non salvare"),
             ("blocco-note", "blocco note"), ("blocco note", "C:/users"),
