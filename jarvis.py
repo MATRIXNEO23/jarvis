@@ -1966,10 +1966,13 @@ def main() -> None:
                 lambda budget: telegram_local_prompt(message, context, budget, profile))
             return answer if (bridge.is_enabled() and not settings["gpt_enabled"]
                               and local_epoch == conversation_epoch) else ""
-        except (OSError, ValueError, RuntimeError):
+        except (OSError, ValueError, RuntimeError) as exc:
             if bridge.is_enabled():
+                # Show the real cause (short, no prompt or private data).
+                reason = " ".join(str(exc).split())[:160] or type(exc).__name__
                 output_queue.put(("telegram_status",
-                                  "Telegram: risposta locale non disponibile. Controlla le impostazioni Gemma."))
+                                  "Telegram: risposta locale non disponibile ("
+                                  + type(exc).__name__ + ": " + reason + ")."))
             return ""
 
     def resolve_telegram_gpt_consent(bridge, approval) -> None:
@@ -4674,7 +4677,8 @@ def main() -> None:
         gemma_trial_busy[0] = True
         gemma_recent_reply[0] = None
         gemma_button.configure(state="disabled")
-        write_line(("GEMMA / DOMANDA > " if typed else "UTENTE / VOCE > ") + spoken)
+        # Typed text is the user's own message, like voice ("TU" role).
+        write_line(("TU > " if typed else "UTENTE / VOCE > ") + spoken)
         voice_epoch = conversation_epoch
 
         def voice_worker():
