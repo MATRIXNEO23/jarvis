@@ -33,8 +33,8 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
-          git clone --recurse-submodules https://github.com/LostRuins/koboldcpp.git "$RUNNER_TEMP/koboldcpp-src"
-          cd "$RUNNER_TEMP/koboldcpp-src"
+          git clone --recurse-submodules https://github.com/LostRuins/koboldcpp.git koboldcpp-src
+          cd koboldcpp-src
           git checkout --detach 6d2fedf8624e5f05926af3191f9efdcb13c4133c
           git submodule update --init --recursive
           test "$(git rev-parse HEAD)" = "6d2fedf8624e5f05926af3191f9efdcb13c4133c"
@@ -47,9 +47,9 @@ jobs:
       - name: Inventory artifact manifest (no DLL load or GGUF)
         shell: pwsh
         run: |
-          python -m tools.f5n_bundle_audit "$env:RUNNER_TEMP/koboldcpp-src" > "$env:RUNNER_TEMP/f5n-dll-manifest.json"
+          python -m tools.f5n_bundle_audit "koboldcpp-src" > "f5n-dll-manifest.json"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Get-Content "$env:RUNNER_TEMP/f5n-dll-manifest.json"
+          Get-Content "f5n-dll-manifest.json"
 
       - name: Archive only unverified research candidate
         uses: actions/upload-artifact@v4
@@ -58,9 +58,9 @@ jobs:
           if-no-files-found: error
           retention-days: 3
           path: |
-            ${{ runner.temp }}/koboldcpp-src/koboldcpp_common.dll
-            ${{ runner.temp }}/koboldcpp-src/koboldcpp_default.dll
-            ${{ runner.temp }}/koboldcpp-src/koboldcpp_noavx2.dll
-            ${{ runner.temp }}/koboldcpp-src/backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll
-            ${{ runner.temp }}/koboldcpp-src/koboldcpp.py
-            ${{ runner.temp }}/f5n-dll-manifest.json
+            koboldcpp-src/koboldcpp_common.dll
+            koboldcpp-src/koboldcpp_default.dll
+            koboldcpp-src/koboldcpp_noavx2.dll
+            koboldcpp-src/backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll
+            koboldcpp-src/koboldcpp.py
+            f5n-dll-manifest.json
