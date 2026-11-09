@@ -1,0 +1,91 @@
+name: "Publish Italian Piper voices to the repository"
+on:
+  push:
+    branches: [feature/jarvis-kobold-f5-profiles-20261109]
+    paths: ['tools/fetch_piper_voices.py', '.github/workflows/publish-piper-voices.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  voices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: voci-piper-v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch voices from publishers with SHA-256 verification
+        run: python tools/fetch_piper_voices.py voci
+      - name: Small files in Download/voci on main, large ones as release assets
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add publish-main origin/main
+          mkdir -p publish-main/Download/voci
+          python - <<'PY'
+          import json, os, shutil, subprocess
+          from pathlib import Path
+          LIMIT = 95_000_000
+          repo = os.environ["GITHUB_REPOSITORY"]; tag = os.environ["TAG"]
+          cat = json.loads(Path("voci/voci.json").read_text(encoding="utf-8"))
+          big = []
+          for voice in cat["voices"].values():
+              for name, info in voice["files"].items():
+                  if info["bytes"] < LIMIT:
+                      shutil.copy2(Path("voci") / name, Path("publish-main/Download/voci") / name)
+                      info["url"] = f"https://raw.githubusercontent.com/{repo}/main/Download/voci/{name}"
+                  else:
+                      big.append(str(Path("voci") / name))
+                      info["url"] = f"https://github.com/{repo}/releases/download/{tag}/{name}"
+          if big:
+              exists = subprocess.run(["gh", "release", "view", tag], capture_output=True).returncode == 0
+              if not exists:
+                  subprocess.run(["gh", "release", "create", tag, "--title", "Voci italiane Piper per Jarvis",
+                                  "--notes", "Modelli vocali Piper (Paola, Serena) per Jarvis. Licenze e attribuzioni in Download/voci/voci.json.",
+                                  "--target", "main"], check=True)
+              subprocess.run(["gh", "release", "upload", tag, *big, "--clobber"], check=True)
+          Path("publish-main/Download/voci/voci.json").write_text(
+              json.dumps(cat, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+          print(json.dumps(cat, indent=2, ensure_ascii=False))
+          PY
+          cd publish-main
+          {
+            echo "# Voci italiane per Jarvis (Piper)"
+            echo
+            echo "Scaricate da Jarvis con verifica SHA-256; elenco, link, licenze e attribuzioni in voci.json."
+            echo "- Paola: voce ufficiale Piper (rhasspy/piper-voices)."
+            echo "- Serena: it_IT-serena-high by Marco Baccarani (Committa), CC BY 4.0."
+            echo "Il motore Piper (piper-tts) è GPL-3.0 ed è installato separatamente."
+          } > Download/voci/LEGGIMI.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Download/voci
+          if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
+          git commit -m "Add Italian Piper voices (Paola, Serena) for Jarvis with verified hashes"
+          git push origin HEAD:main
+      - name: Re-download every published file and verify hashes
+        run: |
+          set -euo pipefail
+          sleep 30
+          python - <<'PY'
+          import hashlib, json, time, urllib.request
+          from pathlib import Path
+          cat = json.loads(Path("publish-main/Download/voci/voci.json").read_text(encoding="utf-8"))
+          for voice in cat["voices"].values():
+              for name, info in voice["files"].items():
+                  for attempt in range(10):
+                      try:
+                          data = urllib.request.urlopen(info["url"], timeout=180).read()
+                          if hashlib.sha256(data).hexdigest() == info["sha256"]:
+                              print("OK", name, len(data)); break
+                      except Exception as exc:
+                          print("retry", name, exc)
+                      time.sleep(30)
+                  else:
+                      raise SystemExit("not verified: " + name)
+          PY
