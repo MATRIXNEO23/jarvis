@@ -1,3 +1,6 @@
+## ARCH-01 F5.0 — Profili Gemma/Qwen isolati (9 novembre 2026)
+Branch `feature/jarvis-kobold-f5-profiles-20261109`, derivato da F4.2: contratto profili `local_model/model_profiles_f5.py`, test `tests/test_model_profiles_f5.py` e [checkpoint](ARCH-01-F5-CHECKPOINT.md). **NON ancora verificato da CI**; nessuna UI, wiring/runtime, build, modifica memoria o provider API. La prova F4.2 sul Pavilion resta pendente. Prossimo passo: gate test Windows e ispezione integrazione prima di F5.1. Rollback utente ZIP014, sorgenti F4.2 conservati.
+
 ## Pubblicazione013 autorizzata — in preparazione
 Richiesta utente «Me la pubblichi?». Fonte76054b7, runtime verificato c91ebb5/58b8059. Registro main letto:latest12/next13. Riutilizzo builder/verifica ZIP/publisher con gate una tantum PR59 stesso repository e ramo, numero013 e1006test attesi. Nessun runtime modificato; verifiche sorgenti/DLL già documentate. Prossimo passo: suite Windows e ZIP estratto, verifica pubblicazione e hash pubblico, disattivazione gate; poi stop.012/profilo preservati, nessuna nuova funzione o promessa prestazioni Pavilion/account.
 
