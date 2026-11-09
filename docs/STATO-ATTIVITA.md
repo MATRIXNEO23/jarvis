@@ -1,3 +1,6 @@
+## ARCH-01 F5.3b.2 — Controller laboratorio KoboldCpp (9 novembre 2026)
+Creato `local_model/owned_kobold_lab_f5.py` + test `tests/test_owned_kobold_lab_f5.py`. Avvio solo esplicito da codice attendibile, preflight porta loopback, probe identità modello, cleanup del processo posseduto e blocco in caso di release non verificata. **Non integrato nel runtime; nessuna generazione, prova GGUF reale o prova Pavilion.** Il preflight porta e probe non garantiscono ownership del listener, quindi nessun prompt privato o hot-switch. CI Windows da verificare. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67, rollback 014.
+
 ## ARCH-01 F5.3b.1 — Owner subprocess locale (9 novembre 2026)
 Creato `local_model/owned_process_f5.py` con arresto verificato via `wait` del solo processo figlio avviato, timeout fail-closed e test mock `tests/test_owned_process_f5.py`. NON collegato al runtime Jarvis e non esegue GGUF o KoboldCpp; non certifica che processi nipoti siano terminati. Test Windows nuovi da confermare; F4.2 sul Pavilion pendente; rollback ZIP014. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67.
 
