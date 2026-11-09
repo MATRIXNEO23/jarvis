@@ -99,3 +99,6 @@ Dettagli e risultati: [F5N DLL audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). Nell'
 
 ## F5N.2 — Workflow DLL nativa Windows (9 novembre 2026)
 Preparati `.github/workflows/f5n-koboldcpp-native-dll-windows.yml` a dispatch manuale e `tools/f5n_bundle_audit.py` con test. Commit ufficiale fissato `6d2fedf...`; target noavx2 su MinGW64 e controlli delle **quattro** DLL richieste dal nuovo schema split upstream. Non avviato manualmente, build non verificata. Non sostituire la DLL di Jarvis 014, non dichiarare parità o compatibilità. [Rapporto](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
+
+## F5N.3 — Gate PE ABI preliminare (9 novembre 2026)
+Build candidata upstream Windows F5N.2 verde (42555705472). Aggiunti audit PE statico `tools/f5n_pe_abi_audit.py`, test sintetici e workflow F5N candidato con `pefile` per verificare export/import DLL split, senza chiamare LoadLibrary o alterare Jarvis. Run nuova 42557729052 avviata, esito da confermare. `koboldcpp_common.dll` e route backend sono necessari per nuova architettura; attuale factory Jarvis non collaudata con DLL split. Rapporto [F5N ABI](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md), ZIP014 intatta.
