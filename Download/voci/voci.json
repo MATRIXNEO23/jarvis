@@ -10,14 +10,18 @@
       "files": {
         "it_IT-paola-medium.onnx": {
           "sha256": "6fc918b5a0ea6137382833dddfa567bffbe6a5060c02043c87192ee59c04210c",
-          "bytes": 63511038,
-          "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/voci/it_IT-paola-medium.onnx"
+          "bytes": 63511038
         },
         "it_IT-paola-medium.onnx.json": {
           "sha256": "aea19c0a7fce29fbc359b93f10e7902854401e4c95ae2ea328ae516b15d296cf",
-          "bytes": 7099,
-          "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/voci/it_IT-paola-medium.onnx.json"
+          "bytes": 7099
         }
+      },
+      "zip": {
+        "name": "Voce-Paola.zip",
+        "bytes": 58421124,
+        "sha256": "de27e157e0f705f61b704c9b027a95b8f95d88934e76a262993a5f709dcf9179",
+        "url": "https://github.com/MATRIXNEO23/jarvis/releases/download/voci-lumi-v1/Voce-Paola.zip"
       }
     },
     "serena": {
@@ -29,14 +33,18 @@
       "files": {
         "it_IT-serena-high.onnx": {
           "sha256": "7462fbdf03727fb4c0c161286ad538fe6436b7e4b1c3059ef52930032475955f",
-          "bytes": 114204024,
-          "url": "https://github.com/MATRIXNEO23/jarvis/releases/download/voci-piper-v1/it_IT-serena-high.onnx"
+          "bytes": 114204024
         },
         "it_IT-serena-high.onnx.json": {
           "sha256": "60597bac737a20766591fe24d1315df9a3811dc3509e69bc394cdee19eccbae7",
-          "bytes": 5252,
-          "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/voci/it_IT-serena-high.onnx.json"
+          "bytes": 5252
         }
+      },
+      "zip": {
+        "name": "Voce-Serena.zip",
+        "bytes": 105668233,
+        "sha256": "599e70c493fe85ca6f0b2839b94e5589f879376d2cd765ecef441520097dea4f",
+        "url": "https://github.com/MATRIXNEO23/jarvis/releases/download/voci-lumi-v1/Voce-Serena.zip"
       }
     }
   }
