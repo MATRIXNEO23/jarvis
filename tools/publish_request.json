@@ -1,10 +1,10 @@
 {
-  "run_id": 42693084765,
-  "artifact": "lumi-020-prova-candidate",
-  "file": "Lumi-020-PROVA.zip",
-  "bytes": 14917208,
-  "sha256": "b1d2f57ecad420bd65667b0e075ea10a602190e855b3f77583173933272ab9ba",
-  "source_commit": "b50f6dc",
-  "title": "Build 020 PROVA — avatar LUMI animato, voci naturali in un file ZIP ciascuna",
-  "description": "Come la 019, più: il volto di LUMI (la tua immagine, invariata) sostituisce la scritta nel cerchio centrale, con battito di ciglia, sguardo che si muove e bocca che segue la voce. Quando riduci a icona, il mini avatar resta in basso a destra sopra la barra; doppio clic per riaprire. Voci: «Scarica Paola» / «Scarica Serena» scaricano un unico ZIP verificato (Voce-Paola.zip, Voce-Serena.zip). Stesso profilo dati. Verificati in CI Windows: 1161 test, ZIP estratto, avvio UI e risposta del motore. Pavilion da collaudare (resa dell'avatar e consumo CPU)."
+  "run_id": 42701561517,
+  "artifact": "lumi-021-prova-candidate",
+  "file": "Lumi-021-PROVA.zip",
+  "bytes": 14959864,
+  "sha256": "e89bbdf8f25fe8c1baa56f5583e6b6c955cb1ba61e6daf7fca97dc52fa588927",
+  "source_commit": "98440e0",
+  "title": "Build 021 PROVA — avatar a figura intera, risposta in streaming, voce naturale veloce",
+  "description": "Come la 020, più: LUMI a figura intera (capelli e busto escono dal cerchio) con testa che oscilla piano; la bocca si muove solo quando l'audio suona davvero. La risposta compare mentre il modello la scrive e la voce parte dalla prima frase completa. Voce Paola/Serena: modello caricato una sola volta e frase successiva preparata mentre suona la precedente (in CI 0,17 s per frase invece di 5,5 s). Stesso profilo dati. Verificati in CI Windows: 1171 test, streaming reale di Gemma, ZIP estratto, avvio UI e risposta del motore. Pavilion da collaudare."
 }
