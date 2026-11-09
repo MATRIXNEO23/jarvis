@@ -9,6 +9,8 @@ from pathlib import Path
 import threading
 from types import SimpleNamespace
 import unittest
+
+from local_model.native_bridge import NativeRestartRequired
 from unittest.mock import Mock, patch
 
 import test_activity_status as callbacks
@@ -80,9 +82,11 @@ class NativeCancellationTests(unittest.TestCase):
         self.assertTrue(self.abi.abort_during_generation)
         self.assertFalse(self.session.prepared)
         self.assertEqual(list(self.session.history), [])
-        self.session.ask("Riprendi")
-        self.assertEqual(len(self.abi.loads), 2)
-        self.assertEqual(len(self.session.history), 2)
+        # F5N.7: no second native load in one process; restart required.
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask("Riprendi")
+        self.assertEqual(len(self.abi.loads), 1)
+        self.assertEqual(list(self.session.history), [])
 
     def test_noncooperative_native_call_keeps_reload_serialized_after_deadline(self):
         aborted = threading.Event()
@@ -361,9 +365,10 @@ class NativeCancellationTests(unittest.TestCase):
         self.assertIsNone(stop.error)
         self.assertEqual(len(self.abi.calls), 1)
         self.assertEqual(list(self.session.history), [])
-        self.session.ask("Nuova dopo stop")
-        self.assertEqual(len(self.abi.calls), 2)
-        self.assertEqual(len(self.abi.loads), 2)
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask("Nuova dopo stop")
+        self.assertEqual(len(self.abi.calls), 1)
+        self.assertEqual(len(self.abi.loads), 1)
 
     def test_watchdog_finishes_before_next_model_load_even_when_abort_returns_late(self):
         abort_started, release_abort, native_done = (threading.Event() for _ in range(3))

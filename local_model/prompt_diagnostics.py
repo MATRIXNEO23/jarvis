@@ -3,20 +3,20 @@
 No persistence, network, inference, desktop action or automatic logging.
 Per-piece token counts are isolated estimates, not additive BPE accounting.
 """
-from .native_provider import format_gemma_messages
+from .chat_templates import FAMILY_LABELS, format_messages
 
 
 def render_prompt_diagnostic(*, messages, sections, count, total_tokens, budget,
                              context_size, max_output, history_limit, mode,
-                             restored, selection_metrics, warning=""):
+                             restored, selection_metrics, warning="", family="gemma2"):
     """Show exact serialized input and owner-provided provenance, on request."""
-    raw = format_gemma_messages(messages)
+    raw = format_messages(messages, family)
     if not isinstance(total_tokens, int) or total_tokens < 1:
         raise ValueError("Conteggio prompt non valido.")
     if len(raw) > 120000:
         raise ValueError("Prompt diagnostico troppo esteso.")
     lines = [
-        "DIAGNOSTICA PROMPT GEMMA — SOLO RAM, NON SALVATA",
+        "DIAGNOSTICA PROMPT " + FAMILY_LABELS.get(family, family).upper() + " — SOLO RAM, NON SALVATA",
         "Generato da: jarvis.py → conversation_router.native_intent_context_for_request",
         "              → NativeConversationSession.prepare_turn → format_gemma_messages",
         "Destinazione: NativeChatAdapter.call('ask') → KoboldCpp (locale)",

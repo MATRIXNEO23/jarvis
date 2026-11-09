@@ -40,12 +40,14 @@ class NativeLocalProvider:
             if prompt is not None and messages is not None:
                 raise RuntimeError("Specificare prompt oppure messaggi.")
             if prompt is None:
-                prompt = format_gemma_messages(messages)
+                pass
             elif isinstance(prompt, str) and prompt.strip():
-                prompt = format_gemma_messages([{"role": "user", "content": prompt}])
+                messages = [{"role": "user", "content": prompt}]
             else:
                 raise RuntimeError("Prompt locale non valido.")
             self.bridge.load()
+            from .chat_templates import format_messages
+            prompt = format_messages(messages, getattr(self.bridge, "family", "gemma2"))
             return self.bridge.generate(prompt, timeout=timeout)
 
     def count_tokens(self, prompt):

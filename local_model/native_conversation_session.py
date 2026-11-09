@@ -28,7 +28,7 @@ from threading import Lock, RLock
 
 from .memory_preferences import MemoryPreferences, default_memory_preferences_path
 from .native_config import NativeModelConfig
-from .native_provider import format_gemma_messages
+from .chat_templates import format_messages as _format_family, model_family
 from .native_settings import default_native_settings_path
 
 
@@ -285,7 +285,7 @@ class NativeConversationSession:
                 return messages
 
             def size(history, prefix, recall=""):
-                return measure(format_gemma_messages(messages_for(history, prefix, recall)))
+                return measure(_format_family(messages_for(history, prefix, recall), model_family(config.model)))
 
             if size([], "") > budget:
                 raise ValueError("Domanda troppo lunga per il contesto configurato.")
@@ -348,7 +348,7 @@ class NativeConversationSession:
                              - size([], instructions) <= memory.history_max_tokens)):
                         recall = candidate
             messages = messages_for(history, instructions, recall)
-            final_size = measure(format_gemma_messages(messages))
+            final_size = measure(_format_family(messages, model_family(config.model)))
             if final_size > budget:
                 raise ValueError("Prompt oltre il contesto configurato.")
             with self._state_lock:
@@ -397,7 +397,7 @@ class NativeConversationSession:
                         ("Domanda corrente", "jarvis.submit_gemma_voice: voce o testo", latest),
                     ])
                     report = render_prompt_diagnostic(
-                        messages=messages, sections=sections,
+                        messages=messages, sections=sections, family=model_family(config.model),
                         count=counter if exact else None, total_tokens=final_size,
                         budget=budget, context_size=config.context_size,
                         max_output=config.max_output,
@@ -445,7 +445,7 @@ class NativeConversationSession:
             config = self.config_loader().validate()
             memory = self.memory_loader().validate()
             budget = memory.available_prompt_tokens(config.context_size, config.max_output)
-            overhead = len(format_gemma_messages([{"role": "user", "content": "x"}])) - 1
+            overhead = len(_format_family([{"role": "user", "content": "x"}], model_family(config.model))) - 1
             if budget <= overhead:
                 raise ValueError("Budget insufficiente per il template Gemma.")
             prompt = build_prompt(budget - overhead)
@@ -467,16 +467,18 @@ class NativeConversationSession:
                 raise ValueError("Impostazioni Gemma cambiate: ripeti la prova.")
             memory = self.memory_loader().validate()
             budget = memory.available_prompt_tokens(current.context_size, current.max_output)
-            budget -= len(format_gemma_messages([{"role": "user", "content": "x"}])) - 1
+            budget -= len(_format_family([{"role": "user", "content": "x"}], model_family(current.model))) - 1
             prompt = "Presentati con una breve frase in italiano."
             style = "Stile di risposta: " + " ".join(current.personality.split()) + "\n"
             if current.personality.strip() and len(style) + len(prompt) <= budget:
                 prompt = style + prompt
             if len(prompt) > budget:
                 raise ValueError("Budget di contesto insufficiente per la prova Gemma.")
-            # The old trial loaded a fresh model every time. Preserve that
-            # explicit reload, but only after all earlier generations finish.
-            self._reset_adapter()
+            # F5N.7: reuse an already loaded native model (no second load in
+            # one process); only an unloaded backend is reset before the trial.
+            bridge = getattr(getattr(self.adapter, "provider", None), "bridge", None)
+            if not getattr(bridge, "loaded", False):
+                self._reset_adapter()
             self._prepare(current, revision)
             self._check_revision(revision)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
@@ -491,7 +493,7 @@ class NativeConversationSession:
         with self._operation() as revision:
             config = self.config_loader().validate()
             memory = self.memory_loader().validate()
-            if len(format_gemma_messages([{"role": "user", "content": prompt}])) > memory.available_prompt_tokens(config.context_size, config.max_output):
+            if len(_format_family([{"role": "user", "content": prompt}], model_family(config.model))) > memory.available_prompt_tokens(config.context_size, config.max_output):
                 raise ValueError("Richiesta o elenco troppo lungo per il contesto Gemma.")
             self._prepare(config, revision)
             self._check_revision(revision)
