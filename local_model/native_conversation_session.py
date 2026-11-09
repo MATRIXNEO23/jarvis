@@ -276,7 +276,7 @@ class NativeConversationSession:
                     archived_pairs.append(canonical)
                 restored = len(archived_pairs)
                 pairs = archived_pairs[-pair_limit:]
-            instructions = "Rispondi in italiano, senza JSON né analisi. Se consigli, spiega perché.\n"
+            instructions = "Ti chiami Lumi. Rispondi in italiano, senza JSON né analisi. Se consigli, spiega perché.\n"
             allowed_actions = None
             intent_warning = ""
             base_instruction_source = "local_model.native_conversation_session: chat naturale"

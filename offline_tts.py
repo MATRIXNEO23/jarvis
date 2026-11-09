@@ -133,7 +133,10 @@ def installed_voices() -> list[str]:
         data = [data]
     if not isinstance(data, list):
         raise ValueError("Elenco delle voci Windows non valido.")
-    return [name for name in data if isinstance(name, str) and name.strip()][:100]
+    windows = [name for name in data if isinstance(name, str) and name.strip()][:100]
+    # Downloaded natural voices (Piper) first; Windows voices stay available.
+    from piper_voice import installed_piper_voices
+    return installed_piper_voices() + windows
 
 
 class OfflineSpeaker:
@@ -150,6 +153,10 @@ class OfflineSpeaker:
         self._worker: threading.Thread | None = None
         self._process_lock = threading.Lock()
         self._process: subprocess.Popen | None = None
+        # Natural voice options (Piper): effect 0..1 and lip-sync callback.
+        self.effect = 0.0
+        self.on_envelope: Callable[[list], None] | None = None
+        self._piper_speaker = None
 
     def _attach_process(self, process) -> bool:
         with self._process_lock:
@@ -211,6 +218,19 @@ class OfflineSpeaker:
                 break
             self._busy.set()
             try:
+                from piper_voice import PiperVoiceError, key_from_label, speak_with_piper
+                piper_key = key_from_label(voice)
+                if piper_key is not None:
+                    try:
+                        speaker = self._piper_speaker or speak_with_piper
+                        speaker(text, piper_key, effect=self.effect,
+                                on_envelope=self.on_envelope)
+                        continue
+                    except PiperVoiceError as exc:
+                        if self._notify_error and not self._closed.is_set():
+                            self._notify_error("Voce naturale non disponibile, uso la voce "
+                                               "Windows. " + str(exc)[:160])
+                        voice = ""
                 for part in _speech_chunks(text):
                     if self._closed.is_set():
                         break
@@ -239,3 +259,5 @@ class OfflineSpeaker:
             process = self._process
         if process is not None:
             self._terminate_process(process)
+        from piper_voice import stop_playback
+        stop_playback()

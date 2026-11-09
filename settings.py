@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 
-DEFAULTS = {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "",
+DEFAULTS = {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "", "tts_effect": 25,
             "memory_enabled": False, "auto_listen": True,
             "keep_awake_fullscreen": False,
             "telegram_enabled": False, "telegram_peer_id": 0,
@@ -121,6 +121,9 @@ def load_settings(path: Path | None = None, *, warnings: list[str] | None = None
         voice = data.get("tts_voice")
         if isinstance(voice, str) and len(voice) <= 180:
             result["tts_voice"] = voice
+        effect = data.get("tts_effect")
+        if type(effect) is int and 0 <= effect <= 100:
+            result["tts_effect"] = effect
     except FileNotFoundError:
         # Preserve the agreed first-installation/legacy defaults. A missing
         # file is different from an existing file we could not interpret.

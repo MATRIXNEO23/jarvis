@@ -127,7 +127,7 @@ class ChatSessionsPanel:
         for question, answer in pairs:
             self.view.insert("end", "TU\n", "user")
             self.view.insert("end", question + "\n\n", "body")
-            self.view.insert("end", "JARVIS\n", "model")
+            self.view.insert("end", "LUMI\n", "model")
             self.view.insert("end", answer + "\n\n", "body")
         self.view.see("end")
         self.view.configure(state="disabled")

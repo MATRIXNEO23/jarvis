@@ -17,6 +17,8 @@ on:
       - 'local_model/qwen3_template_f5.py'
       - 'local_model/chat_templates.py'
       - 'tools/build_jarvis_f5_candidate.py'
+      - 'piper_voice.py'
+      - 'tools/piper_voice_smoke.py'
       - 'local_model/native_bridge.py'
       - 'local_model/native_provider.py'
 
@@ -121,6 +123,15 @@ jobs:
           python -m tools.f5n_gguf_smoke "koboldcpp-src" "probe-models" "f5n-gguf-proof.json"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Natural voice proof (piper-tts + Paola from repository, effect, envelope)
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          python -m pip install "piper-tts>=1.4,<2" numpy --quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/piper_voice_smoke.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Build and verify test candidate ZIP (extracted package, real engine, UI boot, Gemma answer)
         shell: pwsh
         timeout-minutes: 30
@@ -128,16 +139,16 @@ jobs:
           PYTHONUTF8: '1'
           PYTHONIOENCODING: utf-8
         run: |
-          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 18 --out dist --model "probe-models/gemma2.gguf"
+          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 19 --out dist --model "probe-models/gemma2.gguf"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload test candidate (CI artifact, not published)
         uses: actions/upload-artifact@v4
         with:
-          name: jarvis-018-prova-candidate
+          name: jarvis-019-prova-candidate
           path: |
-            dist/Jarvis-018-PROVA.zip
-            dist/Jarvis-018-PROVA.json
+            dist/Jarvis-019-PROVA.zip
+            dist/Jarvis-019-PROVA.json
           if-no-files-found: error
 
       - name: Archive only unverified research candidate

@@ -90,7 +90,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             pending_project_trash_id=None, submit_local=Mock(),
         )
         self.callback("poll_gemma_trial")()
-        self.env["write_line"].assert_called_with("GEMMA > Apri Netflix.")
+        self.env["write_line"].assert_called_with("LUMI > Apri Netflix.")
         self.env["submit_local"].assert_not_called()
 
         self.env["closing"] = False
@@ -119,7 +119,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
         self.assertEqual([call.args[0] for call in self.env["speak_result"].call_args_list],
                          ["Risposta corrente", "Risposta scritta"])
         self.assertEqual([call.args[0] for call in self.env["write_line"].call_args_list],
-                         ["GEMMA > Risposta corrente", "GEMMA > Risposta scritta"])
+                         ["LUMI > Risposta corrente", "LUMI > Risposta scritta"])
 
     def callback(self, name):
         node = copy.deepcopy(next(n for n in self.main.body

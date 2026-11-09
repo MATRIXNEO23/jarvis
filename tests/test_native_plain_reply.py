@@ -32,7 +32,7 @@ class NativePlainReplyTests(unittest.TestCase):
                 harness, env = self.environment()
                 text = 'Stavamo parlando di Mussolini. Quale aspetto vuoi approfondire?'
                 turn = self.deliver(harness, env, text, channel)
-                env['write_line'].assert_called_with('GEMMA > ' + text)
+                env['write_line'].assert_called_with('LUMI > ' + text)
                 env['speak_result'].assert_called_once_with(text)
                 self.assertEqual(list(harness.session.history), [
                     ('user', 'Rispondimi al contesto'), ('assistant', text)])
@@ -42,7 +42,7 @@ class NativePlainReplyTests(unittest.TestCase):
     def test_structured_chat_keeps_existing_validation(self):
         harness, env = self.environment()
         self.deliver(harness, env, '{"kind":"chat","reply":"Parliamo del contesto."}')
-        env['write_line'].assert_called_with('GEMMA > Parliamo del contesto.')
+        env['write_line'].assert_called_with('LUMI > Parliamo del contesto.')
         self.assertEqual(list(harness.session.history)[-1], ('assistant','Parliamo del contesto.'))
         env['dispatch_model_capability'].assert_not_called()
 

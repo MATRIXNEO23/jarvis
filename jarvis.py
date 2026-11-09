@@ -367,6 +367,24 @@ def main() -> None:
     refresh_voices_button.pack(side="left", padx=(0, 6))
     test_voice_button = ttk.Button(speech_row, text="Prova voce")
     test_voice_button.pack(side="left")
+    # Natural voices (Piper) from the repository + digital effect (9/11).
+    natural_row = ttk.Frame(speech_controls)
+    natural_row.pack(fill="x", pady=(6, 0))
+    ttk.Label(natural_row, text="Voci naturali:").pack(side="left", padx=(0, 6))
+    download_paola_button = ttk.Button(natural_row, text="Scarica Paola")
+    download_paola_button.pack(side="left", padx=(0, 6))
+    download_serena_button = ttk.Button(natural_row, text="Scarica Serena")
+    download_serena_button.pack(side="left", padx=(0, 12))
+    ttk.Label(natural_row, text="Effetto digitale:").pack(side="left", padx=(0, 4))
+    spoken_effect = tk.IntVar(value=settings.get("tts_effect", 25))
+    ttk.Scale(natural_row, from_=0, to=100, variable=spoken_effect, length=140,
+              command=lambda _v: spoken_effect.set(int(float(_v)))).pack(side="left")
+    ttk.Label(natural_row, textvariable=spoken_effect, width=4).pack(side="left", padx=(4, 0))
+    ttk.Label(speech_controls, wraplength=680, foreground="#5f8aa3", text=(
+        "Paola e Serena sono voci Piper scaricate dal repository Jarvis con verifica. "
+        "Serena: it_IT-serena-high by Marco Baccarani (Committa), CC BY 4.0. "
+        "Richiedono installa_voce_naturale.bat; se non funzionano si usa la voce di Windows.")
+              ).pack(anchor="w", pady=(4, 0))
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
 
@@ -620,19 +638,19 @@ def main() -> None:
                 else "azione" if low.startswith((
                     "documento >", "[completed]", "correzione voce >"))
                 else "jarvis" if low.startswith((
-                    "jarvis >", "gpt >", "lia >"))
+                    "jarvis >", "gpt >", "lia >", "lumi >"))
                 else "errore" if (
                     "[failed]" in low or "[rejected]" in low
                     or low.startswith(("errore", "gpt: impossibile")))
                 else "sistema")
         identity = {"utente":"●  TU",
-                    "jarvis":"◉  JARVIS",
+                    "jarvis":"◉  LUMI",
                     "azione":"✓  OPERAZIONE",
                     "errore":"!  ERRORE",
                     "sistema":"·  SISTEMA"}[role]
         # Strip repeated provider prefixes without hiding the actual result.
         prefixes = ("utente >", "tu >", "domanda a gpt >", "comando locale >",
-                    "jarvis >", "gpt >", "lia >", "documento >",
+                    "jarvis >", "gpt >", "lia >", "lumi >", "documento >",
                     "correzione voce >")
         body = label
         for prefix in prefixes:
@@ -2658,6 +2676,7 @@ def main() -> None:
         return
 
     speaker = OfflineSpeaker(notify_error=lambda reason: output_queue.put(("tts_error", reason)))
+    speaker.effect = settings.get("tts_effect", 25) / 100
     voice = VoiceController(output_queue.put, ignore_audio=speaker.is_audible)
     wake_gate = WakeWordGate()
     dictation = DesktopDictation()
@@ -2669,6 +2688,8 @@ def main() -> None:
     def save_speech_preferences() -> None:
         settings["tts_enabled"] = bool(spoken_enabled.get())
         settings["tts_voice"] = selected_voice()
+        settings["tts_effect"] = max(0, min(100, int(spoken_effect.get())))
+        speaker.effect = settings["tts_effect"] / 100
         try:
             save_settings(settings)
             spoken_status.set("Risposte vocali salvate; nessun servizio a pagamento.")
@@ -2687,8 +2708,28 @@ def main() -> None:
 
         threading.Thread(target=worker, daemon=True, name="jarvis-voices-list").start()
 
+    def download_natural_voice(key: str) -> None:
+        from piper_voice import LABELS, PiperVoiceError, download_voice
+        spoken_status.set("Download della voce " + LABELS[key] + " dal repository...")
+        for button in (download_paola_button, download_serena_button):
+            button.configure(state="disabled")
+
+        def worker() -> None:
+            try:
+                download_voice(key)
+                output_queue.put(("tts_status", "Voce " + LABELS[key]
+                                  + " scaricata e verificata. Selezionala nel menu Voce."))
+                output_queue.put(("tts_voices", installed_voices()))
+            except (OSError, ValueError, PiperVoiceError) as exc:
+                output_queue.put(("tts_error", "Download voce non riuscito: " + str(exc)[:140]))
+            finally:
+                output_queue.put(("tts_download_done", None))
+
+        threading.Thread(target=worker, daemon=True, name="lumi-voice-download").start()
+
     def test_speech() -> None:
-        if not speaker.speak("Pronto. Questa è la voce di Jarvis.", selected_voice()):
+        speaker.effect = max(0, min(100, int(spoken_effect.get()))) / 100
+        if not speaker.speak("Pronto. Questa è la mia voce.", selected_voice()):
             spoken_status.set("Sintesi vocale occupata: riprova.")
 
     def speak_result(message: str) -> None:
@@ -3806,7 +3847,7 @@ def main() -> None:
                                     write_line("Motore locale occupato: riprova.")
                             else:
                                 if not gpt_enabled.get() and gemma_trial_busy[0]:
-                                    write_line("GEMMA > Sto ancora elaborando. "
+                                    write_line("LUMI > Sto ancora elaborando. "
                                                "Ripeti la frase al termine.")
                                 else:
                                     start_conversation_gpt(spoken)
@@ -4204,8 +4245,15 @@ def main() -> None:
                     spoken_status.set(f"Voci offline disponibili: {len(names)}.")
                     refresh_voices_button.configure(state="normal")
                 elif kind == "tts_error":
-                    spoken_status.set("Voci Windows non disponibili: " + str(data[0]))
+                    message = str(data[0])
+                    spoken_status.set(message if message.startswith(("Voce naturale", "Download voce"))
+                                      else "Voci Windows non disponibili: " + message)
                     refresh_voices_button.configure(state="normal")
+                elif kind == "tts_status":
+                    spoken_status.set(str(data[0]))
+                elif kind == "tts_download_done":
+                    for button in (download_paola_button, download_serena_button):
+                        button.configure(state="normal")
                 elif kind == "gpt_error":
                     runtime_events.record("gpt_failure")
                     action, reason, *request_epoch = data
@@ -4631,23 +4679,23 @@ def main() -> None:
             provider = engine.program_apps
             question = explicit.group(1).strip()
             if blocked(question):
-                write_line("GEMMA > Per scegliere un’app indica un obiettivo da svolgere.")
+                write_line("LUMI > Per scegliere un’app indica un obiettivo da svolgere.")
                 return False
             if provider is not None and provider.available():
                 candidates = tuple(row for row in provider.entries()
                                    if row["enabled"] and row["available"])
             if not 1 <= len(candidates) <= 12:
-                write_line("GEMMA > Per la prova abilita da 1 a 12 app in Programmi e app.")
+                write_line("LUMI > Per la prova abilita da 1 a 12 app in Programmi e app.")
                 return False
         if gemma_source[0] is None or not Path(gemma_source[0]).is_file():
             source = filedialog.askopenfilename(
                 parent=root, title="Configura Gemma: seleziona koboldcpp.py",
                 filetypes=[("Sorgente KoboldCpp", "koboldcpp.py"), ("Python", "*.py")])
             if not source:
-                write_line("GEMMA > Configurazione locale mancante. Nessun invio online.")
+                write_line("LUMI > Configurazione locale mancante. Nessun invio online.")
                 return False
             if Path(source).name.lower() != "koboldcpp.py":
-                write_line("GEMMA > File sorgente non valido. Nessun invio online.")
+                write_line("LUMI > File sorgente non valido. Nessun invio online.")
                 return False
             gemma_source[0] = source
         native_context = chat_target[0] if chat_target is not None else active_project_id
@@ -4723,7 +4771,7 @@ def main() -> None:
             return
         question = request.get().strip()
         if not question:
-            write_line("GEMMA > Scrivi una domanda prima di avviare la prova.")
+            write_line("LUMI > Scrivi una domanda prima di avviare la prova.")
             return
         if (try_program_command(question) or try_gemma_app_followup(question)
                 or submit_gemma_voice(question, typed=True)):
@@ -4781,12 +4829,12 @@ def main() -> None:
                                 value.text = intent.reply
                             except ConversationRejected as exc:
                                 if value.finish_reason == 'length':
-                                    write_line('GEMMA > Risposta incompleta: limite Max Output raggiunto; '
+                                    write_line('LUMI > Risposta incompleta: limite Max Output raggiunto; '
                                                'azione non eseguita. ' + str(exc))
                                     speak_result('La risposta di Gemma è stata interrotta dal limite di output. '
                                                  'Non ho eseguito alcuna azione.')
                                 else:
-                                    write_line('GEMMA > Risposta non interpretabile: ' + str(exc))
+                                    write_line('LUMI > Risposta non interpretabile: ' + str(exc))
                                     speak_result('Non riesco a interpretare la risposta di Gemma. Puoi riprovare?')
                                 continue
                         # UI context/epoch cannot change during this synchronous
@@ -4805,7 +4853,7 @@ def main() -> None:
                             value._session._last_context_notice = context_state
                             for notice in context_state:
                                 if notice:
-                                    write_line('GEMMA > ' + notice)
+                                    write_line('LUMI > ' + notice)
                         if value.memory_warning:
                             write_line("MEMORIA > " + value.memory_warning)
                         owner = value.memory_owner
@@ -4835,22 +4883,22 @@ def main() -> None:
                     spoken, app_id = value
                     if app_id is None:
                         message = "Quale programma vuoi aprire?"
-                        write_line("GEMMA > " + message)
+                        write_line("LUMI > " + message)
                         speak_result(message)
                     elif busy_local:
-                        write_line("GEMMA > Motore locale occupato. Riprova.")
+                        write_line("LUMI > Motore locale occupato. Riprova.")
                     else:
                         submit_local(message_override=spoken, source_utterance=spoken,
                                      addon_action_id="addon.programmi_app.avvia",
                                      program_call=("suggest_id", {"query": app_id}))
                 elif kind == "voice_ok":
-                    write_line("GEMMA > " + value)
+                    write_line("LUMI > " + value)
                     speak_result(value)
                 elif kind == "voice_error":
                     write_line("GEMMA / ERRORE > " + value)
                     speak_result("Gemma locale non disponibile. Controlla la configurazione.")
                 elif kind == "ok":
-                    write_line("GEMMA > " + value)
+                    write_line("LUMI > " + value)
                     speak_result(value)
                 else:
                     write_line("GEMMA / ERRORE > " + value)
@@ -4885,6 +4933,8 @@ def main() -> None:
     spoken_switch.configure(command=save_speech_preferences)
     spoken_picker.bind("<<ComboboxSelected>>", lambda event: save_speech_preferences())
     refresh_voices_button.configure(command=refresh_voices)
+    download_paola_button.configure(command=lambda: download_natural_voice("paola"))
+    download_serena_button.configure(command=lambda: download_natural_voice("serena"))
     test_voice_button.configure(command=test_speech)
     for button in mode_buttons:
         button.configure(command=change_voice_mode)
@@ -4906,7 +4956,7 @@ def main() -> None:
             try:
                 native_owner.close()
             except Exception:
-                write_line("GEMMA > Errore nell'annullamento durante la chiusura.")
+                write_line("LUMI > Errore nell'annullamento durante la chiusura.")
         if addon_manager is not None and addon_manager._file_service is not None:
             addon_manager.file_service.reset()
         if addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None:

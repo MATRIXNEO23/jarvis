@@ -239,6 +239,7 @@ class ChatPanelTests(unittest.TestCase):
         self.assertIn("Domanda 0 sul mare", text)
         self.assertIn("Risposta 39", text)
         self.assertNotIn("GEMMA", text)
+        self.assertIn("LUMI", text)
         self.assertFalse(reopened.toggle_sidebar())
         self.assertFalse(reopened.sidebar.winfo_manager())
         self.assertTrue(reopened.toggle_sidebar())

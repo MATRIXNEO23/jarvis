@@ -71,7 +71,7 @@ class GPTVoiceAddressingTests(unittest.TestCase):
         self.env['start_conversation_gpt'].assert_not_called()
         self.assertEqual([call.args[0] for call in self.env['write_line'].call_args_list], [
             'TU > mi racconti qualcosa',
-            'GEMMA > Sto ancora elaborando. Ripeti la frase al termine.',
+            'LUMI > Sto ancora elaborando. Ripeti la frase al termine.',
         ])
 
     def test_local_command_stays_local_and_background_cannot_trigger_it(self):
