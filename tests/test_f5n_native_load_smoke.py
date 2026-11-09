@@ -19,9 +19,12 @@ class NativeSmokeGuardTests(unittest.TestCase):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(b"MZ" + bytes(1024))
             result = expected_paths(root)
-            self.assertEqual(result["route"], root / FILES[-1])
-            self.assertEqual(result["common"], root / FILES[0])
-            self.assertEqual(result["backend"], root / FILES[2])
+            # Windows may expand the temporary directory 8.3 alias
+            # (RUNNER~1) into its canonical long path (runneradmin).
+            canonical_root = result["root"]
+            self.assertEqual(result["route"], canonical_root / FILES[-1])
+            self.assertEqual(result["common"], canonical_root / FILES[0])
+            self.assertEqual(result["backend"], canonical_root / FILES[2])
 
     @unittest.skipIf(os.name == "nt", "Non-Windows guard only")
     def test_non_windows_cannot_run_native_load(self):
