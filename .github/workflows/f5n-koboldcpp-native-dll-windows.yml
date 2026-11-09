@@ -12,6 +12,9 @@ on:
       - 'tests/test_f5n_native_load_smoke.py'
       - 'tools/f5n_initializer_smoke.py'
       - 'local_model/native_initializer.py'
+      - 'tools/fetch_probe_models.py'
+      - 'tools/f5n_gguf_smoke.py'
+      - 'local_model/qwen3_template_f5.py'
 
 permissions:
   contents: read
@@ -19,7 +22,7 @@ permissions:
 jobs:
   build-upstream-noavx2:
     runs-on: windows-2022
-    timeout-minutes: 90
+    timeout-minutes: 150
     steps:
       - name: Checkout Jarvis audit tools only
         uses: actions/checkout@v4
@@ -95,6 +98,23 @@ jobs:
           python -m tools.f5n_initializer_smoke "koboldcpp-src" "f5n-initializer-proof.json"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: F5N.6 fetch probe GGUF (Gemma 2 2B, Qwen2.5 1.5B, Qwen3 1.7B; publisher SHA-256)
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          python -m tools.fetch_probe_models "probe-models"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: F5N.6 GGUF load, short generation and Gemma abort (one child per model)
+        shell: pwsh
+        timeout-minutes: 50
+        env:
+          PYTHONUTF8: '1'
+          PYTHONIOENCODING: utf-8
+        run: |
+          python -m tools.f5n_gguf_smoke "koboldcpp-src" "probe-models" "f5n-gguf-proof.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Archive only unverified research candidate
         uses: actions/upload-artifact@v4
         with:
@@ -111,3 +131,5 @@ jobs:
             f5n-pe-abi-manifest.json
             f5n-native-loader-proof.json
             f5n-initializer-proof.json
+            f5n-gguf-proof.json
+            probe-models/probe-models-source.json
