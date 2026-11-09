@@ -1212,3 +1212,10 @@ Prove: la suite Windows deve controllare persistenza, rimozione, isolamento tra 
 
 ### Checkpoint API grandi — lezione009
 Un tentativo di serializzare insieme jarvis.py e tutti i documenti di continuità ha prodotto stdout troncato, quindi JSON non valido; nessun commit è stato creato da quel tentativo. Leggere i file a gruppi piccoli, verificare parse/exitcode, poi creare un solo albero/commit coerente e verificare i blob remoti. Non ripetere upload ciechi o interpretare output troncato come salvataggio riuscito.
+
+
+## 2026-11-09 — ARCH-01 F5.0: profili locali, non ancora selettore
+**Decisione:** partendo dal ramo F4.2 isolato (PR #66), creato F5.0 (PR #67) come solo contratto immutabile Gemma/Qwen in `local_model/model_profiles_f5.py`, con test di limiti e campi sconosciuti. Nessun runtime, UI, backend o memoria modificati. Il cambio di modello reale va implementato solo dopo discovery dei punti di integrazione e test Windows; le misure Pavilion F4.2 restano da eseguire.
+**Motivo:** evitare di introdurre la complessità di un secondo GGUF e cambio backend prima di accertare velocità, template e rollback. Profilo validato non significa modello installato.
+**Prove e limiti:** file e PR presenti sul remoto; CI F5.0 non ancora attestata, nessuna esecuzione Windows o Pavilion provata. Primo test di isolamento reso indipendente dall'ordine di import della suite con commit `c1190b0414d68086f225a33601797226a2f65c7c`. Nessun ZIP pubblicato; 014 resta base utente.
+**Ripresa:** gate Windows CI e audit del diff, poi F5.1 rilevamento disponibilità/modello reale e F5.2 selettore configurabile. F8 API gratuite resta pianificata, non aggiunta.
