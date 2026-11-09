@@ -1,3 +1,11 @@
+## Build 020 PROVA — avatar LUMI animato, voci naturali in un file ZIP ciascuna
+
+[Scarica Lumi-020-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-020-PROVA.zip)
+
+Come la 019, più: il volto di LUMI (la tua immagine, invariata) sostituisce la scritta nel cerchio centrale, con battito di ciglia, sguardo che si muove e bocca che segue la voce. Quando riduci a icona, il mini avatar resta in basso a destra sopra la barra; doppio clic per riaprire. Voci: «Scarica Paola» / «Scarica Serena» scaricano un unico ZIP verificato (Voce-Paola.zip, Voce-Serena.zip). Stesso profilo dati. Verificati in CI Windows: 1161 test, ZIP estratto, avvio UI e risposta del motore. Pavilion da collaudare (resa dell'avatar e consumo CPU).
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42693084765). SHA-256: `b1d2f57ecad420bd65667b0e075ea10a602190e855b3f77583173933272ab9ba`.
+
 ## Build 019 PROVA — l'assistente diventa LUMI, voci naturali Paola e Serena
 
 [Scarica Lumi-019-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-019-PROVA.zip)
