@@ -1,3 +1,6 @@
+## F5N.4 — Windows DLL loader smoke isolato (9 novembre 2026)
+**F5N.3 verde**, due committaggi confermati green unit/GPT, tokenizer, diagnosi e compilazione DLL (42562880047, 42562944575). Implementato il solo gate test F5N.4: child Python Windows per caricare route + comune e cercare export senza caricare GGUF; test guardia e workflow candidato con report dedicato (commit `23044874...`). Esito CI F5N.4 da verificare, nulla pubblicato e runtime Jarvis 014 intatto. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
+
 ## F5N.3 — Fix suite Windows: test path Windows errato (9 novembre 2026)
 Test unit/protocollo Windows fallito nella sola fixture PE F5N.3 (StopIteration: doppio backslash nel `replace`, contro percorsi Windows con singolo backslash). Fix test-only commit `5c401f28...`, normalizzazione con `chr(92)`; CI nuova 42562880082 in coda, non ancora validata. Diagnostica e tokenizer verdi. Build/ABI candidato ancora in verifica separata run 42562880047. [Dettagli](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 invariata.
 
