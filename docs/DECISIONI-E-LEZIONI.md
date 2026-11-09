@@ -1265,3 +1265,6 @@ Le variabili `CFLAGS` e `CXXFLAGS` esportate dal workflow non funzionavano: Make
 
 ## 2026-11-09 — F5N.3: la DLL comune è l'ABI della build split
 Dal `koboldcpp.py` ufficiale fissato emerge che Windows apre prima il forwarder del backend selezionato tramite directory dedicata, poi la DLL comune con l'API ctypes. La vecchia DLL monolitica non può essere sostituita da una singola DLL del bundle nuovo. Aggiunto controllo PE puramente statico con export `load_model/generate/abort_generate/token_count/get_chat_template`, import backend route e prove mock. Le esportazioni non certificano layout ctypes, caricabilità DLL o inferenza; gate bootstrap Windows futuro e prova Pavilion obbligatori. Nessuna modifica runtime o release.
+
+## 2026-11-09 — F5N.3: separare build verde da gate ABI rosso
+Due workflow (42557729052, 42557848456) hanno prodotto le quattro DLL e validato il bundle, ma sono falliti al gate PE per nomi richiesti non trovati nella DLL comune. Non ammorbidire la barriera né affermare che l'ABI è compatibile; prima leggere i nomi PE effettivi. Aggiunta diagnostica fail-closed con conteggio/primi simboli, run 42559582501. Rischio possibile di export mancanti nella nuova disposizione split DLL. Nessun cambiamento alla chat Jarvis o DLL 014.
