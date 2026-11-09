@@ -1,3 +1,11 @@
+## Build 016 PROVA — chat stile ChatGPT, cronologia completa, prompt più leggero
+
+[Scarica Jarvis-016-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-016-PROVA.zip)
+
+Build di prova sopra la 015 (014 resta la stabile). Chat locali con elenco a sinistra apribile/chiudibile (☰), Nuova chat, titolo automatico dalla prima domanda e cronologia completa visibile anche dopo il riavvio. Le domande scritte risultano tue (TU) e non più Gemma. Il catalogo azioni arriva al modello solo se la frase sembra un comando: chat semplice con prompt più corto. Corretti: cronologia di una chat ridotta dopo l'uso di un'altra, salvataggio chat fallito ora ritentato, cattura Diagnostica prompt non persa su errore. Telegram: se la risposta locale fallisce la console mostra la causa esatta. Stesso profilo dati, estrai in una cartella NUOVA, cambio modello/contesto/thread con riavvio. Verificati in CI Windows: 1141 test, ZIP estratto, avvio UI e risposta del motore incluso. Pavilion, voce e Telegram reale da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42645704397). SHA-256: `1b68e8c0f64bf7659dc5648255acb6a3fb349e373d3306ef2a87a2cb046e88da`.
+
 ## Build 015 PROVA — motore KoboldCpp integrato (Gemma 2, Qwen2.5, Qwen3)
 
 [Scarica Jarvis-015-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-015-PROVA.zip)
