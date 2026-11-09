@@ -1,3 +1,6 @@
+## F5N.4 — Ricerca DLL runtime MinGW in ctypes Windows (9 novembre 2026)
+La CI 42592362936 ha fallito il solo loader F5N.4: PE imports di `koboldcpp_common.dll` e CPU backend indicano `libgcc_s_seh-1.dll`, `libstdc++-6.dll`, `libwinpthread-1.dll` disponibili in `C:\\mingw64\\bin`, ma la cartella non era stata aggiunta a `os.add_dll_directory` del processo figlio. Fix limitato smoke worker commit `cf041b765...`, nuovo candidato 42595625501 avviato; conferma success ancora pendente. Unit/GPT, tokenizer e diagnostica precedente green. Nessuna modifica a Jarvis014.
+
 ## F5N.4 — Fix percorso 8.3 test Windows e diagnostica DLL missing (9 novembre 2026)
 La prima F5N.4 falliva in due gate: test temporaneo confrontava short path `RUNNER~1` vs long path `runneradmin`; smoke nativo common DLL falliva perché Windows non risolve un modulo o una dipendenza non ancora identificata. Fix test-only `3b563ded...` e nuovo logging import PE read-only `ae724dae...`; **nessuna DLL corretta o sostituita** finché non emerge il dependency name. Nuovi run 42592363012 (unit), 42592362936 (DLL) in corso. F5N.4 ancora aperta. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
 
