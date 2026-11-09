@@ -1,10 +1,10 @@
 {
-  "run_id": 42701561517,
-  "artifact": "lumi-021-prova-candidate",
-  "file": "Lumi-021-PROVA.zip",
-  "bytes": 14959864,
-  "sha256": "e89bbdf8f25fe8c1baa56f5583e6b6c955cb1ba61e6daf7fca97dc52fa588927",
-  "source_commit": "98440e0",
-  "title": "Build 021 PROVA — avatar a figura intera, risposta in streaming, voce naturale veloce",
-  "description": "Come la 020, più: LUMI a figura intera (capelli e busto escono dal cerchio) con testa che oscilla piano; la bocca si muove solo quando l'audio suona davvero. La risposta compare mentre il modello la scrive e la voce parte dalla prima frase completa. Voce Paola/Serena: modello caricato una sola volta e frase successiva preparata mentre suona la precedente (in CI 0,17 s per frase invece di 5,5 s). Stesso profilo dati. Verificati in CI Windows: 1171 test, streaming reale di Gemma, ZIP estratto, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42708117898,
+  "artifact": "lumi-022-prova-candidate",
+  "file": "Lumi-022-PROVA.zip",
+  "bytes": 24898978,
+  "sha256": "612e173dfb5717500be18fce7efe53f291f63ad4eae2103ea472fd897957c3e8",
+  "source_commit": "9dca37c",
+  "title": "Build 022 PROVA — voce inclusa senza installazioni, avatar più naturale",
+  "description": "Come la 021, più: motore voce Piper incluso in Lumi (cartella voce_engine, solo italiano, senza installare nulla e senza numpy): basta premere «Scarica Paola» o «Scarica Serena». Avatar: la testa ruota piano a destra e sinistra (niente tremolio), le ciocche seguono il movimento e si assestano, respiro lento di spalle e petto, bocca a 5 aperture più morbida. Prompt un po' più leggero (cronologia 200 token, ultimo scambio sempre intero). Stesso profilo dati. Verificati in CI Windows: 1176 test, voce con il motore incluso sul pacchetto estratto (seconda frase 0,19 s), streaming, avvio UI e risposta del motore. Pavilion da collaudare (voce senza AVX2, resa dell'avatar)."
 }
