@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "voices": {
+    "paola": {
+      "label": "Paola (Piper, media qualità)",
+      "license": "Piper voice dataset 'paola' (rhasspy/piper-voices), see MODEL_CARD",
+      "attribution": "it_IT-paola-medium, rhasspy/piper-voices",
+      "source_repo": "rhasspy/piper-voices",
+      "source_revision": "cf910fb59f1d79ab3b625a63993a108751c6c25d",
+      "files": {
+        "it_IT-paola-medium.onnx": {
+          "sha256": "6fc918b5a0ea6137382833dddfa567bffbe6a5060c02043c87192ee59c04210c",
+          "bytes": 63511038,
+          "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/voci/it_IT-paola-medium.onnx"
+        },
+        "it_IT-paola-medium.onnx.json": {
+          "sha256": "aea19c0a7fce29fbc359b93f10e7902854401e4c95ae2ea328ae516b15d296cf",
+          "bytes": 7099,
+          "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/voci/it_IT-paola-medium.onnx.json"
+        }
+      }
+    },
+    "serena": {
+      "label": "Serena (Piper, alta qualità)",
+      "license": "CC BY 4.0",
+      "attribution": "it_IT-serena-high by Marco Baccarani (Committa), CC BY 4.0",
+      "source_repo": "committa/it_IT-serena-high",
+      "source_revision": "d1884110c2ac2ffaf87aa7637405fce1d08497a3",
+      "files": {
+        "it_IT-serena-high.onnx": {
+          "sha256": "7462fbdf03727fb4c0c161286ad538fe6436b7e4b1c3059ef52930032475955f",
+          "bytes": 114204024,
+          "url": "https://github.com/MATRIXNEO23/jarvis/releases/download/voci-piper-v1/it_IT-serena-high.onnx"
+        },
+        "it_IT-serena-high.onnx.json": {
+          "sha256": "60597bac737a20766591fe24d1315df9a3811dc3509e69bc394cdee19eccbae7",
+          "bytes": 5252,
+          "url": "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/voci/it_IT-serena-high.onnx.json"
+        }
+      }
+    }
+  }
+}
