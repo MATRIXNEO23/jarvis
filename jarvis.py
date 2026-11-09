@@ -383,7 +383,8 @@ def main() -> None:
     ttk.Label(speech_controls, wraplength=680, foreground="#5f8aa3", text=(
         "Paola e Serena sono voci Piper scaricate dal repository Lumi con verifica. "
         "Serena: it_IT-serena-high by Marco Baccarani (Committa), CC BY 4.0. "
-        "Richiedono installa_voce_naturale.bat; se non funzionano si usa la voce di Windows.")
+        "Il motore voce è già incluso in Lumi (cartella voce_engine): basta scaricare la voce. "
+        "Se non funziona su questo PC si usa la voce di Windows.")
               ).pack(anchor="w", pady=(4, 0))
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")

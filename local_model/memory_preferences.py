@@ -6,6 +6,9 @@ from pathlib import Path
 import tempfile
 
 
+_OLD_DEFAULT_HISTORY = 250
+
+
 @dataclass(frozen=True)
 class MemoryPreferences:
     idle_seconds: int = 60
@@ -17,7 +20,9 @@ class MemoryPreferences:
     conversation_priority: bool = True
     pause_on_heavy_load: bool = True
     background_summaries: bool = True
-    history_max_tokens: int = 250
+    # 021: 250 -> 200 to shorten the prompt a little on the Pavilion; the
+    # newest exchange is always protected, so the dialogue stays coherent.
+    history_max_tokens: int = 200
 
     def validate(self):
         for key, minimum, maximum in (
@@ -58,6 +63,9 @@ class MemoryPreferences:
                 native = json.loads(native_path.read_text(encoding="utf-8"))
                 if not isinstance(native, dict) or set(native) != {"history_max_tokens"}:
                     raise ValueError("Schema budget cronologia non valido.")
+                if native["history_max_tokens"] == _OLD_DEFAULT_HISTORY:
+                    # Untouched old default follows the new, lighter default.
+                    native = {"history_max_tokens": cls.history_max_tokens}
             return cls(**obj, **native).validate()
         except (OSError, UnicodeError, TypeError, json.JSONDecodeError) as exc:
             raise ValueError("Impostazioni memoria danneggiate.") from exc

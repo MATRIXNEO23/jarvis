@@ -60,7 +60,7 @@ def git_files():
     return [Path(os.fsdecode(p)) for p in out.split(b"\0") if p]
 
 
-def build(engine_dir, number, out_dir):
+def build(engine_dir, number, out_dir, piper_dir=None):
     label = f"{number:03d}"
     root = f"Lumi-{label}/"
     engine = Path(engine_dir)
@@ -74,6 +74,14 @@ def build(engine_dir, number, out_dir):
             entries[p.as_posix()] = data
     for name in ENGINE_FILES:
         entries["native_engine/" + name] = (engine / name).read_bytes()
+    if piper_dir:
+        # Slim Piper engine (tools/fetch_piper_engine.py): voice without installs.
+        piper_root = Path(piper_dir)
+        for path in sorted(piper_root.rglob("*")):
+            if path.is_file():
+                entries["voce_engine/piper/" + path.relative_to(piper_root).as_posix()] = path.read_bytes()
+        if "voce_engine/piper/piper.exe" not in entries:
+            raise SystemExit("piper.exe missing from --piper-engine")
     entries[f"LEGGIMI-BUILD-{label}.txt"] = notice(label).encode("utf-8")
     mandatory = {"jarvis.py", "avvia_lumi.bat", "local_model/chat_templates.py",
                  "local_model/native_factory.py"} | OPERATIONAL_GUIDES
@@ -177,6 +185,28 @@ def verify(archive, model, tools_root):
                 "print(json.dumps({'answer':t.strip()[:80],'family':p.bridge.family}))"],
                 package, profile, timeout=900)
             report["packaged_generation"] = json.loads(out.strip().splitlines()[-1])
+        if (package / "voce_engine" / "piper" / "piper.exe").is_file():
+            # Bundled voice engine on the EXTRACTED package: Paola from the
+            # repository catalog, persistent piper.exe worker, effect, envelope.
+            out = run([sys.executable, "-I", "-c",
+                "import sys,json,time,wave;sys.path.insert(0,'.');import piper_voice as v;"
+                "from pathlib import Path;"
+                "f=Path(sys.argv[1]);v.download_voice('paola',folder=f);"
+                "env=[];info={};"
+                "keep=lambda p:info.update(s=wave.open(str(p)).getnframes());"
+                "t=time.monotonic();"
+                "v.speak_with_piper('Ciao, sono Lumi. Prova della voce inclusa.','paola',effect=0.25,"
+                "folder=f,on_envelope=env.extend,player=keep);"
+                "a=round(time.monotonic()-t,2);t=time.monotonic();"
+                "v.speak_with_piper('Seconda frase, modello gia caricato.','paola',effect=0.25,"
+                "folder=f,player=keep);b=round(time.monotonic()-t,2);"
+                "used=any('piper.exe' in k for k in v._WORKERS);v.shutdown_workers();"
+                "print(json.dumps({'bundled_exe':used,'frames':info.get('s',0),'envelope':len(env),"
+                "'first_s_runner':a,'second_s_runner':b}))", str(profile / "voci")],
+                package, profile, timeout=600)
+            voice = json.loads(out.strip().splitlines()[-1])
+            assert voice["bundled_exe"] and voice["frames"] > 0 and voice["envelope"] > 10, voice
+            report["packaged_voice"] = voice
     return report
 
 
@@ -186,10 +216,11 @@ def main(argv=None):
     p.add_argument("--number", type=int, default=15)
     p.add_argument("--out", default="dist")
     p.add_argument("--model", help="GGUF used for the packaged generation proof")
+    p.add_argument("--piper-engine", help="slim Piper folder from tools/fetch_piper_engine.py")
     a = p.parse_args(argv)
     if os.name != "nt":
         raise SystemExit("Windows only.")
-    archive, details = build(a.engine_dir, a.number, a.out)
+    archive, details = build(a.engine_dir, a.number, a.out, a.piper_engine)
     report = verify(archive, a.model, Path(__file__).resolve().parents[1])
     details["verification"] = report
     archive.with_suffix(".json").write_text(json.dumps(details, indent=2, ensure_ascii=False),

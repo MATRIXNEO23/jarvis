@@ -1,6 +1,12 @@
 @echo off
 setlocal
 cd /d "%~dp0"
+if exist "%~dp0voce_engine\piper\piper.exe" (
+  echo Il motore voce e gia incluso in Lumi: non serve installare nulla.
+  echo In Impostazioni ^> Voce premi "Scarica Paola" o "Scarica Serena".
+  pause
+  exit /b 0
+)
 echo Installazione FACOLTATIVA delle voci naturali (motore Piper, offline).
 echo Il motore e GPL-3.0; le voci si scaricano poi da Impostazioni ^> Voce.
 py -3 -m pip install --user "piper-tts>=1.4,<2"

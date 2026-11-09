@@ -108,6 +108,30 @@ class PiperVoiceTests(unittest.TestCase):
         self.assertEqual(out.read_bytes(), (self.dir / "a.wav").read_bytes())
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "numpy not installed")
+    def test_plain_effect_matches_numpy_effect(self):
+        make_wav(self.dir / "a.wav", [int(8000 * ((i % 50) / 25 - 1)) for i in range(4410)])
+        piper_voice.apply_digital_effect(self.dir / "a.wav", self.dir / "np.wav", 0.3)
+        with wave.open(str(self.dir / "a.wav")) as w:
+            params, frames = w.getparams(), w.readframes(w.getnframes())
+        piper_voice._digital_effect_plain(frames, params, self.dir / "py.wav", 0.3)
+        import array
+        def read(name):
+            with wave.open(str(self.dir / name)) as w:
+                return array.array("h", w.readframes(w.getnframes()))
+        a, b = read("np.wav"), read("py.wav")
+        self.assertEqual(len(a), len(b))
+        self.assertLess(max(abs(x - y) for x, y in zip(a, b)), 40)
+
+    def test_slim_engine_keeps_only_italian_and_binaries(self):
+        from tools.fetch_piper_engine import keep
+        self.assertTrue(keep("piper/piper.exe"))
+        self.assertTrue(keep("piper/espeak-ng-data/it_dict"))
+        self.assertTrue(keep("piper/espeak-ng-data/lang/roa/it"))
+        self.assertFalse(keep("piper/espeak-ng-data/ru_dict"))
+        self.assertFalse(keep("piper/libtashkeel_model.ort"))
+        self.assertFalse(keep("other/piper.exe"))
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "numpy not installed")
     def test_digital_effect_keeps_length_and_changes_audio(self):
         make_wav(self.dir / "a.wav", [int(8000 * ((i % 50) / 25 - 1)) for i in range(22050)])
         piper_voice.apply_digital_effect(self.dir / "a.wav", self.dir / "b.wav", 0.3)

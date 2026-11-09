@@ -57,7 +57,9 @@ def installed_piper_voices(folder: Path | None = None) -> list[str]:
 
 
 def engine_available(runner=subprocess.run) -> bool:
-    """True when ``piper`` imports in a child process (no crash in Lumi)."""
+    """True with the bundled piper.exe, or when ``piper`` imports in a child process."""
+    if bundled_engine() is not None and runner is subprocess.run:
+        return True
     try:
         proc = runner([sys.executable, "-c", "import piper"], capture_output=True,
                       timeout=60, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
@@ -146,16 +148,53 @@ for line in sys.stdin:
 """
 
 
+ENGINE_DIR = Path(__file__).resolve().parent / "voce_engine" / "piper"
+
+
+def bundled_engine() -> Path | None:
+    """piper.exe shipped inside Lumi (no Python packages, no installation)."""
+    exe = ENGINE_DIR / "piper.exe"
+    return exe if os.name == "nt" and exe.is_file() else None
+
+
+def _ascii_path(path: Path) -> str:
+    """piper.exe reads argv as narrow text: use the 8.3 short path if needed."""
+    text = str(path)
+    if text.isascii() or os.name != "nt":
+        return text
+    try:
+        import ctypes
+        buffer = ctypes.create_unicode_buffer(1024)
+        if ctypes.windll.kernel32.GetShortPathNameW(text, buffer, 1024) and buffer.value.isascii():
+            return buffer.value
+    except Exception:
+        pass
+    raise PiperVoiceError("Percorso della voce con caratteri speciali: motore incluso non utilizzabile.")
+
+
 class _PiperWorker:
-    def __init__(self, model: Path, timeout: float = 90):
+    """Persistent engine. ``exe`` mode: bundled piper.exe with --json-input,
+    run inside the audio folder so file names stay plain ASCII.
+    Otherwise: the piper-tts Python package in a child interpreter."""
+
+    def __init__(self, model: Path, timeout: float = 90, exe: Path | None = None):
         self.model = Path(model)
         self.lock = threading.Lock()
         self.timeout = timeout
+        self.exe = exe
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        if exe is not None:
+            self.cwd = _audio_dir()
+            self.proc = subprocess.Popen(
+                [str(exe), "--model", _ascii_path(self.model), "--json-input", "--quiet"],
+                cwd=str(self.cwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL, text=True, encoding="utf-8", creationflags=flags)
+            return
+        self.cwd = None
         self.proc = subprocess.Popen(
             [sys.executable, "-c", _WORKER_CODE, str(self.model)],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-            text=True, encoding="utf-8",
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            text=True, encoding="utf-8", creationflags=flags)
         if self._read() != "ready":
             self.close()
             raise PiperVoiceError("Motore Piper persistente non avviato.")
@@ -176,13 +215,22 @@ class _PiperWorker:
         with self.lock:
             if not self.alive():
                 raise PiperVoiceError("Motore Piper chiuso.")
+            out_path = Path(out_path)
+            if self.exe is not None:
+                if out_path.parent.resolve() != Path(self.cwd).resolve():
+                    raise PiperVoiceError("Cartella audio non valida per il motore.")
+                request = {"text": text, "output_file": out_path.name}
+            else:
+                request = {"text": text, "out": str(out_path)}
             try:
-                self.proc.stdin.write(json.dumps({"text": text, "out": str(out_path)}) + "\n")
+                self.proc.stdin.write(json.dumps(request) + "\n")
                 self.proc.stdin.flush()
             except OSError as exc:
                 self.close()
                 raise PiperVoiceError("Motore Piper interrotto.") from exc
             answer = self._read()
+        if self.exe is not None and answer and answer.endswith(out_path.name):
+            answer = "ok"
         if answer != "ok" or not Path(out_path).is_file():
             if not answer:
                 self.close()
@@ -201,15 +249,15 @@ _WORKERS: dict[str, _PiperWorker] = {}
 _WORKERS_LOCK = threading.Lock()
 
 
-def _worker_for(model: Path) -> _PiperWorker:
-    key = str(Path(model).resolve())
+def _worker_for(model: Path, exe: Path | None = None) -> _PiperWorker:
+    key = str(Path(model).resolve()) + "|" + str(exe)
     with _WORKERS_LOCK:
         worker = _WORKERS.get(key)
         if worker is None or not worker.alive():
             for other in _WORKERS.values():   # one voice in RAM at a time
                 other.close()
             _WORKERS.clear()
-            worker = _WORKERS[key] = _PiperWorker(Path(model))
+            worker = _WORKERS[key] = _PiperWorker(Path(model), exe=exe)
         return worker
 
 
@@ -234,6 +282,12 @@ def synthesize(text: str, key: str, out_path: Path, *, folder: Path | None = Non
         raise PiperVoiceError("Voce Piper non scaricata: " + LABELS.get(key, key))
     clean = " ".join(text.split())[:_MAX_TEXT]
     if runner is None:
+        exe = bundled_engine()
+        if exe is not None and Path(out_path).parent.resolve() == _audio_dir().resolve():
+            try:
+                return _worker_for(model, exe).synth(clean, Path(out_path))
+            except (PiperVoiceError, OSError):
+                shutdown_workers()
         try:
             return _worker_for(model).synth(clean, Path(out_path))
         except (PiperVoiceError, OSError):
@@ -264,7 +318,10 @@ def apply_digital_effect(in_path: Path, out_path: Path, amount: float) -> Path:
     if amount <= 0 or params.sampwidth != 2 or params.nchannels != 1:
         Path(out_path).write_bytes(Path(in_path).read_bytes())
         return Path(out_path)
-    import numpy as np
+    try:
+        import numpy as np
+    except ImportError:
+        return _digital_effect_plain(frames, params, out_path, amount)
     dry = np.frombuffer(frames, dtype="<i2").astype(np.float32) / 32768.0
     rate = params.framerate
     n = np.arange(dry.size)
@@ -286,6 +343,48 @@ def apply_digital_effect(in_path: Path, out_path: Path, amount: float) -> Path:
     with wave.open(str(out_path), "wb") as target:
         target.setparams(params)
         target.writeframes((mixed * 32767).astype("<i2").tobytes())
+    return Path(out_path)
+
+
+def _digital_effect_plain(frames: bytes, params, out_path: Path, amount: float) -> Path:
+    """Same effect without numpy (bundled engine, plain Python)."""
+    import array
+    import math
+    dry = array.array("h", frames)
+    if sys.byteorder != "little":
+        dry.byteswap()
+    rate = params.framerate
+    size = len(dry)
+    taps = [(int(rate * ms / 1000), gain) for ms, gain in ((7, 0.35), (13, 0.25), (21, 0.15))]
+    step = 2 * math.pi * 0.8 / rate
+    keep = 1 - 0.5 * amount
+    mixed = [0.0] * size
+    peak = 1.0
+    for n in range(size):
+        delay = (0.012 + 0.003 * math.sin(step * n)) * rate
+        pos = n - delay
+        if pos <= 0:
+            chorus = dry[0]
+        else:
+            low = int(pos)
+            frac = pos - low
+            high = low + 1 if low + 1 < size else low
+            chorus = dry[low] * (1 - frac) + dry[high] * frac
+        echo = 0.0
+        for shift, gain in taps:
+            if n >= shift:
+                echo += dry[n - shift] * gain
+        value = keep * dry[n] + amount * (0.6 * chorus + 0.4 * echo)
+        mixed[n] = value
+        if abs(value) > peak:
+            peak = abs(value)
+    scale = min(1.0, 0.95 * 32767 / peak)
+    out = array.array("h", (int(v * scale) for v in mixed))
+    if sys.byteorder != "little":
+        out.byteswap()
+    with wave.open(str(out_path), "wb") as target:
+        target.setparams(params)
+        target.writeframes(out.tobytes())
     return Path(out_path)
 
 

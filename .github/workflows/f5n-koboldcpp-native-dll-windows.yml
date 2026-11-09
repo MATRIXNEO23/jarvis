@@ -19,6 +19,7 @@ on:
       - 'tools/build_jarvis_f5_candidate.py'
       - 'piper_voice.py'
       - 'tools/piper_voice_smoke.py'
+      - 'tools/fetch_piper_engine.py'
       - 'local_model/native_bridge.py'
       - 'local_model/native_provider.py'
 
@@ -132,23 +133,30 @@ jobs:
           python tools/piper_voice_smoke.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Build and verify test candidate ZIP (extracted package, real engine, UI boot, Gemma answer)
+      - name: Fetch slim Piper engine (official 2023.11.14-2, pinned SHA-256, Italian only)
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          python tools/fetch_piper_engine.py "piper-engine"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build and verify test candidate ZIP (extracted package, real engine, UI boot, Gemma answer, bundled voice)
         shell: pwsh
         timeout-minutes: 30
         env:
           PYTHONUTF8: '1'
           PYTHONIOENCODING: utf-8
         run: |
-          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 21 --out dist --model "probe-models/gemma2.gguf"
+          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 22 --out dist --model "probe-models/gemma2.gguf" --piper-engine "piper-engine"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload test candidate (CI artifact, not published)
         uses: actions/upload-artifact@v4
         with:
-          name: lumi-021-prova-candidate
+          name: lumi-022-prova-candidate
           path: |
-            dist/Lumi-021-PROVA.zip
-            dist/Lumi-021-PROVA.json
+            dist/Lumi-022-PROVA.zip
+            dist/Lumi-022-PROVA.json
           if-no-files-found: error
 
       - name: Archive only unverified research candidate
