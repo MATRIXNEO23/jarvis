@@ -1268,3 +1268,6 @@ Dal `koboldcpp.py` ufficiale fissato emerge che Windows apre prima il forwarder 
 
 ## 2026-11-09 — F5N.3: separare build verde da gate ABI rosso
 Due workflow (42557729052, 42557848456) hanno prodotto le quattro DLL e validato il bundle, ma sono falliti al gate PE per nomi richiesti non trovati nella DLL comune. Non ammorbidire la barriera né affermare che l'ABI è compatibile; prima leggere i nomi PE effettivi. Aggiunta diagnostica fail-closed con conteggio/primi simboli, run 42559582501. Rischio possibile di export mancanti nella nuova disposizione split DLL. Nessun cambiamento alla chat Jarvis o DLL 014.
+
+## 2026-11-09 — F5N.3: non interpretare un parser troncato come ABI assente
+Il gate statico segnala cinque exports mancanti, ma i log enumeravano esattamente 8192 simboli, coincidenti col limite predefinito del parser pefile `0x2000`. Quindi non modificare upstream/linker o disabilitare il controllo. Passare cap esplicito a `PE(max_symbol_exports=65536)` e verificare `NumberOfNames`; testare in CI Windows. La diagnosi del parser non prova ancora la presenza di tutte le funzioni: attendere esito. Nessuna modifica Jarvis 014.
