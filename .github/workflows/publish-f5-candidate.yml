@@ -1,0 +1,71 @@
+name: "Publish verified F5 test candidate 015 to Download"
+on:
+  push:
+    branches: [feature/jarvis-kobold-f5-profiles-20261109]
+    paths: ['tools/publish_request_015.json']
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read publish request
+        id: req
+        run: |
+          echo "run_id=$(jq -r .run_id tools/publish_request_015.json)" >> "$GITHUB_OUTPUT"
+          echo "artifact=$(jq -r .artifact tools/publish_request_015.json)" >> "$GITHUB_OUTPUT"
+      - name: Download the exact verified artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.req.outputs.artifact }}
+          run-id: ${{ steps.req.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: candidate
+      - name: Verify bytes and SHA-256 against request and build report
+        run: |
+          set -euo pipefail
+          f=$(jq -r .file tools/publish_request_015.json)
+          test "$(stat -c %s candidate/$f)" = "$(jq -r .bytes tools/publish_request_015.json)"
+          test "$(sha256sum candidate/$f | cut -d' ' -f1)" = "$(jq -r .sha256 tools/publish_request_015.json)"
+          test "$(jq -r .verification.boot candidate/Jarvis-015-PROVA.json)" != "null"
+          test "$(jq -r .verification.initializer candidate/Jarvis-015-PROVA.json)" = "true"
+      - name: Publish on top of Download in main (014 and older untouched)
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add publish-main origin/main
+          cd publish-main
+          test ! -e Download/Jarvis-015-PROVA.zip
+          cp ../candidate/Jarvis-015-PROVA.zip Download/
+          sha=$(jq -r .sha256 ../tools/publish_request_015.json)
+          run=$(jq -r .run_id ../tools/publish_request_015.json)
+          {
+            echo "## Build 015 PROVA — motore KoboldCpp integrato (Gemma 2, Qwen2.5, Qwen3)"
+            echo
+            echo "[Scarica Jarvis-015-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-015-PROVA.zip)"
+            echo
+            echo "Build di prova, non stabile: 014 resta la versione di riferimento. Nuovo motore KoboldCpp 6d2fedf no-AVX2 compilato con w64devkit, caricato dentro Jarvis senza server. La famiglia del modello (Gemma 2, Qwen2.5, Qwen3) è riconosciuta dal GGUF. Cambio di modello, contesto o thread: salva e riavvia Jarvis. Stesso profilo dati della 014 (impostazioni, chat e memoria conservate). Estrai in una cartella NUOVA. Verificati in CI Windows: ZIP estratto, avvio/chiusura UI, risposta Gemma dal motore incluso; prove Gemma/Qwen2.5/Qwen3 sul bundle. Velocità, RAM, voce e account sul Pavilion ancora da collaudare."
+            echo
+            echo "[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/$run). SHA-256: \`$sha\`."
+            echo
+            cat Download/README.md
+          } > /tmp/README.md
+          mv /tmp/README.md Download/README.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Download/Jarvis-015-PROVA.zip Download/README.md
+          git commit -m "Publish Jarvis 015 PROVA test candidate (verified run $run)"
+          git push origin HEAD:main
+      - name: Re-download public link and verify
+        run: |
+          set -euo pipefail
+          sleep 20
+          curl -fsSL -o check.zip https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-015-PROVA.zip
+          test "$(sha256sum check.zip | cut -d' ' -f1)" = "$(jq -r .sha256 tools/publish_request_015.json)"
+          curl -fsSL https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/README.md | head -1 | grep -F "Build 015 PROVA"
+          echo PUBLIC_DOWNLOAD_VERIFIED
