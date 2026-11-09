@@ -1238,3 +1238,6 @@ Un tentativo di serializzare insieme jarvis.py e tutti i documenti di continuit�
 
 ## 2026-11-09 — F5.3b.2: failure della suite e fix del test
 I workflow Windows 42543240218 (3.11/3.12) hanno riscontrato cinque errori tutti nel nuovo test controller: il mock diceva `is_running=True` prima dell'avvio, causando blocco corretto del gate. Corretto soltanto fixture con stato `False` prima di `start`; mantenuto il rifiuto di sovrapporre processi. Nuovo esito CI da verificare. Separatamente i log evidenziano eccezione Tk `window_chrome.py:158` che non è tra i cinque errori finali e richiede audit indipendente.
+
+## 2026-11-09 — F5.3b.3: una sola app e famiglia Qwen esplicita
+Utente conferma **non due programmi separati**: una sola UI Jarvis, processo del motore eventualmente figlio e invisibile gestito dall'app. La prova Python F5.3b.2 è verde dopo correzioni alle simulazioni (`6a693e23...`, run 42544915058), non dimostra rendimento o GGUF reale. Serializer separato Qwen2.5 Instruct text-only testabile con fixture; NON riusarlo automaticamente con Qwen3. Nessun avvio autonomo del motore né modifica della memoria. I test e metadata modello reale restano gate prima di integrare.
