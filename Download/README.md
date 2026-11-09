@@ -1,3 +1,11 @@
+## Build 022 PROVA — voce inclusa senza installazioni, avatar più naturale
+
+[Scarica Lumi-022-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-022-PROVA.zip)
+
+Come la 021, più: motore voce Piper incluso in Lumi (cartella voce_engine, solo italiano, senza installare nulla e senza numpy): basta premere «Scarica Paola» o «Scarica Serena». Avatar: la testa ruota piano a destra e sinistra (niente tremolio), le ciocche seguono il movimento e si assestano, respiro lento di spalle e petto, bocca a 5 aperture più morbida. Prompt un po' più leggero (cronologia 200 token, ultimo scambio sempre intero). Stesso profilo dati. Verificati in CI Windows: 1176 test, voce con il motore incluso sul pacchetto estratto (seconda frase 0,19 s), streaming, avvio UI e risposta del motore. Pavilion da collaudare (voce senza AVX2, resa dell'avatar).
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42708117898). SHA-256: `612e173dfb5717500be18fce7efe53f291f63ad4eae2103ea472fd897957c3e8`.
+
 ## Build 021 PROVA — avatar a figura intera, risposta in streaming, voce naturale veloce
 
 [Scarica Lumi-021-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-021-PROVA.zip)
