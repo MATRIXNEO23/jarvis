@@ -96,3 +96,6 @@ Documento autorevole per nuova direzione: [ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md](A
 
 ## F5N.1 — Audit C++ e strumento ABI (9 novembre 2026)
 Dettagli e risultati: [F5N DLL audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). Nell'upstream C++ `expose.cpp` non risulta export unload; `gpttype_adapter.cpp` contiene allocazione nel percorso di `gpttype_load_model` che il commento stesso definisce perdita di memoria. Aggiunto solo `tools/f5n_abi_audit.py` con test statici `tests/test_f5n_abi_audit.py`, nessun caricamento DLL o modifica runtime. Prossimo gate: CI Windows, localizzazione integrale del lifecycle C++ e confronto versioni/checksum prima di prototipare una DLL derivata. F4.2 Pavilion non eseguita; ZIP014 conservata.
+
+## F5N.2 — Workflow DLL nativa Windows (9 novembre 2026)
+Preparati `.github/workflows/f5n-koboldcpp-native-dll-windows.yml` a dispatch manuale e `tools/f5n_bundle_audit.py` con test. Commit ufficiale fissato `6d2fedf...`; target noavx2 su MinGW64 e controlli delle **quattro** DLL richieste dal nuovo schema split upstream. Non avviato manualmente, build non verificata. Non sostituire la DLL di Jarvis 014, non dichiarare parità o compatibilità. [Rapporto](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
