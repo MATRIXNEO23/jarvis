@@ -1,3 +1,6 @@
+## F5N.2 — Corretta propagazione macro Windows al compilatore (9 novembre 2026)
+Causa reale del fallimento run 42554779032: Makefile KoboldCpp azzera CFLAGS/CXXFLAGS di ambiente. Commit `ca9f43a...` applica `_WIN32_WINNT=0x0602` e `WINVER=0x0602` nei comandi `CC`/`CXX` passati a `make` senza alterare i flag del motore o i sorgenti upstream. Nuovo run Windows F5N.2 42555705472 in corso; non dichiarare DLL pronta. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 intatta.
+
 ## F5N.2 — Fix compilazione Windows (9 novembre 2026)
 Prime build F5N.2 Windows fallite su `otherarch/llama-util.h` per tipi `WIN32_MEMORY_RANGE_ENTRY` mancanti nella toolchain MinGW (run 42550927869). Correzione esclusivamente al workflow: `-D_WIN32_WINNT=0x0602 -DWINVER=0x0602` per compatibilità API Windows 8+/Windows 10, commit `7a02769a...`. Nuova build run 42551929989 in corso alla verifica. Suite generale Jarvis, diagnosi e tokenizer **verdi** nell'ultimo ciclo concluso. [Log/decisioni tecniche](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). Nessuna sostituzione DLL o ZIP.
 
