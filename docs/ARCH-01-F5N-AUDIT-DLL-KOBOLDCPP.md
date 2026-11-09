@@ -41,3 +41,20 @@ Upstream esaminato: `LostRuins/koboldcpp`, branch `concedo`, commit di riferimen
 
 ## Regole di sicurezza e rollback
 Nessuna modifica a `main`, DLL bundled, file di configurazione personali, Second Brain, storico chat o ZIP014 durante l'audit. Nessun KoboldCpp standalone da richiedere all'utente come prodotto. Il laboratorio subprocess `owned_kobold_lab_f5.py` resta **fuori** dalla strada principale. Il controllo mock Windows misura solo il software di test; non certifica prestazioni, qualità Qwen, RAM liberata o parità con KoboldCpp ufficiale. Non distribuire DLL senza licenza e sorgenti corrispondenti gestiti correttamente.
+
+## F5N.1 — Evidenze C++ e audit riproducibile (9 novembre 2026)
+**Sorgente C++ effettivamente consultato**, upstream commit `6d2fedf8624e5f05926af3191f9efdcb13c4133c`:
+- `kcpp_src/expose.cpp`: definisce `load_model(const load_model_inputs)`, `get_chat_template()`, e invoca `gpttype_load_model`; non risulta una definizione `unload_model` in questo file.
+- `kcpp_src/model_adapter.h`: dichiara `gpttype_load_model` e `gpttype_generate_abort`, non una corrispondente funzione esplicita di deallocazione generale.
+- `kcpp_src/gpttype_adapter.cpp`: **riscontro rilevante**: dentro `gpttype_load_model` compare `kcpp_data = new kcpp_params(); //allocate on heap to avoid linux segfault. yes this leaks memory.` Il codice commenta esplicitamente una perdita di memoria per allocazione. Sono presenti anche usi di `llama_free` e `llama_model_free` legati a contesti secondari/speculative, ma questi non dimostrano il teardown integrale del modello principale. Altri stati del motore sono statici/globali (per esempio `llama_ctx_v4`). Prima di implementare hot-switch serve una verifica delle dipendenze e ownership di **tutte** le risorse, non basta aggiungere una semplice funzione esportata.
+- La mancanza di `unload_model` nell'export consultato non dimostra assenza di qualunque meccanismo privato di swap: dimostra soltanto che non abbiamo identificato un'ABI riutilizzabile con garanzia in-process.
+
+**Nuovo strumento:** `tools/f5n_abi_audit.py` inventaria offline il contenuto di `expose.cpp`, i riferimenti `handle.*` in `koboldcpp.py`, e produce SHA-256 e dimensione della DLL esplicitamente fornita dal chiamante. Non esegue il Python upstream, non carica la DLL, non lancia processi/modelli e non fa rete; segnala chiaramente che è una ricerca statica, non una prova dell'export PE o dell'assenza di leak. Aggiunto `tests/test_f5n_abi_audit.py` con fixture finte per evitare di confondere commenti con definizioni reali. I test Windows sono da verificare.
+
+**Per riprodurre su checkout upstream fissato**:
+```powershell
+python -m tools.f5n_abi_audit --expose-cpp "C:\\koboldcpp\\kcpp_src\\expose.cpp" --kobold-python "C:\\koboldcpp\\koboldcpp.py" --dll "C:\\Jarvis\\native_engine\\koboldcpp_noavx2.dll"
+```
+Questi percorsi sono esempi, non assumere installazioni reali. Per risultati autorevoli fissare **SHA esatto dei tre file sorgente** e versione/checksum della DLL. L'analisi automatica non modifica Jarvis né prova il consumo RAM sul Pavilion.
+
+**Decisione operativa:** non modificare la DLL per inserire un `unload_model` improvvisato; prima costruire matrice completa delle allocazioni e dei distruttori con test C++ Windows e una prova reale in memoria. Il rischio di corrompere il processo e perdere la sessione prevale sul vantaggio di uno switch prematuro. Un solo Jarvis, nessun backend server come prodotto. ZIP014 e dati invariati.
