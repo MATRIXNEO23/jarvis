@@ -1,3 +1,11 @@
+## Build 015 PROVA — motore KoboldCpp integrato (Gemma 2, Qwen2.5, Qwen3)
+
+[Scarica Jarvis-015-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-015-PROVA.zip)
+
+Build di prova, non stabile: 014 resta la versione di riferimento. Nuovo motore KoboldCpp 6d2fedf no-AVX2 compilato con w64devkit, caricato dentro Jarvis senza server. La famiglia del modello (Gemma 2, Qwen2.5, Qwen3) è riconosciuta dal GGUF. Cambio di modello, contesto o thread: salva e riavvia Jarvis. Stesso profilo dati della 014 (impostazioni, chat e memoria conservate). Estrai in una cartella NUOVA. Verificati in CI Windows: ZIP estratto, avvio/chiusura UI, risposta Gemma dal motore incluso; prove Gemma/Qwen2.5/Qwen3 sul bundle. Velocità, RAM, voce e account sul Pavilion ancora da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42625213859). SHA-256: `c4c04198ce70486dd96f2e3e953e132c68424301211a3e24026a9763a960dbff`.
+
 ## Build 014 — Gemma: conversazione naturale e comandi protetti
 
 [Scarica Jarvis-014.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-014.zip)
