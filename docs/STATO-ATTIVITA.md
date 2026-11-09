@@ -1,3 +1,6 @@
+## ARCH-01 F5N.1 — Audit ABI nativa riproducibile (9 novembre 2026)
+Verificati sorgenti ufficiali C++ `kcpp_src/expose.cpp`, `model_adapter.h` e `gpttype_adapter.cpp` (commit upstream `6d2fedf...`). Nessuna API `unload_model` in `expose.cpp`; `gpttype_load_model` contiene allocazione `new kcpp_params()` con commento upstream `yes this leaks memory`, perciò non è sicuro ipotizzare uno switch hot mediante sola DLL. Creato `tools/f5n_abi_audit.py` + test `tests/test_f5n_abi_audit.py` (sola lettura/statica); CI Windows pendente. Documento [F5N ABI](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md); ZIP014 e dati invariati.
+
 ## ARCH-01 F5N.0 — Audit integrazione DLL KoboldCpp (9 novembre 2026)
 Confermato percorso approvato: stesso motore ufficiale KoboldCpp da sorgenti tramite DLL nativa integrata, una sola Jarvis, niente server standalone come soluzione. Pubblicata [matrice ABI e piano F5N](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md): già disponibili `load_model`, `generate`, `abort_generate`, prompt Gemma; mancano prova unload, template Qwen dinamici, parità sampler e performance Pavilion. Prima verificare C++ upstream + DLL corrispondente e build Windows no-AVX2 riproducibile. ZIP014 invariata; nessun cambio runtime.
 
