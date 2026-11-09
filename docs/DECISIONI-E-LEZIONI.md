@@ -1226,3 +1226,6 @@ Un tentativo di serializzare insieme jarvis.py e tutti i documenti di continuit�
 
 ## 2026-11-09 — ARCH-01 F5.2: editor in anteprima prima del vero cambio modello
 **Decisione:** piccolo pulsante lazy import in Impostazioni/GPT e memoria richiama un dialog di prova che valida bozze Gemma/Qwen in memoria e non scrive né applica alcun profilo. Salvataggio permanente, selezione backend effettiva e compatibilità Qwen richiedono ulteriori prove e verranno implementati in una fase successiva con rollback. Il pannello Gemma esistente rimane invariato. **Verifiche:** test unitari aggiunti; esito CI e prova GUI Windows reali ancora pendenti. Nessuna release nuova; ZIP014 inalterato.
+
+## 2026-11-09 — ARCH-01 F5.3a: blocco hot-switch finché manca unload garantito
+**Osservazione dal codice:** `NativeChatAdapter.stop()` usa arresto cooperativo; `NativeGemmaBridge` non dimostra release del GGUF. La sessione formatta Gemma, non Qwen. **Scelta:** costruire solo gate testabile, senza connetterlo alla chat; negare transizione finché busy/release/template/startup non risultino confermati. In caso di impossibilità a scaricare la DLL in sicurezza, valutare cambio a riavvio separato e conservazione DB anziché hot-switch. **Stato:** nuova implementazione e test mock pubblicati su PR #67; CI Windows ancora da verificare, nessuna build; 014 resta rollback.
