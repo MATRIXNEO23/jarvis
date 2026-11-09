@@ -1271,3 +1271,6 @@ Due workflow (42557729052, 42557848456) hanno prodotto le quattro DLL e validato
 
 ## 2026-11-09 — F5N.3: non interpretare un parser troncato come ABI assente
 Il gate statico segnala cinque exports mancanti, ma i log enumeravano esattamente 8192 simboli, coincidenti col limite predefinito del parser pefile `0x2000`. Quindi non modificare upstream/linker o disabilitare il controllo. Passare cap esplicito a `PE(max_symbol_exports=65536)` e verificare `NumberOfNames`; testare in CI Windows. La diagnosi del parser non prova ancora la presenza di tutte le funzioni: attendere esito. Nessuna modifica Jarvis 014.
+
+## 2026-11-09 — Un test fallito in Windows non prova difetto del motore
+Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perché la fixture normalizzava il percorso con `replace` su due separatori consecutivi. Corretta esclusivamente la fixture usando `chr(92)`, mantenendo invariati i gate PE di produzione. Workflow unit e build devono essere controllati separatamente. Prima di modificare runtime o linker leggere sempre traceback esatto e non interpretare warnings laterali come root cause.
