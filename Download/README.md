@@ -1,3 +1,11 @@
+## Build 021 PROVA — avatar a figura intera, risposta in streaming, voce naturale veloce
+
+[Scarica Lumi-021-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-021-PROVA.zip)
+
+Come la 020, più: LUMI a figura intera (capelli e busto escono dal cerchio) con testa che oscilla piano; la bocca si muove solo quando l'audio suona davvero. La risposta compare mentre il modello la scrive e la voce parte dalla prima frase completa. Voce Paola/Serena: modello caricato una sola volta e frase successiva preparata mentre suona la precedente (in CI 0,17 s per frase invece di 5,5 s). Stesso profilo dati. Verificati in CI Windows: 1171 test, streaming reale di Gemma, ZIP estratto, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42701561517). SHA-256: `e89bbdf8f25fe8c1baa56f5583e6b6c955cb1ba61e6daf7fca97dc52fa588927`.
+
 ## Build 020 PROVA — avatar LUMI animato, voci naturali in un file ZIP ciascuna
 
 [Scarica Lumi-020-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-020-PROVA.zip)
