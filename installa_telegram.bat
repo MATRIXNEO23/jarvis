@@ -4,9 +4,9 @@ cd /d "%~dp0"
 echo Installazione facoltativa Telegram - nessuna API a pagamento.
 where py >nul 2>&1
 if %errorlevel%==0 (
-  py -3 -m pip install "Telethon>=1.36,<2"
+  py -3 -m pip install --user "Telethon>=1.36,<2"
 ) else (
-  python -m pip install "Telethon>=1.36,<2"
+  python -m pip install --user "Telethon>=1.36,<2"
 )
 if errorlevel 1 (
   echo Installazione Telethon non riuscita.

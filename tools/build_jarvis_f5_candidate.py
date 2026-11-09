@@ -68,7 +68,8 @@ def build(engine_dir, number, out_dir, piper_dir=None):
     for p in git_files():
         if include(p) and p.is_file() and not p.is_symlink():
             data = p.read_bytes()
-            if p.as_posix() == "avvia_lumi.bat":
+            if p.as_posix() in ("avvia_lumi.bat", "configura_telegram.bat"):
+                # Launcher and Telegram setup must use the SAME data profile.
                 text = data.decode("utf-8").replace("Jarvis-AccessoFile-Trial", "Jarvis-Gemma-Trial")
                 data = text.replace("LUMI // ACCESSO FILE", f"LUMI // {label}").encode("utf-8")
             entries[p.as_posix()] = data
@@ -162,6 +163,7 @@ def verify(archive, model, tools_root):
             assert hashlib.sha256((package / name).read_bytes()).hexdigest() == expected, name
         assert not (package / "tests").exists() and not (package / "tools").exists()
         assert "Jarvis-Gemma-Trial" in (package / "avvia_lumi.bat").read_text(encoding="utf-8")
+        assert "Jarvis-Gemma-Trial" in (package / "configura_telegram.bat").read_text(encoding="utf-8")
         profile = temp / "isolated-profile"
         report["imports"] = run([sys.executable, "-I", "-c",
             "import sys;sys.path.insert(0,'.');import jarvis,local_engine;"

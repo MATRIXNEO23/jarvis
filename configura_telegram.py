@@ -86,7 +86,10 @@ async def configure():
         settings["telegram_contacts"]=[]
         settings["telegram_enabled"]=False
         save_settings(settings)
+        from telegram_security import credential_path, load_credentials
+        load_credentials()          # rilettura: conferma che Lumi potrà usarle
         print("\nAccesso Telegram salvato con cifratura Windows DPAPI.")
+        print("File: "+str(credential_path()))
         print("Apri Lumi > Impostazioni > Gestisci contatti Telegram.")
         print("Carica i contatti reali e selezionali con la spunta.")
         print("Le risposte automatiche restano SPENTE. Nessun messaggio inviato.")
