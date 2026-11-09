@@ -1,3 +1,6 @@
+## ARCH-01 F5N.2 — Build DLL KoboldCpp Windows fissata (9 novembre 2026)
+Preparato workflow manuale `.github/workflows/f5n-koboldcpp-native-dll-windows.yml` con upstream pinned `6d2fedf...` e target MinGW64 no-AVX2. L'upstream costruisce **più DLL** (common/default/noavx2/forwarder): non sostituire soltanto la DLL vecchia. Aggiunti `tools/f5n_bundle_audit.py` e `tests/test_f5n_bundle_audit.py` per manifest statico; workflow build **non ancora avviato**. Test Windows dei nuovi tool da confermare. [Audit e piano](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). Nessuna modifica a runtime, main, zip o dati.
+
 ## ARCH-01 F5N.1 — Audit ABI nativa riproducibile (9 novembre 2026)
 Verificati sorgenti ufficiali C++ `kcpp_src/expose.cpp`, `model_adapter.h` e `gpttype_adapter.cpp` (commit upstream `6d2fedf...`). Nessuna API `unload_model` in `expose.cpp`; `gpttype_load_model` contiene allocazione `new kcpp_params()` con commento upstream `yes this leaks memory`, perciò non è sicuro ipotizzare uno switch hot mediante sola DLL. Creato `tools/f5n_abi_audit.py` + test `tests/test_f5n_abi_audit.py` (sola lettura/statica); CI Windows pendente. Documento [F5N ABI](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md); ZIP014 e dati invariati.
 
