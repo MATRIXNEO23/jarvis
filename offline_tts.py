@@ -143,7 +143,8 @@ def installed_voices() -> list[str]:
     windows = [name for name in data if isinstance(name, str) and name.strip()][:100]
     # Downloaded natural voices (Piper) first; Windows voices stay available.
     from piper_voice import installed_piper_voices
-    return installed_piper_voices() + windows
+    from edge_voice import installed_edge_voices
+    return installed_piper_voices() + installed_edge_voices() + windows
 
 
 _EMOJI = re.compile(
@@ -185,6 +186,7 @@ class OfflineSpeaker:
         self.effect = 0.0
         self.on_envelope: Callable[[list], None] | None = None
         self._piper_speaker = None
+        self._edge_speaker = None
 
     def _attach_process(self, process) -> bool:
         with self._process_lock:
@@ -272,6 +274,22 @@ class OfflineSpeaker:
                 break
             self._busy.set()
             try:
+                import edge_voice
+                edge_key = edge_voice.key_from_label(voice)
+                if edge_key is not None:
+                    try:
+                        extra = {}
+                        upcoming = self._peek_next(voice)
+                        if upcoming:
+                            extra["upcoming"] = upcoming
+                        speaker = self._edge_speaker or edge_voice.speak_with_edge
+                        speaker(text, edge_key, on_envelope=self.on_envelope, **extra)
+                        continue
+                    except edge_voice.EdgeVoiceError as exc:
+                        if self._notify_error and not self._closed.is_set():
+                            self._notify_error("Voce Edge non disponibile (serve Internet), uso "
+                                               "la voce Windows. " + str(exc)[:160])
+                        voice = ""
                 from piper_voice import PiperVoiceError, key_from_label, speak_with_piper
                 piper_key = key_from_label(voice)
                 if piper_key is not None:
@@ -329,3 +347,6 @@ class OfflineSpeaker:
         from piper_voice import shutdown_workers, stop_playback
         stop_playback()
         shutdown_workers()
+        import edge_voice
+        edge_voice.stop_playback()
+        edge_voice.shutdown_worker()

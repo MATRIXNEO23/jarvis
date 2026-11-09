@@ -384,7 +384,9 @@ def main() -> None:
         "Paola e Serena sono voci Piper scaricate dal repository Lumi con verifica. "
         "Serena: it_IT-serena-high by Marco Baccarani (Committa), CC BY 4.0. "
         "Il motore voce è già incluso in Lumi (cartella voce_engine): basta scaricare la voce. "
-        "Se non funziona su questo PC si usa la voce di Windows.")
+        "Se non funziona su questo PC si usa la voce di Windows. "
+        "Voci Edge (Isabella, Elsa, Diego, Giuseppe): gratuite ma ONLINE, il testo va al "
+        "servizio Microsoft; si attivano con installa_voce_edge.bat.")
               ).pack(anchor="w", pady=(4, 0))
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
@@ -2726,8 +2728,9 @@ def main() -> None:
                 output_queue.put(("tts_status", "Voce " + LABELS[key]
                                   + " scaricata e verificata. Selezionala nel menu Voce."))
                 output_queue.put(("tts_voices", installed_voices()))
-            except (OSError, ValueError, PiperVoiceError) as exc:
-                output_queue.put(("tts_error", "Download voce non riuscito: " + str(exc)[:140]))
+            except Exception as exc:   # ogni errore arriva all'interfaccia
+                output_queue.put(("tts_error", "Download voce non riuscito: "
+                                  + (str(exc) or type(exc).__name__)[:140]))
             finally:
                 output_queue.put(("tts_download_done", None))
 
