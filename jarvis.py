@@ -197,6 +197,18 @@ def main() -> None:
     ttk.Button(native_settings_box, text="Configura Gemma locale...",
                command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
 
+    # F5 experimental preview: deliberately NOT connected to the active model.
+    def open_multimodel_f5_preview():
+        try:
+            from local_model.multimodel_ui_f5 import MultiModelSettingsF5Window
+            MultiModelSettingsF5Window(settings_window)
+        except (OSError, ValueError, RuntimeError, ImportError) as exc:
+            messagebox.showerror("Jarvis / Multimodello F5", str(exc),
+                                 parent=settings_window)
+
+    ttk.Button(native_settings_box, text="Anteprima multimodello Gemma / Qwen...",
+               command=open_multimodel_f5_preview).pack(anchor="w", padx=8, pady=6)
+
     def open_memory_preferences():
         try:
             from local_model.memory_ui import MemoryPreferencesWindow
