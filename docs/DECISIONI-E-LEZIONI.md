@@ -1241,3 +1241,6 @@ I workflow Windows 42543240218 (3.11/3.12) hanno riscontrato cinque errori tutti
 
 ## 2026-11-09 — F5.3b.3: una sola app e famiglia Qwen esplicita
 Utente conferma **non due programmi separati**: una sola UI Jarvis, processo del motore eventualmente figlio e invisibile gestito dall'app. La prova Python F5.3b.2 è verde dopo correzioni alle simulazioni (`6a693e23...`, run 42544915058), non dimostra rendimento o GGUF reale. Serializer separato Qwen2.5 Instruct text-only testabile con fixture; NON riusarlo automaticamente con Qwen3. Nessun avvio autonomo del motore né modifica della memoria. I test e metadata modello reale restano gate prima di integrare.
+
+## 2026-11-09 — Rettifica F5: equivalenza KoboldCpp dalla sorgente, non server esterno
+Interpretazione precedente non aderente: l'utente non chiede un frontend Jarvis del KoboldCpp standalone. Richiede le stesse funzioni del motore ufficiale tramite integrazione nativa in Jarvis, eventualmente DLL ricompilata/patch minima mantenuta allineata a upstream. Stop alla promozione del prototipo subprocess/server a soluzione principale; codice laboratorio isolato soltanto. Fare audit ABI e sorgente upstream, mappatura impostazioni e template, test Windows no AVX2, prestazioni Pavilion e verifica della licenza AGPL/attribuzioni prima di affermare parità o pubblicare.
