@@ -1,10 +1,10 @@
 {
-  "run_id": 42645704397,
-  "artifact": "jarvis-016-prova-candidate",
-  "file": "Jarvis-016-PROVA.zip",
-  "bytes": 14623505,
-  "sha256": "1b68e8c0f64bf7659dc5648255acb6a3fb349e373d3306ef2a87a2cb046e88da",
-  "source_commit": "af9e0c9",
-  "title": "Build 016 PROVA — chat stile ChatGPT, cronologia completa, prompt più leggero",
-  "description": "Build di prova sopra la 015 (014 resta la stabile). Chat locali con elenco a sinistra apribile/chiudibile (☰), Nuova chat, titolo automatico dalla prima domanda e cronologia completa visibile anche dopo il riavvio. Le domande scritte risultano tue (TU) e non più Gemma. Il catalogo azioni arriva al modello solo se la frase sembra un comando: chat semplice con prompt più corto. Corretti: cronologia di una chat ridotta dopo l'uso di un'altra, salvataggio chat fallito ora ritentato, cattura Diagnostica prompt non persa su errore. Telegram: se la risposta locale fallisce la console mostra la causa esatta. Stesso profilo dati, estrai in una cartella NUOVA, cambio modello/contesto/thread con riavvio. Verificati in CI Windows: 1141 test, ZIP estratto, avvio UI e risposta del motore incluso. Pavilion, voce e Telegram reale da collaudare."
+  "run_id": 42655550438,
+  "artifact": "jarvis-017-prova-candidate",
+  "file": "Jarvis-017-PROVA.zip",
+  "bytes": 14623773,
+  "sha256": "0325874986b00d2f7a228a1d53a0883245e808f8e275d938f94b605b204fa514",
+  "source_commit": "017",
+  "title": "Build 017 PROVA — risposte Telegram locali corrette",
+  "description": "Come la 016, più la correzione Telegram: il prompt della risposta automatica era misurato in caratteri invece che in token, e con contesto piccolo Jarvis rinunciava prima di chiamare il modello (ValueError: Contesto Gemma insufficiente). Ora usa il tokenizer reale del modello. Estrai in una cartella NUOVA; 014 resta la stabile. Verificati in CI Windows: test unitari, ZIP estratto, avvio UI e risposta del motore incluso. Telegram reale da collaudare sul Pavilion."
 }
