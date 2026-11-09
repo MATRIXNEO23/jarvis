@@ -1259,3 +1259,6 @@ Il Makefile ufficiale al commit `6d2fedf...` usa DLL comune, variante default, n
 
 ## 2026-11-09 — F5N.2: toolchain MinGW e Win8+ SDK
 La build upstream fissata fallisce nella compilazione di `gpttype_adapter_default.o`: tipi `PWIN32_MEMORY_RANGE_ENTRY` e `WIN32_MEMORY_RANGE_ENTRY` non dichiarati, non regressione Jarvis. Tentato fix nel solo workflow `CFLAGS`/`CXXFLAGS` con `_WIN32_WINNT=0x0602` e `WINVER=0x0602`, senza cambiare sorgente ufficiale o DLL distribuita. CI nuova da verificare; non dichiarare compilazione riuscita senza esito.
+
+## 2026-11-09 — F5N.2: il Makefile azzera le variabili di ambiente
+Le variabili `CFLAGS` e `CXXFLAGS` esportate dal workflow non funzionavano: Makefile upstream le reimposta con `=`, quindi nessuna macro Win8 raggiungeva `g++`. Correzione circoscritta: specificare i wrapper `CC`/`CXX` come argomenti `make` con `-D_WIN32_WINNT=0x0602 -DWINVER=0x0602`; si conservano i flag upstream (inclusi no-AVX2), non si modifica il motore. Attendere nuova prova CI Windows run 42555705472. Non confondere test Jarvis verdi con build DLL riuscita.
