@@ -248,8 +248,8 @@ class AvatarFace:
 
         La curva arriva un istante prima che parta il suono (dopo la sintesi),
         quindi la bocca non si muove mentre la voce viene ancora preparata.
-        Con la voce Windows non c'e' curva: la bocca resta chiusa, invece di
-        muoversi fuori tempo. `speaking` resta solo per compatibilita'.
+        Anche la voce Windows ora passa da un file WAV con la sua curva
+        (offline_tts). `speaking` resta solo per compatibilita'.
         """
         raw = LIPSYNC.level(now) or 0.0
         # Apertura rapida, chiusura un po' piu' lenta: niente sfarfallio.

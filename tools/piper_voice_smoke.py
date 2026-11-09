@@ -41,3 +41,15 @@ with tempfile.TemporaryDirectory() as temp:
     assert out["seconds_audio"] > 1.0 and len(envelope) > 10, out
     assert out["persistent_worker"], out
     print("PIPER_VOICE_SMOKE_OK")
+
+# Windows voice (SAPI) to WAV + envelope: the avatar's mouth follows it too.
+import offline_tts  # noqa: E402
+speaker = offline_tts.OfflineSpeaker()
+sapi_env = []
+speaker.on_envelope = sapi_env.extend
+played = []
+piper_voice.play_wav = played.append
+speaker._speak_windows_with_lipsync("Prova della voce di Windows.", "")
+print(json.dumps({"sapi_envelope_frames": len(sapi_env), "sapi_played": len(played)}))
+assert len(sapi_env) > 10 and played, "SAPI lip sync not produced"
+print("SAPI_LIPSYNC_SMOKE_OK")

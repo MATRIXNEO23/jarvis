@@ -32,6 +32,12 @@ try {
         if ($request.voice) { $synth.SelectVoice([string]$request.voice) }
         $synth.Rate = 0
         $synth.Speak([string]$request.text)
+    } elseif ($request.mode -eq 'file') {
+        if ($request.voice) { $synth.SelectVoice([string]$request.voice) }
+        $synth.Rate = 0
+        $synth.SetOutputToWaveFile([string]$request.path)
+        $synth.Speak([string]$request.text)
+        $synth.SetOutputToNull()
     } else {
         throw 'Unsupported operation'
     }
@@ -229,6 +235,22 @@ class OfflineSpeaker:
                 self._worker.start()
         return True
 
+    def _speak_windows_with_lipsync(self, part: str, voice: str) -> None:
+        from piper_voice import _audio_dir, loudness_envelope, play_wav
+        path = _audio_dir() / f"sapi-{os.getpid()}-{threading.get_ident()}.wav"
+        try:
+            _invoke({"mode": "file", "text": part, "voice": voice, "path": str(path)},
+                    timeout=90, owner=self)
+            if self._closed.is_set() or not path.is_file():
+                return
+            self.on_envelope(loudness_envelope(path))
+            play_wav(path)
+        finally:
+            try:
+                path.unlink()
+            except OSError:
+                pass
+
     def _peek_next(self, voice: str) -> str | None:
         """Next queued sentence with the same voice: synthesized while this one plays."""
         with self._messages.mutex:
@@ -270,6 +292,15 @@ class OfflineSpeaker:
                 for part in _speech_chunks(text):
                     if self._closed.is_set():
                         break
+                    if self._runner is None and self.on_envelope is not None:
+                        # Voce Windows su file, poi riproduzione con la curva
+                        # del volume: la bocca dell'avatar segue anche questa voce.
+                        try:
+                            self._speak_windows_with_lipsync(part, voice)
+                            continue
+                        except (OSError, ValueError, subprocess.TimeoutExpired, EOFError):
+                            if self._closed.is_set():
+                                break   # altrimenti si ripiega sulla voce diretta
                     payload = {"mode": "speak", "text": part, "voice": voice}
                     if self._runner is None:
                         _invoke(payload, timeout=90, owner=self)

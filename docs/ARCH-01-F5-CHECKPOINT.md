@@ -184,3 +184,4 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 - Voce: emoji, asterischi e simboli markdown non vengono più letti (`offline_tts.speech_text`); righe di elenco diventano pause.
 - Avatar: 13 pose di rotazione (prima 7), bocca a 8 aperture, animazione su timer proprio a 25 fps (prima legata ai 110 ms del HUD: causa del labiale a scatti), avatar più grande (altezza r*1.3, immagini 190/290 px), capelli a 3 livelli di ritardo; finestra nascosta = animazione quasi ferma. Asset ~8 MB.
 - Antivirus: l'utente riferisce un «virus rilevato» sulla 022; file non identificato (ipotesi: piper.exe non firmato). Da verificare con il nome del file segnalato.
+- Bocca ferma con la voce Windows (riscontro utente): ora SAPI scrive un WAV (`mode: file`), Lumi ne calcola la curva e lo riproduce: labiale sincronizzato anche con le voci Windows; se il WAV fallisce si torna alla voce diretta. Prova CI aggiunta nella prova voce.
