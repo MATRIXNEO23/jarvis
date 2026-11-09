@@ -51,15 +51,30 @@ def dependency_diagnostics(paths):
     if compiler:
         search_dirs.append(Path(compiler).parent)
     result = {"compiler": compiler, "search_dirs": [str(p) for p in search_dirs],
-              "imports": {}, "not_found_in_checked_dirs": {}}
+              "imports": {}, "not_found_in_checked_dirs": {},
+              "imported_symbols": {}, "backend_exports": [],
+              "unresolved_backend_imports": []}
     for key in ("route", "common", "backend"):
         pe = pefile.PE(str(paths[key]), fast_load=True)
         try:
             pe.parse_data_directories(directories=[
-                pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_IMPORT"]])
+                pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_IMPORT"],
+                pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_EXPORT"]])
             names = sorted({entry.dll.decode("ascii", "replace")
                             for entry in getattr(pe, "DIRECTORY_ENTRY_IMPORT", ())
                             if entry.dll})
+            if key == "common":
+                result["imported_symbols"]["koboldcpp_backend.dll"] = sorted({
+                    (imp.name.decode("ascii", "replace") if imp.name else "#" + str(imp.ordinal))
+                    for entry in getattr(pe, "DIRECTORY_ENTRY_IMPORT", ())
+                    if entry.dll and entry.dll.lower() == b"koboldcpp_backend.dll"
+                    for imp in entry.imports
+                })
+            if key == "route":
+                result["backend_exports"] = sorted({
+                    sym.name.decode("ascii", "replace") if sym.name else "#" + str(sym.ordinal)
+                    for sym in getattr(getattr(pe, "DIRECTORY_ENTRY_EXPORT", None), "symbols", ())
+                })
         finally:
             pe.close()
         result["imports"][key] = names
@@ -70,6 +85,9 @@ def dependency_diagnostics(paths):
             if not name.lower().startswith(("api-ms-", "ext-ms-"))
             and not any((directory / name).is_file() for directory in search_dirs)
         ]
+    result["unresolved_backend_imports"] = sorted(
+        set(result["imported_symbols"].get("koboldcpp_backend.dll", ()))
+        - set(result["backend_exports"]))
     return result
 
 
