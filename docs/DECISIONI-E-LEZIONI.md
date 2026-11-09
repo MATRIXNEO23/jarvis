@@ -1262,3 +1262,6 @@ La build upstream fissata fallisce nella compilazione di `gpttype_adapter_defaul
 
 ## 2026-11-09 — F5N.2: il Makefile azzera le variabili di ambiente
 Le variabili `CFLAGS` e `CXXFLAGS` esportate dal workflow non funzionavano: Makefile upstream le reimposta con `=`, quindi nessuna macro Win8 raggiungeva `g++`. Correzione circoscritta: specificare i wrapper `CC`/`CXX` come argomenti `make` con `-D_WIN32_WINNT=0x0602 -DWINVER=0x0602`; si conservano i flag upstream (inclusi no-AVX2), non si modifica il motore. Attendere nuova prova CI Windows run 42555705472. Non confondere test Jarvis verdi con build DLL riuscita.
+
+## 2026-11-09 — F5N.3: la DLL comune è l'ABI della build split
+Dal `koboldcpp.py` ufficiale fissato emerge che Windows apre prima il forwarder del backend selezionato tramite directory dedicata, poi la DLL comune con l'API ctypes. La vecchia DLL monolitica non può essere sostituita da una singola DLL del bundle nuovo. Aggiunto controllo PE puramente statico con export `load_model/generate/abort_generate/token_count/get_chat_template`, import backend route e prove mock. Le esportazioni non certificano layout ctypes, caricabilità DLL o inferenza; gate bootstrap Windows futuro e prova Pavilion obbligatori. Nessuna modifica runtime o release.
