@@ -27,46 +27,40 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Set up MinGW64 build toolchain
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            git
-            make
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-binutils
+      - name: Set up w64devkit toolchain (same as upstream oldpc release)
+        shell: pwsh
+        run: |
+          # Upstream kcpp-build-release-win-oldpc.yaml at 6d2fedf uses
+          # w64devkit 1.22.0. Its GCC links the C++ runtime statically, so the
+          # bundle needs no libstdc++/libgcc_s/libwinpthread DLLs on the PC.
+          curl -L https://github.com/skeeto/w64devkit/releases/download/v1.22.0/w64devkit-1.22.0.zip --output w64devkit.zip
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Expand-Archive w64devkit.zip -DestinationPath .
+          echo "$(Get-Location)\w64devkit\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
       - name: Clone exact upstream and build isolated DLL bundle
-        shell: msys2 {0}
+        shell: pwsh
         run: |
-          set -euo pipefail
-          trap 'echo "F5N_BUILD_FAIL_LINE=$LINENO EXIT=$?"' ERR
-          echo "F5N_STAGE=clone"
+          $ErrorActionPreference = "Stop"
+          Write-Output "F5N_TOOLCHAIN=$((Get-Command gcc).Source)"
+          gcc --version | Select-Object -First 1
           git clone https://github.com/LostRuins/koboldcpp.git koboldcpp-src
-          cd koboldcpp-src
-          echo "F5N_STAGE=checkout"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Set-Location koboldcpp-src
           git checkout --detach 6d2fedf8624e5f05926af3191f9efdcb13c4133c
-          echo "F5N_STAGE=verify_commit"
-          actual_commit="$(git rev-parse HEAD)"
-          printf 'F5N_UPSTREAM_COMMIT=%s\n' "$actual_commit"
-          if [ "$actual_commit" != "6d2fedf8624e5f05926af3191f9efdcb13c4133c" ]; then
-            echo "F5N_ERROR=unexpected_upstream_commit" >&2
-            exit 1
-          fi
-          echo "F5N_STAGE=submodules"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $actual = git rev-parse HEAD
+          Write-Output "F5N_UPSTREAM_COMMIT=$actual"
+          if ($actual -ne "6d2fedf8624e5f05926af3191f9efdcb13c4133c") { throw "unexpected_upstream_commit" }
           git submodule update --init --recursive
-          echo "F5N_STAGE=compile"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           # The upstream Makefile resets CFLAGS/CXXFLAGS, so environment flags are lost.
           # Set Win8+ target via compiler command while preserving upstream ISA flags.
-          make -j2 koboldcpp_noavx2 LLAMA_PORTABLE=1 LLAMA_NOAVX2=1 \
-            CC='gcc -D_WIN32_WINNT=0x0602 -DWINVER=0x0602' \
-            CXX='g++ -D_WIN32_WINNT=0x0602 -DWINVER=0x0602'
-          test -f koboldcpp_common.dll
-          test -f koboldcpp_default.dll
-          test -f koboldcpp_noavx2.dll
-          test -f backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll
+          make -j2 koboldcpp_noavx2 LLAMA_PORTABLE=1 LLAMA_NOAVX2=1 "CC=gcc -D_WIN32_WINNT=0x0602 -DWINVER=0x0602" "CXX=g++ -D_WIN32_WINNT=0x0602 -DWINVER=0x0602"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($f in "koboldcpp_common.dll","koboldcpp_default.dll","koboldcpp_noavx2.dll","backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll") {
+            if (-not (Test-Path $f)) { throw "missing $f" }
+          }
 
       - name: Inventory artifact manifest (no DLL load or GGUF)
         shell: pwsh

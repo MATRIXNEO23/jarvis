@@ -108,3 +108,10 @@ F5N.3 completata con workflow DLL e suite Windows green sui due ultimi commit. A
 
 ## F5N.4 — Intervento di diagnostica, nessuna pubblicazione (9 novembre 2026)
 Primo run F5N.4 fallito: unit test Windows confronto tra short/long path temporanei; corretto fixture commit `3b563ded`. Loader isolato fallisce `ctypes.CDLL(koboldcpp_common.dll)` o dipendenza, mentre static PE exports è verde: migliorata diagnostica read-only per imports PE e directory candidate commit `ae724dae`. Run verifica Windows 42592363012 (unit), 42592362936 (DLL) in corso. Nessuna modifica app, DLL prod, ZIP 014, Second Brain. Rollback: ripristinare i soli due file F5N.4 ai blob precedenti.
+
+## F5N.4 — Causa WinError 127 e correzione toolchain (Claude, 9 novembre 2026)
+**Evidenze:** run 42595625501 (`cf041b7`): con la cartella del compilatore aggiunta l'errore passa da "module not found" a `WinError 127`. Il log mostra build con GCC 16.2 di MSYS2 (`D:\a\_temp\msys64\mingw64`), mentre `shutil.which("g++.exe")` nello step pwsh restituisce `C:\mingw64\bin` (MinGW preinstallato del runner, diverso): viene caricata una `libstdc++-6.dll` non corrispondente. Run diagnostico Codex 42599791325 (`aad6192`): `unresolved_backend_imports=[]`, quindi esclusa la mancata esportazione dal forwarder.
+**Decisione:** compilare con **w64devkit 1.22.0**, lo stesso toolchain del workflow upstream `kcpp-build-release-win-oldpc.yaml` al commit fissato `6d2fedf`, che produce DLL senza runtime MinGW esterno. Lo smoke non aggiunge più la cartella del compilatore (il Pavilion non la possiede) e rifiuta prima del caricamento un bundle che importa `libstdc++-6/libgcc_s_seh-1/libwinpthread-1`. La diagnostica elenca solo le directory realmente cercate dal loader.
+**Scartato:** puntare lo smoke al runtime MSYS2 corretto: verde in CI ma non distribuibile.
+**Differenza nota con upstream:** l'oldpc ufficiale compila anche con `LLAMA_VULKAN=1`; qui no (decisione futura).
+**File:** workflow F5N, `tools/f5n_native_load_smoke.py`, `tests/test_f5n_native_load_smoke.py`. **Rollback:** ripristinare i tre file a `9484d35`. Nessuna modifica runtime Jarvis, DLL 014, ZIP014, dati.

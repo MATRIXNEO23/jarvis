@@ -12,7 +12,6 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-import shutil
 from contextlib import ExitStack
 
 from .f5n_bundle_audit import inspect_bundle
@@ -45,12 +44,11 @@ def dependency_diagnostics(paths):
         import pefile
     except ImportError:
         return {"error": "pefile missing in isolated CI worker"}
+    # Only directories the Python 3.8+ ctypes loader really searches here.
+    # A compiler directory is never part of the Pavilion distribution.
     search_dirs = [paths["root"], paths["route"].parent,
                    Path(os.environ.get("SystemRoot", "C:/Windows")) / "System32"]
-    compiler = shutil.which("g++.exe")
-    if compiler:
-        search_dirs.append(Path(compiler).parent)
-    result = {"compiler": compiler, "search_dirs": [str(p) for p in search_dirs],
+    result = {"search_dirs": [str(p) for p in search_dirs],
               "imports": {}, "not_found_in_checked_dirs": {},
               "imported_symbols": {}, "backend_exports": [],
               "unresolved_backend_imports": []}
@@ -91,20 +89,47 @@ def dependency_diagnostics(paths):
     return result
 
 
+TOOLCHAIN_RUNTIME_DLLS = frozenset((
+    "libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll"))
+
+
+def _pe_imports(path):
+    import pefile
+    pe = pefile.PE(path, fast_load=True)
+    try:
+        pe.parse_data_directories(directories=[
+            pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_IMPORT"]])
+        return {entry.dll.decode("ascii", "replace")
+                for entry in getattr(pe, "DIRECTORY_ENTRY_IMPORT", ()) if entry.dll}
+    finally:
+        pe.close()
+
+
+def toolchain_runtime_imports(paths, *, read_imports=_pe_imports):
+    """Return {dll_key: [runtime imports]} for compiler DLLs absent on users' PCs."""
+    found = {}
+    for key in ("route", "common", "backend"):
+        names = {name.lower() for name in read_imports(str(paths[key]))}
+        bad = sorted(names & TOOLCHAIN_RUNTIME_DLLS)
+        if bad:
+            found[key] = bad
+    return found
+
+
 def load_worker(root):
     """Executed only in the expendable Windows subprocess."""
     if os.name != "nt" or not hasattr(os, "add_dll_directory"):
         raise NativeSmokeError("Windows DLL directories required")
     paths = expected_paths(root)
-    # MinGW-built DLLs depend on libgcc_s_seh-1/libstdc++/libwinpthread.
-    # os.add_dll_directory (unlike PATH) is consulted for ctypes.CDLL on
-    # Python 3.8+. Keep this CI-only addition scoped to the child process.
-    compiler = shutil.which("g++.exe")
+    # Only bundle directories: the end-user PC has no compiler runtime.
+    # A bundle needing MinGW runtime DLLs is rejected before LoadLibrary.
+    runtime = toolchain_runtime_imports(paths)
+    if runtime:
+        raise NativeSmokeError(
+            "Bundle not self-contained; MinGW runtime imports=" + json.dumps(runtime, sort_keys=True))
     with ExitStack() as directories:
         directories.enter_context(os.add_dll_directory(str(paths["root"])))
         directories.enter_context(os.add_dll_directory(str(paths["route"].parent)))
-        if compiler:
-            directories.enter_context(os.add_dll_directory(str(Path(compiler).resolve().parent)))
         # Identical selected-route -> common load order to pinned upstream.
         route_handle = ctypes.CDLL(str(paths["route"]))
         try:
