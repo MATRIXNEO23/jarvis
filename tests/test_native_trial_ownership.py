@@ -295,7 +295,7 @@ class NativeTrialOwnershipTests(unittest.TestCase):
         self.assertEqual(list(self.session.history), history)
         self.assertEqual(self.session.ask("Continua dopo errore"),
                          "Risposta locale controllata")
-        self.assertEqual(len(self.abi.loads), 2)
+        self.assertEqual(len(self.abi.loads), 1)
 
     def test_telegram_waits_for_trial_without_history_changes(self):
         panel = self.window()

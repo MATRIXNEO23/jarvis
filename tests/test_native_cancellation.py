@@ -270,9 +270,10 @@ class NativeCancellationTests(unittest.TestCase):
         self.session.stop()
         self.assertFalse(turn.commit(), "stop must revoke answers waiting for UI acceptance")
         self.assertEqual(list(self.session.history), history)
-        self.session.ask("Nuova")
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask("Nuova")  # F5N.7: after stop, restart needed
         self.assertFalse(turn.commit())
-        self.assertEqual(len(self.session.history), 4)
+        self.assertEqual(list(self.session.history), history)
 
     def test_close_revokes_unaccepted_turn(self):
         self.abi.release.set()

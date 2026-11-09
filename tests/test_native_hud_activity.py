@@ -3,6 +3,7 @@
 No real model, Telegram account or microphone. Every worker is gated, released
 and joined by the existing ownership fixture, including on the Red revision.
 """
+from local_model.native_bridge import NativeRestartRequired
 import os
 import gc
 import threading
@@ -192,7 +193,9 @@ class NativeHudActivityTests(unittest.TestCase):
         self.assertTrue(job.done.wait(2))
         self.assertIsInstance(job.error, RuntimeError)
         self.snapshot(busy=False)
-        self.assertEqual(self.session.ask('Riprendi'), 'Risposta locale controllata')
+        # F5N.7: no in-process native reload after stop; busy still unwinds.
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask('Riprendi')
         self.snapshot(busy=False)
 
     def test_errors_and_closed_requests_do_not_leave_stale_busy_metadata(self):
@@ -234,7 +237,9 @@ class NativeHudActivityTests(unittest.TestCase):
         self.assertIsInstance(job.error, RuntimeError)
         self.assertIsNone(stopped.error)
         self.snapshot(busy=False)
-        self.assertEqual(self.session.ask('Riprendi'), 'Risposta locale controllata')
+        # F5N.7: no in-process native reload after stop; busy still unwinds.
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask('Riprendi')
         self.snapshot(busy=False)
 
     def test_pending_chat_flag_and_existing_gpt_local_document_flags_are_preserved(self):

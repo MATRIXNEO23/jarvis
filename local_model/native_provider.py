@@ -47,7 +47,8 @@ class NativeLocalProvider:
                 raise RuntimeError("Prompt locale non valido.")
             self.bridge.load()
             from .chat_templates import format_messages
-            prompt = format_messages(messages, getattr(self.bridge, "family", "gemma2"))
+            family = getattr(self.bridge, "family", None)
+            prompt = format_messages(messages, family if isinstance(family, str) else "gemma2")
             return self.bridge.generate(prompt, timeout=timeout)
 
     def count_tokens(self, prompt):
