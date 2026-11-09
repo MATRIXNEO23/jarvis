@@ -1,4 +1,4 @@
-"""Bounded GPT intent translation for Jarvis's future conversation voice mode.
+"""Bounded GPT intent translation for Lumi's future conversation voice mode.
 
 Never performs Windows actions. A GPT proposal can only become a validated
 intent, using the same immutable allowlist as the existing safe planner.
@@ -130,7 +130,7 @@ def native_intent_context_for_request(
     if not isinstance(utterance, str) or not utterance.strip():
         raise ConversationRejected("Richiesta Gemma vuota o non valida.")
     text = " ".join(utterance.replace("\u2019", "'").casefold().split())
-    text = re.sub(r"^(?:ehi\s+|ok\s+)?jarvis[,:\s]+", "", text)
+    text = re.sub(r"^(?:ehi\s+|ok\s+)?lumi[,:\s]+", "", text)
     if (_NATIVE_INFORMATION_START.match(text)
             and not _NATIVE_FOLLOWING_ACTION.search(text)):
         return None
@@ -172,7 +172,7 @@ def build_conversation_prompt(
     else:
         prompt = (
             PERSONA
-            + "Interpreta la frase corrente per Jarvis Windows. Rispondi SOLO con UN oggetto JSON: "
+            + "Interpreta la frase corrente per Lumi Windows. Rispondi SOLO con UN oggetto JSON: "
             '{"kind":"chat","reply":"risposta italiana"}, '
             '{"kind":"clarify","reply":"una sola domanda concreta"} oppure '
             '{"kind":"capability","action_id":"ID del catalogo","arguments":{}}. '
@@ -188,7 +188,7 @@ def build_conversation_prompt(
             "browser.search/downloads.find: arguments.query. telegram.voice.start: arguments.recipient "
             "col nome richiesto, mai inventato; testo e conferma nel dialogo locale. "
             "Altri comandi semplici: arguments={}. Se mancano capacità o dati, chiarisci o spiega il limite. "
-            "Documento Blocco note gestito da Jarvis: "
+            "Documento Blocco note gestito da Lumi: "
             + ("SÌ. " if has_document else "NO. ")
             + "Se NO, non chiudere né modificare documenti non identificati. "
             "Catalogo delle azioni CONSENTITE: "

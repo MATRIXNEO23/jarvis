@@ -1,4 +1,4 @@
-"""Optional on-demand Tk control panel for the trusted Jarvis addon manager.
+"""Optional on-demand Tk control panel for the trusted Lumi addon manager.
 
 No network, no script execution, no automatic enable after install or update.
 All changes are local and explicit; failures are visible to the user.
@@ -17,12 +17,12 @@ class AddonSettingsWindow:
         self.manager=manager
         self.on_change=on_change or (lambda:None)
         self.window=tk.Toplevel(parent)
-        self.window.title("JARVIS // Gestisci add-on")
+        self.window.title("LUMI // Gestisci add-on")
         self.window.geometry("790x500")
         self.window.minsize(610,390)
         holder=ttk.Frame(self.window,padding=12)
         holder.pack(fill="both",expand=True)
-        ttk.Label(holder,text="Add-on di Jarvis",
+        ttk.Label(holder,text="Add-on di Lumi",
                   font=("Segoe UI",13,"bold")).pack(anchor="w")
         ttk.Label(holder,wraplength=760,
                   text=("I pacchetti .jaddon sono solo descrizioni JSON, "
@@ -72,7 +72,7 @@ class AddonSettingsWindow:
         return selected[0] if selected else None
 
     def _error(self, exc):
-        messagebox.showerror("Jarvis / Add-on",
+        messagebox.showerror("Lumi / Add-on",
                              str(exc)[:240],parent=self.window)
 
     def reload(self):
@@ -97,11 +97,11 @@ class AddonSettingsWindow:
     def install(self):
         path=filedialog.askopenfilename(
             parent=self.window,title="Scegli un add-on verificato",
-            filetypes=[("Pacchetto Jarvis (.jaddon)","*.jaddon")])
+            filetypes=[("Pacchetto Lumi (.jaddon)","*.jaddon")])
         if not path:
             return
         if not messagebox.askyesno(
-            "Jarvis / Conferma installazione",
+            "Lumi / Conferma installazione",
             "Installare o aggiornare questo add-on descrittivo? "
             "Non verrà avviato automaticamente e non verrà eseguito alcun codice.",
             parent=self.window,default="no"):
@@ -130,7 +130,7 @@ class AddonSettingsWindow:
         if enabled and not messagebox.askyesno(
                 "Autorizza add-on",
                 "Attivare "+item["name"]+"? Le azioni descritte saranno visibili "
-                "a Jarvis GPT e richiamabili solo tramite il motore locale "
+                "a Lumi GPT e richiamabili solo tramite il motore locale "
                 "con le normali verifiche.",
                 parent=self.window,default="no"):
             return

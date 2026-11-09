@@ -1,4 +1,4 @@
-"""Optional real Windows network telemetry for JARVIS HUD.
+"""Optional real Windows network telemetry for LUMI HUD.
 
 Uses the built-in Windows netstat executable with a fixed read-only
 argument list. Runs on a daemon worker, never blocks the Tk event loop,
@@ -81,7 +81,7 @@ class NetworkTelemetry:
         def worker():
             self._queue.put((time.monotonic(),_query_bytes()))
         threading.Thread(target=worker,daemon=True,
-                         name="JARVIS-Network-Read").start()
+                         name="LUMI-Network-Read").start()
 
     def result(self):
         while not self._queue.empty():

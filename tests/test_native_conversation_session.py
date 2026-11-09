@@ -57,7 +57,7 @@ class SessionTests(unittest.TestCase):
     def test_internal_notes_never_reach_spoken_answer(self):
         raw = ("Va bene, ti rispondo.\n\n"
                "**What's Going Right:**\n"
-               "Conversation Flow: instructions to Jarvis")
+               "Conversation Flow: instructions to Lumi")
         self.assertEqual(clean_native_answer(raw), "Va bene, ti rispondo.")
 
     def test_think_block_is_not_spoken(self):
@@ -107,7 +107,7 @@ class SessionTests(unittest.TestCase):
         from telegram_bridge import telegram_local_prompt
         adapter = FakeAdapter()
         session = self.make_session(adapter)
-        session.ask("Nota privata di Jarvis")
+        session.ask("Nota privata di Lumi")
         previous = list(session.history)
         session.ask_isolated(lambda budget: "Telegram: Ciao")
         self.assertEqual(adapter.calls[-1], "Telegram: Ciao")

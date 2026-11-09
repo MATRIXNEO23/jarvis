@@ -1,4 +1,4 @@
-"""Read-only runtime observations for the local Jarvis executor.
+"""Read-only runtime observations for the local Lumi executor.
 
 No models, networking, subprocesses, test execution, log reading or file writes.
 This captures *observed states*, not promises of functionality. Only fixed
@@ -319,5 +319,5 @@ def format_service_report(evidence, *, telegram=None, automatic=False,
             if type(stamp) is int and 0 <= stamp <= 4102444800 and code in SERVICE_EVENTS:
                 lines.append(time.strftime('%H:%M:%S',time.localtime(stamp))+' — '+SERVICE_EVENTS[code][1])
     lines += ['', 'Aggiorna per rileggere lo stato. Nessuna richiesta a GPT/Gemma, apertura del microfono o invio di prova.',
-              'Registro solo in RAM: si azzera riavviando Jarvis o sostituendo il listener. Nessuna conversazione esportata.']
+              'Registro solo in RAM: si azzera riavviando Lumi o sostituendo il listener. Nessuna conversazione esportata.']
     return '\n'.join(lines)

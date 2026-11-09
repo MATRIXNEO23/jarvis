@@ -18,7 +18,7 @@ class NativeSettingsWindow:
         self.current = (NativeModelConfig.load(self.path)
                         if self.path.exists() else NativeModelConfig())
         self.window = tk.Toplevel(parent)
-        self.window.title("Jarvis // Modello locale Gemma")
+        self.window.title("Lumi // Modello locale Gemma")
         self.window.geometry("590x610")
         self.window.minsize(460, 500)
         frame = ttk.Frame(self.window, padding=14)
@@ -52,7 +52,7 @@ class NativeSettingsWindow:
                                    bg="#031522", fg="#d7f6ff", insertbackground="#d7f6ff")
         self.personality.insert("1.0", self.current.personality)
         self.personality.pack(fill="x")
-        ttk.Label(frame, text="Es. Parla come Jarvis: preciso, con ironia secca.",
+        ttk.Label(frame, text="Es. Parla come Lumi: preciso, con ironia secca.",
                   wraplength=420).pack(anchor="w", pady=(2, 0))
         self.status = tk.StringVar(value="Salva il GGUF, poi premi Prova generazione. Nessun invio online.")
         ttk.Label(frame, textvariable=self.status, wraplength=520).pack(
@@ -71,7 +71,7 @@ class NativeSettingsWindow:
     def open_prompt_diagnostics(self):
         """Manual one-turn RAM capture; opening this UI never loads a GGUF."""
         dialog = tk.Toplevel(self.window)
-        dialog.title("Jarvis // Diagnostica prompt Gemma")
+        dialog.title("Lumi // Diagnostica prompt Gemma")
         dialog.geometry("840x620")
         dialog.minsize(570, 380)
         frame = ttk.Frame(dialog, padding=10)
@@ -141,7 +141,7 @@ class NativeSettingsWindow:
                 status.set("Nessun report da copiare.")
                 return
             if not messagebox.askyesno(
-                    "Jarvis / Prompt privato",
+                    "Lumi / Prompt privato",
                     "Il report può contenere conversazioni e ricordi privati. "
                     "Vuoi copiarlo negli appunti di Windows?", parent=dialog):
                 return
@@ -191,7 +191,7 @@ class NativeSettingsWindow:
                 else "Valori usati dalla prossima generazione."))
             return True
         except (OSError, ValueError, TypeError) as exc:
-            messagebox.showerror("Jarvis / Gemma",
+            messagebox.showerror("Lumi / Gemma",
                                  "Impostazioni non valide: " + str(exc),
                                  parent=self.window)
             return False
@@ -205,7 +205,7 @@ class NativeSettingsWindow:
                 raise ValueError("Seleziona prima un file GGUF esistente.")
             get_session = self.get_session
             if not callable(get_session):
-                raise ValueError("Sessione Gemma di Jarvis non disponibile.")
+                raise ValueError("Sessione Gemma di Lumi non disponibile.")
             config = self.current
             self.test_button.configure(state="disabled")
             self.status.set("Caricamento DLL e GGUF in corso...")

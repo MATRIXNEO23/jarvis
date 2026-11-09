@@ -13,8 +13,8 @@ from source_review import Improvement
 
 def sample_audit():
     return SourceAudit(
-        "C:\\Users\\private\\Jarvis; trovato password=donotshare",
-        "Cartella C:\\Users\\private\\Jarvis e Telegram API_HASH=secret",
+        "C:\\Users\\private\\Lumi; trovato password=donotshare",
+        "Cartella C:\\Users\\private\\Lumi e Telegram API_HASH=secret",
         ("passphrase old-value",),
         (Improvement(
             "alta", "source_review.py", 56,
@@ -28,10 +28,10 @@ def sample_audit():
 class DiagnosticHandoffTests(unittest.TestCase):
     def test_explicit_review_request_without_guessing_other_chat(self):
         for text in (
-            "Jarvis, valuta la diagnosi con GPT",
+            "Lumi, valuta la diagnosi con GPT",
             "valuta l'autodiagnosi con ChatGPT",
             "analizza il rapporto usando il modello esterno",
-            "Jarvis, esamina la diagnosi tramite gpt",
+            "Lumi, esamina la diagnosi tramite gpt",
         ):
             with self.subTest(text=text):
                 self.assertTrue(is_external_review_request(text))

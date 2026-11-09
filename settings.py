@@ -1,4 +1,4 @@
-"""Local, dependency-free Jarvis settings. Never store secrets here."""
+"""Local, dependency-free Lumi settings. Never store secrets here."""
 from __future__ import annotations
 
 import json
@@ -136,7 +136,7 @@ def load_settings(path: Path | None = None, *, warnings: list[str] | None = None
             warnings.append(
                 "Impostazioni non leggibili: avvio prudente con microfono e GPT spenti. "
                 "File originale conservato: " + str(target) + ". "
-                "Chiudi Jarvis, conserva una copia dell'originale e ripristina "
+                "Chiudi Lumi, conserva una copia dell'originale e ripristina "
                 "un settings.json valido da backup.")
     return result
 
@@ -180,7 +180,7 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
         pass
     except (OSError, ValueError, UnicodeError) as exc:
         raise OSError(
-            "Impostazioni originali non leggibili: chiudi Jarvis e ripristina "
+            "Impostazioni originali non leggibili: chiudi Lumi e ripristina "
             "una copia valida; file non sovrascritto.") from exc
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_suffix(".tmp")

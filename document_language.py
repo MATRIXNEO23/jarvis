@@ -40,7 +40,7 @@ def clean_speech(utterance: str) -> str:
 def classify_document_choice(utterance: str, *, pending: bool) -> str | None:
     """Return save, discard, cancel or None.
 
-    pending=True means Jarvis has just offered save/discard/cancel for its
+    pending=True means Lumi has just offered save/discard/cancel for its
     own identified Notepad window; a short reply like 'non salvare' is enough.
     pending=False requires an explicit close/discard request, never a bare
     'salva' or 'non salvare' from ordinary conversation.

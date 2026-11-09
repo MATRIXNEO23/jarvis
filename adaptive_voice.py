@@ -22,7 +22,7 @@ MAX_CHARS = 65
 # Exclude control words, negations, confirmations, and wake words from BOTH
 # sides. They must never be changed by a remembered transcription correction.
 _CONTROL_WORDS = frozenset({
-    "ehi", "hey", "jarvis", "lia", "ok", "si", "sì", "no", "non", "senza",
+    "ehi", "hey", "lumi", "lia", "ok", "si", "sì", "no", "non", "senza",
     "apri", "aprimi", "apertura", "chiudi", "chiudimi", "chiuderlo", "chiudila",
     "esci", "uscire", "salva", "salvare", "salvami", "scarta", "cancella",
     "elimina", "esegui", "lancia", "invia", "manda", "conferma", "annulla",

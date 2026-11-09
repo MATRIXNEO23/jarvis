@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-echo JARVIS - Accesso account Telegram (contatti selezionabili in Jarvis)
+echo LUMI - Accesso account Telegram (contatti selezionabili in Lumi)
 echo Configurazione utente: NON invia alcun messaggio.
 where py >nul 2>&1
 if %errorlevel%==0 (

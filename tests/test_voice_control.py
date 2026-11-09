@@ -15,18 +15,18 @@ from voice_control import (
 
 class SpeechRoutingTests(unittest.TestCase):
     def test_allowlisted_command(self):
-        self.assertEqual(speech_to_local_command("Jarvis apri la calcolatrice"),
+        self.assertEqual(speech_to_local_command("Lumi apri la calcolatrice"),
                          "apri calcolatrice")
         self.assertEqual(speech_to_local_command("controlla la RAM"),
                          "stato sistema")
-        self.assertEqual(speech_to_local_command("Ehi Jarvis apri disco locale C"),
+        self.assertEqual(speech_to_local_command("Ehi Lumi apri disco locale C"),
                          "apri disco locale c")
 
     def test_browser_commands(self):
-        self.assertEqual(speech_to_local_command("Jarvis, apri il browser"), "apri browser")
+        self.assertEqual(speech_to_local_command("Lumi, apri il browser"), "apri browser")
         self.assertEqual(speech_to_local_command("apri browser"), "apri browser")
         self.assertEqual(
-            speech_to_local_command("Jarvis cerca nel browser monumenti di Roma"),
+            speech_to_local_command("Lumi cerca nel browser monumenti di Roma"),
             "cerca nel browser monumenti di roma")
         self.assertEqual(
             speech_to_local_command("cerca su internet python tkinter"),
@@ -51,12 +51,12 @@ class WakeWordTests(unittest.TestCase):
         now = [100.0]
         gate = WakeWordGate(clock=lambda: now[0])
         self.assertEqual(gate.route("apri blocco note"), ("ignored", ""))
-        self.assertEqual(gate.route("Ehi Jarvis apri blocco note"),
+        self.assertEqual(gate.route("Ehi Lumi apri blocco note"),
                          ("command", "apri blocco note"))
-        self.assertEqual(gate.route("Ehi Jarvis, apri il browser"),
+        self.assertEqual(gate.route("Ehi Lumi, apri il browser"),
                          ("command", "apri il browser"))
         self.assertEqual(gate.route("apri la calcolatrice"), ("ignored", ""))
-        self.assertEqual(gate.route("Ehi Jarvis"), ("wake", ""))
+        self.assertEqual(gate.route("Ehi Lumi"), ("wake", ""))
         now[0] += 4
         self.assertEqual(gate.route("Apri il browser"),
                          ("command", "apri il browser"))
@@ -73,7 +73,7 @@ class WakeWordTests(unittest.TestCase):
         # The listener does not execute free-standing requests in continuous.
         self.assertEqual(gate.route("attiva dettatura"), ("ignored", ""))
         # An explicit wake phrase can activate dictation without clicking Jarvis.
-        kind, phrase = gate.route("Ehi Jarvis, attiva dettatura")
+        kind, phrase = gate.route("Ehi Lumi, attiva dettatura")
         self.assertEqual((kind, dictation_voice_action(phrase)), ("command", "start"))
         editor.enable()
         kind, phrase = gate.route("questa frase va scritta",
@@ -82,13 +82,13 @@ class WakeWordTests(unittest.TestCase):
         editor.insert(phrase)
         self.assertEqual(writes, ["questa frase va scritta "])
         # While dictation is active the stop phrase must NOT become text.
-        kind, phrase = gate.route("Ehi Jarvis disattiva dettatura",
+        kind, phrase = gate.route("Ehi Lumi disattiva dettatura",
                                   dictation_active=editor.enabled)
         self.assertEqual((kind, dictation_voice_action(phrase)), ("command", "stop"))
         editor.disable()
         self.assertEqual(writes, ["questa frase va scritta "])
         # The wake word can also be spoken as a separate utterance.
-        self.assertEqual(gate.route("Ehi Jarvis"), ("wake", ""))
+        self.assertEqual(gate.route("Ehi Lumi"), ("wake", ""))
         kind, phrase = gate.route("attiva dettatura")
         self.assertEqual((kind, dictation_voice_action(phrase)), ("command", "start"))
 
@@ -103,10 +103,10 @@ class WakeWordTests(unittest.TestCase):
         gate = WakeWordGate()
         self.assertEqual(gate.route("una frase libera", dictation_active=True),
                          ("dictation", "una frase libera"))
-        self.assertEqual(gate.route("ehi Jarvis disattiva dettatura",
+        self.assertEqual(gate.route("ehi Lumi disattiva dettatura",
                                     dictation_active=True),
                          ("command", "disattiva dettatura"))
-        gate.route("ehi jarvis")
+        gate.route("ehi lumi")
         self.assertEqual(gate.route("disattiva dettatura",
                                     dictation_active=True),
                          ("command", "disattiva dettatura"))

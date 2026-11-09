@@ -1,4 +1,4 @@
-"""Restricted Gemma memory reader for one local Jarvis chat instance.
+"""Restricted Gemma memory reader for one local Lumi chat instance.
 
 No global Second Brain data, project memories, online provider or commands.
 The only persistent input is the explicitly selected ChatSessionStore chat.

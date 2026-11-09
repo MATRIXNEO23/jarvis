@@ -1,4 +1,4 @@
-"""Jarvis 015: request-local prompt provenance never changes execution or storage."""
+"""Lumi 015: request-local prompt provenance never changes execution or storage."""
 import unittest
 
 from conversation_router import build_native_intent_context

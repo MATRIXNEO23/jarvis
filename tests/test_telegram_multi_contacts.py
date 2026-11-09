@@ -90,10 +90,10 @@ class TelegramContactTests(unittest.TestCase):
 
 class TelegramVoiceDialogTests(unittest.TestCase):
     def test_recognizes_requested_speech_and_text(self):
-        for value in ("Jarvis, manda un messaggio a Nico",
+        for value in ("Lumi, manda un messaggio a Nico",
                       "manda un messaggio vocale a Nico",
                       "invia audio a Nico",
-                      "Ok Jarvis manda vocale a Nico"):
+                      "Ok Lumi manda vocale a Nico"):
             self.assertEqual(parse_telegram_send_intent(value),"Nico")
         for value in ("rispondi a Nico", "manda un messaggio",
                       "manda un messaggio a", "fai un'autodiagnosi"):

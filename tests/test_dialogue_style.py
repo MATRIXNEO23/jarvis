@@ -26,7 +26,7 @@ class StyleClassificationTests(unittest.TestCase):
 
     def test_procedure_is_complete_even_if_reply_is_long(self):
         for text in ("Come configuro Telegram?",
-                     "Spiegami come installare Jarvis",
+                     "Spiegami come installare Lumi",
                      "Dammi le istruzioni passo passo",
                      "Quali passaggi devo seguire?"):
             with self.subTest(text=text):
@@ -85,7 +85,7 @@ class PromptPolicyTests(unittest.TestCase):
         self.assertIn("Non dichiarare azioni riuscite senza prova",chat)
         self.assertTrue(chat.endswith('"Come configuro Telegram?"'))
         self.assertLessEqual(len(chat),5000)
-        casual=build_chat_prompt("Ciao, Jarvis")
+        casual=build_chat_prompt("Ciao, Lumi")
         self.assertIn("STILE: conversazione naturale",casual)
         self.assertNotIn("STILE: procedura completa",casual)
         self.assertLessEqual(len(casual),5000)
@@ -107,13 +107,13 @@ class PromptPolicyTests(unittest.TestCase):
 
     def test_longest_legal_voice_request_keeps_catalog_and_turn(self):
         prompt=build_conversation_prompt(
-            "Come configuro Jarvis? "+"a"*420,has_document=True,
+            "Come configuro Lumi? "+"a"*420,has_document=True,
             memory_context=json.dumps({"breve":[
                 {"utente":"Salva una nota", "lia":"Quale nota?"}]}))
         self.assertLessEqual(len(prompt),5000)
         self.assertIn("notepad.open",prompt)
         self.assertIn("FRASE ATTUALE",prompt)
-        self.assertIn("configuro Jarvis",prompt)
+        self.assertIn("configuro Lumi",prompt)
 
     def test_style_never_changes_command_response_schema(self):
         unsafe='{"kind":"capability","action_id":"execute_shell","arguments":{}}'

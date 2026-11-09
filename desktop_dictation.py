@@ -187,7 +187,7 @@ class DesktopDictation:
         if (current.window, current.focus, current.pid) != (
                 self.target.window, self.target.focus, self.target.pid):
             return ("La finestra o il campo selezionato è cambiato: dettatura sospesa. "
-                    "Di' 'Jarvis, disattiva dettatura', poi riattivala nella nuova finestra.")
+                    "Di' 'Lumi, disattiva dettatura', poi riattivala nella nuova finestra.")
         rendered = "\n" if speech in ("a capo", "vai a capo", "nuova riga") else speech + " "
         # Revalidate immediately before input (the user may switch windows).
         fresh = self.focus_provider()

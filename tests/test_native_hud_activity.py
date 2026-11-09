@@ -275,10 +275,10 @@ class NativeHudActivityTests(unittest.TestCase):
         try:
             hud._advance()
             root.update_idletasks()
-            self.assertIn('JARVIS STA RAGIONANDO', hud.chat_info.get())
+            self.assertIn('LUMI STA RAGIONANDO', hud.chat_info.get())
             self.env['speaker'].is_speaking = lambda: True
             hud._advance()
-            self.assertIn('JARVIS STA PARLANDO', hud.chat_info.get())
+            self.assertIn('LUMI STA PARLANDO', hud.chat_info.get())
         finally:
             self.abi.release.set()
             finished = job.done.wait(2)

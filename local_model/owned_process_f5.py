@@ -1,6 +1,6 @@
 """F5.3b: opt-in lifecycle of an EXPLICITLY owned local model subprocess.
 
-No default executable, model, network, server startup or Jarvis wiring.
+No default executable, model, network, server startup or Lumi wiring.
 No shell; the caller must validate its own executable/model, CLI flags and
 loopback configuration before supplying a command. This module never kills
 unrelated processes or treats abort of the embedded DLL as verified unload.

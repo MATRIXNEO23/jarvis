@@ -1,4 +1,4 @@
-"""Jarvis core: explicit local tools, minimal dependencies, no arbitrary shell.
+"""Lumi core: explicit local tools, minimal dependencies, no arbitrary shell.
 
 GPT will be a separate planner. Its proposals must pass through this local
 executor, which accepts only registered actions with validated arguments.
@@ -116,7 +116,7 @@ class LocalEngine:
         if self.file_access_blocked and request.casefold().startswith(
                 ("cerca file ","mostra download","elenca download","apri download","apri disco locale c")):
             return self._record(TaskResult(uuid4().hex,"files","rejected",
-                "Accesso file incompleto: reinstalla la cartella file_access dal pacchetto e riavvia Jarvis."))
+                "Accesso file incompleto: reinstalla la cartella file_access dal pacchetto e riavvia Lumi."))
         if self.program_apps is not None:
             parsed = self.program_apps.parse_command(request)
             if parsed is not None:

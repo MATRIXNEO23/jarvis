@@ -1,4 +1,4 @@
-"""ARCH-01 F2 RED: isolated Jarvis chat UI and local-only history sources.
+"""ARCH-01 F2 RED: isolated Lumi chat UI and local-only history sources.
 
 UI uses a temporary DB and no audio, no external API and no GGUF.
 """

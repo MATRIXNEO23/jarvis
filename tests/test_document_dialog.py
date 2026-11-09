@@ -62,12 +62,12 @@ class DocumentDialogTests(unittest.TestCase):
         self.start()
         self.dialog.request_close()
         self.assertEqual(
-            self.dialog.reply("Ehi Jarvis, salva ed esci").kind,
+            self.dialog.reply("Ehi Lumi, salva ed esci").kind,
             "save_then_close")
         self.dialog.operation_completed("notepad-17", succeeded=False)
         self.dialog.request_close()
         self.assertEqual(
-            self.dialog.reply("Jarvis, annulla").kind, "cancel")
+            self.dialog.reply("Lumi, annulla").kind, "cancel")
         self.assertEqual(self.dialog.phase, "editing")
 
     def test_cancel_never_discards_text(self):

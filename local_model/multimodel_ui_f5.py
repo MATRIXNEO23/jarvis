@@ -1,7 +1,7 @@
 """F5.2 experimental multi-model settings panel.
 
 This is an opt-in, side-effect-free editor. Values remain in this window only;
-it neither persists settings nor switches the live Jarvis model. The runtime
+it neither persists settings nor switches the live Lumi model. The runtime
 configuration and the old Gemma settings dialog remain authoritative.
 """
 from dataclasses import replace
@@ -44,7 +44,7 @@ class MultiModelSettingsF5Window:
         self.profiles = {p.profile_id: p for p in default_profiles()}
         self.active_id = "gemma-default"
         self.window = tk.Toplevel(parent)
-        self.window.title("Jarvis // Multimodello F5 (anteprima)")
+        self.window.title("Lumi // Multimodello F5 (anteprima)")
         self.window.geometry("590x490")
         self.window.minsize(480, 420)
         host = ttk.Frame(self.window, padding=14)
@@ -73,7 +73,7 @@ class MultiModelSettingsF5Window:
             variable = tk.StringVar()
             self.values[key] = variable
             ttk.Entry(row, textvariable=variable).pack(side="left", fill="x", expand=True)
-        self.status = tk.StringVar(value="Anteprima: nessun modello caricato o selezionato per Jarvis.")
+        self.status = tk.StringVar(value="Anteprima: nessun modello caricato o selezionato per Lumi.")
         ttk.Label(host, textvariable=self.status, wraplength=530).pack(anchor="w", pady=(10, 7))
         buttons = ttk.Frame(host)
         buttons.pack(fill="x")
@@ -99,7 +99,7 @@ class MultiModelSettingsF5Window:
             return
         self.active_id = selected
         self._fill()
-        self.status.set("Profilo visualizzato; nessuna modifica al runtime Jarvis.")
+        self.status.set("Profilo visualizzato; nessuna modifica al runtime Lumi.")
 
     def validate(self):
         try:
@@ -119,4 +119,4 @@ class MultiModelSettingsF5Window:
         self.profiles[self.active_id] = next(
             p for p in default_profiles() if p.profile_id == self.active_id)
         self._fill()
-        self.status.set("Bozza ripristinata. Impostazioni Jarvis inalterate.")
+        self.status.set("Bozza ripristinata. Impostazioni Lumi inalterate.")

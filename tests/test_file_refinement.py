@@ -1,4 +1,4 @@
-"""Windows filesystem and actual Jarvis callbacks; controlled model replies only."""
+"""Windows filesystem and actual Lumi callbacks; controlled model replies only."""
 import ast
 import copy
 import json
@@ -148,7 +148,7 @@ class FileRefinementTests(unittest.TestCase):
             with self.subTest(channel=channel):
                 env,workers=self.environment()
                 if channel=='voice':
-                    env['output_queue'].put(('voice_text','Jarvis cerca file preventivo'))
+                    env['output_queue'].put(('voice_text','Lumi cerca file preventivo'))
                     self.receive('voice_text',env)
                 else:
                     env['request'].set('cerca file preventivo')
@@ -274,7 +274,7 @@ class FileRefinementTests(unittest.TestCase):
         for channel in ('voice','text'):
             env,workers=self.environment()
             if channel=='voice':
-                env['output_queue'].put(('voice_text','Jarvis cercami un file'))
+                env['output_queue'].put(('voice_text','Lumi cercami un file'))
                 self.receive('voice_text',env)
             else:
                 env['request'].set('cercami un file')

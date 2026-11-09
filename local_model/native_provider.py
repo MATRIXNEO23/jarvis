@@ -1,6 +1,6 @@
 """ModelService-compatible local inference adapter, no online or HTTP access.
 
-This is an opt-in component; existing Jarvis routing is unchanged.
+This is an opt-in component; existing Lumi routing is unchanged.
 """
 import threading
 

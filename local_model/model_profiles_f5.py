@@ -1,6 +1,6 @@
 """F5.0: pure, opt-in local model profile validation.
 
-This module is deliberately not imported by Jarvis runtime. No filesystem,
+This module is deliberately not imported by Lumi runtime. No filesystem,
 network, process launching, persistence or model loading is performed here.
 """
 from dataclasses import dataclass

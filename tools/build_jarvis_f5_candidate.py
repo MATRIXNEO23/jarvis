@@ -42,13 +42,13 @@ def include(p):
 
 
 def notice(label):
-    return f"""JARVIS {label} - BUILD DI PROVA (motore KoboldCpp integrato, no-AVX2)
-Estrai in una cartella NUOVA e avvia soltanto avvia_jarvis.bat.
-Non sovrascrivere ne cancellare Jarvis 014: resta la versione stabile.
+    return f"""LUMI {label} - BUILD DI PROVA (motore KoboldCpp integrato, no-AVX2)
+Estrai in una cartella NUOVA e avvia soltanto avvia_lumi.bat.
+Non sovrascrivere ne cancellare la versione 014: resta quella stabile.
 Profilo dati invariato (Jarvis-Gemma-Trial): impostazioni, chat e memoria restano.
 Modelli GGUF non inclusi: seleziona il tuo (Gemma 2, Qwen2.5 o Qwen3) nelle impostazioni.
 La famiglia del modello e riconosciuta dal file GGUF.
-Cambio di modello, contesto o thread: salva e RIAVVIA Jarvis (nessun ricaricamento a caldo).
+Cambio di modello, contesto o thread: salva e RIAVVIA Lumi (nessun ricaricamento a caldo).
 Motore: KoboldCpp {UPSTREAM_COMMIT} compilato con w64devkit, licenza AGPL-3.0
 (native_engine/LICENSE.md; sorgente: https://github.com/LostRuins/koboldcpp/tree/{UPSTREAM_COMMIT}).
 Da collaudare sul Pavilion: velocita, RAM, voce, account. Nessuna garanzia di prestazioni.
@@ -62,20 +62,20 @@ def git_files():
 
 def build(engine_dir, number, out_dir):
     label = f"{number:03d}"
-    root = f"Jarvis-{label}/"
+    root = f"Lumi-{label}/"
     engine = Path(engine_dir)
     entries = {}
     for p in git_files():
         if include(p) and p.is_file() and not p.is_symlink():
             data = p.read_bytes()
-            if p.as_posix() == "avvia_jarvis.bat":
+            if p.as_posix() == "avvia_lumi.bat":
                 text = data.decode("utf-8").replace("Jarvis-AccessoFile-Trial", "Jarvis-Gemma-Trial")
-                data = text.replace("JARVIS // ACCESSO FILE", f"JARVIS // {label}").encode("utf-8")
+                data = text.replace("LUMI // ACCESSO FILE", f"LUMI // {label}").encode("utf-8")
             entries[p.as_posix()] = data
     for name in ENGINE_FILES:
         entries["native_engine/" + name] = (engine / name).read_bytes()
     entries[f"LEGGIMI-BUILD-{label}.txt"] = notice(label).encode("utf-8")
-    mandatory = {"jarvis.py", "avvia_jarvis.bat", "local_model/chat_templates.py",
+    mandatory = {"jarvis.py", "avvia_lumi.bat", "local_model/chat_templates.py",
                  "local_model/native_factory.py"} | OPERATIONAL_GUIDES
     missing = mandatory - set(entries)
     if missing:
@@ -93,7 +93,7 @@ def build(engine_dir, number, out_dir):
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
             z.writestr(info, entries[name])
-    out = Path(out_dir) / f"Jarvis-{label}-PROVA.zip"
+    out = Path(out_dir) / f"Lumi-{label}-PROVA.zip"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(buffer.getvalue())
     details = dict(file=out.name, bytes=out.stat().st_size,
@@ -153,7 +153,7 @@ def verify(archive, model, tools_root):
         for name, expected in version["files"].items():
             assert hashlib.sha256((package / name).read_bytes()).hexdigest() == expected, name
         assert not (package / "tests").exists() and not (package / "tools").exists()
-        assert "Jarvis-Gemma-Trial" in (package / "avvia_jarvis.bat").read_text(encoding="utf-8")
+        assert "Jarvis-Gemma-Trial" in (package / "avvia_lumi.bat").read_text(encoding="utf-8")
         profile = temp / "isolated-profile"
         report["imports"] = run([sys.executable, "-I", "-c",
             "import sys;sys.path.insert(0,'.');import jarvis,local_engine;"

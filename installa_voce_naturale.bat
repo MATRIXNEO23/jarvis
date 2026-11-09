@@ -16,7 +16,7 @@ exit /b 0
 :cpu
 echo.
 echo Il motore e installato ma non si avvia su questo PC (possibile limite della CPU).
-echo Jarvis continuera a usare le voci di Windows.
+echo Lumi continuera a usare le voci di Windows.
 pause
 exit /b 1
 :error

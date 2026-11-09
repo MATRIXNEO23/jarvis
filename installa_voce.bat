@@ -10,8 +10,8 @@ echo Download sicuro del modello italiano ufficiale...
 py -3 installa_modello_voce.py
 if errorlevel 1 goto error
 echo.
-echo Componenti e modello installati. Avvia avvia_jarvis.bat.
-echo All'avvio Jarvis usa la preferenza microfono salvata.
+echo Componenti e modello installati. Avvia avvia_lumi.bat.
+echo All'avvio Lumi usa la preferenza microfono salvata.
 pause
 exit /b 0
 :error

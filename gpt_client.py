@@ -1,6 +1,6 @@
 """Windows-only ChatGPT DevKit child process client.
 
-Pipe protocol: one JSON message per line, private to Jarvis. The Node child
+Pipe protocol: one JSON message per line, private to Lumi. The Node child
 owns the OAuth flow and encrypted credentials. No ChatGPT API key is accepted.
 """
 from __future__ import annotations

@@ -3,7 +3,7 @@
 Never send a WAV pretending it is an OGG voice message. Either generate
 valid OGG/Opus voice-note media or fail and leave the Telegram reply unsent.
 Incoming voice can optionally be decoded with FFmpeg and recognized by the
-same local Vosk Italian model as Jarvis's microphone.
+same local Vosk Italian model as Lumi's microphone.
 """
 from __future__ import annotations
 

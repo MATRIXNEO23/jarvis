@@ -21,7 +21,7 @@ class FolderSettings:
         self.events = queue.Queue()
         self.alive = True
         self.window = tk.Toplevel(parent)
-        self.window.title('Jarvis — Accesso file / cartelle consentite')
+        self.window.title('Lumi — Accesso file / cartelle consentite')
         self.window.geometry('780x540')
         box = ttk.Frame(self.window, padding=12)
         box.pack(fill='both', expand=True)
@@ -174,7 +174,7 @@ class ResultWindow:
     """One bounded, nonmodal result view; all actions return to the existing worker."""
     def __init__(self,parent,listing,on_open,on_select):
         self.window=tk.Toplevel(parent)
-        self.window.title('Jarvis — risultati file e cartelle')
+        self.window.title('Lumi — risultati file e cartelle')
         self.window.geometry('900x460')
         box=ttk.Frame(self.window,padding=10)
         box.pack(fill='both',expand=True)
@@ -284,7 +284,7 @@ def sync_result_selection(parent,service):
 
 def show_preview(parent, path, text):
     window = tk.Toplevel(parent)
-    window.title('Jarvis — lettura senza modifica: '+Path(path).name)
+    window.title('Lumi — lettura senza modifica: '+Path(path).name)
     window.geometry('780x550')
     ttk.Label(window, text=path, wraplength=750).pack(fill='x', padx=10, pady=8)
     area = tk.Text(window, wrap='word')

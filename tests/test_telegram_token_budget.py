@@ -70,7 +70,7 @@ class TelegramTurnsTests(unittest.TestCase):
         self.assertEqual(messages[-1]["content"], "senza risposta\ndomanda")
         none = telegram_local_messages("domanda", ctx, "", 0)
         self.assertEqual(len(none), 1)
-        self.assertIn("Sei Jarvis", none[0]["content"])
+        self.assertIn("Sei Lumi", none[0]["content"])
 
     def test_session_drops_pairs_until_the_prompt_fits(self):
         adapter = TokenCountingAdapter()

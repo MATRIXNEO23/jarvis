@@ -902,7 +902,7 @@ class FileAccessService:
                 raise PermissionError('Destinazione cambiata o accesso revocato.')
             raw = stream.read(262145)
         if len(raw) > 262144:
-            raise ValueError('File oltre 256 KiB: lettura non eseguita per non appesantire Jarvis.')
+            raise ValueError('File oltre 256 KiB: lettura non eseguita per non appesantire Lumi.')
         if raw.startswith((b'\xff\xfe', b'\xfe\xff')):
             text = raw.decode('utf-16')
         else:

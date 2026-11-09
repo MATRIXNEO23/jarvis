@@ -8,13 +8,13 @@ class NativeCatalogCueTests(unittest.TestCase):
     def test_plain_conversation_gets_no_catalog(self):
         for text in ("Ciao, come va la giornata?", "Mi sento stanco oggi",
                      "Che tempo fa a Roma?", "Raccontami una barzelletta",
-                     "Jarvis, grazie mille"):
+                     "Lumi, grazie mille"):
             with self.subTest(text=text):
                 self.assertIsNone(context_for(text))
 
     def test_action_hints_keep_the_catalog(self):
         for text in ("Vorrei vedere un film", "apri netflix",
-                     "Jarvis, metti un po' di musica", "Quanto è occupata la RAM?",
+                     "Lumi, metti un po' di musica", "Quanto è occupata la RAM?",
                      "Scrivi un messaggio a Mio Tim", "imposta un timer di 5 minuti",
                      "cerca il file della tesi", "Controlla lo stato del PC",
                      "Dimmi come sta il computer"):

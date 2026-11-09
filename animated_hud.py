@@ -1,4 +1,4 @@
-"""Reference-inspired animated JARVIS HUD, lightweight Tkinter edition.
+"""Reference-inspired animated LUMI HUD, lightweight Tkinter edition.
 
 Faithful layout and layered vector artwork without false live telemetry.
 Appearance never controls the microphone, GPT, executable tools or documents.
@@ -202,7 +202,7 @@ class MetricTile:
 
 
 class JarvisHUD:
-    """Chat left, animated JARVIS nucleus center, rotating Earth right."""
+    """Chat left, animated LUMI nucleus center, rotating Earth right."""
 
     def __init__(self,parent,on_settings):
         self.parent=parent
@@ -351,7 +351,7 @@ class JarvisHUD:
         self.orbit_markers=OrbitMarkers(
             self.core_canvas,lambda ident:self._orbit_click(ident))
 
-        self.visual_status=tk.StringVar(value="JARVIS  //  STANDBY")
+        self.visual_status=tk.StringVar(value="LUMI  //  STANDBY")
         tk.Label(self.visual,textvariable=self.visual_status,
                  bg=BG,fg="#60abc5",
                  font=("Consolas",9),pady=3).pack(fill="x")
@@ -517,16 +517,16 @@ class JarvisHUD:
             f"MIC  {'ATTIVO' if mic_enabled else 'OFF'}    /    "
             f"GPT  {'ON' if connected else 'OFF'}    /    "
             f"MEMORIA  {'ON' if memory else 'OFF'}")
-        status=("JARVIS // TRASMISSIONE VOCALE" if speaking else
-                "JARVIS // VOCE RILEVATA" if listening else
-                "JARVIS // STA RAGIONANDO" if reasoning else
-                "JARVIS // RICERCA SUL PC" if searching else
-                "JARVIS // ELABORAZIONE" if thinking else
-                "JARVIS // MICROFONO ATTIVO - IN ATTESA" if mic_enabled else
-                "JARVIS // STANDBY")
-        info=("JARVIS STA PARLANDO" if speaking else
+        status=("LUMI // TRASMISSIONE VOCALE" if speaking else
+                "LUMI // VOCE RILEVATA" if listening else
+                "LUMI // STA RAGIONANDO" if reasoning else
+                "LUMI // RICERCA SUL PC" if searching else
+                "LUMI // ELABORAZIONE" if thinking else
+                "LUMI // MICROFONO ATTIVO - IN ATTESA" if mic_enabled else
+                "LUMI // STANDBY")
+        info=("LUMI STA PARLANDO" if speaking else
               "LA TUA VOCE È RILEVATA" if listening else
-              "JARVIS STA RAGIONANDO" if reasoning else
+              "LUMI STA RAGIONANDO" if reasoning else
               "RICERCA SUL PC IN CORSO" if searching else
               "ELABORAZIONE IN CORSO" if thinking else
               "MICROFONO ATTIVO  •  ATTESA VOCE" if mic_enabled else

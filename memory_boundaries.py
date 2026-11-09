@@ -114,7 +114,7 @@ def observed_local_result(result) -> bool:
     """A direct local read with a persisted executor receipt can be verified.
 
     Launching a process, opening a browser, or issuing a web search is only
-    a success report: Jarvis has no independent observation of the window.
+    a success report: Lumi has no independent observation of the window.
     """
     return bool(
         getattr(result,"status",None)=="completed"

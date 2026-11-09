@@ -32,7 +32,7 @@ class OnlinePermissionsWindow:
         self.path = path or default_online_permissions_path()
         self.policy = OnlinePermissionPolicy.load(self.path)
         self.window = tk.Toplevel(parent)
-        self.window.title("Jarvis - Autorizzazioni GPT per funzione")
+        self.window.title("Lumi - Autorizzazioni GPT per funzione")
         self.window.geometry("650x560")
         self.window.transient(parent)
         frame = ttk.Frame(self.window, padding=14)

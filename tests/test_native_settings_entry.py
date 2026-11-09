@@ -1,4 +1,4 @@
-"""Guard the opt-in settings entry point in Jarvis."""
+"""Guard the opt-in settings entry point in Lumi."""
 import ast
 from pathlib import Path
 import unittest

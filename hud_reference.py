@@ -1,4 +1,4 @@
-"""Vector HUD art modelled after Jarvis's approved cinematic reference.
+"""Vector HUD art modelled after Lumi's approved cinematic reference.
 
 All drawing uses stock Tk Canvas. Nothing here controls Windows, audio,
 microphone state, files or model tools. Real-time values come from the host UI.
@@ -281,7 +281,7 @@ class ReactorArt:
             _ellipse(c,cx,cy,r*.31,outline="#165f83",width=2),
             _ellipse(c,cx,cy,r*.35,outline="#165f83",width=2)]
         self.core_name=c.create_text(cx,cy-1,
-                                     text="JARVIS",
+                                     text="LUMI",
                                      fill="#d9f8ff",
                                      font=("Segoe UI",max(16,int(r*.24)),"bold"))
         # Tiny status lines below the reactor (never "ASCOLTO" inside it).

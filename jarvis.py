@@ -1,4 +1,4 @@
-"""Jarvis alpha — local commands, GPT conversation and offline voice.
+"""Lumi alpha — local commands, GPT conversation and offline voice.
 
 App startup may automatically enable the locally configured Vosk microphone.
 A visible settings switch can disable auto-listening for future launches; all
@@ -92,7 +92,7 @@ def main() -> None:
     root = tk.Tk()
     from window_chrome import install_window_chrome
     install_window_chrome(root)
-    root.title("JARVIS // Interfaccia")
+    root.title("LUMI // Interfaccia")
     root.geometry("1200x670")
     root.minsize(940, 580)
     root.configure(bg=BG)
@@ -129,7 +129,7 @@ def main() -> None:
     # Every existing setting remains available without crowding the main HUD.
     # The settings window is created once, hidden until the user presses ⚙.
     settings_window = tk.Toplevel(root)
-    settings_window.title("JARVIS // Impostazioni")
+    settings_window.title("LUMI // Impostazioni")
     settings_window.geometry("820x650")
     settings_window.minsize(650, 480)
     settings_window.withdraw()
@@ -174,11 +174,11 @@ def main() -> None:
             messagebox.showerror("Impostazioni", str(exc), parent=settings_window)
 
     ttk.Checkbutton(interface_settings_frame,
-                    text="Tieni acceso il PC con Jarvis massimizzato in primo piano",
+                    text="Tieni acceso il PC con Lumi massimizzato in primo piano",
                     variable=keep_awake, command=save_keep_awake).pack(anchor="w")
     ttk.Label(interface_settings_frame, wraplength=540,
               text="Sospende lo standby automatico e lo spegnimento dello schermo "
-                   "finché la finestra principale di Jarvis è massimizzata e in primo piano."
+                   "finché la finestra principale di Lumi è massimizzata e in primo piano."
               ).pack(anchor="w", pady=(6, 0))
 
     # Optional native settings editor. No model initialization or provider switch.
@@ -187,7 +187,7 @@ def main() -> None:
             from local_model.native_ui import NativeSettingsWindow
             NativeSettingsWindow(settings_window, get_session=get_gemma_session)
         except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Jarvis / Gemma", str(exc), parent=settings_window)
+            messagebox.showerror("Lumi / Gemma", str(exc), parent=settings_window)
 
     native_settings_box = ttk.LabelFrame(assistant_settings_frame,
                                          text="Modello locale Gemma (sperimentale)")
@@ -204,7 +204,7 @@ def main() -> None:
             from local_model.multimodel_ui_f5 import MultiModelSettingsF5Window
             MultiModelSettingsF5Window(settings_window)
         except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Jarvis / Multimodello F5", str(exc),
+            messagebox.showerror("Lumi / Multimodello F5", str(exc),
                                  parent=settings_window)
 
     ttk.Button(native_settings_box, text="Anteprima multimodello Gemma / Qwen...",
@@ -215,7 +215,7 @@ def main() -> None:
             from local_model.memory_ui import MemoryPreferencesWindow
             MemoryPreferencesWindow(settings_window, get_session=get_gemma_session)
         except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Jarvis / Memoria", str(exc), parent=settings_window)
+            messagebox.showerror("Lumi / Memoria", str(exc), parent=settings_window)
 
     ttk.Button(native_settings_box, text="Configura memoria e inattivita...",
                command=open_memory_preferences).pack(anchor="w", padx=8, pady=6)
@@ -225,7 +225,7 @@ def main() -> None:
             from local_model.online_permissions_ui import OnlinePermissionsWindow
             OnlinePermissionsWindow(settings_window)
         except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Jarvis / Permessi GPT", str(exc), parent=settings_window)
+            messagebox.showerror("Lumi / Permessi GPT", str(exc), parent=settings_window)
 
     ttk.Button(native_settings_box, text="Autorizzazioni GPT per funzione...",
                command=open_online_permissions).pack(anchor="w", padx=8, pady=6)
@@ -319,21 +319,21 @@ def main() -> None:
             ("Standby (spento)", STANDBY),
             ("Premi per parlare", PUSH_TO_TALK),
             ("Ascolto continuo", CONTINUOUS),
-            ("Hey Jarvis", GPT_CONVERSATION))):
+            ("Hey Lumi", GPT_CONVERSATION))):
         button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
         button.grid(row=index // 2, column=index % 2, sticky="w", padx=(0, 12), pady=3)
         mode_buttons.append(button)
     auto_listen_enabled = tk.BooleanVar(value=settings["auto_listen"])
     auto_listen_switch = ttk.Checkbutton(
         audio_controls,
-        text="Avvia Jarvis con microfono attivo (richiede Jarvis prima di ogni comando)",
+        text="Avvia Lumi con microfono attivo (richiede Lumi prima di ogni comando)",
         variable=auto_listen_enabled)
     auto_listen_switch.pack(anchor="w", pady=(5, 1))
     ttk.Label(
         audio_controls,
         text="Il microfono resta acceso fino a quando scegli Standby. "
              "La voce non viene salvata: Vosk trascrive in locale; "
-             "solo le richieste precedute da Jarvis vengono elaborate; "
+             "solo le richieste precedute da Lumi vengono elaborate; "
              "la conversazione usa Gemma locale, senza invio automatico a GPT.",
         wraplength=710).pack(anchor="w", pady=(0, 4))
     ptt_button = ttk.Button(audio_controls, text="Tieni premuto per parlare", state="disabled")
@@ -354,7 +354,7 @@ def main() -> None:
     speech_controls = ttk.LabelFrame(frame, text="Risposte vocali offline — voci di Windows", padding=8)
     speech_controls.pack(fill="x", pady=(0, 8))
     spoken_switch = ttk.Checkbutton(
-        speech_controls, text="Jarvis risponde a voce", variable=spoken_enabled)
+        speech_controls, text="Lumi risponde a voce", variable=spoken_enabled)
     spoken_switch.pack(anchor="w")
     speech_row = ttk.Frame(speech_controls)
     speech_row.pack(fill="x", pady=(4, 0))
@@ -381,7 +381,7 @@ def main() -> None:
               command=lambda _v: spoken_effect.set(int(float(_v)))).pack(side="left")
     ttk.Label(natural_row, textvariable=spoken_effect, width=4).pack(side="left", padx=(4, 0))
     ttk.Label(speech_controls, wraplength=680, foreground="#5f8aa3", text=(
-        "Paola e Serena sono voci Piper scaricate dal repository Jarvis con verifica. "
+        "Paola e Serena sono voci Piper scaricate dal repository Lumi con verifica. "
         "Serena: it_IT-serena-high by Marco Baccarani (Committa), CC BY 4.0. "
         "Richiedono installa_voce_naturale.bat; se non funzionano si usa la voce di Windows.")
               ).pack(anchor="w", pady=(4, 0))
@@ -464,7 +464,7 @@ def main() -> None:
                     command=save_timer_preferences).pack(anchor="w", pady=(5, 0))
     ttk.Label(timer_box,
               text="Il bip alternativo usa il volume di Windows, "
-                   "non il cursore Jarvis.", wraplength=590).pack(anchor="w")
+                   "non il cursore Lumi.", wraplength=590).pack(anchor="w")
     volume_row = ttk.Frame(timer_box)
     volume_row.pack(fill="x", pady=(12, 5))
     ttk.Label(volume_row, text="Volume").pack(side="left", padx=(0, 8))
@@ -501,7 +501,7 @@ def main() -> None:
 
     document_controls = ttk.Frame(frame)
     document_controls.pack(fill="x", pady=(0, 6))
-    document_status = tk.StringVar(value="Documenti: nessuno aperto da Jarvis.")
+    document_status = tk.StringVar(value="Documenti: nessuno aperto da Lumi.")
     ttk.Label(document_controls, textvariable=document_status, wraplength=530).pack(
         side="left", fill="x", expand=True)
     choose_save_button = ttk.Button(document_controls, text="Scegli dove salvare",
@@ -893,16 +893,16 @@ def main() -> None:
         # chat switching is blocked during generation.
         if (busy_gpt or busy_local or document_busy
                 or (local_chat_active and gemma_trial_busy[0])):
-            write_line("JARVIS > Finisco questa operazione prima di cambiare progetto.")
+            write_line("LUMI > Finisco questa operazione prima di cambiare progetto.")
             return False
         if documents.current is not None or doc_dialog.phase != "idle":
-            write_line("JARVIS > Chiudi il documento di Blocco note prima di cambiare progetto.")
+            write_line("LUMI > Chiudi il documento di Blocco note prima di cambiare progetto.")
             speak_result("Chiudi prima il documento aperto, per non confondere i progetti.")
             return False
         if project_id is not None:
             if (workspace is None or not workspace.project(project_id)
                     or workspace.project(project_id)["trashed"]):
-                write_line("JARVIS > Progetto non trovato o nel cestino.")
+                write_line("LUMI > Progetto non trovato o nel cestino.")
                 return False
             project=workspace.project(project_id)
         if workspace is not None:
@@ -935,7 +935,7 @@ def main() -> None:
         pending_project_reference.reset()
         pending_preference=None
         write_line(
-            "JARVIS > "+("Progetto aperto: "+project["name"]+"."
+            "LUMI > "+("Progetto aperto: "+project["name"]+"."
                         if project_id else "Conversazione generale ripristinata."))
         return True
 
@@ -951,7 +951,7 @@ def main() -> None:
                 return False
             if command is not None:
                 message = "Non riesco a leggere la memoria dei progetti. Non significa che siano spariti."
-                write_line("JARVIS > "+message)
+                write_line("LUMI > "+message)
                 speak_result(message)
                 return True
             return False
@@ -961,7 +961,7 @@ def main() -> None:
                     and documents.current is None and doc_dialog.phase=="idle")
 
         def acknowledge(message: str) -> bool:
-            write_line("JARVIS > "+message)
+            write_line("LUMI > "+message)
             speak_result(message)
             return True
 
@@ -1033,7 +1033,7 @@ def main() -> None:
                     message="Progetti salvati: "+names+(
                         ". E altri "+str(remaining)+" nell'elenco." if remaining else ".")
                 else:
-                    message="Nel database attuale non risultano progetti. Controlla la cartella dati di Jarvis."
+                    message="Nel database attuale non risultano progetti. Controlla la cartella dati di Lumi."
             except (OSError,sqlite3.Error,WorkspaceError):
                 message="Non riesco a consultare l'archivio dei progetti; non vuol dire che siano cancellati."
         elif command_action=="list_trash":
@@ -1161,7 +1161,7 @@ def main() -> None:
             cleaned=normalized_utterance(spoken)
             if cleaned.casefold() in ("annulla","niente","lascia stare","no"):
                 pending_project_reference.reset()
-                write_line("JARVIS > Chiarimento annullato.")
+                write_line("LUMI > Chiarimento annullato.")
                 speak_result("Chiarimento annullato.")
                 return True
             # A fresh full command supersedes the old question; never replay it.
@@ -1182,7 +1182,7 @@ def main() -> None:
                 if match is None:
                     message=("Non trovo un progetto salvato con quel nome. "
                              "Quale progetto esistente intendi?")
-                    write_line("JARVIS > "+message)
+                    write_line("LUMI > "+message)
                     speak_result(message)
                     return True
                 # The answer explicitly chooses the target requested by Jarvis.
@@ -1190,7 +1190,7 @@ def main() -> None:
                 if not switch_context(match["id"]):
                     pending_project_reference.reset()
                     return True
-                write_line("JARVIS > Riferimento risolto: progetto "+match["name"]+".")
+                write_line("LUMI > Riferimento risolto: progetto "+match["name"]+".")
                 if gpt_enabled.get() and active_gpt and not busy_gpt:
                     # Resume the previous READ-ONLY question in *chat* mode,
                     # never via the executor or an old capability intent.
@@ -1207,19 +1207,19 @@ def main() -> None:
                       ", stato "+steps[0]["status"]+".") if steps else (
                       " Nessuna attività ancora registrata.")
                 message="Progetto "+match["name"]+" selezionato."+last
-                write_line("JARVIS > "+message)
+                write_line("LUMI > "+message)
                 speak_result(message)
                 return True
             except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
                 pending_project_reference.reset()
                 message="Non riesco a consultare il progetto: "+str(exc)[:100]
-                write_line("JARVIS > "+message)
+                write_line("LUMI > "+message)
                 speak_result(message)
                 return True
         if pending_project_reference.start_if_needed(
                 spoken,selected=active_project_id is not None):
             message="Quale progetto salvato vuoi aprire per risponderti?"
-            write_line("JARVIS > "+message)
+            write_line("LUMI > "+message)
             speak_result(message)
             return True
         return False
@@ -1232,7 +1232,7 @@ def main() -> None:
                 or conversation_memory.last_question()):
             return False
         message="A quale domanda ti riferisci?"
-        write_line("JARVIS > "+message)
+        write_line("LUMI > "+message)
         speak_result(message)
         remember_exchange(spoken,message,"clarify")
         return True
@@ -1258,11 +1258,11 @@ def main() -> None:
                             message="Preferenza confermata e salvata."
                     except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
                         message="Preferenza non salvata: "+str(exc)[:90]
-                write_line("JARVIS > "+message)
+                write_line("LUMI > "+message)
                 speak_result(message)
                 return True
             if answer in ("annulla","no","lascia stare","non salvare"):
-                write_line("JARVIS > Preferenza non salvata.")
+                write_line("LUMI > Preferenza non salvata.")
                 speak_result("Preferenza non salvata.")
                 return True
             # A new topic cancels stale pending consent.
@@ -1287,7 +1287,7 @@ def main() -> None:
                      " la preferenza "+intent.key+
                      ("="+intent.value if intent.value else "")+
                      "? Di' confermo oppure annulla.")
-        write_line("JARVIS > "+message)
+        write_line("LUMI > "+message)
         speak_result(message)
         return True
 
@@ -1383,7 +1383,7 @@ def main() -> None:
         from local_model.online_permissions import authorize_online_request
         def confirm_review():
             return messagebox.askyesno(
-                "JARVIS — valutazione esterna",
+                "LUMI — valutazione esterna",
                 "Vuoi inviare al GPT collegato soltanto un rapporto tecnico "
                 "ridotto dell'autodiagnosi?\n\n"
                 "Contiene: file sorgenti RELATIVI, righe, segnali statici, "
@@ -1498,7 +1498,7 @@ def main() -> None:
         diagnostic_threads[:]=[t for t in diagnostic_threads if t.is_alive()]
         if len(diagnostic_threads)>=2:
             message=("Due analisi precedenti non rispondono ancora. "
-                     "Non avvio altri controlli; chiudi e riapri Jarvis.")
+                     "Non avvio altri controlli; chiudi e riapri Lumi.")
             diagnostic_status.set("Autodiagnosi: processi non responsivi")
             write_line("DIAGNOSTICA > "+message)
             speak_result(message)
@@ -1577,7 +1577,7 @@ def main() -> None:
         if workspace is None or peer_id not in allowed:
             return
         win=tk.Toplevel(root)
-        win.title("JARVIS // Telegram — "+allowed[peer_id])
+        win.title("LUMI // Telegram — "+allowed[peer_id])
         win.geometry("640x420")
         log=tk.Text(win,wrap="word",bg="#031522",fg="#d7f6ff",
                     padx=12,pady=8)
@@ -1586,7 +1586,7 @@ def main() -> None:
             records=workspace.telegram_activity(peer_id,limit=50)
             for item in reversed(records):
                 direction=("RICEVUTO" if item["direction"]=="incoming"
-                           else "JARVIS HA RISPOSTO")
+                           else "LUMI HA RISPOSTO")
                 log.insert("end",item["when"]+"  "+direction
                            +" ["+item["kind"]+"]\n"
                            +item["text"]+"\n\n")
@@ -1623,9 +1623,9 @@ def main() -> None:
         try:
             workspace.note_for_contact(peer_id,message)
         except (OSError,sqlite3.Error,WorkspaceError) as exc:
-            write_line("JARVIS > Non posso salvare il messaggio: "+str(exc)[:100])
+            write_line("LUMI > Non posso salvare il messaggio: "+str(exc)[:100])
             return False
-        write_line("JARVIS > Messaggio memorizzato per "
+        write_line("LUMI > Messaggio memorizzato per "
                    +chosen[0]["name"]
                    +". Lo riferirò al prossimo contatto, se Telegram è attivo.")
         return True
@@ -1635,7 +1635,7 @@ def main() -> None:
             telegram_status.set("Configura prima il contatto autorizzato.")
             return
         message=simpledialog.askstring(
-            "JARVIS / Telegram",
+            "LUMI / Telegram",
             "Che cosa devo riferire al contatto autorizzato?",
             parent=root)
         if message:
@@ -1680,7 +1680,7 @@ def main() -> None:
         nonlocal addon_settings_window
         if addon_manager is None:
             messagebox.showerror(
-                "Add-on Jarvis",
+                "Add-on Lumi",
                 "Archivio add-on non disponibile: "+addon_setup_error,parent=root)
             return
         if (addon_settings_window is not None
@@ -1845,7 +1845,7 @@ def main() -> None:
         """Explicit owner-initiated, one-shot OGG/Opus send; no GPT needed."""
         nonlocal telegram_owner_busy
         if closing or telegram_owner_busy:
-            write_line("TELEGRAM > Invio già in corso oppure Jarvis in chiusura.")
+            write_line("TELEGRAM > Invio già in corso oppure Lumi in chiusura.")
             speak_result("Invio Telegram già in corso.")
             return False
         contact=next((c for c in selected_telegram_contacts()
@@ -1909,7 +1909,7 @@ def main() -> None:
             return False
         if action.kind=="ask_message":
             message="Che messaggio vuoi mandare a "+action.name+"?"
-            write_line("JARVIS > "+message)
+            write_line("LUMI > "+message)
             speak_result(message)
         elif action.kind=="ask_confirm":
             write_line("TELEGRAM > Bozza per "+action.name+": "+action.message)
@@ -2155,7 +2155,7 @@ def main() -> None:
                     candidate = authorize_online_request(capability, confirmed=True)
                     if candidate is not None and (consent_granted or confirm_gpt_inference(
                             "Conversazione GPT per questa sessione, da voce e chat. "
-                            "Il consenso termina scegliendo Gemma o chiudendo Jarvis.\n\n"
+                            "Il consenso termina scegliendo Gemma o chiudendo Lumi.\n\n"
                             + consent_detail)):
                         permission = candidate
             else:
@@ -2306,7 +2306,7 @@ def main() -> None:
         # toggle_gpt restores the old setting if persistence fails.
         model = "GPT" if gpt_enabled.get() else "Gemma"
         message = "Modello selezionato: " + model + "."
-        write_line("JARVIS > " + message)
+        write_line("LUMI > " + message)
         speak_result(message)
         return True
 
@@ -2513,7 +2513,7 @@ def main() -> None:
     ttk.Label(telegram_panel,wraplength=690,
               text="Il consenso per questa sessione permette di inviare a GPT online "
                    "i messaggi e il contesto recente delle chat Telegram dei contatti "
-                   "spuntati. Si azzera quando spegni o disconnetti GPT o chiudi Jarvis."
+                   "spuntati. Si azzera quando spegni o disconnetti GPT o chiudi Lumi."
               ).pack(anchor="w",pady=(2,0))
     telegram_row=ttk.Frame(telegram_panel)
     telegram_row.pack(fill="x",pady=(4,3))
@@ -2608,7 +2608,7 @@ def main() -> None:
     gemma_button.pack(side="left", padx=(0, 4))
     plan_button = ttk.Button(buttons_row, text="Pianifica attività")
     plan_button.pack(side="left", padx=(0, 4))
-    diagnostic_button = ttk.Button(buttons_row, text="Autodiagnosi Jarvis")
+    diagnostic_button = ttk.Button(buttons_row, text="Autodiagnosi Lumi")
     diagnostic_button.pack(side="left")
 
     # Native Tk text with a dark ttk scrollbar matches the concept's
@@ -2653,7 +2653,7 @@ def main() -> None:
         on_change=lambda old, new: chat_selection_changed(old, new),
         on_settings=open_native_model_settings)
     chat_sessions_panel.frame.pack(fill="both", expand=True)
-    write_line("Jarvis locale pronto. Scrivi 'aiuto' o premi F1 per la guida e i comandi.")
+    write_line("Lumi locale pronto. Scrivi 'aiuto' o premi F1 per la guida e i comandi.")
 
     try:
         engine = LocalEngine()
@@ -2669,7 +2669,7 @@ def main() -> None:
             except (ImportError,OSError,ValueError) as exc:
                 engine.file_access_blocked = True
                 write_line("ACCESSO FILE > Componente incompleto: "+str(exc)+
-                           ". Reinstalla il pacchetto completo (cartella file_access), poi riavvia Jarvis.")
+                           ". Reinstalla il pacchetto completo (cartella file_access), poi riavvia Lumi.")
     except (OSError, ValueError) as exc:
         messagebox.showerror("Motore locale non disponibile", str(exc), parent=root)
         root.destroy()
@@ -2858,7 +2858,7 @@ def main() -> None:
             announce_document("Attendi la fine della scrittura prima di chiudere.")
             return
         if doc_dialog.phase != "editing" or doc_dialog.document_id is None:
-            announce_document("Non ho un documento Blocco note gestito da Jarvis da chiudere.")
+            announce_document("Non ho un documento Blocco note gestito da Lumi da chiudere.")
             return
         decision = doc_dialog.request_close()
         if decision.kind == "close_clean":
@@ -3043,7 +3043,7 @@ def main() -> None:
             return
         write_line(
             "SISTEMA > Al prossimo avvio microfono "
-            + ("in conversazione locale con hotword Jarvis." if desired
+            + ("in conversazione locale con hotword Lumi." if desired
                else "in standby, come selezionato nelle impostazioni."))
 
     def change_voice_mode() -> None:
@@ -3067,12 +3067,12 @@ def main() -> None:
         elif selected == PUSH_TO_TALK:
             mic_status.set("Premi per parlare: microfono spento finché non tieni premuto.")
         elif selected == GPT_CONVERSATION:
-            mic_status.set("Microfono attivo: inizia ogni richiesta con Jarvis, "
-                           "per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato.")
+            mic_status.set("Microfono attivo: inizia ogni richiesta con Lumi, "
+                           "per esempio ‘Lumi, apri Netflix’. Il resto viene ignorato.")
             if not spoken_enabled.get():
                 spoken_enabled.set(True)
                 save_speech_preferences()
-            write_line("Modalità Hey Jarvis. Inizia ogni richiesta con Jarvis.")
+            write_line("Modalità Hey Lumi. Inizia ogni richiesta con Lumi.")
         else:
             mic_status.set("Ascolto continuo: parla direttamente. "
                            "La dettatura richiede l’attivazione manuale.")
@@ -3329,13 +3329,13 @@ def main() -> None:
         last_user_for_action = source_utterance or message
         project_local_ticket = begin_project_work(last_user_for_action,"local")
         if project_local_ticket is False:
-            write_line("JARVIS > Impossibile salvare il checkpoint: comando non eseguito.")
+            write_line("LUMI > Impossibile salvare il checkpoint: comando non eseguito.")
             return
         if operation_ledger is None:
             finish_project_work(project_local_ticket,"interrupted",
                                 "Registro operativo non disponibile.")
             project_local_ticket=None
-            write_line("JARVIS > Registro operativo non disponibile: non eseguo.")
+            write_line("LUMI > Registro operativo non disponibile: non eseguo.")
             return
         try:
             local_operation_id=operation_ledger.begin(
@@ -3345,7 +3345,7 @@ def main() -> None:
             finish_project_work(project_local_ticket,"interrupted",
                                 "Impossibile registrare l'operazione.")
             project_local_ticket=None
-            write_line("JARVIS > Operazione bloccata: "+str(exc)[:95])
+            write_line("LUMI > Operazione bloccata: "+str(exc)[:95])
             return
         busy_local = True
         refresh_buttons()
@@ -3431,7 +3431,7 @@ def main() -> None:
                     "open", source_utterance=original_phrase)
             else:
                 announce_document(
-                    "C'è già un Blocco note gestito da Jarvis. "
+                    "C'è già un Blocco note gestito da Lumi. "
                     "Dimmi cosa vuoi scriverci.")
         elif cap.handler == "document_close":
             if (doc_snapshot is not None
@@ -3529,7 +3529,7 @@ def main() -> None:
                 runtime_info=capability_status_prompt(live))
         except (ValueError,ConversationRejected) as exc:
             request.set(message)
-            write_line("JARVIS > " + str(exc))
+            write_line("LUMI > " + str(exc))
             return
         if run_gpt("ask", prompt=prompt, source=message):
             request.set("")
@@ -3624,7 +3624,7 @@ def main() -> None:
                     write_line("DIAGNOSTICA > "+format_audit(audit))
                     write_line("DIAGNOSTICA > Se vuoi un parere del modello "
                                "esterno, puoi chiedere: "
-                               "'Jarvis, valuta la diagnosi con GPT'. "
+                               "'Lumi, valuta la diagnosi con GPT'. "
                                "Prima di inviare dati chiederò il consenso.")
                     if audit.recommendations:
                         first=audit.recommendations[0]
@@ -3749,7 +3749,7 @@ def main() -> None:
                             route_type = "command"
                         if route_type == "wake":
                             if voice_mode.get() == GPT_CONVERSATION:
-                                mic_status.set("Dì Jarvis seguito dalla richiesta nella stessa frase.")
+                                mic_status.set("Dì Lumi seguito dalla richiesta nella stessa frase.")
                         if route_type not in ("command", "dictation"):
                             continue
                     if raw_spoken and voice_mode.get() != STANDBY:
@@ -3984,7 +3984,7 @@ def main() -> None:
                                 observed=observed,action=result.action
                                 if result.action!="internal" else "local_error")
                         except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
-                            write_line("JARVIS > Registro operazioni: "+str(exc)[:90])
+                            write_line("LUMI > Registro operazioni: "+str(exc)[:90])
                     local_operation_id=None
                     finish_project_work(project_local_ticket,
                         "completed" if result.status=="completed" else "failed",
@@ -4051,7 +4051,7 @@ def main() -> None:
                                 if observed_file else "",observed=observed_file,
                                 action="notepad."+operation)
                         except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
-                            write_line("JARVIS > Registro documento: "+str(exc)[:90])
+                            write_line("LUMI > Registro documento: "+str(exc)[:90])
                     document_operation_id=None
                     finish_project_work(project_document_ticket,"completed",result.message,
                                         receipt=str(result.document_id)+":"+result.kind,
@@ -4106,7 +4106,7 @@ def main() -> None:
                             operation_ledger.finish(document_operation_id,"failed",
                                                     action="notepad."+operation)
                         except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
-                            write_line("JARVIS > Registro documento: "+str(exc)[:90])
+                            write_line("LUMI > Registro documento: "+str(exc)[:90])
                     document_operation_id=None
                     finish_project_work(project_document_ticket,"failed",error_message)
                     project_document_ticket = None
@@ -4145,7 +4145,7 @@ def main() -> None:
                                     and intent.kind not in ("chat","clarify")):
                                 message=("Per eseguire un'azione, dimmi "
                                          "esplicitamente cosa vuoi fare.")
-                                write_line("JARVIS > "+message)
+                                write_line("LUMI > "+message)
                                 speak_result(message)
                                 remember_exchange(original_phrase,message,"clarify")
                                 continue
@@ -4153,7 +4153,7 @@ def main() -> None:
                                 if (not refinement_token and intent.kind=="clarify" and addon_manager is not None
                                         and addon_manager.files_enabled()):
                                     addon_manager.file_service.remember_file_clarification(original_phrase)
-                                write_line("JARVIS > " + intent.reply)
+                                write_line("LUMI > " + intent.reply)
                                 speak_result(intent.reply)
                                 remember_exchange(original_phrase, intent.reply,
                                                   intent.kind)
@@ -4176,10 +4176,10 @@ def main() -> None:
                                         current_id is None or current_id != doc_snapshot):
                                     announce_document(
                                         "Il documento selezionato è cambiato o non è gestito "
-                                        "da Jarvis. Non ho inserito il testo.")
+                                        "da Lumi. Non ho inserito il testo.")
                                 elif current_id is not None and intent.target == "new_notepad":
                                     announce_document(
-                                        "C'è già un documento aperto da Jarvis. "
+                                        "C'è già un documento aperto da Lumi. "
                                         "Per aggiungere testo a quello, chiedimi di scriverci.")
                                 else:
                                     document_operation(
@@ -4231,7 +4231,7 @@ def main() -> None:
                             active_gpt = True
                         elif action == "disconnect":
                             display_status({"status": "disconnected", "sharing": False})
-                            write_line("Account scollegato da Jarvis.")
+                            write_line("Account scollegato da Lumi.")
                         else:
                             display_status(result)
                     else:
@@ -4462,7 +4462,7 @@ def main() -> None:
             return
         if gpt_enabled.get() and active_gpt:
             if busy_gpt:
-                write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
+                write_line("LUMI > Sto già elaborando. Attendi la risposta.")
                 return
             submit_gpt()
         else:
@@ -4507,7 +4507,7 @@ def main() -> None:
     def get_gemma_session():
         with gemma_session_lock:
             if closing:
-                raise RuntimeError("Jarvis in chiusura: richiesta Gemma annullata.")
+                raise RuntimeError("Lumi in chiusura: richiesta Gemma annullata.")
             if gemma_session[0] is None:
                 from local_model.native_chat_adapter import NativeChatAdapter
                 from local_model.native_conversation_session import NativeConversationSession
@@ -4872,7 +4872,7 @@ def main() -> None:
                                     "Risposta non salvata su disco ("
                                     + str(chat_sessions_panel.pending_count)
                                     + " in attesa): nuovo tentativo al prossimo messaggio. "
-                                    "Se chiudi Jarvis prima, andranno perse.")
+                                    "Se chiudi Lumi prima, andranno perse.")
                         elif can_save and remember_exchange(value.question, value.text, "chat") is False:
                             write_line("MEMORIA > Scambio non archiviato.")
                         gemma_recent_reply[0] = (
@@ -4912,7 +4912,7 @@ def main() -> None:
 
     plan_button.configure(command=submit_plan)
     diagnostic_button.configure(
-        command=lambda: try_self_diagnostic("Jarvis, fai un'autodiagnosi"))
+        command=lambda: try_self_diagnostic("Lumi, fai un'autodiagnosi"))
     diagnostic_cancel_button.configure(command=cancel_diagnostic)
     service_diagnostic_box = ttk.LabelFrame(integrations_settings_frame, text="Diagnostica servizi")
     service_diagnostic_box.pack(fill="x", padx=8, pady=8)
@@ -5018,7 +5018,7 @@ def main() -> None:
         # The local SAPI voice is suppressed from Vosk input by
         # ignore_audio=speaker.is_audible, also during the cooldown.
         greeting = startup_greeting()
-        write_line("JARVIS > " + greeting)
+        write_line("LUMI > " + greeting)
         speak_result(greeting)
 
     root.protocol("WM_DELETE_WINDOW", close)

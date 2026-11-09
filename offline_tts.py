@@ -176,7 +176,7 @@ class OfflineSpeaker:
                 process.terminate()
         except OSError:
             if self._notify_error:
-                self._notify_error("Impossibile interrompere il processo vocale di Jarvis.")
+                self._notify_error("Impossibile interrompere il processo vocale di Lumi.")
 
     def is_audible(self) -> bool:
         """Guard recognition against the computer's own spoken output."""

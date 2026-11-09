@@ -197,7 +197,7 @@ class FileAccessTests(unittest.TestCase):
     def test_chat_does_not_parse_as_command_precise_and_aliases(self):
         for chat in ('ieri ho letto un file','Netflix è interessante','stasera voglio guardare un film'):
             self.assertIsNone(self.files.parse_command(chat))
-        self.assertEqual(self.files.parse_command('Jarvis cerca file preventivo')[0], 'search')
+        self.assertEqual(self.files.parse_command('Lumi cerca file preventivo')[0], 'search')
         self.assertEqual(self.files.parse_command('spiegami file 1'), ('read', {'target':'1','kind':'file','explain':True}))
         self.assertIn('Accesso file attivo', self.engine.execute('cosa puoi fare?').message)
         self.assertIn('apri calcolatrice', self.engine.execute('aiuto').message)
@@ -505,13 +505,13 @@ class FileAccessTests(unittest.TestCase):
     def test_store_rows_still_obey_local_policy(self):
         from file_access.windows import installed_locations
         with patch('file_access.windows.shell_query',return_value={'status':'ok','rows':[
-                {'path':str(self.docs),'name':'Jarvis Test Store App'},
-                {'path':str(self.hidden),'name':'Jarvis Test Store App'}]}):
-            rows=installed_locations('Jarvis Test Store App')
+                {'path':str(self.docs),'name':'Lumi Test Store App'},
+                {'path':str(self.hidden),'name':'Lumi Test Store App'}]}):
+            rows=installed_locations('Lumi Test Store App')
         self.assertTrue(any(os.path.samefile(path,self.docs) and
-            why=='Registrazione Windows: Jarvis Test Store App' for path,why in rows))
+            why=='Registrazione Windows: Lumi Test Store App' for path,why in rows))
         with patch('file_access.service.installed_locations',return_value=rows),patch.object(self.files,'index',side_effect=AssertionError('No scan')):
-            result=self.files.execute('locate',{'query':'Jarvis Test Store App'})
+            result=self.files.execute('locate',{'query':'Lumi Test Store App'})
         self.assertEqual(len(result.listing['items']),1)
         self.assertTrue(os.path.samefile(result.listing['items'][0][2],self.docs))
         self.assertFalse(any(os.path.samefile(row[2],self.hidden) for row in result.listing['items']))

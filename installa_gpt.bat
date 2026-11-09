@@ -7,7 +7,7 @@ if errorlevel 1 (
   echo Installazione GPT non riuscita. Controlla il messaggio precedente.
 ) else (
   echo.
-  echo Modulo GPT installato. Avvia Jarvis e usa il pulsante Connetti ChatGPT.
+  echo Modulo GPT installato. Avvia Lumi e usa il pulsante Connetti ChatGPT.
 )
 pause
 endlocal

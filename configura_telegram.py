@@ -1,4 +1,4 @@
-"""One-time account login; contacts selected later inside Jarvis.
+"""One-time account login; contacts selected later inside Lumi.
 
 Requires optional free Telethon. Stores API hash + user StringSession sealed
 using Windows DPAPI, and stores only the selected private contact's numeric
@@ -30,14 +30,14 @@ async def configure():
         from telethon.sessions import StringSession
     except ImportError as exc:
         raise RuntimeError("Esegui installa_telegram.bat prima della configurazione.") from exc
-    print("Configurazione sicura JARVIS / Telegram")
+    print("Configurazione sicura LUMI / Telegram")
     print("Occorrono API ID e API hash gratuiti del proprio account da my.telegram.org.")
     print("Non condividere codice Telegram, API hash o sessione.")
     api_id=int(input("API ID: ").strip())
     print("Si aprirà una finestra protetta per l'API hash.")
     print("Incolla con Ctrl+V o con il pulsante Incolla; vedrai degli asterischi.")
     api_hash=prompt_masked_secret(
-        "JARVIS / Telegram - API hash",
+        "LUMI / Telegram - API hash",
         "Incolla l'API hash di 32 caratteri ottenuto da my.telegram.org. "
         "Il contenuto è nascosto. Usa Ctrl+V oppure il pulsante Incolla.",
         min_length=32,max_length=80)
@@ -56,7 +56,7 @@ async def configure():
         if not await client.is_user_authorized():
             await client.send_code_request(phone)
             code=prompt_masked_secret(
-                "JARVIS / Telegram - Codice di accesso",
+                "LUMI / Telegram - Codice di accesso",
                 "Inserisci il codice ricevuto da Telegram. "
                 "Puoi incollarlo con Ctrl+V oppure con Incolla.",
                 min_length=4,max_length=32)
@@ -67,7 +67,7 @@ async def configure():
                 await client.sign_in(phone,code.strip())
             except SessionPasswordNeededError:
                 password=prompt_masked_secret(
-                    "JARVIS / Telegram - Verifica in due passaggi",
+                    "LUMI / Telegram - Verifica in due passaggi",
                     "Inserisci la password in due passaggi di Telegram. "
                     "Usa Ctrl+V o Incolla se la conservi in un gestore password.",
                     min_length=1,max_length=256)
@@ -87,7 +87,7 @@ async def configure():
         settings["telegram_enabled"]=False
         save_settings(settings)
         print("\nAccesso Telegram salvato con cifratura Windows DPAPI.")
-        print("Apri Jarvis > Impostazioni > Gestisci contatti Telegram.")
+        print("Apri Lumi > Impostazioni > Gestisci contatti Telegram.")
         print("Carica i contatti reali e selezionali con la spunta.")
         print("Le risposte automatiche restano SPENTE. Nessun messaggio inviato.")
     finally:

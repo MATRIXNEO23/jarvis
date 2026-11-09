@@ -23,7 +23,7 @@ def help_sections(engine):
     return {
         'Inizia qui':
             'Scrivi nella casella e premi Invio oppure il pulsante di invio.\n'
-            'Diagnostica servizi apre il rapporto locale, anche da voce con Jarvis. Lo trovi anche in Impostazioni > Progetti e servizi. Aggiorna e Copia rapporto non inviano messaggi o richieste ai modelli.\n'
+            'Diagnostica servizi apre il rapporto locale, anche da voce con Lumi. Lo trovi anche in Impostazioni > Progetti e servizi. Aggiorna e Copia rapporto non inviano messaggi o richieste ai modelli.\n'
             'Scrivi aiuto, help o comandi per riaprire questa guida. Funziona anche con Gemma o GPT attivi.\n\n'
             'F1 apre la guida. Ctrl+L porta il cursore nella casella. Ctrl+, apre le impostazioni.\n'
             'La guida non invia richieste ai modelli e non esegue i comandi mostrati.\n'
@@ -50,10 +50,10 @@ def help_sections(engine):
         'Voce':
             'Standby: microfono fermo. Premi per parlare: usa il pulsante dedicato.\n'
             'Ascolto continuo: accetta le richieste direttamente; può interpretare anche parlato ambientale.\n'
-            'Hey Jarvis: inizia OGNI richiesta con Jarvis, per esempio Jarvis, imposta timer sei minuti. '
-            'Il solo nome Jarvis non abilita la frase successiva.\n\n'
+            'Hey Lumi: inizia OGNI richiesta con Lumi, per esempio Lumi, imposta timer sei minuti. '
+            'Il solo nome Lumi non abilita la frase successiva.\n\n'
             'Il pulsante MIC mantiene il controllo manuale. Il riconoscimento offline richiede Vosk e il modello vocale. '
-            'Per installazione e problemi usa docs/VOCE_OFFLINE.md distribuita con Jarvis.',
+            'Per installazione e problemi usa docs/VOCE_OFFLINE.md distribuita con Lumi.',
         'Modelli e GPT':
             'GPT ON seleziona GPT per voce (anche Premi per parlare), chat e Telegram; GPT OFF seleziona Gemma. '
             'I comandi locali riconosciuti vengono intercettati nella console prima dei modelli; file e app seguono i rispettivi controlli.\n\n'
@@ -63,7 +63,7 @@ def help_sections(engine):
             'Risposte non valide o annullate non eseguono azioni. '
             'Se il catalogo non entra nel contesto configurato, compare un avviso: '
             'restano disponibili chat e comandi diretti, senza cambiare automaticamente le impostazioni. '
-            'Passa a GPT / torna a Gemma / usa GPT / attiva Gemma / avvia GPT cambiano lo stesso interruttore, anche a voce. In Hey Jarvis anteponi Jarvis. Telegram mantiene autorizzazione e consenso specifici. Prova Gemma locale resta una prova esplicita del modello.\n\n'
+            'Passa a GPT / torna a Gemma / usa GPT / attiva Gemma / avvia GPT cambiano lo stesso interruttore, anche a voce. In Hey Lumi anteponi Lumi. Telegram mantiene autorizzazione e consenso specifici. Prova Gemma locale resta una prova esplicita del modello.\n\n'
             'GPT richiede abilitazione, collegamento e permesso della funzione. '
             'Mai: nessun invio per quella funzione. Chiedi autorizzazione: domanda prima dell’invio. '
             'Autorizzato: evita quella richiesta ripetuta, ma non autorizza automaticamente le azioni.\n'
@@ -75,7 +75,7 @@ def help_sections(engine):
             'Con Accesso file attivo e Download autorizzata: apri Download, poi apri Foto (nome di una sottocartella), '
             'poi torna indietro di una cartella. La vista Explorer deve essere identificabile senza ambiguità. '
             'Un esempio non concede accesso. Gli alias personali dipendono dal catalogo attivo. '
-            'L’indice autonomo di Jarvis non è implementato: ricerca tramite Windows Search e scansione limitata. '
+            'L’indice autonomo di Lumi non è implementato: ricerca tramite Windows Search e scansione limitata. '
             'Guide del pacchetto: file_access/LEGGIMI.md e program_apps/LEGGIMI.md.',
         'Progetti e Telegram':
             'crea progetto Casa\napri progetto Casa\nelenca progetti\ntorna alla conversazione generale\n\n'
@@ -92,14 +92,14 @@ def help_sections(engine):
             'Ctrl+Tab / Ctrl+Shift+Tab — Cambia sezione della guida.\n'
             'Tab — Passa tra i controlli.\n'
             'Esc nella guida — Chiudi solo la guida.\n\n'
-            'Per problemi: usa Autodiagnosi Jarvis. Un rapporto locale non invia nulla a GPT da solo.',
+            'Per problemi: usa Autodiagnosi Lumi. Un rapporto locale non invia nulla a GPT da solo.',
     }
 
 
 class HelpWindow(tk.Toplevel):
     def __init__(self, parent, engine):
         super().__init__(parent)
-        self.title('Jarvis — Aiuto e comandi')
+        self.title('Lumi — Aiuto e comandi')
         self.geometry('800x550')
         self.minsize(560, 360)
         self.notebook = ttk.Notebook(self)

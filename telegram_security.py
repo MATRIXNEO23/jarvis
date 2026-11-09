@@ -69,7 +69,7 @@ def save_credentials(api_id:int,api_hash:str,session:str,
     # A .dpapi blob is unreadable outside this Windows account.
     tmp=target.with_suffix(".tmp")
     try:
-        tmp.write_bytes(b"JARVIS-TG1\n"+base64.b64encode(encrypted))
+        tmp.write_bytes(b"LUMI-TG1\n"+base64.b64encode(encrypted))
         os.replace(tmp,target)
     finally:
         if tmp.exists():
@@ -80,7 +80,7 @@ def load_credentials(path:Path|None=None,protect=_windows_dpapi):
     target=Path(path) if path is not None else credential_path()
     try:
         raw=target.read_bytes()
-        if not raw.startswith(b"JARVIS-TG1\n"):
+        if not raw.startswith(b"LUMI-TG1\n"):
             raise TelegramAuthError("Formato credenziali non riconosciuto.")
         plain=protect(base64.b64decode(raw.split(b"\n",1)[1],
                                        validate=True),False)

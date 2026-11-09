@@ -1,4 +1,4 @@
-"""ARCH-01 F4 RED: opt-in localhost KoboldCpp canary, no Jarvis wiring.
+"""ARCH-01 F4 RED: opt-in localhost KoboldCpp canary, no Lumi wiring.
 
 No native GGUF, no real HTTP calls, no installed providers or credentials.
 """

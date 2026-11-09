@@ -1,8 +1,8 @@
-"""Natural Italian voices (Piper) for Jarvis/Lumi, with optional digital effect.
+"""Natural Italian voices (Piper) for Lumi/Lumi, with optional digital effect.
 
 Synthesis runs in a child process (``python -m piper``): if the neural runtime
 cannot run on this CPU, only the child fails and the caller falls back to the
-Windows voice. Voices are downloaded from the Jarvis repository (voci.json)
+Windows voice. Voices are downloaded from the Lumi repository (voci.json)
 with SHA-256 verification into the user's profile, never into the program
 folder. The engine (piper-tts) is GPL-3.0 and installed separately.
 """
@@ -56,7 +56,7 @@ def installed_piper_voices(folder: Path | None = None) -> list[str]:
 
 
 def engine_available(runner=subprocess.run) -> bool:
-    """True when ``piper`` imports in a child process (no crash in Jarvis)."""
+    """True when ``piper`` imports in a child process (no crash in Lumi)."""
     try:
         proc = runner([sys.executable, "-c", "import piper"], capture_output=True,
                       timeout=60, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))

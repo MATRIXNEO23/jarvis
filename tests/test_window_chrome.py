@@ -1,4 +1,4 @@
-"""Windows integration checks for Jarvis's shared window chrome."""
+"""Windows integration checks for Lumi's shared window chrome."""
 import sys
 import tkinter as tk
 import unittest

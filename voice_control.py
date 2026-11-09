@@ -52,7 +52,7 @@ def speech_to_local_command(text: str) -> str | None:
     if not isinstance(text, str):
         return None
     words = " ".join(text.casefold().strip(" .!?").split())
-    words = re.sub(r"^(?:(?:ehi|ok)\s+)?jarvis[,\s:]+", "", words)
+    words = re.sub(r"^(?:(?:ehi|ok)\s+)?lumi[,\s:]+", "", words)
     words = re.sub(r"^(?:per favore|gentilmente)\s+", "", words)
     words = re.sub(r"\s+per favore$", "", words)
     words = re.sub(r"^(?:mi )?(?:puoi|potresti)\s+", "", words)
@@ -107,7 +107,7 @@ def speech_to_local_command(text: str) -> str | None:
 class WakeWordGate:
     """Explicit wake name for continuous listening, never a microphone mode.
 
-    A standalone 'Ehi Jarvis' arms exactly one subsequent utterance, for up to
+    A standalone 'Ehi Lumi' arms exactly one subsequent utterance, for up to
     10 seconds. Speech without a wake name is ignored as a command. During
     manual dictation it is text, except recognized wake commands.
     """
@@ -130,7 +130,7 @@ class WakeWordGate:
         if not isinstance(speech, str) or not speech.strip():
             return "ignored", ""
         spoken = " ".join(speech.casefold().replace(",", " ").replace(":", " ").strip(" .!?").split())
-        for name in ("ehi jarvis", "hey jarvis", "jarvis"):
+        for name in ("ehi lumi", "hey lumi", "lumi"):
             if spoken == name:
                 if not require_name:
                     self.armed_until = self.clock() + self.timeout
@@ -358,7 +358,7 @@ class VoiceController:
 def model_switch_target(text: str):
     """Explicit full-phrase model selection; mentions/negations do not switch."""
     text = ' '.join(str(text).casefold().strip(' .!?').split())
-    text = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,:;-]+', '', text)
+    text = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?lumi[\s,:;-]+', '', text)
     match = re.fullmatch(
         r'(?:passa(?:mi)?\s+a|torna\s+a|usa|utilizza|attiva|avvia)\s+'
         r'(?:il\s+modello\s+)?(gpt|chat\s*gpt|gemma)(?:\s+per favore)?', text)

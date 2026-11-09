@@ -1,4 +1,4 @@
-"""Integrated window controls for Jarvis's Tk windows on Windows."""
+"""Integrated window controls for Lumi's Tk windows on Windows."""
 import ctypes
 from ctypes import wintypes
 import sys

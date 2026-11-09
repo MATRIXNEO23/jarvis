@@ -1,7 +1,7 @@
 """F5N.5: initializer must not read the host process command line.
 
 KoboldCpp 6d2fedf added ``launch_args = parser.parse_args()`` inside its
-``__main__`` block, which Jarvis executes (without ``main()``). Under Jarvis
+``__main__`` block, which Lumi executes (without ``main()``). Under Lumi
 or a probe started with arguments, sys.argv belongs to the host process.
 """
 from pathlib import Path
@@ -21,7 +21,7 @@ def init_library():
 def get_cli_arg_overrides(parser):
     return set(vars(parser.parse_args()))
 def main(launch_args=None):
-    raise AssertionError("main must never run inside Jarvis")
+    raise AssertionError("main must never run inside Lumi")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--usecpu", action="store_true")

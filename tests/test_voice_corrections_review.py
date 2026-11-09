@@ -294,18 +294,18 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             with self.subTest(mode=mode):
                 self.voice_environment(mode)
                 self.env["try_file_command"].return_value = True
-                self.receive_voice("ehi jarvis cerca file blocco moto")
+                self.receive_voice("ehi lumi cerca file blocco moto")
                 expected = ("cerca file blocco note" if mode in (CONTINUOUS, GPT_CONVERSATION)
-                            else "ehi jarvis cerca file blocco note")
+                            else "ehi lumi cerca file blocco note")
                 self.env["try_file_command"].assert_called_once_with(expected)
                 self.assertEqual(self.env["last_voice_sample"].get(),
-                                 "ehi jarvis cerca file blocco moto")
+                                 "ehi lumi cerca file blocco moto")
                 self.env["start_conversation_gpt"].assert_not_called()
 
     def test_corrected_local_command_is_dispatched_once_without_gpt(self):
         self.words.add("brouser", "browser", user_confirmed=True)
         self.voice_environment()
-        self.receive_voice("Jarvis apri brouser")
+        self.receive_voice("Lumi apri brouser")
         self.env["submit_local"].assert_called_once_with(
             message_override="apri browser", source_utterance="apri browser")
         self.env["start_conversation_gpt"].assert_not_called()
@@ -313,7 +313,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
     def test_unresolved_corrected_text_reaches_gpt_once_without_changing_mode(self):
         self.words.add("blocco moto", "blocco note", user_confirmed=True)
         self.voice_environment()
-        self.receive_voice("Jarvis mi racconti di blocco moto")
+        self.receive_voice("Lumi mi racconti di blocco moto")
         self.env["start_conversation_gpt"].assert_called_once_with(
             "mi racconti di blocco note")
         self.env["submit_local"].assert_not_called()
@@ -323,7 +323,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
         self.words.add("blocco moto", "blocco note", user_confirmed=True)
         self.voice_environment(memory=False)
         self.env["try_file_command"].return_value = True
-        self.receive_voice("Jarvis cerca file blocco moto")
+        self.receive_voice("Lumi cerca file blocco moto")
         self.env["try_file_command"].assert_called_once_with("cerca file blocco moto")
         self.voice_environment(STANDBY)
         self.receive_voice("cerca file blocco moto")

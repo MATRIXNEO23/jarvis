@@ -8,7 +8,7 @@ class ServiceDiagnosticsWindow:
     def __init__(self, parent, *, get_report):
         self.get_report = get_report
         self.window = tk.Toplevel(parent)
-        self.window.title('Jarvis // Diagnostica servizi')
+        self.window.title('Lumi // Diagnostica servizi')
         self.window.geometry('780x580')
         self.window.minsize(540, 360)
         frame = ttk.Frame(self.window, padding=12)

@@ -1,4 +1,4 @@
-"""Bounded, offline and read-only static suggestions for JARVIS source code.
+"""Bounded, offline and read-only static suggestions for LUMI source code.
 
 All observations are heuristics. This module NEVER imports or executes the
 files it inspects, runs tests, accesses personal data or makes network calls.

@@ -34,7 +34,7 @@ class CapabilityRegistryTests(unittest.TestCase):
             ("system.status", {}, "stato sistema"),
             ("browser.search", {"query": "Roma antica"},
              "cerca nel browser Roma antica"),
-            ("downloads.find", {"query": "Jarvis"}, "cerca file Jarvis"),
+            ("downloads.find", {"query": "Jarvis"}, "cerca file Lumi"),
         )
         for name, args, expected in test_cases:
             with self.subTest(name=name):

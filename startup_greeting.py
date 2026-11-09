@@ -1,4 +1,4 @@
-"""Local startup greeting for JARVIS, independent of GPT connectivity."""
+"""Local startup greeting for LUMI, independent of GPT connectivity."""
 from __future__ import annotations
 
 from datetime import datetime

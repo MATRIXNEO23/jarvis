@@ -1,4 +1,4 @@
-"""Opt-in chat and instance selector embedded in the existing Jarvis HUD.
+"""Opt-in chat and instance selector embedded in the existing Lumi HUD.
 
 ARCH-01/F2: Tk widgets and sidecar storage only. No inference, model loads,
 implicit legacy migration, Second Brain or credential handling in this module.
@@ -234,7 +234,7 @@ class ChatSessionsPanel:
     def ask_rename(self):
         if self.current_target() is None or not self._can_switch():
             return
-        name = simpledialog.askstring("Jarvis / Rinomina chat",
+        name = simpledialog.askstring("Lumi / Rinomina chat",
                                      "Nuovo titolo:", parent=self.frame)
         if name is not None:
             self.rename_current(name)

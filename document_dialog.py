@@ -35,7 +35,7 @@ class DocumentDialog:
         if not isinstance(phrase, str):
             return ""
         words = " ".join(re.sub(r"[.,!?;:]+", " ", phrase.casefold()).split())
-        for prefix in ("ehi jarvis ", "hey jarvis ", "jarvis "):
+        for prefix in ("ehi lumi ", "hey lumi ", "lumi "):
             if words.startswith(prefix):
                 words = words[len(prefix):]
                 break

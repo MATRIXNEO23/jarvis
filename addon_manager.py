@@ -1,4 +1,4 @@
-"""Jarvis add-on lifecycle: data-only packages, reviewed local execution.
+"""Lumi add-on lifecycle: data-only packages, reviewed local execution.
 
 Installing a .jaddon file NEVER executes code, installs dependencies, runs a
 shell, opens a network connection, or grants new operating-system privileges.

@@ -124,9 +124,9 @@ class ActivityStatusTests(unittest.TestCase):
         hud.set_state_provider(lambda: state)
         try:
             for flags, expected in (
-                ({"thinking": True, "reasoning": True}, "JARVIS STA RAGIONANDO"),
+                ({"thinking": True, "reasoning": True}, "LUMI STA RAGIONANDO"),
                 ({"thinking": True, "searching": True}, "RICERCA SUL PC IN CORSO"),
-                ({"thinking": True, "reasoning": True, "speaking": True}, "JARVIS STA PARLANDO"),
+                ({"thinking": True, "reasoning": True, "speaking": True}, "LUMI STA PARLANDO"),
                 ({"thinking": True, "reasoning": True, "listening": True}, "LA TUA VOCE È RILEVATA"),
                 ({"thinking": True}, "ELABORAZIONE IN CORSO"),
                 ({}, "MICROFONO SPENTO"),
@@ -136,7 +136,7 @@ class ActivityStatusTests(unittest.TestCase):
                 hud._advance()
                 root.update_idletasks()
                 self.assertIn(expected, hud.chat_info.get())
-            self.assertEqual(hud.visual_status.get(), "JARVIS // STANDBY")
+            self.assertEqual(hud.visual_status.get(), "LUMI // STANDBY")
         finally:
             hud.close()
             root.destroy()

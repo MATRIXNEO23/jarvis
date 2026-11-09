@@ -190,7 +190,7 @@ class AddonLifecycleTests(unittest.TestCase):
             telethon_installed=False)
         self.assertIn("tramite_gateway_locale",capability_status_prompt(info))
         prompt=build_conversation_prompt(
-            "Jarvis, dimmi lo stato del computer",
+            "Lumi, dimmi lo stato del computer",
             runtime_info=capability_status_prompt(info),
             addon_actions=self.manager.active_actions())
         self.assertIn(self.action,prompt)

@@ -26,11 +26,11 @@ class VoiceCorrectionTests(unittest.TestCase):
         self.assertEqual(self.words.count(), 1)
         new_session = SpeechCorrections(self.db)
         self.assertEqual(
-            new_session.correct("ehi jarvis apri blocco moto"),
-            "ehi jarvis apri blocco note")
+            new_session.correct("ehi lumi apri blocco moto"),
+            "ehi lumi apri blocco note")
         gate = WakeWordGate()
         route, text = gate.route(new_session.correct(
-            "ehi jarvis apri blocco moto"))
+            "ehi lumi apri blocco moto"))
         self.assertEqual((route, speech_to_local_command(text)),
                          ("command", "apri blocco note"))
 
@@ -38,15 +38,15 @@ class VoiceCorrectionTests(unittest.TestCase):
         source, target = self.words.learn_phrase(
             "apri blocco moto", "apri blocco note", user_confirmed=True)
         self.assertEqual((source, target), ("blocco moto", "blocco note"))
-        self.assertEqual(self.words.correct("ehi jarvis apri blocco moto"),
-                         "ehi jarvis apri blocco note")
+        self.assertEqual(self.words.correct("ehi lumi apri blocco moto"),
+                         "ehi lumi apri blocco note")
         self.assertEqual(self.words.correct("ho una moto"), "ho una moto")
 
     def test_full_phrase_cannot_change_negations_or_verbs(self):
         examples = (
             ("chiudi senza salvare", "chiudi salvare"),
             ("apri blocco moto", "chiudi blocco note"),
-            ("ehi jarvis apri il browser", "ehi lia apri il browser"),
+            ("ehi lumi apri il browser", "ehi lia apri il browser"),
         )
         for heard, intended in examples:
             with self.subTest(heard=heard, intended=intended):

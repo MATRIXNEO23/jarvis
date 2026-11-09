@@ -106,8 +106,8 @@ class SelectedConversationModelTests(unittest.TestCase):
         for text in ('non usare GPT', 'come si attiva GPT?', 'se dico usa Gemma',
                      'GPT è interessante', 'attiva GPT e apri browser'):
             self.assertIsNone(model_switch_target(text), text)
-        self.assertTrue(model_switch_target('Jarvis, passa a GPT'))
-        self.assertFalse(model_switch_target('Jarvis torna a Gemma'))
+        self.assertTrue(model_switch_target('Lumi, passa a GPT'))
+        self.assertFalse(model_switch_target('Lumi torna a Gemma'))
 
     def test_console_disconnected_gpt_keeps_selection_and_does_not_use_gemma(self):
         import test_typed_timer_routing as fixture
@@ -213,7 +213,7 @@ class SelectedConversationModelTests(unittest.TestCase):
                 if channel == 'console':
                     env['send_console_input']()
                 else:
-                    harness.receive_voice('Jarvis usa GPT')
+                    harness.receive_voice('Lumi usa GPT')
                 env['try_telegram_voice_send'].assert_called_once_with(
                     'usa GPT' if channel == 'console' else 'usa gpt')
                 env['toggle_gpt'].assert_not_called()

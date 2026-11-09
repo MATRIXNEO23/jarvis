@@ -1,4 +1,4 @@
-"""Deterministic tone guidance for Jarvis's *text replies*, not tool actions.
+"""Deterministic tone guidance for Lumi's *text replies*, not tool actions.
 
 No model calls, stored hidden personality, or semantic classification claims.
 The current utterance alone chooses a bounded hint; it never changes intent,

@@ -18,11 +18,11 @@ class NativeRestartRequired(RuntimeError):
 
     KoboldCpp exposes no safe unload: native state of a previous load_model
     is not guaranteed to be released or reset. Model, context or thread
-    changes therefore apply when Jarvis is restarted.
+    changes therefore apply when Lumi is restarted.
     """
 
 
-RESTART_MESSAGE = ("Motore locale già caricato in questa sessione: riavvia Jarvis "
+RESTART_MESSAGE = ("Motore locale già caricato in questa sessione: riavvia Lumi "
                    "per usare il nuovo modello o le nuove impostazioni del motore.")
 # Resolved DLL paths whose native load_model already ran in this process.
 _PROCESS_NATIVE_LOADS = set()

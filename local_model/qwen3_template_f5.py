@@ -3,7 +3,7 @@
 Reference: official Qwen3 chat template with ``enable_thinking=False``: same
 ``<|im_start|>``/``<|im_end|>`` turns as Qwen2.5, no default system message,
 and an empty ``<think>`` block opened in the assistant prefix so the model
-answers directly (important on a slow CPU). Not imported by Jarvis runtime;
+answers directly (important on a slow CPU). Not imported by Lumi runtime;
 an explicit model-template match is required before production routing.
 """
 from .model_profiles_f5 import ProfileError

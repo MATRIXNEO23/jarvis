@@ -1,4 +1,4 @@
-"""Read-only capability catalog for the Jarvis conversational GPT.
+"""Read-only capability catalog for the Lumi conversational GPT.
 
 The shipped JSON describes supported actions to GPT and to the user. It is
 NOT executable configuration. Every ID is bound to a compiled allowlist of
@@ -166,7 +166,7 @@ def resolve_capability(action_id: object, arguments: object,
         tool = _LOCAL_BINDINGS[action_id]
         try:
             payload = json.dumps({
-                "intent": "Richiesta verificata di Jarvis",
+                "intent": "Richiesta verificata di Lumi",
                 "steps": [{"tool_id": tool, "arguments": arguments}],
             }, ensure_ascii=False)
             plan = parse_plan(payload)
@@ -179,14 +179,14 @@ def resolve_capability(action_id: object, arguments: object,
             raise CapabilityRejected("Aprire Blocco note non accetta parametri.")
         if has_document:
             raise CapabilityRejected(
-                "C'è già un documento di Jarvis aperto. Scegli quel documento.")
+                "C'è già un documento di Lumi aperto. Scegli quel documento.")
         return ResolvedCapability(action_id, "document_open")
     if action_id == "notepad.close":
         if arguments:
             raise CapabilityRejected("Chiudere Blocco note non accetta parametri GPT.")
         if not has_document:
             raise CapabilityRejected(
-                "Nessun Blocco note creato da Jarvis è associato alla richiesta.")
+                "Nessun Blocco note creato da Lumi è associato alla richiesta.")
         return ResolvedCapability(action_id, "document_close")
     if action_id == "notepad.write":
         if set(arguments) not in (
@@ -205,10 +205,10 @@ def resolve_capability(action_id: object, arguments: object,
             raise CapabilityRejected("Testo o destinazione del documento non validi.")
         if target == "selected_document" and not has_document:
             raise CapabilityRejected(
-                "Nessun documento di Jarvis identificato per la scrittura.")
+                "Nessun documento di Lumi identificato per la scrittura.")
         if target == "new_notepad" and has_document:
             raise CapabilityRejected(
-                "Un documento di Jarvis è già aperto: scegli se aggiungerci testo.")
+                "Un documento di Lumi è già aperto: scegli se aggiungerci testo.")
         return ResolvedCapability(action_id, "document_write",
                                   content=text, target=target,
                                   close_after=close_after)

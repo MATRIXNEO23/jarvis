@@ -1,6 +1,6 @@
 """Small on-demand Tk windows for Telegram selection and owner voice send.
 
-UI only: Telegram network/voice synthesis run in Jarvis workers, never in Tk.
+UI only: Telegram network/voice synthesis run in Lumi workers, never in Tk.
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ class TelegramContactsWindow:
         self.on_open_history=on_open_history
         self.on_clear_history=on_clear_history
         self.window=tk.Toplevel(parent)
-        self.window.title("JARVIS // Telegram — autorizza contatti")
+        self.window.title("LUMI // Telegram — autorizza contatti")
         self.window.geometry("720x550")
         self.window.minsize(540,330)
         self.saved={c["id"]:c for c in stored}
@@ -27,7 +27,7 @@ class TelegramContactsWindow:
         ttk.Label(panel,text="Contatti Telegram autorizzati",
                   font=("Segoe UI",12,"bold")).pack(anchor="w")
         ttk.Label(panel,wraplength=550,
-                  text="Spunta i contatti che Jarvis può usare. "
+                  text="Spunta i contatti che Lumi può usare. "
                        "Gruppi e bot non vengono mostrati; "
                        "un contatto non selezionato non riceve risposte né vocali.").pack(
                            fill="x",pady=(5,8))
@@ -153,7 +153,7 @@ def show_telegram_manual_send(parent, selected_contacts, on_send):
                             parent=parent)
         return
     win=tk.Toplevel(parent)
-    win.title("JARVIS // Invia messaggio vocale Telegram")
+    win.title("LUMI // Invia messaggio vocale Telegram")
     win.geometry("540x310")
     win.minsize(430,280)
     frame=ttk.Frame(win,padding=14)
@@ -163,7 +163,7 @@ def show_telegram_manual_send(parent, selected_contacts, on_send):
     picker=ttk.Combobox(frame,state="readonly",values=names,width=55)
     picker.current(0)
     picker.pack(fill="x",pady=(3,9))
-    ttk.Label(frame,text="Scrivi il messaggio: Jarvis lo convertirà in OGG/Opus").pack(
+    ttk.Label(frame,text="Scrivi il messaggio: Lumi lo convertirà in OGG/Opus").pack(
         anchor="w")
     editor=tk.Text(frame,height=6,wrap="word")
     editor.pack(fill="both",expand=True,pady=(4,8))

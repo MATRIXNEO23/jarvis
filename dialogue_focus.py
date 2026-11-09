@@ -1,4 +1,4 @@
-"""Small deterministic conversation focus hints for JARVIS.
+"""Small deterministic conversation focus hints for LUMI.
 
 These are *data* for conversation, never a command or authorization to act.
 No database, filesystem, model, network, or background processing.

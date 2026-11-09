@@ -1,4 +1,4 @@
-"""Bounded, offline, read-only JARVIS source inventory and static diagnostics.
+"""Bounded, offline, read-only LUMI source inventory and static diagnostics.
 
 Never executes, imports, modifies, uploads or evaluates application sources.
 The static audit cannot certify safety or verify runtime correctness.

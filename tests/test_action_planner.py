@@ -67,7 +67,7 @@ class PlannerPolicyTests(unittest.TestCase):
 
     def test_simple_search(self):
         parsed = parse_plan(make_plan(step("find_download", query="Jarvis")))
-        self.assertEqual(parsed.steps[0].command, "cerca file Jarvis")
+        self.assertEqual(parsed.steps[0].command, "cerca file Lumi")
         self.assertEqual(parsed.steps[0].risk, "sola lettura")
 
     def test_fenced_json(self):

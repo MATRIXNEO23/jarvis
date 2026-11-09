@@ -84,7 +84,7 @@ class ProjectReferenceTests(unittest.TestCase):
         self.assertIsNone(pending.parse_answer("Minecraft Builder"))
 
     def test_project_management_deixis_does_not_create_other_project(self):
-        rename=parse_project_voice("Jarvis, rinomina questo progetto in Colosseo")
+        rename=parse_project_voice("Lumi, rinomina questo progetto in Colosseo")
         self.assertEqual(rename.action,"rename")
         self.assertEqual(rename.name,"Colosseo")
         self.assertEqual(rename.target,"")

@@ -1,7 +1,7 @@
-"""Opt-in local chat instances for a future Kobold-style Jarvis interface.
+"""Opt-in local chat instances for a future Kobold-style Lumi interface.
 
 ARCH-01/F1 only: metadata and atomic, paired transcripts, NO runtime wiring.
-No imports from Jarvis, Second Brain, native model or internet. Instantiation
+No imports from Lumi, Second Brain, native model or internet. Instantiation
 requires an explicit file path and creates only that database.
 """
 from __future__ import annotations

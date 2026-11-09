@@ -9,7 +9,7 @@ class ProgramSettings:
     def __init__(self, parent, service, on_change=lambda: None):
         self.service, self.on_change = service, on_change
         self.window = tk.Toplevel(parent)
-        self.window.title('Jarvis — Programmi e app')
+        self.window.title('Lumi — Programmi e app')
         self.window.geometry('850x560')
         self.window.protocol('WM_DELETE_WINDOW', self.close)
         self.cancelled = threading.Event()
@@ -220,7 +220,7 @@ def show_choices(parent, listing, on_select):
         previous.destroy()
     window = tk.Toplevel(parent)
     parent._program_choices = window
-    window.title('Jarvis — Scegli programma da avviare')
+    window.title('Lumi — Scegli programma da avviare')
     window.geometry('760x350')
     table = ttk.Treeview(window,columns=('number','name','target'),show='headings')
     for key,title in [('number','N.'),('name','Programma'),('target','Destinazione')]:

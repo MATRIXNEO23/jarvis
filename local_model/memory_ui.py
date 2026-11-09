@@ -12,7 +12,7 @@ class MemoryPreferencesWindow:
         self.path = path or default_memory_preferences_path()
         self.current = MemoryPreferences.load(self.path)
         self.window = tk.Toplevel(parent)
-        self.window.title("Jarvis // Memoria e inattivita")
+        self.window.title("Lumi // Memoria e inattivita")
         self.window.geometry("590x650")
         self.window.minsize(480, 550)
         frame = ttk.Frame(self.window, padding=14)
@@ -92,5 +92,5 @@ class MemoryPreferencesWindow:
             self.current = revised
             self.status.set("Impostazioni salvate; nessuna build necessaria.")
         except (ValueError, TypeError, OSError) as exc:
-            messagebox.showerror("Jarvis / Memoria", str(exc),
+            messagebox.showerror("Lumi / Memoria", str(exc),
                                  parent=self.window)
