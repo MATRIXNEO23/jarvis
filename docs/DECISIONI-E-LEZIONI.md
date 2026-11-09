@@ -1256,3 +1256,6 @@ Il Makefile ufficiale al commit `6d2fedf...` usa DLL comune, variante default, n
 
 ## 2026-11-09 — F5N.2: come collaudare un workflow nuovo su ramo feature
 `workflow_dispatch` di un nuovo workflow non necessariamente appare prima che il workflow esista su default branch; per testarne la compilazione senza cambiare `main`, aggiunto `pull_request` filtrato solo su workflow/tool/test F5N.2. Non confondere configurazione CI con la prova effettiva: il run va osservato e i suoi errori corretti prima di attestare successo.
+
+## 2026-11-09 — F5N.2: toolchain MinGW e Win8+ SDK
+La build upstream fissata fallisce nella compilazione di `gpttype_adapter_default.o`: tipi `PWIN32_MEMORY_RANGE_ENTRY` e `WIN32_MEMORY_RANGE_ENTRY` non dichiarati, non regressione Jarvis. Tentato fix nel solo workflow `CFLAGS`/`CXXFLAGS` con `_WIN32_WINNT=0x0602` e `WINVER=0x0602`, senza cambiare sorgente ufficiale o DLL distribuita. CI nuova da verificare; non dichiarare compilazione riuscita senza esito.
