@@ -8,6 +8,8 @@ on:
       - 'tests/test_f5n_bundle_audit.py'
       - 'tools/f5n_pe_abi_audit.py'
       - 'tests/test_f5n_pe_abi_audit.py'
+      - 'tools/f5n_native_load_smoke.py'
+      - 'tests/test_f5n_native_load_smoke.py'
 
 permissions:
   contents: read
@@ -82,6 +84,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Get-Content "f5n-pe-abi-manifest.json" | Select-Object -First 40
 
+      - name: F5N.4 Windows loader smoke in isolated child (no GGUF)
+        shell: pwsh
+        timeout-minutes: 3
+        run: |
+          python -m tools.f5n_native_load_smoke "koboldcpp-src" > "f5n-native-loader-proof.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content "f5n-native-loader-proof.json"
+
       - name: Archive only unverified research candidate
         uses: actions/upload-artifact@v4
         with:
@@ -96,3 +106,4 @@ jobs:
             koboldcpp-src/koboldcpp.py
             f5n-dll-manifest.json
             f5n-pe-abi-manifest.json
+            f5n-native-loader-proof.json
