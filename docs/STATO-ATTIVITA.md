@@ -1,3 +1,6 @@
+## ARCH-01 F5.2 — Anteprima multimodello visibile (9 novembre 2026)
+Aggiunta finestra opzionale Gemma/Qwen da Impostazioni > GPT e memoria, con bozze di parametri in RAM soltanto; `local_model/multimodel_ui_f5.py`, nuovo bottone lazy import in `jarvis.py`, tests `tests/test_multimodel_ui_f5.py`. Nessun cambio di motore, nessun salvataggio, nessuna build e nessuna modifica a chat/Second Brain/Telegram. Gate Windows CI e prova visuale ancora pendenti. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67, rollback 014.
+
 ## ARCH-01 F5.1 — Discovery locale read-only (9 novembre 2026)
 Aggiunto modulo `local_model/model_availability_f5.py` con controlli puramente espliciti dei file embedded GGUF/DLL e probe KoboldCpp F4.1 con identità esatta; test `tests/test_model_availability_f5.py`, checkpoint [F5](ARCH-01-F5-CHECKPOINT.md). **CI nuova ancora da confermare**; nessuna UI, switch, generazione, runtime Jarvis, Second Brain o ZIP modificati. F4.2 su Pavilion pendente, rollback 014. Corretto il rifiuto NaN/infinito nei sampler F5.0.
 
