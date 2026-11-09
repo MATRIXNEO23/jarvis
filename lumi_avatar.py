@@ -37,15 +37,14 @@ def pick_size(height: float) -> int | None:
     return fitting[-1] if fitting else sizes[0]
 
 
-def mouth_level(value: float) -> int:
-    """Volume normalizzato 0..1 -> apertura bocca 0..3."""
-    if value < .12:
+MOUTH_STEPS = 5
+
+
+def mouth_level(value: float, steps: int = MOUTH_STEPS) -> int:
+    """Volume (gia' ammorbidito) 0..1 -> apertura 0..steps; silenzio = chiusa."""
+    if value < .08:
         return 0
-    if value < .35:
-        return 1
-    if value < .65:
-        return 2
-    return 3
+    return max(1, min(steps, int(round(value * steps + .2))))
 
 
 class LipSync:
@@ -113,6 +112,33 @@ class HeadMotion:
         return self.yaw
 
 
+class HairLag:
+    """Le ciocche seguono la testa con un piccolo ritardo e si assestano
+    (molla smorzata): -1..1, zero da ferma."""
+
+    def __init__(self):
+        self.value = 0.0
+        self.speed = 0.0
+        self.last = None
+        self.last_yaw = 0.0
+
+    def update(self, now: float, yaw: float) -> float:
+        if self.last is None:
+            self.last, self.last_yaw = now, yaw
+            return 0.0
+        dt = min(.1, max(0.0, now - self.last))
+        if dt <= 0:
+            return self.value
+        velocity = (yaw - self.last_yaw) / dt
+        self.last, self.last_yaw = now, yaw
+        target = max(-1.0, min(1.0, -velocity * 1.4))   # restano indietro
+        # molla: rigidezza 30, smorzamento 7 -> un piccolo assestamento
+        accel = 30.0 * (target - self.value) - 7.0 * self.speed
+        self.speed += accel * dt
+        self.value = max(-1.0, min(1.0, self.value + self.speed * dt))
+        return self.value
+
+
 class AvatarFace:
     """Volto animato disegnato su un Canvas Tk esistente."""
 
@@ -126,6 +152,14 @@ class AvatarFace:
         self.pose = 0
         self.rng = rng or random.Random()
         self.head = HeadMotion(self.rng)
+        self.hair = HairLag()
+        self.hair_levels = [0.0]
+        self.hair_index = 0
+        self.breath_boxes = []
+        self.breath_index = 0
+        self._breath_period = self.rng.uniform(3.8, 4.8)
+        self._breath_phase = self.rng.uniform(0, 6.28)
+        self._mouth_value = 0.0
         self._next_blink = 0.0
         self._blink_until = 0.0
         self._next_gaze = 0.0
@@ -146,24 +180,35 @@ class AvatarFace:
         try:
             if size != self.size or not self.photos:
                 photos = {}
-                offsets = data["sizes"][str(size)]
-                for index, patches in enumerate(offsets):
-                    photos[(index, "base")] = tk.PhotoImage(
-                        master=canvas, file=str(ASSET_DIR / f"lumi_{size}_p{index}.png"))
+                entry = data["sizes"][str(size)]
+                hair = [float(h) for h in data.get("hair", [0.0])]
+                for index, patches in enumerate(entry["poses"]):
+                    for h in range(len(hair)):
+                        photos[(index, "base", h)] = tk.PhotoImage(
+                            master=canvas, file=str(ASSET_DIR / f"lumi_{size}_p{index}_h{h}.png"))
                     for name in patches:
                         photos[(index, name)] = tk.PhotoImage(
                             master=canvas, file=str(ASSET_DIR / f"lumi_{size}_p{index}_{name}.png"))
-                self.photos, self.offsets, self.size = photos, offsets, size
+                for level, box in enumerate(entry.get("breath", [])):
+                    if box:
+                        photos[("breath", level)] = tk.PhotoImage(
+                            master=canvas, file=str(ASSET_DIR / f"lumi_{size}_b{level}.png"))
+                self.photos, self.offsets, self.size = photos, entry["poses"], size
+                self.breath_boxes = entry.get("breath", [])
                 self.poses = [float(p) for p in data.get("poses", [0.0])]
+                self.hair_levels = hair
         except (tk.TclError, OSError, KeyError, TypeError):
             self.photos = {}
             return False
         self.pose = int(data.get("rest_pose", 0))
-        base = self.photos[(self.pose, "base")]
+        self.hair_index = int(data.get("rest_hair", 0))
+        self.breath_index = 0
+        base = self.photos[(self.pose, "base", self.hair_index)]
         face_y = float(data.get("face_y", .5))
         x0, y0 = cx - base.width() / 2, cy - face_y * size
         self.origin = (x0, y0)
         self.items["base"] = canvas.create_image(x0, y0, anchor="nw", image=base)
+        self.items["breath"] = canvas.create_image(x0, y0, anchor="nw", state="hidden")
         self.items["eyes"] = canvas.create_image(x0, y0, anchor="nw", state="hidden")
         self.items["mouth"] = canvas.create_image(x0, y0, anchor="nw", state="hidden")
         return True
@@ -202,21 +247,57 @@ class AvatarFace:
         Con la voce Windows non c'e' curva: la bocca resta chiusa, invece di
         muoversi fuori tempo. `speaking` resta solo per compatibilita'.
         """
-        level = mouth_level(LIPSYNC.level(now) or 0.0)
+        raw = LIPSYNC.level(now) or 0.0
+        # Apertura rapida, chiusura un po' piu' lenta: niente sfarfallio.
+        k = .65 if raw > self._mouth_value else .35
+        self._mouth_value += (raw - self._mouth_value) * k
+        if raw == 0 and self._mouth_value < .05:
+            self._mouth_value = 0.0
+        level = mouth_level(self._mouth_value)
         return f"mouth{level}" if level else None
 
     def pose_for(self, yaw: float) -> int:
         return min(range(len(self.poses)), key=lambda i: abs(self.poses[i] - yaw))
 
+    def breath_level(self, now: float) -> int:
+        """Respiro lento (~4 s): spalle e petto salgono e scendono."""
+        if not self.breath_boxes:
+            return 0
+        import math
+        wave = (1 - math.cos(2 * math.pi * now / self._breath_period + self._breath_phase)) / 2
+        return int(round(wave * (len(self.breath_boxes) - 1)))
+
+    def _set_base(self) -> None:
+        key = (self.pose, "base", self.hair_index)
+        if key in self.photos:
+            self.canvas.itemconfigure(self.items["base"], image=self.photos[key])
+
     def tick(self, mode: str = "idle", now: float | None = None) -> None:
         if not self.items:
             return
         now = time.monotonic() if now is None else now
-        pose = self.pose_for(self.head.update(now, LIPSYNC.level(now) is not None))
+        yaw = self.head.update(now, LIPSYNC.level(now) is not None)
+        pose = self.pose_for(yaw)
+        hair_value = self.hair.update(now, yaw)
+        hair = min(range(len(self.hair_levels)),
+                   key=lambda i: abs(self.hair_levels[i] - hair_value))
         moved = pose != self.pose
-        if moved and (pose, "base") in self.photos:
-            self.pose = pose
-            self.canvas.itemconfigure(self.items["base"], image=self.photos[(pose, "base")])
+        if moved or hair != self.hair_index:
+            self.pose, self.hair_index = pose, hair
+            self._set_base()
+        breath = self.breath_level(now)
+        if breath != self.breath_index:
+            self.breath_index = breath
+            item = self.items.get("breath")
+            box = self.breath_boxes[breath] if breath < len(self.breath_boxes) else None
+            if item is not None:
+                if box and ("breath", breath) in self.photos:
+                    x0, y0 = self.origin
+                    self.canvas.coords(item, x0 + box[0], y0 + box[1])
+                    self.canvas.itemconfigure(item, image=self.photos[("breath", breath)],
+                                              state="normal")
+                else:
+                    self.canvas.itemconfigure(item, state="hidden")
         eye = self.eye_frame(now)
         if eye != self._eye_state or moved:
             self._show("eyes", eye)
