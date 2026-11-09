@@ -9,7 +9,8 @@ from local_model.owned_kobold_lab_f5 import OwnedKoboldLab, LabServerError
 def owner(*, responses, running=True, port_free=True):
     process = Mock(blocked=False)
     process.start.return_value = 101
-    process.is_running.return_value = running
+    # Before spawn no owned process exists; only after start may it run.
+    process.is_running.side_effect = lambda: bool(process.start.called and running)
     process.stop.return_value = True
     canary = Mock()
     canary.probe.side_effect = responses
