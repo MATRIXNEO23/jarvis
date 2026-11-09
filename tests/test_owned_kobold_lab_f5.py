@@ -57,8 +57,10 @@ class TestOwnedKoboldLabF53b2(unittest.TestCase):
     def test_unverified_release_blocks_further_start(self):
         lab, process, _ = owner(responses=["Mismatch"])
         from local_model.owned_process_f5 import OwnedProcessError
-        process.stop.side_effect = OwnedProcessError("can't stop")
-        process.blocked = True
+        def fail_stop(*, timeout):
+            process.blocked = True
+            raise OwnedProcessError("can't stop")
+        process.stop.side_effect = fail_stop
         with self.assertRaisesRegex(LabServerError, "unverified"):
             lab.start(["approved.exe"], expected_model="Qwen-Test")
         with self.assertRaises(LabServerError):
