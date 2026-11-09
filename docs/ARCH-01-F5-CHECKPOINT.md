@@ -105,3 +105,6 @@ Build candidata upstream Windows F5N.2 verde (42555705472). Aggiunti audit PE st
 
 ## F5N.4 — Prova loader Win32 senza GGUF (9 novembre 2026)
 F5N.3 completata con workflow DLL e suite Windows green sui due ultimi commit. Aggiunti smoke Windows dedicato e test guardia: `tools/f5n_native_load_smoke.py`, `tests/test_f5n_native_load_smoke.py`, audit workflow `f5n-native-loader-proof.json`. Smoke verifica soltanto OS loader + lookup simboli in processo figlio; non chiama model loader, né server, né cambia app Jarvis. Commit workflow `23044874...`; attendere CI. Rollback: eliminare i due nuovi file e ripristinare solo il workflow al commit precedente; ZIP014 e dati intatti.
+
+## F5N.4 — Intervento di diagnostica, nessuna pubblicazione (9 novembre 2026)
+Primo run F5N.4 fallito: unit test Windows confronto tra short/long path temporanei; corretto fixture commit `3b563ded`. Loader isolato fallisce `ctypes.CDLL(koboldcpp_common.dll)` o dipendenza, mentre static PE exports è verde: migliorata diagnostica read-only per imports PE e directory candidate commit `ae724dae`. Run verifica Windows 42592363012 (unit), 42592362936 (DLL) in corso. Nessuna modifica app, DLL prod, ZIP 014, Second Brain. Rollback: ripristinare i soli due file F5N.4 ai blob precedenti.
