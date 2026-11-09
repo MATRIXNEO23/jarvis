@@ -1,3 +1,6 @@
+## ARCH-01 F5.3b.1 — Owner subprocess locale (9 novembre 2026)
+Creato `local_model/owned_process_f5.py` con arresto verificato via `wait` del solo processo figlio avviato, timeout fail-closed e test mock `tests/test_owned_process_f5.py`. NON collegato al runtime Jarvis e non esegue GGUF o KoboldCpp; non certifica che processi nipoti siano terminati. Test Windows nuovi da confermare; F4.2 sul Pavilion pendente; rollback ZIP014. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67.
+
 ## ARCH-01 F5.3a — Gate cambio modello sicuro (9 novembre 2026)
 Audit: Gemma embedded ha abort cooperativo ma nessuna prova di unload/deallocazione; Qwen non ha template chat convalidato. Implementato esclusivamente `local_model/model_switch_gate_f5.py` e `tests/test_model_switch_gate_f5.py`: barriera su busy, disponibilità, template, rilascio modello precedente e startup target, senza integrare il runtime. CI Windows da confermare; nessuna prova Pavilion né release. [Checkpoint F5](ARCH-01-F5-CHECKPOINT.md), PR #67, rollback 014.
 
