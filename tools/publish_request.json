@@ -1,10 +1,10 @@
 {
-  "run_id": 42708117898,
-  "artifact": "lumi-022-prova-candidate",
-  "file": "Lumi-022-PROVA.zip",
-  "bytes": 24898978,
-  "sha256": "612e173dfb5717500be18fce7efe53f291f63ad4eae2103ea472fd897957c3e8",
-  "source_commit": "9dca37c",
-  "title": "Build 022 PROVA — voce inclusa senza installazioni, avatar più naturale",
-  "description": "Come la 021, più: motore voce Piper incluso in Lumi (cartella voce_engine, solo italiano, senza installare nulla e senza numpy): basta premere «Scarica Paola» o «Scarica Serena». Avatar: la testa ruota piano a destra e sinistra (niente tremolio), le ciocche seguono il movimento e si assestano, respiro lento di spalle e petto, bocca a 5 aperture più morbida. Prompt un po' più leggero (cronologia 200 token, ultimo scambio sempre intero). Stesso profilo dati. Verificati in CI Windows: 1176 test, voce con il motore incluso sul pacchetto estratto (seconda frase 0,19 s), streaming, avvio UI e risposta del motore. Pavilion da collaudare (voce senza AVX2, resa dell'avatar)."
+  "run_id": 42719345419,
+  "artifact": "lumi-023-prova-candidate",
+  "file": "Lumi-023-PROVA.zip",
+  "bytes": 27178564,
+  "sha256": "a6e44f0c838d3942cf46ce609d619cba9634a9b9f246404dabf0613083c17370",
+  "source_commit": "f64a398",
+  "title": "Build 023 PROVA — Telegram corretto, voci Edge, labiale anche con voce Windows",
+  "description": "Come la 022, più: Telegram legge di nuovo le credenziali già salvate (errore «Formato credenziali non riconosciuto» introdotto dalla rinomina). Streaming anche per richieste come «consigliami dei film». La voce non legge emoji e asterischi; nelle frasi lunghe parte alla virgola. Bocca che si muove anche con le voci Windows. Avatar più grande e più fluido (13 posizioni della testa, 8 aperture della bocca, 25 fotogrammi al secondo). Voci Microsoft Edge facoltative (Isabella, Elsa, Diego, Giuseppe): gratuite ma online, si attivano con installa_voce_edge.bat. Verificati in CI Windows: 1185 test, voce inclusa sul pacchetto estratto, labiale voce Windows, voce Edge reale, avvio UI e risposta del motore. Pavilion da collaudare."
 }
