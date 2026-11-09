@@ -1,10 +1,10 @@
 {
-  "run_id": 42678806394,
-  "artifact": "lumi-019-prova-candidate",
-  "file": "Lumi-019-PROVA.zip",
-  "bytes": 14629810,
-  "sha256": "4239473ab934499fb2932673b4aa3a1ab5b60b1cac84f0814762da72004007ad",
-  "source_commit": "019",
-  "title": "Build 019 PROVA — l'assistente diventa LUMI, voci naturali Paola e Serena",
-  "description": "Come la 018, più: l'assistente si chiama Lumi ovunque (interfaccia, voce, Telegram) e la parola di attivazione è «Lumi» / «Ehi Lumi»; launcher avvia_lumi.bat. Voci naturali offline Piper: esegui installa_voce_naturale.bat, poi in Impostazioni > Voce premi «Scarica Paola» o «Scarica Serena» (dal repository, con verifica), scegli la voce e regola l'«Effetto digitale». Se il motore non gira su questo PC si torna alla voce di Windows. Stesso profilo dati (impostazioni, chat e memoria restano). L'avatar arriva nella prossima build. Verificati in CI Windows: 1153 test, voce Paola generata dal repository, ZIP estratto, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42693084765,
+  "artifact": "lumi-020-prova-candidate",
+  "file": "Lumi-020-PROVA.zip",
+  "bytes": 14917208,
+  "sha256": "b1d2f57ecad420bd65667b0e075ea10a602190e855b3f77583173933272ab9ba",
+  "source_commit": "b50f6dc",
+  "title": "Build 020 PROVA — avatar LUMI animato, voci naturali in un file ZIP ciascuna",
+  "description": "Come la 019, più: il volto di LUMI (la tua immagine, invariata) sostituisce la scritta nel cerchio centrale, con battito di ciglia, sguardo che si muove e bocca che segue la voce. Quando riduci a icona, il mini avatar resta in basso a destra sopra la barra; doppio clic per riaprire. Voci: «Scarica Paola» / «Scarica Serena» scaricano un unico ZIP verificato (Voce-Paola.zip, Voce-Serena.zip). Stesso profilo dati. Verificati in CI Windows: 1161 test, ZIP estratto, avvio UI e risposta del motore. Pavilion da collaudare (resa dell'avatar e consumo CPU)."
 }
