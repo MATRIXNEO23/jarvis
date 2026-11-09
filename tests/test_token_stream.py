@@ -15,9 +15,10 @@ class VisibleTextTests(unittest.TestCase):
         self.assertEqual(visible_text("Ciao", None), "Ciao")
 
     def test_callback_is_per_thread_and_restored(self):
-        seen = []
-        with streaming(seen.append):
-            self.assertIs(current(), seen.append)
+        def callback(_text):
+            pass
+        with streaming(callback):
+            self.assertIs(current(), callback)
             other = []
             t = threading.Thread(target=lambda: other.append(current()))
             t.start(); t.join()
@@ -64,6 +65,28 @@ class BridgeStreamTests(unittest.TestCase):
     def test_no_callback_no_stream_thread(self):
         bridge = self.make_bridge(GrowingUpstream())
         self.assertEqual(bridge.generate("prompt", timeout=10), "Ciao Alberto. Come stai?")
+
+
+class ChatStreamTests(unittest.TestCase):
+    def test_speaks_completed_sentences_then_only_the_rest(self):
+        from chat_stream import ChatStream
+        spoken, final = [], []
+        stream = ChatStream()
+        stream.speak = lambda text: spoken.append(text) or True
+        stream.voice_enabled = lambda: True
+        stream._speak_sentences("Ciao Alberto. Come")
+        stream._speak_sentences("Ciao Alberto. Come stai")
+        self.assertEqual(spoken, ["Ciao Alberto."])
+        stream.speak_final("Ciao Alberto. Come stai?", final.append)
+        self.assertEqual(final, ["Come stai?"])
+
+    def test_unconfigured_stream_is_a_no_op_and_final_speaks_everything(self):
+        from chat_stream import ChatStream
+        stream, final = ChatStream(), []
+        self.assertIsNone(stream.sink(1))
+        stream.drain(1, True)
+        stream.speak_final("Tutto.", final.append)
+        self.assertEqual(final, ["Tutto."])
 
 
 if __name__ == "__main__":
