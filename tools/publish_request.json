@@ -1,10 +1,10 @@
 {
-  "run_id": 42665758452,
-  "artifact": "jarvis-018-prova-candidate",
-  "file": "Jarvis-018-PROVA.zip",
-  "bytes": 14625002,
-  "sha256": "d9167de4a9ef834bdbd77c10aa0ae500ad0ccb326ed5b2e66d09fb60b6bd8762",
-  "source_commit": "018",
-  "title": "Build 018 PROVA — tasto riduci a icona e conversazioni Telegram più fluide",
-  "description": "Come la 017, più: il tasto «–» riduce Jarvis a icona nella barra delle applicazioni invece di farlo sparire; su Telegram il modello locale ricorda gli ultimi 3 scambi con ogni contatto come vera conversazione e risponde in massimo 2-3 frasi, con istruzioni più corte. Estrai in una cartella NUOVA; 014 resta la stabile. Verificati in CI Windows: test unitari (incluso il tasto riduci a icona), ZIP estratto, avvio UI e risposta del motore incluso. Telegram reale e Pavilion da collaudare."
+  "run_id": 42678806394,
+  "artifact": "lumi-019-prova-candidate",
+  "file": "Lumi-019-PROVA.zip",
+  "bytes": 14629810,
+  "sha256": "4239473ab934499fb2932673b4aa3a1ab5b60b1cac84f0814762da72004007ad",
+  "source_commit": "019",
+  "title": "Build 019 PROVA — l'assistente diventa LUMI, voci naturali Paola e Serena",
+  "description": "Come la 018, più: l'assistente si chiama Lumi ovunque (interfaccia, voce, Telegram) e la parola di attivazione è «Lumi» / «Ehi Lumi»; launcher avvia_lumi.bat. Voci naturali offline Piper: esegui installa_voce_naturale.bat, poi in Impostazioni > Voce premi «Scarica Paola» o «Scarica Serena» (dal repository, con verifica), scegli la voce e regola l'«Effetto digitale». Se il motore non gira su questo PC si torna alla voce di Windows. Stesso profilo dati (impostazioni, chat e memoria restano). L'avatar arriva nella prossima build. Verificati in CI Windows: 1153 test, voce Paola generata dal repository, ZIP estratto, avvio UI e risposta del motore. Pavilion da collaudare."
 }
