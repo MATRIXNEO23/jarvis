@@ -2679,8 +2679,8 @@ def main() -> None:
     speaker.effect = settings.get("tts_effect", 25) / 100
     # Avatar LUMI: lip sync dalla curva del volume della voce naturale e
     # mini avatar in basso a destra quando la finestra e' ridotta a icona.
-    from lumi_avatar import LIPSYNC, AvatarDock
-    speaker.on_envelope = LIPSYNC.push
+    from lumi_avatar import LIPSYNC, PLAYBACK_LATENCY, AvatarDock
+    speaker.on_envelope = lambda envelope: LIPSYNC.push(envelope, delay=PLAYBACK_LATENCY)
     avatar_dock = AvatarDock(root, lambda: getattr(hud, "_last_mode", "idle"))
     voice = VoiceController(output_queue.put, ignore_audio=speaker.is_audible)
     wake_gate = WakeWordGate()

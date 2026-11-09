@@ -58,10 +58,12 @@ class LipSync:
         self._envelope: list[float] = []
         self._start = 0.0
 
-    def push(self, envelope) -> None:
+    def push(self, envelope, delay: float = 0.0) -> None:
+        """Chiamata un istante prima che il suono parta; ``delay`` compensa
+        l'avvio del lettore audio di Windows, cosi' la bocca parte col suono."""
         with self._lock:
             self._envelope = [float(v) for v in (envelope or ())]
-            self._start = time.monotonic()
+            self._start = time.monotonic() + max(0.0, float(delay))
 
     def level(self, now: float | None = None) -> float | None:
         """Valore corrente o None se non c'e' audio con curva in corso."""
@@ -76,6 +78,7 @@ class LipSync:
 
 
 LIPSYNC = LipSync()
+PLAYBACK_LATENCY = 0.12   # secondi tra la chiamata al lettore e il primo suono
 
 
 class AvatarFace:

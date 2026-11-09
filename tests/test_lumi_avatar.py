@@ -51,6 +51,12 @@ class LipSyncTests(unittest.TestCase):
         self.assertEqual(sync.level(start + 0.15), 0.9)
         self.assertIsNone(sync.level(start + 0.5))
 
+    def test_mouth_waits_for_playback_start(self):
+        sync = LipSync(fps=10)
+        sync.push([0.9, 0.9], delay=0.5)
+        self.assertIsNone(sync.level(sync._start - 0.3))
+        self.assertEqual(sync.level(sync._start + 0.05), 0.9)
+
     def test_mouth_levels(self):
         self.assertEqual([mouth_level(v) for v in (0, .2, .5, .9)], [0, 1, 2, 3])
 
