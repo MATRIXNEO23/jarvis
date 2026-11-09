@@ -1,0 +1,43 @@
+# ARCH-01 / F5N — Audit della DLL nativa KoboldCpp (9 novembre 2026)
+
+## Decisione di prodotto
+Jarvis è l'unico programma visibile e l'unica interfaccia. L'utente chiede le **funzioni di KoboldCpp ufficiale direttamente nel motore nativo di Jarvis**, possibilmente con DLL compilata dallo stesso codice sorgente upstream, non un processo KoboldCpp server esterno pilotato da Jarvis. Le funzioni dell'assistente (memoria, strumenti, applicazioni Windows, Telegram) devono restare in Jarvis, separate dalla DLL che effettua l'inferenza; questo evita di riscrivere il motore a ogni nuova azione.
+
+## Evidenza dal codice del progetto
+- `local_model/native_factory.py` carica in-process il sorgente upstream `koboldcpp.py` (ABI ctypes), `NativeGemmaBridge` e `NativeLocalProvider`. La DLL predefinita è `native_engine/koboldcpp_noavx2.dll` (non è necessario aprire KoboldCpp standalone).
+- `local_model/native_initializer.py` estrae l'inizializzazione dell'upstream, invoca `init_library()`, imposta CPU, `--noavx2`, `--gpulayers 0`, threads, blasthreads e contextsize. Attualmente dipende dalla **struttura AST** del blocco `if __name__`: un aggiornamento upstream può romperla.
+- `local_model/native_bridge.py` espone `load()`, `generate()`, `count_tokens()`, `abort()` e aggiornamento dei sampler; `abort()` **non rilascia** necessariamente il GGUF. La generazione invia context, max output, temperatura, top_k, top_p e seed; stop sequence è fissata a `<end_of_turn>` per Gemma.
+- `local_model/native_provider.py` e `native_chat_adapter.py` serializzano le conversazioni con `format_gemma_messages`; il template non è ancora scelto dai metadata del vero GGUF. `NativeModelConfig` non espone tutti i controlli di KoboldCpp. `NativeChatAdapter.prepare` richiama `stop()` per sostituire il provider, ma non certifica che la DLL abbia liberato il vecchio modello.
+- Le conversazioni persistenti della chat non devono essere modificate per intervenire sul motore. F4.2 su Pavilion è ancora non misurata.
+
+## Verifica puntuale del codice ufficiale
+Upstream esaminato: `LostRuins/koboldcpp`, branch `concedo`, commit di riferimento osservato `6d2fedf8624e5f05926af3191f9efdcb13c4133c` (da **verificare/fissare esattamente** prima di compilare). File esaminati: [koboldcpp.py](https://github.com/LostRuins/koboldcpp/blob/concedo/koboldcpp.py), [Makefile](https://github.com/LostRuins/koboldcpp/blob/concedo/Makefile), [README](https://github.com/LostRuins/koboldcpp/blob/concedo/README.md).
+
+- Il Makefile supporta build DLL Windows; su x86 con `LLAMA_PORTABLE` e `LLAMA_NOAVX2` usa le flag `-mavx -msse3 -mssse3`, coerenti con CPU i3-2100 AVX senza AVX2. Serve comunque compilare e testare su Windows.
+- L'interfaccia ctypes upstream include `load_model`, `generate`, `abort_generate`, gestione token e `get_chat_template`. Nell'esame del file Python non è emerso un binding pubblico `handle.unload_model` o `def unload_model`; l'opzione amministrativa testuale `unload_model` NON prova l'esistenza di un'API di deallocazione in-process. Questa è una **lacuna da verificare anche nel sorgente C/C++**, non una prova che il rilascio sia impossibile.
+- La DLL del repo, nel probe CI Windows precedente, esponeva almeno `load_model`, `generate`, `abort_generate`, `token_count` e alcune metriche. Probe dell'export != prova di corretto unload o generazione Qwen.
+- Il README upstream dichiara AGPL-3.0 per KoboldCpp salvo file con licenza differente. Prima di distribuire una DLL ricompilata o modificata occorre verificare obblighi di licenza, disponibilità sorgente corrispondente e attribuzioni di componenti terzi.
+
+## Matrice preliminare di parità
+
+| Funzione | Jarvis DLL corrente | Upstream verificato | Gate per parità |
+|---|---|---|---|
+| CPU/no AVX2 | Configurata e provata in CI limitata | Build target presente | Inference reale sul Pavilion |
+| Modello GGUF Gemma | Caricamento e generazione nativi | load_model/generate | Comparazione stesso GGUF e sampler |
+| GGUF Qwen | Non verificato | Dipende da modello e versione | GGUF, tokenizer, template e risposta coerente |
+| Context / output / threads / BLAS | Esposti | Opzioni upstream presenti | Equivalenza dei valori applicati |
+| Sampler e seed | Sottoinsieme (temp/top_k/top_p/seed) | Più parametri | Inventario campo-per-campo e test |
+| Template per famiglia | Solo Gemma attivo | get_chat_template disponibile | Metadata reali e stop tokens corretti |
+| Unload e cambio a caldo | **Non certificato** | Nessuna API Python di unload trovata nell'audit | Esaminare C++ e verificare deallocazione |
+| Memoria / strumenti di Jarvis | Sono del livello Jarvis | Non sono il compito del motore | Non regredire autorizzazioni/conversazioni |
+| Prestazioni rispetto al KoboldCpp originale | Non misurate sul Pavilion | Nessuna equivalenza automatica | F4.2 a condizioni identiche |
+
+## Piano tecnico vincolante, incrementale
+1. **F5N.1 — Audit ABI C/C++**: identificare esatta versione/commit della DLL bundled e provenienza, confrontare export ctypes e sorgente C/C++ ufficiale, individuare gestione reale di `llama_model`/context e possibili vie di teardown. Non chiamare `load_model` un secondo GGUF nello stesso processo prima di chiarire questo punto.
+2. **F5N.2 — Build riproducibile da upstream**: fissare SHA/tag Git upstream **prima** di compilare, toolchain Windows e flag `LLAMA_PORTABLE=1 LLAMA_NOAVX2=1`, mantenere patch minime isolate e inventario differenze ABI. Prove su runner Windows senza sostituire la DLL distribuita. No Linux test.
+3. **F5N.3 — Configurazione compatibile**: derivare l'elenco dei parametri dal codice effettivo upstream, esporre solo quelli supportati dalla DLL; serializzare secondo metadata reali del modello, senza assumere Gemma=Qwen2.5=Qwen3. Aggiungere test di payload e regressione per Console/Chat/Telegram.
+4. **F5N.4 — Lifecycle**: dimostrare unload/reload reale se possibile; in assenza di API attendibile non promettere cambio a caldo né sovrascrivere un modello caricato. Valutare isolamento interno alternativo solo se indispensabile e compatibile con il requisito di una sola applicazione.
+5. **F5N.5 — Benchmark Pavilion**: stesso GGUF, quantizzazione, contesto, threads, BLAS, prompt, sampling e cache (guida F4.2). Verificare memoria reale e continuità dialogo prima della nuova ZIP.
+
+## Regole di sicurezza e rollback
+Nessuna modifica a `main`, DLL bundled, file di configurazione personali, Second Brain, storico chat o ZIP014 durante l'audit. Nessun KoboldCpp standalone da richiedere all'utente come prodotto. Il laboratorio subprocess `owned_kobold_lab_f5.py` resta **fuori** dalla strada principale. Il controllo mock Windows misura solo il software di test; non certifica prestazioni, qualità Qwen, RAM liberata o parità con KoboldCpp ufficiale. Non distribuire DLL senza licenza e sorgenti corrispondenti gestiti correttamente.
