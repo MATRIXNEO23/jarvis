@@ -36,6 +36,7 @@ class ModelSwitchGate:
         self._generation = 0
         self._pending = None
         self._blocked = False
+        self._target_ready = False
 
     def snapshot(self) -> SwitchSnapshot:
         with self._lock:
@@ -63,6 +64,7 @@ class ModelSwitchGate:
             self._pending = (self._generation, candidate)
             # The owner must release the previous model before any commit.
             self._blocked = True
+            self._target_ready = False
             return self._generation
 
     def confirm_released(self, ticket: int, *, released: bool) -> None:
@@ -77,13 +79,26 @@ class ModelSwitchGate:
                 raise SwitchRejected("Model release unverified; switching blocked")
             self._blocked = False
 
-    def commit(self, ticket: int) -> SwitchSnapshot:
+    def confirm_target_ready(self, ticket: int, *, ready: bool) -> None:
+        """The host must attest successful startup after prior release."""
+        if type(ready) is not bool:
+            raise ProfileError("Explicit target readiness required")
         with self._lock:
             if (self._pending is None or self._blocked or type(ticket) is not int
                     or self._pending[0] != ticket):
-                raise SwitchRejected("Cannot switch before verified release")
+                raise SwitchRejected("Target cannot start before prior release")
+            if not ready:
+                raise SwitchRejected("Target startup unverified")
+            self._target_ready = True
+
+    def commit(self, ticket: int) -> SwitchSnapshot:
+        with self._lock:
+            if (self._pending is None or self._blocked or not self._target_ready or type(ticket) is not int
+                    or self._pending[0] != ticket):
+                raise SwitchRejected("Cannot switch before verified release and startup")
             self._active = self._pending[1]
             self._pending = None
+            self._target_ready = False
             return self.snapshot()
 
     def cancel_before_release(self, ticket: int) -> SwitchSnapshot:
@@ -94,4 +109,5 @@ class ModelSwitchGate:
                 raise SwitchRejected("Cannot restore a released model implicitly")
             self._pending = None
             self._blocked = False
+            self._target_ready = False
             return self.snapshot()
