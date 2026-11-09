@@ -1,3 +1,6 @@
+## F5N.3 — Diagnostica dei due run PE falliti (9 novembre 2026)
+Run 42557729052 e 42557848456 FAILED **esclusivamente al controllo export PE** dopo compilazione DLL e hash corretti. Jarvis unit/protocollo, tokenizer e diagnosi SUCCESS. Il gate non trova `load_model/generate/abort_generate/token_count/get_chat_template` in `koboldcpp_common.dll`, ma resta da verificare la lista esatta delle esportazioni. Aggiunta diagnostica senza bypass del gate (`53181925...`), nuovo run F5N.3 42559582501 in esecuzione alla verifica. Non dichiarare bug risolto prima dell'evidenza. [Dettagli](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 invariata.
+
 ## F5N.3 — Inventario ABI PE del candidato KoboldCpp (9 novembre 2026)
 F5N.2 compilazione Windows completata SUCCESS (run 42555705472). F5N.3 ha introdotto `tools/f5n_pe_abi_audit.py`, `tests/test_f5n_pe_abi_audit.py` e gate statico nel workflow candidato, con esportazioni native obbligatorie, import `koboldcpp_backend.dll` e manifest checksum. `koboldcpp_common.dll` è il punto di accesso ufficiale della versione split; il nuovo bootstrap in Jarvis non è ancora testato e NON è stato collegato alla chat. Workflow Windows [42557729052](https://github.com/MATRIXNEO23/jarvis/actions/runs/42557729052) in corso alla prima verifica. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 invariata.
 
