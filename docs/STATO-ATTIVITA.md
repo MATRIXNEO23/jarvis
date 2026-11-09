@@ -1,3 +1,6 @@
+## F5N.3 — Inventario ABI PE del candidato KoboldCpp (9 novembre 2026)
+F5N.2 compilazione Windows completata SUCCESS (run 42555705472). F5N.3 ha introdotto `tools/f5n_pe_abi_audit.py`, `tests/test_f5n_pe_abi_audit.py` e gate statico nel workflow candidato, con esportazioni native obbligatorie, import `koboldcpp_backend.dll` e manifest checksum. `koboldcpp_common.dll` è il punto di accesso ufficiale della versione split; il nuovo bootstrap in Jarvis non è ancora testato e NON è stato collegato alla chat. Workflow Windows [42557729052](https://github.com/MATRIXNEO23/jarvis/actions/runs/42557729052) in corso alla prima verifica. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 invariata.
+
 ## F5N.2 — Corretta propagazione macro Windows al compilatore (9 novembre 2026)
 Causa reale del fallimento run 42554779032: Makefile KoboldCpp azzera CFLAGS/CXXFLAGS di ambiente. Commit `ca9f43a...` applica `_WIN32_WINNT=0x0602` e `WINVER=0x0602` nei comandi `CC`/`CXX` passati a `make` senza alterare i flag del motore o i sorgenti upstream. Nuovo run Windows F5N.2 42555705472 in corso; non dichiarare DLL pronta. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 intatta.
 
