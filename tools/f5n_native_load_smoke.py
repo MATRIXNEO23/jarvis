@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import shutil
 
 from .f5n_bundle_audit import inspect_bundle
 from .f5n_pe_abi_audit import REQUIRED_COMMON_EXPORTS
@@ -34,6 +35,43 @@ def expected_paths(root):
     }
 
 
+def dependency_diagnostics(paths):
+    """Report PE imports and likely missing dynamic dependencies, read-only.
+
+    This is diagnostic evidence only, not proof of Windows loader resolution.
+    """
+    try:
+        import pefile
+    except ImportError:
+        return {"error": "pefile missing in isolated CI worker"}
+    search_dirs = [paths["root"], paths["route"].parent,
+                   Path(os.environ.get("SystemRoot", "C:/Windows")) / "System32"]
+    compiler = shutil.which("g++.exe")
+    if compiler:
+        search_dirs.append(Path(compiler).parent)
+    result = {"compiler": compiler, "search_dirs": [str(p) for p in search_dirs],
+              "imports": {}, "not_found_in_checked_dirs": {}}
+    for key in ("route", "common", "backend"):
+        pe = pefile.PE(str(paths[key]), fast_load=True)
+        try:
+            pe.parse_data_directories(directories=[
+                pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_IMPORT"]])
+            names = sorted({entry.dll.decode("ascii", "replace")
+                            for entry in getattr(pe, "DIRECTORY_ENTRY_IMPORT", ())
+                            if entry.dll})
+        finally:
+            pe.close()
+        result["imports"][key] = names
+        # Windows KnownDLLs/API sets are resolved by the OS and do not
+        # need to exist as files; list potential absences without assertions.
+        result["not_found_in_checked_dirs"][key] = [
+            name for name in names
+            if not name.lower().startswith(("api-ms-", "ext-ms-"))
+            and not any((directory / name).is_file() for directory in search_dirs)
+        ]
+    return result
+
+
 def load_worker(root):
     """Executed only in the expendable Windows subprocess."""
     if os.name != "nt" or not hasattr(os, "add_dll_directory"):
@@ -42,7 +80,14 @@ def load_worker(root):
     with os.add_dll_directory(str(paths["root"])), os.add_dll_directory(str(paths["route"].parent)):
         # Identical load sequence to pinned upstream koboldcpp.py:init_library.
         route_handle = ctypes.CDLL(str(paths["route"]))
-        common_handle = ctypes.CDLL(str(paths["common"]))
+        try:
+            common_handle = ctypes.CDLL(str(paths["common"]))
+        except OSError as exc:
+            diagnostic = dependency_diagnostics(paths)
+            raise NativeSmokeError(
+                "Common DLL load failed; PE dependency diagnostic="
+                + json.dumps(diagnostic, sort_keys=True)
+                + "; original error=" + str(exc)) from exc
         symbols = sorted(REQUIRED_COMMON_EXPORTS)
         for symbol in symbols:
             getattr(common_handle, symbol)
