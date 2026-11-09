@@ -1,3 +1,6 @@
+## F5N.3 — Fix cap parser PE 8192 simboli (9 novembre 2026)
+Due run candidati F5N.3 rossi (42559582501 e 42559697598), mentre build DLL, unit test Jarvis, tokenizer e diagnostica superati. Confermato limite `pefile.MAX_SYMBOL_EXPORT_COUNT = 0x2000`, usato come default dal costruttore: vengono letti solo i primi 8192 export. Nuova chiamata `PE(..., max_symbol_exports=65536)` con controllo integrità `NumberOfNames` e test regressione; CI nuova ancora da confermare. [Report](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 non modificata.
+
 ## F5N.3 — Diagnostica dei due run PE falliti (9 novembre 2026)
 Run 42557729052 e 42557848456 FAILED **esclusivamente al controllo export PE** dopo compilazione DLL e hash corretti. Jarvis unit/protocollo, tokenizer e diagnosi SUCCESS. Il gate non trova `load_model/generate/abort_generate/token_count/get_chat_template` in `koboldcpp_common.dll`, ma resta da verificare la lista esatta delle esportazioni. Aggiunta diagnostica senza bypass del gate (`53181925...`), nuovo run F5N.3 42559582501 in esecuzione alla verifica. Non dichiarare bug risolto prima dell'evidenza. [Dettagli](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 invariata.
 
