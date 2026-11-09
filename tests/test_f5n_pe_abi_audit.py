@@ -1,8 +1,11 @@
 """F5N.3 synthetic PE metadata regression: no DLL load, inference or disk changes."""
 import unittest
+import tempfile
+from pathlib import Path
+from types import SimpleNamespace
 
 from tools.f5n_bundle_audit import FILES
-from tools.f5n_pe_abi_audit import PeAbiError, verify_abi_metadata
+from tools.f5n_pe_abi_audit import PeAbiError, verify_abi_metadata, inspect_pe
 
 
 def _bundle():
@@ -56,6 +59,48 @@ class TestF5N3PEABI(unittest.TestCase):
         result = verify_abi_metadata(_bundle(), item)
         self.assertTrue(result["unload_symbol_present"])
         self.assertFalse(result["safe_model_unload_verified"])
+
+    def test_inspect_pe_uses_explicit_high_export_cap(self):
+        # Fake parser intentionally rejects the default pefile 8192-symbol cap.
+        with tempfile.TemporaryDirectory() as directory:
+            for filename in FILES:
+                file = Path(directory) / filename
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_bytes(b"MZ" + bytes(2048))
+
+            class Parser:
+                DIRECTORY_ENTRY = {
+                    "IMAGE_DIRECTORY_ENTRY_EXPORT": 0,
+                    "IMAGE_DIRECTORY_ENTRY_IMPORT": 1,
+                }
+                calls = []
+
+                class PE:
+                    def __init__(self, filename, *, fast_load, max_symbol_exports):
+                        Parser.calls.append(max_symbol_exports)
+                        assert max_symbol_exports > 8192
+                        self.filename = filename
+
+                    def parse_data_directories(self, *, directories):
+                        assert directories == [0, 1]
+                        name = self.filename.replace("\\\\", "/")
+                        exports = _metadata()[next(x for x in FILES if name.endswith(x))]
+                        names = exports["exports"]
+                        self.DIRECTORY_ENTRY_EXPORT = SimpleNamespace(
+                            struct=SimpleNamespace(NumberOfNames=len(names)),
+                            symbols=[SimpleNamespace(name=n.encode("ascii")) for n in names],
+                        )
+                        self.DIRECTORY_ENTRY_IMPORT = [
+                            SimpleNamespace(dll=n.encode("ascii"))
+                            for n in exports["imports"]
+                        ]
+
+                    def close(self):
+                        pass
+
+            result = inspect_pe(directory, pe_module=Parser)
+            self.assertTrue(result["common_native_api_found"])
+            self.assertEqual(Parser.calls, [65536] * len(FILES))
 
     def test_missing_dll_metadata_blocks(self):
         item = _metadata()
