@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import queue
+import re
 import subprocess
 import threading
 import time
@@ -139,6 +140,27 @@ def installed_voices() -> list[str]:
     return installed_piper_voices() + windows
 
 
+_EMOJI = re.compile(
+    "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF"
+    "\U00002B00-\U00002BFF\U0000FE0F\U0000200D\U000020E3\U00002190-\U000021FF]+")
+_MARKUP = re.compile(r"[*_#`~>|]+")
+
+
+def speech_text(text: str) -> str:
+    """Text to read aloud: no emoji, no markdown symbols (asterischi, #, `)."""
+    text = _EMOJI.sub(" ", text)
+    text = re.sub(r"^\s*[-•]\s+", "", text, flags=re.M)       # punti elenco
+    text = _MARKUP.sub(" ", text)
+    parts = []
+    for line in text.splitlines():           # a capo / elenchi -> pausa
+        line = " ".join(line.split())
+        if line:
+            parts.append(line if line[-1] in ".,;:!?…" else line + ".")
+    text = " ".join(parts) if len(parts) > 1 else " ".join(text.split())
+    text = re.sub(r"\s+([,.;:!?])", r"\1", text)
+    return " ".join(text.split())
+
+
 class OfflineSpeaker:
     """Bounded, background TTS. Optional and independent of listening mode."""
 
@@ -187,6 +209,8 @@ class OfflineSpeaker:
         return self._busy.is_set()
 
     def speak(self, text: str, voice: str = "") -> bool:
+        if isinstance(text, str):
+            text = speech_text(text)
         if self._closed.is_set() or not isinstance(text, str) or not text.strip():
             return False
         if not isinstance(voice, str) or len(voice) > 180:

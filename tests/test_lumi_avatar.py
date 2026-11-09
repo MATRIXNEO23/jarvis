@@ -39,15 +39,15 @@ class AssetTests(unittest.TestCase):
                 self.assertTrue((ASSET_DIR / f"lumi_{size}_b{level}.png").is_file())
 
     def test_pick_size_fits_or_falls_back_to_smallest(self):
-        self.assertEqual(pick_size(260), 250)
-        self.assertEqual(pick_size(200), 180)
-        self.assertEqual(pick_size(10), 180)
+        self.assertEqual(pick_size(300), 290)
+        self.assertEqual(pick_size(200), 190)
+        self.assertEqual(pick_size(10), 190)
 
     def test_original_image_kept_out_of_package(self):
         from tools.build_jarvis_f5_candidate import include
         self.assertTrue((ASSET_DIR / "lumi_originale.png").is_file())
         self.assertFalse(include(Path("assets/lumi/lumi_originale.png")))
-        self.assertTrue(include(Path("assets/lumi/lumi_180_p3_h2.png")))
+        self.assertTrue(include(Path("assets/lumi/lumi_190_p6_h1.png")))
 
 
 class LipSyncTests(unittest.TestCase):

@@ -160,6 +160,9 @@ class AvatarFace:
         self._breath_period = self.rng.uniform(3.8, 4.8)
         self._breath_phase = self.rng.uniform(0, 6.28)
         self._mouth_value = 0.0
+        self.mouth_steps = MOUTH_STEPS
+        self._loop_job = None
+        self._mode_provider = None
         self._next_blink = 0.0
         self._blink_until = 0.0
         self._next_gaze = 0.0
@@ -202,6 +205,7 @@ class AvatarFace:
             return False
         self.pose = int(data.get("rest_pose", 0))
         self.hair_index = int(data.get("rest_hair", 0))
+        self.mouth_steps = int(data.get("mouth_levels", MOUTH_STEPS))
         self.breath_index = 0
         base = self.photos[(self.pose, "base", self.hair_index)]
         face_y = float(data.get("face_y", .5))
@@ -253,11 +257,43 @@ class AvatarFace:
         self._mouth_value += (raw - self._mouth_value) * k
         if raw == 0 and self._mouth_value < .05:
             self._mouth_value = 0.0
-        level = mouth_level(self._mouth_value)
+        level = mouth_level(self._mouth_value, self.mouth_steps)
         return f"mouth{level}" if level else None
 
     def pose_for(self, yaw: float) -> int:
         return min(range(len(self.poses)), key=lambda i: abs(self.poses[i] - yaw))
+
+    def start(self, mode_provider=lambda: "idle", interval_ms: int = 40) -> None:
+        """Animazione a 25 fotogrammi/s, indipendente dal ritmo del HUD:
+        bocca e testa non restano agganciate ai 110 ms del nucleo."""
+        self.stop()
+        self._mode_provider = mode_provider
+        canvas = self.canvas
+
+        def step():
+            if self.canvas is not canvas or not self.items:
+                return
+            delay = interval_ms
+            try:
+                if canvas.winfo_viewable():
+                    self.tick(self._mode_provider())
+                else:
+                    delay = 250           # finestra nascosta: quasi nessun lavoro
+            except Exception:
+                return
+            try:
+                self._loop_job = canvas.after(delay, step)
+            except Exception:
+                self._loop_job = None
+        step()
+
+    def stop(self) -> None:
+        job, self._loop_job = self._loop_job, None
+        if job is not None and self.canvas is not None:
+            try:
+                self.canvas.after_cancel(job)
+            except Exception:
+                pass
 
     def breath_level(self, now: float) -> int:
         """Respiro lento (~4 s): spalle e petto salgono e scendono."""
@@ -327,7 +363,7 @@ class AvatarDock:
     Doppio clic: ripristina la finestra principale.
     """
 
-    HEIGHT = 180
+    HEIGHT = 190
     KEY = "#010203"
 
     def __init__(self, root, mode_provider=lambda: "idle"):
@@ -382,26 +418,13 @@ class AvatarDock:
         for widget in (win, canvas):
             widget.bind("<Double-Button-1>", self.restore)
         self.window = win
-        self._animate()
-
-    def _animate(self):
-        if self.window is None:
-            return
-        try:
-            self.face.tick(self.mode_provider())
-        except Exception:
-            pass
-        self._job = self.window.after(40, self._animate)
+        self.face.start(self.mode_provider)
 
     def hide(self):
         win, self.window = self.window, None
         if win is not None:
-            if self._job is not None:
-                try:
-                    win.after_cancel(self._job)
-                except Exception:
-                    pass
-            self._job = None
+            self.face.stop()
+            self.face.items = {}
             win.destroy()
 
     def restore(self, _event=None):

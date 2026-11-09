@@ -67,7 +67,33 @@ class BridgeStreamTests(unittest.TestCase):
         self.assertEqual(bridge.generate("prompt", timeout=10), "Ciao Alberto. Come stai?")
 
 
+class ReplyStreamTests(unittest.TestCase):
+    def test_action_schema_streams_only_chat_reply(self):
+        from local_model.token_stream import visible_reply
+        self.assertEqual(visible_reply('{"kind":"chat","reply":"Ecco tre film: \\"Up'), 'Ecco tre film: "Up')
+        self.assertEqual(visible_reply('{"kind":"capability","action_id":"x"'), "")
+        self.assertEqual(visible_reply('{"kind":"chat","rep'), "")
+        self.assertEqual(visible_reply("Testo normale"), "Testo normale")
+
+
+class SpeechTextTests(unittest.TestCase):
+    def test_emoji_and_markdown_are_not_read_aloud(self):
+        from offline_tts import speech_text
+        self.assertEqual(speech_text("**Ecco** tre film 🎬😊:\n- *Inception* 🍿\n- # Matrix ✨ !"),
+                         "Ecco tre film: Inception. Matrix!")
+
+
 class ChatStreamTests(unittest.TestCase):
+    def test_very_long_sentence_starts_at_a_comma(self):
+        from chat_stream import ChatStream
+        spoken = []
+        stream = ChatStream()
+        stream.speak = lambda text: spoken.append(text) or True
+        stream.voice_enabled = lambda: True
+        long_text = "Ti consiglio Inception di Nolan, " * 5 + "e poi"
+        stream._speak_sentences(long_text)
+        self.assertTrue(spoken and spoken[0].endswith(","))
+
     def test_speaks_completed_sentences_then_only_the_rest(self):
         from chat_stream import ChatStream
         spoken, final = [], []
@@ -91,3 +117,18 @@ class ChatStreamTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TelegramHeaderTests(unittest.TestCase):
+    def test_old_and_renamed_credential_headers_are_both_readable(self):
+        import base64, json, tempfile
+        from pathlib import Path
+        from telegram_security import load_credentials, save_credentials
+        plain = json.dumps({"api_id": 1, "api_hash": "a" * 32, "session": "s" * 40}).encode()
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "auth.dpapi"
+            for header in (b"JARVIS-TG1\n", b"LUMI-TG1\n"):
+                path.write_bytes(header + base64.b64encode(plain))
+                self.assertEqual(load_credentials(path, protect=lambda v, _e: v)["api_id"], 1)
+            save_credentials(1, "a" * 32, "s" * 40, path=path, protect=lambda v, _e: v)
+            self.assertTrue(path.read_bytes().startswith(b"JARVIS-TG1\n"))

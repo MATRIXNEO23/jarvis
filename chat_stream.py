@@ -10,6 +10,7 @@ import queue
 import re
 
 _SENTENCE_END = re.compile(r"[.!?…:;](?=\s)|\n")
+_CLAUSE_END = re.compile(r",(?=\s)")
 
 
 class ChatStream:
@@ -82,6 +83,13 @@ class ChatStream:
         last = None
         for match in _SENTENCE_END.finditer(rest):
             last = match
+        if last is None:
+            # Frase molto lunga: parte alla virgola, cosi' la voce non aspetta.
+            if len(rest) < 140:
+                return
+            for match in _CLAUSE_END.finditer(rest):
+                if match.end() >= 60:
+                    last = match
         if last is None or len(rest[:last.end()].strip()) < 2:
             return
         chunk = rest[:last.end()]
@@ -93,8 +101,10 @@ class ChatStream:
         done, self.spoken = self.spoken, ""
         if not done:
             speak_result(text)
-        elif text.startswith(done):
-            rest = text[len(done):].strip()
+            return
+        flat_text, flat_done = " ".join(text.split()), " ".join(done.split())
+        if flat_text.startswith(flat_done):
+            rest = flat_text[len(flat_done):].strip()
             if rest:
                 speak_result(rest)
 

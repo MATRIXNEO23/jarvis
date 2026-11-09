@@ -38,3 +38,57 @@ def visible_text(raw: str, stop: str | None) -> str:
             if raw.endswith(stop[:n]):
                 return raw[:-n]
     return raw
+
+
+_REPLY_KEY = None
+
+
+def visible_reply(raw: str) -> str:
+    """Partial text to show for a reply that may be the action JSON schema.
+
+    Plain prose is shown as is. ``{"kind":"chat"|"clarify","reply":"..."}`` shows
+    the reply string decoded so far. Anything else (a capability proposal,
+    incomplete keys) shows nothing: actions are never displayed while generated.
+    """
+    import re
+    global _REPLY_KEY
+    if _REPLY_KEY is None:
+        _REPLY_KEY = re.compile(r'"reply"\s*:\s*"')
+    text = (raw or "").lstrip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1].lstrip() if "\n" in text else ""
+    if not text:
+        return ""
+    if not text.startswith("{"):
+        return "" if text.startswith("`") else raw.strip()
+    if '"capability"' in text or '"action_id"' in text:
+        return ""
+    match = _REPLY_KEY.search(text)
+    if not match:
+        return ""
+    out = []
+    i = match.end()
+    escapes = {"n": "\n", "t": " ", '"': '"', "\\": "\\", "/": "/", "r": ""}
+    while i < len(text):
+        ch = text[i]
+        if ch == '"':
+            break
+        if ch == "\\":
+            if i + 1 >= len(text):
+                break
+            nxt = text[i + 1]
+            if nxt == "u":
+                if i + 6 > len(text):
+                    break
+                try:
+                    out.append(chr(int(text[i + 2:i + 6], 16)))
+                except ValueError:
+                    pass
+                i += 6
+                continue
+            out.append(escapes.get(nxt, nxt))
+            i += 2
+            continue
+        out.append(ch)
+        i += 1
+    return "".join(out)

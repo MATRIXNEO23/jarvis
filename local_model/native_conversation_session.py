@@ -363,10 +363,19 @@ class NativeConversationSession:
             try:
                 self._prepare(config, revision)
                 self._check_revision(revision)
-                # Plain chat streams its text to the UI; action replies (JSON)
-                # are validated first and never shown while generated.
-                from .token_stream import streaming
-                stream_cb = getattr(self, "on_stream", None) if allowed_actions is None else None
+                # Plain chat streams its text to the UI; with the action catalog
+                # only the "reply" of a chat/clarify answer is streamed.
+                from .token_stream import streaming, visible_reply
+                stream_cb = getattr(self, "on_stream", None)
+                if stream_cb is not None and allowed_actions is not None:
+                    # Action-capable prompt: stream only the chat "reply" text,
+                    # never a capability proposal (validated after generation).
+                    sink = stream_cb
+
+                    def stream_cb(raw, sink=sink):
+                        shown = visible_reply(raw)
+                        if shown.strip():
+                            sink(shown)
                 with streaming(stream_cb):
                     result = self.adapter.call("ask", messages=messages, timeout=timeout,
                                                prompt_budget=budget)

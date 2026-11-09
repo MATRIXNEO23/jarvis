@@ -290,9 +290,12 @@ class ReactorArt:
         # resta solo se le immagini dell'avatar non sono disponibili.
         try:
             from lumi_avatar import AvatarFace
+            if self.avatar is not None:
+                self.avatar.stop()
             face=AvatarFace()
-            if face.attach(c,cx,cy,r*1.15):
+            if face.attach(c,cx,cy,r*1.3):
                 c.itemconfigure(self.core_name,state="hidden")
+                face.start(lambda:getattr(self,"last_mode","idle"))
                 self.avatar=face
             else:
                 self.avatar=None
@@ -353,11 +356,6 @@ class ReactorArt:
         for item,enabled in zip(self.system_lamps,
                                 (listening,connected,memory)):
             c.itemconfigure(item,fill=GREEN if enabled else "#2a5161")
-        if self.avatar is not None:
-            try:
-                self.avatar.tick(mode)
-            except Exception:
-                self.avatar=None
 
 
 def clip_coast(poly,turn,radius):

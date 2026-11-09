@@ -16,13 +16,13 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "assets" / "lumi" / "lumi_originale.png"
 OUT = ROOT / "assets" / "lumi"
 CROP = (60, 0, 1140, 1150)           # figura intera: capelli, volto, inizio busto
-SIZES = (180, 250)                   # altezza in pixel: mini avatar, nucleo HUD
+SIZES = (190, 290)                   # altezza in pixel: mini avatar, nucleo HUD
 FACE_Y = 690                         # centro del volto (coordinate originali)
 EYES = ((509, 586, 470, 562, 568, 604), (712, 586, 664, 758, 568, 604))  # iride cx,cy, x0,x1,y0,y1
 IRIS_R = 21
 MOUTH_X = (532, 702)
-MOUTH_LEVELS = (3, 6, 9, 12, 15)     # 5 aperture: movimento piu' morbido
-HAIR = (-1.0, -0.5, 0.0, 0.5, 1.0)  # ritardo delle ciocche quando la testa si gira
+MOUTH_LEVELS = (2, 4, 6, 8, 10, 12, 14, 16)   # 8 aperture: labbra piu' fluide
+HAIR = (-1.0, 0.0, 1.0)             # ritardo delle ciocche quando la testa si gira
 BREATH = (0.0, 0.33, 0.66, 1.0)     # spalle/petto che salgono piano
 
 
@@ -116,7 +116,7 @@ def mouth(im, d):
     return out
 
 
-POSES = (-1.0, -0.66, -0.33, 0.0, 0.33, 0.66, 1.0)   # rotazione leggera della testa
+POSES = tuple(round(-1 + i / 6, 3) for i in range(13))   # 13 pose: rotazione fluida
 
 
 def turn(im, yaw, amount=24.0, theta=0.02, hair=0.0, breath=0.0):
