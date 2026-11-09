@@ -6,6 +6,8 @@ on:
       - '.github/workflows/f5n-koboldcpp-native-dll-windows.yml'
       - 'tools/f5n_bundle_audit.py'
       - 'tests/test_f5n_bundle_audit.py'
+      - 'tools/f5n_pe_abi_audit.py'
+      - 'tests/test_f5n_pe_abi_audit.py'
 
 permissions:
   contents: read
@@ -71,6 +73,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Get-Content "f5n-dll-manifest.json"
 
+      - name: Audit PE exports and internal DLL imports (static, no LoadLibrary)
+        shell: pwsh
+        run: |
+          python -m pip install pefile==2024.8.26
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m tools.f5n_pe_abi_audit "koboldcpp-src" > "f5n-pe-abi-manifest.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content "f5n-pe-abi-manifest.json" | Select-Object -First 40
+
       - name: Archive only unverified research candidate
         uses: actions/upload-artifact@v4
         with:
@@ -84,3 +95,4 @@ jobs:
             koboldcpp-src/backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll
             koboldcpp-src/koboldcpp.py
             f5n-dll-manifest.json
+            f5n-pe-abi-manifest.json
