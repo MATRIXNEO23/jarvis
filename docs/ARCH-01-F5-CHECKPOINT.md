@@ -102,3 +102,6 @@ Preparati `.github/workflows/f5n-koboldcpp-native-dll-windows.yml` a dispatch ma
 
 ## F5N.3 — Gate PE ABI preliminare (9 novembre 2026)
 Build candidata upstream Windows F5N.2 verde (42555705472). Aggiunti audit PE statico `tools/f5n_pe_abi_audit.py`, test sintetici e workflow F5N candidato con `pefile` per verificare export/import DLL split, senza chiamare LoadLibrary o alterare Jarvis. Run nuova 42557729052 avviata, esito da confermare. `koboldcpp_common.dll` e route backend sono necessari per nuova architettura; attuale factory Jarvis non collaudata con DLL split. Rapporto [F5N ABI](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md), ZIP014 intatta.
+
+## F5N.4 — Prova loader Win32 senza GGUF (9 novembre 2026)
+F5N.3 completata con workflow DLL e suite Windows green sui due ultimi commit. Aggiunti smoke Windows dedicato e test guardia: `tools/f5n_native_load_smoke.py`, `tests/test_f5n_native_load_smoke.py`, audit workflow `f5n-native-loader-proof.json`. Smoke verifica soltanto OS loader + lookup simboli in processo figlio; non chiama model loader, né server, né cambia app Jarvis. Commit workflow `23044874...`; attendere CI. Rollback: eliminare i due nuovi file e ripristinare solo il workflow al commit precedente; ZIP014 e dati intatti.
