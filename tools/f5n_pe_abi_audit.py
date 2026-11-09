@@ -80,6 +80,14 @@ def inspect_pe(root, *, pe_module=None):
         except ImportError:
             raise PeAbiError("Missing isolated PE parser dependency") from None
     bundle = inspect_bundle(root)
+    # pefile's default MAX_SYMBOL_EXPORT_COUNT is 0x2000 (8192).
+    # Upstream's common DLL exports more than 8192 symbols, so the
+    # previous parser silently truncated the export table before our ABI.
+    # Increase the read ceiling ONLY in this standalone research audit.
+    # A hard maximum keeps malformed PE headers from demanding huge scans.
+    cap = 65536
+    if hasattr(pe_module, "MAX_SYMBOL_EXPORT_COUNT"):
+        pe_module.MAX_SYMBOL_EXPORT_COUNT = cap
     metadata = {}
     for relative in FILES:
         target = Path(root).joinpath(*relative.split("/"))
@@ -91,9 +99,17 @@ def inspect_pe(root, *, pe_module=None):
                     pe_module.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_EXPORT"],
                     pe_module.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_IMPORT"],
                 ])
+            export_table = getattr(pe, "DIRECTORY_ENTRY_EXPORT", None)
+            if export_table is not None:
+                count = int(export_table.struct.NumberOfNames)
+                if count > cap:
+                    raise PeAbiError("PE named-export count exceeds safe audit cap")
+                parsed_names = sum(sym.name is not None for sym in export_table.symbols)
+                if parsed_names < count:
+                    raise PeAbiError("Incomplete PE export enumeration")
             exports = sorted({
                 sym.name.decode("ascii", errors="replace")
-                for sym in getattr(getattr(pe, "DIRECTORY_ENTRY_EXPORT", None), "symbols", ())
+                for sym in getattr(export_table, "symbols", ())
                 if sym.name is not None
             })
             imports = sorted({
@@ -102,6 +118,8 @@ def inspect_pe(root, *, pe_module=None):
                 if item.dll is not None
             })
             metadata[relative] = {"exports": exports, "imports": imports}
+        except PeAbiError:
+            raise
         except (OSError, ValueError, AttributeError, UnicodeError) as exc:
             raise PeAbiError("PE metadata inspection failed") from None
         finally:
