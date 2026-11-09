@@ -1,3 +1,11 @@
+## Build 019 PROVA — l'assistente diventa LUMI, voci naturali Paola e Serena
+
+[Scarica Lumi-019-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-019-PROVA.zip)
+
+Come la 018, più: l'assistente si chiama Lumi ovunque (interfaccia, voce, Telegram) e la parola di attivazione è «Lumi» / «Ehi Lumi»; launcher avvia_lumi.bat. Voci naturali offline Piper: esegui installa_voce_naturale.bat, poi in Impostazioni > Voce premi «Scarica Paola» o «Scarica Serena» (dal repository, con verifica), scegli la voce e regola l'«Effetto digitale». Se il motore non gira su questo PC si torna alla voce di Windows. Stesso profilo dati (impostazioni, chat e memoria restano). L'avatar arriva nella prossima build. Verificati in CI Windows: 1153 test, voce Paola generata dal repository, ZIP estratto, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42678806394). SHA-256: `4239473ab934499fb2932673b4aa3a1ab5b60b1cac84f0814762da72004007ad`.
+
 ## Build 018 PROVA — tasto riduci a icona e conversazioni Telegram più fluide
 
 [Scarica Jarvis-018-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Jarvis-018-PROVA.zip)
