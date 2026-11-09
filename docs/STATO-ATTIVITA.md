@@ -1,3 +1,6 @@
+## F5N.4 — Fix percorso 8.3 test Windows e diagnostica DLL missing (9 novembre 2026)
+La prima F5N.4 falliva in due gate: test temporaneo confrontava short path `RUNNER~1` vs long path `runneradmin`; smoke nativo common DLL falliva perché Windows non risolve un modulo o una dipendenza non ancora identificata. Fix test-only `3b563ded...` e nuovo logging import PE read-only `ae724dae...`; **nessuna DLL corretta o sostituita** finché non emerge il dependency name. Nuovi run 42592363012 (unit), 42592362936 (DLL) in corso. F5N.4 ancora aperta. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
+
 ## F5N.4 — Windows DLL loader smoke isolato (9 novembre 2026)
 **F5N.3 verde**, due committaggi confermati green unit/GPT, tokenizer, diagnosi e compilazione DLL (42562880047, 42562944575). Implementato il solo gate test F5N.4: child Python Windows per caricare route + comune e cercare export senza caricare GGUF; test guardia e workflow candidato con report dedicato (commit `23044874...`). Esito CI F5N.4 da verificare, nulla pubblicato e runtime Jarvis 014 intatto. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
 
