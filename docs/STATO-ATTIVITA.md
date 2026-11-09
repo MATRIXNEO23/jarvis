@@ -1,3 +1,6 @@
+## F5 — Correzione architetturale richiesta (9 novembre 2026)
+L'utente vuole **KoboldCpp ufficiale integrato nativamente in Jarvis**, auspicabilmente con DLL compilata dalla stessa sorgente e aggiornata pari passo, e parità di comportamento/impostazioni: non un secondo programma o un server pilotato. Il percorso `OwnedKoboldLab` rimane solo laboratorio e non va collegato al runtime. Prossimo audit API/ABI upstream, build DLL Windows no-AVX2 con sorgente fissata e prova parità; ZIP014 preservata. [Checkpoint F5](ARCH-01-F5-CHECKPOINT.md).
+
 ## ARCH-01 F5.3b.3 — Jarvis unico programma e template Qwen2.5 (9 novembre 2026)
 Vincolo confermato: unica app/interfaccia Jarvis, engine interno invisibile e gestito da Jarvis. Gate Windows F5.3b.2 ora SUCCESS (runs 42544915058, 42544915314, 42544915068). Creati `local_model/qwen25_template_f5.py` e `tests/test_qwen25_template_f5.py`: serializer ChatML Qwen2.5 text-only isolato, nessun collegamento runtime. CI nuova da verificare; Qwen GGUF reale e Pavilion non ancora provati. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67, ZIP014 invariata.
 
