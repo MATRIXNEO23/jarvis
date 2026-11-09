@@ -92,10 +92,11 @@ class NativeCommandIntentTests(unittest.TestCase):
     def test_structured_native_chat_keeps_only_reply_in_conversation(self):
         with patch.object(self.owner.adapter, 'call', return_value={
                 'text':json.dumps({'kind':'chat','reply':'Parliamo pure di cinema.'})}):
-            self.ask('Parliamo di cinema', typed=True)
+            # Action cue ("film") keeps the structured catalog path (9/11).
+            self.ask('Parliamo di film', typed=True)
         self.assertEqual(self.actions(), [])
         self.assertEqual(list(self.owner.session.history), [
-            ('user','Parliamo di cinema'), ('assistant','Parliamo pure di cinema.')])
+            ('user','Parliamo di film'), ('assistant','Parliamo pure di cinema.')])
 
     def test_malformed_native_reply_never_executes_or_becomes_chat_history(self):
         with patch.object(self.owner.adapter, 'call', return_value={
@@ -170,10 +171,10 @@ class NativeCommandIntentTests(unittest.TestCase):
     def test_small_context_preserves_chat_without_adding_action_authority(self):
         from local_model.native_config import NativeModelConfig
         self.owner.session.config_loader = lambda: NativeModelConfig(context_size=512, max_output=128)
-        self.ask('Parliamo di cinema')
+        self.ask('Parliamo di film')  # catalog path, see 9/11 cue rule
         self.assertEqual(self.actions(), [])
         self.assertEqual(list(self.owner.session.history), [
-            ('user','Parliamo di cinema'), ('assistant','Risposta locale 1')])
+            ('user','Parliamo di film'), ('assistant','Risposta locale 1')])
         self.assertLessEqual(len(self.owner.adapter.prompts[-1]), 256)
         self.assertTrue(any('Contesto insufficiente' in str(call)
                             for call in self.env['write_line'].call_args_list))
