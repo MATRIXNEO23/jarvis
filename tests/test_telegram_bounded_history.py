@@ -48,17 +48,17 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(len(restarted.telegram_activity(123,limit=100)),50)
         self.assertEqual(restarted.telegram_counts(456)["received"],1)
 
-    def test_context_exactly_four_previous_events_no_historical_search(self):
-        for n in range(1,9):
+    def test_context_exactly_six_previous_events_no_historical_search(self):
+        # 9/11: last 3 exchanges (6 events) for a fluent conversation.
+        for n in range(1,10):
             direction="incoming" if n%2 else "outgoing"
             self.db.telegram_event(123,direction,n,"text",f"msg-{n}")
-        result=self.db.telegram_recent_context(123,7)
-        self.assertIn("msg-6",result)
+        result=self.db.telegram_recent_context(123,9)
+        self.assertIn("msg-8",result)
         self.assertIn("msg-3",result)
         self.assertNotIn("msg-2",result)
-        self.assertNotIn("msg-7",result)
-        self.assertNotIn("msg-8",result)
-        self.assertEqual(result.count('"da"'),4)
+        self.assertNotIn("msg-9",result)
+        self.assertEqual(result.count('"da"'),6)
         self.assertNotIn("segreto",result)
         self.assertEqual(self.db.add_turn("telegram","123","test","test"),False)
 

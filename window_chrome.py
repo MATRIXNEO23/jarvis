@@ -7,6 +7,9 @@ from tkinter import ttk
 
 
 GWL_STYLE = -16
+GWL_EXSTYLE = -20
+WS_EX_APPWINDOW = 0x00040000
+WS_EX_TOOLWINDOW = 0x00000080
 WS_CAPTION = 0x00C00000
 WS_THICKFRAME = 0x00040000
 GA_ROOT = 2
@@ -38,6 +41,18 @@ class _WindowApi:
 
     def hwnd(self, window):
         return self.ancestor(window.winfo_id(), GA_ROOT)
+
+    def ensure_taskbar_button(self, hwnd):
+        """Keep a taskbar entry for a captionless main window (9/11 fix).
+
+        Without it, minimizing the stripped root could leave no visible way
+        back, so the app looked closed while still running.
+        """
+        original = self.get_style(hwnd, GWL_EXSTYLE)
+        style = (original | WS_EX_APPWINDOW) & ~WS_EX_TOOLWINDOW
+        if style != original:
+            self.set_style(hwnd, GWL_EXSTYLE, style)
+            self.set_position(hwnd, None, 0, 0, 0, 0, FRAME_CHANGED)
 
     def strip_frame(self, hwnd):
         original = self.get_style(hwnd, GWL_STYLE)
@@ -71,6 +86,8 @@ def install_window_chrome(root):
             return
         if getattr(window, "_jarvis_window_buttons", None) is not None:
             return
+        if not window.transient():
+            api.ensure_taskbar_button(hwnd)
 
         header = getattr(window, "_jarvis_window_header", None)
         children = window.pack_slaves()
@@ -95,7 +112,12 @@ def install_window_chrome(root):
         def minimize():
             owner = window.transient()
             target = window.nametowidget(owner) if owner else window
-            api.show(api.hwnd(target), 6)  # SW_MINIMIZE
+            # Tk-managed iconify keeps Tk's state consistent and restorable
+            # from the taskbar; raw ShowWindow is only a fallback.
+            try:
+                target.iconify()
+            except tk.TclError:
+                api.show(api.hwnd(target), 6)  # SW_MINIMIZE
 
         def toggle_maximize():
             handle = api.hwnd(window)

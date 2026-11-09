@@ -3,7 +3,8 @@ import sys
 import tkinter as tk
 import unittest
 
-from window_chrome import GWL_STYLE, WS_CAPTION, WS_THICKFRAME, _WindowApi, install_window_chrome
+from window_chrome import (GWL_EXSTYLE, GWL_STYLE, WS_CAPTION, WS_EX_APPWINDOW,
+                           WS_THICKFRAME, _WindowApi, install_window_chrome)
 
 
 @unittest.skipUnless(sys.platform == "win32", "Requires the Windows window manager")
@@ -40,6 +41,14 @@ class WindowChromeTests(unittest.TestCase):
             self.assertEqual(set(window._jarvis_window_buttons.children) & {"minimize", "maximize", "close"},
                              {"minimize", "maximize", "close"})
 
+        # 9/11: "–" must minimize to the taskbar, never close the app.
+        self.assertTrue(api.get_style(api.hwnd(root), GWL_EXSTYLE) & WS_EX_APPWINDOW)
+        root._jarvis_window_buttons.nametowidget("minimize").invoke()
+        root.update()
+        self.assertEqual(root.state(), "iconic")
+        self.assertEqual(closed, [])
+        root.deiconify()
+        root.update()
         root._jarvis_window_buttons.nametowidget("maximize").invoke()
         root.update()
         self.assertTrue(api.zoomed(api.hwnd(root)))

@@ -155,7 +155,7 @@ class WorkspaceMemory:
                 self.fts_available=False
 
     TELEGRAM_HISTORY_LIMIT = 50
-    TELEGRAM_CONTEXT_LIMIT = 4
+    TELEGRAM_CONTEXT_LIMIT = 6  # last 3 exchanges (9/11)
 
     def _prune_telegram_backup(self, backup: Path) -> None:
         """Keep the rollback snapshot bounded too, including legacy chat turns.

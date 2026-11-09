@@ -246,20 +246,22 @@ class ActivityStatusTests(unittest.TestCase):
         self.assertEqual(env["service"].call.call_count, 3)
 
     def test_telegram_uses_gemma_only_when_gpt_is_switched_off(self):
-        from telegram_bridge import telegram_assistant_prompt, telegram_local_prompt
+        from telegram_bridge import (telegram_assistant_prompt, telegram_local_messages,
+                                     telegram_local_prompt)
         env, _, _ = self.environment()
         ready = env["telegram_gpt_ready"]
         bridge = SimpleNamespace(is_enabled=Mock(return_value=True))
         session = Mock()
         prompts = []
-        def ask_local(build_prompt):
-            prompts.append(build_prompt(512))
+        def ask_local(build_messages):
+            prompts.append(str(build_messages(3)))
             return "Ciao, come posso aiutarti?"
-        session.ask_isolated.side_effect = ask_local
+        session.ask_isolated_messages.side_effect = ask_local
         env.update(get_gemma_session=Mock(return_value=session),
                    ask_telegram_gpt=Mock(return_value=""),
                    telegram_assistant_prompt=telegram_assistant_prompt,
                    telegram_local_prompt=telegram_local_prompt,
+                   telegram_local_messages=telegram_local_messages,
                    settings={"gpt_enabled": False, "telegram_contact_profiles": {"123": "Usa il tu", "456": "Usa il lei"}})
         reply = self.callback("ask_telegram_reply", env)
         self.assertEqual(reply("Ciao", "Contesto privato", bridge, 123),
@@ -280,7 +282,7 @@ class ActivityStatusTests(unittest.TestCase):
         self.assertEqual(reply("Ciao", "", bridge, 123), "")
         env["ask_telegram_gpt"].assert_called_once()
         self.assertNotIn("Tono cordiale", env["ask_telegram_gpt"].call_args.args[0])
-        self.assertEqual(session.ask_isolated.call_count, 3)
+        self.assertEqual(session.ask_isolated_messages.call_count, 3)
 
     def test_actual_gpt_timeout_clears_phase_and_reports_reason_in_chat(self):
         env, workers, provider = self.environment()

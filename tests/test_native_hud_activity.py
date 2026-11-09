@@ -87,10 +87,12 @@ class NativeHudActivityTests(unittest.TestCase):
         self.snapshot(busy=False)
 
     def test_actual_telegram_local_callback_updates_same_hud_owner(self):
-        from telegram_bridge import telegram_assistant_prompt, telegram_local_prompt
+        from telegram_bridge import (telegram_assistant_prompt, telegram_local_messages,
+                                     telegram_local_prompt)
         self.env.update(get_gemma_session=Mock(return_value=self.session),
                         ask_telegram_gpt=Mock(), telegram_assistant_prompt=telegram_assistant_prompt,
-                        telegram_local_prompt=telegram_local_prompt, settings={"gpt_enabled": False})
+                        telegram_local_prompt=telegram_local_prompt,
+                        telegram_local_messages=telegram_local_messages, settings={"gpt_enabled": False})
         reply = self.callbacks.callback('ask_telegram_reply', self.env)
         bridge = SimpleNamespace(is_enabled=lambda: True)
         job = self.active(lambda: reply('Ciao', '', bridge, 123))

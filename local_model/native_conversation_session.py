@@ -489,6 +489,33 @@ class NativeConversationSession:
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
             return clean_native_answer(result.get("text"))
 
+    def ask_isolated_messages(self, build_messages, *, timeout=180, max_pairs=3):
+        """Like ask_isolated, with real turns: drop the oldest pair until it fits.
+
+        ``build_messages(pairs)`` returns alternating user/assistant messages
+        ending with the user. Never reads or changes the chat history.
+        """
+        with self._operation() as revision:
+            config = self.config_loader().validate()
+            memory = self.memory_loader().validate()
+            budget = memory.available_prompt_tokens(config.context_size, config.max_output)
+            self._prepare(config, revision)
+            self._check_revision(revision)
+            family = model_family(config.model)
+            try:
+                counter = self.adapter.context_token_counter()
+            except (RuntimeError, AttributeError):
+                counter = None
+            measure = counter if callable(counter) else len
+            for pairs in range(max_pairs, -1, -1):
+                messages = build_messages(pairs)
+                if measure(_format_family(messages, family)) <= budget:
+                    break
+            else:
+                raise ValueError("Contesto insufficiente per la risposta isolata.")
+            result = self.adapter.call("ask", messages=messages, timeout=timeout)
+            return clean_native_answer(result.get("text"))
+
     def test_generation(self, *, config=None, timeout=180):
         """Explicit isolated trial, serialized with chat/Telegram and reload.
 

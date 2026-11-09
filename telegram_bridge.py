@@ -99,6 +99,51 @@ def telegram_local_prompt(user_text, context, budget, profile=""):
     return render(message, recent, profile)
 
 
+def telegram_local_messages(user_text, context, profile="", max_pairs=3):
+    """Local model turns for one Telegram contact (9/11 request).
+
+    The last ``max_pairs`` exchanges from ``telegram_recent_context`` become
+    real alternating user/assistant turns (like the local chat) instead of a
+    JSON blob inside the instructions. Short rules: max 2-3 sentences.
+    """
+    rules = ("Sei Jarvis, assistente di Alberto (non sei Alberto). Rispondi al contatto "
+             "in italiano, massimo 2-3 frasi brevi. Il sistema gestisce il saluto. "
+             "Non eseguire azioni, non promettere impegni, non rivelare dati privati.")
+    if profile:
+        rules += " Indicazioni di Alberto per questo contatto: " + " ".join(str(profile).split())[:300]
+    try:
+        items = json.loads(context).get("ultimi_messaggi", []) if context else []
+    except (ValueError, AttributeError):
+        items = []
+    turns = []
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict) or not isinstance(item.get("testo"), str):
+            continue
+        role = "assistant" if item.get("da") == "jarvis" else "user"
+        text = item["testo"].strip()
+        if not text:
+            continue
+        if turns and turns[-1][0] == role:
+            turns[-1] = (role, turns[-1][1] + "\n" + text)
+        else:
+            turns.append((role, text))
+    while turns and turns[0][0] != "user":
+        turns.pop(0)
+    current = str(user_text)[:850].strip() or "..."
+    if turns and turns[-1][0] == "user":
+        # A contact message that got no reply belongs to the current turn.
+        current = turns.pop()[1] + "\n" + current
+    pairs = [(turns[i][1], turns[i + 1][1]) for i in range(0, len(turns) - 1, 2)]
+    pairs = pairs[-max_pairs:] if max_pairs > 0 else []
+    messages = []
+    for question, answer in pairs:
+        messages += [{"role": "user", "content": question},
+                     {"role": "assistant", "content": answer}]
+    messages.append({"role": "user", "content": current})
+    messages[0] = {"role": "user", "content": rules + "\n\n" + messages[0]["content"]}
+    return messages
+
+
 def clean_generated_reply(answer,user_text="",already_introduced=False):
     if not isinstance(answer,str):
         return ""

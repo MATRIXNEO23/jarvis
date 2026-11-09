@@ -40,7 +40,8 @@ from telegram_ui import (TelegramContactsWindow, edit_telegram_context,
 from telegram_outbound_flow import (
     VoiceSendDialog, parse_telegram_send_intent, resolve_selected_recipient,
 )
-from telegram_bridge import TelegramBridge, telegram_assistant_prompt, telegram_local_prompt
+from telegram_bridge import (TelegramBridge, telegram_assistant_prompt, telegram_local_messages,
+                             telegram_local_prompt)
 from live_capabilities import (LiveCapabilityRegistry, snapshot_capabilities,
                                capability_status_prompt)
 from addon_manager import AddonManager, AddonError
@@ -1962,8 +1963,9 @@ def main() -> None:
             session = get_gemma_session()
             profile = (settings.get("telegram_contact_profiles", {}).get(str(peer_id), "")
                        if peer_id is not None else "")
-            answer = session.ask_isolated(
-                lambda budget: telegram_local_prompt(message, context, budget, profile))
+            # 9/11: last 3 exchanges as real turns, short replies.
+            answer = session.ask_isolated_messages(
+                lambda pairs: telegram_local_messages(message, context, profile, pairs))
             return answer if (bridge.is_enabled() and not settings["gpt_enabled"]
                               and local_epoch == conversation_epoch) else ""
         except (OSError, ValueError, RuntimeError) as exc:
