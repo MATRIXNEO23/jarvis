@@ -7,6 +7,7 @@ unrelated processes or treats abort of the embedded DLL as verified unload.
 """
 import subprocess
 import threading
+import math
 
 
 class OwnedProcessError(RuntimeError):
@@ -59,7 +60,7 @@ class OwnedModelProcess:
 
         If termination/join fails, remain blocked: no speculative replacement.
         """
-        if type(timeout) not in (int, float) or not 0 < timeout <= 120:
+        if type(timeout) not in (int, float) or not math.isfinite(timeout) or not 0 < timeout <= 120:
             raise OwnedProcessError("Invalid stop timeout")
         with self._lock:
             child = self._child
