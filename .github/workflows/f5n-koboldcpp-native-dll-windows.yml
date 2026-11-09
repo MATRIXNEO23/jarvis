@@ -1,6 +1,11 @@
 name: "F5N.2 KoboldCpp pinned native DLL candidate (Windows manual)"
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/f5n-koboldcpp-native-dll-windows.yml'
+      - 'tools/f5n_bundle_audit.py'
+      - 'tests/test_f5n_bundle_audit.py'
 
 permissions:
   contents: read
