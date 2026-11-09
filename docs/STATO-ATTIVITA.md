@@ -1,3 +1,6 @@
+## ARCH-01 F5N.0 — Audit integrazione DLL KoboldCpp (9 novembre 2026)
+Confermato percorso approvato: stesso motore ufficiale KoboldCpp da sorgenti tramite DLL nativa integrata, una sola Jarvis, niente server standalone come soluzione. Pubblicata [matrice ABI e piano F5N](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md): già disponibili `load_model`, `generate`, `abort_generate`, prompt Gemma; mancano prova unload, template Qwen dinamici, parità sampler e performance Pavilion. Prima verificare C++ upstream + DLL corrispondente e build Windows no-AVX2 riproducibile. ZIP014 invariata; nessun cambio runtime.
+
 ## F5 — Correzione architetturale richiesta (9 novembre 2026)
 L'utente vuole **KoboldCpp ufficiale integrato nativamente in Jarvis**, auspicabilmente con DLL compilata dalla stessa sorgente e aggiornata pari passo, e parità di comportamento/impostazioni: non un secondo programma o un server pilotato. Il percorso `OwnedKoboldLab` rimane solo laboratorio e non va collegato al runtime. Prossimo audit API/ABI upstream, build DLL Windows no-AVX2 con sorgente fissata e prova parità; ZIP014 preservata. [Checkpoint F5](ARCH-01-F5-CHECKPOINT.md).
 
