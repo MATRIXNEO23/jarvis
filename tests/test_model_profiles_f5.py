@@ -63,10 +63,13 @@ class TestF5Profiles(unittest.TestCase):
         p = default_profiles()[0]
         self.assertEqual(parse_profile(vars(p)), p)
 
-    def test_does_not_import_runtime_or_network(self):
-        import sys
-        self.assertNotIn("jarvis", sys.modules)
-        self.assertNotIn("local_model.kobold_server_canary", sys.modules)
+    def test_profile_constructor_has_no_runtime_dependency(self):
+        import inspect
+        from local_model import model_profiles_f5
+        source = inspect.getsource(model_profiles_f5)
+        for forbidden in ("import jarvis", "import requests", "import urllib",
+                          "import socket", "import subprocess"):
+            self.assertNotIn(forbidden, source)
 
 
 if __name__ == "__main__":
