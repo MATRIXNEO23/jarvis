@@ -16,7 +16,8 @@ class NativeCatalogCueTests(unittest.TestCase):
         for text in ("Vorrei vedere un film", "apri netflix",
                      "Jarvis, metti un po' di musica", "Quanto è occupata la RAM?",
                      "Scrivi un messaggio a Mio Tim", "imposta un timer di 5 minuti",
-                     "cerca il file della tesi"):
+                     "cerca il file della tesi", "Controlla lo stato del PC",
+                     "Dimmi come sta il computer"):
             with self.subTest(text=text):
                 self.assertIsNotNone(context_for(text))
 

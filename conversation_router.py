@@ -112,7 +112,7 @@ _NATIVE_ACTION_CUE = re.compile(
     r"visualizz\w*|crea\w*|fammi|ricordami|volume|timer|sveglia|promemoria|"
     r"film|serie|musica|canzon\w*|video|programm\w*|app|applicazion\w*|"
     r"cartell\w*|file|document\w*|telegram|messaggi\w*|finestr\w*|"
-    r"sistema|cpu|ram|batteria|disco)\b",
+    r"sistema|cpu|ram|batteria|disco|controll\w*|pc|computer|portatile)\b",
     re.I,
 )
 
