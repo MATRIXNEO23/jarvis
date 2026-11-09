@@ -1,3 +1,6 @@
+## ARCH-01 F5N.2 — Trigger build candidato Windows (9 novembre 2026)
+Aggiunto evento PR filtrato alla build candidata Windows oltre a dispatch manuale (`3bbe376a...`) perché il nuovo workflow esiste soltanto sul ramo feature. Nessuna esecuzione compilazione verificata al primo controllo; restano i gate ABI, licenza, CPU e Pavilion. [Dettagli](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
+
 ## ARCH-01 F5N.2 — Build DLL KoboldCpp Windows fissata (9 novembre 2026)
 Preparato workflow manuale `.github/workflows/f5n-koboldcpp-native-dll-windows.yml` con upstream pinned `6d2fedf...` e target MinGW64 no-AVX2. L'upstream costruisce **più DLL** (common/default/noavx2/forwarder): non sostituire soltanto la DLL vecchia. Aggiunti `tools/f5n_bundle_audit.py` e `tests/test_f5n_bundle_audit.py` per manifest statico; workflow build **non ancora avviato**. Test Windows dei nuovi tool da confermare. [Audit e piano](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). Nessuna modifica a runtime, main, zip o dati.
 
