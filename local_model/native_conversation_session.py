@@ -363,8 +363,13 @@ class NativeConversationSession:
             try:
                 self._prepare(config, revision)
                 self._check_revision(revision)
-                result = self.adapter.call("ask", messages=messages, timeout=timeout,
-                                           prompt_budget=budget)
+                # Plain chat streams its text to the UI; action replies (JSON)
+                # are validated first and never shown while generated.
+                from .token_stream import streaming
+                stream_cb = getattr(self, "on_stream", None) if allowed_actions is None else None
+                with streaming(stream_cb):
+                    result = self.adapter.call("ask", messages=messages, timeout=timeout,
+                                               prompt_budget=budget)
             except BaseException:
                 # Review bug 5 (9/11): a failed generation must not silently
                 # consume the armed capture; keep it for the next question.

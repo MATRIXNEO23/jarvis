@@ -15,6 +15,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import threading
 import urllib.request
 import wave
 
@@ -126,17 +127,121 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+# Persistent child process: the voice model is loaded ONCE, not per sentence.
+# It stays a separate process, so an engine crash never closes Lumi.
+_WORKER_CODE = r"""
+import json, sys, wave
+from piper import PiperVoice
+voice = PiperVoice.load(sys.argv[1])
+sys.stdout.write("ready\n"); sys.stdout.flush()
+for line in sys.stdin:
+    try:
+        req = json.loads(line)
+        with wave.open(req["out"], "wb") as wav_file:
+            voice.synthesize_wav(req["text"], wav_file)
+        sys.stdout.write("ok\n")
+    except Exception as exc:
+        sys.stdout.write("err " + type(exc).__name__ + " " + " ".join(str(exc).split())[:200] + "\n")
+    sys.stdout.flush()
+"""
+
+
+class _PiperWorker:
+    def __init__(self, model: Path, timeout: float = 90):
+        self.model = Path(model)
+        self.lock = threading.Lock()
+        self.timeout = timeout
+        self.proc = subprocess.Popen(
+            [sys.executable, "-c", _WORKER_CODE, str(self.model)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            text=True, encoding="utf-8",
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        if self._read() != "ready":
+            self.close()
+            raise PiperVoiceError("Motore Piper persistente non avviato.")
+
+    def _read(self) -> str:
+        timer = threading.Timer(self.timeout, self.close)
+        timer.daemon = True
+        timer.start()
+        try:
+            return (self.proc.stdout.readline() or "").strip()
+        finally:
+            timer.cancel()
+
+    def alive(self) -> bool:
+        return self.proc.poll() is None
+
+    def synth(self, text: str, out_path: Path) -> Path:
+        with self.lock:
+            if not self.alive():
+                raise PiperVoiceError("Motore Piper chiuso.")
+            try:
+                self.proc.stdin.write(json.dumps({"text": text, "out": str(out_path)}) + "\n")
+                self.proc.stdin.flush()
+            except OSError as exc:
+                self.close()
+                raise PiperVoiceError("Motore Piper interrotto.") from exc
+            answer = self._read()
+        if answer != "ok" or not Path(out_path).is_file():
+            if not answer:
+                self.close()
+            raise PiperVoiceError("Motore Piper: " + (answer or "nessuna risposta")[:200])
+        return Path(out_path)
+
+    def close(self) -> None:
+        try:
+            if self.proc.poll() is None:
+                self.proc.kill()
+        except OSError:
+            pass
+
+
+_WORKERS: dict[str, _PiperWorker] = {}
+_WORKERS_LOCK = threading.Lock()
+
+
+def _worker_for(model: Path) -> _PiperWorker:
+    key = str(Path(model).resolve())
+    with _WORKERS_LOCK:
+        worker = _WORKERS.get(key)
+        if worker is None or not worker.alive():
+            for other in _WORKERS.values():   # one voice in RAM at a time
+                other.close()
+            _WORKERS.clear()
+            worker = _WORKERS[key] = _PiperWorker(Path(model))
+        return worker
+
+
+def shutdown_workers() -> None:
+    with _WORKERS_LOCK:
+        for worker in _WORKERS.values():
+            worker.close()
+        _WORKERS.clear()
+
+
 def synthesize(text: str, key: str, out_path: Path, *, folder: Path | None = None,
-               runner=subprocess.run, timeout: int = 120) -> Path:
-    """Text -> WAV in an isolated child process. Raises PiperVoiceError."""
+               runner=None, timeout: int = 120) -> Path:
+    """Text -> WAV in an isolated child process. Raises PiperVoiceError.
+
+    Default: persistent worker (model loaded once). If it cannot run, or a
+    test injects ``runner``, fall back to one ``python -m piper`` per call.
+    """
     if not isinstance(text, str) or not text.strip():
         raise PiperVoiceError("Testo vuoto.")
     model = _model(key, folder)
     if model is None:
         raise PiperVoiceError("Voce Piper non scaricata: " + LABELS.get(key, key))
+    clean = " ".join(text.split())[:_MAX_TEXT]
+    if runner is None:
+        try:
+            return _worker_for(model).synth(clean, Path(out_path))
+        except (PiperVoiceError, OSError):
+            shutdown_workers()
+        runner = subprocess.run
     try:
         proc = runner([sys.executable, "-m", "piper", "-m", str(model), "-f", str(out_path)],
-                      input=" ".join(text.split())[:_MAX_TEXT], capture_output=True, text=True,
+                      input=clean, capture_output=True, text=True,
                       encoding="utf-8", timeout=timeout,
                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -216,13 +321,72 @@ def stop_playback() -> None:
         pass
 
 
+_PREPARED: dict[tuple, tuple[threading.Thread, dict]] = {}
+_PREPARED_LOCK = threading.Lock()
+_AUDIO_DIR: Path | None = None
+
+
+def _audio_dir() -> Path:
+    global _AUDIO_DIR
+    if _AUDIO_DIR is None or not _AUDIO_DIR.is_dir():
+        _AUDIO_DIR = Path(tempfile.mkdtemp(prefix="lumi-voice-"))
+    return _AUDIO_DIR
+
+
+def _render(text: str, key: str, effect: float, folder, runner) -> Path:
+    base = _audio_dir() / f"v{threading.get_ident()}-{id(text)}-{os.getpid()}"
+    raw = synthesize(text, key, base.with_suffix(".raw.wav"), folder=folder, runner=runner)
+    if effect > 0:
+        final = apply_digital_effect(raw, base.with_suffix(".wav"), effect)
+        raw.unlink(missing_ok=True)
+        return final
+    return raw
+
+
+def prepare(text: str, key: str, *, effect: float = 0.0, folder: Path | None = None,
+            runner=None) -> None:
+    """Start synthesizing ``text`` in background (next sentence while one plays)."""
+    token = (text, key, round(effect, 3), str(folder))
+    with _PREPARED_LOCK:
+        if token in _PREPARED:
+            return
+        box: dict = {}
+
+        def work():
+            try:
+                box["path"] = _render(text, key, effect, folder, runner)
+            except Exception as exc:   # reported when the sentence is spoken
+                box["error"] = exc
+        thread = threading.Thread(target=work, daemon=True, name="lumi-voice-prepare")
+        _PREPARED[token] = (thread, box)
+    thread.start()
+
+
 def speak_with_piper(text: str, key: str, *, effect: float = 0.0,
                      on_envelope=None, folder: Path | None = None,
-                     runner=subprocess.run, player=play_wav) -> None:
-    """Synthesize, apply effect, publish lip-sync envelope, play. Raises on failure."""
-    with tempfile.TemporaryDirectory(prefix="lumi-voice-") as temp:
-        raw = synthesize(text, key, Path(temp) / "raw.wav", folder=folder, runner=runner)
-        final = apply_digital_effect(raw, Path(temp) / "voice.wav", effect) if effect > 0 else raw
+                     runner=None, player=play_wav, upcoming: str | None = None) -> None:
+    """Synthesize (or take the prefetched audio), publish lip-sync, play.
+
+    The envelope is published right before the sound starts, so the avatar's
+    mouth moves with the audio, not while the voice is still being prepared.
+    """
+    token = (text, key, round(effect, 3), str(folder))
+    with _PREPARED_LOCK:
+        prepared = _PREPARED.pop(token, None)
+    if prepared is not None:
+        thread, box = prepared
+        thread.join()
+        if "error" in box:
+            raise box["error"] if isinstance(box["error"], PiperVoiceError) else PiperVoiceError(
+                "Sintesi non riuscita: " + type(box["error"]).__name__)
+        final = box["path"]
+    else:
+        final = _render(text, key, effect, folder, runner)
+    try:
+        if upcoming:
+            prepare(upcoming, key, effect=effect, folder=folder, runner=runner)
         if on_envelope is not None:
             on_envelope(loudness_envelope(final))
         player(final)
+    finally:
+        Path(final).unlink(missing_ok=True)

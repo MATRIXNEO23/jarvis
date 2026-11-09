@@ -28,11 +28,12 @@ def manifest() -> dict:
     return _MANIFEST_CACHE
 
 
-def pick_size(diameter: float) -> int | None:
+def pick_size(height: float) -> int | None:
+    """Altezza disponibile in pixel -> altezza dell'immagine pronta piu' adatta."""
     sizes = sorted(int(s) for s in manifest().get("sizes", {}))
     if not sizes:
         return None
-    fitting = [s for s in sizes if s <= diameter]
+    fitting = [s for s in sizes if s <= height]
     return fitting[-1] if fitting else sizes[0]
 
 
@@ -93,12 +94,13 @@ class AvatarFace:
         self._eye_state = None
         self._mouth_state = None
 
-    def attach(self, canvas, cx: float, cy: float, diameter: float) -> bool:
+    def attach(self, canvas, cx: float, cy: float, height: float) -> bool:
+        """Figura intera centrata in orizzontale, volto all'altezza cy."""
         import tkinter as tk
         self.canvas = canvas
         self.items = {}
         self._eye_state = self._mouth_state = None
-        size = pick_size(diameter)
+        size = pick_size(height)
         if size is None:
             return False
         try:
@@ -113,7 +115,9 @@ class AvatarFace:
         except (tk.TclError, OSError, KeyError):
             self.photos = {}
             return False
-        x0, y0 = cx - size / 2, cy - size / 2
+        base = self.photos["base"]
+        face_y = float(manifest().get("face_y", .5))
+        x0, y0 = cx - base.width() / 2, cy - face_y * size
         self.origin = (x0, y0)
         self.items["base"] = canvas.create_image(x0, y0, anchor="nw",
                                                  image=self.photos["base"])
@@ -146,12 +150,15 @@ class AvatarFace:
             self._next_gaze = now + self.rng.uniform(1.2, 4.0)
         return self._gaze
 
-    def mouth_frame(self, now: float, speaking: bool) -> str | None:
-        value = LIPSYNC.level(now)
-        if value is None and speaking:
-            # Voce Windows: nessuna curva, movimento sintetico credibile.
-            value = .45 + .4 * abs(((now * 7.3) % 2) - 1) * self.rng.random()
-        level = mouth_level(value or 0.0)
+    def mouth_frame(self, now: float, speaking: bool = False) -> str | None:
+        """Bocca guidata SOLO dall'audio in riproduzione.
+
+        La curva arriva un istante prima che parta il suono (dopo la sintesi),
+        quindi la bocca non si muove mentre la voce viene ancora preparata.
+        Con la voce Windows non c'e' curva: la bocca resta chiusa, invece di
+        muoversi fuori tempo. `speaking` resta solo per compatibilita'.
+        """
+        level = mouth_level(LIPSYNC.level(now) or 0.0)
         return f"mouth{level}" if level else None
 
     def tick(self, mode: str = "idle", now: float | None = None) -> None:
@@ -162,7 +169,7 @@ class AvatarFace:
         if eye != self._eye_state:
             self._show("eyes", eye)
             self._eye_state = eye
-        mouth = self.mouth_frame(now, mode == "speaking")
+        mouth = self.mouth_frame(now)
         if mouth != self._mouth_state:
             self._show("mouth", mouth)
             self._mouth_state = mouth
@@ -187,7 +194,7 @@ class AvatarDock:
     Doppio clic: ripristina la finestra principale.
     """
 
-    SIZE = 128
+    HEIGHT = 180
     KEY = "#010203"
 
     def __init__(self, root, mode_provider=lambda: "idle"):
@@ -228,14 +235,16 @@ class AvatarDock:
             win.attributes("-transparentcolor", self.KEY)
         except tk.TclError:
             pass
-        size = self.SIZE
+        height = self.HEIGHT
+        width = round(height * .94)
         left, top, right, bottom = _work_area(self.root)
-        win.geometry(f"{size}x{size}+{right - size - 12}+{bottom - size - 8}")
-        canvas = tk.Canvas(win, width=size, height=size, bg=self.KEY,
+        win.geometry(f"{width}x{height}+{right - width - 12}+{bottom - height}")
+        canvas = tk.Canvas(win, width=width, height=height, bg=self.KEY,
                            highlightthickness=0, bd=0)
         canvas.pack()
-        if not self.face.attach(canvas, size / 2, size / 2, size):
-            canvas.create_text(size / 2, size / 2, text="LUMI", fill="#d9f8ff",
+        face_y = float(manifest().get("face_y", .5))
+        if not self.face.attach(canvas, width / 2, face_y * height, height):
+            canvas.create_text(width / 2, height / 2, text="LUMI", fill="#d9f8ff",
                                font=("Segoe UI", 18, "bold"))
         for widget in (win, canvas):
             widget.bind("<Double-Button-1>", self.restore)

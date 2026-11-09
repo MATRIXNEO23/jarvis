@@ -28,15 +28,15 @@ class AssetTests(unittest.TestCase):
                 self.assertTrue((ASSET_DIR / f"lumi_{size}_{name}.png").is_file())
 
     def test_pick_size_fits_or_falls_back_to_smallest(self):
-        self.assertEqual(pick_size(170), 160)
-        self.assertEqual(pick_size(500), 200)
-        self.assertEqual(pick_size(10), 96)
+        self.assertEqual(pick_size(250), 230)
+        self.assertEqual(pick_size(500), 280)
+        self.assertEqual(pick_size(10), 140)
 
     def test_original_image_kept_out_of_package(self):
         from tools.build_jarvis_f5_candidate import include
         self.assertTrue((ASSET_DIR / "lumi_originale.png").is_file())
         self.assertFalse(include(Path("assets/lumi/lumi_originale.png")))
-        self.assertTrue(include(Path("assets/lumi/lumi_128.png")))
+        self.assertTrue(include(Path("assets/lumi/lumi_180.png")))
 
 
 class LipSyncTests(unittest.TestCase):
@@ -75,6 +75,11 @@ class FaceTests(unittest.TestCase):
         self.assertEqual(face.mouth_frame(now, speaking=False), "mouth3")
         lumi_avatar.LIPSYNC.push([])
         self.assertIsNone(face.mouth_frame(now, speaking=False))
+
+    def test_mouth_stays_closed_while_voice_is_only_being_prepared(self):
+        face = self.make_face()
+        lumi_avatar.LIPSYNC.push([])
+        self.assertIsNone(face.mouth_frame(123.0, speaking=True))
 
     def test_tick_places_patch_at_offset(self):
         face = self.make_face()

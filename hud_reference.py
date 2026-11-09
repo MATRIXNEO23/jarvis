@@ -285,12 +285,13 @@ class ReactorArt:
                                      text="LUMI",
                                      fill="#d9f8ff",
                                      font=("Segoe UI",max(16,int(r*.24)),"bold"))
-        # Il volto di LUMI sostituisce la scritta nel nucleo; la scritta
+        # LUMI a figura intera sopra il nucleo (capelli e busto escono dal
+        # cerchio); la scritta
         # resta solo se le immagini dell'avatar non sono disponibili.
         try:
             from lumi_avatar import AvatarFace
             face=AvatarFace()
-            if face.attach(c,cx,cy,r*.66):
+            if face.attach(c,cx,cy,r*1.15):
                 c.itemconfigure(self.core_name,state="hidden")
                 self.avatar=face
             else:

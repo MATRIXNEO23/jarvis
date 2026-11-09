@@ -118,6 +118,54 @@ class NativeGemmaBridge:
                 raise RuntimeError("Conteggio token nativo non valido.")
             return len(ids)
 
+    def _start_stream(self, done):
+        """Poll partial output for the thread's stream callback (chat only)."""
+        from .token_stream import current, visible_text
+        callback = current()
+        handle = getattr(self.upstream, "handle", None)
+        pending = getattr(handle, "get_pending_output", None)
+        if callback is None or pending is None:
+            return None
+        try:
+            stop = stop_sequence(self.family)[0]
+        except Exception:
+            stop = None
+
+        def read():
+            raw = pending()
+            if isinstance(raw, bytes):
+                raw = raw.decode("utf-8", "ignore")
+            return raw if isinstance(raw, str) else ""
+
+        try:
+            stale = read()   # previous answer until the engine resets it
+        except Exception:
+            return None
+
+        def poll():
+            sent = ""
+            started = False
+            while not done.wait(0.12):
+                try:
+                    raw = read()
+                except Exception:
+                    return
+                if not started:
+                    if raw == stale:
+                        continue
+                    started = True
+                text = visible_text(raw, stop)
+                if text.strip() and text != sent:
+                    sent = text
+                    try:
+                        callback(text)
+                    except Exception:
+                        return
+
+        thread = threading.Thread(target=poll, daemon=True, name="lumi-token-stream")
+        thread.start()
+        return thread
+
     def generate(self, prompt, *, timeout=120):
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Prompt vuoto.")
@@ -152,6 +200,8 @@ class NativeGemmaBridge:
             watchdog = threading.Timer(timeout, expire)
             watchdog.daemon = True
             watchdog.start()
+            stream_done = threading.Event()
+            streamer = self._start_stream(stream_done)
             failure = None
             try:
                 # Timer.start() may schedule a stop/deadline before native
@@ -169,6 +219,9 @@ class NativeGemmaBridge:
             except Exception as exc:
                 failure = exc
             finally:
+                stream_done.set()
+                if streamer is not None:
+                    streamer.join(2)
                 with deadline_lock:
                     finished = True
                     watchdog.cancel()

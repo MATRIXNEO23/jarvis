@@ -66,14 +66,29 @@ def worker(build_dir, family, model, output):
             NativeModelConfig(dll=config.dll, model=config.model, context_size=1024,
                               max_output=512, temperature=0.7, top_k=40, top_p=0.9, seed=7))
         started = time.monotonic()
+        # Same long request also proves streaming of partial text (020/021).
+        from local_model.token_stream import streaming
+        chunks, first = [], []
+        def collect(text):
+            if not first:
+                first.append(round(time.monotonic() - started, 2))
+            chunks.append(text)
         try:
-            bridge.generate(format_gemma_messages(
-                [{"role": "user", "content": "Scrivi un racconto molto lungo sul mare."}]),
-                timeout=3)
+            with streaming(collect):
+                bridge.generate(format_gemma_messages(
+                    [{"role": "user", "content": "Scrivi un racconto molto lungo sul mare."}]),
+                    timeout=3)
             report["abort_verified"] = False
         except TimeoutError:
             report["abort_verified"] = True
         report["abort_return_seconds_runner"] = round(time.monotonic() - started, 2)
+        report["stream_chunks"] = len(chunks)
+        report["stream_first_seconds_runner"] = first[0] if first else None
+        report["stream_sample"] = chunks[-1][:120] if chunks else ""
+        report["stream_verified"] = (
+            len(chunks) >= 2
+            and all(b.startswith(a) for a, b in zip(chunks, chunks[1:]))
+            and not any(m in c for c in chunks for m in LEAK_MARKERS))
     report["gguf_load_verified"] = True
     report["model_inference_verified"] = bool(report["answer"]) and not report["leaked_markers"]
     report["pavilion_cpu_verified"] = False
@@ -107,6 +122,8 @@ def run_isolated(build_dir, models_dir, output, *, families=FAMILIES, timeout=90
             failures.append(f"{family}: inference not verified")
         if family == "gemma2" and report.get("abort_verified") is not True:
             failures.append("gemma2: abort not verified")
+        if family == "gemma2" and report.get("stream_verified") is not True:
+            failures.append("gemma2: streaming not verified")
     Path(output).write_text(json.dumps(results, indent=2, ensure_ascii=False, sort_keys=True),
                             encoding="utf-8")
     if failures:

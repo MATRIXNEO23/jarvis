@@ -81,6 +81,23 @@ class PiperVoiceTests(unittest.TestCase):
             piper_voice.synthesize("Ciao", "paola", self.dir / "o.wav",
                                    folder=self.dir, runner=crashing)
 
+    def test_upcoming_sentence_is_prepared_once_and_reused(self):
+        piper_voice.download_voice("paola", catalog_url="https://cat",
+                                   folder=self.dir, opener=self.catalog())
+        made = []
+        def fake(cmd, **kwargs):
+            made.append(kwargs["input"])
+            make_wav(Path(cmd[-1]), [1000, -1000] * 2205)
+            return subprocess.CompletedProcess(cmd, 0, "", "")
+        played = []
+        piper_voice.speak_with_piper("Prima.", "paola", folder=self.dir, runner=fake,
+                                     player=played.append, upcoming="Seconda.")
+        piper_voice.speak_with_piper("Seconda.", "paola", folder=self.dir, runner=fake,
+                                     player=played.append)
+        self.assertEqual(sorted(made), ["Prima.", "Seconda."])
+        self.assertEqual(len(played), 2)
+        self.assertFalse(any(Path(p).exists() for p in played))
+
     def test_envelope_and_effect(self):
         loud = [0] * 2205 + [20000, -20000] * 1102
         make_wav(self.dir / "a.wav", loud)

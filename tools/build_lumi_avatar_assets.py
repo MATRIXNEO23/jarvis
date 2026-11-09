@@ -15,8 +15,9 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "assets" / "lumi" / "lumi_originale.png"
 OUT = ROOT / "assets" / "lumi"
-CROP = (300, 330, 900, 930)          # quadrato del volto, coordinate originali
-SIZES = (96, 128, 160, 200)
+CROP = (60, 0, 1140, 1150)           # figura intera: capelli, volto, inizio busto
+SIZES = (140, 180, 230, 280)         # altezza in pixel
+FACE_Y = 690                         # centro del volto (coordinate originali)
 EYES = ((509, 586, 470, 562, 568, 604), (712, 586, 664, 758, 568, 604))  # iride cx,cy, x0,x1,y0,y1
 IRIS_R = 21
 MOUTH_X = (532, 702)
@@ -99,13 +100,18 @@ def mouth(im, d):
     return out
 
 
-def circle(im):
-    m = Image.new("L", im.size, 0)
-    ImageDraw.Draw(m).ellipse((2, 2, im.size[0] - 3, im.size[1] - 3), fill=255)
-    bg = Image.new("RGBA", im.size, (4, 14, 26, 255))
-    bg.alpha_composite(im)
-    bg.putalpha(m.filter(ImageFilter.GaussianBlur(1)))
-    return bg
+def fade_bottom(im, band=0.14):
+    """Sfuma il taglio del busto invece di una riga netta."""
+    alpha = im.getchannel("A")
+    ap = alpha.load()
+    w, h = im.size
+    start = int(h * (1 - band))
+    for y in range(start, h):
+        k = (h - 1 - y) / max(1, h - 1 - start)
+        for x in range(w):
+            ap[x, y] = int(ap[x, y] * k)
+    im.putalpha(alpha)
+    return im
 
 
 def main() -> int:
@@ -114,9 +120,12 @@ def main() -> int:
               "look_r": gaze(full, 4)}
     for n, d in enumerate(MOUTH_LEVELS, 1):
         frames[f"mouth{n}"] = mouth(full, d)
-    manifest = {"source": SRC.name, "crop": CROP, "sizes": {}}
+    cw, ch = CROP[2] - CROP[0], CROP[3] - CROP[1]
+    manifest = {"source": SRC.name, "crop": CROP,
+                "face_y": (FACE_Y - CROP[1]) / ch, "sizes": {}}
     for size in SIZES:
-        scaled = {k: circle(v.crop(CROP).resize((size, size), Image.LANCZOS))
+        width = round(size * cw / ch)
+        scaled = {k: fade_bottom(v.crop(CROP).resize((width, size), Image.LANCZOS))
                   for k, v in frames.items()}
         base = scaled["base"]
         base.save(OUT / f"lumi_{size}.png", optimize=True)
@@ -127,7 +136,7 @@ def main() -> int:
             diff = Image.new("L", base.size, 0)
             dp, bp, fp = diff.load(), base.load(), frame.load()
             for y in range(size):
-                for x in range(size):
+                for x in range(width):
                     if max(abs(bp[x, y][i] - fp[x, y][i]) for i in range(3)) > 2:
                         dp[x, y] = 255
             box = diff.getbbox()

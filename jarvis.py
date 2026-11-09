@@ -4501,6 +4501,75 @@ def main() -> None:
     ask_button.configure(command=submit_gpt)
     # Manual, isolated native test. No automatic online fallback or PC actions.
     gemma_trial_queue = queue.Queue()
+    # Streaming: partial chat text while the local model is still generating,
+    # and voice that starts from the first complete sentence.
+    gemma_stream_queue = queue.Queue()
+    stream_state = {"shown": False, "spoken": ""}
+    _SENTENCE_END = re.compile(r"[.!?…:;](?=\s)|\n")
+
+    def stream_clear() -> None:
+        if stream_state["shown"]:
+            output.configure(state="normal")
+            output.delete("lumi_stream_start", "lumi_stream_end")
+            output.configure(state="disabled")
+        stream_state["shown"] = False
+
+    def stream_show(text: str) -> None:
+        output.configure(state="normal")
+        if stream_state["shown"]:
+            output.delete("lumi_stream_start", "lumi_stream_end")
+        else:
+            output.mark_set("lumi_stream_start", "end-1c")
+            output.mark_gravity("lumi_stream_start", "left")
+            output.mark_set("lumi_stream_end", "end-1c")
+            output.mark_gravity("lumi_stream_end", "right")
+            stream_state["shown"] = True
+        output.insert("lumi_stream_start",
+                      "◉  LUMI         " + datetime.now().strftime("%H:%M:%S") + "  …\n",
+                      ("jarvis", "message_head"))
+        output.insert("lumi_stream_end", text.strip() + "\n\n", "jarvis")
+        output.see("end")
+        output.configure(state="disabled")
+
+    def stream_speak(text: str) -> None:
+        """Speak each completed sentence as soon as it exists."""
+        if not spoken_enabled.get():
+            return
+        done = stream_state["spoken"]
+        if not text.startswith(done):
+            return
+        rest = text[len(done):]
+        last = None
+        for match in _SENTENCE_END.finditer(rest):
+            last = match
+        if last is None or len(rest[:last.end()].strip()) < 2:
+            return
+        chunk = rest[:last.end()]
+        if speaker.speak(chunk.strip(), selected_voice()):
+            stream_state["spoken"] = done + chunk
+
+    def speak_final(text: str) -> None:
+        """Speak only what streaming has not already said."""
+        done, stream_state["spoken"] = stream_state["spoken"], ""
+        if not done:
+            speak_result(text)
+        elif text.startswith(done):
+            rest = text[len(done):].strip()
+            if rest:
+                speak_result(rest)
+
+    def drain_stream() -> None:
+        latest = None
+        try:
+            while True:
+                text, epoch = gemma_stream_queue.get_nowait()
+                if epoch == conversation_epoch and gemma_trial_busy[0]:
+                    latest = text
+        except queue.Empty:
+            pass
+        if latest is not None and not closing:
+            stream_show(latest)
+            stream_speak(latest)
     gemma_trial_busy = [False]
     # Prefer the pinned native source packaged beside Jarvis.
     gemma_source = [str(Path(__file__).resolve().parent / "native_engine" / "koboldcpp.py")
@@ -4735,6 +4804,7 @@ def main() -> None:
         # Typed text is the user's own message, like voice ("TU" role).
         write_line(("TU > " if typed else "UTENTE / VOCE > ") + spoken)
         voice_epoch = conversation_epoch
+        stream_state["spoken"] = ""
 
         def voice_worker():
             try:
@@ -4752,10 +4822,15 @@ def main() -> None:
                     intent_context = native_intent_context_for_request(
                         spoken, has_document=native_document is not None,
                         addon_actions=native_actions)
-                    turn = chat_transport.ask_local_first(
-                        spoken, session=session, timeout=180,
-                        context_id=native_context, defer_history=True,
-                        memory_context=reader, intent_context=intent_context)
+                    session.on_stream = (
+                        lambda text, epoch=voice_epoch: gemma_stream_queue.put((text, epoch)))
+                    try:
+                        turn = chat_transport.ask_local_first(
+                            spoken, session=session, timeout=180,
+                            context_id=native_context, defer_history=True,
+                            memory_context=reader, intent_context=intent_context)
+                    finally:
+                        session.on_stream = None
                     from local_model.native_conversation_session import NativeChatTurn
                     if isinstance(turn, NativeChatTurn):
                         turn.memory_owner = memory_owner
@@ -4783,9 +4858,14 @@ def main() -> None:
             request.set("")
 
     def poll_gemma_trial():
+        drain_stream()
         try:
             while True:
                 kind, value, voice_epoch = gemma_trial_queue.get_nowait()
+                drain_stream()
+                stream_clear()
+                if kind not in ("ok", "voice_ok"):
+                    stream_state["spoken"] = ""
                 gemma_trial_busy[0] = False
                 gemma_button.configure(state="normal")
                 if voice_epoch is not None and voice_epoch != conversation_epoch:
@@ -4898,19 +4978,19 @@ def main() -> None:
                                      program_call=("suggest_id", {"query": app_id}))
                 elif kind == "voice_ok":
                     write_line("LUMI > " + value)
-                    speak_result(value)
+                    speak_final(value)
                 elif kind == "voice_error":
                     write_line("GEMMA / ERRORE > " + value)
                     speak_result("Gemma locale non disponibile. Controlla la configurazione.")
                 elif kind == "ok":
                     write_line("LUMI > " + value)
-                    speak_result(value)
+                    speak_final(value)
                 else:
                     write_line("GEMMA / ERRORE > " + value)
         except queue.Empty:
             pass
         if not closing:
-            root.after(250, poll_gemma_trial)
+            root.after(150, poll_gemma_trial)
 
     root.after(250, poll_gemma_trial)
     gemma_button.configure(command=submit_gemma_trial)

@@ -146,7 +146,7 @@ class OfflineSpeaker:
                  notify_error: Callable[[str], None] | None = None):
         self._runner = runner
         self._notify_error = notify_error
-        self._messages: queue.Queue[tuple[str, str] | None] = queue.Queue(maxsize=3)
+        self._messages: queue.Queue[tuple[str, str] | None] = queue.Queue(maxsize=16)
         self._busy = threading.Event()
         self._closed = threading.Event()
         self._cooldown_until = 0.0
@@ -205,6 +205,14 @@ class OfflineSpeaker:
                 self._worker.start()
         return True
 
+    def _peek_next(self, voice: str) -> str | None:
+        """Next queued sentence with the same voice: synthesized while this one plays."""
+        with self._messages.mutex:
+            nxt = self._messages.queue[0] if self._messages.queue else None
+        if isinstance(nxt, tuple) and nxt[1] == voice:
+            return nxt[0]
+        return None
+
     def _run(self) -> None:
         while not self._closed.is_set():
             try:
@@ -223,8 +231,12 @@ class OfflineSpeaker:
                 if piper_key is not None:
                     try:
                         speaker = self._piper_speaker or speak_with_piper
+                        extra = {}
+                        upcoming = self._peek_next(voice)
+                        if upcoming:
+                            extra["upcoming"] = upcoming
                         speaker(text, piper_key, effect=self.effect,
-                                on_envelope=self.on_envelope)
+                                on_envelope=self.on_envelope, **extra)
                         continue
                     except PiperVoiceError as exc:
                         if self._notify_error and not self._closed.is_set():
@@ -259,5 +271,6 @@ class OfflineSpeaker:
             process = self._process
         if process is not None:
             self._terminate_process(process)
-        from piper_voice import stop_playback
+        from piper_voice import shutdown_workers, stop_playback
         stop_playback()
+        shutdown_workers()
