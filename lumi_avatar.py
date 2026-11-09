@@ -7,6 +7,7 @@ tools/build_lumi_avatar_assets.py partendo dall'immagine originale.
 from __future__ import annotations
 
 import json
+import math
 import random
 import sys
 import threading
@@ -93,6 +94,8 @@ class AvatarFace:
         self._gaze = None
         self._eye_state = None
         self._mouth_state = None
+        self._shift = (0, 0)
+        self._phase = self.rng.uniform(0, 100)
 
     def attach(self, canvas, cx: float, cy: float, height: float) -> bool:
         """Figura intera centrata in orizzontale, volto all'altezza cy."""
@@ -100,6 +103,7 @@ class AvatarFace:
         self.canvas = canvas
         self.items = {}
         self._eye_state = self._mouth_state = None
+        self._shift = (0, 0)
         size = pick_size(height)
         if size is None:
             return False
@@ -134,6 +138,7 @@ class AvatarFace:
             return
         dx, dy = self.offsets[name]
         x0, y0 = self.origin
+        x0, y0 = x0 + self._shift[0], y0 + self._shift[1]
         self.canvas.coords(item, x0 + dx, y0 + dy)
         self.canvas.itemconfigure(item, image=self.photos[name], state="normal")
 
@@ -161,10 +166,28 @@ class AvatarFace:
         level = mouth_level(LIPSYNC.level(now) or 0.0)
         return f"mouth{level}" if level else None
 
+    def head_offset(self, now: float) -> tuple[int, int]:
+        """Lieve oscillazione della testa: respiro + ondeggiamento, piu' vivo quando parla."""
+        t = now + self._phase
+        talk = LIPSYNC.level(now) or 0.0
+        amp = (self.size or 180) / 180.0
+        dx = amp * (2.2 * math.sin(t * 0.55) + 0.8 * math.sin(t * 1.3))
+        dy = amp * (1.4 * math.sin(t * 0.9 + 1.0) + 1.6 * talk * math.sin(t * 9.0))
+        return round(dx), round(dy)
+
+    def _apply_shift(self, shift: tuple[int, int]) -> None:
+        mx, my = shift[0] - self._shift[0], shift[1] - self._shift[1]
+        if not (mx or my):
+            return
+        for item in self.items.values():
+            self.canvas.move(item, mx, my)
+        self._shift = shift
+
     def tick(self, mode: str = "idle", now: float | None = None) -> None:
         if not self.items:
             return
         now = time.monotonic() if now is None else now
+        self._apply_shift(self.head_offset(now))
         eye = self.eye_frame(now)
         if eye != self._eye_state:
             self._show("eyes", eye)

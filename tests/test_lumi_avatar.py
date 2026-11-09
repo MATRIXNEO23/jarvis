@@ -10,6 +10,9 @@ class FakeCanvas:
     def __init__(self):
         self.calls = []
 
+    def move(self, item, dx, dy):
+        self.calls.append(("move", item, dx, dy))
+
     def coords(self, item, *xy):
         self.calls.append(("coords", item, xy))
 
@@ -81,10 +84,18 @@ class FaceTests(unittest.TestCase):
         lumi_avatar.LIPSYNC.push([])
         self.assertIsNone(face.mouth_frame(123.0, speaking=True))
 
-    def test_tick_places_patch_at_offset(self):
+    def test_tick_places_patch_at_offset_plus_head_motion(self):
         face = self.make_face()
         face.tick("idle", now=0.0)
-        self.assertIn(("coords", 2, (105, 56)), face.canvas.calls)
+        sx, sy = face._shift
+        self.assertIn(("coords", 2, (105 + sx, 56 + sy)), face.canvas.calls)
+
+    def test_head_moves_gently_over_time(self):
+        face = self.make_face()
+        lumi_avatar.LIPSYNC.push([])
+        offsets = {face.head_offset(t / 10) for t in range(200)}
+        self.assertGreater(len(offsets), 3)
+        self.assertTrue(all(abs(x) <= 4 and abs(y) <= 4 for x, y in offsets))
 
 
 if __name__ == "__main__":
