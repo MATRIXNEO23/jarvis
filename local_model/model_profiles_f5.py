@@ -6,6 +6,7 @@ network, process launching, persistence or model loading is performed here.
 from dataclasses import dataclass
 from typing import Mapping, Any
 import re
+import math
 
 _ALLOWED_FAMILIES = frozenset(("gemma", "qwen"))
 _ALLOWED_BACKENDS = frozenset(("embedded", "koboldcpp"))
@@ -52,7 +53,7 @@ class LocalModelProfile:
             raise ProfileError("Output limit exceeds context")
         for key in ("temperature", "top_p"):
             value = getattr(self, key)
-            if type(value) not in (int, float):
+            if type(value) not in (int, float) or not math.isfinite(value):
                 raise ProfileError("Invalid sampler parameter")
             if key == "temperature" and not 0 <= value <= 2:
                 raise ProfileError("Invalid temperature")
