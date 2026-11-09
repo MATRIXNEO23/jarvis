@@ -13,7 +13,7 @@ from tools.f5n_native_load_smoke import (
 class NativeSmokeGuardTests(unittest.TestCase):
     def test_bundle_route_paths_and_no_side_effects(self):
         with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
+            root = Path(temp).resolve()
             for relative in FILES:
                 path = root.joinpath(*relative.split("/"))
                 path.parent.mkdir(parents=True, exist_ok=True)
