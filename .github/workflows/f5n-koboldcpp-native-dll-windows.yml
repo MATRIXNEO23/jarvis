@@ -15,6 +15,9 @@ on:
       - 'tools/fetch_probe_models.py'
       - 'tools/f5n_gguf_smoke.py'
       - 'local_model/qwen3_template_f5.py'
+      - 'local_model/chat_templates.py'
+      - 'local_model/native_bridge.py'
+      - 'local_model/native_provider.py'
 
 permissions:
   contents: read

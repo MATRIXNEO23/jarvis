@@ -3,8 +3,8 @@
 One disposable child process per model (no safe unload exists upstream, so a
 model is never replaced inside a process). Uses Jarvis production factory,
 initializer and bridge. Gemma runs the real ``NativeGemmaBridge.generate`` and
-its watchdog abort; Qwen families use the same loaded upstream module with
-their own ChatML template and stop token (runtime routing not wired yet).
+its watchdog abort; since F5N.7 every family goes through provider.ask with
+the template and stop token chosen from the GGUF architecture.
 Synthetic prompts only; no personal data, memory or profile is touched.
 """
 import argparse
@@ -32,8 +32,6 @@ def worker(build_dir, family, model, output):
     from local_model.native_config import NativeModelConfig
     from local_model.native_factory import create_native_provider
     from local_model.native_provider import format_gemma_messages
-    from local_model.qwen25_template_f5 import format_qwen25_instruct
-    from local_model.qwen3_template_f5 import format_qwen3_nothink
 
     root = Path(build_dir).resolve(strict=True)
     config = NativeModelConfig(
@@ -47,25 +45,15 @@ def worker(build_dir, family, model, output):
     load_seconds = round(time.monotonic() - started, 2)
     messages = [{"role": "user", "content": QUESTION}]
     started = time.monotonic()
-    if family == "gemma2":
-        text = bridge.generate(format_gemma_messages(messages), timeout=300)
-        stop, tokens = bridge.last_generation_finish, bridge.last_generation_tokens
-    else:
-        prompt = (format_qwen25_instruct(messages) if family == "qwen25"
-                  else format_qwen3_nothink(messages))
-        c = bridge.config
-        result = bridge.upstream.generate({
-            "prompt": prompt, "max_context_length": c.context_size,
-            "max_length": c.max_output, "temperature": c.temperature,
-            "top_k": c.top_k, "top_p": c.top_p, "sampler_seed": c.seed,
-            "stop_sequence": ["<|im_end|>"]})
-        if result.get("status") != 1:
-            raise GgufSmokeError(f"{family}: status={result.get('status')}")
-        text = result.get("text") or ""
-        stop, tokens = result.get("stopreason"), result.get("completion_tokens")
+    # F5N.7 production path for every family: provider formats with the
+    # family read from the GGUF header and the bridge uses its stop token.
+    text = provider.ask(messages=messages, timeout=300)
+    stop, tokens = bridge.last_generation_finish, bridge.last_generation_tokens
+    if bridge.family != {"gemma2": "gemma2", "qwen25": "qwen25", "qwen3": "qwen3"}[family]:
+        raise GgufSmokeError(f"{family}: detected family {bridge.family}")
     gen_seconds = round(time.monotonic() - started, 2)
     report = {
-        "schema": 1, "family": family, "load_seconds_runner": load_seconds,
+        "schema": 1, "family": family, "detected_family": bridge.family, "load_seconds_runner": load_seconds,
         "generation_seconds_runner": gen_seconds, "stop": stop, "completion_tokens": tokens,
         "answer": text.strip()[:200],
         "leaked_markers": [m for m in LEAK_MARKERS if m in text],
