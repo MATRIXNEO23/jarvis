@@ -100,6 +100,31 @@ def mouth(im, d):
     return out
 
 
+POSES = (-1.0, -0.66, -0.33, 0.0, 0.33, 0.66, 1.0)   # rotazione leggera della testa
+
+
+def turn(im, yaw, amount=24.0, theta=0.02):
+    """Leggera rotazione della testa (destra/sinistra) con un campo di
+    spostamento morbido: volto e lineamenti si spostano piu' del contorno
+    (parallasse), piccola inclinazione attorno al collo, busto fermo."""
+    import numpy as np
+    from scipy.ndimage import map_coordinates
+    if yaw == 0:
+        return im.copy()
+    a = np.asarray(im).astype(np.float32)
+    h, w = a.shape[:2]
+    y, x = np.mgrid[0:h, 0:w].astype(np.float32)
+    head = np.exp(-(((x - 600) / 270) ** 2 + ((y - 560) / 340) ** 2))
+    head *= np.clip((1000 - y) / 150, 0, 1)
+    features = np.exp(-(((x - 606) / 95) ** 2 + ((y - 690) / 130) ** 2))
+    t = theta * yaw
+    dx = amount * yaw * (head + 0.6 * features) - t * (y - 960) * head
+    dy = t * (x - 600) * head
+    out = np.stack([map_coordinates(a[..., c], [y - dy, x - dx], order=1, mode="constant", cval=0)
+                    for c in range(4)], -1)
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGBA")
+
+
 def fade_bottom(im, band=0.14):
     """Sfuma il taglio del busto invece di una riga netta."""
     alpha = im.getchannel("A")
@@ -115,35 +140,39 @@ def fade_bottom(im, band=0.14):
 
 
 def main() -> int:
+    import numpy as np
     full = Image.open(SRC).convert("RGBA")
-    frames = {"base": full, "blink": blink(full), "look_l": gaze(full, -4),
+    states = {"base": full, "blink": blink(full), "look_l": gaze(full, -4),
               "look_r": gaze(full, 4)}
     for n, d in enumerate(MOUTH_LEVELS, 1):
-        frames[f"mouth{n}"] = mouth(full, d)
+        states[f"mouth{n}"] = mouth(full, d)
+    for old in OUT.glob("lumi_[0-9]*.png"):
+        old.unlink()
     cw, ch = CROP[2] - CROP[0], CROP[3] - CROP[1]
-    manifest = {"source": SRC.name, "crop": CROP,
-                "face_y": (FACE_Y - CROP[1]) / ch, "sizes": {}}
+    manifest = {"source": SRC.name, "crop": CROP, "face_y": (FACE_Y - CROP[1]) / ch,
+                "poses": list(POSES), "rest_pose": POSES.index(0.0), "sizes": {}}
+    posed = [{k: turn(v, yaw) for k, v in states.items()} for yaw in POSES]
     for size in SIZES:
         width = round(size * cw / ch)
-        scaled = {k: fade_bottom(v.crop(CROP).resize((width, size), Image.LANCZOS))
-                  for k, v in frames.items()}
-        base = scaled["base"]
-        base.save(OUT / f"lumi_{size}.png", optimize=True)
-        entry = {}
-        for name, frame in scaled.items():
-            if name == "base":
-                continue
-            diff = Image.new("L", base.size, 0)
-            dp, bp, fp = diff.load(), base.load(), frame.load()
-            for y in range(size):
-                for x in range(width):
-                    if max(abs(bp[x, y][i] - fp[x, y][i]) for i in range(3)) > 2:
-                        dp[x, y] = 255
-            box = diff.getbbox()
-            if not box:
-                continue
-            frame.crop(box).save(OUT / f"lumi_{size}_{name}.png", optimize=True)
-            entry[name] = list(box[:2])
+        entry = []
+        for index, frames in enumerate(posed):
+            scaled = {k: fade_bottom(v.crop(CROP).resize((width, size), Image.LANCZOS))
+                      for k, v in frames.items()}
+            base = scaled["base"]
+            base.save(OUT / f"lumi_{size}_p{index}.png", optimize=True)
+            ref = np.asarray(base).astype(np.int16)
+            patches = {}
+            for name, frame in scaled.items():
+                if name == "base":
+                    continue
+                diff = np.abs(np.asarray(frame).astype(np.int16) - ref)[..., :3].max(-1) > 2
+                if not diff.any():
+                    continue
+                rows, cols = np.where(diff)
+                box = (int(cols.min()), int(rows.min()), int(cols.max()) + 1, int(rows.max()) + 1)
+                frame.crop(box).save(OUT / f"lumi_{size}_p{index}_{name}.png", optimize=True)
+                patches[name] = list(box[:2])
+            entry.append(patches)
         manifest["sizes"][str(size)] = entry
     (OUT / "lumi_avatar.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
     return 0

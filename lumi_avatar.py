@@ -7,7 +7,6 @@ tools/build_lumi_avatar_assets.py partendo dall'immagine originale.
 from __future__ import annotations
 
 import json
-import math
 import random
 import sys
 import threading
@@ -81,6 +80,39 @@ LIPSYNC = LipSync()
 PLAYBACK_LATENCY = 0.12   # secondi tra la chiamata al lettore e il primo suono
 
 
+class HeadMotion:
+    """Rotazioni lente e naturali della testa: sceglie ogni tanto una nuova
+    direzione e ci arriva con un movimento morbido, poi resta ferma.
+    Parlando i cambi sono un po' piu' frequenti e piccoli. Nessun tremolio."""
+
+    def __init__(self, rng: random.Random):
+        self.rng = rng
+        self.yaw = 0.0
+        self.start = 0.0
+        self.target = 0.0
+        self.t0 = None
+        self.duration = 1.0
+        self.next_change = 0.0
+
+    def update(self, now: float, talking: bool) -> float:
+        if self.t0 is None:
+            self.t0, self.next_change = now, now + self.rng.uniform(1.5, 3.0)
+        if now >= self.next_change:
+            self.start, self.t0 = self.yaw, now
+            if talking:
+                self.target = self.rng.uniform(-.55, .55)
+                hold = self.rng.uniform(1.2, 2.8)
+            else:
+                self.target = 0.0 if self.rng.random() < .35 else self.rng.uniform(-.9, .9)
+                hold = self.rng.uniform(2.5, 6.0)
+            self.duration = .9 + abs(self.target - self.start) * .9
+            self.next_change = now + self.duration + hold
+        k = min(1.0, max(0.0, (now - self.t0) / self.duration))
+        ease = k * k * (3 - 2 * k)          # smoothstep: parte e arriva piano
+        self.yaw = self.start + (self.target - self.start) * ease
+        return self.yaw
+
+
 class AvatarFace:
     """Volto animato disegnato su un Canvas Tk esistente."""
 
@@ -89,16 +121,17 @@ class AvatarFace:
         self.size = None
         self.items = {}
         self.photos = {}
-        self.offsets = {}
+        self.offsets = []          # per posa: {stato: [x, y]}
+        self.poses = [0.0]
+        self.pose = 0
         self.rng = rng or random.Random()
+        self.head = HeadMotion(self.rng)
         self._next_blink = 0.0
         self._blink_until = 0.0
         self._next_gaze = 0.0
         self._gaze = None
         self._eye_state = None
         self._mouth_state = None
-        self._shift = (0, 0)
-        self._phase = self.rng.uniform(0, 100)
 
     def attach(self, canvas, cx: float, cy: float, height: float) -> bool:
         """Figura intera centrata in orizzontale, volto all'altezza cy."""
@@ -106,28 +139,31 @@ class AvatarFace:
         self.canvas = canvas
         self.items = {}
         self._eye_state = self._mouth_state = None
-        self._shift = (0, 0)
         size = pick_size(height)
         if size is None:
             return False
+        data = manifest()
         try:
             if size != self.size or not self.photos:
-                self.photos = {"base": tk.PhotoImage(
-                    master=canvas, file=str(ASSET_DIR / f"lumi_{size}.png"))}
-                self.offsets = manifest()["sizes"][str(size)]
-                for name in self.offsets:
-                    self.photos[name] = tk.PhotoImage(
-                        master=canvas, file=str(ASSET_DIR / f"lumi_{size}_{name}.png"))
-                self.size = size
-        except (tk.TclError, OSError, KeyError):
+                photos = {}
+                offsets = data["sizes"][str(size)]
+                for index, patches in enumerate(offsets):
+                    photos[(index, "base")] = tk.PhotoImage(
+                        master=canvas, file=str(ASSET_DIR / f"lumi_{size}_p{index}.png"))
+                    for name in patches:
+                        photos[(index, name)] = tk.PhotoImage(
+                            master=canvas, file=str(ASSET_DIR / f"lumi_{size}_p{index}_{name}.png"))
+                self.photos, self.offsets, self.size = photos, offsets, size
+                self.poses = [float(p) for p in data.get("poses", [0.0])]
+        except (tk.TclError, OSError, KeyError, TypeError):
             self.photos = {}
             return False
-        base = self.photos["base"]
-        face_y = float(manifest().get("face_y", .5))
+        self.pose = int(data.get("rest_pose", 0))
+        base = self.photos[(self.pose, "base")]
+        face_y = float(data.get("face_y", .5))
         x0, y0 = cx - base.width() / 2, cy - face_y * size
         self.origin = (x0, y0)
-        self.items["base"] = canvas.create_image(x0, y0, anchor="nw",
-                                                 image=self.photos["base"])
+        self.items["base"] = canvas.create_image(x0, y0, anchor="nw", image=base)
         self.items["eyes"] = canvas.create_image(x0, y0, anchor="nw", state="hidden")
         self.items["mouth"] = canvas.create_image(x0, y0, anchor="nw", state="hidden")
         return True
@@ -136,14 +172,14 @@ class AvatarFace:
         item = self.items.get(slot)
         if item is None:
             return
-        if name is None or name not in self.photos:
+        key = (self.pose, name)
+        if name is None or key not in self.photos:
             self.canvas.itemconfigure(item, state="hidden")
             return
-        dx, dy = self.offsets[name]
+        dx, dy = self.offsets[self.pose][name]
         x0, y0 = self.origin
-        x0, y0 = x0 + self._shift[0], y0 + self._shift[1]
         self.canvas.coords(item, x0 + dx, y0 + dy)
-        self.canvas.itemconfigure(item, image=self.photos[name], state="normal")
+        self.canvas.itemconfigure(item, image=self.photos[key], state="normal")
 
     def eye_frame(self, now: float) -> str | None:
         if now >= self._next_blink:
@@ -169,34 +205,24 @@ class AvatarFace:
         level = mouth_level(LIPSYNC.level(now) or 0.0)
         return f"mouth{level}" if level else None
 
-    def head_offset(self, now: float) -> tuple[int, int]:
-        """Lieve oscillazione della testa: respiro + ondeggiamento, piu' vivo quando parla."""
-        t = now + self._phase
-        talk = LIPSYNC.level(now) or 0.0
-        amp = (self.size or 180) / 180.0
-        dx = amp * (2.2 * math.sin(t * 0.55) + 0.8 * math.sin(t * 1.3))
-        dy = amp * (1.4 * math.sin(t * 0.9 + 1.0) + 1.6 * talk * math.sin(t * 9.0))
-        return round(dx), round(dy)
-
-    def _apply_shift(self, shift: tuple[int, int]) -> None:
-        mx, my = shift[0] - self._shift[0], shift[1] - self._shift[1]
-        if not (mx or my):
-            return
-        for item in self.items.values():
-            self.canvas.move(item, mx, my)
-        self._shift = shift
+    def pose_for(self, yaw: float) -> int:
+        return min(range(len(self.poses)), key=lambda i: abs(self.poses[i] - yaw))
 
     def tick(self, mode: str = "idle", now: float | None = None) -> None:
         if not self.items:
             return
         now = time.monotonic() if now is None else now
-        self._apply_shift(self.head_offset(now))
+        pose = self.pose_for(self.head.update(now, LIPSYNC.level(now) is not None))
+        moved = pose != self.pose
+        if moved and (pose, "base") in self.photos:
+            self.pose = pose
+            self.canvas.itemconfigure(self.items["base"], image=self.photos[(pose, "base")])
         eye = self.eye_frame(now)
-        if eye != self._eye_state:
+        if eye != self._eye_state or moved:
             self._show("eyes", eye)
             self._eye_state = eye
         mouth = self.mouth_frame(now)
-        if mouth != self._mouth_state:
+        if mouth != self._mouth_state or moved:
             self._show("mouth", mouth)
             self._mouth_state = mouth
 

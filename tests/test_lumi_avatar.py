@@ -10,9 +10,6 @@ class FakeCanvas:
     def __init__(self):
         self.calls = []
 
-    def move(self, item, dx, dy):
-        self.calls.append(("move", item, dx, dy))
-
     def coords(self, item, *xy):
         self.calls.append(("coords", item, xy))
 
@@ -24,11 +21,15 @@ class AssetTests(unittest.TestCase):
     def test_every_frame_listed_in_manifest_exists(self):
         sizes = manifest()["sizes"]
         self.assertTrue(sizes)
-        for size, frames in sizes.items():
-            self.assertTrue((ASSET_DIR / f"lumi_{size}.png").is_file())
-            for name in ("blink", "look_l", "look_r", "mouth1", "mouth2", "mouth3"):
-                self.assertIn(name, frames)
-                self.assertTrue((ASSET_DIR / f"lumi_{size}_{name}.png").is_file())
+        poses = manifest()["poses"]
+        self.assertEqual(poses[manifest()["rest_pose"]], 0.0)
+        for size, per_pose in sizes.items():
+            self.assertEqual(len(per_pose), len(poses))
+            for index, frames in enumerate(per_pose):
+                self.assertTrue((ASSET_DIR / f"lumi_{size}_p{index}.png").is_file())
+                for name in ("blink", "look_l", "look_r", "mouth1", "mouth2", "mouth3"):
+                    self.assertIn(name, frames)
+                    self.assertTrue((ASSET_DIR / f"lumi_{size}_p{index}_{name}.png").is_file())
 
     def test_pick_size_fits_or_falls_back_to_smallest(self):
         self.assertEqual(pick_size(250), 230)
@@ -39,7 +40,7 @@ class AssetTests(unittest.TestCase):
         from tools.build_jarvis_f5_candidate import include
         self.assertTrue((ASSET_DIR / "lumi_originale.png").is_file())
         self.assertFalse(include(Path("assets/lumi/lumi_originale.png")))
-        self.assertTrue(include(Path("assets/lumi/lumi_180.png")))
+        self.assertTrue(include(Path("assets/lumi/lumi_180_p3.png")))
 
 
 class LipSyncTests(unittest.TestCase):
@@ -66,9 +67,11 @@ class FaceTests(unittest.TestCase):
         face = AvatarFace(rng=random.Random(1))
         face.canvas = FakeCanvas()
         face.items = {"base": 1, "eyes": 2, "mouth": 3}
-        face.photos = {n: n for n in ("base", "blink", "look_l", "look_r",
-                                      "mouth1", "mouth2", "mouth3")}
-        face.offsets = {n: [5, 6] for n in face.photos if n != "base"}
+        names = ("base", "blink", "look_l", "look_r", "mouth1", "mouth2", "mouth3")
+        face.poses = [-1.0, 0.0, 1.0]
+        face.pose = 1
+        face.photos = {(p, n): (p, n) for p in range(3) for n in names}
+        face.offsets = [{n: [5 + p, 6] for n in names if n != "base"} for p in range(3)]
         face.origin = (100, 50)
         return face
 
@@ -90,18 +93,24 @@ class FaceTests(unittest.TestCase):
         lumi_avatar.LIPSYNC.push([])
         self.assertIsNone(face.mouth_frame(123.0, speaking=True))
 
-    def test_tick_places_patch_at_offset_plus_head_motion(self):
+    def test_tick_places_patch_at_offset_of_current_pose(self):
         face = self.make_face()
         face.tick("idle", now=0.0)
-        sx, sy = face._shift
-        self.assertIn(("coords", 2, (105 + sx, 56 + sy)), face.canvas.calls)
+        self.assertIn(("coords", 2, (105 + face.pose, 56)), face.canvas.calls)
 
-    def test_head_moves_gently_over_time(self):
-        face = self.make_face()
+    def test_head_turns_smoothly_without_jitter(self):
+        from lumi_avatar import HeadMotion
         lumi_avatar.LIPSYNC.push([])
-        offsets = {face.head_offset(t / 10) for t in range(200)}
-        self.assertGreater(len(offsets), 3)
-        self.assertTrue(all(abs(x) <= 4 and abs(y) <= 4 for x, y in offsets))
+        head = HeadMotion(random.Random(3))
+        values = [head.update(t / 25, talking=False) for t in range(25 * 60)]
+        steps = [abs(b - a) for a, b in zip(values, values[1:])]
+        self.assertLess(max(steps), 0.08)          # mai scatti
+        self.assertGreater(max(values) - min(values), 0.5)   # ma si gira davvero
+        self.assertTrue(all(-1 <= v <= 1 for v in values))
+        # direction changes are rare (no oscillation back and forth)
+        signs = [1 if b > a else -1 for a, b in zip(values, values[1:]) if abs(b - a) > 1e-4]
+        flips = sum(1 for a, b in zip(signs, signs[1:]) if a != b)
+        self.assertLess(flips, 30)
 
 
 if __name__ == "__main__":
