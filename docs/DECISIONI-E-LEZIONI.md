@@ -1253,3 +1253,6 @@ Sul commit upstream `6d2fedf...`, `kcpp_src/expose.cpp` non esporta unload del m
 
 ## 2026-11-09 — ARCH-01 F5N.2: bundle upstream non monolitico
 Il Makefile ufficiale al commit `6d2fedf...` usa DLL comune, variante default, noavx2 e forwarder per Windows. Di conseguenza una semplice sostituzione di `koboldcpp_noavx2.dll` potrebbe rompere l'integrazione. Decisione: workflow manuale di compilazione isolato con revisione bloccata e verifica di tutti gli artefatti, senza modifica della DLL installata o release. La verifica statica dei binari non attesta parità ABI, ISA o velocità. Attendere compilazione vera su Windows, licenza/sorgente corrispondente e prova Pavilion prima di distribuire.
+
+## 2026-11-09 — F5N.2: come collaudare un workflow nuovo su ramo feature
+`workflow_dispatch` di un nuovo workflow non necessariamente appare prima che il workflow esista su default branch; per testarne la compilazione senza cambiare `main`, aggiunto `pull_request` filtrato solo su workflow/tool/test F5N.2. Non confondere configurazione CI con la prova effettiva: il run va osservato e i suoi errori corretti prima di attestare successo.
