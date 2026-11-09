@@ -1,3 +1,11 @@
+## Build 023 PROVA — Telegram corretto, voci Edge, labiale anche con voce Windows
+
+[Scarica Lumi-023-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-023-PROVA.zip)
+
+Come la 022, più: Telegram legge di nuovo le credenziali già salvate (errore «Formato credenziali non riconosciuto» introdotto dalla rinomina). Streaming anche per richieste come «consigliami dei film». La voce non legge emoji e asterischi; nelle frasi lunghe parte alla virgola. Bocca che si muove anche con le voci Windows. Avatar più grande e più fluido (13 posizioni della testa, 8 aperture della bocca, 25 fotogrammi al secondo). Voci Microsoft Edge facoltative (Isabella, Elsa, Diego, Giuseppe): gratuite ma online, si attivano con installa_voce_edge.bat. Verificati in CI Windows: 1185 test, voce inclusa sul pacchetto estratto, labiale voce Windows, voce Edge reale, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42719345419). SHA-256: `a6e44f0c838d3942cf46ce609d619cba9634a9b9f246404dabf0613083c17370`.
+
 ## Build 022 PROVA — voce inclusa senza installazioni, avatar più naturale
 
 [Scarica Lumi-022-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-022-PROVA.zip)
