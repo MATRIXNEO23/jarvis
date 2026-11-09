@@ -128,16 +128,16 @@ jobs:
           PYTHONUTF8: '1'
           PYTHONIOENCODING: utf-8
         run: |
-          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 16 --out dist --model "probe-models/gemma2.gguf"
+          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 17 --out dist --model "probe-models/gemma2.gguf"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload test candidate (CI artifact, not published)
         uses: actions/upload-artifact@v4
         with:
-          name: jarvis-016-prova-candidate
+          name: jarvis-017-prova-candidate
           path: |
-            dist/Jarvis-016-PROVA.zip
-            dist/Jarvis-016-PROVA.json
+            dist/Jarvis-017-PROVA.zip
+            dist/Jarvis-017-PROVA.json
           if-no-files-found: error
 
       - name: Archive only unverified research candidate
