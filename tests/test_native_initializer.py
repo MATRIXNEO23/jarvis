@@ -73,6 +73,7 @@ class NativeInitializerArgvTests(unittest.TestCase):
             dll = Path(temp) / "koboldcpp_noavx2.dll"
             dll.write_bytes(b"MZ")
             upstream = ModuleType("k")
+            exec(compile(broken, str(source), "exec"), upstream.__dict__)
             config = SimpleNamespace(dll=str(dll), threads=2, batch_threads=2,
                                      context_size=1024)
             with mock.patch.object(sys, "argv", list(argv)):

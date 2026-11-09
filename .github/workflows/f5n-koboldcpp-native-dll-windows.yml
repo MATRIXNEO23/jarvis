@@ -10,6 +10,8 @@ on:
       - 'tests/test_f5n_pe_abi_audit.py'
       - 'tools/f5n_native_load_smoke.py'
       - 'tests/test_f5n_native_load_smoke.py'
+      - 'tools/f5n_initializer_smoke.py'
+      - 'local_model/native_initializer.py'
 
 permissions:
   contents: read
@@ -86,6 +88,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Get-Content "f5n-native-loader-proof.json"
 
+      - name: F5N.5 Jarvis initializer on split bundle in isolated child (no GGUF)
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          python -m tools.f5n_initializer_smoke "koboldcpp-src" "f5n-initializer-proof.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Archive only unverified research candidate
         uses: actions/upload-artifact@v4
         with:
@@ -101,3 +110,4 @@ jobs:
             f5n-dll-manifest.json
             f5n-pe-abi-manifest.json
             f5n-native-loader-proof.json
+            f5n-initializer-proof.json
