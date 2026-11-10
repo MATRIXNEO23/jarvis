@@ -16,9 +16,11 @@ _NOT_MUSIC = re.compile(
     r"prime\s+video|disney|cartella|file)\b", re.IGNORECASE)
 _SIMPLE = (
     ("pause", r"(?:metti\s+in\s+)?pausa(?:\s+(?:la\s+)?musica)?|ferma\s+un\s+attimo(?:\s+la\s+musica)?"),
-    ("resume", r"riprendi(?:\s+la\s+musica)?|continua\s+(?:la\s+)?musica|fai\s+ripartire\s+la\s+musica"),
-    ("stop", r"(?:ferma|stop|spegni|basta)\s+(?:la\s+)?musica|stop\s+musica"),
+    ("resume", r"riprendi(?:\s+la\s+musica)?|continua\s+(?:la\s+)?musica|fai\s+ripartire\s+la\s+musica"
+               r"|play"),
+    ("stop", r"(?:ferma|stop|spegni|basta)\s+(?:la\s+)?musica|stop\s+musica|stop"),
     ("next", r"(?:prossima|prossimo)(?:\s+(?:canzone|brano|pezzo))?|(?:canzone|brano)\s+successiv[oa]"
+             r"|avanti|vai\s+avanti"
              r"|passa\s+(?:alla\s+prossima|al\s+prossimo)|salta(?:\s+(?:canzone|brano))?"),
     ("prev", r"(?:torna\s+)?indietro|(?:canzone|brano|video)\s+precedente|(?:metti\s+)?(?:la\s+|il\s+)?precedente"),
     ("volume_up", r"alza\s+(?:il\s+)?volume\s+(?:della\s+)?musica|musica\s+più\s+forte"),

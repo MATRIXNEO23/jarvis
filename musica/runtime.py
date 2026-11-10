@@ -27,6 +27,10 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     request = parse_command(spoken)
     if request is None:
         return False
+    if request[0] != "play" and current.snapshot().get("mode") is None:
+        # Niente in riproduzione: «stop», «avanti», «pausa»… non vengono
+        # catturati dalla musica e restano agli altri comandi o al modello.
+        return False
     parser = _STATE["program_parser"]
     if request[0] == "play" and parser is not None:
         # Una frase che Programmi e app riconosce resta a Programmi e app.

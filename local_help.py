@@ -48,8 +48,13 @@ def help_sections(engine):
             'La sveglia richiede la relativa add-on attiva. Se l’orario è passato, vale per domani. '
             'Per evitare ambiguità puoi usare il formato 24 ore. Gli elenchi di questa guida non vengono letti a voce.',
         'Musica':
-            'metti Bohemian Rhapsody\nsuona la canzone Imagine\nfammi sentire Vasco Rossi\n'
-            'pausa\nriprendi\nprossima\nferma la musica\nalza il volume della musica\n\n'
+            'metti Bohemian Rhapsody\nsuona la canzone Imagine\nfammi sentire Vasco Rossi\n\n'
+            'Lettore:\n'
+            'play / riprendi\npausa / metti in pausa\nstop / ferma la musica\n'
+            'avanti / prossima / brano successivo\nindietro / torna indietro / brano precedente\n'
+            'alza il volume della musica\nabbassa il volume della musica\n\n'
+            'Indietro: oltre 3 secondi ricomincia il brano, altrimenti va al precedente. '
+            'Il pulsante ☰ della barra apre l’elenco dei brani (doppio clic per ascoltare).\n\n'
             'Richiede l’add-on Musica attivo. Cerca prima nella cartella musica scelta in '
             'Gestisci add-on > Musica > Configura; se il brano non c’è apre la ricerca su YouTube '
             'nel browser (con la chiave API facoltativa apre subito il primo video).',

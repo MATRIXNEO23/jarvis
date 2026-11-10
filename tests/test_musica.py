@@ -23,6 +23,11 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(parse_command("prossima canzone"), ("next", ""))
         self.assertEqual(parse_command("abbassa il volume della musica"), ("volume_down", ""))
         self.assertEqual(parse_command("torna indietro"), ("prev", ""))
+        self.assertEqual(parse_command("avanti"), ("next", ""))
+        self.assertEqual(parse_command("indietro"), ("prev", ""))
+        self.assertEqual(parse_command("stop"), ("stop", ""))
+        self.assertEqual(parse_command("play"), ("resume", ""))
+        self.assertEqual(parse_command("Lumi, pausa"), ("pause", ""))
         self.assertEqual(parse_command("brano precedente"), ("prev", ""))
 
     def test_other_features_are_not_taken(self):
@@ -293,6 +298,8 @@ class RuntimeTests(unittest.TestCase):
             runtime.register(service, lambda text: object() if "netflix" in text.lower() else None)
             self.assertFalse(runtime.handle_text("metti Netflix", lines.append, lines.append))
             self.assertFalse(runtime.handle_text("che ore sono", lines.append, lines.append))
+            self.assertFalse(runtime.handle_text("stop", lines.append, lines.append))  # niente in corso
+            service.mode = "browser"
             self.assertTrue(runtime.handle_text("pausa", lines.append, lines.append))
 
 
