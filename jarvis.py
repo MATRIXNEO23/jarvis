@@ -3544,6 +3544,11 @@ def main() -> None:
         message = request.get().strip()
         if not message:
             return
+        from command_aliases import rewrite as alias_rewrite
+        aliased = alias_rewrite(message)
+        if aliased != message:
+            write_line("COMANDO PERSONALE > " + aliased)
+            message = aliased
         if try_file_command(message):
             request.set("")
             return
@@ -3831,6 +3836,14 @@ def main() -> None:
                             spoken = speech_lexicon.correct(uncorrected)
                             if spoken != uncorrected:
                                 write_line("VOCABOLARIO LIA > " + spoken)
+                    if raw_spoken and spoken and route_type != "dictation":
+                        # Comandi personalizzati (Aiuto > sezione > Le mie parole):
+                        # la frase diventa il comando scelto, poi i soliti controlli.
+                        from command_aliases import rewrite as alias_rewrite
+                        aliased = alias_rewrite(spoken)
+                        if aliased != spoken:
+                            write_line("COMANDO PERSONALE > " + aliased)
+                            spoken = aliased
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if route_type == "dictation":
                             sync_dictation_ui(dictation.insert(spoken))
