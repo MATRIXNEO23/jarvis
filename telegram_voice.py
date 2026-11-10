@@ -60,6 +60,41 @@ def _sapi_to_wav(text:str,wav_path:Path,voice:str=""):
         raise TelegramVoiceError("Sintesi vocale Windows non riuscita.")
 
 
+def _speech_source(text:str,folder:Path,voice:str) -> Path:
+    """Audio della risposta con la voce scelta in Lumi.
+
+    Piper (Paola/Serena) -> WAV; Edge (online) -> MP3; Windows -> WAV SAPI.
+    Le etichette «Piper: …» / «Edge: …» non sono voci SAPI: prima venivano
+    passate a SelectVoice e la nota vocale falliva («Sintesi vocale Windows
+    non riuscita»). Se la voce scelta non funziona si usa la voce Windows
+    predefinita invece di non rispondere.
+    """
+    try:
+        import edge_voice
+        edge_key=edge_voice.key_from_label(voice)
+        if edge_key is not None:
+            out=folder/"speech.mp3"
+            edge_voice.synthesize(text,edge_key,out)
+            return out
+        import piper_voice
+        piper_key=piper_voice.key_from_label(voice)
+        if piper_key is not None:
+            # Cartella audio di Piper: lì il motore incluso (piper.exe) lavora.
+            out=piper_voice._audio_dir()/("telegram-"+str(os.getpid())+".wav")
+            piper_voice.synthesize(text,piper_key,out)
+            return out
+    except Exception:
+        voice=""                     # ripiego: voce Windows predefinita
+    wav=folder/"speech.wav"
+    try:
+        _sapi_to_wav(text,wav,voice)
+    except TelegramVoiceError:
+        if not voice:
+            raise
+        _sapi_to_wav(text,wav,"")    # voce Windows non trovata: predefinita
+    return wav
+
+
 def make_telegram_voice(text:str,folder:Path,voice:str="") -> Path:
     """Return an OGG/Opus file, ready for Telethon voice_note=True."""
     missing=missing_voice_dependencies()
@@ -67,13 +102,18 @@ def make_telegram_voice(text:str,folder:Path,voice:str="") -> Path:
         raise TelegramVoiceError("Manca "+", ".join(missing))
     folder=Path(folder)
     folder.mkdir(parents=True,exist_ok=True)
-    wav=folder/"speech.wav"
     ogg=folder/"jarvis-voice.ogg"
     try:
-        _sapi_to_wav(" ".join(text.split())[:500],wav,voice)
+        from offline_tts import speech_text
+        clean=speech_text(text)
+    except Exception:
+        clean=" ".join(str(text).split())
+    source=None
+    try:
+        source=_speech_source(clean[:500],folder,voice or "")
         result=subprocess.run(
             ["ffmpeg","-nostdin","-hide_banner","-loglevel","error",
-             "-y","-i",str(wav),"-ac","1","-ar","48000",
+             "-y","-i",str(source),"-ac","1","-ar","48000",
              "-c:a","libopus","-application","voip",
              "-b:a","24k","-f","ogg",str(ogg)],
             capture_output=True,timeout=45,check=False,
@@ -84,8 +124,9 @@ def make_telegram_voice(text:str,folder:Path,voice:str="") -> Path:
             raise TelegramVoiceError("Nota vocale troppo grande.")
         return ogg
     finally:
-        if wav.exists():
-            wav.unlink()
+        for leftover in (folder/"speech.wav",folder/"speech.mp3",source):
+            if leftover is not None and Path(leftover).exists():
+                Path(leftover).unlink()
 
 
 def transcribe_incoming_voice(path:Path,max_seconds:int=90):
