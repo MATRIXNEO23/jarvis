@@ -37,7 +37,12 @@ def main(out_dir: str) -> int:
         threading.Thread(target=lambda: [events.put(line.strip()) for line in proc.stdout],
                          daemon=True).start()
         seen, started = [], time.monotonic()
-        sent = False
+        # Comandi inviati SUBITO, prima che WebView2 sia pronto: l'host deve
+        # tenerli in coda (era il motivo per cui i video offline non partivano).
+        proc.stdin.write(json.dumps({"cmd": "volume", "value": 40}) + "\n")
+        proc.stdin.write(json.dumps({"cmd": "file", "path": str(sample)}) + "\n")
+        proc.stdin.flush()
+        sent = True
         while time.monotonic() - started < 60:
             root.update()
             try:
@@ -49,11 +54,6 @@ def main(out_dir: str) -> int:
             except ValueError:
                 continue
             kinds = {e.get("ev") for e in seen}
-            if not sent:   # subito: i comandi devono restare in coda finché la pagina è pronta
-                proc.stdin.write(json.dumps({"cmd": "volume", "value": 40}) + "\n")
-                proc.stdin.write(json.dumps({"cmd": "file", "path": str(sample)}) + "\n")
-                proc.stdin.flush()
-                sent = True
             if sent and ("state" in kinds or "error" in kinds) and time.monotonic() - started > 3:
                 break
         try:
