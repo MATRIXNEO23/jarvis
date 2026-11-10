@@ -1,3 +1,11 @@
+## Build 026 PROVA — fast forwarding, carattere di Lumi, lunghezza delle risposte
+
+[Scarica Lumi-026-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-026-PROVA.zip)
+
+Come la 025, più: prompt riordinato (parti fisse in cima, regola di lunghezza vicino alla domanda) per sfruttare il fast forwarding di KoboldCpp, con interruttore in Modello locale (cambiarlo richiede il riavvio). In CI la seconda domanda con lo stesso inizio: 3,4 s invece di 14,8 s. Nuovi menu Carattere principale e Tocco in più, Lunghezza risposte (Nessuno, Breve scegli tu, 1-5 frasi), frasi per le spiegazioni (spiegami, come funziona, approfondisci, in dettaglio, descrivimi, consigliami) e Note su di te. Impostazioni precedenti mantenute, Telegram invariato. Verificati in CI Windows: 1204 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42786913579). SHA-256: `5cdafd4300694965113e4f2b93e754bbca752c5920135299d43d24c15ad96841`.
+
 ## Build 025 PROVA — velocità, tonalità e volume della voce; configurazione Telegram corretta
 
 [Scarica Lumi-025-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-025-PROVA.zip)
