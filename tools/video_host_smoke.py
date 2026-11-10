@@ -49,7 +49,7 @@ def main(out_dir: str) -> int:
             except ValueError:
                 continue
             kinds = {e.get("ev") for e in seen}
-            if "page" in kinds and not sent:
+            if not sent:   # subito: i comandi devono restare in coda finché la pagina è pronta
                 proc.stdin.write(json.dumps({"cmd": "volume", "value": 40}) + "\n")
                 proc.stdin.write(json.dumps({"cmd": "file", "path": str(sample)}) + "\n")
                 proc.stdin.flush()

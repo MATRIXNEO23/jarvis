@@ -6,6 +6,7 @@ globo) → YouTube nel riquadro (con chiave API: lettore ufficiale incorporato)
 """
 from __future__ import annotations
 
+import os
 import threading
 import webbrowser
 
@@ -17,7 +18,7 @@ class MusicService:
     def __init__(self, is_enabled, *, notify=None, open_url=webbrowser.open,
                  player=None, data_folder=None, url_for=youtube.url_for,
                  media_key=youtube.send_media_key, video_id_for=youtube.first_video_id,
-                 video_panel=None):
+                 video_panel=None, open_file=None):
         self.is_enabled = is_enabled
         self.notify = notify or (lambda text: None)
         self.open_url = open_url
@@ -36,6 +37,8 @@ class MusicService:
         self.browser_title = ""
         self.video_items: list[tuple[str, object, str]] = []   # (tipo, valore, titolo)
         self.video_index = -1
+        self.video_hidden = False         # video nascosto, audio che continua (solo file)
+        self.open_file = open_file or (lambda path: os.startfile(str(path)))
         if self.video is not None:
             self.video.on_event = self._video_event
 
@@ -132,11 +135,29 @@ class MusicService:
             return self._video_step(-1) or "Dall'inizio."
         return ""
 
+    def current_video_kind(self) -> str | None:
+        if self.mode == "video" and 0 <= self.video_index < len(self.video_items):
+            return self.video_items[self.video_index][0]
+        return None
+
+    def toggle_video_visible(self) -> str:
+        """Nasconde/mostra il video lasciando l'audio. YouTube: le regole del
+        lettore incorporato chiedono che il video resti visibile."""
+        kind = self.current_video_kind()
+        if kind is None:
+            return ""
+        if kind == "youtube":
+            self.video_hidden = False
+            return "YouTube richiede che il video resti visibile: puoi metterlo in pausa o fermarlo."
+        self.video_hidden = not self.video_hidden
+        return "Video nascosto, l'audio continua." if self.video_hidden else "Video visibile."
+
     def stop_video(self) -> None:
         # Chiude il riquadro: WebView2 libera la sua RAM (importante sul Pavilion).
         if self.video is not None:
             self.video.close()
         self.mode = None
+        self.video_hidden = False
         self.video_items, self.video_index = [], -1
 
     def _video_step(self, delta: int) -> str:
@@ -172,8 +193,17 @@ class MusicService:
                 self.notify("Riquadro video non disponibile (WebView2): installa o aggiorna "
                             "Microsoft Edge WebView2 Runtime.")
                 self.stop_video()
-            elif not self._video_step(+1):
-                self.stop_video()
+            else:
+                # Formato/codec non supportato dal riquadro: lettore di Windows.
+                if current and current[0] == "file":
+                    try:
+                        self.open_file(current[1])
+                        self.notify("Il riquadro non riproduce questo video: lo apro con "
+                                    "il lettore di Windows.")
+                    except OSError:
+                        self.notify("Questo video non si può riprodurre.")
+                if not self._video_step(+1):
+                    self.stop_video()
         elif kind == "closed":
             self.mode = None
 
@@ -193,9 +223,14 @@ class MusicService:
         if not tracks:
             return ""
         if library.is_video(tracks[0]):
-            if not self.video_ready():
-                return "Riquadro video non disponibile su questo PC."
-            return self._start_video([("file", t, t.stem) for t in tracks if library.is_video(t)])
+            if not library.is_panel_video(tracks[0]) or not self.video_ready():
+                try:
+                    self.open_file(tracks[0])
+                except OSError as exc:
+                    return "Non riesco ad aprire il video: " + str(exc)[:80]
+                return "Apro " + tracks[0].stem + " con il lettore di Windows."
+            return self._start_video([("file", t, t.stem) for t in tracks
+                                      if library.is_panel_video(t)])
         if self.mode == "video":
             self.stop_video()
         if self.mode == "browser":
@@ -262,7 +297,8 @@ class MusicService:
                      if 0 <= self.video_index < len(self.video_items) else "Video")
             state = self.video.state if self.video is not None else "stopped"
             return {"mode": "video", "state": "paused" if state == "paused" else "playing",
-                    "title": title, "volume": volume}
+                    "title": title, "volume": volume, "video_visible": not self.video_hidden,
+                    "kind": self.current_video_kind()}
         if self.mode == "browser":
             return {"mode": "browser", "state": "playing", "title": "YouTube: " + self.browser_title,
                     "volume": volume}

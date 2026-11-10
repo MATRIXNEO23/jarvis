@@ -161,10 +161,12 @@ class FakePanel:
 class VideoTests(unittest.TestCase):
     def make(self, folder, key="", video_id=lambda q, k: "abcDEF12345"):
         panel, opened = FakePanel(), []
+        self.files = []
         service = MusicService(lambda: True, open_url=opened.append, player=FakePlayer(),
                                data_folder=Path(folder) / "data",
                                url_for=lambda q, k: (results_url(q), "risultati"),
-                               media_key=lambda a: True, video_id_for=video_id, video_panel=panel)
+                               media_key=lambda a: True, video_id_for=video_id, video_panel=panel,
+                               open_file=self.files.append)
         service.video_hwnd = 1234
         service.api_key = lambda: key
         return service, panel, opened
@@ -194,6 +196,37 @@ class VideoTests(unittest.TestCase):
             self.assertEqual(service.handle("stop"), "Musica fermata.")
             self.assertEqual(panel.closed, 1)
             self.assertIsNone(service.snapshot()["mode"])
+
+    def test_hide_local_video_keeps_audio_but_youtube_stays_visible(self):
+        with tempfile.TemporaryDirectory() as folder:
+            music = Path(folder) / "m"
+            music.mkdir()
+            (music / "Live.mp4").write_bytes(b"x")
+            service, panel, _ = self.make(folder, key="KEY")
+            service.configure(str(music), None)
+            service.handle("play", "live")
+            self.assertIn("nascosto", service.toggle_video_visible())
+            self.assertFalse(service.snapshot()["video_visible"])
+            self.assertEqual(panel.closed, 0)                 # l'audio continua
+            self.assertEqual(service.snapshot()["mode"], "video")
+            service.video_items = [("youtube", "abcDEF12345", "queen")]
+            service.video_index = 0
+            self.assertIn("visibile", service.toggle_video_visible())
+            self.assertTrue(service.snapshot()["video_visible"])
+
+    def test_unsupported_formats_open_with_windows_player(self):
+        with tempfile.TemporaryDirectory() as folder:
+            music = Path(folder) / "m"
+            music.mkdir()
+            (music / "Vecchio.avi").write_bytes(b"x")
+            (music / "Nuovo.mp4").write_bytes(b"x")
+            service, panel, _ = self.make(folder)
+            service.configure(str(music), None)
+            self.assertIn("lettore di Windows", service.handle("play", "vecchio"))
+            self.assertEqual([p.name for p in self.files], ["Vecchio.avi"])
+            service.handle("play", "nuovo")
+            panel.on_event({"ev": "error", "code": "file", "detail": 4})   # codec non supportato
+            self.assertEqual([p.name for p in self.files], ["Vecchio.avi", "Nuovo.mp4"])
 
     def test_prev_restarts_after_three_seconds(self):
         with tempfile.TemporaryDirectory() as folder:

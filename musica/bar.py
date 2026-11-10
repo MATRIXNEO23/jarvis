@@ -63,33 +63,44 @@ class TrackList:
 
 
 class MusicBar:
+    """Barra sotto il video, nell'area del globo; visibile solo con musica attiva.
+
+    Riga 1: ⏮ ⏸ ⏹ ⏭ e volume. Riga 2: ☰ elenco brani, titolo, ✕ nascondi video.
+    Durante un video il riquadro occupa l'area sopra la barra.
+    """
+
     def __init__(self, host, service, *, on_message=None, video_host=None):
-        self.host = host                 # il canvas del nucleo HUD
         self.service = service
         self.on_message = on_message or (lambda text: None)
-        self.frame = tk.Frame(host, bg="#031522", highlightthickness=1,
-                              highlightbackground="#1b6f8f")
-        ttk.Button(self.frame, text="☰", width=3, command=self.open_list).pack(side="left", padx=(4, 0))
-        self.title = tk.StringVar(value="")
-        tk.Label(self.frame, textvariable=self.title, bg="#031522", fg="#d7f6ff",
-                 font=("Segoe UI", 9), width=22, anchor="w").pack(side="left", padx=(6, 4))
-        ttk.Button(self.frame, text="⏮", width=3, command=lambda: self._do("prev")).pack(side="left")
-        self.toggle_button = ttk.Button(self.frame, text="⏸", width=3, command=self._toggle)
-        self.toggle_button.pack(side="left")
-        ttk.Button(self.frame, text="⏹", width=3, command=lambda: self._do("stop")).pack(side="left")
-        ttk.Button(self.frame, text="⏭", width=3, command=lambda: self._do("next")).pack(side="left")
-        self.volume = tk.IntVar(value=service.settings.get("volume", 70))
-        self.volume_scale = ttk.Scale(self.frame, from_=0, to=100, variable=self.volume,
-                                      length=80, command=self._volume)
-        self.volume_scale.pack(side="left", padx=(4, 6))
-        # Riquadro video: stessa area del globo, visibile solo durante un video.
         self.video_host = video_host
+        self.host = video_host if video_host is not None else host
+        self.frame = tk.Frame(self.host, bg="#031522", highlightthickness=1,
+                              highlightbackground="#1b6f8f")
+        controls = tk.Frame(self.frame, bg="#031522")
+        controls.pack(fill="x", padx=4, pady=(4, 2))
+        ttk.Button(controls, text="⏮", width=3, command=lambda: self._do("prev")).pack(side="left")
+        self.toggle_button = ttk.Button(controls, text="⏸", width=3, command=self._toggle)
+        self.toggle_button.pack(side="left")
+        ttk.Button(controls, text="⏹", width=3, command=lambda: self._do("stop")).pack(side="left")
+        ttk.Button(controls, text="⏭", width=3, command=lambda: self._do("next")).pack(side="left")
+        self.volume = tk.IntVar(value=service.settings.get("volume", 70))
+        self.volume_scale = ttk.Scale(controls, from_=0, to=100, variable=self.volume,
+                                      command=self._volume)
+        self.volume_scale.pack(side="left", fill="x", expand=True, padx=(8, 2))
+        info = tk.Frame(self.frame, bg="#031522")
+        info.pack(fill="x", padx=4, pady=(0, 4))
+        ttk.Button(info, text="☰", width=3, command=self.open_list).pack(side="left")
+        self.title = tk.StringVar(value="")
+        tk.Label(info, textvariable=self.title, bg="#031522", fg="#d7f6ff",
+                 font=("Segoe UI", 9), anchor="w").pack(side="left", fill="x", expand=True, padx=6)
+        self.video_button = ttk.Button(info, text="✕ video", width=8, command=self._toggle_video)
         self.video_frame = None
         if video_host is not None and getattr(service, "video", None) is not None:
             self.video_frame = tk.Frame(video_host, bg="#000000", highlightthickness=0, bd=0)
             service.video_hwnd = self.video_frame.winfo_id()
         self._shown = False
         self._video_shown = False
+        self._video_button_shown = False
         self._job = None
         self._volume_job = None
         self._list = None
@@ -112,10 +123,13 @@ class MusicBar:
 
     def _toggle(self) -> None:
         snap = self.service.snapshot()
-        if snap["mode"] is None:
-            self.open_list()
-            return
         self._do("pause" if snap["state"] == "playing" else "resume")
+
+    def _toggle_video(self) -> None:
+        message = self.service.toggle_video_visible()
+        if message:
+            self.on_message(message)
+        self.refresh(reschedule=False)
 
     def _volume(self, value) -> None:
         if self._volume_job is not None:
@@ -127,30 +141,45 @@ class MusicBar:
             enabled = self.service.is_enabled()
             snap = self.service.snapshot() if enabled else {"mode": None, "state": "stopped"}
             active = snap.get("mode") is not None and snap.get("state") != "stopped"
-            if enabled:
-                self.title.set(snap["title"][:36] if active else "Musica")
-                self.toggle_button.configure(text="▶" if not active or snap["state"] == "paused"
-                                             else "⏸")
+            if active:
+                self.title.set(snap["title"][:48])
+                self.toggle_button.configure(text="▶" if snap["state"] == "paused" else "⏸")
                 if snap.get("mode") == "browser":
                     self.volume_scale.state(["disabled"])
                 else:
                     self.volume_scale.state(["!disabled"])
                 if not self._shown:
-                    self.frame.place(in_=self.host, relx=0.5, rely=0.93, anchor="s")
+                    self.frame.place(in_=self.host, relx=0, rely=1, relwidth=1, anchor="sw")
+                    self.frame.lift()
                     self._shown = True
             elif self._shown:
                 self.frame.place_forget()
                 self._shown = False
-            want_video = enabled and snap.get("mode") == "video"
-            if self.video_frame is not None and want_video != self._video_shown:
-                if want_video:
-                    self.video_frame.place(in_=self.video_host, relx=0, rely=0,
-                                           relwidth=1, relheight=1)
-                    self.video_frame.lift()
+            is_video = active and snap.get("mode") == "video"
+            want_button = is_video
+            if want_button != self._video_button_shown:
+                if want_button:
+                    self.video_button.pack(side="right")
                 else:
+                    self.video_button.pack_forget()
+                self._video_button_shown = want_button
+            if is_video:
+                self.video_button.configure(
+                    text="✕ video" if snap.get("video_visible", True) else "▣ video")
+            want_video = is_video and snap.get("video_visible", True)
+            if self.video_frame is not None:
+                if want_video:
+                    # Video sopra la barra: il riquadro si accorcia dell'altezza della barra.
+                    bar_h = self.frame.winfo_reqheight() + 4
+                    self.video_frame.place(in_=self.video_host, x=0, y=0, relwidth=1,
+                                           relheight=1, height=-bar_h)
+                    if not self._video_shown:
+                        self.video_frame.lift()
+                        self.frame.lift()
+                elif self._video_shown:
                     self.video_frame.place_forget()
                 self._video_shown = want_video
         except tk.TclError:
             return
         if reschedule:
-            self._job = self.host.after(500, self.refresh)
+            self._job = self.host.after(400, self.refresh)

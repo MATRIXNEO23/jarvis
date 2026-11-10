@@ -40,7 +40,12 @@ class MusicSettings:
         buttons = ttk.Frame(frame)
         buttons.pack(fill="x", side="bottom")
         ttk.Button(buttons, text="Salva", command=self.save).pack(side="left")
+        ttk.Button(buttons, text="Elenco brani...", command=self.open_list).pack(side="left", padx=6)
         ttk.Button(buttons, text="Chiudi", command=self.window.destroy).pack(side="right")
+
+    def open_list(self):
+        from .bar import TrackList
+        TrackList(self.window, self.service, lambda text: self.status.set(text))
 
     def browse(self):
         chosen = filedialog.askdirectory(parent=self.window, title="Cartella musica",

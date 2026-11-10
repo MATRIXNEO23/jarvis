@@ -72,7 +72,12 @@ static class Program
             using (var res = Assembly.GetExecutingAssembly().GetManifestResourceStream("player.html"))
             using (var fs = File.Create(Path.Combine(pageDir, "player.html"))) res.CopyTo(fs);
             core.SetVirtualHostNameToFolderMapping("lumi.player", pageDir, CoreWebView2HostResourceAccessKind.DenyCors);
-            core.WebMessageReceived += (o, m) => Emit(m.TryGetWebMessageAsString());
+            core.WebMessageReceived += (o, m) =>
+            {
+                var text = m.TryGetWebMessageAsString();
+                if (text != null && text.Contains("\"page\"")) PageReady = true;
+                Emit(text);
+            };
             // File locali serviti da Lumi con richieste a intervalli (Range):
             // la mappatura cartella di WebView2 non riproduceva i file (MediaError 4).
             core.AddWebResourceRequestedFilter("https://lumi.media/*", CoreWebView2WebResourceContext.All);
@@ -83,11 +88,29 @@ static class Program
         var timer = new System.Windows.Forms.Timer { Interval = 300 };
         timer.Tick += (s, e) => { if (!IsWindow(parent)) Application.Exit(); else Fit(form, parent); };
         timer.Start();
+        // I comandi arrivano anche mentre WebView2 si sta ancora avviando: si
+        // tengono in coda e si eseguono solo quando la pagina del lettore è pronta
+        // (prima andavano persi: il primo video dopo l'avvio non partiva).
+        var pending = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        var quit = false;
         var reader = new Thread(() =>
         {
-            var json = new JavaScriptSerializer();
             string line;
             while ((line = Console.In.ReadLine()) != null)
+            {
+                if (line.Contains("\"quit\"")) { quit = true; break; }
+                pending.Enqueue(line);
+            }
+            quit = true;
+        }) { IsBackground = true };
+        var pump = new System.Windows.Forms.Timer { Interval = 80 };
+        pump.Tick += (s, e) =>
+        {
+            if (quit) { pump.Stop(); Application.Exit(); return; }
+            var core = web.CoreWebView2;
+            if (core == null || !PageReady) return;
+            var json = new JavaScriptSerializer();
+            while (pending.TryDequeue(out var line))
             {
                 string cmd = null; string path = null;
                 try
@@ -97,32 +120,30 @@ static class Program
                     path = d.ContainsKey("path") ? d["path"] as string : null;
                 }
                 catch { continue; }
-                if (cmd == "quit") break;
-                var copy = line;
-                form.BeginInvoke((Action)(() =>
+                if (cmd == "file")
                 {
-                    var core = web.CoreWebView2;
-                    if (core == null) return;
-                    if (cmd == "file" && path != null && File.Exists(path))
+                    if (path == null || !File.Exists(path))
                     {
-                        // La cartella del file diventa https://lumi.media/ solo per questo brano.
-                        var full = LongPath(Path.GetFullPath(path));
-                        CurrentMedia = full;
-                        var url = "https://lumi.media/" + Uri.EscapeDataString(Path.GetFileName(full));
-                        Emit("{\"ev\":\"debug\",\"url\":" + json.Serialize(url) + "}");
-                        core.PostWebMessageAsString(json.Serialize(new { cmd = "file", url = url }));
+                        Emit("{\"ev\":\"error\",\"code\":\"missing\"}");
+                        continue;
                     }
-                    else core.PostWebMessageAsString(copy);
-                }));
+                    var full = LongPath(Path.GetFullPath(path));
+                    CurrentMedia = full;
+                    var url = "https://lumi.media/" + Uri.EscapeDataString(Path.GetFileName(full));
+                    Emit("{\"ev\":\"debug\",\"url\":" + json.Serialize(url) + "}");
+                    core.PostWebMessageAsString(json.Serialize(new { cmd = "file", url = url }));
+                }
+                else core.PostWebMessageAsString(line);
             }
-            form.BeginInvoke((Action)(() => Application.Exit()));
-        }) { IsBackground = true };
+        };
+        pump.Start();
         reader.Start();
         Application.Run(form);
         return 0;
     }
 
     static string CurrentMedia;
+    static volatile bool PageReady;
 
     static string Mime(string path)
     {

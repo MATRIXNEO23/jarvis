@@ -7,8 +7,11 @@ import re
 import unicodedata
 
 AUDIO_EXTENSIONS = frozenset((".mp3", ".wav", ".wma", ".m4a"))
-VIDEO_EXTENSIONS = frozenset((".mp4", ".webm", ".m4v", ".mov"))
-EXTENSIONS = AUDIO_EXTENSIONS | VIDEO_EXTENSIONS
+# Riquadro (WebView2): formati che Chromium/Edge riproduce.
+VIDEO_EXTENSIONS = frozenset((".mp4", ".webm", ".m4v", ".mov", ".mkv"))
+# Altri video: si aprono con il lettore predefinito di Windows.
+EXTERNAL_VIDEO_EXTENSIONS = frozenset((".avi", ".wmv", ".mpg", ".mpeg", ".flv", ".3gp"))
+EXTENSIONS = AUDIO_EXTENSIONS | VIDEO_EXTENSIONS | EXTERNAL_VIDEO_EXTENSIONS
 MAX_FILES = 20000
 
 
@@ -51,4 +54,8 @@ def best_matches(tracks: list[Path], query: str, limit: int = 20) -> list[Path]:
 
 
 def is_video(path) -> bool:
+    return Path(path).suffix.lower() in (VIDEO_EXTENSIONS | EXTERNAL_VIDEO_EXTENSIONS)
+
+
+def is_panel_video(path) -> bool:
     return Path(path).suffix.lower() in VIDEO_EXTENSIONS
