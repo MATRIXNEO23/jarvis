@@ -8,14 +8,16 @@ from . import library
 
 
 class TrackList:
-    """Elenco dei brani della cartella: ricerca in alto, doppio clic per suonare."""
+    """Brani per cartella: si naviga nelle cartelle e sottocartelle (▸ per aprire),
+    doppio clic su un brano per ascoltarlo (poi seguono gli altri della stessa cartella).
+    «Suona cartella» suona tutta la cartella scelta. Scrivendo in alto si cerca ovunque."""
 
     def __init__(self, parent, service, on_message):
         self.service = service
         self.on_message = on_message
         self.window = tk.Toplevel(parent)
         self.window.title("Lumi // Brani")
-        self.window.geometry("460x520")
+        self.window.geometry("480x560")
         frame = ttk.Frame(self.window, padding=10)
         frame.pack(fill="both", expand=True)
         self.query = tk.StringVar()
@@ -25,39 +27,107 @@ class TrackList:
         self.query.trace_add("write", lambda *_a: self.fill())
         holder = ttk.Frame(frame)
         holder.pack(fill="both", expand=True, pady=(8, 0))
-        self.listbox = tk.Listbox(holder, activestyle="none", bg="#031522", fg="#d7f6ff",
-                                  selectbackground="#1b6f8f", highlightthickness=0)
-        scroll = ttk.Scrollbar(holder, orient="vertical", command=self.listbox.yview)
-        self.listbox.configure(yscrollcommand=scroll.set)
+        self.tree = ttk.Treeview(holder, show="tree", selectmode="browse")
+        scroll = ttk.Scrollbar(holder, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scroll.set)
         scroll.pack(side="right", fill="y")
-        self.listbox.pack(side="left", fill="both", expand=True)
-        self.listbox.bind("<Double-Button-1>", self.play_selected)
-        self.listbox.bind("<Return>", self.play_selected)
+        self.tree.pack(side="left", fill="both", expand=True)
+        self.tree.bind("<Double-Button-1>", self.play_selected)
+        self.tree.bind("<Return>", self.play_selected)
+        self.tree.bind("<<TreeviewOpen>>", self._open_node)
+        bottom = ttk.Frame(frame)
+        bottom.pack(fill="x", pady=(6, 0))
+        ttk.Button(bottom, text="▶ Suona cartella", command=self.play_folder).pack(side="right")
         self.status = tk.StringVar()
-        ttk.Label(frame, textvariable=self.status).pack(anchor="w", pady=(6, 0))
-        self.shown = []
+        ttk.Label(bottom, textvariable=self.status, wraplength=320).pack(side="left", anchor="w")
+        self.nodes = {}       # id albero -> ("dir", chiave cartella) | ("track", Path)
+        self.dirs = {}        # chiave cartella -> {"subdirs": [...], "tracks": [...]}
         self.fill()
+
+    # --- struttura cartelle (costruita dall'elenco già letto, senza rileggere il disco)
+    def _build_dirs(self, tracks):
+        roots, self.dirs = library.folder_tree(tracks, self.service.folders())
+        return roots
+
+    def _insert_dir(self, parent_id, key, label):
+        node = self.tree.insert(parent_id, "end", text="📁 " + label, open=False)
+        self.nodes[node] = ("dir", key)
+        self.tree.insert(node, "end", text="…")      # segnaposto: si riempie all'apertura
+        return node
+
+    def _open_node(self, _event=None):
+        node = self.tree.focus()
+        kind, key = self.nodes.get(node, (None, None))
+        if kind != "dir":
+            return
+        children = self.tree.get_children(node)
+        if len(children) == 1 and children[0] not in self.nodes:
+            self.tree.delete(children[0])
+            self._fill_dir(node, key)
+
+    def _fill_dir(self, node, key):
+        import os
+        entry = self.dirs.get(key, {"subdirs": [], "tracks": []})
+        for sub in entry["subdirs"]:
+            self._insert_dir(node, sub, os.path.basename(sub) or sub)
+        for track in entry["tracks"]:
+            mark = "▶ " if library.is_video(track) else "♪ "
+            item = self.tree.insert(node, "end", text=mark + track.stem)
+            self.nodes[item] = ("track", track)
+
+    def _tracks_under(self, key):
+        return library.tracks_under(self.dirs, key)
 
     def fill(self):
         tracks = self.service.tracks()
+        self.tree.delete(*self.tree.get_children())
+        self.nodes = {}
         words = library.normalized(self.query.get()).split()
-        if words:
-            tracks = [t for t in tracks
-                      if all(w in library.normalized(" ".join(t.parts[-3:])) for w in words)]
-        self.shown = list(tracks[:3000])
-        self.listbox.delete(0, "end")
-        for track in self.shown:
-            mark = "▶ " if library.is_video(track) else "♪ "
-            self.listbox.insert("end", mark + track.stem)
-        total = len(self.service.tracks())
-        self.status.set(f"{len(self.shown)} di {total} brani. Doppio clic per ascoltare."
-                        if total else "Nessun brano: scegli la cartella in Gestisci add-on > Musica.")
+        total = len(tracks)
+        if words:          # ricerca: elenco piatto da tutte le cartelle
+            found = [t for t in tracks
+                     if all(w in library.normalized(" ".join(t.parts[-3:])) for w in words)][:3000]
+            self._build_dirs(tracks)
+            for track in found:
+                mark = "▶ " if library.is_video(track) else "♪ "
+                item = self.tree.insert("", "end", text=mark + track.stem)
+                self.nodes[item] = ("track", track)
+            self.status.set(f"{len(found)} di {total} brani. Doppio clic per ascoltare.")
+            return
+        roots = self._build_dirs(tracks)
+        for root in roots:
+            node = self._insert_dir("", root, root)
+            if len(roots) == 1:
+                self.tree.item(node, open=True)
+                self.tree.delete(*self.tree.get_children(node))
+                self._fill_dir(node, root)
+        self.status.set(f"{total} brani in {len(roots)} cartelle. Doppio clic per ascoltare."
+                        if total else "Nessun brano: scegli le cartelle in Gestisci add-on > Musica.")
 
     def play_selected(self, _event=None):
-        selection = self.listbox.curselection()
-        if not selection:
+        node = self.tree.focus()
+        kind, value = self.nodes.get(node, (None, None))
+        if kind != "track":
+            return                       # su una cartella il doppio clic la apre/chiude
+        parent = self.tree.parent(node)
+        siblings = [self.nodes[i][1] for i in self.tree.get_children(parent)
+                    if self.nodes.get(i, ("",))[0] == "track"]
+        start = siblings.index(value) if value in siblings else 0
+        message = self.service.play_tracks(siblings, start)
+        if message:
+            self.on_message(message)
+
+    def play_folder(self):
+        node = self.tree.focus()
+        kind, value = self.nodes.get(node, (None, None))
+        if kind == "track":
+            node = self.tree.parent(node)
+            kind, value = self.nodes.get(node, (None, None))
+        if kind != "dir":
+            self.status.set("Scegli prima una cartella.")
             return
-        message = self.service.play_tracks(self.shown, selection[0])
+        tracks = self._tracks_under(value)
+        message = self.service.play_tracks(tracks, 0) if tracks else "Cartella vuota."
         if message:
             self.on_message(message)
 

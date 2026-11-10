@@ -55,7 +55,7 @@ def help_sections(engine):
             'alza il volume della musica\nabbassa il volume della musica\n\n'
             'Indietro: oltre 3 secondi ricomincia il brano, altrimenti va al precedente. '
             'Il pulsante ☰ della barra apre l’elenco dei brani (doppio clic per ascoltare).\n\n'
-            'Richiede l’add-on Musica attivo. Cerca prima nella cartella musica scelta in '
+            'Richiede l’add-on Musica attivo. Cerca prima nelle cartelle musica scelte in '
             'Gestisci add-on > Musica > Configura; se il brano non c’è apre la ricerca su YouTube '
             'nel browser (con la chiave API facoltativa apre subito il primo video).',
         'Voce':

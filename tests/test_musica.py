@@ -352,3 +352,38 @@ class ManifestTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MultiFolderTests(unittest.TestCase):
+    def test_old_single_folder_config_is_migrated_and_list_saved(self):
+        with tempfile.TemporaryDirectory() as folder:
+            base = Path(folder)
+            (base / "config.json").write_text(json.dumps({"folder": "C:/Musica", "volume": 40}),
+                                              encoding="utf-8")
+            data = config.load(base)
+            self.assertEqual(data["folders"], ["C:/Musica"])
+            self.assertEqual(data["volume"], 40)
+            config.save({"folders": ["C:/A", "C:/A", "", "C:/B"], "volume": 40}, base)
+            saved = json.loads((base / "config.json").read_text(encoding="utf-8"))
+            self.assertEqual(saved["folders"], ["C:/A", "C:/B"])
+            self.assertEqual(saved["folder"], "C:/A")
+
+    def test_several_folders_with_subfolders_and_tree(self):
+        from musica import library
+        with tempfile.TemporaryDirectory() as folder:
+            a, b = Path(folder) / "A", Path(folder) / "B"
+            (a / "Rock" / "Live").mkdir(parents=True)
+            b.mkdir()
+            (a / "Rock" / "Live" / "One.mp3").write_bytes(b"x")
+            (a / "Rock" / "Two.mp3").write_bytes(b"x")
+            (b / "Three.mp3").write_bytes(b"x")
+            service, _o, _k = ServiceTests.make(ServiceTests(), folder)
+            self.assertEqual(service.configure([str(a), str(b), str(a / "Rock")], None), 3)
+            self.assertEqual(service.handle("play", "three"), "Metto Three.")
+            self.assertEqual(library.root_of(a / "Rock" / "Two.mp3", service.folders()),
+                             str(a / "Rock"))
+            roots, dirs = library.folder_tree(service.tracks(), service.folders())
+            self.assertEqual(set(roots), {str(a / "Rock"), str(b)})
+            self.assertEqual(dirs[str(a / "Rock")]["subdirs"], [str(a / "Rock" / "Live")])
+            self.assertEqual([t.stem for t in library.tracks_under(dirs, str(a / "Rock"))],
+                             ["Two", "One"])

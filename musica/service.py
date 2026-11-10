@@ -7,6 +7,7 @@ globo) → YouTube nel riquadro (con chiave API: lettore ufficiale incorporato)
 from __future__ import annotations
 
 import os
+from pathlib import Path
 import threading
 import webbrowser
 
@@ -43,8 +44,13 @@ class MusicService:
             self.video.on_event = self._video_event
 
     # --- impostazioni -----------------------------------------------------
-    def configure(self, folder: str, api_key: str | None = None) -> int:
-        self.settings["folder"] = str(folder or "").strip()
+    def configure(self, folders, api_key: str | None = None) -> int:
+        """folders: una cartella (testo) o un elenco di cartelle."""
+        if isinstance(folders, (str, Path)) or folders is None:
+            folders = [str(folders or "")]
+        clean = config.clean_folders([str(f) for f in folders])
+        self.settings["folders"] = clean
+        self.settings["folder"] = clean[0] if clean else ""
         config.save(self.settings, self.data_folder)
         if api_key is not None:
             config.save_api_key(api_key, self.data_folder)
@@ -54,11 +60,15 @@ class MusicService:
     def api_key(self) -> str:
         return config.load_api_key(self.data_folder)
 
+    def folders(self) -> list[str]:
+        return list(self.settings.get("folders") or
+                    ([self.settings["folder"]] if self.settings.get("folder") else []))
+
     def tracks(self, refresh: bool = False):
-        folder = self.settings.get("folder", "")
-        if refresh or self._tracks is None or self._tracks_folder != folder:
-            self._tracks = library.scan(folder)
-            self._tracks_folder = folder
+        folders = tuple(self.folders())
+        if refresh or self._tracks is None or self._tracks_folder != folders:
+            self._tracks = library.scan_all(folders)
+            self._tracks_folder = folders
         return self._tracks
 
     def set_volume(self, value: int) -> None:
@@ -243,7 +253,7 @@ class MusicService:
 
     def play(self, query: str) -> str:
         matches = library.best_matches(self.tracks(), query)
-        if not matches and self.settings.get("folder"):
+        if not matches and self.folders():
             matches = library.best_matches(self.tracks(refresh=True), query)
         if matches:
             return self.play_tracks(matches)

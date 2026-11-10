@@ -3,10 +3,11 @@
 Add-on facoltativo di Lumi. Si attiva in Impostazioni > Gestisci add-on > Musica > Attiva; «Configura» apre le sue impostazioni. Spento, Lumi resta com'era: nessuna barra, nessun comando musica.
 
 ## Uso
-- «Lumi, metti …» (anche «suona», «riproduci», «fammi sentire»): cerca il brano nella **cartella musica** per nome del file (anche nelle sottocartelle; MP3, WAV, WMA, M4A) e lo suona dentro Lumi; i brani trovati con quel nome formano la coda.
+- «Lumi, metti …» (anche «suona», «riproduci», «fammi sentire»): cerca il brano nelle **cartelle musica** (se ne possono aggiungere più d'una in Configura) per nome del file (anche nelle sottocartelle; MP3, WAV, WMA, M4A) e lo suona dentro Lumi; i brani trovati con quel nome formano la coda.
 - Se non è nella cartella: apre nel browser la ricerca YouTube. Con la **chiave API YouTube** facoltativa apre direttamente il primo video (quota gratuita circa 100 ricerche al giorno; se finisce o la chiave non va, si torna ai risultati).
 - **Video** (MP4, WebM, M4V, MOV nella cartella) e **YouTube con la chiave API** si vedono nel riquadro al posto del globo (`video_bin/LumiVideo.exe`, Microsoft Edge WebView2, già presente in Windows 10/11 aggiornato). YouTube usa il lettore ufficiale incorporato: nessun audio estratto. Video non incorporabile o WebView2 assente → si apre il browser. Finito il video, il riquadro si chiude e la sua RAM viene liberata.
-- **☰** nella barra: elenco dei brani della cartella con ricerca; doppio clic fa partire il brano e poi i successivi.
+- **☰** nella barra: brani divisi per cartella; si naviga nelle cartelle e sottocartelle (▸ per aprire), doppio clic su un brano lo fa partire con i successivi della stessa cartella, **▶ Suona cartella** suona tutta la cartella scelta. Scrivendo in alto si cerca in tutte le cartelle.
+- **▁ riduci** nella barra: toglie il video e resta solo la musica con la barra (YouTube resta in un riquadrino 200×200, minimo richiesto dal lettore). **▣ video** lo riporta.
 - «pausa», «riprendi», «ferma la musica», «prossima», «torna indietro» / «brano precedente» (oltre 3 secondi torna all'inizio), «alza/abbassa il volume della musica». Un solo volume per brani, video e YouTube nel riquadro. Con YouTube questi comandi usano i tasti multimediali di Windows (se due programmi suonano, Windows comanda l'ultimo che ha suonato).
 - Barra sotto il nucleo: titolo, pausa/riprendi, stop, avanti, volume (il volume vale per i brani locali).
 
