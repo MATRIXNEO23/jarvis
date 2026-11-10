@@ -1,3 +1,11 @@
+## Build 028 PROVA — Telegram: avviso con nome e ID del mittente ignorato
+
+[Scarica Lumi-028-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-028-PROVA.zip)
+
+Come la 027, più: quando arriva un messaggio da un account che non è tra i contatti spuntati, Lumi lo scrive in chat una volta per mittente («messaggio da Nome [ID numero] ignorato»), invece di scartarlo in silenzio. Confronta quell'ID con quello mostrato in Gestisci contatti. Nient'altro cambiato. Verificati in CI Windows: 1205 test, ascolto Telegram simulato, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42805702663). SHA-256: `bce0b7a73babfdec1c013b3be948048854c66518c36a6b1223c3bf92a7a27b3d`.
+
 ## Build 027 PROVA — Telegram: messaggi ricevuti elaborati di nuovo
 
 [Scarica Lumi-027-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-027-PROVA.zip)
