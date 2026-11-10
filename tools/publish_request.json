@@ -1,10 +1,10 @@
 {
-  "run_id": 42719345419,
-  "artifact": "lumi-023-prova-candidate",
-  "file": "Lumi-023-PROVA.zip",
-  "bytes": 27178564,
-  "sha256": "a6e44f0c838d3942cf46ce609d619cba9634a9b9f246404dabf0613083c17370",
-  "source_commit": "f64a398",
-  "title": "Build 023 PROVA — Telegram corretto, voci Edge, labiale anche con voce Windows",
-  "description": "Come la 022, più: Telegram legge di nuovo le credenziali già salvate (errore «Formato credenziali non riconosciuto» introdotto dalla rinomina). Streaming anche per richieste come «consigliami dei film». La voce non legge emoji e asterischi; nelle frasi lunghe parte alla virgola. Bocca che si muove anche con le voci Windows. Avatar più grande e più fluido (13 posizioni della testa, 8 aperture della bocca, 25 fotogrammi al secondo). Voci Microsoft Edge facoltative (Isabella, Elsa, Diego, Giuseppe): gratuite ma online, si attivano con installa_voce_edge.bat. Verificati in CI Windows: 1185 test, voce inclusa sul pacchetto estratto, labiale voce Windows, voce Edge reale, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42726221570,
+  "artifact": "lumi-024-prova-candidate",
+  "file": "Lumi-024-PROVA.zip",
+  "bytes": 27180880,
+  "sha256": "bf12b5f8f7623a35678c120d7761c1c59248a47002cb64940680940c542b0cd2",
+  "source_commit": "056610c",
+  "title": "Build 024 PROVA — note vocali Telegram con la voce scelta, labiale agganciato all'audio",
+  "description": "Come la 023, più: le note vocali Telegram usano la voce scelta in Lumi (Edge, Paola/Serena o Windows) e, se non funziona, la voce Windows predefinita invece di non rispondere. La bocca dell'avatar segue la posizione reale dell'audio e parte solo quando parte il suono, con tutte le voci. configura_telegram.bat salva nello stesso profilo di avvia_lumi.bat e ricontrolla le credenziali. Verificati in CI Windows: 12 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare."
 }
