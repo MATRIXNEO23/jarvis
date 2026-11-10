@@ -1,3 +1,11 @@
+## Build 025 PROVA — velocità, tonalità e volume della voce; configurazione Telegram corretta
+
+[Scarica Lumi-025-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-025-PROVA.zip)
+
+Come la 024, più: in Impostazioni > Voce i cursori Velocità, Tonalità e Volume, validi per Paola/Serena, voci Edge, voci Windows e note vocali Telegram; l'effetto digitale ora viene salvato. Configurazione Telegram: i campi sbagliati si possono reinserire, numero e hash vengono ripuliti (+39, spazi), e una nuova configurazione non cancella più i contatti spuntati (era il motivo per cui i messaggi non arrivavano più): se hai già riconfigurato con la 024, rispunta i contatti una volta. Verificati in CI Windows: 1197 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42733173977). SHA-256: `a9b197099421526596c7c438fe3d7fac7ed55adb17e4cc84f50fb4c378c63037`.
+
 ## Build 024 PROVA — note vocali Telegram con la voce scelta, labiale agganciato all'audio
 
 [Scarica Lumi-024-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-024-PROVA.zip)
