@@ -69,7 +69,9 @@ def folder_tree(tracks, folders):
     roots: list[str] = []
     for track in tracks:
         track = Path(track)
-        root = root_of(track, folders) or str(track.parent)
+        # Stessa forma dei percorsi dei brani (su Windows «C:/x» diventa «C:\\x»),
+        # altrimenti aprendo la cartella radice non si trova nulla.
+        root = str(Path(root_of(track, folders) or track.parent))
         if root not in roots:
             roots.append(root)
         parent = str(track.parent)

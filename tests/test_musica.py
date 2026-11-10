@@ -383,6 +383,10 @@ class MultiFolderTests(unittest.TestCase):
             self.assertEqual(library.root_of(a / "Rock" / "Two.mp3", service.folders()),
                              str(a / "Rock"))
             roots, dirs = library.folder_tree(service.tracks(), service.folders())
+            # Cartella scritta in altra forma (barra finale, «.»): la radice si apre lo stesso.
+            other = [str(a / "Rock") + "/", str(b) + "/."]
+            roots2, dirs2 = library.folder_tree(service.tracks(), other)
+            self.assertTrue(all(dirs2.get(r) for r in roots2))
             self.assertEqual(set(roots), {str(a / "Rock"), str(b)})
             self.assertEqual(dirs[str(a / "Rock")]["subdirs"], [str(a / "Rock" / "Live")])
             self.assertEqual([t.stem for t in library.tracks_under(dirs, str(a / "Rock"))],

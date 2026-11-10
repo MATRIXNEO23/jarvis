@@ -248,3 +248,7 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 - «✕ video»: nasconde il video lasciando l'audio, solo per i file locali; per YouTube no (regole del lettore incorporato: il video deve restare visibile) e Lumi lo spiega.
 - Tasto «▁ riduci» nella barra: riduce il video e lascia solo musica + barra (file locali: video nascosto; YouTube: riquadrino 200x200, minimo richiesto dal lettore incorporato). «▣ video» lo ripristina.
 - Più cartelle musica (Configura: Aggiungi.../Rimuovi; il vecchio `folder` viene migrato in `folders`, nessun dato perso). ☰ ora mostra le cartelle come albero navigabile (sottocartelle caricate all'apertura), doppio clic su un brano, «▶ Suona cartella»; la ricerca resta su tutte le cartelle.
+
+## 033 — Elenco brani: apertura cartelle (riscontro utente 10/11 23:27, foto)
+- Le cartelle radice nell'elenco ☰ non si aprivano: la cartella salvata come «C:/Users/...» non coincideva con i percorsi dei brani «C:\Users\...». Ora la radice è normalizzata come i brani (test con barra finale e «.»).
+- YouTube «riduci» resta un riquadrino 200×200: nasconderlo del tutto viola le regole del lettore YouTube incorporato (rischio blocco della chiave). I video locali si nascondono del tutto.
