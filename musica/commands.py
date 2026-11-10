@@ -20,6 +20,7 @@ _SIMPLE = (
     ("stop", r"(?:ferma|stop|spegni|basta)\s+(?:la\s+)?musica|stop\s+musica"),
     ("next", r"(?:prossima|prossimo)(?:\s+(?:canzone|brano|pezzo))?|(?:canzone|brano)\s+successiv[oa]"
              r"|passa\s+(?:alla\s+prossima|al\s+prossimo)|salta(?:\s+(?:canzone|brano))?"),
+    ("prev", r"(?:torna\s+)?indietro|(?:canzone|brano|video)\s+precedente|(?:metti\s+)?(?:la\s+|il\s+)?precedente"),
     ("volume_up", r"alza\s+(?:il\s+)?volume\s+(?:della\s+)?musica|musica\s+più\s+forte"),
     ("volume_down", r"abbassa\s+(?:il\s+)?volume\s+(?:della\s+)?musica|musica\s+più\s+piano"),
 )

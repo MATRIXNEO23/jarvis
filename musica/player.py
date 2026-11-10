@@ -52,6 +52,9 @@ class MusicPlayer:
     def next(self):
         self._send("next")
 
+    def prev(self):
+        self._send("prev")
+
     def set_volume(self, value: int):
         self._send("volume", max(0, min(100, int(value))))
 
@@ -128,6 +131,17 @@ class MusicPlayer:
             if self.index >= len(self.playlist):
                 self.index = 0
             self._start_track()
+        elif name == "prev" and self.playlist:
+            # Come i lettori normali: oltre 3 s torna all'inizio, sennò il precedente.
+            position = self._mci(f"status {self.ALIAS} position")[1] if self._open else "0"
+            if position.isdigit() and int(position) > 3000:
+                self._mci(f"seek {self.ALIAS} to start")
+                self._mci(f"play {self.ALIAS}")
+                self.state = "playing"
+                self._emit()
+            else:
+                self.index = max(0, self.index - 1)
+                self._start_track()
         elif name == "volume":
             self.volume = command[1]
             if self._open:

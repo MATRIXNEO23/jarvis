@@ -16,6 +16,10 @@ def results_url(query: str) -> str:
     return "https://www.youtube.com/results?search_query=" + urllib.parse.quote_plus(query)
 
 
+def first_video_id(query: str, api_key: str, opener=urllib.request.urlopen, timeout=8) -> str:
+    return first_video_url(query, api_key, opener=opener, timeout=timeout).rsplit("=", 1)[1]
+
+
 def first_video_url(query: str, api_key: str, opener=urllib.request.urlopen, timeout=8) -> str:
     """URL del primo video; solleva un'eccezione se la ricerca non riesce."""
     params = urllib.parse.urlencode({"part": "snippet", "type": "video", "maxResults": 1,
@@ -41,6 +45,7 @@ def url_for(query: str, api_key: str = "", opener=urllib.request.urlopen) -> tup
 
 # Tasti multimediali di Windows: il browser li riceve anche in secondo piano.
 MEDIA_KEYS = {"toggle": 0xB3, "pause": 0xB3, "resume": 0xB3, "next": 0xB0, "stop": 0xB2,
+              "prev": 0xB1,
               "volume_up": 0xAF, "volume_down": 0xAE}
 
 

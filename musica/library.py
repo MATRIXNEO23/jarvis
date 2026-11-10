@@ -6,7 +6,9 @@ from pathlib import Path
 import re
 import unicodedata
 
-EXTENSIONS = frozenset((".mp3", ".wav", ".wma", ".m4a"))
+AUDIO_EXTENSIONS = frozenset((".mp3", ".wav", ".wma", ".m4a"))
+VIDEO_EXTENSIONS = frozenset((".mp4", ".webm", ".m4v", ".mov"))
+EXTENSIONS = AUDIO_EXTENSIONS | VIDEO_EXTENSIONS
 MAX_FILES = 20000
 
 
@@ -46,3 +48,7 @@ def best_matches(tracks: list[Path], query: str, limit: int = 20) -> list[Path]:
             scored.append((score, str(track).lower(), track))
     scored.sort()
     return [t for *_rest, t in scored[:limit]]
+
+
+def is_video(path) -> bool:
+    return Path(path).suffix.lower() in VIDEO_EXTENSIONS

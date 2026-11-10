@@ -22,6 +22,8 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(parse_command("ferma la musica"), ("stop", ""))
         self.assertEqual(parse_command("prossima canzone"), ("next", ""))
         self.assertEqual(parse_command("abbassa il volume della musica"), ("volume_down", ""))
+        self.assertEqual(parse_command("torna indietro"), ("prev", ""))
+        self.assertEqual(parse_command("brano precedente"), ("prev", ""))
 
     def test_other_features_are_not_taken(self):
         for text in ("metti un timer di 5 minuti", "metti la sveglia alle 7", "metti il film Matrix",
@@ -38,7 +40,7 @@ class LibraryTests(unittest.TestCase):
                          "Imagine - John Lennon.wav", "note.txt"):
                 (root / name).write_bytes(b"x")
             tracks = library.scan(root)
-            self.assertEqual(len(tracks), 3)
+            self.assertEqual(len(tracks), 3)          # note.txt escluso
             self.assertEqual(library.best_matches(tracks, "bohemian rhapsody")[0].stem,
                              "Bohemian Rhapsody")
             self.assertEqual(len(library.best_matches(tracks, "queen")), 2)   # cartella artista
@@ -73,6 +75,9 @@ class FakePlayer:
 
     def next(self):
         self.calls.append(("next",))
+
+    def prev(self):
+        self.calls.append(("prev",))
 
     def set_volume(self, value):
         self.calls.append(("volume", value))
@@ -124,6 +129,97 @@ class ServiceTests(unittest.TestCase):
             service, opened, _ = self.make(folder, enabled=False)
             self.assertIn("spento", service.handle("play", "imagine"))
             self.assertEqual(opened, [])
+
+
+class FakePanel:
+    def __init__(self):
+        self.sent, self.started, self.closed, self.state, self.position = [], [], 0, "playing", 0.0
+        self.on_event = None
+
+    def start(self, hwnd):
+        self.started.append(hwnd)
+
+    def send(self, **command):
+        self.sent.append(command)
+        return True
+
+    def file(self, path):
+        return self.send(cmd="file", path=str(path))
+
+    def youtube(self, video_id):
+        return self.send(cmd="youtube", id=video_id)
+
+    def close(self):
+        self.closed += 1
+
+
+class VideoTests(unittest.TestCase):
+    def make(self, folder, key="", video_id=lambda q, k: "abcDEF12345"):
+        panel, opened = FakePanel(), []
+        service = MusicService(lambda: True, open_url=opened.append, player=FakePlayer(),
+                               data_folder=Path(folder) / "data",
+                               url_for=lambda q, k: (results_url(q), "risultati"),
+                               media_key=lambda a: True, video_id_for=video_id, video_panel=panel)
+        service.video_hwnd = 1234
+        service.api_key = lambda: key
+        return service, panel, opened
+
+    def wait(self, condition):
+        for _ in range(100):
+            if condition():
+                return True
+            time.sleep(0.01)
+        return False
+
+    def test_folder_video_plays_in_panel_then_next_on_end_and_stop_frees_ram(self):
+        with tempfile.TemporaryDirectory() as folder:
+            music = Path(folder) / "m"
+            music.mkdir()
+            for name in ("Concerto 1.mp4", "Concerto 2.mp4"):
+                (music / name).write_bytes(b"x")
+            service, panel, _ = self.make(folder)
+            service.configure(str(music), None)
+            self.assertEqual(service.handle("play", "concerto"), "Metto Concerto 1.")
+            self.assertEqual(panel.started, [1234])
+            self.assertEqual(panel.sent[-1]["cmd"], "file")
+            panel.on_event({"ev": "state", "state": "ended"})
+            self.assertTrue(panel.sent[-1]["path"].endswith("Concerto 2.mp4"))
+            service.set_volume(30)
+            self.assertIn({"cmd": "volume", "value": 30}, panel.sent)
+            self.assertEqual(service.handle("stop"), "Musica fermata.")
+            self.assertEqual(panel.closed, 1)
+            self.assertIsNone(service.snapshot()["mode"])
+
+    def test_prev_restarts_after_three_seconds(self):
+        with tempfile.TemporaryDirectory() as folder:
+            music = Path(folder) / "m"
+            music.mkdir()
+            for name in ("A.mp4", "B.mp4"):
+                (music / name).write_bytes(b"x")
+            service, panel, _ = self.make(folder)
+            service.configure(str(music), None)
+            service.play_tracks(service.tracks(), 0)
+            service.handle("next")
+            panel.position = 10
+            self.assertEqual(service.handle("prev"), "Dall'inizio.")
+            panel.position = 1
+            self.assertEqual(service.handle("prev"), "Metto A.")
+
+    def test_youtube_with_key_plays_in_panel_and_unembeddable_goes_to_browser(self):
+        with tempfile.TemporaryDirectory() as folder:
+            service, panel, opened = self.make(folder, key="KEY")
+            self.assertEqual(service.handle("play", "queen"), "Cerco «queen» su YouTube.")
+            self.assertTrue(self.wait(lambda: panel.sent and panel.sent[-1].get("cmd") == "youtube"))
+            self.assertEqual(panel.sent[-1]["id"], "abcDEF12345")
+            panel.on_event({"ev": "error", "code": 150})
+            self.assertEqual(opened, ["https://www.youtube.com/watch?v=abcDEF12345"])
+
+    def test_without_key_or_panel_youtube_opens_in_browser(self):
+        with tempfile.TemporaryDirectory() as folder:
+            service, panel, opened = self.make(folder, key="")
+            self.assertIn("browser", service.handle("play", "queen"))
+            self.assertTrue(self.wait(lambda: opened))
+            self.assertEqual(panel.started, [])
 
 
 class YoutubeTests(unittest.TestCase):

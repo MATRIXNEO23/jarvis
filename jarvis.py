@@ -305,11 +305,15 @@ def main() -> None:
     music_bar = None
     try:
         from musica.service import MusicService
+        from musica import config as music_config, video as music_video
+        music_panel = (music_video.VideoPanel(music_config.data_folder() / "webview2")
+                       if music_video.available() else None)
         music_service = MusicService(
             lambda: bool(addon_manager and any(
                 item["id"] == "musica" and item["enabled"]
                 for item in addon_manager.list_installed())),
-            notify=lambda text: output_queue.put(("music_status", text)))
+            notify=lambda text: output_queue.put(("music_status", text)),
+            video_panel=music_panel)
         if addon_manager is not None:
             addon_manager.music_service = music_service
         from musica.runtime import register as register_music
@@ -318,7 +322,8 @@ def main() -> None:
             if getattr(engine, "program_apps", None) is not None else None))
         from musica.bar import MusicBar
         music_bar = MusicBar(hud.core_canvas, music_service,
-                             on_message=lambda text: write_line("MUSICA > " + text))
+                             on_message=lambda text: write_line("MUSICA > " + text),
+                             video_host=hud.earth_canvas)
     except (ImportError, OSError, ValueError, tk.TclError, AttributeError) as exc:
         addon_setup_error = (addon_setup_error or "") + " Musica: " + str(exc)[:80]
         music_service = None

@@ -35,6 +35,8 @@ def include(p):
     if parts[0] in {".github", "tests", "tools", "docs", "Download", "upstream-kobold",
                     "koboldcpp-src", "probe-models", "dist", ".agents", "superpowers"}:
         return False
+    if parts[:2] == ("musica", "video_host"):       # sorgente C#: nel pacchetto va solo il compilato
+        return False
     if p.name in {"AGENTS.md", "RECUPERO.md", ".gitignore", "lumi_originale.png"}:
         return False
     if p.suffix.lower() in {".md", ".yml", ".yaml", ".toml"} and p.name != "README.md":
@@ -61,7 +63,7 @@ def git_files():
     return [Path(os.fsdecode(p)) for p in out.split(b"\0") if p]
 
 
-def build(engine_dir, number, out_dir, piper_dir=None):
+def build(engine_dir, number, out_dir, piper_dir=None, video_dir=None):
     label = f"{number:03d}"
     root = f"Lumi-{label}/"
     engine = Path(engine_dir)
@@ -84,6 +86,14 @@ def build(engine_dir, number, out_dir, piper_dir=None):
                 entries["voce_engine/piper/" + path.relative_to(piper_root).as_posix()] = path.read_bytes()
         if "voce_engine/piper/piper.exe" not in entries:
             raise SystemExit("piper.exe missing from --piper-engine")
+    if video_dir:
+        # Riquadro video (WebView2) compilato in CI da musica/video_host.
+        video_root = Path(video_dir)
+        for path in sorted(video_root.rglob("*")):
+            if path.is_file() and path.suffix.lower() not in {".pdb", ".xml"}:
+                entries["musica/video_bin/" + path.relative_to(video_root).as_posix()] = path.read_bytes()
+        if "musica/video_bin/LumiVideo.exe" not in entries:
+            raise SystemExit("LumiVideo.exe missing from --video-host")
     entries[f"LEGGIMI-BUILD-{label}.txt"] = notice(label).encode("utf-8")
     mandatory = {"jarvis.py", "avvia_lumi.bat", "local_model/chat_templates.py",
                  "local_model/native_factory.py"} | OPERATIONAL_GUIDES
@@ -220,10 +230,11 @@ def main(argv=None):
     p.add_argument("--out", default="dist")
     p.add_argument("--model", help="GGUF used for the packaged generation proof")
     p.add_argument("--piper-engine", help="slim Piper folder from tools/fetch_piper_engine.py")
+    p.add_argument("--video-host", help="built LumiVideo output folder (musica/video_host)")
     a = p.parse_args(argv)
     if os.name != "nt":
         raise SystemExit("Windows only.")
-    archive, details = build(a.engine_dir, a.number, a.out, a.piper_engine)
+    archive, details = build(a.engine_dir, a.number, a.out, a.piper_engine, a.video_host)
     report = verify(archive, a.model, Path(__file__).resolve().parents[1])
     details["verification"] = report
     archive.with_suffix(".json").write_text(json.dumps(details, indent=2, ensure_ascii=False),

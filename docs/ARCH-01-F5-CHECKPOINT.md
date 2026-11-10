@@ -227,3 +227,12 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 - Controlli: pausa, riprendi, ferma la musica, prossima, alza/abbassa il volume della musica; con YouTube tasti multimediali di Windows. Barra sotto il nucleo visibile solo con musica attiva.
 - Conflitti evitati: timer e sveglia hanno la precedenza; frasi con film/serie/Netflix/volume/pausa del timer escluse; una frase riconosciuta da Programmi e app resta a Programmi e app.
 - Dati nel profilo: `addon-data/musica/config.json`, chiave in `youtube-key.dpapi` (DPAPI). Test: `tests/test_musica.py`.
+
+## 031 — Musica: indietro, elenco brani, riquadro video al posto del globo (richiesta utente 10/11/2026)
+- Tasto ⏮ e «torna indietro / brano precedente»: oltre 3 s ricomincia, sennò il precedente (MCI `seek to start`; riquadro `restart`; YouTube nel browser: tasto multimediale «precedente»).
+- ☰ nella barra (ora visibile quando l'add-on è attivo): elenco brani con ricerca, doppio clic = parte quel brano poi i successivi.
+- Riquadro video unico per video della cartella e YouTube: `musica/video_host` (C#, WinForms + WebView2 su .NET Framework 4.8, già in Windows 10) compilato in CI → `musica/video_bin/LumiVideo.exe`, finestra figlia (SetParent) di un Frame Tk posto sopra il canvas del globo. Pagina locale `https://lumi.player/` con `<video>` per i file (cartella mappata a `https://lumi.media/`) e YouTube IFrame Player API per YouTube (lettore ufficiale, nessuna estrazione audio). Comandi JSON su stdin, eventi su stdout.
+- YouTube nel riquadro solo con la chiave Data API (serve a trovare l'ID del video); senza chiave resta il browser. Errori 101/150 (incorporamento vietato) o WebView2 assente → browser con avviso.
+- Volume unico (MCI, `<video>`, YouTube `setVolume`). Fine elenco o stop → processo chiuso (RAM liberata), torna il globo.
+- Alternative scartate: pywebview/pythonnet (dipendenze Python da installare), controllo IE (YouTube non lo supporta), estrazione audio da YouTube (vietata dalle regole).
+- Prove CI: compilazione dell'host, avvio reale di WebView2 dentro una finestra Tk con comandi e file WAV (`tools/video_host_smoke.py`), test del servizio. Da provare sul Pavilion: resa, RAM, YouTube reale.
