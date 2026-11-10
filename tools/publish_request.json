@@ -1,10 +1,10 @@
 {
-  "run_id": 42843310028,
-  "artifact": "lumi-030-prova-candidate",
-  "file": "Lumi-030-PROVA.zip",
-  "bytes": 27204072,
-  "sha256": "663fff0d8a5cdc7b419e64635add0a1ee4d650c2e18783202ef567f06c6380b1",
-  "source_commit": "10e4bd1",
-  "title": "Build 030 PROVA — add-on Musica",
-  "description": "Come la 029, più l'add-on Musica (installato spento: attivalo in Impostazioni > Gestisci add-on > Musica, poi Configura per scegliere la cartella). «Lumi, metti …» cerca il brano nella cartella musica e lo suona dentro Lumi; se non c'è apre la ricerca su YouTube nel browser (con la chiave API YouTube facoltativa apre subito il primo video). Pausa, riprendi, prossima, ferma la musica, volume, anche a voce; barra sotto il nucleo. Con l'add-on spento Lumi resta com'era. Verificati in CI Windows: 1217 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42878790559,
+  "artifact": "lumi-031-prova-candidate",
+  "file": "Lumi-031-PROVA.zip",
+  "bytes": 27576535,
+  "sha256": "20095889fd8a955872706fba7ceaf741223e3cd408faa48ef6c5e7cbac49247d",
+  "source_commit": "f104659",
+  "title": "Build 031 PROVA — Musica: indietro, elenco brani, video al posto del globo",
+  "description": "Come la 030, più: tasto ⏮ e «torna indietro» (oltre 3 secondi ricomincia il brano), pulsante ☰ con l'elenco dei brani della cartella (ricerca e doppio clic), comandi play, pausa, stop, avanti, indietro nella guida. Video della cartella (MP4, WebM, M4V, MOV) e YouTube con la chiave API nello stesso riquadro al posto del globo (Microsoft Edge WebView2, già presente in Windows aggiornato); un solo volume per tutto. Finito il video il riquadro si chiude e libera la RAM. Video non incorporabile o WebView2 assente: si apre il browser. Verificati in CI Windows: 1221 test, riquadro reale dentro una finestra Tk con un file in riproduzione, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare (YouTube reale, RAM)."
 }
