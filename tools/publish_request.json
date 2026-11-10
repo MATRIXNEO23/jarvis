@@ -1,10 +1,10 @@
 {
-  "run_id": 42878790559,
-  "artifact": "lumi-031-prova-candidate",
-  "file": "Lumi-031-PROVA.zip",
-  "bytes": 27576535,
-  "sha256": "20095889fd8a955872706fba7ceaf741223e3cd408faa48ef6c5e7cbac49247d",
-  "source_commit": "f104659",
-  "title": "Build 031 PROVA — Musica: indietro, elenco brani, video al posto del globo",
-  "description": "Come la 030, più: tasto ⏮ e «torna indietro» (oltre 3 secondi ricomincia il brano), pulsante ☰ con l'elenco dei brani della cartella (ricerca e doppio clic), comandi play, pausa, stop, avanti, indietro nella guida. Video della cartella (MP4, WebM, M4V, MOV) e YouTube con la chiave API nello stesso riquadro al posto del globo (Microsoft Edge WebView2, già presente in Windows aggiornato); un solo volume per tutto. Finito il video il riquadro si chiude e libera la RAM. Video non incorporabile o WebView2 assente: si apre il browser. Verificati in CI Windows: 1221 test, riquadro reale dentro una finestra Tk con un file in riproduzione, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare (YouTube reale, RAM)."
+  "run_id": 42896984473,
+  "artifact": "lumi-032-prova-candidate",
+  "file": "Lumi-032-PROVA.zip",
+  "bytes": 27580158,
+  "sha256": "bb1021dce1c141c5fd27d3a065b8459b94b599a3d70cd6a103ce4df7f2888780",
+  "source_commit": "2e3db74",
+  "title": "Build 032 PROVA — Musica: barra sotto il video, riduci video, più cartelle",
+  "description": "Come la 031, più: barra musica sotto il video su due righe (⏮ ⏸ ⏹ ⏭ e volume; ☰ e titolo), visibile solo con la musica attiva. Tasto «▁ riduci»: resta solo la musica con la barra (YouTube in un riquadrino 200×200, minimo richiesto dal lettore), «▣ video» lo riporta. Video offline corretti: ora partono nel riquadro. Più cartelle musica (Aggiungi/Rimuovi in Configura, la cartella già scelta viene ripresa) e elenco ☰ navigabile per cartelle e sottocartelle, con «▶ Suona cartella». Verificati in CI Windows: 1225 test, riquadro reale dentro una finestra Tk con un file in riproduzione, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare."
 }
