@@ -1,3 +1,11 @@
+## Build 027 PROVA — Telegram: messaggi ricevuti elaborati di nuovo
+
+[Scarica Lumi-027-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-027-PROVA.zip)
+
+Come la 026, più: i messaggi Telegram che arrivavano a Lumi ma non venivano elaborati (diagnostica: «nuovo messaggio osservato» ma 0 messaggi autorizzati) ora vengono recuperati direttamente da Telegram dopo 2 secondi e ricevono risposta una sola volta. Gli errori interni del gestore messaggi ora compaiono in Lumi invece di sparire. Nient'altro cambiato. Verificati in CI Windows: 1205 test, ascolto Telegram simulato, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42801282254). SHA-256: `e61e00dcba3fdb78152eebcc7e6cdedad2f30ab463f4efc81037cb23e7d498cf`.
+
 ## Build 026 PROVA — fast forwarding, carattere di Lumi, lunghezza delle risposte
 
 [Scarica Lumi-026-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-026-PROVA.zip)
