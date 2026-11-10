@@ -27,7 +27,7 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     request = parse_command(spoken)
     if request is None:
         return False
-    if request[0] != "play" and current.snapshot().get("mode") is None:
+    if request[0] not in ("play", "queue", "playlist") and current.snapshot().get("mode") is None:
         # Niente in riproduzione: «stop», «avanti», «pausa»… non vengono
         # catturati dalla musica e restano agli altri comandi o al modello.
         return False
@@ -42,7 +42,7 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     message = current.handle(*request)
     if message:
         write_line("MUSICA > " + message)
-        if request[0] == "play" and current.mode == "browser":
+        if request[0] in ("play", "playlist") and current.mode == "browser":
             speak(message)
     return True
 

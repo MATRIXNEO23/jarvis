@@ -9,6 +9,12 @@ _PLAY = re.compile(
     r"voglio\s+ascoltare|ascoltiamo)\s+"
     r"(?:(?:la\s+canzone|il\s+brano|la\s+musica\s+di|musica\s+di|un\s+po'\s+di|"
     r"qualcosa\s+di|il\s+pezzo)\s+)?(?P<query>.+?)[\s.!?]*$", re.IGNORECASE)
+_QUEUE = re.compile(
+    r"^(?:(?:metti|aggiungi)\s+(?:in|alla)\s+coda|accoda)\s+(?P<query>.+?)[\s.!?]*$"
+    r"|^aggiungi\s+(?P<query2>.+?)\s+(?:in|alla)\s+coda[\s.!?]*$", re.IGNORECASE)
+_PLAYLIST = re.compile(
+    r"^(?:metti|suona|riproduci|fammi\s+sentire|ascoltiamo)\s+(?:la\s+)?playlist\s+"
+    r"(?P<query>.+?)[\s.!?]*$", re.IGNORECASE)
 # «metti un timer», «metti la sveglia», «metti in pausa»… non sono musica.
 _NOT_MUSIC = re.compile(
     r"^(?:un\s+|il\s+|la\s+|una\s+|lo\s+|l')?(?:timer|sveglia|promemoria|allarme|volume|"
@@ -29,7 +35,7 @@ _SIMPLE = (
 
 
 def parse_command(text: str):
-    """("play", query) | (azione, "") | None se non è un comando musica."""
+    """("play"|"queue"|"playlist", testo) | (azione, "") | None se non è musica."""
     if not isinstance(text, str):
         return None
     value = _WAKE.sub("", text.strip()).strip()
@@ -39,6 +45,14 @@ def parse_command(text: str):
     for action, pattern in _SIMPLE:
         if re.fullmatch(pattern + r"[\s.!?]*", value, re.IGNORECASE):
             return action, ""
+    match = _QUEUE.match(value)
+    if match:
+        query = (match.group("query") or match.group("query2") or "").strip(" \"'«»")
+        return ("queue", query) if query and len(query) <= 120 else None
+    match = _PLAYLIST.match(value)
+    if match:
+        query = match.group("query").strip(" \"'«»")
+        return ("playlist", query) if query and len(query) <= 60 else None
     match = _PLAY.match(value)
     if match:
         query = match.group("query").strip(" \"'«»")

@@ -70,6 +70,36 @@ def save(values: dict, folder: Path | None = None) -> None:
     os.replace(tmp, base / "config.json")
 
 
+MAX_PLAYLISTS = 200
+MAX_PLAYLIST_TRACKS = 5000
+
+
+def load_playlists(folder: Path | None = None) -> dict[str, list[str]]:
+    """addon-data/musica/playlists.json: {nome: [percorsi]} (solo questo PC)."""
+    path = Path(folder or data_folder()) / "playlists.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    result = {}
+    if isinstance(data, dict):
+        for name, tracks in list(data.items())[:MAX_PLAYLISTS]:
+            if isinstance(name, str) and 0 < len(name.strip()) <= 60 and isinstance(tracks, list):
+                result[name.strip()] = [t for t in tracks if isinstance(t, str) and len(t) <= 600
+                                        ][:MAX_PLAYLIST_TRACKS]
+    return result
+
+
+def save_playlists(playlists: dict, folder: Path | None = None) -> None:
+    base = Path(folder or data_folder())
+    base.mkdir(parents=True, exist_ok=True)
+    clean = {str(k).strip()[:60]: [str(t) for t in v][:MAX_PLAYLIST_TRACKS]
+             for k, v in list(playlists.items())[:MAX_PLAYLISTS] if str(k).strip()}
+    tmp = base / "playlists.json.tmp"
+    tmp.write_text(json.dumps(clean, ensure_ascii=False, indent=1), encoding="utf-8")
+    os.replace(tmp, base / "playlists.json")
+
+
 def load_api_key(folder: Path | None = None, protect=_protect) -> str:
     path = Path(folder or data_folder()) / "youtube-key.dpapi"
     try:

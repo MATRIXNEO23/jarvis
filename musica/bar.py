@@ -35,11 +35,16 @@ class TrackList:
         self.tree.bind("<Double-Button-1>", self.play_selected)
         self.tree.bind("<Return>", self.play_selected)
         self.tree.bind("<<TreeviewOpen>>", self._open_node)
+        actions = ttk.Frame(frame)
+        actions.pack(fill="x", pady=(6, 0))
+        ttk.Button(actions, text="▶ Suona", command=self.play_folder).pack(side="left")
+        ttk.Button(actions, text="+ Coda", command=self.add_to_queue).pack(side="left", padx=4)
+        ttk.Button(actions, text="+ Playlist...", command=self.add_to_playlist).pack(side="left")
+        ttk.Button(actions, text="Togli", command=self.remove_selected).pack(side="right")
         bottom = ttk.Frame(frame)
-        bottom.pack(fill="x", pady=(6, 0))
-        ttk.Button(bottom, text="▶ Suona cartella", command=self.play_folder).pack(side="right")
+        bottom.pack(fill="x", pady=(4, 0))
         self.status = tk.StringVar()
-        ttk.Label(bottom, textvariable=self.status, wraplength=320).pack(side="left", anchor="w")
+        ttk.Label(bottom, textvariable=self.status, wraplength=440).pack(side="left", anchor="w")
         self.nodes = {}       # id albero -> ("dir", chiave cartella) | ("track", Path)
         self.dirs = {}        # chiave cartella -> {"subdirs": [...], "tracks": [...]}
         self.fill()
@@ -58,12 +63,90 @@ class TrackList:
     def _open_node(self, _event=None):
         node = self.tree.focus()
         kind, key = self.nodes.get(node, (None, None))
-        if kind != "dir":
+        if kind not in ("dir", "playlist"):
             return
         children = self.tree.get_children(node)
         if len(children) == 1 and children[0] not in self.nodes:
             self.tree.delete(children[0])
-            self._fill_dir(node, key)
+            if kind == "dir":
+                self._fill_dir(node, key)
+            else:
+                for track in self.service.playlist_tracks(key):
+                    mark = "▶ " if library.is_video(track) else "♪ "
+                    item = self.tree.insert(node, "end", text=mark + track.stem)
+                    self.nodes[item] = ("track", track)
+
+    def _selected_tracks(self):
+        """Brani del nodo scelto: un brano, o tutta la cartella/playlist."""
+        node = self.tree.focus()
+        kind, value = self.nodes.get(node, (None, None))
+        if kind == "track":
+            return [value]
+        if kind == "dir":
+            return self._tracks_under(value)
+        if kind == "playlist":
+            return [t for t in self.service.playlist_tracks(value) if t.exists()]
+        return []
+
+    def _say(self, message):
+        if message:
+            self.status.set(message)
+            self.on_message(message)
+
+    def add_to_queue(self):
+        tracks = self._selected_tracks()
+        if not tracks:
+            self.status.set("Scegli un brano, una cartella o una playlist.")
+            return
+        self._say(self.service.enqueue(tracks))
+
+    def add_to_playlist(self):
+        tracks = self._selected_tracks()
+        if not tracks:
+            self.status.set("Scegli un brano, una cartella o una playlist.")
+            return
+        names = sorted(self.service.playlists(), key=str.lower)
+        dialog = tk.Toplevel(self.window)
+        dialog.title("Aggiungi a playlist")
+        dialog.transient(self.window)
+        body = ttk.Frame(dialog, padding=10)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text=f"{len(tracks)} brani. Playlist (scegli o scrivi un nome nuovo):"
+                  ).pack(anchor="w")
+        name = tk.StringVar(value=names[0] if names else "")
+        box = ttk.Combobox(body, textvariable=name, values=names, width=36)
+        box.pack(fill="x", pady=6)
+        box.focus_set()
+
+        def confirm(_event=None):
+            try:
+                message = self.service.add_to_playlist(name.get(), tracks)
+            except OSError as exc:
+                message = "Playlist non salvata: " + str(exc)[:80]
+            dialog.destroy()
+            self.status.set(message)
+            self.fill()
+        box.bind("<Return>", confirm)
+        ttk.Button(body, text="Aggiungi", command=confirm).pack(side="left")
+        ttk.Button(body, text="Annulla", command=dialog.destroy).pack(side="right")
+
+    def remove_selected(self):
+        """Toglie un brano dalla playlist, o elimina la playlist (i file restano)."""
+        from tkinter import messagebox
+        node = self.tree.focus()
+        kind, value = self.nodes.get(node, (None, None))
+        parent_kind, parent_value = self.nodes.get(self.tree.parent(node), (None, None))
+        if kind == "track" and parent_kind == "playlist":
+            self.status.set(self.service.remove_from_playlist(parent_value, [value]))
+            self.tree.delete(node)
+        elif kind == "playlist":
+            if messagebox.askyesno("Elimina playlist", f"Eliminare la playlist «{value}»?\n"
+                                   "I file musicali restano dove sono.", parent=self.window):
+                self.status.set(self.service.remove_from_playlist(value))
+                self.fill()
+        else:
+            self.status.set("«Togli» vale per i brani di una playlist o per una playlist. "
+                            "Le cartelle si tolgono in Configura.")
 
     def _fill_dir(self, node, key):
         import os
@@ -95,6 +178,14 @@ class TrackList:
             self.status.set(f"{len(found)} di {total} brani. Doppio clic per ascoltare.")
             return
         roots = self._build_dirs(tracks)
+        lists = self.service.playlists()
+        if lists:
+            top = self.tree.insert("", "end", text="★ Playlist", open=False)
+            self.nodes[top] = ("lists", None)
+            for name in sorted(lists, key=str.lower):
+                node = self.tree.insert(top, "end", text="♫ " + name)
+                self.nodes[node] = ("playlist", name)
+                self.tree.insert(node, "end", text="…")
         for root in roots:
             node = self._insert_dir("", root, root)
             if len(roots) == 1:
@@ -119,17 +210,15 @@ class TrackList:
 
     def play_folder(self):
         node = self.tree.focus()
-        kind, value = self.nodes.get(node, (None, None))
+        kind, _value = self.nodes.get(node, (None, None))
         if kind == "track":
-            node = self.tree.parent(node)
-            kind, value = self.nodes.get(node, (None, None))
-        if kind != "dir":
-            self.status.set("Scegli prima una cartella.")
+            self.play_selected()
             return
-        tracks = self._tracks_under(value)
-        message = self.service.play_tracks(tracks, 0) if tracks else "Cartella vuota."
-        if message:
-            self.on_message(message)
+        tracks = self._selected_tracks()
+        if not tracks:
+            self.status.set("Scegli un brano, una cartella o una playlist.")
+            return
+        self._say(self.service.play_tracks(tracks, 0))
 
 
 class MusicBar:

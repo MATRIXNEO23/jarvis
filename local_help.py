@@ -53,8 +53,12 @@ def help_sections(engine):
             'play / riprendi\npausa / metti in pausa\nstop / ferma la musica\n'
             'avanti / prossima / brano successivo\nindietro / torna indietro / brano precedente\n'
             'alza il volume della musica\nabbassa il volume della musica\n\n'
+            'Coda e playlist:\n'
+            'aggiungi in coda Imagine / metti in coda Imagine\nmetti la playlist Viaggio\n\n'
             'Indietro: oltre 3 secondi ricomincia il brano, altrimenti va al precedente. '
-            'Il pulsante ☰ della barra apre l’elenco dei brani (doppio clic per ascoltare).\n\n'
+            'Il pulsante ☰ della barra apre l’elenco dei brani per cartelle e playlist: doppio clic per '
+            'ascoltare, «+ Coda», «+ Playlist...» per crearne o riempirne una, «Togli» per i brani di una '
+            'playlist. Con YouTube (chiave API) finito un video parte il risultato successivo.\n\n'
             'Richiede l’add-on Musica attivo. Cerca prima nelle cartelle musica scelte in '
             'Gestisci add-on > Musica > Configura; se il brano non c’è apre la ricerca su YouTube '
             'nel browser (con la chiave API facoltativa apre subito il primo video).',

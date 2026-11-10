@@ -18,7 +18,7 @@ from .player import MusicPlayer
 class MusicService:
     def __init__(self, is_enabled, *, notify=None, open_url=webbrowser.open,
                  player=None, data_folder=None, url_for=youtube.url_for,
-                 media_key=youtube.send_media_key, video_id_for=youtube.first_video_id,
+                 media_key=youtube.send_media_key, video_id_for=youtube.video_list,
                  video_panel=None, open_file=None):
         self.is_enabled = is_enabled
         self.notify = notify or (lambda text: None)
@@ -91,6 +91,10 @@ class MusicService:
             return "L'add-on Musica è spento: attivalo in Impostazioni > Gestisci add-on."
         if action == "play":
             return self.play(query)
+        if action == "queue":
+            return self.queue_query(query)
+        if action == "playlist":
+            return self.play_playlist(query)
         if self.mode == "browser":
             if action in ("pause", "resume", "next", "prev", "stop", "volume_up", "volume_down"):
                 self.media_key("toggle" if action in ("pause", "resume") else action)
@@ -251,6 +255,81 @@ class MusicService:
         self.player.play([t for t in tracks if not library.is_video(t)])
         return "Metto " + tracks[0].stem + "."
 
+    # --- coda e playlist (solo brani della cartella) -------------------------
+    def enqueue(self, tracks) -> str:
+        """Aggiunge in coda senza fermare quello che suona; se non suona nulla parte."""
+        if not self.is_enabled():
+            return "L'add-on Musica è spento."
+        tracks = [Path(t) for t in tracks]
+        if not tracks:
+            return ""
+        if self.mode == "video" and self.current_video_kind() == "file":
+            videos = [t for t in tracks if library.is_panel_video(t)]
+            self.video_items.extend(("file", t, t.stem) for t in videos)
+            skipped = len(tracks) - len(videos)
+            return (f"Aggiunti {len(videos)} video in coda." if videos else
+                    "In coda al video vanno solo video.") + (
+                    f" ({skipped} brani audio esclusi.)" if videos and skipped else "")
+        if self.mode == "local" and self.player.state != "stopped":
+            audio = [t for t in tracks if not library.is_video(t)]
+            if not audio:
+                return "In coda alla musica vanno solo brani audio."
+            self.player.add(audio)
+            return ("Aggiunto in coda: " + audio[0].stem + "." if len(audio) == 1
+                    else f"Aggiunti {len(audio)} brani in coda.")
+        return self.play_tracks(tracks)
+
+    def queue_query(self, query: str) -> str:
+        matches = library.best_matches(self.tracks(), query) or \
+            library.best_matches(self.tracks(refresh=True), query)
+        if not matches:
+            return "Non trovo «" + query + "» nelle cartelle musica."
+        return self.enqueue(matches[:1])
+
+    def playlists(self) -> dict:
+        return config.load_playlists(self.data_folder)
+
+    def add_to_playlist(self, name: str, tracks) -> str:
+        name = " ".join(str(name or "").split())[:60]
+        if not name:
+            return "Nome playlist vuoto."
+        data = self.playlists()
+        current = data.setdefault(name, [])
+        added = [str(t) for t in tracks if str(t) not in current]
+        current.extend(added)
+        config.save_playlists(data, self.data_folder)
+        return f"Playlist «{name}»: {len(added)} aggiunti, {len(current)} in totale."
+
+    def remove_from_playlist(self, name: str, tracks=None) -> str:
+        """tracks None: elimina la playlist (i file restano dove sono)."""
+        data = self.playlists()
+        if name not in data:
+            return ""
+        if tracks is None:
+            del data[name]
+            message = f"Playlist «{name}» eliminata (i file restano)."
+        else:
+            drop = {str(t) for t in tracks}
+            data[name] = [t for t in data[name] if t not in drop]
+            message = f"Tolti dalla playlist «{name}»."
+        config.save_playlists(data, self.data_folder)
+        return message
+
+    def playlist_tracks(self, name: str) -> list[Path]:
+        return [Path(t) for t in self.playlists().get(name, [])]
+
+    def play_playlist(self, query: str) -> str:
+        data = self.playlists()
+        wanted = library.normalized(query)
+        name = next((n for n in data if library.normalized(n) == wanted), None) or \
+            next((n for n in data if wanted and wanted in library.normalized(n)), None)
+        if name is None:
+            return "Non trovo la playlist «" + query + "»."
+        tracks = [t for t in self.playlist_tracks(name) if t.exists()]
+        if not tracks:
+            return f"La playlist «{name}» è vuota o i file non ci sono più."
+        return self.play_tracks(tracks)
+
     def play(self, query: str) -> str:
         matches = library.best_matches(self.tracks(), query)
         if not matches and self.folders():
@@ -270,14 +349,17 @@ class MusicService:
 
         def find_and_play():
             try:
-                video_id = self.video_id_for(query, key)
+                found = self.video_id_for(query, key)
             except Exception:
                 self.mode = None
                 self._youtube_in_browser(query, "")
                 self.notify("Ricerca YouTube non riuscita: apro i risultati nel browser.")
                 return
+            if isinstance(found, str):
+                found = [(found, query)]
             self.video.start(self.video_hwnd)
-            self.video_items = [("youtube", video_id, query)]
+            # Più risultati in coda: finito un video parte il successivo.
+            self.video_items = [("youtube", vid, title or query) for vid, title in found]
             self.video_index = -1
             self._video_step(+1)
         threading.Thread(target=find_and_play, daemon=True, name="lumi-youtube").start()

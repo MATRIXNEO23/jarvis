@@ -37,6 +37,10 @@ class MusicPlayer:
     def play(self, tracks, start: int = 0):
         self._send("play", list(tracks), start)
 
+    def add(self, tracks):
+        """Aggiunge brani in fondo alla coda senza interrompere quello in corso."""
+        self._send("add", list(tracks))
+
     def pause(self):
         self._send("pause")
 
@@ -112,6 +116,9 @@ class MusicPlayer:
         if name == "play":
             self.playlist, self.index = command[1], max(0, command[2])
             self._start_track()
+        elif name == "add":
+            self.playlist = list(self.playlist) + list(command[1])
+            self._emit()
         elif name == "pause" and self.state == "playing":
             self._mci(f"pause {self.ALIAS}")
             self.state = "paused"

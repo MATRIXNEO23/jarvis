@@ -252,3 +252,5 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 ## 033 — Elenco brani: apertura cartelle (riscontro utente 10/11 23:27, foto)
 - Le cartelle radice nell'elenco ☰ non si aprivano: la cartella salvata come «C:/Users/...» non coincideva con i percorsi dei brani «C:\Users\...». Ora la radice è normalizzata come i brani (test con barra finale e «.»).
 - YouTube «riduci» resta un riquadrino 200×200: nasconderlo del tutto viola le regole del lettore YouTube incorporato (rischio blocco della chiave). I video locali si nascondono del tutto.
+- Coda e playlist locali: `player.add` (accoda senza interrompere), comandi «aggiungi/metti in coda …», «metti la playlist …»; playlist in `addon-data/musica/playlists.json` (eliminare una playlist non tocca i file); ☰ con ★ Playlist, «+ Coda», «+ Playlist...», «Togli».
+- YouTube continua: `youtube.video_list` (una ricerca, maxResults 10, videoEmbeddable, stessi 100 punti) mette in coda i risultati; a fine video parte il successivo invece di chiudere.

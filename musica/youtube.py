@@ -4,6 +4,7 @@ quota gratuita ~10.000 punti al giorno). L'audio NON viene preso da YouTube:
 riproduzione sempre nel lettore di YouTube (regole del servizio)."""
 from __future__ import annotations
 
+import html
 import json
 import re
 import urllib.parse
@@ -31,6 +32,28 @@ def first_video_url(query: str, api_key: str, opener=urllib.request.urlopen, tim
     if not isinstance(video, str) or not _VIDEO_ID.fullmatch(video):
         raise ValueError("Nessun video trovato.")
     return "https://www.youtube.com/watch?v=" + video
+
+
+def video_list(query: str, api_key: str, opener=urllib.request.urlopen, timeout=8,
+               limit: int = 10) -> list[tuple[str, str]]:
+    """[(id, titolo)] dei primi video: una sola ricerca (100 punti, come per uno solo),
+    così finito un video ne parte un altro invece di chiudere il riquadro."""
+    params = urllib.parse.urlencode({"part": "snippet", "type": "video", "maxResults": limit,
+                                     "q": query, "key": api_key, "safeSearch": "none",
+                                     "videoEmbeddable": "true"})
+    with opener("https://www.googleapis.com/youtube/v3/search?" + params, timeout=timeout) as response:
+        data = json.loads(response.read(400_000).decode("utf-8"))
+    result, seen = [], set()
+    for item in data.get("items") or []:
+        video = (item.get("id") or {}).get("videoId")
+        if not isinstance(video, str) or not _VIDEO_ID.fullmatch(video) or video in seen:
+            continue
+        seen.add(video)
+        title = html.unescape(str((item.get("snippet") or {}).get("title") or ""))[:120]
+        result.append((video, title or query))
+    if not result:
+        raise ValueError("Nessun video trovato.")
+    return result
 
 
 def url_for(query: str, api_key: str = "", opener=urllib.request.urlopen) -> tuple[str, str]:

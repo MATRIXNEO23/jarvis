@@ -391,3 +391,73 @@ class MultiFolderTests(unittest.TestCase):
             self.assertEqual(dirs[str(a / "Rock")]["subdirs"], [str(a / "Rock" / "Live")])
             self.assertEqual([t.stem for t in library.tracks_under(dirs, str(a / "Rock"))],
                              ["Two", "One"])
+
+
+class QueueAndPlaylistTests(unittest.TestCase):
+    def test_voice_commands_for_queue_and_playlist(self):
+        self.assertEqual(parse_command("Lumi, aggiungi in coda Imagine"), ("queue", "Imagine"))
+        self.assertEqual(parse_command("metti in coda bohemian rhapsody"), ("queue", "bohemian rhapsody"))
+        self.assertEqual(parse_command("aggiungi Imagine alla coda"), ("queue", "Imagine"))
+        self.assertEqual(parse_command("metti la playlist Viaggio"), ("playlist", "Viaggio"))
+        self.assertEqual(parse_command("metti Imagine"), ("play", "Imagine"))
+        self.assertEqual(parse_command("metti in pausa"), ("pause", ""))
+
+    def test_queue_adds_without_stopping_and_playlists_persist(self):
+        with tempfile.TemporaryDirectory() as folder:
+            music = Path(folder) / "m"
+            music.mkdir()
+            for name in ("Imagine.mp3", "Yesterday.mp3", "Clip.mp4"):
+                (music / name).write_bytes(b"x")
+            service, _o, _k = ServiceTests.make(ServiceTests(), folder)
+            added = []
+            service.player.add = lambda tracks: added.extend(t.name for t in tracks)
+            service.configure(str(music), None)
+            # Niente in riproduzione: «in coda» fa partire il brano.
+            self.assertEqual(service.handle("queue", "imagine"), "Metto Imagine.")
+            self.assertEqual(service.handle("queue", "yesterday"), "Aggiunto in coda: Yesterday.")
+            self.assertEqual(added, ["Yesterday.mp3"])
+            self.assertIn("solo brani audio", service.enqueue([music / "Clip.mp4"]))
+            self.assertIn("Non trovo", service.handle("queue", "zzz"))
+            # Playlist: salvata nel profilo, si suona per nome, eliminarla non tocca i file.
+            self.assertIn("2 aggiunti", service.add_to_playlist("Viaggio", [music / "Imagine.mp3",
+                                                                           music / "Yesterday.mp3"]))
+            self.assertIn("0 aggiunti", service.add_to_playlist("Viaggio", [music / "Imagine.mp3"]))
+            self.assertEqual(config.load_playlists(Path(folder) / "data")["Viaggio"],
+                             [str(music / "Imagine.mp3"), str(music / "Yesterday.mp3")])
+            self.assertEqual(service.handle("playlist", "viaggio"), "Metto Imagine.")
+            service.remove_from_playlist("Viaggio", [music / "Imagine.mp3"])
+            self.assertEqual([t.name for t in service.playlist_tracks("Viaggio")], ["Yesterday.mp3"])
+            self.assertIn("eliminata", service.remove_from_playlist("Viaggio"))
+            self.assertTrue((music / "Yesterday.mp3").exists())
+            self.assertIn("Non trovo la playlist", service.handle("playlist", "viaggio"))
+
+
+class YouTubeContinueTests(unittest.TestCase):
+    def test_youtube_queues_more_results_and_goes_on_after_end(self):
+        found = [("abcDEF12345", "Thunderstruck"), ("ghiJKL67890", "Back in Black")]
+        with tempfile.TemporaryDirectory() as folder:
+            v = VideoTests()
+            service, panel, _ = v.make(folder, key="KEY", video_id=lambda q, k: found)
+            service.handle("play", "acdc")
+            self.assertTrue(v.wait(lambda: service.video_index == 0))
+            self.assertEqual(service.snapshot()["title"], "Thunderstruck")
+            service._video_event({"ev": "state", "state": "ended"})
+            self.assertEqual(service.snapshot()["title"], "Back in Black")
+            self.assertEqual(service.snapshot()["mode"], "video")
+
+    def test_video_list_parses_titles(self):
+        import io
+        from musica.youtube import video_list
+        body = json.dumps({"items": [
+            {"id": {"videoId": "abcDEF12345"}, "snippet": {"title": "AC/DC &amp; Co"}},
+            {"id": {"videoId": "abcDEF12345"}, "snippet": {"title": "doppione"}},
+            {"id": {"videoId": "bad id!"}}]}).encode()
+
+        class Resp(io.BytesIO):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+        self.assertEqual(video_list("acdc", "K", opener=lambda url, timeout: Resp(body)),
+                         [("abcDEF12345", "AC/DC & Co")])
