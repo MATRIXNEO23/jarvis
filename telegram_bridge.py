@@ -8,6 +8,7 @@ no general Second Brain and no contacts other than the authorized peer.
 from __future__ import annotations
 
 import asyncio
+from types import SimpleNamespace
 import json
 import os
 import re
@@ -294,25 +295,9 @@ class TelegramBridge:
             # notes or bypass the outgoing rate limit.
             processing_lock=asyncio.Lock()
 
-            @client.on(events.Raw)
-            async def observe_update(update):
-                if self._enabled.is_set():
-                    self._observe("update")
-                    if type(update).__name__ in ("UpdateNewMessage", "UpdateShortMessage",
-                            "UpdateNewChannelMessage", "UpdateShortChatMessage"):
-                        self._observe("message_update")
+            handled_ids=set()
 
-            @client.on(events.NewMessage(incoming=True))
-            async def receive(event):
-                if not self._enabled.is_set():
-                    return
-                if not accepted_private_message(
-                        event.sender_id,bool(event.is_private),
-                        bool(event.out),peers):
-                    self._observe("filtered_outgoing" if event.out else
-                                  "filtered_non_private" if not event.is_private else
-                                  "filtered_contact")
-                    return
+            async def process(event):
                 try:
                     async with processing_lock:
                         if self._enabled.is_set():
@@ -322,10 +307,82 @@ class TelegramBridge:
                     self._diagnostics.failed()
                     self.notify(("telegram_status",
                                  "Telegram: "+str(exc)[:160]))
-                except Exception:
+                except Exception as exc:
                     self._diagnostics.failed()
                     self.notify(("telegram_status",
-                                 "Telegram: errore di elaborazione."))
+                                 "Telegram: errore di elaborazione ("+type(exc).__name__+")."))
+
+            async def raw_fallback(user_id,message_id):
+                """Rete di sicurezza (026): sul PC dell'utente gli aggiornamenti
+                di nuovo messaggio arrivavano ma il gestore NewMessage non
+                veniva mai chiamato. Se entro 2 s il gestore non ha preso il
+                messaggio, lo si legge per ID e si elabora uguale; i doppioni
+                sono comunque esclusi dall'archivio (telegram_event)."""
+                await asyncio.sleep(2.0)
+                if message_id in handled_ids or not self._enabled.is_set():
+                    return
+                try:
+                    message=await client.get_messages(user_id,ids=message_id)
+                except Exception as exc:
+                    self._observe("handler_error")
+                    self.notify(("telegram_status","Telegram: lettura messaggio non riuscita ("
+                                 +type(exc).__name__+")."))
+                    return
+                if message is None or getattr(message,"out",True):
+                    return
+                handled_ids.add(message_id)
+                self._observe("raw_fallback")
+                await process(SimpleNamespace(sender_id=user_id,message=message))
+
+            @client.on(events.Raw)
+            async def observe_update(update):
+                if self._enabled.is_set():
+                    self._observe("update")
+                    kind=type(update).__name__
+                    if kind in ("UpdateNewMessage", "UpdateShortMessage",
+                            "UpdateNewChannelMessage", "UpdateShortChatMessage"):
+                        self._observe("message_update")
+                    try:
+                        user_id=message_id=None
+                        if kind=="UpdateShortMessage" and not getattr(update,"out",True):
+                            user_id,message_id=getattr(update,"user_id",None),getattr(update,"id",None)
+                        elif kind=="UpdateNewMessage":
+                            message=getattr(update,"message",None)
+                            peer=getattr(message,"peer_id",None)
+                            if (message is not None and not getattr(message,"out",True)
+                                    and type(peer).__name__=="PeerUser"):
+                                user_id,message_id=getattr(peer,"user_id",None),getattr(message,"id",None)
+                        if (type(user_id) is int and type(message_id) is int
+                                and user_id in peers and message_id not in handled_ids):
+                            asyncio.create_task(raw_fallback(user_id,message_id))
+                    except Exception:
+                        self._observe("handler_error")
+
+            @client.on(events.NewMessage(incoming=True))
+            async def receive(event):
+                if not self._enabled.is_set():
+                    return
+                self._observe("handler_called")
+                try:
+                    handled_ids.add(event.message.id)
+                except Exception:
+                    pass
+                try:
+                    accepted=accepted_private_message(
+                        event.sender_id,bool(event.is_private),
+                        bool(event.out),peers)
+                except Exception as exc:
+                    # Telethon swallows handler errors silently: make them visible.
+                    self._observe("handler_error")
+                    self.notify(("telegram_status","Telegram: messaggio non leggibile ("
+                                 +type(exc).__name__+")."))
+                    return
+                if not accepted:
+                    self._observe("filtered_outgoing" if event.out else
+                                  "filtered_non_private" if not event.is_private else
+                                  "filtered_contact")
+                    return
+                await process(event)
 
             self._observe("listening")
             # Telethon already owns reconnect/retry. A resolved disconnected
