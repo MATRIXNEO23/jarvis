@@ -65,6 +65,18 @@ class LipSyncTests(unittest.TestCase):
         self.assertIsNone(sync.level(sync._start - 0.3))
         self.assertEqual(sync.level(sync._start + 0.05), 0.9)
 
+    def test_mouth_follows_real_playback_position(self):
+        sync = LipSync(fps=10)
+        sync.push([0.1, 0.5, 0.9], grace=0.8)
+        start = sync._start
+        self.assertIsNone(sync.level(start + 0.3))        # file non ancora aperto
+        sync.update_position(0.15)                        # suono partito
+        at = sync._position[1]
+        self.assertEqual(sync.level(at), 0.5)
+        self.assertEqual(sync.level(at + 0.1), 0.9)
+        sync.update_position(-1)                           # fine audio
+        self.assertIsNone(sync.level(at + 0.1))
+
     def test_mouth_levels(self):
         self.assertEqual([mouth_level(v) for v in (0, .05, .1, .5, 1.0)], [0, 0, 1, 3, 5])
 

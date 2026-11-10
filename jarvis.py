@@ -2683,7 +2683,9 @@ def main() -> None:
     # Avatar LUMI: lip sync dalla curva del volume della voce naturale e
     # mini avatar in basso a destra quando la finestra e' ridotta a icona.
     from lumi_avatar import LIPSYNC, PLAYBACK_LATENCY, AvatarDock
-    speaker.on_envelope = lambda envelope: LIPSYNC.push(envelope, delay=PLAYBACK_LATENCY)
+    speaker.on_envelope = lambda envelope: LIPSYNC.push(envelope, delay=PLAYBACK_LATENCY, grace=0.8)
+    import audio_player
+    audio_player.POSITION_LISTENER = LIPSYNC.update_position
     avatar_dock = AvatarDock(root, lambda: getattr(hud, "_last_mode", "idle"))
     voice = VoiceController(output_queue.put, ignore_audio=speaker.is_audible)
     wake_gate = WakeWordGate()

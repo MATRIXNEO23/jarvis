@@ -206,41 +206,21 @@ def synthesize(text: str, key: str, out_path: Path, synth=None) -> list:
         raise EdgeVoiceError("Voce Edge non avviata: " + type(exc).__name__) from exc
 
 
-# --- riproduzione MP3 con MCI (winmm), senza dipendenze -------------------
-_PLAY_LOCK = threading.Lock()
-_CURRENT_ALIAS: list[str] = []
-
-
-def _mci(command: str) -> int:
-    import ctypes
-    buffer = ctypes.create_unicode_buffer(256)
-    return ctypes.windll.winmm.mciSendStringW(command, buffer, 255, None)
-
-
+# --- riproduzione MP3: audio_player (MCI con posizione reale) ------------
 def play_mp3(path: Path) -> None:
-    alias = f"lumiedge{threading.get_ident()}"
-    with _PLAY_LOCK:
-        _CURRENT_ALIAS[:] = [alias]
-    if _mci(f'open "{path}" type mpegvideo alias {alias}') != 0:
-        raise EdgeVoiceError("Riproduzione MP3 non disponibile.")
+    import audio_player
     try:
-        _mci(f"play {alias} wait")
-    finally:
-        _mci(f"close {alias}")
-        with _PLAY_LOCK:
-            _CURRENT_ALIAS[:] = []
+        audio_player.play(Path(path))
+    except OSError as exc:
+        raise EdgeVoiceError(str(exc)) from exc
 
 
 def stop_playback() -> None:
-    if os.name != "nt":
-        return
-    with _PLAY_LOCK:
-        aliases = list(_CURRENT_ALIAS)
-    for alias in aliases:
-        try:
-            _mci(f"stop {alias}")
-        except Exception:
-            pass
+    try:
+        import audio_player
+        audio_player.stop()
+    except Exception:
+        pass
 
 
 # --- frase successiva preparata in anticipo --------------------------------

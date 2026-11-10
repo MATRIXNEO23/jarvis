@@ -407,16 +407,16 @@ def loudness_envelope(path: Path, fps: int = 30) -> list[float]:
 
 
 def play_wav(path: Path) -> None:
-    """Blocking playback with the Windows built-in player (stop via stop_playback)."""
-    import winsound
-    winsound.PlaySound(str(path), winsound.SND_FILENAME | winsound.SND_NODEFAULT)
+    """Riproduzione bloccante con posizione reale per il labiale (stop_playback ferma)."""
+    import audio_player
+    audio_player.play(Path(path))
 
 
 def stop_playback() -> None:
     try:
-        import winsound
-        winsound.PlaySound(None, winsound.SND_PURGE)
-    except (ImportError, RuntimeError):
+        import audio_player
+        audio_player.stop()
+    except Exception:
         pass
 
 

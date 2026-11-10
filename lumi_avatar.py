@@ -48,28 +48,58 @@ def mouth_level(value: float, steps: int = MOUTH_STEPS) -> int:
 
 
 class LipSync:
-    """Curva del volume condivisa tra il thread della voce e la UI."""
+    """Curva del volume condivisa tra il thread della voce e la UI.
+
+    Il lettore audio comunica la posizione reale di riproduzione
+    (update_position): la bocca parte quando parte il suono e resta agganciata
+    anche se l'apertura del file tarda. Senza posizione si usa l'orologio
+    con il ritardo stimato ``delay``.
+    """
 
     def __init__(self, fps: int = 30):
         self.fps = fps
         self._lock = threading.Lock()
         self._envelope: list[float] = []
         self._start = 0.0
+        self._position = None          # (secondi audio, istante della lettura)
+        self._ended = False
+        self._grace = 0.0
 
-    def push(self, envelope, delay: float = 0.0) -> None:
-        """Chiamata un istante prima che il suono parta; ``delay`` compensa
-        l'avvio del lettore audio di Windows, cosi' la bocca parte col suono."""
+    def push(self, envelope, delay: float = 0.0, grace: float = 0.0) -> None:
+        """``grace``: attesa massima della prima posizione dal lettore prima di
+        ripiegare sull'orologio (evita una bocca che parte prima del suono)."""
         with self._lock:
             self._envelope = [float(v) for v in (envelope or ())]
             self._start = time.monotonic() + max(0.0, float(delay))
+            self._grace = max(0.0, float(grace))
+            self._position = None
+            self._ended = False
+
+    def update_position(self, seconds: float) -> None:
+        """Dal lettore audio: posizione corrente; negativa = audio finito."""
+        with self._lock:
+            if seconds < 0:
+                self._ended = True
+                self._position = None
+                return
+            self._position = (float(seconds), time.monotonic())
 
     def level(self, now: float | None = None) -> float | None:
         """Valore corrente o None se non c'e' audio con curva in corso."""
         now = time.monotonic() if now is None else now
         with self._lock:
-            if not self._envelope:
+            if not self._envelope or self._ended:
                 return None
-            index = int((now - self._start) * self.fps)
+            if self._position is not None:
+                seconds, at = self._position
+                if now - at > 0.5:            # posizione ferma: lettore bloccato
+                    return None
+                t = seconds + (now - at)
+            else:
+                if now < self._start + self._grace:
+                    return None
+                t = now - self._start - self._grace
+            index = int(t * self.fps)
             if index < 0 or index >= len(self._envelope):
                 return None
             return self._envelope[index]
