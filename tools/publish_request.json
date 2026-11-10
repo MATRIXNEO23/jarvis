@@ -1,10 +1,10 @@
 {
-  "run_id": 42896984473,
-  "artifact": "lumi-032-prova-candidate",
-  "file": "Lumi-032-PROVA.zip",
-  "bytes": 27580158,
-  "sha256": "bb1021dce1c141c5fd27d3a065b8459b94b599a3d70cd6a103ce4df7f2888780",
-  "source_commit": "2e3db74",
-  "title": "Build 032 PROVA — Musica: barra sotto il video, riduci video, più cartelle",
-  "description": "Come la 031, più: barra musica sotto il video su due righe (⏮ ⏸ ⏹ ⏭ e volume; ☰ e titolo), visibile solo con la musica attiva. Tasto «▁ riduci»: resta solo la musica con la barra (YouTube in un riquadrino 200×200, minimo richiesto dal lettore), «▣ video» lo riporta. Video offline corretti: ora partono nel riquadro. Più cartelle musica (Aggiungi/Rimuovi in Configura, la cartella già scelta viene ripresa) e elenco ☰ navigabile per cartelle e sottocartelle, con «▶ Suona cartella». Verificati in CI Windows: 1225 test, riquadro reale dentro una finestra Tk con un file in riproduzione, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42918451263,
+  "artifact": "lumi-033-prova-candidate",
+  "file": "Lumi-033-PROVA.zip",
+  "bytes": 27586757,
+  "sha256": "4c1cd5e119cf7beb9013525b4e0199418e5ea3710237609a0287781d95add227",
+  "source_commit": "3d2ec20",
+  "title": "Build 033 PROVA — Musica: cartelle navigabili, coda, playlist, schermo intero",
+  "description": "Come la 032, più: le cartelle dell'elenco ☰ ora si aprono. Coda: «aggiungi in coda …» (cartelle, o YouTube mentre va YouTube, senza interrompere), pulsante Coda nella barra con ▲▼, Togli, + Aggiungi e Salva come playlist. Più playlist con nome (anche vuote, anche con video YouTube), Rinomina, Togli, «metti la playlist …». YouTube con la chiave: finito un video parte il risultato successivo (fino a 10 per ricerca, stessa quota). «⛶ intero»: video a schermo intero con la barra in fondo, «⛶ esci» o Esc. Verificati in CI Windows: 1232 test, riquadro video reale in finestra Tk, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare."
 }
