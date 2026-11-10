@@ -1,10 +1,10 @@
 {
-  "run_id": 42726221570,
-  "artifact": "lumi-024-prova-candidate",
-  "file": "Lumi-024-PROVA.zip",
-  "bytes": 27180880,
-  "sha256": "bf12b5f8f7623a35678c120d7761c1c59248a47002cb64940680940c542b0cd2",
-  "source_commit": "056610c",
-  "title": "Build 024 PROVA — note vocali Telegram con la voce scelta, labiale agganciato all'audio",
-  "description": "Come la 023, più: le note vocali Telegram usano la voce scelta in Lumi (Edge, Paola/Serena o Windows) e, se non funziona, la voce Windows predefinita invece di non rispondere. La bocca dell'avatar segue la posizione reale dell'audio e parte solo quando parte il suono, con tutte le voci. configura_telegram.bat salva nello stesso profilo di avvia_lumi.bat e ricontrolla le credenziali. Verificati in CI Windows: 12 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42733173977,
+  "artifact": "lumi-025-prova-candidate",
+  "file": "Lumi-025-PROVA.zip",
+  "bytes": 27184774,
+  "sha256": "a9b197099421526596c7c438fe3d7fac7ed55adb17e4cc84f50fb4c378c63037",
+  "source_commit": "27c35c1",
+  "title": "Build 025 PROVA — velocità, tonalità e volume della voce; configurazione Telegram corretta",
+  "description": "Come la 024, più: in Impostazioni > Voce i cursori Velocità, Tonalità e Volume, validi per Paola/Serena, voci Edge, voci Windows e note vocali Telegram; l'effetto digitale ora viene salvato. Configurazione Telegram: i campi sbagliati si possono reinserire, numero e hash vengono ripuliti (+39, spazi), e una nuova configurazione non cancella più i contatti spuntati (era il motivo per cui i messaggi non arrivavano più): se hai già riconfigurato con la 024, rispunta i contatti una volta. Verificati in CI Windows: 1197 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare."
 }
