@@ -183,6 +183,23 @@ class PlayerTests(unittest.TestCase):
         self.assertTrue(any(c.startswith("setaudio") for c in log))
 
 
+class RuntimeTests(unittest.TestCase):
+    def tearDown(self):
+        from musica import runtime
+        runtime.register(None)
+
+    def test_unregistered_or_disabled_does_nothing_and_programs_keep_priority(self):
+        from musica import runtime
+        lines = []
+        self.assertFalse(runtime.handle_text("metti Imagine", lines.append, lines.append))
+        with tempfile.TemporaryDirectory() as folder:
+            service, opened, _ = ServiceTests.make(ServiceTests(), folder)
+            runtime.register(service, lambda text: object() if "netflix" in text.lower() else None)
+            self.assertFalse(runtime.handle_text("metti Netflix", lines.append, lines.append))
+            self.assertFalse(runtime.handle_text("che ore sono", lines.append, lines.append))
+            self.assertTrue(runtime.handle_text("pausa", lines.append, lines.append))
+
+
 class ManifestTests(unittest.TestCase):
     def test_bundled_manifest_is_valid_and_local_only(self):
         from addon_manager import validate_manifest

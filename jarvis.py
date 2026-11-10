@@ -312,6 +312,10 @@ def main() -> None:
             notify=lambda text: output_queue.put(("music_status", text)))
         if addon_manager is not None:
             addon_manager.music_service = music_service
+        from musica.runtime import register as register_music
+        register_music(music_service, lambda text: (
+            engine.program_apps.parse_command(text)
+            if getattr(engine, "program_apps", None) is not None else None))
         from musica.bar import MusicBar
         music_bar = MusicBar(hud.core_canvas, music_service,
                              on_message=lambda text: write_line("MUSICA > " + text))
@@ -3194,29 +3198,6 @@ def main() -> None:
             consent_generation=lambda: conversation_epoch,
         )
 
-    def try_music_command(spoken: str) -> bool:
-        if music_service is None or not music_service.is_enabled():
-            return False
-        from musica.commands import parse_command as parse_music_command
-        request = parse_music_command(spoken)
-        if request is None:
-            return False
-        # Una frase che Programmi e app riconosce (es. «metti Netflix» come
-        # comando personalizzato) resta a Programmi e app.
-        provider = getattr(engine, "program_apps", None)
-        if request[0] == "play" and provider is not None:
-            try:
-                if provider.parse_command(spoken) is not None:
-                    return False
-            except Exception:
-                pass
-        message = music_service.handle(*request)
-        if message:
-            write_line("MUSICA > " + message)
-            if request[0] == "play" and music_service.mode == "browser":
-                speak_result(message)
-        return True
-
     def try_timer_command(spoken: str) -> bool:
         alarm_request = parse_alarm_clock_command(spoken)
         if alarm_request:
@@ -3237,7 +3218,8 @@ def main() -> None:
         if parsed is None:
             # Stesso punto d'ingresso dei comandi locali: la musica viene
             # provata solo dopo timer e sveglia, e solo con l'add-on attivo.
-            return try_music_command(spoken)
+            from musica.runtime import handle_text as music_handle_text
+            return music_handle_text(spoken, write_line, speak_result)
         action = parsed.action
         if action == "start":
             if timer.start(parsed.seconds):
@@ -5087,8 +5069,8 @@ def main() -> None:
             telegram_bridge.stop()
         telegram_gpt_ready.clear()
         speaker.close()
-        if music_service is not None:
-            music_service.close()
+        from musica.runtime import close as close_music
+        close_music()
         hud.close()
         alarm.stop()
         timer.close()
