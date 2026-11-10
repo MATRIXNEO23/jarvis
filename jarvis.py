@@ -285,6 +285,10 @@ def main() -> None:
             bundled = Path(__file__).parent / "sveglia" / "Sveglia.jaddon"
             if bundled.is_file():
                 addon_manager.install(bundled)
+        if not any(item["id"] == "musica" for item in addon_manager.list_installed()):
+            bundled = Path(__file__).parent / "musica" / "Musica.jaddon"
+            if bundled.is_file():
+                addon_manager.install(bundled)  # Installed OFF: nothing changes until enabled.
 
     except (AddonError,OSError,ValueError) as exc:
         addon_setup_error=str(exc)[:150]
@@ -296,6 +300,25 @@ def main() -> None:
         lambda text: (write_line("SVEGLIA > " + text), speak_result(text)),
         hud.set_alarm_active)
     hud.alarm_stop_button.configure(command=alarm.stop)
+    # Add-on Musica (cartella musica / YouTube nel browser), solo se attivo.
+    music_service = None
+    music_bar = None
+    try:
+        from musica.service import MusicService
+        music_service = MusicService(
+            lambda: bool(addon_manager and any(
+                item["id"] == "musica" and item["enabled"]
+                for item in addon_manager.list_installed())),
+            notify=lambda text: output_queue.put(("music_status", text)))
+        if addon_manager is not None:
+            addon_manager.music_service = music_service
+        from musica.bar import MusicBar
+        music_bar = MusicBar(hud.core_canvas, music_service,
+                             on_message=lambda text: write_line("MUSICA > " + text))
+    except (ImportError, OSError, ValueError, tk.TclError, AttributeError) as exc:
+        addon_setup_error = (addon_setup_error or "") + " Musica: " + str(exc)[:80]
+        music_service = None
+        music_bar = None
     addon_settings_window=None
     telegram_owner_busy=False
     orbit_nodes_cache=()
@@ -3171,6 +3194,29 @@ def main() -> None:
             consent_generation=lambda: conversation_epoch,
         )
 
+    def try_music_command(spoken: str) -> bool:
+        if music_service is None or not music_service.is_enabled():
+            return False
+        from musica.commands import parse_command as parse_music_command
+        request = parse_music_command(spoken)
+        if request is None:
+            return False
+        # Una frase che Programmi e app riconosce (es. «metti Netflix» come
+        # comando personalizzato) resta a Programmi e app.
+        provider = getattr(engine, "program_apps", None)
+        if request[0] == "play" and provider is not None:
+            try:
+                if provider.parse_command(spoken) is not None:
+                    return False
+            except Exception:
+                pass
+        message = music_service.handle(*request)
+        if message:
+            write_line("MUSICA > " + message)
+            if request[0] == "play" and music_service.mode == "browser":
+                speak_result(message)
+        return True
+
     def try_timer_command(spoken: str) -> bool:
         alarm_request = parse_alarm_clock_command(spoken)
         if alarm_request:
@@ -3189,7 +3235,9 @@ def main() -> None:
             return True
         parsed = parse_timer_command(spoken)
         if parsed is None:
-            return False
+            # Stesso punto d'ingresso dei comandi locali: la musica viene
+            # provata solo dopo timer e sveglia, e solo con l'add-on attivo.
+            return try_music_command(spoken)
         action = parsed.action
         if action == "start":
             if timer.start(parsed.seconds):
@@ -4286,6 +4334,8 @@ def main() -> None:
                     refresh_voices_button.configure(state="normal")
                 elif kind == "tts_status":
                     spoken_status.set(str(data[0]))
+                elif kind == "music_status":
+                    write_line("MUSICA > " + str(data[0])[:160])
                 elif kind == "tts_download_done":
                     for button in (download_paola_button, download_serena_button):
                         button.configure(state="normal")
@@ -5037,6 +5087,8 @@ def main() -> None:
             telegram_bridge.stop()
         telegram_gpt_ready.clear()
         speaker.close()
+        if music_service is not None:
+            music_service.close()
         hud.close()
         alarm.stop()
         timer.close()

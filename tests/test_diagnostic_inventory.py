@@ -16,7 +16,7 @@ from self_diagnostics import _source_list, inspect_jarvis, format_audit
 from source_review import review_sources
 
 
-RUNTIME = ("local_model", "file_access", "program_apps", "sveglia")
+RUNTIME = ("local_model", "file_access", "program_apps", "sveglia", "musica")
 SIGNAL = "def controlled():\n    try:\n        work()\n    except Exception:\n        pass\n"
 
 

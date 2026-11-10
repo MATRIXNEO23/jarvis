@@ -21,7 +21,8 @@ UPSTREAM_COMMIT = "6d2fedf8624e5f05926af3191f9efdcb13c4133c"
 ENGINE_FILES = ("koboldcpp.py", "koboldcpp_common.dll", "koboldcpp_noavx2.dll",
                 "backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll", "LICENSE.md")
 OPERATIONAL_GUIDES = frozenset({"docs/VOCE_OFFLINE.md", "docs/RECUPERO-IMPOSTAZIONI.md",
-                                "file_access/LEGGIMI.md", "program_apps/LEGGIMI.md"})
+                                "file_access/LEGGIMI.md", "program_apps/LEGGIMI.md",
+                                "musica/LEGGIMI.md"})
 STAMP = (2026, 11, 9, 0, 0, 0)
 
 

@@ -47,6 +47,12 @@ def help_sections(engine):
             'ferma la sveglia\nche ore sono\n\n'
             'La sveglia richiede la relativa add-on attiva. Se l’orario è passato, vale per domani. '
             'Per evitare ambiguità puoi usare il formato 24 ore. Gli elenchi di questa guida non vengono letti a voce.',
+        'Musica':
+            'metti Bohemian Rhapsody\nsuona la canzone Imagine\nfammi sentire Vasco Rossi\n'
+            'pausa\nriprendi\nprossima\nferma la musica\nalza il volume della musica\n\n'
+            'Richiede l’add-on Musica attivo. Cerca prima nella cartella musica scelta in '
+            'Gestisci add-on > Musica > Configura; se il brano non c’è apre la ricerca su YouTube '
+            'nel browser (con la chiave API facoltativa apre subito il primo video).',
         'Voce':
             'Standby: microfono fermo. Premi per parlare: usa il pulsante dedicato.\n'
             'Ascolto continuo: accetta le richieste direttamente; può interpretare anche parlato ambientale.\n'

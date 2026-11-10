@@ -18,7 +18,7 @@ from source_review import (
 )
 
 _SOURCE_SUFFIXES = frozenset({".py",".bat",".ps1",".mjs"})
-_RUNTIME_FOLDERS = ("local_model", "file_access", "program_apps", "sveglia")
+_RUNTIME_FOLDERS = ("local_model", "file_access", "program_apps", "sveglia", "musica")
 _MAX_FILES = 140
 _MAX_DIRECTORIES = 140
 _MAX_BYTES = 260_000

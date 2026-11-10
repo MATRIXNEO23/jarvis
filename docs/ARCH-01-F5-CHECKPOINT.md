@@ -219,3 +219,11 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 - Causa dimostrata: la 026 ha aggiunto carattere/lunghezza/note/fast forwarding e portato la finestra a 780 px fissi; su uno schermo da 768 px (Pavilion) la riga con Salva e Prova generazione finiva fuori schermo, quindi non si poteva salvare un nuovo GGUF.
 - Correzione: barra fissa in basso con stato e pulsanti, modulo scorrevole (barra e rotella), altezza adattata allo schermo (massimo schermo-90 px). Test Tk: con finestra da 420 px i pulsanti restano visibili.
 - Lezione: ogni aggiunta di campi a una finestra va verificata con altezza 768 px; pulsanti di conferma sempre in una barra fissa.
+
+## 030 — Add-on Musica (richiesta utente 10/11/2026, a voce)
+- Cartella `musica/` come le altre add-on (LEGGIMI, manifest `Musica.jaddon`, file per responsabilità: commands, library, player, youtube, service, bar, ui, config). Installata SPENTA: finché non la attivi in Gestisci add-on, Lumi non cambia.
+- Azione `music.local` (come `alarm.local`): gestita solo dal parser locale, mai proposta al modello; il manager accetta solo l'identità `musica / addon.musica.riproduci`.
+- «metti / suona / riproduci / fammi sentire …»: prima la cartella musica (sottocartelle, MP3/WAV/WMA/M4A, ricerca per parole nel nome file e nelle cartelle) → lettore MCI dentro Lumi con coda dei brani trovati; altrimenti YouTube nel browser (pagina risultati; con chiave YouTube Data API v3 facoltativa il primo video, ripiego sui risultati se la chiave/quota non va). L'audio di YouTube non viene mai preso (regole del servizio).
+- Controlli: pausa, riprendi, ferma la musica, prossima, alza/abbassa il volume della musica; con YouTube tasti multimediali di Windows. Barra sotto il nucleo visibile solo con musica attiva.
+- Conflitti evitati: timer e sveglia hanno la precedenza; frasi con film/serie/Netflix/volume/pausa del timer escluse; una frase riconosciuta da Programmi e app resta a Programmi e app.
+- Dati nel profilo: `addon-data/musica/config.json`, chiave in `youtube-key.dpapi` (DPAPI). Test: `tests/test_musica.py`.

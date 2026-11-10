@@ -159,16 +159,16 @@ jobs:
           PYTHONUTF8: '1'
           PYTHONIOENCODING: utf-8
         run: |
-          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 29 --out dist --model "probe-models/gemma2.gguf" --piper-engine "piper-engine"
+          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 30 --out dist --model "probe-models/gemma2.gguf" --piper-engine "piper-engine"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload test candidate (CI artifact, not published)
         uses: actions/upload-artifact@v4
         with:
-          name: lumi-029-prova-candidate
+          name: lumi-030-prova-candidate
           path: |
-            dist/Lumi-029-PROVA.zip
-            dist/Lumi-029-PROVA.json
+            dist/Lumi-030-PROVA.zip
+            dist/Lumi-030-PROVA.json
           if-no-files-found: error
 
       - name: Archive only unverified research candidate

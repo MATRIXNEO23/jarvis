@@ -142,6 +142,17 @@ class AddonSettingsWindow:
             self._error(exc)
 
     def configure(self):
+        if self._selected() == 'musica':
+            service = getattr(self.manager, 'music_service', None)
+            if service is None:
+                self._error('Musica non disponibile: reinstalla la cartella musica dal pacchetto completo.')
+                return
+            try:
+                from musica.ui import MusicSettings
+                MusicSettings(self.window, service, on_change=self.on_change)
+            except (ImportError, OSError, ValueError) as exc:
+                self._error('Musica non disponibile: ' + str(exc)[:120])
+            return
         if self._selected() == 'programmi_app':
             try:
                 from program_apps.ui import ProgramSettings
