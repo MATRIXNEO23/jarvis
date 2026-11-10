@@ -260,3 +260,4 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 
 ## 034 — Barra: tasti riduci e schermo intero visibili (riscontro utente 11/11 00:24, foto)
 - Con un titolo lungo i tasti «▁ riduci» e «⛶ intero» venivano spinti fuori dalla riga 2. Ora il titolo ha larghezza minima 1 e i tasti sono impacchettati prima del titolo: il titolo si accorcia, i tasti restano.
+- Titolo scorrevole nella barra quando non entra (ogni 220 ms un carattere, separatore «•»); se entra resta fermo.

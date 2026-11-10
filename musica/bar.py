@@ -404,6 +404,9 @@ class MusicBar:
         self._job = None
         self._volume_job = None
         self._list = None
+        self._marquee_text = ""
+        self._marquee_pos = 0
+        self._marquee()
         self.refresh()
 
     def open_list(self) -> None:
@@ -442,6 +445,23 @@ class MusicBar:
             self.on_message(message)
         self.refresh(reschedule=False)
 
+    def _marquee(self) -> None:
+        """Titolo scorrevole quando non entra nella barra."""
+        try:
+            import tkinter.font as tkfont
+            text = self._marquee_text
+            width = self.title_label.winfo_width()
+            font = tkfont.Font(font=self.title_label.cget("font"))
+            if text and width > 20 and font.measure(text) > width:
+                loop = text + "     •     "
+                self._marquee_pos = (self._marquee_pos + 1) % len(loop)
+                self.title.set(loop[self._marquee_pos:] + loop[:self._marquee_pos])
+            elif self.title.get() != text:
+                self.title.set(text)
+            self.host.after(220, self._marquee)
+        except tk.TclError:
+            pass
+
     def _toggle_full(self) -> None:
         self._set_full(not self._full)
         self.refresh(reschedule=False)
@@ -471,7 +491,9 @@ class MusicBar:
             snap = self.service.snapshot() if enabled else {"mode": None, "state": "stopped"}
             active = snap.get("mode") is not None and snap.get("state") != "stopped"
             if active:
-                self.title.set(snap["title"][:48])
+                if snap["title"] != self._marquee_text:
+                    self._marquee_text, self._marquee_pos = snap["title"], 0
+                    self.title.set(snap["title"])
                 self.toggle_button.configure(text="▶" if snap["state"] == "paused" else "⏸")
                 if snap.get("mode") == "browser":
                     self.volume_scale.state(["disabled"])
