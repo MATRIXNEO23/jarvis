@@ -486,3 +486,48 @@ class YouTubeQueueTests(unittest.TestCase):
             self.assertIn("solo video YouTube", service.enqueue([Path(folder) / "x.mp3"]))
             service._video_event({"ev": "state", "state": "ended"})
             self.assertEqual(service.snapshot()["title"], "Bohemian Rhapsody")
+
+
+class NamedPlaylistTests(unittest.TestCase):
+    def test_many_named_playlists_with_youtube_queue_edit_and_rename(self):
+        results = {"acdc": [("abcDEF12345", "Thunderstruck"), ("ghiJKL67890", "Back in Black")],
+                   "queen": [("qqqQQQ11111", "Bohemian Rhapsody")]}
+        with tempfile.TemporaryDirectory() as folder:
+            v = VideoTests()
+            service, panel, _ = v.make(folder, key="KEY", video_id=lambda q, k: results[q])
+            service.handle("play", "acdc")
+            self.assertTrue(v.wait(lambda: service.video_index == 0))
+            service.handle("queue", "queen")
+            self.assertTrue(v.wait(lambda: len(service.video_items) == 3))
+            # Coda modificabile: sposta e togli (quello in corso resta).
+            self.assertTrue(service.queue_move(1, +1))
+            self.assertEqual(service.queue_view(), (["Thunderstruck", "Back in Black",
+                                                     "Bohemian Rhapsody"], 0))
+            self.assertFalse(service.queue_remove(0))
+            self.assertTrue(service.queue_remove(1))
+            # Più playlist con nome, anche con YouTube.
+            self.assertIn("2 aggiunti", service.save_queue_as_playlist("Rock"))
+            self.assertIn("0 aggiunti", service.add_to_playlist("Vuota", []))
+            self.assertEqual(sorted(service.playlists()), ["Rock", "Vuota"])
+            self.assertIn("rinominata", service.rename_playlist("Rock", "Rock anni 80"))
+            self.assertIn("Esiste già", service.rename_playlist("Vuota", "Rock anni 80"))
+            service.stop_video()
+            self.assertEqual(service.handle("playlist", "rock"), "Metto Thunderstruck.")
+            self.assertEqual([i[2] for i in service.video_items],
+                             ["Thunderstruck", "Bohemian Rhapsody"])
+            self.assertIn("Tolti", service.remove_from_playlist(
+                "Rock anni 80", [("youtube", "abcDEF12345", "")]))
+            self.assertEqual([i[2] for i in service.playlist_items("Rock anni 80")],
+                             ["Bohemian Rhapsody"])
+
+    def test_local_queue_edit_goes_to_player(self):
+        calls = []
+        player = MusicPlayer(mci=lambda c: (calls.append(c), (0, "playing"))[1])
+        player.playlist, player.index = [Path("a.mp3"), Path("b.mp3"), Path("c.mp3")], 0
+        player._handle(("move", 2, -1))
+        self.assertEqual([p.name for p in player.playlist], ["a.mp3", "c.mp3", "b.mp3"])
+        player._handle(("remove", 0))                       # in corso: non si toglie
+        player._handle(("remove", 1))
+        self.assertEqual([p.name for p in player.playlist], ["a.mp3", "b.mp3"])
+        player._handle(("add", [Path("d.mp3")]))
+        self.assertEqual(len(player.playlist), 3)

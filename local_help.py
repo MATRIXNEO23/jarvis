@@ -57,8 +57,8 @@ def help_sections(engine):
             'aggiungi in coda Imagine / metti in coda Imagine\nmetti la playlist Viaggio\n\n'
             'Indietro: oltre 3 secondi ricomincia il brano, altrimenti va al precedente. '
             'Il pulsante ☰ della barra apre l’elenco dei brani per cartelle e playlist: doppio clic per '
-            'ascoltare, «+ Coda», «+ Playlist...» per crearne o riempirne una, «Togli» per i brani di una '
-            'playlist. Con YouTube (chiave API) finito un video parte il risultato successivo; mentre va YouTube «aggiungi in coda …» cerca su YouTube e lo mette dopo il video in corso.\n\n'
+            'ascoltare, «+ Coda», «+ Playlist...» per crearne o riempirne una, «Togli» e «Rinomina» per le '
+            'playlist (anche più playlist con nome, anche con video YouTube). Il pulsante Coda mostra la coda: sposta, togli, cerca e aggiungi, salva come playlist. Con YouTube (chiave API) finito un video parte il risultato successivo; mentre va YouTube «aggiungi in coda …» cerca su YouTube e lo mette dopo il video in corso.\n\n'
             'Richiede l’add-on Musica attivo. Cerca prima nelle cartelle musica scelte in '
             'Gestisci add-on > Musica > Configura; se il brano non c’è apre la ricerca su YouTube '
             'nel browser (con la chiave API facoltativa apre subito il primo video).',

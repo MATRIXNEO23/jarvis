@@ -41,6 +41,7 @@ class TrackList:
         ttk.Button(actions, text="+ Coda", command=self.add_to_queue).pack(side="left", padx=4)
         ttk.Button(actions, text="+ Playlist...", command=self.add_to_playlist).pack(side="left")
         ttk.Button(actions, text="Togli", command=self.remove_selected).pack(side="right")
+        ttk.Button(actions, text="Rinomina", command=self.rename_selected).pack(side="right", padx=4)
         bottom = ttk.Frame(frame)
         bottom.pack(fill="x", pady=(4, 0))
         self.status = tk.StringVar()
@@ -71,10 +72,13 @@ class TrackList:
             if kind == "dir":
                 self._fill_dir(node, key)
             else:
-                for track in self.service.playlist_tracks(key):
-                    mark = "▶ " if library.is_video(track) else "♪ "
-                    item = self.tree.insert(node, "end", text=mark + track.stem)
-                    self.nodes[item] = ("track", track)
+                for index, entry in enumerate(self.service.playlist_items(key)):
+                    if entry[0] == "youtube":
+                        mark = "▷ YouTube: "
+                    else:
+                        mark = "▶ " if library.is_video(entry[1]) else "♪ "
+                    item = self.tree.insert(node, "end", text=mark + entry[2])
+                    self.nodes[item] = ("pitem", (key, index, entry))
 
     def _selected_tracks(self):
         """Brani del nodo scelto: un brano, o tutta la cartella/playlist."""
@@ -82,6 +86,8 @@ class TrackList:
         kind, value = self.nodes.get(node, (None, None))
         if kind == "track":
             return [value]
+        if kind == "pitem":
+            return [value[2][1]] if value[2][0] == "file" else []
         if kind == "dir":
             return self._tracks_under(value)
         if kind == "playlist":
@@ -101,19 +107,16 @@ class TrackList:
         self._say(self.service.enqueue(tracks))
 
     def add_to_playlist(self):
-        tracks = self._selected_tracks()
-        if not tracks:
-            self.status.set("Scegli un brano, una cartella o una playlist.")
-            return
+        tracks = self._selected_tracks()   # vuoto: crea solo la playlist col nome scelto
         names = sorted(self.service.playlists(), key=str.lower)
         dialog = tk.Toplevel(self.window)
         dialog.title("Aggiungi a playlist")
         dialog.transient(self.window)
         body = ttk.Frame(dialog, padding=10)
         body.pack(fill="both", expand=True)
-        ttk.Label(body, text=f"{len(tracks)} brani. Playlist (scegli o scrivi un nome nuovo):"
-                  ).pack(anchor="w")
-        name = tk.StringVar(value=names[0] if names else "")
+        ttk.Label(body, text=(f"{len(tracks)} brani. " if tracks else "Nuova playlist vuota. ") +
+                  "Playlist (scegli o scrivi un nome nuovo):").pack(anchor="w")
+        name = tk.StringVar(value=(names[0] if names and tracks else ""))
         box = ttk.Combobox(body, textvariable=name, values=names, width=36)
         box.pack(fill="x", pady=6)
         box.focus_set()
@@ -130,22 +133,34 @@ class TrackList:
         ttk.Button(body, text="Aggiungi", command=confirm).pack(side="left")
         ttk.Button(body, text="Annulla", command=dialog.destroy).pack(side="right")
 
+    def rename_selected(self):
+        from tkinter import simpledialog
+        kind, value = self.nodes.get(self.tree.focus(), (None, None))
+        if kind != "playlist":
+            self.status.set("Scegli una playlist da rinominare.")
+            return
+        new = simpledialog.askstring("Rinomina playlist", "Nuovo nome:", initialvalue=value,
+                                     parent=self.window)
+        if new:
+            self.status.set(self.service.rename_playlist(value, new) or "Nome non valido.")
+            self.fill()
+
     def remove_selected(self):
         """Toglie un brano dalla playlist, o elimina la playlist (i file restano)."""
         from tkinter import messagebox
         node = self.tree.focus()
         kind, value = self.nodes.get(node, (None, None))
         parent_kind, parent_value = self.nodes.get(self.tree.parent(node), (None, None))
-        if kind == "track" and parent_kind == "playlist":
-            self.status.set(self.service.remove_from_playlist(parent_value, [value]))
-            self.tree.delete(node)
+        if kind == "pitem":
+            self.status.set(self.service.remove_from_playlist(value[0], [value[2]]))
+            self.fill()
         elif kind == "playlist":
             if messagebox.askyesno("Elimina playlist", f"Eliminare la playlist «{value}»?\n"
                                    "I file musicali restano dove sono.", parent=self.window):
                 self.status.set(self.service.remove_from_playlist(value))
                 self.fill()
         else:
-            self.status.set("«Togli» vale per i brani di una playlist o per una playlist. "
+            self.status.set("«Togli» vale per le voci di una playlist o per una playlist. "
                             "Le cartelle si tolgono in Configura.")
 
     def _fill_dir(self, node, key):
@@ -198,6 +213,9 @@ class TrackList:
     def play_selected(self, _event=None):
         node = self.tree.focus()
         kind, value = self.nodes.get(node, (None, None))
+        if kind == "pitem":
+            self._say(self.service.play_playlist(value[0], value[1]))
+            return
         if kind != "track":
             return                       # su una cartella il doppio clic la apre/chiude
         parent = self.tree.parent(node)
@@ -210,9 +228,12 @@ class TrackList:
 
     def play_folder(self):
         node = self.tree.focus()
-        kind, _value = self.nodes.get(node, (None, None))
-        if kind == "track":
+        kind, value = self.nodes.get(node, (None, None))
+        if kind in ("track", "pitem"):
             self.play_selected()
+            return
+        if kind == "playlist":
+            self._say(self.service.play_playlist(value))
             return
         tracks = self._selected_tracks()
         if not tracks:
@@ -221,10 +242,119 @@ class TrackList:
         self._say(self.service.play_tracks(tracks, 0))
 
 
+class QueueWindow:
+    """Coda attuale (cartelle o YouTube): togli, sposta, cerca e aggiungi, salva come playlist."""
+
+    def __init__(self, parent, service, on_message):
+        self.service = service
+        self.on_message = on_message
+        self.window = tk.Toplevel(parent)
+        self.window.title("Lumi // Coda")
+        self.window.geometry("440x500")
+        frame = ttk.Frame(self.window, padding=10)
+        frame.pack(fill="both", expand=True)
+        add = ttk.Frame(frame)
+        add.pack(fill="x")
+        self.query = tk.StringVar()
+        entry = ttk.Entry(add, textvariable=self.query)
+        entry.pack(side="left", fill="x", expand=True)
+        entry.bind("<Return>", lambda _e: self.add())
+        ttk.Button(add, text="+ Aggiungi", command=self.add).pack(side="left", padx=(4, 0))
+        ttk.Label(frame, text="Cerca nelle cartelle; mentre va YouTube cerca su YouTube.",
+                  wraplength=410).pack(anchor="w", pady=(2, 6))
+        holder = ttk.Frame(frame)
+        holder.pack(fill="both", expand=True)
+        self.listbox = tk.Listbox(holder, activestyle="none", bg="#031522", fg="#d7f6ff",
+                                  selectbackground="#1b6f8f", highlightthickness=0)
+        scroll = ttk.Scrollbar(holder, orient="vertical", command=self.listbox.yview)
+        self.listbox.configure(yscrollcommand=scroll.set)
+        scroll.pack(side="right", fill="y")
+        self.listbox.pack(side="left", fill="both", expand=True)
+        row = ttk.Frame(frame)
+        row.pack(fill="x", pady=(6, 0))
+        ttk.Button(row, text="▲", width=3, command=lambda: self.move(-1)).pack(side="left")
+        ttk.Button(row, text="▼", width=3, command=lambda: self.move(+1)).pack(side="left", padx=4)
+        ttk.Button(row, text="Togli", command=self.remove).pack(side="left")
+        ttk.Button(row, text="Salva come playlist...", command=self.save).pack(side="right")
+        self.status = tk.StringVar()
+        ttk.Label(frame, textvariable=self.status, wraplength=410).pack(anchor="w", pady=(4, 0))
+        self._last = None
+        self.refresh()
+
+    def refresh(self):
+        try:
+            view = self.service.queue_view()
+            if view != self._last:
+                keep = self.listbox.curselection()
+                self._last = (list(view[0]), view[1])
+                titles, current = view
+                self.listbox.delete(0, "end")
+                for i, title in enumerate(titles):
+                    self.listbox.insert("end", ("▶ " if i == current else "   ") + title)
+                for i in keep:
+                    if i < len(titles):
+                        self.listbox.selection_set(i)
+                if not titles:
+                    self.status.set("Coda vuota: metti un brano o una playlist.")
+            self.window.after(1000, self.refresh)
+        except tk.TclError:
+            pass
+
+    def _selected(self):
+        sel = self.listbox.curselection()
+        return sel[0] if sel else None
+
+    def move(self, delta):
+        index = self._selected()
+        if index is not None and self.service.queue_move(index, delta):
+            self._last = None
+            self.window.after(150, lambda: self.listbox.selection_set(index + delta))
+
+    def remove(self):
+        index = self._selected()
+        if index is None:
+            return
+        if not self.service.queue_remove(index):
+            self.status.set("Quello in corso non si toglie: usa ⏭ o ⏹.")
+        self._last = None
+
+    def add(self):
+        text = self.query.get().strip()
+        if text:
+            message = self.service.queue_query(text)
+            self.status.set(message)
+            self.on_message(message)
+            self.query.set("")
+
+    def save(self):
+        names = sorted(self.service.playlists(), key=str.lower)
+        dialog = tk.Toplevel(self.window)
+        dialog.title("Salva coda come playlist")
+        dialog.transient(self.window)
+        body = ttk.Frame(dialog, padding=10)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text="Nome playlist (nuovo, o esistente per aggiungere):").pack(anchor="w")
+        name = tk.StringVar()
+        box = ttk.Combobox(body, textvariable=name, values=names, width=36)
+        box.pack(fill="x", pady=6)
+        box.focus_set()
+
+        def confirm(_event=None):
+            try:
+                message = self.service.save_queue_as_playlist(name.get())
+            except OSError as exc:
+                message = "Playlist non salvata: " + str(exc)[:80]
+            dialog.destroy()
+            self.status.set(message)
+        box.bind("<Return>", confirm)
+        ttk.Button(body, text="Salva", command=confirm).pack(side="left")
+        ttk.Button(body, text="Annulla", command=dialog.destroy).pack(side="right")
+
+
 class MusicBar:
     """Barra sotto il video, nell'area del globo; visibile solo con musica attiva.
 
-    Riga 1: ⏮ ⏸ ⏹ ⏭ e volume. Riga 2: ☰ elenco brani, titolo, «riduci» video.
+    Riga 1: ⏮ ⏸ ⏹ ⏭ e volume. Riga 2: ☰ elenco brani, Coda, titolo, «riduci» video.
     Durante un video il riquadro occupa l'area sopra la barra.
     """
 
@@ -249,6 +379,7 @@ class MusicBar:
         info = tk.Frame(self.frame, bg="#031522")
         info.pack(fill="x", padx=4, pady=(0, 4))
         ttk.Button(info, text="☰", width=3, command=self.open_list).pack(side="left")
+        ttk.Button(info, text="Coda", width=5, command=self.open_queue).pack(side="left", padx=(3, 0))
         self.title = tk.StringVar(value="")
         tk.Label(info, textvariable=self.title, bg="#031522", fg="#d7f6ff",
                  font=("Segoe UI", 9), anchor="w").pack(side="left", fill="x", expand=True, padx=6)
@@ -273,6 +404,17 @@ class MusicBar:
             except tk.TclError:
                 self._list = None
         self._list = TrackList(self.host.winfo_toplevel(), self.service, self.on_message)
+
+    def open_queue(self) -> None:
+        current = getattr(self, "_queue_window", None)
+        if current is not None:
+            try:
+                current.window.lift()
+                return
+            except tk.TclError:
+                pass
+        self._queue_window = QueueWindow(self.host.winfo_toplevel(), self.service,
+                                         self.on_message)
 
     def _do(self, action: str) -> None:
         message = self.service.handle(action)

@@ -41,6 +41,12 @@ class MusicPlayer:
         """Aggiunge brani in fondo alla coda senza interrompere quello in corso."""
         self._send("add", list(tracks))
 
+    def remove_at(self, index: int):
+        self._send("remove", int(index))
+
+    def move(self, index: int, delta: int):
+        self._send("move", int(index), int(delta))
+
     def pause(self):
         self._send("pause")
 
@@ -119,6 +125,20 @@ class MusicPlayer:
         elif name == "add":
             self.playlist = list(self.playlist) + list(command[1])
             self._emit()
+        elif name == "remove" and 0 <= command[1] < len(self.playlist) and command[1] != self.index:
+            self.playlist = list(self.playlist)
+            del self.playlist[command[1]]
+            if command[1] < self.index:
+                self.index -= 1
+            self._emit()
+        elif name == "move":
+            i, j = command[1], command[1] + command[2]
+            if 0 <= i < len(self.playlist) and 0 <= j < len(self.playlist):
+                self.playlist = list(self.playlist)
+                self.playlist[i], self.playlist[j] = self.playlist[j], self.playlist[i]
+                if self.index in (i, j):
+                    self.index = j if self.index == i else i
+                self._emit()
         elif name == "pause" and self.state == "playing":
             self._mci(f"pause {self.ALIAS}")
             self.state = "paused"

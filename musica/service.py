@@ -323,13 +323,37 @@ class MusicService:
     def playlists(self) -> dict:
         return config.load_playlists(self.data_folder)
 
+    @staticmethod
+    def _entry(item) -> str:
+        """Voce di playlist: percorso del file, o «yt:<id>|<titolo>» per YouTube."""
+        if isinstance(item, tuple) and item and item[0] == "youtube":
+            return "yt:" + str(item[1]) + "|" + str(item[2] if len(item) > 2 else "")[:120]
+        if isinstance(item, tuple) and item and item[0] == "file":
+            return str(item[1])
+        return str(item)
+
+    @staticmethod
+    def _item(entry: str):
+        if entry.startswith("yt:"):
+            vid, _sep, title = entry[3:].partition("|")
+            return ("youtube", vid, title or "YouTube")
+        return ("file", Path(entry), Path(entry).stem)
+
     def add_to_playlist(self, name: str, tracks) -> str:
         name = " ".join(str(name or "").split())[:60]
         if not name:
             return "Nome playlist vuoto."
         data = self.playlists()
+        if name not in data and len(data) >= config.MAX_PLAYLISTS:
+            return "Troppe playlist: eliminane qualcuna."
         current = data.setdefault(name, [])
-        added = [str(t) for t in tracks if str(t) not in current]
+        ids = {e.partition("|")[0] for e in current}
+        added = []
+        for item in tracks:
+            entry = self._entry(item)
+            if entry.partition("|")[0] not in ids:
+                ids.add(entry.partition("|")[0])
+                added.append(entry)
         current.extend(added)
         config.save_playlists(data, self.data_folder)
         return f"Playlist «{name}»: {len(added)} aggiunti, {len(current)} in totale."
@@ -343,26 +367,104 @@ class MusicService:
             del data[name]
             message = f"Playlist «{name}» eliminata (i file restano)."
         else:
-            drop = {str(t) for t in tracks}
-            data[name] = [t for t in data[name] if t not in drop]
+            drop = {self._entry(t).partition("|")[0] for t in tracks}
+            data[name] = [t for t in data[name] if t.partition("|")[0] not in drop]
             message = f"Tolti dalla playlist «{name}»."
         config.save_playlists(data, self.data_folder)
         return message
 
-    def playlist_tracks(self, name: str) -> list[Path]:
-        return [Path(t) for t in self.playlists().get(name, [])]
+    def rename_playlist(self, old: str, new: str) -> str:
+        new = " ".join(str(new or "").split())[:60]
+        data = self.playlists()
+        if old not in data or not new:
+            return ""
+        if new in data and new != old:
+            return f"Esiste già una playlist «{new}»."
+        data = {(new if k == old else k): v for k, v in data.items()}
+        config.save_playlists(data, self.data_folder)
+        return f"Playlist rinominata in «{new}»."
 
-    def play_playlist(self, query: str) -> str:
+    def playlist_items(self, name: str) -> list:
+        return [self._item(e) for e in self.playlists().get(name, [])]
+
+    def playlist_tracks(self, name: str) -> list[Path]:
+        return [i[1] for i in self.playlist_items(name) if i[0] == "file"]
+
+    def find_playlist(self, query: str):
         data = self.playlists()
         wanted = library.normalized(query)
-        name = next((n for n in data if library.normalized(n) == wanted), None) or \
+        return next((n for n in data if library.normalized(n) == wanted), None) or \
             next((n for n in data if wanted and wanted in library.normalized(n)), None)
+
+    def play_playlist(self, query: str, start: int = 0) -> str:
+        name = query if query in self.playlists() else self.find_playlist(query)
         if name is None:
             return "Non trovo la playlist «" + query + "»."
-        tracks = [t for t in self.playlist_tracks(name) if t.exists()]
+        items = self.playlist_items(name)[start:]
+        if any(i[0] == "youtube" for i in items):
+            if not self.video_ready():
+                return "Per i video YouTube della playlist serve il riquadro video (WebView2)."
+            playable = [i for i in items if i[0] == "youtube" or
+                        (i[1].exists() and library.is_panel_video(i[1]))]
+            skipped = len(items) - len(playable)
+            message = self._start_video(playable)
+            return message + (f" ({skipped} brani audio saltati: con YouTube la playlist "
+                              "suona solo video.)" if skipped else "")
+        tracks = [i[1] for i in items if i[1].exists()]
         if not tracks:
             return f"La playlist «{name}» è vuota o i file non ci sono più."
         return self.play_tracks(tracks)
+
+    # --- coda visibile e modificabile ---------------------------------------
+    def queue_view(self) -> tuple[list[str], int]:
+        """(titoli in coda, indice di quello in corso)."""
+        if self.mode == "video":
+            return [i[2] for i in self.video_items], self.video_index
+        if self.mode == "local":
+            return [Path(t).stem for t in self.player.playlist], self.player.index
+        return [], -1
+
+    def queue_items(self) -> list:
+        if self.mode == "video":
+            return list(self.video_items)
+        if self.mode == "local":
+            return [("file", Path(t), Path(t).stem) for t in self.player.playlist]
+        return []
+
+    def queue_remove(self, index: int) -> bool:
+        if self.mode == "video":
+            if 0 <= index < len(self.video_items) and index != self.video_index:
+                del self.video_items[index]
+                if index < self.video_index:
+                    self.video_index -= 1
+                self._queued_until = max(0, min(self._queued_until, len(self.video_items)))
+                return True
+            return False
+        if self.mode == "local" and index != self.player.index:
+            self.player.remove_at(index)
+            return True
+        return False
+
+    def queue_move(self, index: int, delta: int) -> bool:
+        if self.mode == "video":
+            j = index + delta
+            if 0 <= index < len(self.video_items) and 0 <= j < len(self.video_items):
+                items = self.video_items
+                items[index], items[j] = items[j], items[index]
+                if self.video_index in (index, j):
+                    self.video_index = j if self.video_index == index else index
+                return True
+            return False
+        if self.mode == "local":
+            self.player.move(index, delta)
+            return True
+        return False
+
+    def save_queue_as_playlist(self, name: str) -> str:
+        items = self.queue_items()
+        if not items:
+            return "La coda è vuota."
+        return self.add_to_playlist(name, items)
 
     def play(self, query: str) -> str:
         matches = library.best_matches(self.tracks(), query)
