@@ -2,7 +2,7 @@
 
 [Scarica Lumi-024-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-024-PROVA.zip)
 
-Come la 023, più: le note vocali Telegram usano la voce scelta in Lumi (Edge, Paola/Serena o Windows) e, se non funziona, la voce Windows predefinita invece di non rispondere. La bocca dell'avatar segue la posizione reale dell'audio e parte solo quando parte il suono, con tutte le voci. configura_telegram.bat salva nello stesso profilo di avvia_lumi.bat e ricontrolla le credenziali. Verificati in CI Windows: 12 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare.
+Come la 023, più: le note vocali Telegram usano la voce scelta in Lumi (Edge, Paola/Serena o Windows) e, se non funziona, la voce Windows predefinita invece di non rispondere. La bocca dell'avatar segue la posizione reale dell'audio e parte solo quando parte il suono, con tutte le voci. configura_telegram.bat salva nello stesso profilo di avvia_lumi.bat e ricontrolla le credenziali. Verificati in CI Windows: 1191 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare.
 
 [Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42726221570). SHA-256: `bf12b5f8f7623a35678c120d7761c1c59248a47002cb64940680940c542b0cd2`.
 
