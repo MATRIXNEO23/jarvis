@@ -257,3 +257,6 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 - Coda YouTube: durante un video YouTube «aggiungi in coda …» cerca su YouTube e inserisce il primo risultato dopo il video in corso (e dopo quelli già accodati), senza interrompere; un brano della cartella non interrompe più YouTube.
 - Più playlist con nome (anche vuote), «Rinomina», voci YouTube nelle playlist (`yt:<id>|titolo`); finestra **Coda** dalla barra (▲▼, Togli, + Aggiungi, Salva come playlist). Player: comandi `remove`/`move` sul suo thread (quello in corso non si toglie).
 - **⛶ intero**: barra e riquadro ora sono figli della finestra principale (posizionati con place in_= sull'area del globo); a schermo intero la finestra va in -fullscreen e coprono tutta la finestra; «⛶ esci»/Esc, uscita automatica a fine video o con riduci.
+
+## 034 — Barra: tasti riduci e schermo intero visibili (riscontro utente 11/11 00:24, foto)
+- Con un titolo lungo i tasti «▁ riduci» e «⛶ intero» venivano spinti fuori dalla riga 2. Ora il titolo ha larghezza minima 1 e i tasti sono impacchettati prima del titolo: il titolo si accorcia, i tasti restano.

@@ -384,8 +384,10 @@ class MusicBar:
         ttk.Button(info, text="☰", width=3, command=self.open_list).pack(side="left")
         ttk.Button(info, text="Coda", width=5, command=self.open_queue).pack(side="left", padx=(3, 0))
         self.title = tk.StringVar(value="")
-        tk.Label(info, textvariable=self.title, bg="#031522", fg="#d7f6ff",
-                 font=("Segoe UI", 9), anchor="w").pack(side="left", fill="x", expand=True, padx=6)
+        # width=1: il titolo lungo non spinge fuori i tasti video (prendono spazio prima).
+        self.title_label = tk.Label(info, textvariable=self.title, bg="#031522", fg="#d7f6ff",
+                                    font=("Segoe UI", 9), anchor="w", width=1)
+        self.title_label.pack(side="left", fill="x", expand=True, padx=6)
         self.video_button = ttk.Button(info, text="▁ riduci", width=9, command=self._toggle_video)
         self.full_button = ttk.Button(info, text="⛶ intero", width=9, command=self._toggle_full)
         self._full = False
@@ -492,7 +494,7 @@ class MusicBar:
                 self._bar_in = self.host
             if full_ok != self._full_shown:
                 if full_ok:
-                    self.full_button.pack(side="right", padx=(0, 3))
+                    self.full_button.pack(side="right", padx=(0, 3), before=self.title_label)
                 else:
                     self.full_button.pack_forget()
                 self._full_shown = full_ok
@@ -501,7 +503,7 @@ class MusicBar:
             want_button = is_video
             if want_button != self._video_button_shown:
                 if want_button:
-                    self.video_button.pack(side="right")
+                    self.video_button.pack(side="right", before=self.title_label)
                 else:
                     self.video_button.pack_forget()
                 self._video_button_shown = want_button
