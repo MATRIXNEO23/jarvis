@@ -1,3 +1,11 @@
+## Build 029 PROVA — finestra Modello locale: Salva e Prova di nuovo visibili
+
+[Scarica Lumi-029-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-029-PROVA.zip)
+
+Come la 028, più: nella configurazione del modello locale i pulsanti Salva, Prova generazione e Chiudi restano sempre in fondo alla finestra, il resto scorre, e l'altezza si adatta allo schermo (sulla 026-028, con uno schermo da 768 px, i pulsanti finivano fuori e non si poteva salvare il nuovo GGUF). Nient'altro cambiato. Verificati in CI Windows: test della finestra su schermo piccolo, 1206 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42817896454). SHA-256: `4a24902e0e76a6fd1711f53aabe34ff2c96535c0a99d0732eb7bacd877343286`.
+
 ## Build 028 PROVA — Telegram: avviso con nome e ID del mittente ignorato
 
 [Scarica Lumi-028-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-028-PROVA.zip)
