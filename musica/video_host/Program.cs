@@ -73,6 +73,10 @@ static class Program
             using (var fs = File.Create(Path.Combine(pageDir, "player.html"))) res.CopyTo(fs);
             core.SetVirtualHostNameToFolderMapping("lumi.player", pageDir, CoreWebView2HostResourceAccessKind.DenyCors);
             core.WebMessageReceived += (o, m) => Emit(m.TryGetWebMessageAsString());
+            // File locali serviti da Lumi con richieste a intervalli (Range):
+            // la mappatura cartella di WebView2 non riproduceva i file (MediaError 4).
+            core.AddWebResourceRequestedFilter("https://lumi.media/*", CoreWebView2WebResourceContext.All);
+            core.WebResourceRequested += (o, r) => ServeMedia(core, r);
             core.NavigationCompleted += (o, n) => Emit("{\"ev\":\"ready\"}");
             core.Navigate("https://lumi.player/player.html");
         };
@@ -103,9 +107,7 @@ static class Program
                     {
                         // La cartella del file diventa https://lumi.media/ solo per questo brano.
                         var full = LongPath(Path.GetFullPath(path));
-                        var folder = Path.GetDirectoryName(full);
-                        try { core.ClearVirtualHostNameToFolderMapping("lumi.media"); } catch { }
-                        core.SetVirtualHostNameToFolderMapping("lumi.media", folder, CoreWebView2HostResourceAccessKind.Allow);
+                        CurrentMedia = full;
                         var url = "https://lumi.media/" + Uri.EscapeDataString(Path.GetFileName(full));
                         Emit("{\"ev\":\"debug\",\"url\":" + json.Serialize(url) + "}");
                         core.PostWebMessageAsString(json.Serialize(new { cmd = "file", url = url }));
@@ -118,6 +120,76 @@ static class Program
         reader.Start();
         Application.Run(form);
         return 0;
+    }
+
+    static string CurrentMedia;
+
+    static string Mime(string path)
+    {
+        switch (Path.GetExtension(path).ToLowerInvariant())
+        {
+            case ".mp4": case ".m4v": return "video/mp4";
+            case ".webm": return "video/webm";
+            case ".mov": return "video/quicktime";
+            case ".mp3": return "audio/mpeg";
+            case ".wav": return "audio/wav";
+            case ".m4a": return "audio/mp4";
+            default: return "application/octet-stream";
+        }
+    }
+
+    static void ServeMedia(CoreWebView2 core, CoreWebView2WebResourceRequestedEventArgs r)
+    {
+        var path = CurrentMedia;
+        var name = Uri.UnescapeDataString(new Uri(r.Request.Uri).AbsolutePath.TrimStart('/'));
+        if (path == null || !File.Exists(path) || !string.Equals(Path.GetFileName(path), name, StringComparison.OrdinalIgnoreCase))
+        {
+            r.Response = core.Environment.CreateWebResourceResponse(null, 404, "Not Found", "");
+            return;
+        }
+        long length = new FileInfo(path).Length, start = 0, end = length - 1;
+        int status = 200;
+        string range = null;
+        try { range = r.Request.Headers.GetHeader("Range"); } catch { }
+        if (!string.IsNullOrEmpty(range) && range.StartsWith("bytes="))
+        {
+            var parts = range.Substring(6).Split('-');
+            if (long.TryParse(parts[0], out var s0)) start = Math.Max(0, Math.Min(s0, length - 1));
+            if (parts.Length > 1 && long.TryParse(parts[1], out var e0)) end = Math.Min(e0, length - 1);
+            status = 206;
+        }
+        var count = Math.Max(0, end - start + 1);
+        var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        stream.Seek(start, SeekOrigin.Begin);
+        var slice = new SliceStream(stream, count);
+        var headers = "Content-Type: " + Mime(path) + "\r\nAccept-Ranges: bytes\r\nContent-Length: " + count
+            + (status == 206 ? "\r\nContent-Range: bytes " + start + "-" + end + "/" + length : "")
+            + "\r\nAccess-Control-Allow-Origin: *";
+        r.Response = core.Environment.CreateWebResourceResponse(slice, status, status == 206 ? "Partial Content" : "OK", headers);
+    }
+
+    // Legge al massimo «count» byte dalla posizione corrente.
+    sealed class SliceStream : Stream
+    {
+        readonly Stream inner; long left;
+        public SliceStream(Stream inner, long count) { this.inner = inner; left = count; }
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => left;
+        public override long Position { get => 0; set => throw new NotSupportedException(); }
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (left <= 0) return 0;
+            int n = inner.Read(buffer, offset, (int)Math.Min(count, left));
+            left -= n;
+            return n;
+        }
+        public override long Seek(long o, SeekOrigin k) => throw new NotSupportedException();
+        public override void SetLength(long v) => throw new NotSupportedException();
+        public override void Write(byte[] b, int o, int c) => throw new NotSupportedException();
+        protected override void Dispose(bool disposing) { if (disposing) inner.Dispose(); base.Dispose(disposing); }
     }
 
     static void Fit(Form form, IntPtr parent)
