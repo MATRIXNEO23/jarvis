@@ -22,7 +22,8 @@ def main(out_dir: str) -> int:
     frame.pack(fill="both", expand=True)
     root.update()
     events: queue.Queue = queue.Queue()
-    with tempfile.TemporaryDirectory() as temp:
+    # WebView2 child processes may hold files for a moment after exit.
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
         sample = Path(temp) / "prova.wav"
         with wave.open(str(sample), "wb") as w:
             w.setnchannels(1); w.setsampwidth(2); w.setframerate(22050)

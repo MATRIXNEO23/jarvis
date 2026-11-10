@@ -237,3 +237,4 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 - Alternative scartate: pywebview/pythonnet (dipendenze Python da installare), controllo IE (YouTube non lo supporta), estrazione audio da YouTube (vietata dalle regole).
 - Prove CI: compilazione dell'host, avvio reale di WebView2 dentro una finestra Tk con comandi e file WAV (`tools/video_host_smoke.py`), test del servizio. Da provare sul Pavilion: resa, RAM, YouTube reale.
 - Comandi locali del lettore (richiesta utente): play, pausa, stop, avanti, indietro (anche singole parole) nella guida «Musica» e nel parser; senza musica in corso queste parole non vengono catturate.
+- CI 031 prima prova: il riquadro si è chiuso ma la cartella temporanea di WebView2 era ancora bloccata dai suoi processi figli (BrowserMetrics) → errore solo di pulizia nella prova; corretta con ignore_cleanup_errors.
