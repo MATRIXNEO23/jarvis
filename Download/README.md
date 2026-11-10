@@ -1,3 +1,11 @@
+## Build 033 PROVA — Musica: cartelle navigabili, coda, playlist, schermo intero
+
+[Scarica Lumi-033-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-033-PROVA.zip)
+
+Come la 032, più: le cartelle dell'elenco ☰ ora si aprono. Coda: «aggiungi in coda …» (cartelle, o YouTube mentre va YouTube, senza interrompere), pulsante Coda nella barra con ▲▼, Togli, + Aggiungi e Salva come playlist. Più playlist con nome (anche vuote, anche con video YouTube), Rinomina, Togli, «metti la playlist …». YouTube con la chiave: finito un video parte il risultato successivo (fino a 10 per ricerca, stessa quota). «⛶ intero»: video a schermo intero con la barra in fondo, «⛶ esci» o Esc. Verificati in CI Windows: 1232 test, riquadro video reale in finestra Tk, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42918451263). SHA-256: `4c1cd5e119cf7beb9013525b4e0199418e5ea3710237609a0287781d95add227`.
+
 ## Build 032 PROVA — Musica: barra sotto il video, riduci video, più cartelle
 
 [Scarica Lumi-032-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-032-PROVA.zip)
