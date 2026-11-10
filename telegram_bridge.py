@@ -296,6 +296,7 @@ class TelegramBridge:
             processing_lock=asyncio.Lock()
 
             handled_ids=set()
+            warned_senders=set()
 
             async def process(event):
                 try:
@@ -381,6 +382,16 @@ class TelegramBridge:
                     self._observe("filtered_outgoing" if event.out else
                                   "filtered_non_private" if not event.is_private else
                                   "filtered_contact")
+                    sender=getattr(event,"sender_id",None)
+                    if (not event.out and event.is_private and type(sender) is int
+                            and sender not in warned_senders):
+                        # Una volta per mittente: dice CHI è stato ignorato (solo
+                        # il nome già in rubrica/chat, mai il testo), così si
+                        # capisce se è spuntato il contatto sbagliato.
+                        warned_senders.add(sender)
+                        name=available.get(sender,("un contatto non in rubrica",))[0]
+                        self.notify(("telegram_status","Telegram: messaggio da "+str(name)[:60]
+                                     +" ignorato: non è tra i contatti spuntati."))
                     return
                 await process(event)
 
