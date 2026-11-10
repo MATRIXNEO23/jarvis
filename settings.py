@@ -6,12 +6,16 @@ import os
 from pathlib import Path
 
 DEFAULTS = {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "", "tts_effect": 25,
+            "tts_rate": 0, "tts_pitch": 0, "tts_volume": 100,
             "memory_enabled": False, "auto_listen": True,
             "keep_awake_fullscreen": False,
             "telegram_enabled": False, "telegram_peer_id": 0,
             "telegram_contact_name": "", "telegram_contacts": [],
             "timer_sound": "digital", "timer_volume": 80,
             "timer_repeat": True, "timer_audio_mode": "auto"}
+
+
+_VOICE_STYLE_LIMITS = (("tts_rate", -50, 50), ("tts_pitch", -50, 50), ("tts_volume", 10, 100))
 
 
 def normalize_telegram_contacts(value) -> list[dict]:
@@ -124,6 +128,10 @@ def load_settings(path: Path | None = None, *, warnings: list[str] | None = None
         effect = data.get("tts_effect")
         if type(effect) is int and 0 <= effect <= 100:
             result["tts_effect"] = effect
+        for key, low, high in _VOICE_STYLE_LIMITS:
+            value = data.get(key)
+            if type(value) is int and low <= value <= high:
+                result[key] = value
     except FileNotFoundError:
         # Preserve the agreed first-installation/legacy defaults. A missing
         # file is different from an existing file we could not interpret.
@@ -165,6 +173,12 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
         raise ValueError("Invalid timer alarm preferences")
     if not isinstance(contacts, list) or normalize_telegram_contacts(contacts) != contacts:
         raise ValueError("Invalid Telegram contact selection")
+    voice_style = {"tts_effect": settings.get("tts_effect", DEFAULTS["tts_effect"])}
+    for key, low, high in (("tts_effect", 0, 100),) + _VOICE_STYLE_LIMITS:
+        value = settings.get(key, DEFAULTS[key])
+        if type(value) is not int or not low <= value <= high:
+            raise ValueError("Invalid voice style: " + key)
+        voice_style[key] = value
     if (type(enabled) is not bool or type(memory_enabled) is not bool
             or type(auto_listen) is not bool or type(keep_awake_fullscreen) is not bool
             or type(telegram_enabled) is not bool
@@ -186,6 +200,7 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
     tmp = target.with_suffix(".tmp")
     tmp.write_text(json.dumps({"gpt_enabled": settings["gpt_enabled"],
                                "tts_enabled": enabled, "tts_voice": voice,
+                               **voice_style,
                                "memory_enabled": memory_enabled,
                                "auto_listen": auto_listen,
                                "keep_awake_fullscreen": keep_awake_fullscreen,

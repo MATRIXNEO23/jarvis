@@ -139,8 +139,19 @@ sys.stdout.write("ready\n"); sys.stdout.flush()
 for line in sys.stdin:
     try:
         req = json.loads(line)
+        scale = float(req.get("length_scale") or 1.0)
         with wave.open(req["out"], "wb") as wav_file:
-            voice.synthesize_wav(req["text"], wav_file)
+            done = False
+            if abs(scale - 1.0) > 1e-3:
+                try:
+                    from piper import SynthesisConfig
+                    voice.synthesize_wav(req["text"], wav_file,
+                                         syn_config=SynthesisConfig(length_scale=scale))
+                    done = True
+                except (ImportError, TypeError):
+                    done = False
+            if not done:
+                voice.synthesize_wav(req["text"], wav_file)
         sys.stdout.write("ok\n")
     except Exception as exc:
         sys.stdout.write("err " + type(exc).__name__ + " " + " ".join(str(exc).split())[:200] + "\n")
@@ -177,8 +188,10 @@ class _PiperWorker:
     run inside the audio folder so file names stay plain ASCII.
     Otherwise: the piper-tts Python package in a child interpreter."""
 
-    def __init__(self, model: Path, timeout: float = 90, exe: Path | None = None):
+    def __init__(self, model: Path, timeout: float = 90, exe: Path | None = None,
+                 length_scale: float = 1.0):
         self.model = Path(model)
+        self.length_scale = length_scale
         self.lock = threading.Lock()
         self.timeout = timeout
         self.exe = exe
@@ -186,7 +199,8 @@ class _PiperWorker:
         if exe is not None:
             self.cwd = _audio_dir()
             self.proc = subprocess.Popen(
-                [str(exe), "--model", _ascii_path(self.model), "--json-input", "--quiet"],
+                [str(exe), "--model", _ascii_path(self.model), "--json-input", "--quiet",
+                 "--length_scale", f"{self.length_scale:.3f}"],
                 cwd=str(self.cwd), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL, text=True, encoding="utf-8", creationflags=flags)
             return
@@ -221,7 +235,8 @@ class _PiperWorker:
                     raise PiperVoiceError("Cartella audio non valida per il motore.")
                 request = {"text": text, "output_file": out_path.name}
             else:
-                request = {"text": text, "out": str(out_path)}
+                request = {"text": text, "out": str(out_path),
+                           "length_scale": self.length_scale}
             try:
                 self.proc.stdin.write(json.dumps(request) + "\n")
                 self.proc.stdin.flush()
@@ -249,15 +264,18 @@ _WORKERS: dict[str, _PiperWorker] = {}
 _WORKERS_LOCK = threading.Lock()
 
 
-def _worker_for(model: Path, exe: Path | None = None) -> _PiperWorker:
-    key = str(Path(model).resolve()) + "|" + str(exe)
+def _worker_for(model: Path, exe: Path | None = None,
+                length_scale: float = 1.0) -> _PiperWorker:
+    # piper.exe takes length_scale only at start: a speed change restarts it.
+    key = str(Path(model).resolve()) + "|" + str(exe) + "|" + f"{length_scale:.3f}"
     with _WORKERS_LOCK:
         worker = _WORKERS.get(key)
         if worker is None or not worker.alive():
             for other in _WORKERS.values():   # one voice in RAM at a time
                 other.close()
             _WORKERS.clear()
-            worker = _WORKERS[key] = _PiperWorker(Path(model), exe=exe)
+            worker = _WORKERS[key] = _PiperWorker(Path(model), exe=exe,
+                                                  length_scale=length_scale)
         return worker
 
 
@@ -269,7 +287,7 @@ def shutdown_workers() -> None:
 
 
 def synthesize(text: str, key: str, out_path: Path, *, folder: Path | None = None,
-               runner=None, timeout: int = 120) -> Path:
+               runner=None, timeout: int = 120, length_scale: float = 1.0) -> Path:
     """Text -> WAV in an isolated child process. Raises PiperVoiceError.
 
     Default: persistent worker (model loaded once). If it cannot run, or a
@@ -285,11 +303,11 @@ def synthesize(text: str, key: str, out_path: Path, *, folder: Path | None = Non
         exe = bundled_engine()
         if exe is not None and Path(out_path).parent.resolve() == _audio_dir().resolve():
             try:
-                return _worker_for(model, exe).synth(clean, Path(out_path))
+                return _worker_for(model, exe, length_scale).synth(clean, Path(out_path))
             except (PiperVoiceError, OSError):
                 shutdown_workers()
         try:
-            return _worker_for(model).synth(clean, Path(out_path))
+            return _worker_for(model, None, length_scale).synth(clean, Path(out_path))
         except (PiperVoiceError, OSError):
             shutdown_workers()
         runner = subprocess.run
@@ -432,20 +450,70 @@ def _audio_dir() -> Path:
     return _AUDIO_DIR
 
 
-def _render(text: str, key: str, effect: float, folder, runner) -> Path:
-    base = _audio_dir() / f"v{threading.get_ident()}-{id(text)}-{os.getpid()}"
-    raw = synthesize(text, key, base.with_suffix(".raw.wav"), folder=folder, runner=runner)
-    if effect > 0:
-        final = apply_digital_effect(raw, base.with_suffix(".wav"), effect)
-        raw.unlink(missing_ok=True)
-        return final
-    return raw
+def apply_pitch_volume(in_path: Path, out_path: Path, pitch: float, gain: float) -> Path:
+    """Tonalità (ricampionamento: alza/abbassa e accorcia/allunga di ``pitch``,
+    compensato a monte con length_scale) e volume. Senza numpy se serve."""
+    with wave.open(str(in_path), "rb") as source:
+        params = source.getparams()
+        frames = source.readframes(params.nframes)
+    if params.sampwidth != 2 or params.nchannels != 1 or (
+            abs(pitch - 1.0) < 1e-3 and abs(gain - 1.0) < 1e-3):
+        Path(out_path).write_bytes(Path(in_path).read_bytes())
+        return Path(out_path)
+    import array
+    samples = array.array("h", frames)
+    if sys.byteorder != "little":
+        samples.byteswap()
+    size = len(samples)
+    length = max(1, int(size / pitch))
+    try:
+        import numpy as np
+        src = np.asarray(samples, dtype=np.float32)
+        pos = np.arange(length, dtype=np.float64) * pitch
+        out = np.interp(pos, np.arange(size), src) * gain
+        data = np.clip(out, -32768, 32767).astype("<i2").tobytes()
+    except ImportError:
+        out = array.array("h")
+        for n in range(length):
+            x = n * pitch
+            i = int(x)
+            j = i + 1 if i + 1 < size else i
+            f = x - i
+            v = (samples[i] * (1 - f) + samples[j] * f) * gain if i < size else 0
+            out.append(max(-32768, min(32767, int(v))))
+        if sys.byteorder != "little":
+            out.byteswap()
+        data = out.tobytes()
+    with wave.open(str(out_path), "wb") as target:
+        target.setparams(params)
+        target.writeframes(data)
+    return Path(out_path)
 
+
+def _render(text: str, key: str, effect: float, folder, runner) -> Path:
+    import voice_style
+    style = voice_style.current()
+    pitch = voice_style.pitch_factor(style)
+    length_scale = pitch / voice_style.speed_factor(style)
+    base = _audio_dir() / f"v{threading.get_ident()}-{id(text)}-{os.getpid()}"
+    raw = synthesize(text, key, base.with_suffix(".raw.wav"), folder=folder, runner=runner,
+                     length_scale=length_scale)
+    styled = raw
+    if abs(pitch - 1.0) > 1e-3 or style["volume"] != 100:
+        styled = apply_pitch_volume(raw, base.with_suffix(".styled.wav"), pitch,
+                                    voice_style.gain(style))
+        raw.unlink(missing_ok=True)
+    if effect > 0:
+        final = apply_digital_effect(styled, base.with_suffix(".wav"), effect)
+        styled.unlink(missing_ok=True)
+        return final
+    return styled
 
 def prepare(text: str, key: str, *, effect: float = 0.0, folder: Path | None = None,
             runner=None) -> None:
     """Start synthesizing ``text`` in background (next sentence while one plays)."""
-    token = (text, key, round(effect, 3), str(folder))
+    import voice_style
+    token = (text, key, round(effect, 3), str(folder), tuple(sorted(voice_style.current().items())))
     with _PREPARED_LOCK:
         if token in _PREPARED:
             return
@@ -469,7 +537,8 @@ def speak_with_piper(text: str, key: str, *, effect: float = 0.0,
     The envelope is published right before the sound starts, so the avatar's
     mouth moves with the audio, not while the voice is still being prepared.
     """
-    token = (text, key, round(effect, 3), str(folder))
+    import voice_style
+    token = (text, key, round(effect, 3), str(folder), tuple(sorted(voice_style.current().items())))
     with _PREPARED_LOCK:
         prepared = _PREPARED.pop(token, None)
     if prepared is not None:

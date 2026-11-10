@@ -28,8 +28,21 @@ $s=New-Object System.Speech.Synthesis.SpeechSynthesizer
 try {
     if ($r.voice) { $s.SelectVoice([string]$r.voice) }
     $s.Rate=0
+    if ($null -ne $r.rate) { $s.Rate=[Math]::Max(-10,[Math]::Min(10,[int]$r.rate)) }
+    if ($null -ne $r.volume) { $s.Volume=[Math]::Max(0,[Math]::Min(100,[int]$r.volume)) }
     $s.SetOutputToWaveFile([string]$r.path)
-    $s.Speak([string]$r.text)
+    $done=$false
+    if ($null -ne $r.pitch -and [int]$r.pitch -ne 0) {
+        try {
+            $t=[System.Security.SecurityElement]::Escape([string]$r.text)
+            $lang=$s.Voice.Culture.Name
+            $p=[int]([int]$r.pitch/2)
+            $sign=if ($p -ge 0) {'+'} else {''}
+            $s.SpeakSsml("<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='$lang'><prosody pitch='$sign$p%'>$t</prosody></speak>")
+            $done=$true
+        } catch { $done=$false }
+    }
+    if (-not $done) { $s.Speak([string]$r.text) }
 } finally { $s.Dispose() }
 """
 _ENCODED=base64.b64encode(_PS_WAV.encode("utf-16-le")).decode("ascii")
@@ -49,8 +62,13 @@ def _sapi_to_wav(text:str,wav_path:Path,voice:str=""):
         raise TelegramVoiceError("SAPI richiede Windows.")
     if not text.strip() or len(text)>520:
         raise TelegramVoiceError("Testo vocale vuoto o troppo lungo.")
-    data=json.dumps({"text":text,"path":str(wav_path),
-                     "voice":voice[:180]},ensure_ascii=False).encode("utf-8")
+    request={"text":text,"path":str(wav_path),"voice":voice[:180]}
+    try:
+        import voice_style
+        request.update(voice_style.sapi_params())
+    except Exception:
+        pass
+    data=json.dumps(request,ensure_ascii=False).encode("utf-8")
     result=subprocess.run(
         ["powershell.exe","-NoLogo","-NoProfile","-NonInteractive",
          "-EncodedCommand",_ENCODED],
@@ -80,9 +98,8 @@ def _speech_source(text:str,folder:Path,voice:str) -> Path:
         piper_key=piper_voice.key_from_label(voice)
         if piper_key is not None:
             # Cartella audio di Piper: lì il motore incluso (piper.exe) lavora.
-            out=piper_voice._audio_dir()/("telegram-"+str(os.getpid())+".wav")
-            piper_voice.synthesize(text,piper_key,out)
-            return out
+            # Stessa velocità/tonalità/volume della voce in Lumi.
+            return piper_voice._render(text,piper_key,0.0,None,None)
     except Exception:
         voice=""                     # ripiego: voce Windows predefinita
     wav=folder/"speech.wav"

@@ -380,6 +380,19 @@ def main() -> None:
     ttk.Scale(natural_row, from_=0, to=100, variable=spoken_effect, length=140,
               command=lambda _v: spoken_effect.set(int(float(_v)))).pack(side="left")
     ttk.Label(natural_row, textvariable=spoken_effect, width=4).pack(side="left", padx=(4, 0))
+    # Velocità, tonalità e volume: valgono per tutte le voci e per Telegram.
+    style_row = ttk.Frame(speech_controls)
+    style_row.pack(fill="x", pady=(6, 0))
+    spoken_rate = tk.IntVar(value=settings.get("tts_rate", 0))
+    spoken_pitch = tk.IntVar(value=settings.get("tts_pitch", 0))
+    spoken_volume = tk.IntVar(value=settings.get("tts_volume", 100))
+    for label, variable, low, high in (("Velocità:", spoken_rate, -50, 50),
+                                       ("Tonalità:", spoken_pitch, -50, 50),
+                                       ("Volume:", spoken_volume, 10, 100)):
+        ttk.Label(style_row, text=label).pack(side="left", padx=(0, 4))
+        ttk.Scale(style_row, from_=low, to=high, variable=variable, length=110,
+                  command=lambda _v, var=variable: var.set(int(float(_v)))).pack(side="left")
+        ttk.Label(style_row, textvariable=variable, width=4).pack(side="left", padx=(2, 10))
     ttk.Label(speech_controls, wraplength=680, foreground="#5f8aa3", text=(
         "Paola e Serena sono voci Piper scaricate dal repository Lumi con verifica. "
         "Serena: it_IT-serena-high by Marco Baccarani (Committa), CC BY 4.0. "
@@ -2680,6 +2693,9 @@ def main() -> None:
 
     speaker = OfflineSpeaker(notify_error=lambda reason: output_queue.put(("tts_error", reason)))
     speaker.effect = settings.get("tts_effect", 25) / 100
+    import voice_style
+    voice_style.update(rate=settings.get("tts_rate", 0), pitch=settings.get("tts_pitch", 0),
+                       volume=settings.get("tts_volume", 100))
     # Avatar LUMI: lip sync dalla curva del volume della voce naturale e
     # mini avatar in basso a destra quando la finestra e' ridotta a icona.
     from lumi_avatar import LIPSYNC, PLAYBACK_LATENCY, AvatarDock
@@ -2700,6 +2716,11 @@ def main() -> None:
         settings["tts_voice"] = selected_voice()
         settings["tts_effect"] = max(0, min(100, int(spoken_effect.get())))
         speaker.effect = settings["tts_effect"] / 100
+        import voice_style
+        style = voice_style.update(rate=spoken_rate.get(), pitch=spoken_pitch.get(),
+                                   volume=spoken_volume.get())
+        settings["tts_rate"], settings["tts_pitch"], settings["tts_volume"] = (
+            style["rate"], style["pitch"], style["volume"])
         try:
             save_settings(settings)
             spoken_status.set("Risposte vocali salvate; nessun servizio a pagamento.")
@@ -2740,6 +2761,9 @@ def main() -> None:
 
     def test_speech() -> None:
         speaker.effect = max(0, min(100, int(spoken_effect.get()))) / 100
+        import voice_style
+        voice_style.update(rate=spoken_rate.get(), pitch=spoken_pitch.get(),
+                           volume=spoken_volume.get())
         if not speaker.speak("Pronto. Questa è la mia voce.", selected_voice()):
             spoken_status.set("Sintesi vocale occupata: riprova.")
 
@@ -4961,6 +4985,20 @@ def main() -> None:
         command=lambda: handle_document_confirmation("annulla"))
     spoken_switch.configure(command=save_speech_preferences)
     spoken_picker.bind("<<ComboboxSelected>>", lambda event: save_speech_preferences())
+    # Cursori voce (effetto, velocità, tonalità, volume): salvati poco dopo
+    # l'ultimo spostamento, senza scrivere su disco a ogni pixel.
+    style_save_job = [None]
+
+    def schedule_style_save(*_args) -> None:
+        if style_save_job[0] is not None:
+            try:
+                root.after_cancel(style_save_job[0])
+            except tk.TclError:
+                pass
+        style_save_job[0] = root.after(700, save_speech_preferences)
+
+    for style_var in (spoken_effect, spoken_rate, spoken_pitch, spoken_volume):
+        style_var.trace_add("write", schedule_style_save)
     refresh_voices_button.configure(command=refresh_voices)
     download_paola_button.configure(command=lambda: download_natural_voice("paola"))
     download_serena_button.configure(command=lambda: download_natural_voice("serena"))

@@ -28,16 +28,28 @@ try {
         $voices = @($synth.GetInstalledVoices() | Where-Object { $_.Enabled } |
             ForEach-Object { $_.VoiceInfo.Name })
         ConvertTo-Json -InputObject $voices -Compress
-    } elseif ($request.mode -eq 'speak') {
+    } elseif ($request.mode -eq 'speak' -or $request.mode -eq 'file') {
         if ($request.voice) { $synth.SelectVoice([string]$request.voice) }
         $synth.Rate = 0
-        $synth.Speak([string]$request.text)
-    } elseif ($request.mode -eq 'file') {
-        if ($request.voice) { $synth.SelectVoice([string]$request.voice) }
-        $synth.Rate = 0
-        $synth.SetOutputToWaveFile([string]$request.path)
-        $synth.Speak([string]$request.text)
-        $synth.SetOutputToNull()
+        if ($null -ne $request.rate) { $synth.Rate = [Math]::Max(-10, [Math]::Min(10, [int]$request.rate)) }
+        if ($null -ne $request.volume) { $synth.Volume = [Math]::Max(0, [Math]::Min(100, [int]$request.volume)) }
+        if ($request.mode -eq 'file') { $synth.SetOutputToWaveFile([string]$request.path) }
+        $pitch = 0
+        if ($null -ne $request.pitch) { $pitch = [int]$request.pitch }
+        $spoken = $false
+        if ($pitch -ne 0) {
+            try {
+                $t = [System.Security.SecurityElement]::Escape([string]$request.text)
+                $lang = $synth.Voice.Culture.Name
+                $p = [int]($pitch / 2)
+                $sign = if ($p -ge 0) { '+' } else { '' }
+                $ssml = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='$lang'><prosody pitch='$sign$p%'>$t</prosody></speak>"
+                $synth.SpeakSsml($ssml)
+                $spoken = $true
+            } catch { $spoken = $false }
+        }
+        if (-not $spoken) { $synth.Speak([string]$request.text) }
+        if ($request.mode -eq 'file') { $synth.SetOutputToNull() }
     } else {
         throw 'Unsupported operation'
     }
@@ -241,8 +253,10 @@ class OfflineSpeaker:
         from piper_voice import _audio_dir, loudness_envelope, play_wav
         path = _audio_dir() / f"sapi-{os.getpid()}-{threading.get_ident()}.wav"
         try:
-            _invoke({"mode": "file", "text": part, "voice": voice, "path": str(path)},
-                    timeout=90, owner=self)
+            import voice_style
+            payload = {"mode": "file", "text": part, "voice": voice, "path": str(path)}
+            payload.update(voice_style.sapi_params())
+            _invoke(payload, timeout=90, owner=self)
             if self._closed.is_set() or not path.is_file():
                 return
             self.on_envelope(loudness_envelope(path))
@@ -321,6 +335,8 @@ class OfflineSpeaker:
                                 break   # altrimenti si ripiega sulla voce diretta
                     payload = {"mode": "speak", "text": part, "voice": voice}
                     if self._runner is None:
+                        import voice_style
+                        payload.update(voice_style.sapi_params())
                         _invoke(payload, timeout=90, owner=self)
                     else:
                         self._runner(payload, timeout=90)

@@ -71,10 +71,11 @@ import asyncio, json, sys
 import edge_tts
 
 async def run(req):
+    style = {k: req[k] for k in ("rate", "volume", "pitch") if req.get(k)}
     try:
-        comm = edge_tts.Communicate(req["text"], req["voice"], boundary="WordBoundary")
+        comm = edge_tts.Communicate(req["text"], req["voice"], boundary="WordBoundary", **style)
     except TypeError:
-        comm = edge_tts.Communicate(req["text"], req["voice"])
+        comm = edge_tts.Communicate(req["text"], req["voice"], **style)
     marks = []
     with open(req["out"], "wb") as audio:
         async for chunk in comm.stream():
@@ -121,13 +122,14 @@ class _EdgeWorker:
     def alive(self) -> bool:
         return self.proc.poll() is None
 
-    def synth(self, text: str, voice: str, out_path: Path) -> list:
+    def synth(self, text: str, voice: str, out_path: Path, style: dict | None = None) -> list:
         with self.lock:
             if not self.alive():
                 raise EdgeVoiceError("Voce Edge chiusa.")
             try:
-                self.proc.stdin.write(json.dumps({"text": text, "voice": voice,
-                                                  "out": str(out_path)}) + "\n")
+                request = {"text": text, "voice": voice, "out": str(out_path)}
+                request.update(style or {})
+                self.proc.stdin.write(json.dumps(request) + "\n")
                 self.proc.stdin.flush()
             except OSError as exc:
                 self.close()
@@ -196,7 +198,9 @@ def synthesize(text: str, key: str, out_path: Path, synth=None) -> list:
     try:
         if synth is not None:
             return synth(clean, VOICES[key][1], Path(out_path))
-        return _worker().synth(clean, VOICES[key][1], Path(out_path))
+        import voice_style
+        return _worker().synth(clean, VOICES[key][1], Path(out_path),
+                               voice_style.edge_params())
     except EdgeVoiceError:
         if synth is None:
             shutdown_worker()
@@ -235,7 +239,8 @@ def _render(text: str, key: str, synth=None) -> tuple[Path, list]:
 
 
 def prepare(text: str, key: str, synth=None) -> None:
-    token = (text, key)
+    import voice_style
+    token = (text, key, tuple(sorted(voice_style.current().items())))
     with _PREPARED_LOCK:
         if token in _PREPARED:
             return
@@ -253,8 +258,9 @@ def prepare(text: str, key: str, synth=None) -> None:
 
 def speak_with_edge(text: str, key: str, *, on_envelope=None, upcoming: str | None = None,
                     synth=None, player=play_mp3, **_ignored) -> None:
+    import voice_style
     with _PREPARED_LOCK:
-        prepared = _PREPARED.pop((text, key), None)
+        prepared = _PREPARED.pop((text, key, tuple(sorted(voice_style.current().items()))), None)
     if prepared is not None:
         thread, box = prepared
         thread.join()
