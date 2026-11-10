@@ -1,3 +1,11 @@
+## Build 030 PROVA — add-on Musica
+
+[Scarica Lumi-030-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-030-PROVA.zip)
+
+Come la 029, più l'add-on Musica (installato spento: attivalo in Impostazioni > Gestisci add-on > Musica, poi Configura per scegliere la cartella). «Lumi, metti …» cerca il brano nella cartella musica e lo suona dentro Lumi; se non c'è apre la ricerca su YouTube nel browser (con la chiave API YouTube facoltativa apre subito il primo video). Pausa, riprendi, prossima, ferma la musica, volume, anche a voce; barra sotto il nucleo. Con l'add-on spento Lumi resta com'era. Verificati in CI Windows: 1217 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42843310028). SHA-256: `663fff0d8a5cdc7b419e64635add0a1ee4d650c2e18783202ef567f06c6380b1`.
+
 ## Build 029 PROVA — finestra Modello locale: Salva e Prova di nuovo visibili
 
 [Scarica Lumi-029-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-029-PROVA.zip)
