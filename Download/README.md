@@ -1,3 +1,11 @@
+## Build 032 PROVA — Musica: barra sotto il video, riduci video, più cartelle
+
+[Scarica Lumi-032-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-032-PROVA.zip)
+
+Come la 031, più: barra musica sotto il video su due righe (⏮ ⏸ ⏹ ⏭ e volume; ☰ e titolo), visibile solo con la musica attiva. Tasto «▁ riduci»: resta solo la musica con la barra (YouTube in un riquadrino 200×200, minimo richiesto dal lettore), «▣ video» lo riporta. Video offline corretti: ora partono nel riquadro. Più cartelle musica (Aggiungi/Rimuovi in Configura, la cartella già scelta viene ripresa) e elenco ☰ navigabile per cartelle e sottocartelle, con «▶ Suona cartella». Verificati in CI Windows: 1225 test, riquadro reale dentro una finestra Tk con un file in riproduzione, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42896984473). SHA-256: `bb1021dce1c141c5fd27d3a065b8459b94b599a3d70cd6a103ce4df7f2888780`.
+
 ## Build 031 PROVA — Musica: indietro, elenco brani, video al posto del globo
 
 [Scarica Lumi-031-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-031-PROVA.zip)
