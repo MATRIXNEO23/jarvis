@@ -1,3 +1,11 @@
+## Build 031 PROVA — Musica: indietro, elenco brani, video al posto del globo
+
+[Scarica Lumi-031-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-031-PROVA.zip)
+
+Come la 030, più: tasto ⏮ e «torna indietro» (oltre 3 secondi ricomincia il brano), pulsante ☰ con l'elenco dei brani della cartella (ricerca e doppio clic), comandi play, pausa, stop, avanti, indietro nella guida. Video della cartella (MP4, WebM, M4V, MOV) e YouTube con la chiave API nello stesso riquadro al posto del globo (Microsoft Edge WebView2, già presente in Windows aggiornato); un solo volume per tutto. Finito il video il riquadro si chiude e libera la RAM. Video non incorporabile o WebView2 assente: si apre il browser. Verificati in CI Windows: 1221 test, riquadro reale dentro una finestra Tk con un file in riproduzione, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare (YouTube reale, RAM).
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42878790559). SHA-256: `20095889fd8a955872706fba7ceaf741223e3cd408faa48ef6c5e7cbac49247d`.
+
 ## Build 030 PROVA — add-on Musica
 
 [Scarica Lumi-030-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-030-PROVA.zip)
