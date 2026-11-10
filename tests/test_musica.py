@@ -461,3 +461,28 @@ class YouTubeContinueTests(unittest.TestCase):
                 return False
         self.assertEqual(video_list("acdc", "K", opener=lambda url, timeout: Resp(body)),
                          [("abcDEF12345", "AC/DC & Co")])
+
+
+class YouTubeQueueTests(unittest.TestCase):
+    def test_queue_during_youtube_adds_after_current_without_interrupting(self):
+        results = {"acdc": [("abcDEF12345", "Thunderstruck"), ("ghiJKL67890", "Back in Black")],
+                   "queen": [("qqqQQQ11111", "Bohemian Rhapsody")],
+                   "vasco": [("vvvVVV22222", "Albachiara")]}
+        notes = []
+        with tempfile.TemporaryDirectory() as folder:
+            v = VideoTests()
+            service, panel, _ = v.make(folder, key="KEY", video_id=lambda q, k: results[q])
+            service.notify = notes.append
+            service.handle("play", "acdc")
+            self.assertTrue(v.wait(lambda: service.video_index == 0))
+            self.assertIn("per la coda", service.handle("queue", "queen"))
+            self.assertTrue(v.wait(lambda: len(service.video_items) == 3))
+            service.handle("queue", "vasco")
+            self.assertTrue(v.wait(lambda: len(service.video_items) == 4))
+            self.assertEqual([t for _k, _i, t in service.video_items],
+                             ["Thunderstruck", "Bohemian Rhapsody", "Albachiara", "Back in Black"])
+            self.assertEqual(service.snapshot()["title"], "Thunderstruck")   # non interrotto
+            self.assertIn("Aggiunto in coda: Albachiara.", notes)
+            self.assertIn("solo video YouTube", service.enqueue([Path(folder) / "x.mp3"]))
+            service._video_event({"ev": "state", "state": "ended"})
+            self.assertEqual(service.snapshot()["title"], "Bohemian Rhapsody")

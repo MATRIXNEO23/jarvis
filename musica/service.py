@@ -38,6 +38,7 @@ class MusicService:
         self.browser_title = ""
         self.video_items: list[tuple[str, object, str]] = []   # (tipo, valore, titolo)
         self.video_index = -1
+        self._queued_until = 0            # coda YouTube: posizione dopo l'ultimo accodato
         self.video_hidden = False         # video nascosto, audio che continua (solo file)
         self.open_file = open_file or (lambda path: os.startfile(str(path)))
         if self.video is not None:
@@ -229,6 +230,7 @@ class MusicService:
         self.video.start(self.video_hwnd)
         self.mode = "video"
         self.video_items, self.video_index = list(items), -1
+        self._queued_until = 0
         return self._video_step(+1)
 
     def play_tracks(self, tracks, start: int = 0) -> str:
@@ -263,6 +265,10 @@ class MusicService:
         tracks = [Path(t) for t in tracks]
         if not tracks:
             return ""
+        if self.mode == "video" and self.current_video_kind() == "youtube":
+            # Non interrompe YouTube con un brano della cartella.
+            return ("Mentre va YouTube la coda accetta solo video YouTube: "
+                    "di' «aggiungi in coda …».")
         if self.mode == "video" and self.current_video_kind() == "file":
             videos = [t for t in tracks if library.is_panel_video(t)]
             self.video_items.extend(("file", t, t.stem) for t in videos)
@@ -280,11 +286,39 @@ class MusicService:
         return self.play_tracks(tracks)
 
     def queue_query(self, query: str) -> str:
+        if self.mode == "video" and self.current_video_kind() == "youtube":
+            return self._queue_youtube(query)
         matches = library.best_matches(self.tracks(), query) or \
             library.best_matches(self.tracks(refresh=True), query)
         if not matches:
             return "Non trovo «" + query + "» nelle cartelle musica."
         return self.enqueue(matches[:1])
+
+    def _queue_youtube(self, query: str) -> str:
+        """Durante YouTube: cerca (una ricerca della chiave) e mette il primo video
+        dopo quelli già in coda, senza interrompere quello in corso."""
+        key = self.api_key()
+        if not key:
+            return "Per la coda YouTube serve la chiave API in Configura."
+
+        def find_and_add():
+            try:
+                found = self.video_id_for(query, key)
+            except Exception:
+                self.notify("Ricerca YouTube non riuscita: niente aggiunto in coda.")
+                return
+            if isinstance(found, str):
+                found = [(found, query)]
+            if self.mode != "video" or not found:
+                return
+            video_id, title = found[0]
+            # Dopo il video in corso e gli altri già accodati da te.
+            position = max(self.video_index + 1, self._queued_until)
+            self.video_items.insert(position, ("youtube", video_id, title or query))
+            self._queued_until = position + 1
+            self.notify("Aggiunto in coda: " + (title or query) + ".")
+        threading.Thread(target=find_and_add, daemon=True, name="lumi-youtube-coda").start()
+        return "Cerco «" + query + "» su YouTube per la coda."
 
     def playlists(self) -> dict:
         return config.load_playlists(self.data_folder)
@@ -360,6 +394,7 @@ class MusicService:
             self.video.start(self.video_hwnd)
             # Più risultati in coda: finito un video parte il successivo.
             self.video_items = [("youtube", vid, title or query) for vid, title in found]
+            self._queued_until = 0
             self.video_index = -1
             self._video_step(+1)
         threading.Thread(target=find_and_play, daemon=True, name="lumi-youtube").start()

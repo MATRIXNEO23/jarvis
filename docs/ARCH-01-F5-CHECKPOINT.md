@@ -254,3 +254,4 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 - YouTube «riduci» resta un riquadrino 200×200: nasconderlo del tutto viola le regole del lettore YouTube incorporato (rischio blocco della chiave). I video locali si nascondono del tutto.
 - Coda e playlist locali: `player.add` (accoda senza interrompere), comandi «aggiungi/metti in coda …», «metti la playlist …»; playlist in `addon-data/musica/playlists.json` (eliminare una playlist non tocca i file); ☰ con ★ Playlist, «+ Coda», «+ Playlist...», «Togli».
 - YouTube continua: `youtube.video_list` (una ricerca, maxResults 10, videoEmbeddable, stessi 100 punti) mette in coda i risultati; a fine video parte il successivo invece di chiudere.
+- Coda YouTube: durante un video YouTube «aggiungi in coda …» cerca su YouTube e inserisce il primo risultato dopo il video in corso (e dopo quelli già accodati), senza interrompere; un brano della cartella non interrompe più YouTube.
