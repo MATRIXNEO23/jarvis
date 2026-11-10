@@ -1,10 +1,10 @@
 {
-  "run_id": 42801282254,
-  "artifact": "lumi-027-prova-candidate",
-  "file": "Lumi-027-PROVA.zip",
-  "bytes": 27189027,
-  "sha256": "e61e00dcba3fdb78152eebcc7e6cdedad2f30ab463f4efc81037cb23e7d498cf",
-  "source_commit": "2958826",
-  "title": "Build 027 PROVA — Telegram: messaggi ricevuti elaborati di nuovo",
-  "description": "Come la 026, più: i messaggi Telegram che arrivavano a Lumi ma non venivano elaborati (diagnostica: «nuovo messaggio osservato» ma 0 messaggi autorizzati) ora vengono recuperati direttamente da Telegram dopo 2 secondi e ricevono risposta una sola volta. Gli errori interni del gestore messaggi ora compaiono in Lumi invece di sparire. Nient'altro cambiato. Verificati in CI Windows: 1205 test, ascolto Telegram simulato, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42805702663,
+  "artifact": "lumi-028-prova-candidate",
+  "file": "Lumi-028-PROVA.zip",
+  "bytes": 27189282,
+  "sha256": "bce0b7a73babfdec1c013b3be948048854c66518c36a6b1223c3bf92a7a27b3d",
+  "source_commit": "87cde4d",
+  "title": "Build 028 PROVA — Telegram: avviso con nome e ID del mittente ignorato",
+  "description": "Come la 027, più: quando arriva un messaggio da un account che non è tra i contatti spuntati, Lumi lo scrive in chat una volta per mittente («messaggio da Nome [ID numero] ignorato»), invece di scartarlo in silenzio. Confronta quell'ID con quello mostrato in Gestisci contatti. Nient'altro cambiato. Verificati in CI Windows: 1205 test, ascolto Telegram simulato, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare."
 }
