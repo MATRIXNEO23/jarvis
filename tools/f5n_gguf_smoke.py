@@ -82,6 +82,20 @@ def worker(build_dir, family, model, output):
         except TimeoutError:
             report["abort_verified"] = True
         report["abort_return_seconds_runner"] = round(time.monotonic() - started, 2)
+        # 026: fast forwarding, informative. Same long start, different end:
+        # the second prompt should reprocess only the new tail.
+        fixed = ("Carattere: sei dolce e un po' monella.\nTi chiami Lumi. Rispondi in italiano. "
+                 + "Ricorda queste regole di cortesia. " * 25)
+        timings = []
+        for tail in ("Domanda: che giorno è oggi?", "Domanda: che ore sono adesso?"):
+            t0 = time.monotonic()
+            try:
+                bridge.generate(format_gemma_messages([{"role": "user", "content": fixed + tail}]),
+                                timeout=60)
+            except Exception:
+                pass
+            timings.append(round(time.monotonic() - t0, 2))
+        report["fast_forward_first_s_runner"], report["fast_forward_second_s_runner"] = timings
         report["stream_chunks"] = len(chunks)
         report["stream_first_seconds_runner"] = first[0] if first else None
         report["stream_sample"] = chunks[-1][:120] if chunks else ""

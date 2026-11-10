@@ -23,6 +23,13 @@ class NativeModelConfig:
     top_p: float = 0.9
     seed: int = -1
     personality: str = ""
+    # 026: fast forwarding (riuso dell'inizio del prompt), carattere e lunghezza.
+    fast_forward: bool = True
+    character_main: str = ""
+    character_extra: str = ""
+    reply_length: str = ""
+    explain_sentences: int = 8
+    user_notes: str = ""
 
     def validate(self):
         for key, low, high in (
@@ -46,6 +53,19 @@ class NativeModelConfig:
         if (not isinstance(self.personality, str) or "\x00" in self.personality
                 or len(self.personality) > PERSONALITY_LIMIT):
             raise ValueError(f"Istruzioni di carattere non valide (massimo {PERSONALITY_LIMIT} caratteri).")
+        from .persona import CHARACTERS, EXPLAIN_MAX, EXPLAIN_MIN, LENGTHS, NOTES_LIMIT
+        if type(self.fast_forward) is not bool:
+            raise ValueError("Parametro non valido: fast_forward")
+        for key in ("character_main", "character_extra"):
+            if getattr(self, key) not in ("", *CHARACTERS):
+                raise ValueError(f"Carattere non valido: {key}")
+        if self.reply_length not in LENGTHS:
+            raise ValueError("Lunghezza risposte non valida.")
+        if type(self.explain_sentences) is not int or not EXPLAIN_MIN <= self.explain_sentences <= EXPLAIN_MAX:
+            raise ValueError("Parametro non valido: explain_sentences")
+        if (not isinstance(self.user_notes, str) or "\x00" in self.user_notes
+                or len(self.user_notes) > NOTES_LIMIT):
+            raise ValueError(f"Note sull'utente non valide (massimo {NOTES_LIMIT} caratteri).")
         return self
 
     def save(self, path):
@@ -73,7 +93,12 @@ class NativeModelConfig:
         target = Path(path)
         try:
             data = json.loads(target.read_text(encoding="utf-8"))
-            if not isinstance(data, dict) or set(data) | {"personality"} != set(cls.__dataclass_fields__):
+            fields = set(cls.__dataclass_fields__)
+            # Campi aggiunti dopo: un file di una build precedente resta valido.
+            optional = {"personality", "fast_forward", "character_main", "character_extra",
+                        "reply_length", "explain_sentences", "user_notes"}
+            if (not isinstance(data, dict) or not set(data) <= fields
+                    or not fields - optional <= set(data)):
                 raise ValueError("Schema configurazione non valido.")
             return cls(**data).validate()
         except (UnicodeError, json.JSONDecodeError, TypeError) as exc:

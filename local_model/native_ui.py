@@ -19,8 +19,8 @@ class NativeSettingsWindow:
                         if self.path.exists() else NativeModelConfig())
         self.window = tk.Toplevel(parent)
         self.window.title("Lumi // Modello locale Gemma")
-        self.window.geometry("590x610")
-        self.window.minsize(460, 500)
+        self.window.geometry("620x780")
+        self.window.minsize(480, 600)
         frame = ttk.Frame(self.window, padding=14)
         frame.pack(fill="both", expand=True)
         ttk.Label(frame, text="Gemma locale - configurazione",
@@ -36,7 +36,7 @@ class NativeSettingsWindow:
             "top_k": "Top-K", "top_p": "Top-P", "seed": "Seed (-1 casuale)",
         }
         for key in EDITABLE_FIELDS:
-            if key == "personality":
+            if key not in labels:
                 continue
             line = ttk.Frame(frame)
             line.pack(fill="x", pady=3)
@@ -54,6 +54,41 @@ class NativeSettingsWindow:
         self.personality.pack(fill="x")
         ttk.Label(frame, text="Es. Parla come Lumi: preciso, con ironia secca.",
                   wraplength=420).pack(anchor="w", pady=(2, 0))
+        # 026: carattere a menu, lunghezza delle risposte, note sull'utente,
+        # fast forwarding. Tutto breve: poche parole in cima al prompt.
+        from .persona import CHARACTERS, EXPLAIN_MAX, EXPLAIN_MIN, LENGTHS, NONE_LABEL, NOTES_LIMIT
+        self._character_choices = [NONE_LABEL] + list(CHARACTERS)
+        persona = ttk.Frame(frame)
+        persona.pack(fill="x", pady=(8, 0))
+        ttk.Label(persona, text="Carattere principale").grid(row=0, column=0, sticky="w")
+        ttk.Label(persona, text="Tocco in più").grid(row=0, column=1, sticky="w", padx=(10, 0))
+        self.character_main = tk.StringVar(value=self.current.character_main or NONE_LABEL)
+        self.character_extra = tk.StringVar(value=self.current.character_extra or NONE_LABEL)
+        ttk.Combobox(persona, textvariable=self.character_main, values=self._character_choices,
+                     state="readonly", width=18).grid(row=1, column=0, sticky="w")
+        ttk.Combobox(persona, textvariable=self.character_extra, values=self._character_choices,
+                     state="readonly", width=18).grid(row=1, column=1, sticky="w", padx=(10, 0))
+        ttk.Label(persona, text="Lunghezza risposte").grid(row=2, column=0, sticky="w", pady=(6, 0))
+        ttk.Label(persona, text="Spiegazioni (frasi)").grid(row=2, column=1, sticky="w",
+                                                            padx=(10, 0), pady=(6, 0))
+        self._length_labels = dict(LENGTHS)
+        self.reply_length = tk.StringVar(value=LENGTHS.get(self.current.reply_length, NONE_LABEL))
+        ttk.Combobox(persona, textvariable=self.reply_length, values=list(LENGTHS.values()),
+                     state="readonly", width=18).grid(row=3, column=0, sticky="w")
+        self.explain_sentences = tk.StringVar(value=str(self.current.explain_sentences))
+        ttk.Spinbox(persona, from_=EXPLAIN_MIN, to=EXPLAIN_MAX, textvariable=self.explain_sentences,
+                    width=6).grid(row=3, column=1, sticky="w", padx=(10, 0))
+        ttk.Label(frame, text=("Con «spiegami», «come funziona», «approfondisci», «in dettaglio», "
+                               "«descrivimi» o «consigliami» la risposta può arrivare al numero "
+                               "di frasi per le spiegazioni."), wraplength=560).pack(anchor="w", pady=(3, 0))
+        ttk.Label(frame, text=f"Note su di te (facoltativo, max {NOTES_LIMIT} caratteri)").pack(
+            anchor="w", pady=(8, 2))
+        self.user_notes = tk.StringVar(value=self.current.user_notes)
+        ttk.Entry(frame, textvariable=self.user_notes).pack(fill="x")
+        self.fast_forward = tk.BooleanVar(value=self.current.fast_forward)
+        ttk.Checkbutton(frame, variable=self.fast_forward, text=(
+            "Fast forwarding: riusa l'inizio del prompt già elaborato (più veloce). "
+            "Cambiarlo richiede di riavviare Lumi.")).pack(anchor="w", pady=(8, 0))
         self.status = tk.StringVar(value="Salva il GGUF, poi premi Prova generazione. Nessun invio online.")
         ttk.Label(frame, textvariable=self.status, wraplength=520).pack(
             anchor="w", pady=10)
@@ -167,11 +202,28 @@ class NativeSettingsWindow:
         for key, variable in self.values.items():
             variable.set(str(getattr(defaults, key)))
         self.personality.delete("1.0", "end")
+        from .persona import NONE_LABEL
+        self.character_main.set(NONE_LABEL)
+        self.character_extra.set(NONE_LABEL)
+        self.reply_length.set(NONE_LABEL)
+        self.explain_sentences.set(str(defaults.explain_sentences))
+        self.user_notes.set("")
+        self.fast_forward.set(True)
         self.status.set("Valori predefiniti mostrati; premi Salva per confermare.")
 
     def save(self):
         try:
             changes = {"personality": self.personality.get("1.0", "end-1c").strip()}
+            from .persona import CHARACTERS
+            for key, variable in (("character_main", self.character_main),
+                                  ("character_extra", self.character_extra)):
+                value = variable.get()
+                changes[key] = value if value in CHARACTERS else ""
+            by_label = {label: key for key, label in self._length_labels.items()}
+            changes["reply_length"] = by_label.get(self.reply_length.get(), "")
+            changes["explain_sentences"] = int(self.explain_sentences.get())
+            changes["user_notes"] = " ".join(self.user_notes.get().split())
+            changes["fast_forward"] = bool(self.fast_forward.get())
             for key, variable in self.values.items():
                 value = variable.get().strip()
                 if key in ("threads", "batch_threads", "context_size",

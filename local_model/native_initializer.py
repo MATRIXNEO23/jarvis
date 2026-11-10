@@ -41,12 +41,17 @@ def initialize_kobold_cpu(upstream, config, source_path):
         sys.argv = host_argv
     if not hasattr(upstream, "parser"):
         raise RuntimeError("Parser upstream non inizializzato dopo il bootstrap.")
-    args = upstream.parser.parse_args([
+    options = [
         "--usecpu", "--noavx2", "--gpulayers", "0",
         "--threads", str(config.threads),
         "--blasthreads", str(config.batch_threads),
         "--contextsize", str(config.context_size), "--quiet",
-    ])
+    ]
+    # Fast forwarding (default ON upstream): reuses the part of the previous
+    # prompt that is identical. Off = always reprocess (also disables shift).
+    if getattr(config, "fast_forward", True) is False:
+        options.append("--nofastforward")
+    args = upstream.parser.parse_args(options)
     args.usemmap = True
     args.ropeconfig = [0.0, 10000.0]
     upstream.args = args

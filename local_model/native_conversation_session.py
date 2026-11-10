@@ -281,10 +281,17 @@ class NativeConversationSession:
             intent_warning = ""
             base_instruction_source = "local_model.native_conversation_session: chat naturale"
 
+            # 026: the only part that changes with the question (length rule)
+            # goes at the END, next to it; fixed parts stay at the top so the
+            # engine's fast forwarding can reuse them.
+            from .persona import length_rule, persona_block
+            rule = length_rule(config, latest)
+            tail = ("\n(" + rule + ")") if rule else ""
+
             def messages_for(history, prefix, recall=""):
                 messages = [{"role": role, "content": text}
                             for pair in history for role, text in pair]
-                messages.append({"role": "user", "content": recall + latest})
+                messages.append({"role": "user", "content": recall + latest + tail})
                 if prefix:
                     messages[0] = dict(messages[0], content=prefix + messages[0]["content"])
                 return messages
@@ -308,9 +315,11 @@ class NativeConversationSession:
                                       'chat e comandi diretti restano disponibili.')
             base_instructions = instructions
             applied_personality = ""
-            style = "Stile di risposta: " + " ".join(config.personality.split()) + "\n"
-            if config.personality.strip() and size([], instructions + style) <= budget:
-                instructions += style
+            # Fixed persona FIRST (same text in chat and action mode), then the
+            # mode instructions: the common start is reused by fast forwarding.
+            style = persona_block(config)
+            if style and size([], style + instructions) <= budget:
+                instructions = style + instructions
                 applied_personality = style
             if size([], instructions) > budget:
                 if exact:
@@ -545,8 +554,9 @@ class NativeConversationSession:
             budget = memory.available_prompt_tokens(current.context_size, current.max_output)
             budget -= len(_format_family([{"role": "user", "content": "x"}], model_family(current.model))) - 1
             prompt = "Presentati con una breve frase in italiano."
-            style = "Stile di risposta: " + " ".join(current.personality.split()) + "\n"
-            if current.personality.strip() and len(style) + len(prompt) <= budget:
+            from .persona import persona_block
+            style = persona_block(current)
+            if style and len(style) + len(prompt) <= budget:
                 prompt = style + prompt
             if len(prompt) > budget:
                 raise ValueError("Budget di contesto insufficiente per la prova Gemma.")
