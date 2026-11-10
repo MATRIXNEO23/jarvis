@@ -354,7 +354,7 @@ class QueueWindow:
 class MusicBar:
     """Barra sotto il video, nell'area del globo; visibile solo con musica attiva.
 
-    Riga 1: ⏮ ⏸ ⏹ ⏭ e volume. Riga 2: ☰ elenco brani, Coda, titolo, «riduci» video.
+    Riga 1: ⏮ ⏸ ⏹ ⏭ e volume. Riga 2: ☰ elenco brani, Coda, titolo, «⛶ intero» e «riduci» video.
     Durante un video il riquadro occupa l'area sopra la barra.
     """
 
@@ -363,7 +363,10 @@ class MusicBar:
         self.on_message = on_message or (lambda text: None)
         self.video_host = video_host
         self.host = video_host if video_host is not None else host
-        self.frame = tk.Frame(self.host, bg="#031522", highlightthickness=1,
+        # Figli della finestra principale: così barra e video possono stare nell'area
+        # del globo (place in_=…) oppure coprire tutta la finestra a schermo intero.
+        self.top = self.host.winfo_toplevel()
+        self.frame = tk.Frame(self.top, bg="#031522", highlightthickness=1,
                               highlightbackground="#1b6f8f")
         controls = tk.Frame(self.frame, bg="#031522")
         controls.pack(fill="x", padx=4, pady=(4, 2))
@@ -384,9 +387,14 @@ class MusicBar:
         tk.Label(info, textvariable=self.title, bg="#031522", fg="#d7f6ff",
                  font=("Segoe UI", 9), anchor="w").pack(side="left", fill="x", expand=True, padx=6)
         self.video_button = ttk.Button(info, text="▁ riduci", width=9, command=self._toggle_video)
+        self.full_button = ttk.Button(info, text="⛶ intero", width=9, command=self._toggle_full)
+        self._full = False
+        self._full_shown = False
+        self._bar_in = None
+        self.top.bind("<Escape>", lambda _e: self._full and self._toggle_full(), add="+")
         self.video_frame = None
         if video_host is not None and getattr(service, "video", None) is not None:
-            self.video_frame = tk.Frame(video_host, bg="#000000", highlightthickness=0, bd=0)
+            self.video_frame = tk.Frame(self.top, bg="#000000", highlightthickness=0, bd=0)
             service.video_hwnd = self.video_frame.winfo_id()
         self._shown = False
         self._video_shown = False
@@ -432,6 +440,24 @@ class MusicBar:
             self.on_message(message)
         self.refresh(reschedule=False)
 
+    def _toggle_full(self) -> None:
+        self._set_full(not self._full)
+        self.refresh(reschedule=False)
+
+    def _set_full(self, value: bool) -> None:
+        """Schermo intero: finestra di Lumi a tutto schermo, video su tutta l'area,
+        barra in fondo (il tasto «⛶ esci» torna come prima)."""
+        if value == self._full:
+            return
+        try:
+            self.top.attributes("-fullscreen", value)
+        except tk.TclError:
+            pass
+        self._full = value
+        self._video_shown = False          # forza il nuovo posizionamento
+        self._bar_in = None
+        self.on_message("Schermo intero." if value else "Schermo intero chiuso.")
+
     def _volume(self, value) -> None:
         if self._volume_job is not None:
             self.host.after_cancel(self._volume_job)
@@ -449,14 +475,29 @@ class MusicBar:
                     self.volume_scale.state(["disabled"])
                 else:
                     self.volume_scale.state(["!disabled"])
-                if not self._shown:
-                    self.frame.place(in_=self.host, relx=0, rely=1, relwidth=1, anchor="sw")
+                bar_in = self.top if self._full else self.host
+                if not self._shown or self._bar_in is not bar_in:
+                    self.frame.place(in_=bar_in, relx=0, rely=1, relwidth=1, anchor="sw")
                     self.frame.lift()
                     self._shown = True
+                    self._bar_in = bar_in
             elif self._shown:
                 self.frame.place_forget()
                 self._shown = False
             is_video = active and snap.get("mode") == "video"
+            full_ok = is_video and snap.get("video_visible", True)
+            if self._full and not full_ok:
+                self._set_full(False)              # video finito o ridotto: si esce
+                self.frame.place(in_=self.host, relx=0, rely=1, relwidth=1, anchor="sw")
+                self._bar_in = self.host
+            if full_ok != self._full_shown:
+                if full_ok:
+                    self.full_button.pack(side="right", padx=(0, 3))
+                else:
+                    self.full_button.pack_forget()
+                self._full_shown = full_ok
+            if full_ok:
+                self.full_button.configure(text="⛶ esci" if self._full else "⛶ intero")
             want_button = is_video
             if want_button != self._video_button_shown:
                 if want_button:
@@ -482,7 +523,8 @@ class MusicBar:
                 elif want_video:
                     # Video sopra la barra: il riquadro si accorcia dell'altezza della barra.
                     bar_h = self.frame.winfo_reqheight() + 4
-                    self.video_frame.place(in_=self.video_host, relx=0, rely=0, x=0, y=0,
+                    self.video_frame.place(in_=self.top if self._full else self.video_host,
+                                           relx=0, rely=0, x=0, y=0,
                                            relwidth=1, relheight=1, width=0, height=-bar_h,
                                            anchor="nw")
                     if not self._video_shown:
