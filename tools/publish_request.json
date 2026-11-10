@@ -1,10 +1,10 @@
 {
-  "run_id": 42805702663,
-  "artifact": "lumi-028-prova-candidate",
-  "file": "Lumi-028-PROVA.zip",
-  "bytes": 27189282,
-  "sha256": "bce0b7a73babfdec1c013b3be948048854c66518c36a6b1223c3bf92a7a27b3d",
-  "source_commit": "87cde4d",
-  "title": "Build 028 PROVA — Telegram: avviso con nome e ID del mittente ignorato",
-  "description": "Come la 027, più: quando arriva un messaggio da un account che non è tra i contatti spuntati, Lumi lo scrive in chat una volta per mittente («messaggio da Nome [ID numero] ignorato»), invece di scartarlo in silenzio. Confronta quell'ID con quello mostrato in Gestisci contatti. Nient'altro cambiato. Verificati in CI Windows: 1205 test, ascolto Telegram simulato, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42817896454,
+  "artifact": "lumi-029-prova-candidate",
+  "file": "Lumi-029-PROVA.zip",
+  "bytes": 27189717,
+  "sha256": "4a24902e0e76a6fd1711f53aabe34ff2c96535c0a99d0732eb7bacd877343286",
+  "source_commit": "a065f45",
+  "title": "Build 029 PROVA — finestra Modello locale: Salva e Prova di nuovo visibili",
+  "description": "Come la 028, più: nella configurazione del modello locale i pulsanti Salva, Prova generazione e Chiudi restano sempre in fondo alla finestra, il resto scorre, e l'altezza si adatta allo schermo (sulla 026-028, con uno schermo da 768 px, i pulsanti finivano fuori e non si poteva salvare il nuovo GGUF). Nient'altro cambiato. Verificati in CI Windows: test della finestra su schermo piccolo, 1206 test, voce inclusa sul pacchetto estratto, avvio UI e risposta del motore. Pavilion da collaudare."
 }
