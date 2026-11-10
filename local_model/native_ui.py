@@ -19,10 +19,31 @@ class NativeSettingsWindow:
                         if self.path.exists() else NativeModelConfig())
         self.window = tk.Toplevel(parent)
         self.window.title("Lumi // Modello locale Gemma")
-        self.window.geometry("620x780")
-        self.window.minsize(480, 600)
-        frame = ttk.Frame(self.window, padding=14)
-        frame.pack(fill="both", expand=True)
+        # 028 fix: on a 768 px screen the 780 px window hid Salva/Prova at the
+        # bottom (the 026 options made the form taller). Buttons now live in a
+        # fixed bar at the bottom and the form scrolls.
+        screen_h = self.window.winfo_screenheight()
+        height = max(420, min(780, screen_h - 90))
+        self.window.geometry(f"640x{height}")
+        self.window.minsize(480, 380)
+        bottom = ttk.Frame(self.window, padding=(14, 4, 14, 10))
+        bottom.pack(side="bottom", fill="x")
+        holder = ttk.Frame(self.window)
+        holder.pack(side="top", fill="both", expand=True)
+        canvas = tk.Canvas(holder, highlightthickness=0, borderwidth=0)
+        scrollbar = ttk.Scrollbar(holder, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        frame = ttk.Frame(canvas, padding=14)
+        inner = canvas.create_window((0, 0), window=frame, anchor="nw")
+        frame.bind("<Configure>", lambda _e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.bind("<Configure>", lambda e: canvas.itemconfigure(inner, width=e.width))
+
+        def wheel(event):
+            if getattr(event, "delta", 0):
+                canvas.yview_scroll(int(-event.delta / 120), "units")
+        self.window.bind("<MouseWheel>", wheel)
         ttk.Label(frame, text="Gemma locale - configurazione",
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
         ttk.Label(frame, text="Salvare non avvia il modello. I nuovi valori saranno usati "
@@ -90,10 +111,10 @@ class NativeSettingsWindow:
             "Fast forwarding: riusa l'inizio del prompt già elaborato (più veloce). "
             "Cambiarlo richiede di riavviare Lumi.")).pack(anchor="w", pady=(8, 0))
         self.status = tk.StringVar(value="Salva il GGUF, poi premi Prova generazione. Nessun invio online.")
-        ttk.Label(frame, textvariable=self.status, wraplength=520).pack(
-            anchor="w", pady=10)
-        buttons = ttk.Frame(frame)
-        buttons.pack(fill="x", pady=5)
+        ttk.Label(bottom, textvariable=self.status, wraplength=600).pack(
+            anchor="w", pady=(0, 6))
+        buttons = ttk.Frame(bottom)
+        buttons.pack(fill="x")
         ttk.Button(buttons, text="Salva", command=self.save).pack(side="left")
         self.test_button = ttk.Button(buttons, text="Prova generazione", command=self.test_model)
         self.test_button.pack(side="left", padx=6)
