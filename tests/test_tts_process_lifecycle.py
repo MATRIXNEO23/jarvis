@@ -257,7 +257,8 @@ class TtsProcessLifecycleTests(unittest.TestCase):
         self.assertFalse(options.get('shell', False))
         self.assertEqual(options['cwd'], system_root)
         self.assertEqual(json.loads(child.marker.read_text(encoding='utf-8')),
-                         {'mode': 'speak', 'text': text, 'voice': 'Voce fixture'})
+                         {'mode': 'speak', 'text': text, 'voice': 'Voce fixture',
+                          'rate': 0, 'volume': 100, 'pitch': 0})   # stile voce neutro
         self.bounded_close(player)
         self.joined(player)
 
