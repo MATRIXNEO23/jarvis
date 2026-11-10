@@ -112,6 +112,9 @@ class ListenerTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(client.sent),1)
             self.assertTrue(client.sent[0][1])
             self.assertEqual(sum(e[0]=='telegram_received' for e in self.events),1)
+            ignored=[e[1] for e in self.events if e[0]=='telegram_status' and 'ignorato' in e[1]]
+            self.assertEqual(len(ignored),1)          # una volta sola per mittente
+            self.assertIn('[ID 99]',ignored[0])
         finally:
             self.bridge.stop()
             await asyncio.wait_for(task,2)

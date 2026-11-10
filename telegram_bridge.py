@@ -391,7 +391,8 @@ class TelegramBridge:
                         warned_senders.add(sender)
                         name=available.get(sender,("un contatto non in rubrica",))[0]
                         self.notify(("telegram_status","Telegram: messaggio da "+str(name)[:60]
-                                     +" ignorato: non è tra i contatti spuntati."))
+                                     +" [ID "+str(sender)+"] ignorato: non è tra i contatti "
+                                     "spuntati (confronta l'ID in Gestisci contatti)."))
                     return
                 await process(event)
 
