@@ -197,7 +197,7 @@ class VideoTests(unittest.TestCase):
             self.assertEqual(panel.closed, 1)
             self.assertIsNone(service.snapshot()["mode"])
 
-    def test_hide_local_video_keeps_audio_but_youtube_stays_visible(self):
+    def test_reduce_video_keeps_music_and_youtube_keeps_minimum_size(self):
         with tempfile.TemporaryDirectory() as folder:
             music = Path(folder) / "m"
             music.mkdir()
@@ -205,14 +205,16 @@ class VideoTests(unittest.TestCase):
             service, panel, _ = self.make(folder, key="KEY")
             service.configure(str(music), None)
             service.handle("play", "live")
-            self.assertIn("nascosto", service.toggle_video_visible())
+            self.assertIn("solo la musica", service.toggle_video_visible())
             self.assertFalse(service.snapshot()["video_visible"])
             self.assertEqual(panel.closed, 0)                 # l'audio continua
             self.assertEqual(service.snapshot()["mode"], "video")
             service.video_items = [("youtube", "abcDEF12345", "queen")]
             service.video_index = 0
-            self.assertIn("visibile", service.toggle_video_visible())
-            self.assertTrue(service.snapshot()["video_visible"])
+            service.video_hidden = False
+            self.assertIn("riquadrino", service.toggle_video_visible())
+            self.assertTrue(service.snapshot()["video_mini"])          # YouTube: 200x200
+            self.assertIn("ripristinato", service.toggle_video_visible())
 
     def test_unsupported_formats_open_with_windows_player(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -65,7 +65,7 @@ class TrackList:
 class MusicBar:
     """Barra sotto il video, nell'area del globo; visibile solo con musica attiva.
 
-    Riga 1: ⏮ ⏸ ⏹ ⏭ e volume. Riga 2: ☰ elenco brani, titolo, ✕ nascondi video.
+    Riga 1: ⏮ ⏸ ⏹ ⏭ e volume. Riga 2: ☰ elenco brani, titolo, «riduci» video.
     Durante un video il riquadro occupa l'area sopra la barra.
     """
 
@@ -93,7 +93,7 @@ class MusicBar:
         self.title = tk.StringVar(value="")
         tk.Label(info, textvariable=self.title, bg="#031522", fg="#d7f6ff",
                  font=("Segoe UI", 9), anchor="w").pack(side="left", fill="x", expand=True, padx=6)
-        self.video_button = ttk.Button(info, text="✕ video", width=8, command=self._toggle_video)
+        self.video_button = ttk.Button(info, text="▁ riduci", width=9, command=self._toggle_video)
         self.video_frame = None
         if video_host is not None and getattr(service, "video", None) is not None:
             self.video_frame = tk.Frame(video_host, bg="#000000", highlightthickness=0, bd=0)
@@ -165,14 +165,25 @@ class MusicBar:
                 self._video_button_shown = want_button
             if is_video:
                 self.video_button.configure(
-                    text="✕ video" if snap.get("video_visible", True) else "▣ video")
-            want_video = is_video and snap.get("video_visible", True)
+                    text="▁ riduci" if snap.get("video_visible", True) else "▣ video")
+            mini = is_video and snap.get("video_mini", False)
+            want_video = is_video and (snap.get("video_visible", True) or mini)
             if self.video_frame is not None:
-                if want_video:
+                if mini:
+                    # YouTube ridotto: riquadrino 200x200 sopra la barra (minimo richiesto).
+                    bar_h = self.frame.winfo_reqheight() + 4
+                    self.video_frame.place(in_=self.video_host, relx=1, rely=1, x=-4,
+                                           y=-bar_h - 4, width=200, height=200, anchor="se",
+                                           relwidth=0, relheight=0)
+                    if not self._video_shown:
+                        self.video_frame.lift()
+                        self.frame.lift()
+                elif want_video:
                     # Video sopra la barra: il riquadro si accorcia dell'altezza della barra.
                     bar_h = self.frame.winfo_reqheight() + 4
-                    self.video_frame.place(in_=self.video_host, x=0, y=0, relwidth=1,
-                                           relheight=1, height=-bar_h)
+                    self.video_frame.place(in_=self.video_host, relx=0, rely=0, x=0, y=0,
+                                           relwidth=1, relheight=1, width=0, height=-bar_h,
+                                           anchor="nw")
                     if not self._video_shown:
                         self.video_frame.lift()
                         self.frame.lift()

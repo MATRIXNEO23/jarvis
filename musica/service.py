@@ -141,16 +141,18 @@ class MusicService:
         return None
 
     def toggle_video_visible(self) -> str:
-        """Nasconde/mostra il video lasciando l'audio. YouTube: le regole del
-        lettore incorporato chiedono che il video resti visibile."""
+        """Riduce/ripristina il video lasciando la musica con la sola barra.
+        File locali: il video sparisce. YouTube: resta un riquadrino 200x200,
+        la misura minima che le regole del lettore incorporato richiedono."""
         kind = self.current_video_kind()
         if kind is None:
             return ""
-        if kind == "youtube":
-            self.video_hidden = False
-            return "YouTube richiede che il video resti visibile: puoi metterlo in pausa o fermarlo."
         self.video_hidden = not self.video_hidden
-        return "Video nascosto, l'audio continua." if self.video_hidden else "Video visibile."
+        if not self.video_hidden:
+            return "Video ripristinato."
+        if kind == "youtube":
+            return "Video ridotto: YouTube richiede un riquadrino visibile, la musica continua."
+        return "Video ridotto: continua solo la musica."
 
     def stop_video(self) -> None:
         # Chiude il riquadro: WebView2 libera la sua RAM (importante sul Pavilion).
@@ -298,6 +300,7 @@ class MusicService:
             state = self.video.state if self.video is not None else "stopped"
             return {"mode": "video", "state": "paused" if state == "paused" else "playing",
                     "title": title, "volume": volume, "video_visible": not self.video_hidden,
+                    "video_mini": self.video_hidden and self.current_video_kind() == "youtube",
                     "kind": self.current_video_kind()}
         if self.mode == "browser":
             return {"mode": "browser", "state": "playing", "title": "YouTube: " + self.browser_title,

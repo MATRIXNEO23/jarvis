@@ -246,3 +246,4 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 - Formati: MP4/WebM/M4V/MOV/MKV nel riquadro; AVI/WMV/MPG/MPEG/FLV/3GP e i video che il riquadro non riesce a riprodurre (codec) → lettore predefinito di Windows con avviso.
 - Barra spostata nell'area del globo, sotto il video (il riquadro si accorcia dell'altezza della barra), su due righe: ⏮ ⏸ ⏹ ⏭ + volume; ☰ + titolo + «✕ video». Visibile solo con musica/video attivi (come la 030). L'elenco brani si apre anche da Configura quando non suona nulla.
 - «✕ video»: nasconde il video lasciando l'audio, solo per i file locali; per YouTube no (regole del lettore incorporato: il video deve restare visibile) e Lumi lo spiega.
+- Tasto «▁ riduci» nella barra: riduce il video e lascia solo musica + barra (file locali: video nascosto; YouTube: riquadrino 200x200, minimo richiesto dal lettore incorporato). «▣ video» lo ripristina.
