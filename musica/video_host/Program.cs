@@ -18,7 +18,15 @@ static class Program
     [DllImport("user32.dll")] static extern bool IsWindow(IntPtr hWnd);
     [DllImport("user32.dll")] static extern int SetWindowLong(IntPtr hWnd, int index, int value);
     [DllImport("user32.dll")] static extern int GetWindowLong(IntPtr hWnd, int index);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern uint GetLongPathName(string shortPath, System.Text.StringBuilder longPath, uint size);
     [StructLayout(LayoutKind.Sequential)] struct RECT { public int Left, Top, Right, Bottom; }
+
+    // WebView2 folder mappings want the real long path (no 8.3 «RUNNER~1»).
+    static string LongPath(string path)
+    {
+        var sb = new System.Text.StringBuilder(1024);
+        return GetLongPathName(path, sb, (uint)sb.Capacity) > 0 ? sb.ToString() : path;
+    }
 
     static readonly object OutLock = new object();
     static void Emit(string json) { lock (OutLock) { Console.Out.WriteLine(json); Console.Out.Flush(); } }
@@ -94,8 +102,12 @@ static class Program
                     if (cmd == "file" && path != null && File.Exists(path))
                     {
                         // La cartella del file diventa https://lumi.media/ solo per questo brano.
-                        core.SetVirtualHostNameToFolderMapping("lumi.media", Path.GetDirectoryName(path), CoreWebView2HostResourceAccessKind.Allow);
-                        var url = "https://lumi.media/" + Uri.EscapeDataString(Path.GetFileName(path));
+                        var full = LongPath(Path.GetFullPath(path));
+                        var folder = Path.GetDirectoryName(full);
+                        try { core.ClearVirtualHostNameToFolderMapping("lumi.media"); } catch { }
+                        core.SetVirtualHostNameToFolderMapping("lumi.media", folder, CoreWebView2HostResourceAccessKind.Allow);
+                        var url = "https://lumi.media/" + Uri.EscapeDataString(Path.GetFileName(full));
+                        Emit("{\"ev\":\"debug\",\"url\":" + json.Serialize(url) + "}");
                         core.PostWebMessageAsString(json.Serialize(new { cmd = "file", url = url }));
                     }
                     else core.PostWebMessageAsString(copy);

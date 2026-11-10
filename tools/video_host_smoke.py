@@ -24,7 +24,10 @@ def main(out_dir: str) -> int:
     events: queue.Queue = queue.Queue()
     # WebView2 child processes may hold files for a moment after exit.
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
-        sample = Path(temp) / "prova.wav"
+        # Cartella con nome lungo e normale, come la cartella musica sul PC.
+        media = Path.cwd() / "video-proof media"
+        media.mkdir(exist_ok=True)
+        sample = media / "prova audio.wav"
         with wave.open(str(sample), "wb") as w:
             w.setnchannels(1); w.setsampwidth(2); w.setframerate(22050)
             w.writeframes(b"\x00\x10" * 22050)
