@@ -40,12 +40,14 @@ function loadYt(id){
 vid.addEventListener("playing",()=>send({ev:"state",state:"playing"}));
 vid.addEventListener("pause",()=>{ if(!vid.ended) send({ev:"state",state:"paused"}); });
 vid.addEventListener("ended",()=>send({ev:"state",state:"ended"}));
-vid.addEventListener("error",()=>send({ev:"error",code:"file"}));
+vid.addEventListener("error",()=>send({ev:"error",code:"file",
+  detail:(vid.error && vid.error.code) || 0}));
 host.addEventListener("message", ev => {
   const c = typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data;
   if (c.cmd === "youtube") { mode="yt"; vid.pause(); show("yt"); loadYt(c.id); }
   else if (c.cmd === "file") { mode="vid"; if (yt) yt.stopVideo(); show("vid");
-      vid.src = c.url; vid.volume = volume/100; vid.play().catch(()=>send({ev:"error",code:"file"})); }
+      vid.src = c.url; vid.volume = volume/100;
+      vid.play().catch(e=>send({ev:"error",code:(e && e.name==="NotAllowedError") ? "autoplay" : "play"})); }
   else if (c.cmd === "pause") { mode==="yt" ? yt && yt.pauseVideo() : vid.pause(); }
   else if (c.cmd === "resume") { mode==="yt" ? yt && yt.playVideo() : vid.play(); }
   else if (c.cmd === "stop") { if (yt) yt.stopVideo(); vid.pause(); vid.removeAttribute("src"); vid.load(); show(null); mode=null; }

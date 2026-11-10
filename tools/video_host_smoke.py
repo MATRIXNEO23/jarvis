@@ -64,6 +64,8 @@ def main(out_dir: str) -> int:
     print(json.dumps({"events": seen[:12], "seconds": round(time.monotonic() - started, 1)}))
     assert "ready" in kinds and "page" in kinds, kinds
     assert not any(e.get("code") == "webview2" for e in seen), seen
+    # Il file locale deve partire: un rifiuto dell'avvio automatico romperebbe i video.
+    assert not any(e.get("code") in ("autoplay", "file") for e in seen), seen
     print("VIDEO_HOST_SMOKE_OK")
     return 0
 

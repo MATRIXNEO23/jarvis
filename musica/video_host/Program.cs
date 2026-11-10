@@ -43,7 +43,10 @@ static class Program
             Fit(form, parent);
             try
             {
-                var env = await CoreWebView2Environment.CreateAsync(null, dataDir);
+                // Senza questo Chromium blocca l'avvio automatico con audio
+                // (play() rifiutato: nessun gesto dell'utente nella pagina).
+                var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
+                var env = await CoreWebView2Environment.CreateAsync(null, dataDir, options);
                 await web.EnsureCoreWebView2Async(env);
             }
             catch (Exception ex)
