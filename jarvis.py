@@ -281,7 +281,8 @@ def main() -> None:
                 ("programmi_app", "program_apps", "ProgrammiApp.jaddon"),
                 ("sveglia", "sveglia", "Sveglia.jaddon"),
                 ("musica", "musica", "Musica.jaddon"),
-                ("controllo_pc", "controllo_pc", "ControlloPC.jaddon")):
+                ("controllo_pc", "controllo_pc", "ControlloPC.jaddon"),
+                ("telegram", "telegram_addon", "Telegram.jaddon")):
             if any(item["id"] == addon_id for item in addon_manager.list_installed()):
                 continue
             bundled = Path(__file__).parent / folder / file_name
@@ -289,6 +290,11 @@ def main() -> None:
                 continue
             try:
                 addon_manager.install(bundled)
+                # Telegram era già una funzione di Lumi: chi l'aveva configurato
+                # lo ritrova ATTIVO, così niente smette di funzionare.
+                if addon_id == "telegram" and (settings.get("telegram_enabled")
+                                               or credentials_present()):
+                    addon_manager.set_enabled("telegram", True)
             except (AddonError, OSError, ValueError) as exc:
                 addon_bundled_errors.append(file_name + ": " + str(exc)[:120])
     except (AddonError,OSError,ValueError) as exc:
@@ -1750,10 +1756,9 @@ def main() -> None:
             return
         addon_settings_window=AddonSettingsWindow(
             root,addon_manager,
-            on_change=lambda: write_line(
-                "ADD-ON > Registro aggiornato. Le capacità attive saranno "
-                "comunicate al GPT alla prossima richiesta."),
-            engine=engine)
+            on_change=addon_changed,
+            engine=engine,
+            section_builders={"telegram": build_telegram_section})
 
     def active_addon_actions() -> tuple[dict,...]:
         if addon_manager is None:
@@ -2069,6 +2074,23 @@ def main() -> None:
         finally:
             approval.set_result(approved_epoch)
 
+    def telegram_addon_enabled() -> bool:
+        if addon_manager is None:
+            return True                 # archivio add-on guasto: comportamento di prima
+        try:
+            return any(item["id"] == "telegram" and item["enabled"]
+                       for item in addon_manager.list_installed())
+        except (AddonError, OSError, ValueError):
+            return True
+
+    def addon_changed() -> None:
+        write_line("ADD-ON > Registro aggiornato. Le capacità attive saranno "
+                   "comunicate al GPT alla prossima richiesta.")
+        # Add-on Telegram spento: si fermano anche le risposte automatiche.
+        if not telegram_addon_enabled() and telegram_auto.get():
+            telegram_auto.set(False)
+            toggle_telegram_automatic()
+
     def toggle_telegram_automatic() -> None:
         nonlocal telegram_bridge
         enabled=telegram_auto.get()
@@ -2079,6 +2101,12 @@ def main() -> None:
             settings["telegram_enabled"]=False
             telegram_status.set("Telegram: risposte automatiche disattivate.")
         else:
+            if not telegram_addon_enabled():
+                telegram_auto.set(False)
+                settings["telegram_enabled"]=False
+                telegram_status.set(
+                    "Telegram: attiva prima l'add-on in Gestisci add-on > Telegram.")
+                return
             chosen=selected_telegram_contacts()
             if not chosen or not credentials_present() or workspace is None:
                 telegram_auto.set(False)
@@ -2135,16 +2163,13 @@ def main() -> None:
             telegram_status.set("Impossibile salvare Telegram: " + str(exc)[:130])
 
     def telegram_open_setup():
-        if os.name!="nt":
-            telegram_status.set("Configurazione disponibile solo su Windows.")
-            return
-        script=Path(__file__).resolve().parent/"configura_telegram.bat"
+        # Accesso dentro Lumi (niente configura_telegram.bat): campi per
+        # API ID, hash e numero; il codice di Telegram arriva in un pop-up.
         try:
-            os.startfile(str(script))
-            telegram_status.set(
-                "Completa la configurazione nella finestra aperta, "
-                "poi premi Rileggi contatto autorizzato.")
-        except OSError as exc:
+            from telegram_addon.login import TelegramLoginWindow
+            TelegramLoginWindow(root, on_done=telegram_reconfigure)
+            telegram_status.set("Inserisci API ID, API hash e numero, poi «Collegati».")
+        except (ImportError, OSError, tk.TclError) as exc:
             telegram_status.set("Configurazione non avviata: "+str(exc)[:100])
 
     def display_status(state: dict) -> None:
@@ -2556,56 +2581,68 @@ def main() -> None:
     ttk.Label(workspace_panel,textvariable=workspace_status,
               wraplength=420).pack(side="left",fill="x",expand=True)
 
-    telegram_panel=ttk.LabelFrame(
-        integrations_settings_frame,text="Telegram — contatti selezionati e messaggi vocali",padding=8)
-    telegram_panel.pack(fill="x",pady=(3,10))
-    telegram_toggle=ttk.Checkbutton(
-        telegram_panel,text="Risposte vocali automatiche ON / OFF",
-        variable=telegram_auto)
-    telegram_toggle.pack(anchor="w")
-    telegram_consent_row=ttk.Frame(telegram_panel)
-    telegram_consent_row.pack(fill="x",pady=(4,0))
-    ttk.Label(telegram_consent_row,text="Consenso GPT online").pack(side="left",padx=(0,8))
-    ttk.Radiobutton(telegram_consent_row,text="Chiedi ogni volta",
-                    variable=telegram_gpt_session_choice,value=False,
-                    command=lambda: set_telegram_gpt_session(False)).pack(side="left")
-    ttk.Radiobutton(telegram_consent_row,text="Consenti per questa sessione",
-                    variable=telegram_gpt_session_choice,value=True,
-                    command=lambda: set_telegram_gpt_session(True)).pack(side="left",padx=(8,0))
-    ttk.Label(telegram_panel,wraplength=690,
-              text="Il consenso per questa sessione permette di inviare a GPT online "
-                   "i messaggi e il contesto recente delle chat Telegram dei contatti "
-                   "spuntati. Si azzera quando spegni o disconnetti GPT o chiudi Lumi."
-              ).pack(anchor="w",pady=(2,0))
-    telegram_row=ttk.Frame(telegram_panel)
-    telegram_row.pack(fill="x",pady=(4,3))
-    telegram_configure_button=ttk.Button(
-        telegram_row,text="Configura Telegram (accesso sicuro)")
-    telegram_configure_button.pack(side="left",padx=(0,8))
-    telegram_reload_button=ttk.Button(
-        telegram_row,text="Rileggi configurazione Telegram")
-    telegram_reload_button.pack(side="left",padx=(0,8))
-    telegram_note_button=ttk.Button(
-        telegram_row,text="Messaggio da riferire (legacy)")
-    telegram_note_button.pack(side="left")
-    telegram_actions=ttk.Frame(telegram_panel)
-    telegram_actions.pack(fill="x",pady=(4,3))
-    telegram_contacts_button=ttk.Button(
-        telegram_actions,text="Gestisci contatti Telegram (spunta)")
-    telegram_contacts_button.pack(side="left",padx=(0,8))
-    telegram_send_button=ttk.Button(
-        telegram_actions,text="Invia messaggio vocale")
-    telegram_send_button.pack(side="left")
-    ttk.Label(
-        telegram_panel,textvariable=telegram_status,wraplength=690
-    ).pack(anchor="w",pady=(3,0))
-    ttk.Label(
-        telegram_panel,
-        text="I contatti si scelgono dall'elenco Telegram con una spunta. "
-             "Le risposte automatiche si attivano separatamente dall'invio "
-             "manuale, che richiede conferma. I vocali usano Windows SAPI "
-             "e OGG/Opus, senza GPT per trasformare il testo in audio.",
-        wraplength=690).pack(anchor="w",pady=(3,0))
+    # Telegram è un add-on: i suoi comandi e la configurazione stanno nella sua
+    # sezione in Gestisci add-on (non più in Impostazioni > Integrazioni).
+    # I widget si ricreano ogni volta che si apre la sezione.
+    def build_telegram_section(parent):
+        telegram_panel=ttk.LabelFrame(
+            parent,text="Telegram — contatti selezionati e messaggi vocali",padding=8)
+        telegram_panel.pack(fill="x",pady=(3,10))
+        telegram_toggle=ttk.Checkbutton(
+            telegram_panel,text="Risposte vocali automatiche ON / OFF",
+            variable=telegram_auto)
+        telegram_toggle.pack(anchor="w")
+        telegram_consent_row=ttk.Frame(telegram_panel)
+        telegram_consent_row.pack(fill="x",pady=(4,0))
+        ttk.Label(telegram_consent_row,text="Consenso GPT online").pack(side="left",padx=(0,8))
+        ttk.Radiobutton(telegram_consent_row,text="Chiedi ogni volta",
+                        variable=telegram_gpt_session_choice,value=False,
+                        command=lambda: set_telegram_gpt_session(False)).pack(side="left")
+        ttk.Radiobutton(telegram_consent_row,text="Consenti per questa sessione",
+                        variable=telegram_gpt_session_choice,value=True,
+                        command=lambda: set_telegram_gpt_session(True)).pack(side="left",padx=(8,0))
+        ttk.Label(telegram_panel,wraplength=690,
+                  text="Il consenso per questa sessione permette di inviare a GPT online "
+                       "i messaggi e il contesto recente delle chat Telegram dei contatti "
+                       "spuntati. Si azzera quando spegni o disconnetti GPT o chiudi Lumi."
+                  ).pack(anchor="w",pady=(2,0))
+        telegram_row=ttk.Frame(telegram_panel)
+        telegram_row.pack(fill="x",pady=(4,3))
+        telegram_configure_button=ttk.Button(
+            telegram_row,text="Configura account (ID, hash, numero)...")
+        telegram_configure_button.pack(side="left",padx=(0,8))
+        telegram_reload_button=ttk.Button(
+            telegram_row,text="Rileggi configurazione Telegram")
+        telegram_reload_button.pack(side="left",padx=(0,8))
+        telegram_note_button=ttk.Button(
+            telegram_row,text="Messaggio da riferire (legacy)")
+        telegram_note_button.pack(side="left")
+        telegram_actions=ttk.Frame(telegram_panel)
+        telegram_actions.pack(fill="x",pady=(4,3))
+        telegram_contacts_button=ttk.Button(
+            telegram_actions,text="Gestisci contatti Telegram (spunta)")
+        telegram_contacts_button.pack(side="left",padx=(0,8))
+        telegram_send_button=ttk.Button(
+            telegram_actions,text="Invia messaggio vocale")
+        telegram_send_button.pack(side="left")
+        ttk.Label(
+            telegram_panel,textvariable=telegram_status,wraplength=690
+        ).pack(anchor="w",pady=(3,0))
+        ttk.Label(
+            telegram_panel,
+            text="I contatti si scelgono dall'elenco Telegram con una spunta. "
+                 "Le risposte automatiche si attivano separatamente dall'invio "
+                 "manuale, che richiede conferma. I vocali usano Windows SAPI "
+                 "e OGG/Opus, senza GPT per trasformare il testo in audio.",
+            wraplength=690).pack(anchor="w",pady=(3,0))
+
+        telegram_toggle.configure(command=toggle_telegram_automatic)
+        telegram_configure_button.configure(command=telegram_open_setup)
+        telegram_reload_button.configure(command=telegram_reconfigure)
+        telegram_note_button.configure(command=leave_telegram_note_dialog)
+        telegram_contacts_button.configure(command=open_telegram_contact_list)
+        telegram_send_button.configure(command=open_telegram_manual_send)
+        return telegram_panel
 
     addon_panel=ttk.LabelFrame(
         integrations_settings_frame,text="Add-on — installazione locale e permessi",padding=8)
@@ -4595,12 +4632,6 @@ def main() -> None:
 
     workspace_button.configure(command=open_project_manager)
     scope_button.configure(command=open_project_manager)
-    telegram_toggle.configure(command=toggle_telegram_automatic)
-    telegram_configure_button.configure(command=telegram_open_setup)
-    telegram_reload_button.configure(command=telegram_reconfigure)
-    telegram_note_button.configure(command=leave_telegram_note_dialog)
-    telegram_contacts_button.configure(command=open_telegram_contact_list)
-    telegram_send_button.configure(command=open_telegram_manual_send)
     addon_settings_button.configure(command=open_addon_settings)
     hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
@@ -5186,6 +5217,19 @@ def main() -> None:
     root.after(400, refresh_voices)
     root.after(650, initial_launch)
     root.after(1100, refresh_orbit_nodes)
+    def first_run_components() -> None:
+        # Primo avvio: finestra per installare i componenti facoltativi da dentro
+        # Lumi (niente .bat). Dopo la chiusura non ricompare: si riapre da
+        # Gestisci add-on > «Installa componenti...».
+        try:
+            from componenti import catalog as components_catalog
+            if not components_catalog.load_state()["wizard_shown"]:
+                from componenti.ui import ComponentsWindow
+                ComponentsWindow(root)
+        except (ImportError, OSError, tk.TclError) as exc:
+            write_line("COMPONENTI > Finestra non disponibile: " + str(exc)[:120])
+
+    root.after(2500, first_run_components)
     if telegram_auto.get():
         root.after(1400,toggle_telegram_automatic)
     if gpt_enabled.get():

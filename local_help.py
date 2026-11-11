@@ -106,10 +106,30 @@ def help_sections(engine):
         'Progetti e Telegram':
             'crea progetto Casa\napri progetto Casa\nelenca progetti\ntorna alla conversazione generale\n\n'
             'I progetti mantengono contesti separati. Le preferenze memoria controllano il recupero dei ricordi.\n\n'
-            'Telegram richiede attivazione, account collegato e contatti autorizzati. '
-            'Gestisci contatti, cronologia e consensi dalle impostazioni Telegram. '
+            'Telegram è un add-on: attivalo in Gestisci add-on > Telegram, dove trovi account '
+            '(ID, hash, numero e codice in un pop-up), contatti, cronologia e consensi. '
             'Non avviare due istanze Telegram contemporaneamente. I messaggi non letti compaiono negli indicatori; '
             'aprire una conversazione marca solo i messaggi visualizzati. Gli invii restano soggetti ai controlli previsti.',
+        'Chiavi API':
+            'Alcuni add-on usano chiavi o dati d’accesso gratuiti. Si inseriscono nella sezione '
+            'dell’add-on in Gestisci add-on; lì c’è anche il pulsante «Crea la chiave».\n\n'
+            'CHIAVE YOUTUBE (add-on Musica, video nel riquadro)\n'
+            '1. Apri https://console.cloud.google.com/ e accedi con il tuo account Google.\n'
+            '2. In alto scegli «Seleziona un progetto» > «Nuovo progetto», dai un nome (es. Lumi) e crea.\n'
+            '3. Apri https://console.cloud.google.com/apis/library/youtube.googleapis.com e premi «Abilita».\n'
+            '4. Vai su https://console.cloud.google.com/apis/credentials > «Crea credenziali» > «Chiave API».\n'
+            '5. Copia la chiave e incollala in Gestisci add-on > Musica > Configura, poi Salva.\n'
+            'È gratuita (quota giornaliera: circa 100 ricerche). Non serve carta di credito per questa API. '
+            'Consigliato: in «Limita chiave» scegli solo «YouTube Data API v3».\n\n'
+            'API ID E API HASH DI TELEGRAM (add-on Telegram)\n'
+            '1. Apri https://my.telegram.org e accedi con il tuo numero (il codice arriva nell’app Telegram).\n'
+            '2. Scegli «API development tools».\n'
+            '3. Compila App title (es. Lumi) e Short name (es. lumi), piattaforma Desktop, e crea.\n'
+            '4. Copia «App api_id» (numero) e «App api_hash» (32 caratteri).\n'
+            '5. In Lumi: Gestisci add-on > Telegram > «Configura account», scrivi ID, hash e numero, '
+            'poi «Collegati» e inserisci il codice nel pop-up.\n'
+            'Non condividere mai API hash, codici o sessione con nessuno.\n\n'
+            'Se un link cambia, nella sezione dell’add-on puoi scrivere quello nuovo e premere «Salva link».',
         'Tastiera':
             'F1 — Apri o richiama questa guida.\n'
             'Ctrl+L — Metti il cursore nella casella di comando, senza inviare nulla.\n'
@@ -120,6 +140,27 @@ def help_sections(engine):
             'Esc nella guida — Chiudi solo la guida.\n\n'
             'Per problemi: usa Autodiagnosi Lumi. Un rapporto locale non invia nulla a GPT da solo.',
     }
+
+
+_LINK = __import__('re').compile(r'https://[^\s)»"]+')
+
+
+def _fill_text(text, content):
+    """Inserisce il testo e rende cliccabili i link https:// (si aprono nel browser)."""
+    import webbrowser
+    text.configure(state='normal')
+    text.delete('1.0', 'end')
+    text.insert('1.0', content)
+    text.tag_configure('link', foreground='#5fd0ff', underline=True)
+    for index, match in enumerate(_LINK.finditer(content)):
+        tag = f'link{index}'
+        start, end = f'1.0+{match.start()}c', f'1.0+{match.end()}c'
+        text.tag_add('link', start, end)
+        text.tag_add(tag, start, end)
+        text.tag_bind(tag, '<Button-1>', lambda _e, url=match.group(0): webbrowser.open(url))
+        text.tag_bind(tag, '<Enter>', lambda _e: text.configure(cursor='hand2'))
+        text.tag_bind(tag, '<Leave>', lambda _e: text.configure(cursor=''))
+    text.configure(state='disabled')
 
 
 class HelpWindow(tk.Toplevel):
@@ -140,8 +181,7 @@ class HelpWindow(tk.Toplevel):
             text.configure(yscrollcommand=scroll.set)
             scroll.pack(side='right', fill='y')
             text.pack(fill='both', expand=True)
-            text.insert('1.0', content)
-            text.configure(state='disabled')
+            _fill_text(text, content)
             self.pages[title] = text
             self.notebook.add(frame, text=title)
         ttk.Button(self, text='Chiudi (Esc)', command=self.destroy).pack(pady=(0, 10))
@@ -166,11 +206,7 @@ class HelpWindow(tk.Toplevel):
 
     def refresh(self, engine):
         for title, content in help_sections(engine).items():
-            text = self.pages[title]
-            text.configure(state='normal')
-            text.delete('1.0', 'end')
-            text.insert('1.0', content)
-            text.configure(state='disabled')
+            _fill_text(self.pages[title], content)
 
 
 def open_help(parent, engine):

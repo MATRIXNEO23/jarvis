@@ -19,9 +19,12 @@ class AddonSettingsWindow:
     """Elenco degli add-on a sinistra; clic su uno: la sua sezione a destra
     (stato, Attiva/Disattiva, Configura, i suoi comandi personalizzabili)."""
 
-    def __init__(self, parent, manager: AddonManager, on_change=None, engine=None):
+    def __init__(self, parent, manager: AddonManager, on_change=None, engine=None,
+                 section_builders=None):
         self.manager=manager
         self.engine=engine
+        # Sezioni costruite da Lumi (es. Telegram, che usa lo stato del programma).
+        self.section_builders=dict(section_builders or {})
         self.on_change=on_change or (lambda:None)
         self.window=tk.Toplevel(parent)
         self.window.title("LUMI // Gestisci add-on")
@@ -40,6 +43,8 @@ class AddonSettingsWindow:
         ttk.Button(bottom,text="Installa / aggiorna...",
                    command=self.install).pack(side="left",padx=(0,6))
         ttk.Button(bottom,text="Ricarica",command=self.reload).pack(side="left")
+        ttk.Button(bottom,text="Installa componenti...",
+                   command=self.open_components).pack(side="left",padx=(6,0))
         ttk.Button(bottom,text="Chiudi",command=self.window.destroy).pack(side="right")
         self.status=tk.StringVar(value="")
         ttk.Label(holder,textvariable=self.status,wraplength=940).pack(
@@ -54,8 +59,19 @@ class AddonSettingsWindow:
         self.table.column("enabled",width=75,stretch=False)
         self.table.pack(side="left",fill="y")
         self.table.bind("<<TreeviewSelect>>",lambda _e:self.show_section())
-        self.section=ttk.Frame(body,padding=(12,0,0,0))
-        self.section.pack(side="left",fill="both",expand=True)
+        outer=ttk.Frame(body,padding=(12,0,0,0))
+        outer.pack(side="left",fill="both",expand=True)
+        self.section_canvas=tk.Canvas(outer,highlightthickness=0)
+        scroll=ttk.Scrollbar(outer,orient="vertical",command=self.section_canvas.yview)
+        self.section_canvas.configure(yscrollcommand=scroll.set)
+        scroll.pack(side="right",fill="y")
+        self.section_canvas.pack(side="left",fill="both",expand=True)
+        self.section=ttk.Frame(self.section_canvas)
+        window_id=self.section_canvas.create_window(0,0,window=self.section,anchor="nw")
+        self.section.bind("<Configure>",lambda _e:self.section_canvas.configure(
+            scrollregion=self.section_canvas.bbox("all")))
+        self.section_canvas.bind("<Configure>",lambda e:self.section_canvas.itemconfigure(
+            window_id,width=e.width))
         self.reload()
 
     def exists(self):
@@ -97,6 +113,13 @@ class AddonSettingsWindow:
         except (AddonError,OSError,ValueError) as exc:
             self._error(exc)
 
+    def open_components(self):
+        try:
+            from componenti.ui import ComponentsWindow
+            ComponentsWindow(self.window,on_close=lambda: self.exists() and self.show_section())
+        except (ImportError,tk.TclError) as exc:
+            self._error("Installazione componenti non disponibile: "+str(exc)[:100])
+
     def show_section(self):
         """Sezione dell'add-on scelto: descrizione, stato, azioni, comandi."""
         for child in self.section.winfo_children():
@@ -120,6 +143,21 @@ class AddonSettingsWindow:
         if ident in _DESCRIPTIONS_CONFIG:
             ttk.Button(row,text="Configura...",command=self.configure).pack(side="left",padx=(0,6))
         ttk.Button(row,text="Rimuovi",command=self.remove).pack(side="left")
+        builder=self.section_builders.get(ident)
+        if builder is not None:
+            try:
+                builder(self.section)
+            except tk.TclError as exc:
+                ttk.Label(self.section,text="Sezione non disponibile: "+str(exc)[:80]).pack(anchor="w")
+        try:
+            from componenti import catalog
+            if catalog.for_addon(ident) or catalog.keys_for_addon(ident):
+                ttk.Label(self.section,text="Cosa serve installare e chiavi",
+                          font=("Segoe UI",10,"bold")).pack(anchor="w",pady=(6,0))
+                from componenti.ui import RequirementsPanel
+                RequirementsPanel(self.section,ident).pack(fill="x")
+        except ImportError as exc:
+            ttk.Label(self.section,text="Requisiti non disponibili: "+str(exc)[:80]).pack(anchor="w")
         try:
             import command_aliases
             section=command_aliases.ADDON_SECTIONS.get(ident)

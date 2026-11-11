@@ -16,7 +16,7 @@ from self_diagnostics import _source_list, inspect_jarvis, format_audit
 from source_review import review_sources
 
 
-RUNTIME = ("local_model", "file_access", "program_apps", "sveglia", "musica", "controllo_pc")
+RUNTIME = ("local_model", "file_access", "program_apps", "sveglia", "musica", "controllo_pc", "telegram_addon", "componenti")
 SIGNAL = "def controlled():\n    try:\n        work()\n    except Exception:\n        pass\n"
 
 
@@ -52,7 +52,7 @@ class DiagnosticInventoryTests(unittest.TestCase):
     def test_actual_checkout_runtime_modules_fit_the_unchanged_file_inventory_budget(self):
         checkout=Path(__file__).resolve().parents[1]
         collected=set(_source_list(checkout))
-        self.assertLessEqual(len(collected),170)
+        self.assertLessEqual(len(collected),200)
         for module in RUNTIME:
             with self.subTest(module=module):
                 expected=set((checkout/module).glob("*.py"))
@@ -85,17 +85,17 @@ class DiagnosticInventoryTests(unittest.TestCase):
         self.write("entry.py")
         for module in RUNTIME:
             self.write(module+"/engine.py")
-        for number in range(200):
+        for number in range(230):
             self.write(f"tests/test_{number:03}.py")
         names=self.names()
-        self.assertEqual(len(names),170)
+        self.assertEqual(len(names),200)
         for module in RUNTIME:
             self.assertIn(module+"/engine.py",names)
         self.assertEqual(names,self.names())
         first_test=next(n for n,name in enumerate(names) if name.startswith("tests/"))
         self.assertTrue(all(names.index(module+"/engine.py")<first_test for module in RUNTIME))
         report=inspect_jarvis(source_root=self.root)
-        self.assertIn("170",report.summary)
+        self.assertIn("200",report.summary)
         self.assertIn("limit",(report.detail+" "+" ".join(report.findings)).lower())
 
     def test_directory_traversal_is_bounded_and_reported_even_with_no_source_files(self):
@@ -115,7 +115,7 @@ class DiagnosticInventoryTests(unittest.TestCase):
     def test_coverage_limit_stays_visible_after_more_than_eight_inventory_errors(self):
         for number in range(10):
             self.write(f"bad_{number:02}.py")
-        for number in range(175):
+        for number in range(205):
             self.write(f"good_{number:03}.py")
         real_stat=Path.stat
         def stat(path,*args,**kwargs):
@@ -125,10 +125,10 @@ class DiagnosticInventoryTests(unittest.TestCase):
         with patch.object(Path,"stat",stat):
             report=inspect_jarvis(source_root=self.root)
         self.assertIn("limit",(report.summary+" "+report.detail).lower())
-        self.assertIn("170",report.summary)
+        self.assertIn("200",report.summary)
 
     def test_missing_module_in_capped_inventory_is_not_claimed_absent_from_program(self):
-        for number in range(175):
+        for number in range(205):
             self.write(f"good_{number:03}.py")
         self.write("zz_goal.py",SIGNAL)
         report=inspect_jarvis(source_root=self.root,module="zz_goal.py")

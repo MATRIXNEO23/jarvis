@@ -22,7 +22,8 @@ ENGINE_FILES = ("koboldcpp.py", "koboldcpp_common.dll", "koboldcpp_noavx2.dll",
                 "backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll", "LICENSE.md")
 OPERATIONAL_GUIDES = frozenset({"docs/VOCE_OFFLINE.md", "docs/RECUPERO-IMPOSTAZIONI.md",
                                 "file_access/LEGGIMI.md", "program_apps/LEGGIMI.md",
-                                "musica/LEGGIMI.md", "controllo_pc/LEGGIMI.md"})
+                                "musica/LEGGIMI.md", "controllo_pc/LEGGIMI.md",
+                                "telegram_addon/LEGGIMI.md", "componenti/LEGGIMI.md"})
 STAMP = (2026, 11, 9, 0, 0, 0)
 
 
