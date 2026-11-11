@@ -1,10 +1,10 @@
 {
-  "run_id": 42925415082,
-  "artifact": "lumi-034-prova-candidate",
-  "file": "Lumi-034-PROVA.zip",
-  "bytes": 27592027,
-  "sha256": "5f65739466f3bb8f1d9b29ed9ba6e9e062a148ce520362c397b7a143ab95e47b",
-  "source_commit": "5f5a2e3",
-  "title": "Build 034 PROVA — Le mie parole, mini avatar spostabile, barra musica",
-  "description": "Come la 033, più: comandi con parole proprie (Aiuto > in fondo alle sezioni dei comandi > «Le mie parole»: frase scelta → comando esistente, {testo} per la parte variabile, voce e testo, salvati nel profilo; i comandi standard restano). Mini avatar con Lumi ridotta a icona: trascinabile, posizione salvata, mai sotto la barra delle applicazioni; con la musica attiva accanto compaiono titolo e ⏮ ⏯ ⏭ ⏹. Barra musica: tasti «▁ riduci» e «⛶ intero» sempre visibili, titolo scorrevole se lungo. Verificati in CI Windows: 1235 test, riquadro video reale in finestra Tk, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42934512348,
+  "artifact": "lumi-035-prova-candidate",
+  "file": "Lumi-035-PROVA.zip",
+  "bytes": 27594193,
+  "sha256": "7147b10155010d2bd0eff1e549ea925ff06d4d8076506f1ea171739f9e5490da",
+  "source_commit": "d0cb04b",
+  "title": "Build 035 PROVA — Le mie parole accanto ai comandi, mini lettore separato",
+  "description": "Come la 034, più: «Le mie parole» in Aiuto mostra l'elenco dei comandi che Lumi esegue già (anche i programmi abilitati e le playlist) con la casella accanto a ognuno; più frasi separate da «;», «Salva le mie parole»; il comando standard resta valido. Mini lettore separato dall'avatar: una riga con titolo scorrevole, ⏮ ⏯ ⏭ ⏹ e volume 🔉 🔊; avatar e lettore si spostano ognuno per conto suo e le posizioni restano salvate fra le sessioni. Verificati in CI Windows: 1238 test, riquadro video reale in finestra Tk, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare."
 }
