@@ -1,3 +1,11 @@
+## Build 035 PROVA — Le mie parole accanto ai comandi, mini lettore separato
+
+[Scarica Lumi-035-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-035-PROVA.zip)
+
+Come la 034, più: «Le mie parole» in Aiuto mostra l'elenco dei comandi che Lumi esegue già (anche i programmi abilitati e le playlist) con la casella accanto a ognuno; più frasi separate da «;», «Salva le mie parole»; il comando standard resta valido. Mini lettore separato dall'avatar: una riga con titolo scorrevole, ⏮ ⏯ ⏭ ⏹ e volume 🔉 🔊; avatar e lettore si spostano ognuno per conto suo e le posizioni restano salvate fra le sessioni. Verificati in CI Windows: 1238 test, riquadro video reale in finestra Tk, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42934512348). SHA-256: `7147b10155010d2bd0eff1e549ea925ff06d4d8076506f1ea171739f9e5490da`.
+
 ## Build 034 PROVA — Le mie parole, mini avatar spostabile, barra musica
 
 [Scarica Lumi-034-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-034-PROVA.zip)
