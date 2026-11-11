@@ -1,3 +1,11 @@
+## Build 037 PROVA — Controllo PC corretto, componenti da Lumi, Telegram add-on
+
+[Scarica Lumi-037-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-037-PROVA.zip)
+
+Come la 036, più: Controllo PC ora compare in Gestisci add-on (descrizione oltre il limite: rifiutato in silenzio); gli add-on inclusi si installano uno per uno ed eventuali errori compaiono in console. Componenti facoltativi installabili da dentro Lumi senza .bat (Telethon, FFmpeg, WebView2, riconoscimento vocale, voci Edge, Node.js, modulo GPT), finestra al primo avvio e in Gestisci add-on. Telegram è un add-on: account (ID, hash, numero) dentro Lumi con codice in pop-up, contatti e consensi nella sua sezione; chi l'aveva configurato lo ritrova attivo. Ogni add-on mostra cosa serve installare e le sue chiavi API con link modificabili; F1 > Chiavi API spiega come crearle. Verificati in CI Windows: 1250 test, prova reale Controllo PC, riquadro video, voce, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43066473656). SHA-256: `61399e554ca5939d43520e1c8e0e36a55798ebc732a9fd1a7d2adffe252be15e`.
+
 ## Build 036 PROVA — Add-on Controllo PC, Gestisci add-on a sezioni
 
 [Scarica Lumi-036-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-036-PROVA.zip)
