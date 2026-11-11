@@ -1,10 +1,10 @@
 {
-  "run_id": 43048551042,
-  "artifact": "lumi-036-prova-candidate",
-  "file": "Lumi-036-PROVA.zip",
-  "bytes": 27616744,
-  "sha256": "093288dee4faba206dbf9415797b7be9a0054cf00a3b5a698126debaf94d4c01",
-  "source_commit": "f031ffc",
-  "title": "Build 036 PROVA — Add-on Controllo PC, Gestisci add-on a sezioni",
-  "description": "Come la 035, più: add-on Controllo PC (installato spento): finestre aperte per nome, numero o nome tuo, passa/chiudi finestra, clic su pulsanti e campi tramite UI Automation di Windows, scrittura, scorciatoie, scorrimento; tutto offline. Conferma le prime volte poi ricorda; azioni delicate sempre. Gestisci add-on: elenco a sinistra, sezione dell'add-on a destra con Attiva/Disattiva, Configura e i suoi comandi personalizzabili. Comandi di base personalizzabili in Impostazioni > Personalizzazione comandi; F1 solo guida. Verificati in CI Windows: 1243 test, prova reale Controllo PC (campo Cerca scritto e pulsante Saluta cliccato in una finestra WinForms), riquadro video, voce, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 43066473656,
+  "artifact": "lumi-037-prova-candidate",
+  "file": "Lumi-037-PROVA.zip",
+  "bytes": 27631372,
+  "sha256": "61399e554ca5939d43520e1c8e0e36a55798ebc732a9fd1a7d2adffe252be15e",
+  "source_commit": "de781a1",
+  "title": "Build 037 PROVA — Controllo PC corretto, componenti da Lumi, Telegram add-on",
+  "description": "Come la 036, più: Controllo PC ora compare in Gestisci add-on (descrizione oltre il limite: rifiutato in silenzio); gli add-on inclusi si installano uno per uno ed eventuali errori compaiono in console. Componenti facoltativi installabili da dentro Lumi senza .bat (Telethon, FFmpeg, WebView2, riconoscimento vocale, voci Edge, Node.js, modulo GPT), finestra al primo avvio e in Gestisci add-on. Telegram è un add-on: account (ID, hash, numero) dentro Lumi con codice in pop-up, contatti e consensi nella sua sezione; chi l'aveva configurato lo ritrova attivo. Ogni add-on mostra cosa serve installare e le sue chiavi API con link modificabili; F1 > Chiavi API spiega come crearle. Verificati in CI Windows: 1250 test, prova reale Controllo PC, riquadro video, voce, avvio UI e risposta del motore. Pavilion da collaudare."
 }
