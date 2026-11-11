@@ -108,13 +108,21 @@ class WakeWordGate:
     """Explicit wake name for continuous listening, never a microphone mode.
 
     A standalone 'Ehi Lumi' arms exactly one subsequent utterance, for up to
-    10 seconds. Speech without a wake name is ignored as a command. During
+    10 seconds (6 seconds in the modes that require the name in every command). Speech without a wake name is ignored as a command. During
     manual dictation it is text, except recognized wake commands.
     """
 
+    # «Lumi» da solo nelle modalità che vogliono il nome in ogni comando: Lumi
+    # resta in ascolto per una sola frase, entro pochi secondi (richiesta utente:
+    # «almeno 2-3 secondi»; il tempo conta fino alla fine della frase riconosciuta,
+    # quindi c'è margine per pronunciarla). Poi torna a ignorare la stanza.
+    SHORT_WAKE_SECONDS = 6.0
+
     def __init__(self, *, timeout: float = 10.0,
-                 clock: Callable[[], float] = time.monotonic):
+                 clock: Callable[[], float] = time.monotonic,
+                 short_timeout: float | None = None):
         self.timeout = timeout
+        self.short_timeout = self.SHORT_WAKE_SECONDS if short_timeout is None else short_timeout
         self.clock = clock
         self.armed_until = 0.0
 
@@ -123,17 +131,15 @@ class WakeWordGate:
 
     def route(self, speech: str, *, dictation_active: bool = False,
               require_name: bool = False) -> tuple[str, str]:
-        # Passive microphone modes require a name in EVERY command. A bare
-        # wake name must not open a window for subsequent room conversation.
-        if require_name:
-            self.reset()
+        # Passive microphone modes require a name in every command; a bare
+        # name opens a SHORT window for exactly one following phrase.
         if not isinstance(speech, str) or not speech.strip():
             return "ignored", ""
         spoken = " ".join(speech.casefold().replace(",", " ").replace(":", " ").strip(" .!?").split())
         for name in ("ehi lumi", "hey lumi", "lumi"):
             if spoken == name:
-                if not require_name:
-                    self.armed_until = self.clock() + self.timeout
+                self.armed_until = self.clock() + (
+                    self.short_timeout if require_name else self.timeout)
                 return "wake", ""
             if spoken.startswith(name + " "):
                 self.reset()

@@ -231,3 +231,19 @@ class MicrophoneSafetyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ShortWakeWindowTests(unittest.TestCase):
+    def test_bare_name_waits_for_next_phrase_in_name_required_modes(self):
+        now = [100.0]
+        gate = WakeWordGate(clock=lambda: now[0])
+        self.assertEqual(gate.route("Lumi", require_name=True), ("wake", ""))
+        now[0] += 3.0                                    # pausa di 3 secondi
+        self.assertEqual(gate.route("apri il browser", require_name=True),
+                         ("command", "apri il browser"))
+        self.assertEqual(gate.route("e poi un'altra frase", require_name=True), ("ignored", ""))
+        gate.route("Lumi", require_name=True)
+        now[0] += 7.0                                    # troppo tardi: la stanza resta ignorata
+        self.assertEqual(gate.route("apri il browser", require_name=True), ("ignored", ""))
+        self.assertEqual(gate.route("Lumi apri il browser", require_name=True),
+                         ("command", "apri il browser"))

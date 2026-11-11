@@ -3905,8 +3905,9 @@ def main() -> None:
                         if route_type == "dictation" and dictation_voice_action(raw_spoken) == "stop":
                             route_type = "command"
                         if route_type == "wake":
-                            if voice_mode.get() == GPT_CONVERSATION:
-                                mic_status.set("Dì Lumi seguito dalla richiesta nella stessa frase.")
+                            # «Lumi» da solo: resta in ascolto della frase successiva.
+                            mic_status.set("Ti ascolto: dimmi il comando.")
+                            write_line("LUMI > Ti ascolto…")
                         if route_type not in ("command", "dictation"):
                             continue
                     if raw_spoken and voice_mode.get() != STANDBY:
