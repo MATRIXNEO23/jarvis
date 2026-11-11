@@ -387,6 +387,15 @@ def _work_area(root) -> tuple[int, int, int, int]:
     return 0, 0, root.winfo_screenwidth(), root.winfo_screenheight() - 48
 
 
+def marquee(text: str, position: int, width: int) -> str:
+    """Testo scorrevole se più lungo di width caratteri, altrimenti fermo."""
+    if len(text) <= width:
+        return text
+    loop = text + "   •   "
+    position %= len(loop)
+    return (loop[position:] + loop[:position])[:width]
+
+
 def _dock_file() -> Path | None:
     try:
         from settings import default_path
@@ -395,49 +404,100 @@ def _dock_file() -> Path | None:
         return None
 
 
-def load_dock_position(path: Path | None) -> tuple[int, int] | None:
+def load_dock_positions(path: Path | None) -> dict:
+    """{"avatar": (x, y), "player": (x, y)} salvati (solo quelli validi)."""
+    result = {}
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
-        x, y = data["x"], data["y"]
-        if type(x) is int and type(y) is int and -10000 < x < 20000 and -10000 < y < 20000:
-            return x, y
     except Exception:
-        pass
-    return None
+        return result
+    pairs = {"avatar": (data.get("x"), data.get("y")),
+             "player": (data.get("px"), data.get("py"))}
+    for key, (x, y) in pairs.items():
+        if type(x) is int and type(y) is int and -10000 < x < 20000 and -10000 < y < 20000:
+            result[key] = (x, y)
+    return result
 
 
-def save_dock_position(path: Path | None, x: int, y: int) -> None:
+def load_dock_position(path: Path | None) -> tuple[int, int] | None:
+    return load_dock_positions(path).get("avatar")
+
+
+def save_dock_position(path: Path | None, x: int, y: int, which: str = "avatar") -> None:
+    """Salva la posizione di avatar o lettore senza perdere quella dell'altro."""
     if path is None:
         return
+    current = load_dock_positions(path)
+    current[which] = (int(x), int(y))
+    data = {}
+    if "avatar" in current:
+        data["x"], data["y"] = current["avatar"]
+    if "player" in current:
+        data["px"], data["py"] = current["player"]
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
-        tmp.write_text(json.dumps({"x": int(x), "y": int(y)}), encoding="utf-8")
+        tmp.write_text(json.dumps(data), encoding="utf-8")
         tmp.replace(path)
     except OSError:
         pass
 
 
 def clamp_dock(x: int, y: int, width: int, height: int, area) -> tuple[int, int]:
-    """Tiene il mini avatar dentro l'area utile (mai sotto la barra delle applicazioni)."""
+    """Tiene la finestrella dentro l'area utile (mai sotto la barra delle applicazioni)."""
     left, top, right, bottom = area
     x = max(left, min(int(x), right - width))
     y = max(top, min(int(y), bottom - height))
     return x, y
 
 
+class _Draggable:
+    """Finestrella senza bordi spostabile col mouse; a fine trascinamento salva."""
+
+    def __init__(self, dock, which):
+        self.dock, self.which, self.window, self._drag = dock, which, None, None
+
+    def bind(self, *widgets):
+        for widget in widgets:
+            widget.bind("<ButtonPress-1>", self._start, add="+")
+            widget.bind("<B1-Motion>", self._move, add="+")
+            widget.bind("<ButtonRelease-1>", self._end, add="+")
+
+    def _start(self, event):
+        self._drag = (event.x_root, event.y_root, self.window.winfo_x(), self.window.winfo_y())
+
+    def _move(self, event):
+        if self._drag is None or self.window is None:
+            return
+        x0, y0, wx, wy = self._drag
+        self.place(wx + event.x_root - x0, wy + event.y_root - y0)
+
+    def _end(self, _event=None):
+        if self._drag is not None and self.window is not None:
+            save_dock_position(self.dock.position_file, self.window.winfo_x(),
+                               self.window.winfo_y(), self.which)
+        self._drag = None
+
+    def place(self, x, y):
+        self.window.update_idletasks()
+        width, height = self.window.winfo_reqwidth(), self.window.winfo_reqheight()
+        x, y = clamp_dock(x, y, width, height, _work_area(self.dock.root))
+        self.window.geometry(f"+{x}+{y}")
+
+
 class AvatarDock:
     """Mini avatar quando LUMI e' ridotta a icona.
 
-    Trascinalo col mouse per spostarlo (la posizione resta salvata).
-    Doppio clic: ripristina la finestra principale.
-    Con la musica attiva, accanto compaiono i comandi del lettore (⏮ ⏯ ⏭ e titolo).
+    Avatar e lettore musicale sono due finestrelle separate: ognuna si sposta
+    trascinandola e la posizione resta salvata fra le sessioni
+    (avatar-dock.json nel profilo). Doppio clic sull'avatar: riapre Lumi.
+    Il lettore (titolo e ⏮ ⏯ ⏭ ⏹ su una riga) compare solo con la musica attiva.
     """
 
     HEIGHT = 190
     KEY = "#010203"
-    PANEL_W = 150
     MARGIN = 16
+    TITLE_CHARS = 24
 
     def __init__(self, root, mode_provider=lambda: "idle", position_file="auto",
                  music_provider=None):
@@ -448,10 +508,10 @@ class AvatarDock:
         self.window = None
         self.face = AvatarFace()
         self._job = None
-        self._panel = None
-        self._panel_shown = False
-        self._drag = None
-        self._avatar_xy = None
+        self._avatar = _Draggable(self, "avatar")
+        self._player = _Draggable(self, "player")
+        self._title_text = ""
+        self._title_pos = 0
         root.bind("<Unmap>", self._on_unmap, add="+")
         root.bind("<Map>", self._on_map, add="+")
 
@@ -487,90 +547,80 @@ class AvatarDock:
         height = self.HEIGHT
         return round(height * .94), height
 
-    def _place(self):
-        """Posiziona la finestra: l'avatar resta fermo, il pannello musica va a sinistra."""
-        width, height = self._size()
-        extra = self.PANEL_W if self._panel_shown else 0
-        area = _work_area(self.root)
-        x, y = self._avatar_xy
-        x, y = clamp_dock(x - extra, y, width + extra, height, area)
-        self._avatar_xy = (x + extra, y)
-        self.window.geometry(f"{width + extra}x{height}+{x}+{y}")
+    def _overlay(self, transparent):
+        import tkinter as tk
+        win = tk.Toplevel(self.root)
+        win.overrideredirect(True)
+        try:
+            win.attributes("-topmost", True)
+            if transparent:
+                win.configure(bg=self.KEY)
+                win.attributes("-transparentcolor", self.KEY)
+        except tk.TclError:
+            pass
+        return win
 
     def show(self):
         import tkinter as tk
         if self.window is not None:
             return
-        win = tk.Toplevel(self.root)
-        win.overrideredirect(True)
-        win.configure(bg=self.KEY)
-        try:
-            win.attributes("-topmost", True)
-            win.attributes("-transparentcolor", self.KEY)
-        except tk.TclError:
-            pass
+        win = self._overlay(transparent=True)
         width, height = self._size()
-        left, top, right, bottom = _work_area(self.root)
-        saved = load_dock_position(self.position_file)
-        # Predefinito: in basso a destra, staccato dalla barra delle applicazioni.
-        self._avatar_xy = saved or (right - width - 12, bottom - height - self.MARGIN)
-        self.window = win
-        self._panel = self._build_panel(win)
         canvas = tk.Canvas(win, width=width, height=height, bg=self.KEY,
                            highlightthickness=0, bd=0)
-        canvas.pack(side="right")
-        self._place()
+        canvas.pack()
+        self.window = self._avatar.window = win
+        left, top, right, bottom = _work_area(self.root)
+        saved = load_dock_positions(self.position_file).get("avatar")
+        # Predefinito: in basso a destra, staccato dalla barra delle applicazioni.
+        self._avatar.place(*(saved or (right - width - 12, bottom - height - self.MARGIN)))
         face_y = float(manifest().get("face_y", .5))
         if not self.face.attach(canvas, width / 2, face_y * height, height):
             canvas.create_text(width / 2, height / 2, text="LUMI", fill="#d9f8ff",
                                font=("Segoe UI", 18, "bold"))
         for widget in (win, canvas):
             widget.bind("<Double-Button-1>", self.restore)
-            widget.bind("<ButtonPress-1>", self._drag_start)
-            widget.bind("<B1-Motion>", self._drag_move)
-            widget.bind("<ButtonRelease-1>", self._drag_end)
+        self._avatar.bind(win, canvas)
         self.face.start(self.mode_provider)
         self._music_tick()
 
-    # --- trascinamento ----------------------------------------------------
-    def _drag_start(self, event):
-        self._drag = (event.x_root, event.y_root, self.window.winfo_x(), self.window.winfo_y())
-
-    def _drag_move(self, event):
-        if self._drag is None or self.window is None:
-            return
-        x0, y0, wx, wy = self._drag
-        extra = self.PANEL_W if self._panel_shown else 0
-        self._avatar_xy = (wx + event.x_root - x0 + extra, wy + event.y_root - y0)
-        self._place()
-
-    def _drag_end(self, _event=None):
-        if self._drag is not None and self._avatar_xy is not None:
-            save_dock_position(self.position_file, *self._avatar_xy)
-        self._drag = None
-
-    # --- comandi musica (tipo PiP) ----------------------------------------
-    def _build_panel(self, win):
+    # --- lettore musicale separato (tipo PiP) -----------------------------
+    def _open_player(self):
         import tkinter as tk
-        panel = tk.Frame(win, bg="#031522", highlightthickness=1,
-                         highlightbackground="#1b6f8f", width=self.PANEL_W - 6)
+        win = self._overlay(transparent=False)
+        frame = tk.Frame(win, bg="#031522", highlightthickness=1, highlightbackground="#1b6f8f")
+        frame.pack()
+        grip = tk.Label(frame, text="⋮⋮", bg="#031522", fg="#5aa9c4", cursor="fleur",
+                        font=("Segoe UI", 9))
+        grip.pack(side="left", padx=(3, 0))
         self._title = tk.StringVar(value="")
-        tk.Label(panel, textvariable=self._title, bg="#031522", fg="#d7f6ff",
-                 font=("Segoe UI", 8), anchor="w", width=1).pack(fill="x", padx=4, pady=(4, 2))
-        row = tk.Frame(panel, bg="#031522")
-        row.pack(pady=(0, 4))
+        title = tk.Label(frame, textvariable=self._title, bg="#031522", fg="#d7f6ff",
+                         font=("Segoe UI", 9), anchor="w", width=self.TITLE_CHARS)
+        title.pack(side="left", padx=(2, 4), pady=3)
         style = dict(bg="#06263a", fg="#d7f6ff", activebackground="#1b6f8f", bd=0, width=3,
                      font=("Segoe UI Symbol", 10))
-        tk.Button(row, text="⏮", command=lambda: self._music("prev"), **style).pack(side="left", padx=1)
-        self._toggle = tk.Button(row, text="⏸", command=lambda: self._music("toggle"), **style)
+        tk.Button(frame, text="⏮", command=lambda: self._music("prev"), **style).pack(side="left", padx=1)
+        self._toggle = tk.Button(frame, text="⏸", command=lambda: self._music("toggle"), **style)
         self._toggle.pack(side="left", padx=1)
-        tk.Button(row, text="⏭", command=lambda: self._music("next"), **style).pack(side="left", padx=1)
-        tk.Button(row, text="⏹", command=lambda: self._music("stop"), **style).pack(side="left", padx=1)
-        for widget in (panel,):
-            widget.bind("<ButtonPress-1>", self._drag_start)
-            widget.bind("<B1-Motion>", self._drag_move)
-            widget.bind("<ButtonRelease-1>", self._drag_end)
-        return panel
+        tk.Button(frame, text="⏭", command=lambda: self._music("next"), **style).pack(side="left", padx=1)
+        tk.Button(frame, text="⏹", command=lambda: self._music("stop"), **style).pack(side="left", padx=(1, 3))
+        self._player.window = win
+        self._player.bind(win, frame, grip, title)
+        saved = load_dock_positions(self.position_file).get("player")
+        if saved is None:
+            # Predefinito: a sinistra dell'avatar, in basso.
+            win.update_idletasks()
+            ax, ay = self.window.winfo_x(), self.window.winfo_y()
+            saved = (ax - win.winfo_reqwidth() - 6, ay + self.HEIGHT - win.winfo_reqheight() - 20)
+        self._player.place(*saved)
+
+    def _close_player(self):
+        win, self._player.window = self._player.window, None
+        if win is not None:
+            try:
+                win.destroy()
+            except Exception:
+                pass
 
     def _music(self, action):
         service = self.music_provider()
@@ -591,25 +641,26 @@ class AvatarDock:
             service = self.music_provider()
             snap = service.snapshot() if service is not None else {}
             active = snap.get("mode") is not None and snap.get("state") not in (None, "stopped")
+            if active and self._player.window is None:
+                self._open_player()
+            elif not active and self._player.window is not None:
+                self._close_player()
             if active:
-                title = str(snap.get("title", ""))
-                self._title.set(title if len(title) <= 22 else title[:21] + "…")
+                text = str(snap.get("title", ""))
+                if text != self._title_text:
+                    self._title_text, self._title_pos = text, 0
+                self._title.set(marquee(text, self._title_pos, self.TITLE_CHARS))
+                self._title_pos += 1
                 self._toggle.configure(text="▶" if snap.get("state") == "paused" else "⏸")
-            if active != self._panel_shown:
-                if active:
-                    self._panel.pack(side="left", anchor="s", pady=(0, 24), padx=(0, 6))
-                else:
-                    self._panel.pack_forget()
-                self._panel_shown = active
-                self._place()
         except Exception:
             pass
         if reschedule and self.window is not None:
-            self._job = self.window.after(700, self._music_tick)
+            self._job = self.window.after(300, self._music_tick)
 
     def hide(self):
+        self._close_player()
         win, self.window = self.window, None
-        self._panel_shown = False
+        self._avatar.window = None
         if win is not None:
             self.face.stop()
             self.face.items = {}
