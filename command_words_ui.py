@@ -99,6 +99,9 @@ class CommandWordsWindow:
             tab = ttk.Frame(tabs)
             tabs.add(tab, text=section)
             AliasPanel(tab, section, engine, height=330).pack(fill='both', expand=True)
+        tab = ttk.Frame(tabs)
+        tabs.add(tab, text='Sinonimi')
+        SynonymsPanel(tab).pack(fill='both', expand=True)
         ttk.Button(frame, text='Chiudi', command=self.window.destroy).pack(anchor='e', pady=(6, 0))
 
     def exists(self):
@@ -110,3 +113,67 @@ class CommandWordsWindow:
     def focus(self):
         self.window.deiconify()
         self.window.lift()
+
+
+class SynonymsPanel(ttk.Frame):
+    """Parole tue che valgono come un verbo che Lumi conosce (es. «spara» = «imposta»).
+    Si usano prima del modello per capire i comandi detti in modo diverso."""
+
+    def __init__(self, parent):
+        super().__init__(parent, padding=8)
+        import intent_normalizer
+        self.normalizer = intent_normalizer
+        ttk.Label(self, wraplength=700, text=(
+            'Lumi capisce già molti sinonimi (attiva/avvia/metti = imposta, stoppa/spegni = '
+            'ferma, aumenta = alza…). Qui aggiungi i tuoi: scrivi la parola e scegli il verbo '
+            'che deve valere.')).pack(anchor='w')
+        self.tree = ttk.Treeview(self, columns=('word', 'base'), show='headings', height=10)
+        self.tree.heading('word', text='Quando dico')
+        self.tree.heading('base', text='Vale come')
+        self.tree.pack(fill='both', expand=True, pady=6)
+        row = ttk.Frame(self)
+        row.pack(fill='x')
+        self.word = tk.StringVar()
+        self.base = tk.StringVar(value='imposta')
+        ttk.Entry(row, textvariable=self.word, width=24).pack(side='left')
+        ttk.Label(row, text=' = ').pack(side='left')
+        ttk.Combobox(row, textvariable=self.base, width=14, state='readonly',
+                     values=sorted(intent_normalizer.SYNONYMS)).pack(side='left')
+        ttk.Button(row, text='Aggiungi', command=self.add).pack(side='left', padx=6)
+        ttk.Button(row, text='Togli', command=self.remove).pack(side='left')
+        self.status = tk.StringVar()
+        ttk.Label(self, textvariable=self.status).pack(anchor='w', pady=(4, 0))
+        self.fill()
+
+    def fill(self):
+        self.tree.delete(*self.tree.get_children())
+        for word, base in sorted(self.normalizer.load_extra().items()):
+            self.tree.insert('', 'end', values=(word, base))
+
+    def _save(self, extra, message):
+        try:
+            self.normalizer.save_extra(extra)
+        except OSError as exc:
+            self.status.set('Non salvato: ' + str(exc)[:80])
+            return
+        self.status.set(message)
+        self.fill()
+
+    def add(self):
+        word = ' '.join(self.word.get().lower().split())
+        if not word:
+            self.status.set('Scrivi la parola.')
+            return
+        extra = dict(self.normalizer.load_extra())
+        extra[word] = self.base.get()
+        self.word.set('')
+        self._save(extra, f'«{word}» ora vale come «{self.base.get()}».')
+
+    def remove(self):
+        selected = self.tree.selection()
+        if not selected:
+            self.status.set('Scegli una riga.')
+            return
+        word = self.tree.item(selected[0], 'values')[0]
+        extra = {k: v for k, v in self.normalizer.load_extra().items() if k != word}
+        self._save(extra, 'Tolto.')

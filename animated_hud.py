@@ -282,7 +282,8 @@ class JarvisHUD:
         quick_controls = tk.Frame(header, bg=BG)
         quick_controls.pack(side="right", padx=(0, 12))
         for index, (key, label) in enumerate((
-                ("mic", "MIC OFF"), ("gpt", "GPT OFF"), ("memory", "MEMORIA OFF"))):
+                ("mic", "MIC OFF"), ("gpt", "GPT OFF"), ("model", "MODELLO ON"),
+                ("memory", "MEMORIA OFF"))):
             if index:
                 tk.Label(quick_controls, text="/", bg=BG, fg=MUTED,
                          font=("Consolas", 9)).pack(side="left", padx=3)
@@ -422,9 +423,11 @@ class JarvisHUD:
     def set_state_provider(self,callback):
         self.state_provider=callback
 
-    def set_quick_toggle_handlers(self, *, microphone, gpt, memory):
+    def set_quick_toggle_handlers(self, *, microphone, gpt, memory, model=None):
         """Bind trusted existing controls; this HUD owns no setting state."""
         handlers = {"mic": microphone, "gpt": gpt, "memory": memory}
+        if model is not None:
+            handlers["model"] = model
         if not all(callable(callback) for callback in handlers.values()):
             raise TypeError("Quick controls require callable handlers.")
         self._quick_toggle_handlers = handlers
@@ -541,8 +544,11 @@ class JarvisHUD:
                      "MIC NON ATTIVO" if mic_selected else "MIC OFF")
         gpt_label = ("GPT ON" if connected and gpt_enabled else
                      "GPT NON CONNESSO" if gpt_enabled else "GPT OFF")
+        from model_gate import enabled as model_enabled
+        model_on = bool(state.get("model_enabled", model_enabled()))
         controls = (("mic", mic_label, mic_enabled or mic_selected),
                     ("gpt", gpt_label, gpt_enabled),
+                    ("model", "MODELLO ON" if model_on else "MODELLO OFF", model_on),
                     ("memory", "MEMORIA ON" if memory else "MEMORIA OFF", memory))
         if controls != self._quick_state_cache:
             for key, label, enabled in controls:

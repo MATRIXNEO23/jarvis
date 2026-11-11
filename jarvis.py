@@ -2227,6 +2227,10 @@ def main() -> None:
         nonlocal gpt_conversation_session_grant
         if busy_gpt or not gpt_enabled.get() or closing:
             return False
+        from model_gate import enabled as model_enabled
+        if not model_enabled():
+            write_line("MODELLO OFF > Richiesta GPT non inviata: modello escluso.")
+            return False
         if action in ("ask", "conversation", "typed_conversation"):
             if not active_gpt:
                 return False
@@ -2314,6 +2318,13 @@ def main() -> None:
         if closing or voice_mode.get() not in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
             return
         if try_self_diagnostic(spoken):
+            return
+        from intent_normalizer import before_model
+        if before_model(spoken):
+            return
+        from model_gate import enabled as model_enabled, refused as model_refused
+        if not model_enabled():
+            write_line(model_refused(spoken))
             return
         try:
             chat_is_visible = chat_notebook.select() == str(chat_local_tab)
@@ -4640,7 +4651,28 @@ def main() -> None:
     hud.set_quick_toggle_handlers(
         microphone=hud_mic_button.invoke,
         gpt=gpt_toggle.invoke,
-        memory=memory_toggle.invoke)
+        memory=memory_toggle.invoke,
+        model=lambda: write_line(__import__("model_gate").toggle_message()))
+
+    def run_understood_command(text: str) -> None:
+        # Comando capito dal motore interno: stessi gestori dei comandi diretti.
+        from voice_control import model_switch_target
+        if model_switch_target(text) is not None and try_model_switch(text):
+            return
+        if try_file_command(text) or try_program_command(text) or try_timer_command(text):
+            return
+        command = speech_to_local_command(text)
+        if command == "apri blocco note":
+            document_operation("open", source_utterance=text)
+            return
+        submit_local(message_override=command or text, source_utterance=text)
+
+    def understood_catalog() -> list:
+        import command_aliases
+        return [c for items in command_aliases.catalog(engine).values() for c in items]
+
+    from intent_normalizer import register as register_understanding
+    register_understanding(run_understood_command, understood_catalog, write_line)
     tools_button.configure(command=toggle_console_tools)
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
@@ -4821,6 +4853,13 @@ def main() -> None:
     def submit_gemma_voice(spoken, *, typed=False):
         if closing or gemma_trial_busy[0]:
             return False
+        from intent_normalizer import before_model
+        if before_model(spoken):
+            return True              # capita dal motore interno (sinonimi) o domanda sì/no
+        from model_gate import enabled as model_enabled, refused as model_refused
+        if not model_enabled():
+            write_line(model_refused(spoken))
+            return True              # gestita: nessun passaggio a un altro modello
         try:
             chat_tab_active = chat_notebook.select() == str(chat_local_tab)
         except NameError:

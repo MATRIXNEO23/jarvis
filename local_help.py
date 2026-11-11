@@ -81,6 +81,12 @@ def help_sections(engine):
             'Il pulsante MIC mantiene il controllo manuale. Il riconoscimento offline richiede Vosk e il modello vocale. '
             'Per installazione e problemi usa docs/VOCE_OFFLINE.md distribuita con Lumi.',
         'Modelli e GPT':
+            'MODELLO ON/OFF (in alto, accanto a GPT): con OFF nessuna richiesta va a Gemma o a GPT, '
+            'funzionano solo i comandi interni; serve a provare il motore interno. A ogni avvio torna ON.\n'
+            'Prima del modello Lumi prova a capire da sola: toglie le parole di cortesia e usa i sinonimi '
+            '(attiva/avvia/metti = imposta, stoppa/spegni = ferma…). Se la frase diventa un comando lo esegue '
+            '(in console «CAPITO COME > …»). Con MODELLO OFF, se la frase somiglia a un comando chiede '
+            '«Intendevi …?»: rispondi sì o no. Sinonimi tuoi: Impostazioni > Personalizzazione comandi > Sinonimi.\n\n'
             'GPT ON seleziona GPT per voce (anche Premi per parlare), chat e Telegram; GPT OFF seleziona Gemma. '
             'I comandi locali riconosciuti vengono intercettati nella console prima dei modelli; file e app seguono i rispettivi controlli.\n\n'
             'Al primo invio conversazionale a GPT confermi il consenso per la sessione, condiviso fra voce e chat. Un errore di connessione non seleziona Gemma. Torna a Gemma quando lo scegli tu. '
@@ -142,6 +148,21 @@ def help_sections(engine):
     }
 
 
+# Nomi interi delle sezioni nel menu verticale (le chiavi restano corte).
+FULL_TITLES = {
+    'Inizia qui': 'Inizia qui',
+    'Comandi locali': 'Comandi locali di base',
+    'Timer e sveglia': 'Timer e sveglia',
+    'Controllo PC': 'Controllo PC (finestre, mouse, tasti)',
+    'Musica': 'Musica e video',
+    'Voce': 'Voce e microfono',
+    'Modelli e GPT': 'Modelli locali e GPT',
+    'File e app': 'File, cartelle e programmi',
+    'Progetti e Telegram': 'Progetti e Telegram',
+    'Chiavi API': 'Chiavi API (come crearle)',
+    'Tastiera': 'Scorciatoie da tastiera',
+}
+
 _LINK = __import__('re').compile(r'https://[^\s)»"]+')
 
 
@@ -169,12 +190,20 @@ class HelpWindow(tk.Toplevel):
         self.title('Lumi — Aiuto e comandi')
         self.geometry('800x550')
         self.minsize(560, 360)
-        self.notebook = ttk.Notebook(self)
-        self.notebook.pack(fill='both', expand=True, padx=10, pady=10)
-        self.notebook.enable_traversal()
+        # Menu verticale a sinistra con i nomi interi, testo della sezione a destra.
+        body = ttk.Frame(self)
+        body.pack(fill='both', expand=True, padx=10, pady=10)
+        self.menu = tk.Listbox(body, width=30, activestyle='none', exportselection=False,
+                               font=('Segoe UI', 11), bg='#031522', fg='#d7f6ff',
+                               selectbackground='#1b6f8f', highlightthickness=0)
+        self.menu.pack(side='left', fill='y', padx=(0, 8))
+        self.content = ttk.Frame(body)
+        self.content.pack(side='left', fill='both', expand=True)
         self.pages = {}
+        self.frames = {}
+        self.order = []
         for title, content in help_sections(engine).items():
-            frame = ttk.Frame(self.notebook)
+            frame = ttk.Frame(self.content)
             text = tk.Text(frame, wrap='word', font=('Segoe UI', 11),
                            bg='#061421', fg='#d7f6ff', padx=12, pady=12)
             scroll = ttk.Scrollbar(frame, command=text.yview)
@@ -183,11 +212,24 @@ class HelpWindow(tk.Toplevel):
             text.pack(fill='both', expand=True)
             _fill_text(text, content)
             self.pages[title] = text
-            self.notebook.add(frame, text=title)
+            self.frames[title] = frame
+            self.order.append(title)
+            self.menu.insert('end', ' ' + FULL_TITLES.get(title, title))
+        self.menu.bind('<<ListboxSelect>>', lambda _e: self.show_page())
+        self.menu.selection_set(0)
+        self.show_page()
         ttk.Button(self, text='Chiudi (Esc)', command=self.destroy).pack(pady=(0, 10))
         self.bind('<Escape>', self.close)
         self.bind('<Control-l>', self.focus_command)
         self.bind('<Destroy>', lambda event: self._forget(parent, event), add='+')
+
+    def show_page(self, title=None):
+        if title is None:
+            chosen = self.menu.curselection()
+            title = self.order[chosen[0]] if chosen else self.order[0]
+        for frame in self.frames.values():
+            frame.pack_forget()
+        self.frames[title].pack(fill='both', expand=True)
 
     def _forget(self, parent, event):
         if event.widget is self and getattr(parent, '_jarvis_help_window', None) is self:
