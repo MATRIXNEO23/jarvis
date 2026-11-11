@@ -1,10 +1,10 @@
 {
-  "run_id": 42918451263,
-  "artifact": "lumi-033-prova-candidate",
-  "file": "Lumi-033-PROVA.zip",
-  "bytes": 27586757,
-  "sha256": "4c1cd5e119cf7beb9013525b4e0199418e5ea3710237609a0287781d95add227",
-  "source_commit": "3d2ec20",
-  "title": "Build 033 PROVA — Musica: cartelle navigabili, coda, playlist, schermo intero",
-  "description": "Come la 032, più: le cartelle dell'elenco ☰ ora si aprono. Coda: «aggiungi in coda …» (cartelle, o YouTube mentre va YouTube, senza interrompere), pulsante Coda nella barra con ▲▼, Togli, + Aggiungi e Salva come playlist. Più playlist con nome (anche vuote, anche con video YouTube), Rinomina, Togli, «metti la playlist …». YouTube con la chiave: finito un video parte il risultato successivo (fino a 10 per ricerca, stessa quota). «⛶ intero»: video a schermo intero con la barra in fondo, «⛶ esci» o Esc. Verificati in CI Windows: 1232 test, riquadro video reale in finestra Tk, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 42925415082,
+  "artifact": "lumi-034-prova-candidate",
+  "file": "Lumi-034-PROVA.zip",
+  "bytes": 27592027,
+  "sha256": "5f65739466f3bb8f1d9b29ed9ba6e9e062a148ce520362c397b7a143ab95e47b",
+  "source_commit": "5f5a2e3",
+  "title": "Build 034 PROVA — Le mie parole, mini avatar spostabile, barra musica",
+  "description": "Come la 033, più: comandi con parole proprie (Aiuto > in fondo alle sezioni dei comandi > «Le mie parole»: frase scelta → comando esistente, {testo} per la parte variabile, voce e testo, salvati nel profilo; i comandi standard restano). Mini avatar con Lumi ridotta a icona: trascinabile, posizione salvata, mai sotto la barra delle applicazioni; con la musica attiva accanto compaiono titolo e ⏮ ⏯ ⏭ ⏹. Barra musica: tasti «▁ riduci» e «⛶ intero» sempre visibili, titolo scorrevole se lungo. Verificati in CI Windows: 1235 test, riquadro video reale in finestra Tk, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare."
 }
