@@ -5,7 +5,8 @@ Quando una frase non è un comando preciso, prima di passarla al modello Lumi:
 2. sostituisce i sinonimi dei verbi con un verbo comune (attiva/avvia/metti → imposta,
    stoppa/spegni → ferma…), sia nella frase sia nei comandi che conosce (catalogo);
 3. se la frase coincide con un comando del catalogo → lo esegue («CAPITO COME > …»);
-4. con MODELLO OFF, se gli somiglia → chiede «Intendevi …? sì / no».
+4. se gli somiglia → chiede «Intendevi …?» (domande variabili); con «no» e modello
+   acceso la frase originale va al modello.
 I comandi di una sola parola + parte variabile («metti …», «passa a …») non vengono
 mai presi per sinonimo: «avvia il computer» non diventa musica.
 I sinonimi personali si aggiungono in Impostazioni > Personalizzazione comandi.
@@ -39,9 +40,12 @@ FILLERS = ("per favore", "per piacere", "per cortesia", "potresti", "puoi", "rie
 ARTICLES = {"il", "lo", "la", "i", "gli", "le", "un", "uno", "una", "l", "di", "del", "della",
             "dello", "dei", "degli", "delle", "da", "per", "a", "al", "alla", "allo", "ai"}
 _SLOT = re.compile(r"\{([a-zA-Z_]{1,20})\}")
-# Con il modello ACCESO non si chiede mai «Intendevi…?»: ciò che non coincide con un
-# comando va al modello come prima. La domanda sì/no vale con MODELLO OFF.
+# «Intendevi…?» anche con il modello ACCESO (richiesta utente: è lì che una frase
+# simile a un comando rischia di finire al modello), ma più severo: frase corta e
+# molto somigliante. Se rispondi «no», la frase originale va al modello come prima.
 ASK_THRESHOLD_MODEL_OFF = 0.6
+ASK_THRESHOLD_MODEL_ON = 0.7
+ASK_MAX_WORDS_MODEL_ON = 6
 _cache = {"path": None, "mtime": None, "extra": {}}
 
 
@@ -128,9 +132,9 @@ def understand(text: str, commands, model_on: bool = True, extra=None):
         match = _pattern(command, extra).fullmatch(said)
         if match:
             return ("esatto", _fill(command, match.groupdict()))
-    if model_on:
+    threshold = ASK_THRESHOLD_MODEL_ON if model_on else ASK_THRESHOLD_MODEL_OFF
+    if model_on and len(said.split()) > ASK_MAX_WORDS_MODEL_ON:
         return None
-    threshold = ASK_THRESHOLD_MODEL_OFF
     best, best_score = None, 0.0
     for command in commands:
         if _SLOT.search(command):
@@ -190,14 +194,19 @@ def save_extra(extra: dict, path: Path | None = None) -> None:
 
 
 # --- conferma «Intendevi …?» ----------------------------------------------------
-_PENDING = {"command": None}
+_PENDING = {"command": None, "original": None}
 _YES = {"si", "sì", "esatto", "proprio", "confermo", "ok", "va bene", "certo", "giusto"}
 _NO = {"no", "annulla", "niente", "lascia stare", "no grazie"}
 
 
-def ask(command: str) -> str:
+def ask(command: str, original: str = "") -> str:
     _PENDING["command"] = command
-    return f"Intendevi «{command}»? Di' «sì» o «no»."
+    _PENDING["original"] = original
+    try:
+        from frasi_lumi import say
+        return say("intendevi", comando=command) + " Di' «sì» o «no»."
+    except Exception:
+        return f"Intendevi «{command}»? Di' «sì» o «no»."
 
 
 def answer(text: str):
@@ -210,17 +219,18 @@ def answer(text: str):
     if word in _YES or word.startswith("si "):
         return ("si", command)
     if word in _NO:
-        return ("no", None)
+        return ("no", _PENDING.pop("original", None) or None)
     return None                      # altra frase: la domanda decade
 
 
 # --- collegamento con Lumi (jarvis.py registra; qui nessuna variabile nuova nelle sue funzioni)
-_RUNTIME = {"run_local": None, "commands": None, "write": None, "busy": False}
+_RUNTIME = {"run_local": None, "commands": None, "write": None, "busy": False, "to_model": None}
 
 
-def register(run_local, commands, write) -> None:
-    """run_local(testo): esegue un comando interno; commands(): elenco del catalogo."""
-    _RUNTIME.update(run_local=run_local, commands=commands, write=write)
+def register(run_local, commands, write, to_model=None) -> None:
+    """run_local(testo): esegue un comando interno; commands(): elenco del catalogo;
+    to_model(testo): manda una frase al modello (dopo un «no» a «Intendevi…?»)."""
+    _RUNTIME.update(run_local=run_local, commands=commands, write=write, to_model=to_model)
 
 
 def before_model(text: str) -> bool:
@@ -231,7 +241,20 @@ def before_model(text: str) -> bool:
     reply = answer(text)
     if reply is not None:
         if reply[0] == "no":
-            write("LUMI > Va bene, non faccio nulla.")
+            from model_gate import enabled as model_enabled
+            original = reply[1]
+            if original and model_enabled() and _RUNTIME["to_model"] is not None:
+                _RUNTIME["busy"] = True          # la frase originale va al modello
+                try:
+                    _RUNTIME["to_model"](original)
+                finally:
+                    _RUNTIME["busy"] = False
+                return True
+            try:
+                from frasi_lumi import say
+                write("LUMI > " + say("annullato"))
+            except Exception:
+                write("LUMI > Va bene, non faccio nulla.")
             return True
         return _run(reply[1])
     try:
@@ -244,7 +267,7 @@ def before_model(text: str) -> bool:
     if result[0] == "esatto":
         write("CAPITO COME > " + result[1])
         return _run(result[1])
-    write("LUMI > " + ask(result[1]))
+    write("LUMI > " + ask(result[1], text))
     return True
 
 

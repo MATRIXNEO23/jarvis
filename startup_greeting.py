@@ -20,4 +20,11 @@ def greeting_for_hour(hour: int) -> str:
 
 
 def startup_greeting() -> str:
-    return greeting_for_hour(datetime.now().hour)
+    """Saluto all'avvio con tante varianti per ora del giorno (Frasi di Lumi,
+    personalizzabili); se le frasi non sono disponibili, il saluto di sempre."""
+    hour = datetime.now().hour
+    try:
+        from frasi_lumi import greeting
+        return greeting("avvio", hour)
+    except Exception:
+        return greeting_for_hour(hour)

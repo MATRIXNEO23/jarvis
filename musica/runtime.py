@@ -23,6 +23,17 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     current = _STATE["service"]
     if current is None or not current.is_enabled():
         return False
+    import re
+    word = re.sub(r"^\s*(?:(?:ehi|hey|ok)\s+)?lumi[\s,!.:]*", "", spoken, flags=re.I)
+    word = " ".join(word.casefold().strip(" .!?").split())
+    if word in ("esci", "esci dallo schermo intero", "esci da schermo intero",
+                "togli lo schermo intero", "schermo normale"):
+        # Solo mentre il video è a schermo intero; altrimenti «esci» resta agli altri.
+        if getattr(current, "is_fullscreen", lambda: False)():
+            current.exit_fullscreen()
+            write_line("MUSICA > Schermo intero chiuso.")
+            return True
+        return False
     from .commands import parse_command
     request = parse_command(spoken)
     if request is None:

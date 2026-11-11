@@ -394,6 +394,9 @@ class MusicBar:
         self._full_shown = False
         self._bar_in = None
         self.top.bind("<Escape>", lambda _e: self._full and self._toggle_full(), add="+")
+        # «esci» a voce dallo schermo intero (musica/runtime.py).
+        service.is_fullscreen = lambda: self._full
+        service.exit_fullscreen = lambda: self._full and self._toggle_full()
         self.video_frame = None
         if video_host is not None and getattr(service, "video", None) is not None:
             self.video_frame = tk.Frame(self.top, bg="#000000", highlightthickness=0, bd=0)
@@ -478,7 +481,8 @@ class MusicBar:
         self._full = value
         self._video_shown = False          # forza il nuovo posizionamento
         self._bar_in = None
-        self.on_message("Schermo intero." if value else "Schermo intero chiuso.")
+        self.on_message("Schermo intero: di' «esci» o premi Esc per tornare." if value
+                        else "Schermo intero chiuso.")
 
     def _volume(self, value) -> None:
         if self._volume_job is not None:
@@ -499,12 +503,19 @@ class MusicBar:
                     self.volume_scale.state(["disabled"])
                 else:
                     self.volume_scale.state(["!disabled"])
-                bar_in = self.top if self._full else self.host
-                if not self._shown or self._bar_in is not bar_in:
-                    self.frame.place(in_=bar_in, relx=0, rely=1, relwidth=1, anchor="sw")
-                    self.frame.lift()
-                    self._shown = True
-                    self._bar_in = bar_in
+                if self._full:
+                    # Schermo intero: solo il video, nessuna barra (esci con «esci» o Esc).
+                    if self._shown:
+                        self.frame.place_forget()
+                        self._shown = False
+                        self._bar_in = None
+                else:
+                    bar_in = self.host
+                    if not self._shown or self._bar_in is not bar_in:
+                        self.frame.place(in_=bar_in, relx=0, rely=1, relwidth=1, anchor="sw")
+                        self.frame.lift()
+                        self._shown = True
+                        self._bar_in = bar_in
             elif self._shown:
                 self.frame.place_forget()
                 self._shown = False
@@ -546,7 +557,7 @@ class MusicBar:
                         self.frame.lift()
                 elif want_video:
                     # Video sopra la barra: il riquadro si accorcia dell'altezza della barra.
-                    bar_h = self.frame.winfo_reqheight() + 4
+                    bar_h = 0 if self._full else self.frame.winfo_reqheight() + 4
                     self.video_frame.place(in_=self.top if self._full else self.video_host,
                                            relx=0, rely=0, x=0, y=0,
                                            relwidth=1, relheight=1, width=0, height=-bar_h,

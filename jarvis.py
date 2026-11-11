@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import os
 import queue
+import subprocess
+import sys
 import shutil
 from collections import deque
 from concurrent.futures import Future
@@ -2683,6 +2685,33 @@ def main() -> None:
               text="Timer, comandi locali, modelli, progetti: scegli tu le parole.",
               wraplength=455).pack(side="left",fill="x",expand=True)
 
+    # Mini avatar quando Lumi è ridotta a icona: mostra/nascondi e trasparenza
+    # dopo N secondi di mouse fermo (0 = mai). Salvati in avatar-dock.json.
+    dock_panel=ttk.LabelFrame(
+        integrations_settings_frame,text="Mini avatar (Lumi ridotta a icona)",padding=8)
+    dock_panel.pack(fill="x",pady=(3,9))
+
+    def save_dock_settings() -> None:
+        from lumi_avatar import _dock_file, save_dock_options
+        try:
+            seconds=int(dock_idle_var.get())
+        except (tk.TclError,ValueError):
+            seconds=30
+        save_dock_options(_dock_file(),dock_show_var.get(),seconds)
+        write_line("IMPOSTAZIONI > Mini avatar: "+("visibile" if dock_show_var.get() else "nascosto")
+                   +(f", trasparente dopo {seconds} s di mouse fermo." if seconds else
+                     ", sempre visibile anche col mouse fermo."))
+
+    from lumi_avatar import _dock_file as _dock_options_file, load_dock_options
+    _dock_options=load_dock_options(_dock_options_file())
+    dock_show_var=tk.BooleanVar(value=_dock_options["show"])
+    dock_idle_var=tk.IntVar(value=_dock_options["idle"])
+    ttk.Checkbutton(dock_panel,text="Mostra il mini avatar",variable=dock_show_var).pack(side="left")
+    ttk.Label(dock_panel,text="  Trasparente dopo").pack(side="left")
+    ttk.Spinbox(dock_panel,from_=0,to=600,width=5,textvariable=dock_idle_var).pack(side="left",padx=4)
+    ttk.Label(dock_panel,text="s di mouse fermo (0 = mai)").pack(side="left")
+    ttk.Button(dock_panel,text="Salva",command=save_dock_settings).pack(side="right")
+
     # Conversation is always visible at the left of the animated HUD.
     # The console composer follows the supplied reference: a circular mic,
     # one conversation field and a send arrow. The previous explicit tools
@@ -3286,6 +3315,11 @@ def main() -> None:
         )
 
     def try_timer_command(spoken: str) -> bool:
+        # Comandi su Lumi stessa (riduci, chiudi, riavvia, nascondi/sveglia):
+        # prima di tutto, così «sveglia» con Lumi nascosta la riapre.
+        from lumi_comandi import handle_text as lumi_handle_text
+        if lumi_handle_text(spoken, write_line, speak_result):
+            return True
         alarm_request = parse_alarm_clock_command(spoken)
         if alarm_request:
             action, value = alarm_request
@@ -4682,7 +4716,16 @@ def main() -> None:
         return [c for items in command_aliases.catalog(engine).values() for c in items]
 
     from intent_normalizer import register as register_understanding
-    register_understanding(run_understood_command, understood_catalog, write_line)
+    def understanding_output(line: str) -> None:
+        # Le domande «Intendevi…?» si sentono anche a voce (uso senza mani).
+        write_line(line)
+        if line.startswith("LUMI > "):
+            speak_result(line[7:])
+
+    register_understanding(
+        run_understood_command, understood_catalog, understanding_output,
+        to_model=lambda text: (start_conversation_gpt(text) if gpt_enabled.get()
+                               else submit_gemma_voice(text, typed=True)))
     tools_button.configure(command=toggle_console_tools)
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
@@ -5214,7 +5257,23 @@ def main() -> None:
         anchor="e", pady=(9, 0))
     # Settings are intentionally hidden until the gear is pressed.
     # The normal window-close control invokes the same safe shutdown.
-    hud.set_close_handler(close)
+    def close_with_goodbye() -> None:
+        # Saluto alla chiusura (frasi variabili); con la voce attiva aspetta che lo dica.
+        if closing or goodbye_started[0]:
+            return
+        goodbye_started[0] = True
+        from datetime import datetime
+        from frasi_lumi import greeting as lumi_greeting
+        text = lumi_greeting("chiusura", datetime.now().hour)
+        write_line("LUMI > " + text)
+        if spoken_enabled.get():
+            speak_result(text)
+            root.after(2300, close)
+        else:
+            close()
+
+    goodbye_started = [False]
+    hud.set_close_handler(close_with_goodbye)
     hud.set_state_provider(lambda: {
         "speaking": speaker.is_speaking(),
         # Orange only if the real Vosk input stream has actually opened.
@@ -5254,7 +5313,72 @@ def main() -> None:
         write_line("LUMI > " + greeting)
         speak_result(greeting)
 
-    root.protocol("WM_DELETE_WINDOW", close)
+    root.protocol("WM_DELETE_WINDOW", close_with_goodbye)
+
+    def lumi_restart() -> None:
+        from frasi_lumi import say
+        text = say("riavvio")
+        write_line("LUMI > " + text)
+        speak_result(text)
+        # Un piccolo processo separato riapre Lumi quando questa si è chiusa.
+        subprocess.Popen(
+            [sys.executable, "-c",
+             "import subprocess,sys,time;time.sleep(5);subprocess.Popen(sys.argv[1:])",
+             sys.executable, *sys.argv], cwd=os.getcwd(),
+            creationflags=getattr(subprocess, "DETACHED_PROCESS", 0))
+        goodbye_started[0] = True
+        root.after(1800, close)
+
+    def lumi_shutdown_pc() -> None:
+        subprocess.run(["shutdown", "/s", "/t", "20"], check=False,
+                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        message = ("Spengo il computer tra 20 secondi. Per fermarlo di' "
+                   "«annulla lo spegnimento».")
+        write_line("LUMI > " + message)
+        speak_result(message)
+
+    def lumi_cancel_shutdown() -> None:
+        subprocess.run(["shutdown", "/a"], check=False,
+                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        write_line("LUMI > Spegnimento annullato.")
+        speak_result("Spegnimento annullato.")
+
+    def lumi_say(key: str) -> None:
+        from frasi_lumi import say
+        text = say(key)
+        write_line("LUMI > " + text)
+        speak_result(text)
+
+    def lumi_minimize() -> None:
+        lumi_say("minimizzo")
+        root.iconify()
+
+    def lumi_hide() -> None:
+        lumi_say("nascondo")
+        avatar_dock.hide_by_user()
+        if root.state() != "iconic":
+            root.iconify()
+
+    def lumi_wake() -> None:
+        avatar_dock.unhide()
+        root.deiconify()
+        try:
+            root.state("zoomed")
+        except tk.TclError:
+            pass
+        root.lift()
+        try:
+            root.focus_force()
+        except tk.TclError:
+            pass
+        lumi_say("sveglia")
+
+    from lumi_comandi import register as register_lumi_commands
+    register_lumi_commands(
+        {"minimize": lumi_minimize, "close": close_with_goodbye, "restart": lumi_restart,
+         "shutdown_pc": lumi_shutdown_pc, "cancel_shutdown": lumi_cancel_shutdown,
+         "hide": lumi_hide, "wake": lumi_wake},
+        lambda: root.state() == "iconic" or avatar_dock.user_hidden)
     settings_window.bind("<Escape>", lambda _event: settings_window.withdraw())
     root.bind("<Control-comma>", lambda _event: show_settings())
     from local_help import bind_help_shortcuts

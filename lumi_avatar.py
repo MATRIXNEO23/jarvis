@@ -423,24 +423,52 @@ def load_dock_position(path: Path | None) -> tuple[int, int] | None:
     return load_dock_positions(path).get("avatar")
 
 
-def save_dock_position(path: Path | None, x: int, y: int, which: str = "avatar") -> None:
-    """Salva la posizione di avatar o lettore senza perdere quella dell'altro."""
+def _read_dock(path) -> dict:
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _write_dock(path, data: dict) -> None:
     if path is None:
         return
-    current = load_dock_positions(path)
-    current[which] = (int(x), int(y))
-    data = {}
-    if "avatar" in current:
-        data["x"], data["y"] = current["avatar"]
-    if "player" in current:
-        data["px"], data["py"] = current["player"]
     try:
+        path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
         tmp.write_text(json.dumps(data), encoding="utf-8")
         tmp.replace(path)
     except OSError:
         pass
+
+
+def save_dock_position(path: Path | None, x: int, y: int, which: str = "avatar") -> None:
+    """Salva la posizione di avatar o lettore senza perdere il resto (altra posizione, opzioni)."""
+    if path is None:
+        return
+    data = _read_dock(path)
+    if which == "avatar":
+        data["x"], data["y"] = int(x), int(y)
+    else:
+        data["px"], data["py"] = int(x), int(y)
+    _write_dock(path, data)
+
+
+def load_dock_options(path) -> dict:
+    """show: mini avatar quando Lumi è ridotta; idle: secondi di mouse fermo prima di
+    diventare trasparente (0 = mai)."""
+    data = _read_dock(path) if path else {}
+    idle = data.get("idle", 30)
+    return {"show": data.get("show", True) is not False,
+            "idle": idle if type(idle) is int and 0 <= idle <= 3600 else 30}
+
+
+def save_dock_options(path, show: bool, idle: int) -> None:
+    data = _read_dock(path) if path else {}
+    data["show"], data["idle"] = bool(show), max(0, min(int(idle), 3600))
+    _write_dock(path, data)
 
 
 def clamp_dock(x: int, y: int, width: int, height: int, area) -> tuple[int, int]:
@@ -512,6 +540,10 @@ class AvatarDock:
         self._player = _Draggable(self, "player")
         self._title_text = ""
         self._title_pos = 0
+        self.user_hidden = False          # «Lumi, nascondi»: resta nascosto finché «sveglia»
+        self._cursor = None
+        self._still_since = time.monotonic()
+        self._faded = False
         root.bind("<Unmap>", self._on_unmap, add="+")
         root.bind("<Map>", self._on_map, add="+")
 
@@ -562,7 +594,9 @@ class AvatarDock:
 
     def show(self):
         import tkinter as tk
-        if self.window is not None:
+        if self.window is not None or self.user_hidden:
+            return
+        if not load_dock_options(self.position_file)["show"]:
             return
         win = self._overlay(transparent=True)
         width, height = self._size()
@@ -581,8 +615,13 @@ class AvatarDock:
         for widget in (win, canvas):
             widget.bind("<Double-Button-1>", self.restore)
         self._avatar.bind(win, canvas)
+        for widget in (win, canvas):
+            widget.bind("<Button-3>", self._menu)
         self.face.start(self.mode_provider)
         self._music_tick()
+        self._faded = False
+        self._cursor = None
+        self._idle_tick()
 
     # --- lettore musicale separato (tipo PiP) -----------------------------
     def _open_player(self):
@@ -608,6 +647,8 @@ class AvatarDock:
         tk.Button(frame, text="🔉", command=lambda: self._music("volume_down"), **style).pack(side="left", padx=(6, 1))
         tk.Button(frame, text="🔊", command=lambda: self._music("volume_up"), **style).pack(side="left", padx=(1, 3))
         self._player.window = win
+        if self._faded:
+            win.attributes("-alpha", 0.0)
         self._player.bind(win, frame, grip, title)
         saved = load_dock_positions(self.position_file).get("player")
         if saved is None:
@@ -668,6 +709,53 @@ class AvatarDock:
             self.face.stop()
             self.face.items = {}
             win.destroy()
+
+    # --- nascosto a voce, menu col tasto destro, trasparenza col mouse fermo -----
+    def hide_by_user(self):
+        self.user_hidden = True
+        self.hide()
+
+    def unhide(self):
+        self.user_hidden = False
+
+    def _menu(self, event):
+        import tkinter as tk
+        menu = tk.Menu(self.window, tearoff=0)
+        menu.add_command(label="Apri Lumi", command=self.restore)
+        menu.add_command(label="Nascondi avatar (torna con «Lumi, sveglia»)",
+                         command=self.hide_by_user)
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
+    def _idle_tick(self):
+        """Mouse fermo per «idle» secondi: avatar e lettore trasparenti; lo muovi e tornano."""
+        if self.window is None:
+            return
+        try:
+            point = (self.root.winfo_pointerx(), self.root.winfo_pointery())
+            idle = load_dock_options(self.position_file)["idle"]
+            now = time.monotonic()
+            if point != self._cursor:
+                self._cursor, self._still_since = point, now
+                if self._faded:
+                    self._set_alpha(1.0)
+            elif idle and not self._faded and now - self._still_since >= idle:
+                self._set_alpha(0.0)
+        except Exception:
+            pass
+        if self.window is not None:
+            self.window.after(500, self._idle_tick)
+
+    def _set_alpha(self, value):
+        self._faded = value < 1.0
+        for win in (self.window, self._player.window):
+            if win is not None:
+                try:
+                    win.attributes("-alpha", value)
+                except Exception:
+                    pass
 
     def restore(self, _event=None):
         self.hide()

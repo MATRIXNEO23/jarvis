@@ -50,14 +50,44 @@ def help_sections(engine):
             'La sveglia richiede la relativa add-on attiva. Se l’orario è passato, vale per domani. '
             'Per evitare ambiguità puoi usare il formato 24 ore. Gli elenchi di questa guida non vengono letti a voce.',
         'Controllo PC':
-            'Add-on Controllo PC (spento finché non lo attivi in Gestisci add-on). Tutto offline.\n\n'
-            'finestre aperte\ncosa c’è aperto\npassa a Chrome\nvai su Blocco note\npassa alla 2\n'
-            'chiudi la finestra Blocco note\nclicca su Cerca\ndoppio clic su Foto\n'
-            'scrivi ciao nel campo Cerca\ndigita buongiorno\npremi Ctrl più C\npremi invio\n'
-            'scorri giù\nscorri su di 5\ncosa posso cliccare\nchiama questa finestra lavoro\n\n'
+            'Add-on Controllo PC (spento finché non lo attivi in Gestisci add-on). Tutto offline, '
+            'pensato per usare il PC solo con la voce.\n\n'
+            'FINESTRE\nfinestre aperte\npassa a Chrome / passa alla 2 / passa a lavoro (nome tuo)\n'
+            'minimizza / ingrandisci / ripristina (la finestra in uso o con il nome)\n'
+            'chiudi la finestra / chiudi la finestra Blocco note\n\n'
+            'SCEGLIERE SENZA DIRE IL NOME\nmostra i numeri → poi «il 3», «clicca il 3», «vai al 3»\n'
+            'seleziona il primo / apri il terzo / l’ultima cartella / la prima immagine\n'
+            'giù / su: la selezione si sposta di uno e Lumi dice il nome\n'
+            'aprilo / apri questo / doppio clic: apre l’elemento selezionato\n'
+            'apri (da solo): con un elemento selezionato Lumi chiede «Apro …?»\n\n'
+            'ESPLORA FILE\nvai su Download / vai su Disco C / vai su Utenti\n'
+            'indietro / avanti / su di un livello\nvai alla barra degli indirizzi (poi detta il percorso)\n\n'
+            'CAMPI E TASTI\nclicca su Cerca\nscrivi gatti nel campo cerca (sostituisce il testo)\n'
+            'aggiungi neri nel campo cerca (scrive dopo)\npulisci la ricerca\ndigita buongiorno\n'
+            'premi Ctrl più C / premi invio\nscorri giù / scorri su di 5\n\n'
+            'AIUTO\ncosa posso fare qui → poi «altri»\nchiama questa finestra lavoro\n\n'
+            'Le parole corte (giù, su, indietro, avanti, apri, il 3) valgono come comando solo '
+            'mentre stai usando il Controllo PC (2 minuti dall’ultimo comando): altrimenti vanno '
+            'agli altri comandi e al modello. Il puntatore si muove sempre in modo visibile. '
             'Le prime volte chiede «sì», poi ricorda; le azioni delicate (Invia, Elimina, '
             'Non salvare, Alt+F4, Invio…) chiedono sempre. Nomi tuoi per le finestre: '
             'Gestisci add-on > Controllo PC > Configura.',
+        'Lumi':
+            'Comandi su Lumi stessa, anche con Lumi ridotta a icona:\n'
+            'riduci a icona / minimizza Lumi → resta il mini avatar\n'
+            'Lumi, nascondi → anche l’avatar sparisce, finché non dici «Lumi, sveglia»\n'
+            'Lumi, sveglia / svegliati → riapre l’interfaccia a schermo intero\n'
+            'chiudi Lumi / spegni Lumi → chiude con un saluto\n'
+            'riavvia Lumi → chiede conferma, poi si riapre da sola\n'
+            'spegni il PC → solo detto così, chiede conferma; «annulla lo spegnimento» lo ferma\n\n'
+            '«Lumi» da solo non fa ricomparire niente: aspetta il comando per qualche secondo. '
+            '«sveglia» da sola, con Lumi già davanti, resta il comando della sveglia.\n'
+            'Mini avatar: trascinalo dove vuoi; tasto destro → «Nascondi avatar». Col mouse fermo '
+            'per 30 secondi avatar e mini lettore diventano trasparenti e tornano muovendo il mouse '
+            '(Impostazioni > Integrazioni > Mini avatar).\n'
+            'Video della musica a schermo intero: solo il video; «esci» o Esc per tornare.\n'
+            'Frasi di Lumi (saluti, risposte, «Intendevi…?»): Impostazioni > Personalizzazione '
+            'comandi > Frasi di Lumi.',
         'Musica':
             'metti Bohemian Rhapsody\nsuona la canzone Imagine\nfammi sentire Vasco Rossi\n\n'
             'Lettore:\n'
@@ -154,6 +184,7 @@ FULL_TITLES = {
     'Comandi locali': 'Comandi locali di base',
     'Timer e sveglia': 'Timer e sveglia',
     'Controllo PC': 'Controllo PC (finestre, mouse, tasti)',
+    'Lumi': 'Lumi: finestra, avatar, chiusura',
     'Musica': 'Musica e video',
     'Voce': 'Voce e microfono',
     'Modelli e GPT': 'Modelli locali e GPT',

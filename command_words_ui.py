@@ -151,6 +151,9 @@ class CommandWordsWindow:
             tabs.add(tab, text=section)
             AliasPanel(tab, section, engine, height=330).pack(fill='both', expand=True)
         tab = ttk.Frame(tabs)
+        tabs.add(tab, text='Frasi di Lumi')
+        PhrasesPanel(tab).pack(fill='both', expand=True)
+        tab = ttk.Frame(tabs)
         tabs.add(tab, text='Sinonimi')
         SynonymsPanel(tab).pack(fill='both', expand=True)
         ttk.Button(frame, text='Chiudi', command=self.window.destroy).pack(anchor='e', pady=(6, 0))
@@ -228,3 +231,99 @@ class SynonymsPanel(ttk.Frame):
         word = self.tree.item(selected[0], 'values')[0]
         extra = {k: v for k, v in self.normalizer.load_extra().items() if k != word}
         self._save(extra, 'Tolto.')
+
+
+class PhrasesPanel(ttk.Frame):
+    """Frasi di Lumi: per ogni azione le varianti (predefinite + tue). Aggiungi,
+    Modifica ed Elimina una alla volta; «Ripristina predefinite» rimette quelle tolte."""
+
+    def __init__(self, parent):
+        super().__init__(parent, padding=8)
+        import frasi_lumi
+        self.frasi = frasi_lumi
+        ttk.Label(self, wraplength=720, text=(
+            'Lumi sceglie a caso una frase tra quelle dell\'azione, mai la stessa due volte di '
+            'fila. Le tue si aggiungono alle predefinite. Segnaposto: {nome}, {finestra}, '
+            '{comando}, {tasti}.')).pack(anchor='w')
+        body = ttk.Frame(self)
+        body.pack(fill='both', expand=True, pady=6)
+        self.actions = ttk.Treeview(body, show='tree', height=14, selectmode='browse')
+        self.actions.column('#0', width=280)
+        self.actions.pack(side='left', fill='y')
+        for category, actions in frasi_lumi.DEFAULTS.items():
+            node = self.actions.insert('', 'end', text=category, open=False)
+            for key, (description, _phrases) in actions.items():
+                self.actions.insert(node, 'end', iid=key, text=description)
+        self.actions.bind('<<TreeviewSelect>>', lambda _e: self.fill())
+        right = ttk.Frame(body)
+        right.pack(side='left', fill='both', expand=True, padx=(8, 0))
+        self.listbox = tk.Listbox(right, height=14)
+        self.listbox.pack(fill='both', expand=True)
+        row = ttk.Frame(right)
+        row.pack(fill='x', pady=(6, 0))
+        for text, command in (('Aggiungi', self.add), ('Modifica', self.edit),
+                              ('Elimina', self.delete), ('Ripristina predefinite', self.restore)):
+            ttk.Button(row, text=text, command=command).pack(side='left', padx=(0, 6))
+        self.status = tk.StringVar(value='Scegli un\'azione a sinistra.')
+        ttk.Label(self, textvariable=self.status).pack(anchor='w')
+        self.rows = []
+
+    def key(self):
+        selected = self.actions.selection()
+        if not selected or selected[0] not in {k for a in self.frasi.DEFAULTS.values() for k in a}:
+            return None
+        return selected[0]
+
+    def fill(self):
+        key = self.key()
+        self.listbox.delete(0, 'end')
+        self.rows = self.frasi.phrases(key) if key else []
+        for phrase, mine in self.rows:
+            self.listbox.insert('end', phrase + ('   (tua)' if mine else ''))
+
+    def _chosen(self):
+        sel = self.listbox.curselection()
+        return self.rows[sel[0]][0] if sel and sel[0] < len(self.rows) else None
+
+    def _ask(self, title, initial=''):
+        from tkinter import simpledialog
+        return simpledialog.askstring(title, 'Frase:', initialvalue=initial, parent=self)
+
+    def _do(self, action, *args):
+        key = self.key()
+        if key is None:
+            self.status.set('Scegli prima un\'azione a sinistra.')
+            return
+        try:
+            action(key, *args)
+            self.status.set('Salvato.')
+        except OSError as exc:
+            self.status.set('Non salvato: ' + str(exc)[:80])
+        self.fill()
+
+    def add(self):
+        text = self._ask('Aggiungi frase')
+        if text:
+            self._do(self.frasi.add, text)
+
+    def edit(self):
+        old = self._chosen()
+        if old is None:
+            self.status.set('Scegli una frase.')
+            return
+        new = self._ask('Modifica frase', old)
+        if new:
+            self._do(self.frasi.edit, old, new)
+
+    def delete(self):
+        old = self._chosen()
+        if old is None:
+            self.status.set('Scegli una frase.')
+            return
+        if len(self.rows) <= 1:
+            self.status.set('Lascia almeno una frase.')
+            return
+        self._do(self.frasi.remove, old)
+
+    def restore(self):
+        self._do(self.frasi.restore_defaults)

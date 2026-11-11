@@ -39,3 +39,16 @@ class DockPositionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DockOptionsTests(unittest.TestCase):
+    def test_options_saved_with_positions(self):
+        from lumi_avatar import load_dock_options, save_dock_options
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "avatar-dock.json"
+            self.assertEqual(load_dock_options(path), {"show": True, "idle": 30})
+            save_dock_position(path, 10, 20)
+            save_dock_options(path, False, 45)
+            save_dock_position(path, 11, 21, "player")
+            self.assertEqual(load_dock_options(path), {"show": False, "idle": 45})
+            self.assertEqual(load_dock_positions(path), {"avatar": (10, 20), "player": (11, 21)})

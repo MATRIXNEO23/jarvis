@@ -24,8 +24,11 @@ class UnderstandTests(unittest.TestCase):
         self.assertIsNone(n.understand("avvia il computer", CATALOG, extra={}))
         self.assertIsNone(n.understand("attiva la modalità aereo", CATALOG, extra={}))
 
-    def test_model_on_never_asks_model_off_asks(self):
-        self.assertIsNone(n.understand("stato del sistema di casa", CATALOG, model_on=True, extra={}))
+    def test_asks_also_with_model_on_but_stricter(self):
+        self.assertIsNone(n.understand("stato del sistema di casa mia oggi pomeriggio", CATALOG,
+                                       model_on=True, extra={}))
+        self.assertEqual(n.understand("stato sistemi", CATALOG, model_on=True, extra={})[:2],
+                         ("simile", "stato sistema"))
         result = n.understand("stato sistemi", CATALOG, model_on=False, extra={})
         self.assertEqual(result[:2], ("simile", "stato sistema"))
         self.assertIsNone(n.understand("raccontami una storia", CATALOG, model_on=False, extra={}))
@@ -37,7 +40,7 @@ class UnderstandTests(unittest.TestCase):
         try:
             set_enabled(False)
             self.assertTrue(n.before_model("stato sistemi"))
-            self.assertIn("Intendevi «stato sistema»", lines[-1])
+            self.assertIn("«stato sistema»", lines[-1])
             self.assertTrue(n.before_model("sì"))
             self.assertEqual(ran, ["stato sistema"])
             self.assertTrue(n.before_model("stato sistemi"))
@@ -47,6 +50,11 @@ class UnderstandTests(unittest.TestCase):
             self.assertTrue(n.before_model("stoppa la musica"))
             self.assertEqual(ran[-1], "ferma la musica")
             self.assertFalse(n.before_model("raccontami una barzelletta"))   # va al modello
+            sent = []
+            n.register(ran.append, lambda: CATALOG, lines.append, to_model=sent.append)
+            self.assertTrue(n.before_model("stato sistemi"))                  # modello acceso: chiede
+            self.assertTrue(n.before_model("no"))
+            self.assertEqual(sent, ["stato sistemi"])                         # «no» → al modello
         finally:
             set_enabled(True)
             n.register(None, None, None)
