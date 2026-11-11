@@ -1,3 +1,11 @@
+## Build 034 PROVA — Le mie parole, mini avatar spostabile, barra musica
+
+[Scarica Lumi-034-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-034-PROVA.zip)
+
+Come la 033, più: comandi con parole proprie (Aiuto > in fondo alle sezioni dei comandi > «Le mie parole»: frase scelta → comando esistente, {testo} per la parte variabile, voce e testo, salvati nel profilo; i comandi standard restano). Mini avatar con Lumi ridotta a icona: trascinabile, posizione salvata, mai sotto la barra delle applicazioni; con la musica attiva accanto compaiono titolo e ⏮ ⏯ ⏭ ⏹. Barra musica: tasti «▁ riduci» e «⛶ intero» sempre visibili, titolo scorrevole se lungo. Verificati in CI Windows: 1235 test, riquadro video reale in finestra Tk, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/42925415082). SHA-256: `5f65739466f3bb8f1d9b29ed9ba6e9e062a148ce520362c397b7a143ab95e47b`.
+
 ## Build 033 PROVA — Musica: cartelle navigabili, coda, playlist, schermo intero
 
 [Scarica Lumi-033-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-033-PROVA.zip)
