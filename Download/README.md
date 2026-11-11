@@ -1,3 +1,11 @@
+## Build 036 PROVA — Add-on Controllo PC, Gestisci add-on a sezioni
+
+[Scarica Lumi-036-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-036-PROVA.zip)
+
+Come la 035, più: add-on Controllo PC (installato spento): finestre aperte per nome, numero o nome tuo, passa/chiudi finestra, clic su pulsanti e campi tramite UI Automation di Windows, scrittura, scorciatoie, scorrimento; tutto offline. Conferma le prime volte poi ricorda; azioni delicate sempre. Gestisci add-on: elenco a sinistra, sezione dell'add-on a destra con Attiva/Disattiva, Configura e i suoi comandi personalizzabili. Comandi di base personalizzabili in Impostazioni > Personalizzazione comandi; F1 solo guida. Verificati in CI Windows: 1243 test, prova reale Controllo PC (campo Cerca scritto e pulsante Saluta cliccato in una finestra WinForms), riquadro video, voce, avvio UI e risposta del motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43048551042). SHA-256: `093288dee4faba206dbf9415797b7be9a0054cf00a3b5a698126debaf94d4c01`.
+
 ## Build 035 PROVA — Le mie parole accanto ai comandi, mini lettore separato
 
 [Scarica Lumi-035-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-035-PROVA.zip)
