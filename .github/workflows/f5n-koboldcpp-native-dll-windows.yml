@@ -24,6 +24,8 @@ on:
       - 'tools/edge_voice_smoke.py'
       - 'musica/**'
       - 'tools/video_host_smoke.py'
+      - 'controllo_pc/**'
+      - 'tools/uia_host_smoke.py'
       - 'local_model/native_bridge.py'
       - 'local_model/native_provider.py'
 
@@ -164,6 +166,22 @@ jobs:
           python tools/video_host_smoke.py video-host-out
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Build Lumi window reader (UI Automation, .NET Framework 4.8)
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          dotnet build controllo_pc/uia_host/LumiControl.csproj -c Release -o uia-host-out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Controllo PC proof (real UI Automation read + click on a Tk window)
+        shell: pwsh
+        timeout-minutes: 5
+        env:
+          PYTHONUTF8: '1'
+        run: |
+          python tools/uia_host_smoke.py uia-host-out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Fetch slim Piper engine (official 2023.11.14-2, pinned SHA-256, Italian only)
         shell: pwsh
         timeout-minutes: 10
@@ -178,16 +196,16 @@ jobs:
           PYTHONUTF8: '1'
           PYTHONIOENCODING: utf-8
         run: |
-          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 35 --out dist --model "probe-models/gemma2.gguf" --piper-engine "piper-engine" --video-host "video-host-out"
+          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 36 --out dist --model "probe-models/gemma2.gguf" --piper-engine "piper-engine" --video-host "video-host-out" --uia-host "uia-host-out"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload test candidate (CI artifact, not published)
         uses: actions/upload-artifact@v4
         with:
-          name: lumi-035-prova-candidate
+          name: lumi-036-prova-candidate
           path: |
-            dist/Lumi-035-PROVA.zip
-            dist/Lumi-035-PROVA.json
+            dist/Lumi-036-PROVA.zip
+            dist/Lumi-036-PROVA.json
           if-no-files-found: error
 
       - name: Archive only unverified research candidate

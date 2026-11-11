@@ -127,32 +127,41 @@ _FIXED = {
         "aiuto", "stato sistema", "apri download", "elenca download", "cerca file {testo}",
         "apri blocco note", "apri calcolatrice", "apri esplora file", "apri disco locale C",
         "apri browser", "cerca nel browser {testo}", "ultimi comandi"),
-    "Timer e sveglia": (
+    "Timer": (
         "imposta timer {testo}", "timer", "pausa timer", "riprendi timer",
-        "quanto manca al timer", "ferma timer", "reset timer",
-        "imposta sveglia alle {testo}", "ferma la sveglia", "che ore sono"),
-    "Musica": (
-        "metti {testo}", "aggiungi in coda {testo}", "metti la playlist {testo}",
-        "pausa", "riprendi", "ferma la musica", "avanti", "indietro",
-        "alza il volume della musica", "abbassa il volume della musica"),
+        "quanto manca al timer", "ferma timer", "reset timer", "che ore sono"),
     "Modelli e GPT": ("passa a GPT", "torna a Gemma"),
     "Progetti e Telegram": (
         "crea progetto {testo}", "apri progetto {testo}", "elenca progetti",
         "torna alla conversazione generale"),
+    "Sveglia": ("imposta sveglia alle {testo}", "ferma la sveglia"),
+    "Musica": (
+        "metti {testo}", "aggiungi in coda {testo}", "metti la playlist {testo}",
+        "pausa", "riprendi", "ferma la musica", "avanti", "indietro",
+        "alza il volume della musica", "abbassa il volume della musica"),
+    "Controllo PC": (
+        "finestre aperte", "passa a {testo}", "chiudi la finestra {testo}", "chiudi la finestra",
+        "clicca su {testo}", "digita {testo}", "premi {testo}", "scorri giù", "scorri su",
+        "cosa posso cliccare", "chiama questa finestra {testo}"),
 }
+# Comandi di base (Impostazioni > Personalizzazione comandi).
+BASE_SECTIONS = ("Comandi locali", "Timer", "Modelli e GPT", "Progetti e Telegram")
+# Comandi di un add-on (Gestisci add-on > sezione dell'add-on).
+ADDON_SECTIONS = {"sveglia": "Sveglia", "musica": "Musica", "programmi_app": "Programmi e app",
+                  "accesso_file": "Accesso file", "controllo_pc": "Controllo PC"}
 
 
-def catalog(engine=None, music=None) -> dict[str, list[str]]:
+def catalog(engine=None, music=None, pc=None) -> dict[str, list[str]]:
     """Sezione -> comandi che Lumi sa già eseguire, compresi i programmi abilitati
-    in Programmi e app e le playlist esistenti (si aggiornano da soli)."""
+    in Programmi e app, le playlist e i nomi delle finestre (si aggiornano da soli)."""
     result = {name: list(items) for name, items in _FIXED.items()}
-    files = []
+    programs, files = [], []
     apps = getattr(engine, "program_apps", None)
     try:
         if apps is not None and apps.available():
             for row in apps.entries():
                 if row.get("enabled") and row.get("available"):
-                    files.append("apri " + row["name"])
+                    programs.append("apri " + row["name"])
     except Exception:
         pass
     access = getattr(engine, "file_access", None)
@@ -164,13 +173,22 @@ def catalog(engine=None, music=None) -> dict[str, list[str]]:
                     files.append(example)
     except Exception:
         pass
-    result["File e app"] = files
+    result["Programmi e app"] = programs
+    result["Accesso file"] = files
     try:
         if music is None:
             from musica import runtime
             music = runtime.service()
-        if music is not None and music.is_enabled():
+        if music:
             result["Musica"] += ["metti la playlist " + n for n in sorted(music.playlists(), key=str.lower)]
+    except Exception:
+        pass
+    try:
+        if pc is None:
+            from controllo_pc import runtime as pc_runtime
+            pc = pc_runtime.service()
+        if pc:
+            result["Controllo PC"] += ["passa a " + v["label"] for v in pc.settings["nicknames"].values()]
     except Exception:
         pass
     return result

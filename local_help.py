@@ -23,8 +23,8 @@ def help_sections(engine):
     return {
         'Inizia qui':
             'Scrivi nella casella e premi Invio oppure il pulsante di invio.\n'
-            'Comandi con parole tue: in fondo alle sezioni dei comandi c’è «Le mie parole»: '
-            'accanto a ogni comando scrivi come vuoi dirlo, poi Salva (voce e testo).\n'
+            'Comandi con parole tue: Impostazioni > Personalizzazione comandi (comandi di base) '
+            'e Gestisci add-on > sezione dell’add-on (comandi dell’add-on).\n'
             'Diagnostica servizi apre il rapporto locale, anche da voce con Lumi. Lo trovi anche in Impostazioni > Progetti e servizi. Aggiorna e Copia rapporto non inviano messaggi o richieste ai modelli.\n'
             'Scrivi aiuto, help o comandi per riaprire questa guida. Funziona anche con Gemma o GPT attivi.\n\n'
             'F1 apre la guida. Ctrl+L porta il cursore nella casella. Ctrl+, apre le impostazioni.\n'
@@ -49,6 +49,15 @@ def help_sections(engine):
             'ferma la sveglia\nche ore sono\n\n'
             'La sveglia richiede la relativa add-on attiva. Se l’orario è passato, vale per domani. '
             'Per evitare ambiguità puoi usare il formato 24 ore. Gli elenchi di questa guida non vengono letti a voce.',
+        'Controllo PC':
+            'Add-on Controllo PC (spento finché non lo attivi in Gestisci add-on). Tutto offline.\n\n'
+            'finestre aperte\ncosa c’è aperto\npassa a Chrome\nvai su Blocco note\npassa alla 2\n'
+            'chiudi la finestra Blocco note\nclicca su Cerca\ndoppio clic su Foto\n'
+            'scrivi ciao nel campo Cerca\ndigita buongiorno\npremi Ctrl più C\npremi invio\n'
+            'scorri giù\nscorri su di 5\ncosa posso cliccare\nchiama questa finestra lavoro\n\n'
+            'Le prime volte chiede «sì», poi ricorda; le azioni delicate (Invia, Elimina, '
+            'Non salvare, Alt+F4, Invio…) chiedono sempre. Nomi tuoi per le finestre: '
+            'Gestisci add-on > Controllo PC > Configura.',
         'Musica':
             'metti Bohemian Rhapsody\nsuona la canzone Imagine\nfammi sentire Vasco Rossi\n\n'
             'Lettore:\n'
@@ -113,90 +122,11 @@ def help_sections(engine):
     }
 
 
-ALIAS_SECTIONS = ('Comandi locali', 'Timer e sveglia', 'Musica', 'File e app',
-                  'Modelli e GPT', 'Progetti e Telegram')
-
-
-class AliasPanel(ttk.Frame):
-    """Accanto a ogni comando esistente, la casella per le tue parole.
-
-    I comandi vengono dal catalogo di Lumi (anche programmi abilitati e playlist).
-    Più frasi per lo stesso comando: separale con «;». Casella vuota = nessuna.
-    """
-
-    def __init__(self, parent, section, engine=None):
-        super().__init__(parent, padding=(8, 4))
-        self.section = section
-        self.engine = engine
-        ttk.Label(self, text='Le mie parole: scrivi accanto al comando come vuoi dirlo '
-                             '(più frasi separate da ;). Il comando standard resta valido.',
-                  wraplength=760).pack(anchor='w')
-        holder = ttk.Frame(self)
-        holder.pack(fill='both', expand=True, pady=(4, 4))
-        self.canvas = tk.Canvas(holder, height=190, highlightthickness=0, bg='#061421')
-        scroll = ttk.Scrollbar(holder, orient='vertical', command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=scroll.set)
-        scroll.pack(side='right', fill='y')
-        self.canvas.pack(side='left', fill='both', expand=True)
-        self.grid_frame = ttk.Frame(self.canvas)
-        self.canvas.create_window(0, 0, window=self.grid_frame, anchor='nw')
-        self.grid_frame.bind('<Configure>', lambda _e: self.canvas.configure(
-            scrollregion=self.canvas.bbox('all')))
-        row = ttk.Frame(self)
-        row.pack(fill='x')
-        ttk.Button(row, text='Salva le mie parole', command=self.save).pack(side='left')
-        self.status = tk.StringVar()
-        ttk.Label(row, textvariable=self.status, wraplength=560).pack(side='left', padx=8)
-        self.entries = {}
-        self.fill()
-
-    def fill(self):
-        import command_aliases
-        for child in self.grid_frame.winfo_children():
-            child.destroy()
-        self.entries = {}
-        commands = command_aliases.catalog(self.engine).get(self.section, [])
-        if not commands:
-            ttk.Label(self.grid_frame, text='Nessun comando: abilita prima il componente '
-                                            '(per i programmi: Impostazioni > Programmi e app).'
-                      ).grid(row=0, column=0, sticky='w')
-            return
-        ttk.Label(self.grid_frame, text='Comando', font=('Segoe UI', 9, 'bold')
-                  ).grid(row=0, column=0, sticky='w', padx=(0, 10))
-        ttk.Label(self.grid_frame, text='Le mie parole', font=('Segoe UI', 9, 'bold')
-                  ).grid(row=0, column=1, sticky='w')
-        for index, (command, mine) in enumerate(
-                command_aliases.section_rows(self.section, commands), start=1):
-            ttk.Label(self.grid_frame, text=command.replace('{testo}', '…')
-                      ).grid(row=index, column=0, sticky='w', padx=(0, 10), pady=1)
-            value = tk.StringVar(value=mine.replace(' {testo}', '').replace('{testo}', '…'))
-            ttk.Entry(self.grid_frame, textvariable=value, width=46
-                      ).grid(row=index, column=1, sticky='w', pady=1)
-            self.entries[command] = value
-
-    def save(self):
-        import command_aliases
-        values = {command: var.get().replace('…', '{testo}')
-                  for command, var in self.entries.items()}
-        wanted = sum(1 for v in values.values() for p in v.split(';') if p.strip())
-        items = command_aliases.replace_section(self.section, values)
-        try:
-            command_aliases.save(items)
-        except OSError as exc:
-            self.status.set('Non salvato: ' + str(exc)[:80])
-            return
-        mine = sum(1 for i in items if i['command'] in values)
-        lost = wanted - mine
-        self.status.set(f'Salvato: {mine} frasi, valgono per voce e testo.' +
-                        (f' {lost} già usate per un altro comando: non aggiunte.' if lost > 0 else ''))
-        self.fill()
-
-
 class HelpWindow(tk.Toplevel):
     def __init__(self, parent, engine):
         super().__init__(parent)
         self.title('Lumi — Aiuto e comandi')
-        self.geometry('860x680')
+        self.geometry('800x550')
         self.minsize(560, 360)
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill='both', expand=True, padx=10, pady=10)
@@ -209,8 +139,6 @@ class HelpWindow(tk.Toplevel):
             scroll = ttk.Scrollbar(frame, command=text.yview)
             text.configure(yscrollcommand=scroll.set)
             scroll.pack(side='right', fill='y')
-            if title in ALIAS_SECTIONS:
-                AliasPanel(frame, title, engine).pack(side='bottom', fill='x', pady=(6, 0))
             text.pack(fill='both', expand=True)
             text.insert('1.0', content)
             text.configure(state='disabled')

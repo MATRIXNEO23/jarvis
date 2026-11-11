@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "controllo_pc",
+  "name": "Controllo PC",
+  "version": "1.0.0",
+  "description": "Finestre aperte, passa e chiudi finestre, clic su pulsanti e campi, scrittura, scorciatoie e scorrimento. Tutto offline con Windows; conferma le prime volte, sempre per le azioni delicate.",
+  "actions": [
+    {
+      "id": "addon.controllo_pc.comando",
+      "description": "Controlla finestre, mouse e tastiera del PC con le funzioni di Windows (offline).",
+      "example": "passa a Blocco note",
+      "core_action": "pc.local"
+    }
+  ]
+}

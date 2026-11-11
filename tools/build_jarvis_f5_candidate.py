@@ -22,7 +22,7 @@ ENGINE_FILES = ("koboldcpp.py", "koboldcpp_common.dll", "koboldcpp_noavx2.dll",
                 "backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll", "LICENSE.md")
 OPERATIONAL_GUIDES = frozenset({"docs/VOCE_OFFLINE.md", "docs/RECUPERO-IMPOSTAZIONI.md",
                                 "file_access/LEGGIMI.md", "program_apps/LEGGIMI.md",
-                                "musica/LEGGIMI.md"})
+                                "musica/LEGGIMI.md", "controllo_pc/LEGGIMI.md"})
 STAMP = (2026, 11, 9, 0, 0, 0)
 
 
@@ -35,8 +35,8 @@ def include(p):
     if parts[0] in {".github", "tests", "tools", "docs", "Download", "upstream-kobold",
                     "koboldcpp-src", "probe-models", "dist", ".agents", "superpowers"}:
         return False
-    if parts[:2] == ("musica", "video_host"):       # sorgente C#: nel pacchetto va solo il compilato
-        return False
+    if parts[:2] in {("musica", "video_host"), ("controllo_pc", "uia_host")}:
+        return False                                  # sorgente C#: nel pacchetto va solo il compilato
     if p.name in {"AGENTS.md", "RECUPERO.md", ".gitignore", "lumi_originale.png"}:
         return False
     if p.suffix.lower() in {".md", ".yml", ".yaml", ".toml"} and p.name != "README.md":
@@ -63,7 +63,7 @@ def git_files():
     return [Path(os.fsdecode(p)) for p in out.split(b"\0") if p]
 
 
-def build(engine_dir, number, out_dir, piper_dir=None, video_dir=None):
+def build(engine_dir, number, out_dir, piper_dir=None, video_dir=None, uia_dir=None):
     label = f"{number:03d}"
     root = f"Lumi-{label}/"
     engine = Path(engine_dir)
@@ -94,6 +94,14 @@ def build(engine_dir, number, out_dir, piper_dir=None, video_dir=None):
                 entries["musica/video_bin/" + path.relative_to(video_root).as_posix()] = path.read_bytes()
         if "musica/video_bin/LumiVideo.exe" not in entries:
             raise SystemExit("LumiVideo.exe missing from --video-host")
+    if uia_dir:
+        # Lettore elementi finestre (UI Automation) compilato in CI da controllo_pc/uia_host.
+        uia_root = Path(uia_dir)
+        for path in sorted(uia_root.rglob("*")):
+            if path.is_file() and path.suffix.lower() not in {".pdb", ".xml"}:
+                entries["controllo_pc/uia_bin/" + path.relative_to(uia_root).as_posix()] = path.read_bytes()
+        if "controllo_pc/uia_bin/LumiControl.exe" not in entries:
+            raise SystemExit("LumiControl.exe missing from --uia-host")
     entries[f"LEGGIMI-BUILD-{label}.txt"] = notice(label).encode("utf-8")
     mandatory = {"jarvis.py", "avvia_lumi.bat", "local_model/chat_templates.py",
                  "local_model/native_factory.py"} | OPERATIONAL_GUIDES
@@ -231,10 +239,12 @@ def main(argv=None):
     p.add_argument("--model", help="GGUF used for the packaged generation proof")
     p.add_argument("--piper-engine", help="slim Piper folder from tools/fetch_piper_engine.py")
     p.add_argument("--video-host", help="built LumiVideo output folder (musica/video_host)")
+    p.add_argument("--uia-host", help="built LumiControl output folder (controllo_pc/uia_host)")
     a = p.parse_args(argv)
     if os.name != "nt":
         raise SystemExit("Windows only.")
-    archive, details = build(a.engine_dir, a.number, a.out, a.piper_engine, a.video_host)
+    archive, details = build(a.engine_dir, a.number, a.out, a.piper_engine, a.video_host,
+                             a.uia_host)
     report = verify(archive, a.model, Path(__file__).resolve().parents[1])
     details["verification"] = report
     archive.with_suffix(".json").write_text(json.dumps(details, indent=2, ensure_ascii=False),

@@ -271,3 +271,14 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 
 ## Da decidere con l'utente (11/11 01:50) — NON implementare senza accordo
 - Riordino di Aiuto (F1) e Impostazioni/opzioni: oggi «abbastanza caotico». Criteri, posizioni e struttura vanno decisi insieme all'utente; l'assistente propone opzioni e chiede, non inventa dove mettere le cose.
+
+## 036 — Add-on Controllo PC, finestra add-on a sezioni, «Le mie parole» fuori da F1 (richiesta 11/11 15:45, accordata a voce)
+Requisiti concordati: tutto offline con le funzioni di Windows, modello solo eventuale aiuto in più; add-on attivabile/disattivabile, installato spento; conferma le prime volte poi ricorda, sempre per le azioni delicate; finestre per nome, numero e nome scelto dall'utente; F1 solo guida; comandi di base in Impostazioni > Personalizzazione comandi, comandi di un add-on nella sua sezione in Gestisci add-on (elenco a sinistra, sezione a destra).
+- `controllo_pc/`: `commands.py` (frasi), `service.py` (logica, conferme, nomi finestre), `windows.py` (ctypes: EnumWindows, SetForegroundWindow con Alt «vuoto», WM_CLOSE = chiusura normale, SendInput per mouse/tasti/scrittura Unicode), `uia_host/` (C# `LumiControl.exe list <hwnd>`: elementi via UI Automation, sola lettura), `runtime.py`, `ui.py`, `LEGGIMI.md`. Dati: `addon-data/controllo_pc/config.json`.
+- Scelta UI Automation: C# su .NET Framework 4.8 (già in Windows 10) come il riquadro video, invece di pywinauto/uiautomation (dipendenze Python in più) o PowerShell (avvio lento sull'i3). Processo solo a richiesta, nessun servizio residente.
+- Frasi catturate solo se esiste la finestra/elemento; altrimenti restano agli altri comandi. Destinazioni riservate (GPT, Gemma, modello, progetto, musica, timer, sveglia…) mai trattate come finestre.
+- Delicate (sempre conferma): nomi con invia/elimina/non salvare/paga/acquista/spegni…, tasti Alt+F4, Ctrl+W, Invio, Ctrl+Invio, Shift+Canc.
+- Elenchi (finestre, elementi) in console, a voce solo l'intestazione.
+- Sguardo sullo schermo con modello online: NON implementato. Requisito utente: opzione spenta, i modelli sono un'aggiunta, e prima di passare a un modello online Lumi deve chiedere conferma.
+- CI: build `LumiControl.csproj`, prova reale `tools/uia_host_smoke.py` (finestra Tk in altro processo: trovata, elemento «Saluta» letto via UIA, clic reale ricevuto).
+- Gestisci add-on: elenco a sinistra, sezione a destra (descrizione, stato, Attiva/Disattiva, Configura, Rimuovi, «Comandi di …» con `command_words_ui.AliasPanel`). Personalizzazione comandi di base: `command_words_ui.CommandWordsWindow` da Impostazioni. F1 senza caselle. Le parole già salvate restano (si abbinano per comando, la sezione è solo visualizzazione).

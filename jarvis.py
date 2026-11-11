@@ -289,6 +289,10 @@ def main() -> None:
             bundled = Path(__file__).parent / "musica" / "Musica.jaddon"
             if bundled.is_file():
                 addon_manager.install(bundled)  # Installed OFF: nothing changes until enabled.
+        if not any(item["id"] == "controllo_pc" for item in addon_manager.list_installed()):
+            bundled = Path(__file__).parent / "controllo_pc" / "ControlloPC.jaddon"
+            if bundled.is_file():
+                addon_manager.install(bundled)  # Installato SPENTO: lo accende l'utente.
 
     except (AddonError,OSError,ValueError) as exc:
         addon_setup_error=str(exc)[:150]
@@ -328,6 +332,18 @@ def main() -> None:
         addon_setup_error = (addon_setup_error or "") + " Musica: " + str(exc)[:80]
         music_service = None
         music_bar = None
+    # Add-on Controllo PC (finestre, clic, tasti; offline), solo se attivo.
+    try:
+        from controllo_pc.service import ControlService
+        from controllo_pc.runtime import register as register_pc
+        pc_service = ControlService(lambda: bool(addon_manager and any(
+            item["id"] == "controllo_pc" and item["enabled"]
+            for item in addon_manager.list_installed())))
+        register_pc(pc_service)
+        if addon_manager is not None:
+            addon_manager.pc_service = pc_service
+    except (ImportError, OSError, ValueError) as exc:
+        addon_setup_error = (addon_setup_error or "") + " Controllo PC: " + str(exc)[:80]
     addon_settings_window=None
     telegram_owner_busy=False
     orbit_nodes_cache=()
@@ -1739,7 +1755,8 @@ def main() -> None:
             root,addon_manager,
             on_change=lambda: write_line(
                 "ADD-ON > Registro aggiornato. Le capacità attive saranno "
-                "comunicate al GPT alla prossima richiesta."))
+                "comunicate al GPT alla prossima richiesta."),
+            engine=engine)
 
     def active_addon_actions() -> tuple[dict,...]:
         if addon_manager is None:
@@ -2604,6 +2621,19 @@ def main() -> None:
                    "viene eseguito automaticamente.",
               wraplength=455).pack(side="left",fill="x",expand=True)
 
+    # Personalizzazione comandi di base (i comandi degli add-on stanno nella
+    # sezione di ciascun add-on, in Gestisci add-on). F1 resta solo una guida.
+    command_words_panel=ttk.LabelFrame(
+        integrations_settings_frame,text="Personalizzazione comandi",padding=8)
+    command_words_panel.pack(fill="x",pady=(3,9))
+    ttk.Button(
+        command_words_panel,text="Le mie parole per i comandi di base...",
+        command=lambda: __import__("command_words_ui").CommandWordsWindow(
+            settings_window,engine)).pack(side="left",padx=(0,10))
+    ttk.Label(command_words_panel,
+              text="Timer, comandi locali, modelli, progetti: scegli tu le parole.",
+              wraplength=455).pack(side="left",fill="x",expand=True)
+
     # Conversation is always visible at the left of the animated HUD.
     # The console composer follows the supplied reference: a circular mic,
     # one conversation field and a send arrow. The previous explicit tools
@@ -3224,7 +3254,11 @@ def main() -> None:
             # Stesso punto d'ingresso dei comandi locali: la musica viene
             # provata solo dopo timer e sveglia, e solo con l'add-on attivo.
             from musica.runtime import handle_text as music_handle_text
-            return music_handle_text(spoken, write_line, speak_result)
+            if music_handle_text(spoken, write_line, speak_result):
+                return True
+            # Poi il Controllo PC (finestre, clic, tasti), solo se attivo.
+            from controllo_pc.runtime import handle_text as pc_handle_text
+            return pc_handle_text(spoken, write_line, speak_result)
         action = parsed.action
         if action == "start":
             if timer.start(parsed.seconds):

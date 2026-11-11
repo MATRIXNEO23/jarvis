@@ -2,3 +2,8 @@
 # Bytecode generato localmente
 __pycache__/
 *.pyc
+
+# Eseguibili compilati in CI (nel pacchetto, non nel repository)
+musica/video_bin/
+controllo_pc/uia_bin/
+uia-proof-data/

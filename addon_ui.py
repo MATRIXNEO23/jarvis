@@ -12,51 +12,50 @@ from tkinter import filedialog, messagebox, ttk
 from addon_manager import AddonError, AddonManager
 
 
+_DESCRIPTIONS_CONFIG = {"musica", "programmi_app", "accesso_file", "controllo_pc"}
+
+
 class AddonSettingsWindow:
-    def __init__(self, parent, manager: AddonManager, on_change=None):
+    """Elenco degli add-on a sinistra; clic su uno: la sua sezione a destra
+    (stato, Attiva/Disattiva, Configura, i suoi comandi personalizzabili)."""
+
+    def __init__(self, parent, manager: AddonManager, on_change=None, engine=None):
         self.manager=manager
+        self.engine=engine
         self.on_change=on_change or (lambda:None)
         self.window=tk.Toplevel(parent)
         self.window.title("LUMI // Gestisci add-on")
-        self.window.geometry("790x500")
-        self.window.minsize(610,390)
+        self.window.geometry("980x640")
+        self.window.minsize(760,480)
         holder=ttk.Frame(self.window,padding=12)
         holder.pack(fill="both",expand=True)
         ttk.Label(holder,text="Add-on di Lumi",
                   font=("Segoe UI",13,"bold")).pack(anchor="w")
-        ttk.Label(holder,wraplength=760,
-                  text=("I pacchetti .jaddon sono solo descrizioni JSON, "
-                        "non installano programmi né eseguono codice. "
-                        "Ogni nuova installazione o aggiornamento resta SPENTO. "
-                        "Un add-on attivo utilizza esclusivamente azioni "
-                        "già approvate dal motore locale.")).pack(
-                            fill="x",pady=(6,8))
-        self.table=ttk.Treeview(
-            holder,columns=("name","version","enabled","actions"),
-            show="headings",selectmode="browse",height=12)
-        for key,label,width in (
-                ("name","Add-on",260),("version","Versione",85),
-                ("enabled","Stato",125),("actions","Funzioni",90)):
-            self.table.heading(key,text=label)
-            self.table.column(key,width=width,stretch=(key=="name"))
-        self.table.pack(fill="both",expand=True)
-        self.status=tk.StringVar(value="")
-        ttk.Label(holder,textvariable=self.status,wraplength=760).pack(
-            anchor="w",pady=6)
-        controls=ttk.Frame(holder)
-        controls.pack(fill="x")
-        ttk.Button(controls,text="Installa / aggiorna...",
+        ttk.Label(holder,wraplength=940,
+                  text=("Scegli un add-on a sinistra per vederne stato, configurazione e "
+                        "comandi. Ogni nuova installazione o aggiornamento resta SPENTO.")).pack(
+                            fill="x",pady=(4,8))
+        bottom=ttk.Frame(holder)
+        bottom.pack(side="bottom",fill="x",pady=(8,0))
+        ttk.Button(bottom,text="Installa / aggiorna...",
                    command=self.install).pack(side="left",padx=(0,6))
-        ttk.Button(controls,text="Attiva / Disattiva",
-                   command=self.toggle).pack(side="left",padx=(0,6))
-        ttk.Button(controls,text="Configura",
-                   command=self.configure).pack(side="left",padx=(0,6))
-        ttk.Button(controls,text="Rimuovi",
-                   command=self.remove).pack(side="left",padx=(0,6))
-        ttk.Button(controls,text="Ricarica",
-                   command=self.reload).pack(side="left")
-        ttk.Button(controls,text="Chiudi",
-                   command=self.window.destroy).pack(side="right")
+        ttk.Button(bottom,text="Ricarica",command=self.reload).pack(side="left")
+        ttk.Button(bottom,text="Chiudi",command=self.window.destroy).pack(side="right")
+        self.status=tk.StringVar(value="")
+        ttk.Label(holder,textvariable=self.status,wraplength=940).pack(
+            side="bottom",anchor="w",pady=(6,0))
+        body=ttk.Frame(holder)
+        body.pack(fill="both",expand=True)
+        self.table=ttk.Treeview(body,columns=("name","enabled"),show="headings",
+                                selectmode="browse",height=14)
+        self.table.heading("name",text="Add-on")
+        self.table.heading("enabled",text="Stato")
+        self.table.column("name",width=190,stretch=False)
+        self.table.column("enabled",width=75,stretch=False)
+        self.table.pack(side="left",fill="y")
+        self.table.bind("<<TreeviewSelect>>",lambda _e:self.show_section())
+        self.section=ttk.Frame(body,padding=(12,0,0,0))
+        self.section.pack(side="left",fill="both",expand=True)
         self.reload()
 
     def exists(self):
@@ -77,22 +76,61 @@ class AddonSettingsWindow:
 
     def reload(self):
         try:
+            keep=self._selected()
             self.manager.refresh()
             for ident in self.table.get_children():
                 self.table.delete(ident)
-            for item in self.manager.list_installed():
+            installed=self.manager.list_installed()
+            for item in installed:
                 self.table.insert("", "end", iid=item["id"],values=(
-                    item["name"],item["version"],
-                    "ATTIVO" if item["enabled"] else "SPENTO",
-                    item["action_count"],
-                ))
+                    item["name"],"ATTIVO" if item["enabled"] else "SPENTO"))
             warnings=self.manager.warnings()
             self.status.set(
-                str(len(self.manager.list_installed()))+" add-on installati. "
+                str(len(installed))+" add-on installati. "
                 +(str(len(warnings))+" file non validi ignorati." if warnings
                   else "Modifiche sincronizzate al prossimo comando GPT."))
+            if keep and self.table.exists(keep):
+                self.table.selection_set(keep)
+            elif installed:
+                self.table.selection_set(installed[0]["id"])
+            self.show_section()
         except (AddonError,OSError,ValueError) as exc:
             self._error(exc)
+
+    def show_section(self):
+        """Sezione dell'add-on scelto: descrizione, stato, azioni, comandi."""
+        for child in self.section.winfo_children():
+            child.destroy()
+        ident=self._selected()
+        item=next((c for c in self.manager.list_installed() if c["id"]==ident),None)
+        if item is None:
+            ttk.Label(self.section,text="Scegli un add-on dall'elenco.").pack(anchor="w")
+            return
+        ttk.Label(self.section,text=item["name"]+"  "+item["version"],
+                  font=("Segoe UI",12,"bold")).pack(anchor="w")
+        description=str(item.get("description",""))
+        if description:
+            ttk.Label(self.section,text=description,wraplength=640).pack(anchor="w",pady=(2,4))
+        ttk.Label(self.section,text=("ATTIVO" if item["enabled"] else "SPENTO")+
+                  " · "+str(item["action_count"])+" funzioni").pack(anchor="w")
+        row=ttk.Frame(self.section)
+        row.pack(fill="x",pady=(6,8))
+        ttk.Button(row,text="Disattiva" if item["enabled"] else "Attiva",
+                   command=self.toggle).pack(side="left",padx=(0,6))
+        if ident in _DESCRIPTIONS_CONFIG:
+            ttk.Button(row,text="Configura...",command=self.configure).pack(side="left",padx=(0,6))
+        ttk.Button(row,text="Rimuovi",command=self.remove).pack(side="left")
+        try:
+            import command_aliases
+            section=command_aliases.ADDON_SECTIONS.get(ident)
+            if section:
+                ttk.Label(self.section,text="Comandi di "+item["name"],
+                          font=("Segoe UI",10,"bold")).pack(anchor="w",pady=(4,0))
+                from command_words_ui import AliasPanel
+                AliasPanel(self.section,section,self.engine,height=260).pack(
+                    fill="both",expand=True)
+        except (ImportError,tk.TclError) as exc:
+            ttk.Label(self.section,text="Comandi non disponibili: "+str(exc)[:80]).pack(anchor="w")
 
     def install(self):
         path=filedialog.askopenfilename(
@@ -152,6 +190,17 @@ class AddonSettingsWindow:
                 MusicSettings(self.window, service, on_change=self.on_change)
             except (ImportError, OSError, ValueError) as exc:
                 self._error('Musica non disponibile: ' + str(exc)[:120])
+            return
+        if self._selected() == 'controllo_pc':
+            service = getattr(self.manager, 'pc_service', None)
+            if service is None:
+                self._error('Controllo PC non disponibile: reinstalla la cartella controllo_pc dal pacchetto completo.')
+                return
+            try:
+                from controllo_pc.ui import ControlSettings
+                ControlSettings(self.window, service, on_change=self.on_change)
+            except (ImportError, OSError, ValueError) as exc:
+                self._error('Controllo PC non disponibile: ' + str(exc)[:120])
             return
         if self._selected() == 'programmi_app':
             try:

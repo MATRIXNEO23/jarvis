@@ -46,8 +46,8 @@ class CommandAliasTests(unittest.TestCase):
         class Engine:
             program_apps = Apps()
             file_access = None
-        cat = ca.catalog(Engine(), music=False)
-        self.assertEqual(cat["File e app"], ["apri Spotify"])
+        cat = ca.catalog(Engine(), music=False, pc=False)
+        self.assertEqual(cat["Programmi e app"], ["apri Spotify"])
         self.assertIn("metti {testo}", cat["Musica"])
         old = [{"section": "Musica", "phrase": "vecchia", "command": "ferma la musica"},
                {"section": "Timer e sveglia", "phrase": "pasta", "command": "imposta timer nove minuti"}]
