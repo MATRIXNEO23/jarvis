@@ -45,12 +45,13 @@ class GPTVoiceAddressingTests(unittest.TestCase):
         self.receive('jarvisiano raccontami qualcosa')
         self.env['start_conversation_gpt'].assert_called_once_with('raccontami qualcosa')
 
-    def test_name_alone_does_not_authorize_later_room_speech(self):
+    def test_name_alone_waits_only_for_the_next_phrase(self):
+        # Richiesta utente 11/11 (build 038): dopo «Lumi» da solo Lumi aspetta UNA
+        # frase per qualche secondo; il resto della stanza resta ignorato.
         self.receive('Ehi Lumi')
         self.receive('mi racconti qualcosa')
-        self.env['start_conversation_gpt'].assert_not_called()
-        self.env['try_file_command'].assert_not_called()
-        self.receive('Lumi mi racconti qualcosa')
+        self.env['start_conversation_gpt'].assert_called_once_with('mi racconti qualcosa')
+        self.receive('e poi parliamo di altro')
         self.env['start_conversation_gpt'].assert_called_once_with('mi racconti qualcosa')
 
     def test_learned_correction_cannot_invent_addressing(self):

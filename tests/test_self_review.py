@@ -116,7 +116,7 @@ class SelfReviewTests(unittest.TestCase):
         self.assertTrue(any("Funzione massive" in i.observation
                             for i in review.recommendations))
         self.assertIn("Valutare",format_audit(review))
-        self.assertLessEqual(len(review.recommendations),8)
+        self.assertLessEqual(len(review.recommendations),12)
 
     def test_untrusted_source_is_not_imported_or_executed(self):
         secret="VERY_PRIVATE_TOKEN_9324"
@@ -160,13 +160,13 @@ class SelfReviewTests(unittest.TestCase):
                 self.root,[outside],module=""),())
 
     def test_many_signals_are_bounded_and_across_modules(self):
-        for n in range(12):
+        for n in range(16):
             (self.root/f"module_{n:02}.py").write_text(
                 "def run():\n    subprocess.run('x', shell=True)\n"
                 "    try:\n        work()\n    except Exception:\n"
                 "        pass\n",encoding="utf-8")
         audit=inspect_jarvis(source_root=self.root)
-        self.assertEqual(len(audit.recommendations),8)
+        self.assertEqual(len(audit.recommendations),12)
         names={r.file for r in audit.recommendations}
         self.assertGreaterEqual(len(names),4)
         self.assertTrue(all(r.priority in ("alta","media","bassa")

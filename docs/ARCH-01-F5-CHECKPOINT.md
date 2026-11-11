@@ -316,3 +316,4 @@ Dopo le prove sul Pavilion si rivedono insieme le sezioni.
 - Mini avatar: menu tasto destro, trasparenza dopo N s di mouse fermo (anche mini lettore), opzioni in Impostazioni > Integrazioni > Mini avatar (`avatar-dock.json`: show, idle).
 - Musica: a schermo intero solo il video (barra nascosta), «esci» o Esc.
 - F1: pagine «Controllo PC» riscritta e «Lumi».
+- CI 039 prima prova: corretti 5 test. (1) test_name_alone… aggiornato al nuovo requisito utente (dopo «Lumi» da solo una frase entro 6 s), il resto della stanza resta ignorato; (2) messaggio «Ti ascolto» solo in modalità con nome obbligatorio (ripristinata la struttura attesa dal test di diagnostica); (3) limiti di revisione statica 8 → 12 (le cartelle runtime sono ora 10: ognuna deve comparire nel rapporto).

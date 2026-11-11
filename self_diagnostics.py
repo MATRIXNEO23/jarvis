@@ -284,10 +284,10 @@ def inspect_jarvis(*,source_root: Path | None=None,
                 "Moduli chiave trovati: "+", ".join(p for p in important if p in found)
                 +"\nTest Python rilevati: "+
                 str(sum(1 for m in modules if m[0].startswith("tests/test_"))))
-    # Coverage must remain visible even when eight earlier I/O findings fill
+    # Coverage must remain visible even when twelve earlier I/O findings fill
     # the compact observations list; never imply a complete inventory.
     detail += coverage_detail
-    suggestions=(tuple(findings[:8]) if findings else
+    suggestions=(tuple(findings[:12]) if findings else
          ("Nessun errore di sintassi individuato dai controlli statici.",
           "Questo controllo non verifica funzioni in esecuzione, malware o bug logici.",
           "Per proporre patch servono test di riproduzione e revisione del codice qui in chat."))
