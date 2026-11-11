@@ -323,4 +323,5 @@ Dopo le prove sul Pavilion si rivedono insieme le sezioni.
 2. **Finestra di riferimento = quella in primo piano adesso**, anche se l'utente l'ha portata davanti col mouse; non l'ultima usata da Lumi (oggi `service.target` ha la precedenza: da togliere/limitare).
 3. **Risposte sì/no senza dire «Lumi»** anche nella modalità con nome obbligatorio: dopo una domanda di Lumi, per qualche secondo vale la sola risposta, poi torna l'obbligo del nome.
 4. **Conflitto «sveglia»:** «sveglia» da sola o «Lumi, sveglia» riapre sempre Lumi e non imposta mai la sveglia; la sveglia si imposta solo con «imposta/metti la sveglia (alle …)». (Nella 039 «sveglia» da sola con Lumi già davanti andava alla sveglia: da correggere.)
+5. **Riavvia Lumi: messaggio prima del riavvio.** Dire e mostrare che si sta riavviando e chiudere solo DOPO che il messaggio è stato detto per intero (nella 039 la chiusura parte dopo 1,8 s fissi: la voce può essere tagliata). Da verificare sul Pavilion se il messaggio si sente.
 Altre richieste arriveranno dopo i test sul Pavilion.
