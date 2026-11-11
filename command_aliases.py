@@ -118,3 +118,91 @@ def rewrite(text: str, items=None, path=None) -> str:
             command = _SLOT.sub(lambda m: values.get(m.group(1), ""), item["command"])
             return (prefix + command).strip()
     return text
+
+
+# --- Catalogo dei comandi esistenti (per scegliere a cosa associare le tue parole) ---
+# {testo} = parte variabile (nome, durata, brano…): le tue parole la mettono in fondo.
+_FIXED = {
+    "Comandi locali": (
+        "aiuto", "stato sistema", "apri download", "elenca download", "cerca file {testo}",
+        "apri blocco note", "apri calcolatrice", "apri esplora file", "apri disco locale C",
+        "apri browser", "cerca nel browser {testo}", "ultimi comandi"),
+    "Timer e sveglia": (
+        "imposta timer {testo}", "timer", "pausa timer", "riprendi timer",
+        "quanto manca al timer", "ferma timer", "reset timer",
+        "imposta sveglia alle {testo}", "ferma la sveglia", "che ore sono"),
+    "Musica": (
+        "metti {testo}", "aggiungi in coda {testo}", "metti la playlist {testo}",
+        "pausa", "riprendi", "ferma la musica", "avanti", "indietro",
+        "alza il volume della musica", "abbassa il volume della musica"),
+    "Modelli e GPT": ("passa a GPT", "torna a Gemma"),
+    "Progetti e Telegram": (
+        "crea progetto {testo}", "apri progetto {testo}", "elenca progetti",
+        "torna alla conversazione generale"),
+}
+
+
+def catalog(engine=None, music=None) -> dict[str, list[str]]:
+    """Sezione -> comandi che Lumi sa già eseguire, compresi i programmi abilitati
+    in Programmi e app e le playlist esistenti (si aggiornano da soli)."""
+    result = {name: list(items) for name, items in _FIXED.items()}
+    files = []
+    apps = getattr(engine, "program_apps", None)
+    try:
+        if apps is not None and apps.available():
+            for row in apps.entries():
+                if row.get("enabled") and row.get("available"):
+                    files.append("apri " + row["name"])
+    except Exception:
+        pass
+    access = getattr(engine, "file_access", None)
+    try:
+        if access is not None and access.available():
+            for item in access.descriptors():
+                example = str(item.get("example", "")).strip()
+                if example and example not in files:
+                    files.append(example)
+    except Exception:
+        pass
+    result["File e app"] = files
+    try:
+        if music is None:
+            from musica import runtime
+            music = runtime.service()
+        if music is not None and music.is_enabled():
+            result["Musica"] += ["metti la playlist " + n for n in sorted(music.playlists(), key=str.lower)]
+    except Exception:
+        pass
+    return result
+
+
+def phrase_for(phrase: str, command: str) -> str:
+    """Se il comando ha {testo} e le tue parole no, la parte variabile va in fondo."""
+    phrase = " ".join(str(phrase).split())
+    for slot in _SLOT.findall(command):
+        if "{" + slot + "}" not in phrase:
+            phrase += " {" + slot + "}"
+    return phrase
+
+
+def section_rows(section: str, commands, items=None) -> list[tuple[str, str]]:
+    """[(comando, tue parole separate da «;»)] per la sezione."""
+    items = load() if items is None else items
+    rows = []
+    for command in commands:
+        mine = [i["phrase"] for i in items if i["command"] == command]
+        rows.append((command, "; ".join(mine)))
+    return rows
+
+
+def replace_section(section: str, values: dict, items=None) -> list[dict]:
+    """values: {comando: "parole; altre parole"} → nuovo elenco completo.
+    Le righe dei comandi mostrati vengono sostituite; le altre restano."""
+    items = load() if items is None else items
+    keep = [i for i in items if i["command"] not in values]
+    for command, text in values.items():
+        for phrase in str(text or "").split(";"):
+            if phrase.strip():
+                keep.append({"section": section, "phrase": phrase_for(phrase, command),
+                             "command": command})
+    return clean(keep)

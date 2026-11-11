@@ -23,8 +23,8 @@ def help_sections(engine):
     return {
         'Inizia qui':
             'Scrivi nella casella e premi Invio oppure il pulsante di invio.\n'
-            'Comandi con parole tue: in fondo alle sezioni dei comandi c’è «Le mie parole» '
-            '(frase a scelta → comando esistente, per voce e testo).\n'
+            'Comandi con parole tue: in fondo alle sezioni dei comandi c’è «Le mie parole»: '
+            'accanto a ogni comando scrivi come vuoi dirlo, poi Salva (voce e testo).\n'
             'Diagnostica servizi apre il rapporto locale, anche da voce con Lumi. Lo trovi anche in Impostazioni > Progetti e servizi. Aggiorna e Copia rapporto non inviano messaggi o richieste ai modelli.\n'
             'Scrivi aiuto, help o comandi per riaprire questa guida. Funziona anche con Gemma o GPT attivi.\n\n'
             'F1 apre la guida. Ctrl+L porta il cursore nella casella. Ctrl+, apre le impostazioni.\n'
@@ -118,77 +118,77 @@ ALIAS_SECTIONS = ('Comandi locali', 'Timer e sveglia', 'Musica', 'File e app',
 
 
 class AliasPanel(ttk.Frame):
-    """«Le mie parole»: frasi scelte dall'utente che eseguono un comando della sezione."""
+    """Accanto a ogni comando esistente, la casella per le tue parole.
 
-    def __init__(self, parent, section):
+    I comandi vengono dal catalogo di Lumi (anche programmi abilitati e playlist).
+    Più frasi per lo stesso comando: separale con «;». Casella vuota = nessuna.
+    """
+
+    def __init__(self, parent, section, engine=None):
         super().__init__(parent, padding=(8, 4))
         self.section = section
-        ttk.Label(self, text='Le mie parole per questa sezione — usa {testo} per la parte variabile '
-                             '(es. «sparami {testo}» → «metti {testo}»):',
-                  wraplength=740).pack(anchor='w')
-        self.tree = ttk.Treeview(self, columns=('phrase', 'command'), show='headings', height=3)
-        self.tree.heading('phrase', text='Quando dico')
-        self.tree.heading('command', text='Esegue il comando')
-        self.tree.pack(fill='x', pady=(4, 4))
+        self.engine = engine
+        ttk.Label(self, text='Le mie parole: scrivi accanto al comando come vuoi dirlo '
+                             '(più frasi separate da ;). Il comando standard resta valido.',
+                  wraplength=760).pack(anchor='w')
+        holder = ttk.Frame(self)
+        holder.pack(fill='both', expand=True, pady=(4, 4))
+        self.canvas = tk.Canvas(holder, height=190, highlightthickness=0, bg='#061421')
+        scroll = ttk.Scrollbar(holder, orient='vertical', command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=scroll.set)
+        scroll.pack(side='right', fill='y')
+        self.canvas.pack(side='left', fill='both', expand=True)
+        self.grid_frame = ttk.Frame(self.canvas)
+        self.canvas.create_window(0, 0, window=self.grid_frame, anchor='nw')
+        self.grid_frame.bind('<Configure>', lambda _e: self.canvas.configure(
+            scrollregion=self.canvas.bbox('all')))
         row = ttk.Frame(self)
         row.pack(fill='x')
-        self.phrase = tk.StringVar()
-        self.command = tk.StringVar()
-        ttk.Entry(row, textvariable=self.phrase, width=28).pack(side='left')
-        ttk.Label(row, text=' → ').pack(side='left')
-        ttk.Entry(row, textvariable=self.command, width=34).pack(side='left')
-        ttk.Button(row, text='Aggiungi', command=self.add).pack(side='left', padx=4)
-        ttk.Button(row, text='Togli', command=self.remove).pack(side='left')
+        ttk.Button(row, text='Salva le mie parole', command=self.save).pack(side='left')
         self.status = tk.StringVar()
-        ttk.Label(self, textvariable=self.status).pack(anchor='w')
+        ttk.Label(row, textvariable=self.status, wraplength=560).pack(side='left', padx=8)
+        self.entries = {}
         self.fill()
 
     def fill(self):
         import command_aliases
-        self.tree.delete(*self.tree.get_children())
-        for item in command_aliases.load():
-            if item.get('section') == self.section:
-                self.tree.insert('', 'end', values=(item['phrase'], item['command']))
+        for child in self.grid_frame.winfo_children():
+            child.destroy()
+        self.entries = {}
+        commands = command_aliases.catalog(self.engine).get(self.section, [])
+        if not commands:
+            ttk.Label(self.grid_frame, text='Nessun comando: abilita prima il componente '
+                                            '(per i programmi: Impostazioni > Programmi e app).'
+                      ).grid(row=0, column=0, sticky='w')
+            return
+        ttk.Label(self.grid_frame, text='Comando', font=('Segoe UI', 9, 'bold')
+                  ).grid(row=0, column=0, sticky='w', padx=(0, 10))
+        ttk.Label(self.grid_frame, text='Le mie parole', font=('Segoe UI', 9, 'bold')
+                  ).grid(row=0, column=1, sticky='w')
+        for index, (command, mine) in enumerate(
+                command_aliases.section_rows(self.section, commands), start=1):
+            ttk.Label(self.grid_frame, text=command.replace('{testo}', '…')
+                      ).grid(row=index, column=0, sticky='w', padx=(0, 10), pady=1)
+            value = tk.StringVar(value=mine.replace(' {testo}', '').replace('{testo}', '…'))
+            ttk.Entry(self.grid_frame, textvariable=value, width=46
+                      ).grid(row=index, column=1, sticky='w', pady=1)
+            self.entries[command] = value
 
-    def add(self):
+    def save(self):
         import command_aliases
-        phrase, command = self.phrase.get().strip(), self.command.get().strip()
-        if not phrase or not command:
-            self.status.set('Scrivi la frase e il comando che deve eseguire.')
-            return
-        items = command_aliases.load()
-        before = len(items)
-        items = [i for i in items if command_aliases._normal(i['phrase'])
-                 != command_aliases._normal(phrase)]
-        items.append({'section': self.section, 'phrase': phrase, 'command': command})
-        cleaned = command_aliases.clean(items)
-        if not any(i['phrase'] == phrase for i in cleaned):
-            self.status.set('Non valido: ogni {nome} del comando deve comparire anche nella frase.')
-            return
-        try:
-            command_aliases.save(cleaned)
-        except OSError as exc:
-            self.status.set('Non salvato: ' + str(exc)[:80])
-            return
-        self.phrase.set('')
-        self.command.set('')
-        self.status.set('Sostituito.' if len(cleaned) == before else 'Aggiunto: vale per voce e testo.')
-        self.fill()
-
-    def remove(self):
-        import command_aliases
-        selected = self.tree.selection()
-        if not selected:
-            self.status.set('Scegli una riga da togliere.')
-            return
-        phrase = self.tree.item(selected[0], 'values')[0]
-        items = [i for i in command_aliases.load() if i['phrase'] != phrase]
+        values = {command: var.get().replace('…', '{testo}')
+                  for command, var in self.entries.items()}
+        wanted = sum(1 for v in values.values() for p in v.split(';') if p.strip())
+        items = command_aliases.replace_section(self.section, values)
         try:
             command_aliases.save(items)
         except OSError as exc:
             self.status.set('Non salvato: ' + str(exc)[:80])
             return
-        self.status.set('Tolto.')
+        mine = sum(1 for i in items if i['command'] in values)
+        lost = wanted - mine
+        self.status.set(f'Salvato: {mine} frasi, valgono per voce e testo.' +
+                        (f' {lost} già usate per un altro comando: non aggiunte.' if lost > 0 else ''))
         self.fill()
 
 
@@ -196,7 +196,7 @@ class HelpWindow(tk.Toplevel):
     def __init__(self, parent, engine):
         super().__init__(parent)
         self.title('Lumi — Aiuto e comandi')
-        self.geometry('800x550')
+        self.geometry('860x680')
         self.minsize(560, 360)
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill='both', expand=True, padx=10, pady=10)
@@ -210,7 +210,7 @@ class HelpWindow(tk.Toplevel):
             text.configure(yscrollcommand=scroll.set)
             scroll.pack(side='right', fill='y')
             if title in ALIAS_SECTIONS:
-                AliasPanel(frame, title).pack(side='bottom', fill='x', pady=(6, 0))
+                AliasPanel(frame, title, engine).pack(side='bottom', fill='x', pady=(6, 0))
             text.pack(fill='both', expand=True)
             text.insert('1.0', content)
             text.configure(state='disabled')
