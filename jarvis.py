@@ -270,30 +270,27 @@ def main() -> None:
     addon_capability_registry=LiveCapabilityRegistry()
     addon_manager=None
     addon_setup_error=""
+    addon_bundled_errors=[]
     try:
         addon_manager=AddonManager(addon_capability_registry)
-        if not any(item["id"]=="accesso_file" for item in addon_manager.list_installed()):
-            bundled=Path(__file__).parent/"file_access"/"AccessoFile.jaddon"
-            if bundled.is_file():
-                addon_manager.install(bundled)  # Descriptive only, remains OFF.
-        if not any(item['id']=='programmi_app' for item in addon_manager.list_installed()):
-            bundled=Path(__file__).parent/'program_apps'/'ProgrammiApp.jaddon'
-            if bundled.is_file():
-                addon_manager.install(bundled)  # No application is enabled by installation.
-
-        if not any(item["id"] == "sveglia" for item in addon_manager.list_installed()):
-            bundled = Path(__file__).parent / "sveglia" / "Sveglia.jaddon"
-            if bundled.is_file():
+        # Add-on inclusi nel pacchetto: installati SPENTI se mancano. Ognuno per
+        # conto suo: se uno viene rifiutato gli altri si installano lo stesso e
+        # l'errore compare in console all'avvio (prima veniva perso).
+        for addon_id, folder, file_name in (
+                ("accesso_file", "file_access", "AccessoFile.jaddon"),
+                ("programmi_app", "program_apps", "ProgrammiApp.jaddon"),
+                ("sveglia", "sveglia", "Sveglia.jaddon"),
+                ("musica", "musica", "Musica.jaddon"),
+                ("controllo_pc", "controllo_pc", "ControlloPC.jaddon")):
+            if any(item["id"] == addon_id for item in addon_manager.list_installed()):
+                continue
+            bundled = Path(__file__).parent / folder / file_name
+            if not bundled.is_file():
+                continue
+            try:
                 addon_manager.install(bundled)
-        if not any(item["id"] == "musica" for item in addon_manager.list_installed()):
-            bundled = Path(__file__).parent / "musica" / "Musica.jaddon"
-            if bundled.is_file():
-                addon_manager.install(bundled)  # Installed OFF: nothing changes until enabled.
-        if not any(item["id"] == "controllo_pc" for item in addon_manager.list_installed()):
-            bundled = Path(__file__).parent / "controllo_pc" / "ControlloPC.jaddon"
-            if bundled.is_file():
-                addon_manager.install(bundled)  # Installato SPENTO: lo accende l'utente.
-
+            except (AddonError, OSError, ValueError) as exc:
+                addon_bundled_errors.append(file_name + ": " + str(exc)[:120])
     except (AddonError,OSError,ValueError) as exc:
         addon_setup_error=str(exc)[:150]
     alarm_status = tk.StringVar(value="Nessuna sveglia impostata.")
@@ -2732,6 +2729,9 @@ def main() -> None:
         on_settings=open_native_model_settings)
     chat_sessions_panel.frame.pack(fill="both", expand=True)
     write_line("Lumi locale pronto. Scrivi 'aiuto' o premi F1 per la guida e i comandi.")
+    for problem in addon_bundled_errors:
+        write_line("ADD-ON > Non installato: " + problem +
+                   " Reinstalla il pacchetto completo o segnala l'errore.")
 
     try:
         engine = LocalEngine()

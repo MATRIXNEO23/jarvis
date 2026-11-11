@@ -3,7 +3,7 @@
   "id": "controllo_pc",
   "name": "Controllo PC",
   "version": "1.0.0",
-  "description": "Finestre aperte, passa e chiudi finestre, clic su pulsanti e campi, scrittura, scorciatoie e scorrimento. Tutto offline con Windows; conferma le prime volte, sempre per le azioni delicate.",
+  "description": "Finestre, clic, scrittura, scorciatoie e scorrimento con le funzioni di Windows, offline. Conferma le prime volte; azioni delicate sempre.",
   "actions": [
     {
       "id": "addon.controllo_pc.comando",
