@@ -491,7 +491,7 @@ class AvatarDock:
     Avatar e lettore musicale sono due finestrelle separate: ognuna si sposta
     trascinandola e la posizione resta salvata fra le sessioni
     (avatar-dock.json nel profilo). Doppio clic sull'avatar: riapre Lumi.
-    Il lettore (titolo e ⏮ ⏯ ⏭ ⏹ su una riga) compare solo con la musica attiva.
+    Il lettore (titolo, ⏮ ⏯ ⏭ ⏹ e volume 🔉 🔊 su una riga) compare solo con la musica attiva.
     """
 
     HEIGHT = 190
@@ -603,7 +603,10 @@ class AvatarDock:
         self._toggle = tk.Button(frame, text="⏸", command=lambda: self._music("toggle"), **style)
         self._toggle.pack(side="left", padx=1)
         tk.Button(frame, text="⏭", command=lambda: self._music("next"), **style).pack(side="left", padx=1)
-        tk.Button(frame, text="⏹", command=lambda: self._music("stop"), **style).pack(side="left", padx=(1, 3))
+        tk.Button(frame, text="⏹", command=lambda: self._music("stop"), **style).pack(side="left", padx=1)
+        # Volume musica −10 / +10 (stesso volume unico della barra).
+        tk.Button(frame, text="🔉", command=lambda: self._music("volume_down"), **style).pack(side="left", padx=(6, 1))
+        tk.Button(frame, text="🔊", command=lambda: self._music("volume_up"), **style).pack(side="left", padx=(1, 3))
         self._player.window = win
         self._player.bind(win, frame, grip, title)
         saved = load_dock_positions(self.position_file).get("player")

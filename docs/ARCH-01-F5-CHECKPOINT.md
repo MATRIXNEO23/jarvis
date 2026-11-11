@@ -266,3 +266,4 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 
 ## 035 — Mini lettore separato
 - Riscontro 11/11 01:36 (foto): mini lettore su due righe e legato all'avatar. Ora avatar e lettore sono due finestrelle separate, ognuna trascinabile (lettore: anche dalla maniglia ⋮⋮), posizioni salvate insieme in `avatar-dock.json` (`x,y` avatar, `px,py` lettore; salvare una non perde l'altra). Lettore su una riga: titolo scorrevole (24 caratteri) + ⏮ ⏯ ⏭ ⏹.
+- Mini lettore: aggiunti 🔉 / 🔊 (volume musica −10/+10, stesso volume unico).
