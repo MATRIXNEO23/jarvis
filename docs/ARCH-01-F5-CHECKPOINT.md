@@ -317,3 +317,10 @@ Dopo le prove sul Pavilion si rivedono insieme le sezioni.
 - Musica: a schermo intero solo il video (barra nascosta), «esci» o Esc.
 - F1: pagine «Controllo PC» riscritta e «Lumi».
 - CI 039 prima prova: corretti 5 test. (1) test_name_alone… aggiornato al nuovo requisito utente (dopo «Lumi» da solo una frase entro 6 s), il resto della stanza resta ignorato; (2) messaggio «Ti ascolto» solo in modalità con nome obbligatorio (ripristinata la struttura attesa dal test di diagnostica); (3) limiti di revisione statica 8 → 12 (le cartelle runtime sono ora 10: ognuna deve comparire nel rapporto).
+
+## Da fare dopo i test della 039 (richieste utente 11/11 sera, a voce) — NON ancora implementate, nessuna build
+1. **Lumi nell'elenco delle finestre aperte.** Nella 039 era esclusa di mia iniziativa (scelta non concordata: andava chiesta). Va inclusa; quando un comando riguarda Lumi stessa (es. «chiudi la finestra» con Lumi davanti) chiede sempre conferma.
+2. **Finestra di riferimento = quella in primo piano adesso**, anche se l'utente l'ha portata davanti col mouse; non l'ultima usata da Lumi (oggi `service.target` ha la precedenza: da togliere/limitare).
+3. **Risposte sì/no senza dire «Lumi»** anche nella modalità con nome obbligatorio: dopo una domanda di Lumi, per qualche secondo vale la sola risposta, poi torna l'obbligo del nome.
+4. **Conflitto «sveglia»:** «sveglia» da sola o «Lumi, sveglia» riapre sempre Lumi e non imposta mai la sveglia; la sveglia si imposta solo con «imposta/metti la sveglia (alle …)». (Nella 039 «sveglia» da sola con Lumi già davanti andava alla sveglia: da correggere.)
+Altre richieste arriveranno dopo i test sul Pavilion.
