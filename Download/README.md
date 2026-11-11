@@ -1,3 +1,11 @@
+## Build 039 PROVA — PC a voce senza mani, frasi di Lumi, comandi su Lumi
+
+[Scarica Lumi-039-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-039-PROVA.zip)
+
+Come la 038 (Aiuto con menu verticale, MODELLO ON/OFF, comprensione dei sinonimi, attesa dopo «Lumi»), più: Controllo PC navigabile a voce: numeri sugli elementi, scelta per numero/posizione/tipo, giù/su, elemento selezionato (aprilo, doppio clic, «apri» con domanda), Esplora file (vai su Download, indietro, avanti, su di un livello, barra indirizzi), scrivi/aggiungi/pulisci nei campi, minimizza/ingrandisci, aiuto «cosa posso fare qui», puntatore sempre visibile; parole corte solo mentre usi il Controllo PC. Base comune mouse/tastiera spenta se nessun add-on di controllo è attivo. Descrizioni accanto ai comandi; Le mie parole una alla volta. Frasi di Lumi variabili e personalizzabili (saluti, risposte, Intendevi anche col modello acceso). Comandi su Lumi: riduci a icona, nascondi/sveglia, chiudi con saluto, riavvia, spegni il PC con conferma. Mini avatar trasparente col mouse fermo, menu destro; video a schermo intero senza barra, «esci». Verificati in CI Windows: 1267 test, prova reale numeri + scrittura + clic, riquadro video, voce, avvio UI e motore. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43100128967). SHA-256: `c52c0a3da4a9ddacf32b9033d37830a7bcf5de38547737d50041f8a1bfaec9cf`.
+
 ## Build 037 PROVA — Controllo PC corretto, componenti da Lumi, Telegram add-on
 
 [Scarica Lumi-037-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-037-PROVA.zip)
