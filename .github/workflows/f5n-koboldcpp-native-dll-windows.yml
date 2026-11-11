@@ -25,6 +25,7 @@ on:
       - 'musica/**'
       - 'tools/video_host_smoke.py'
       - 'controllo_pc/**'
+      - 'controllo_comune/**'
       - 'componenti/**'
       - 'telegram_addon/**'
       - 'tools/uia_host_smoke.py'
@@ -172,7 +173,7 @@ jobs:
         shell: pwsh
         timeout-minutes: 10
         run: |
-          dotnet build controllo_pc/uia_host/LumiControl.csproj -c Release -o uia-host-out
+          dotnet build controllo_comune/uia_host/LumiControl.csproj -c Release -o uia-host-out
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Controllo PC proof (real UI Automation read + click on a Tk window)

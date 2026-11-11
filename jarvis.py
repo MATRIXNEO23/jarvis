@@ -343,6 +343,10 @@ def main() -> None:
             item["id"] == "controllo_pc" and item["enabled"]
             for item in addon_manager.list_installed())))
         register_pc(pc_service)
+        # Numeri sugli elementi («mostra i numeri»): finestrella trasparente.
+        from controllo_pc import overlay as pc_overlay
+        pc_service.show_overlay = lambda items: (
+            pc_overlay.show(root, items) if items else pc_overlay.hide(root))
         if addon_manager is not None:
             addon_manager.pc_service = pc_service
     except (ImportError, OSError, ValueError) as exc:
@@ -3302,10 +3306,15 @@ def main() -> None:
             # Stesso punto d'ingresso dei comandi locali: la musica viene
             # provata solo dopo timer e sveglia, e solo con l'add-on attivo.
             from musica.runtime import handle_text as music_handle_text
+            from controllo_pc.runtime import (claims_first as pc_claims_first,
+                                              handle_text as pc_handle_text)
+            # Parole corte del Controllo PC in uso («indietro», «giù», «il 3»): prima
+            # della musica; altrimenti la musica ha la precedenza come prima.
+            if pc_claims_first(spoken) and pc_handle_text(spoken, write_line, speak_result):
+                return True
             if music_handle_text(spoken, write_line, speak_result):
                 return True
             # Poi il Controllo PC (finestre, clic, tasti), solo se attivo.
-            from controllo_pc.runtime import handle_text as pc_handle_text
             return pc_handle_text(spoken, write_line, speak_result)
         action = parsed.action
         if action == "start":

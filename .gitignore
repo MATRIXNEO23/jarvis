@@ -5,5 +5,5 @@ __pycache__/
 
 # Eseguibili compilati in CI (nel pacchetto, non nel repository)
 musica/video_bin/
-controllo_pc/uia_bin/
+controllo_comune/uia_bin/
 uia-proof-data/

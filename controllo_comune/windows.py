@@ -10,6 +10,8 @@ import os
 import sys
 import time
 
+from . import gate
+
 IS_WINDOWS = sys.platform == "win32"
 
 if IS_WINDOWS:
@@ -177,6 +179,7 @@ def _key(vk, up=False):
 
 def focus(hwnd: int) -> bool:
     """Porta davanti la finestra (anche se ridotta a icona)."""
+    gate.require()
     if not exists(hwnd):
         return False
     if user32.IsIconic(hwnd):
@@ -190,6 +193,7 @@ def focus(hwnd: int) -> bool:
 
 def close(hwnd: int) -> bool:
     """Chiusura normale, come la X: se c'è da salvare lo chiede il programma."""
+    gate.require()
     return bool(exists(hwnd) and user32.PostMessageW(hwnd, WM_CLOSE, 0, 0))
 
 
@@ -202,6 +206,7 @@ def window_rect(hwnd: int):
 
 def move_mouse(x: int, y: int, visible: bool = True) -> None:
     """Porta il puntatore su (x, y); visible: con un breve movimento visibile."""
+    gate.require()
     if not IS_WINDOWS:
         return
     if visible:
@@ -227,6 +232,8 @@ def click(x: int, y: int, visible: bool = True, double: bool = False) -> None:
 
 def type_text(text: str) -> None:
     """Scrive il testo carattere per carattere (Unicode, anche accenti)."""
+    gate.require()
+    gate.require()
     if not IS_WINDOWS:
         return
     inputs = []
@@ -246,6 +253,7 @@ def type_text(text: str) -> None:
 
 def press(keys: list[str]) -> bool:
     """Scorciatoia: ["ctrl", "c"] -> Ctrl+C."""
+    gate.require()
     if not IS_WINDOWS:
         return False
     codes = [KEYS[k] for k in keys if k in KEYS]
@@ -257,7 +265,24 @@ def press(keys: list[str]) -> bool:
 
 def scroll(clicks: int) -> None:
     """clicks > 0 su, < 0 giù (una tacca della rotella = 120)."""
+    gate.require()
     if not IS_WINDOWS:
         return
-    _send([INPUT(type=0, mi=MOUSEINPUT(0, 0, ctypes.c_ulong(int(clicks) * 120 & 0xFFFFFFFF).value,
-                                       MOUSEEVENTF_WHEEL, 0, 0))])
+    # Una tacca alla volta (alcuni programmi ignorano un salto unico grande).
+    notch = ctypes.c_ulong((120 if clicks > 0 else -120) & 0xFFFFFFFF).value
+    for _ in range(min(abs(int(clicks)), 30)):
+        _send([INPUT(type=0, mi=MOUSEINPUT(0, 0, notch, MOUSEEVENTF_WHEEL, 0, 0))])
+        time.sleep(0.03)
+
+
+SW_MINIMIZE, SW_MAXIMIZE = 6, 3
+
+
+def show_window(hwnd: int, how: str) -> bool:
+    """how: "minimizza" | "ingrandisci" | "ripristina"."""
+    gate.require()
+    if not exists(hwnd):
+        return False
+    code = {"minimizza": SW_MINIMIZE, "ingrandisci": SW_MAXIMIZE, "ripristina": SW_RESTORE}[how]
+    user32.ShowWindow(hwnd, code)
+    return True

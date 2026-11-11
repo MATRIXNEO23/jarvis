@@ -141,9 +141,91 @@ _FIXED = {
         "alza il volume della musica", "abbassa il volume della musica"),
     "Controllo PC": (
         "finestre aperte", "passa a {testo}", "chiudi la finestra {testo}", "chiudi la finestra",
-        "clicca su {testo}", "digita {testo}", "premi {testo}", "scorri giù", "scorri su",
-        "cosa posso cliccare", "chiama questa finestra {testo}"),
+        "minimizza", "ingrandisci", "mostra i numeri", "seleziona il {testo}", "apri il {testo}",
+        "aprilo", "giù", "su", "clicca su {testo}", "scrivi {testo} nel campo cerca",
+        "pulisci la ricerca", "digita {testo}", "premi {testo}", "scorri giù", "scorri su",
+        "indietro", "avanti", "su di un livello", "vai alla barra degli indirizzi",
+        "cosa posso fare qui", "chiama questa finestra {testo}"),
 }
+# Cosa fa ogni comando (mostrato accanto, in «Le mie parole»).
+DESCRIPTIONS = {
+    "aiuto": "Apre la guida (F1).",
+    "stato sistema": "Dice CPU, RAM e disco.",
+    "apri download": "Apre la cartella Download.",
+    "elenca download": "Mostra i file in Download.",
+    "cerca file {testo}": "Cerca un file per nome.",
+    "apri blocco note": "Apre il Blocco note.",
+    "apri calcolatrice": "Apre la Calcolatrice.",
+    "apri esplora file": "Apre Esplora file.",
+    "apri disco locale C": "Apre il disco C:.",
+    "apri browser": "Apre il browser predefinito.",
+    "cerca nel browser {testo}": "Cerca sul web nel browser.",
+    "ultimi comandi": "Mostra gli ultimi comandi dati.",
+    "imposta timer {testo}": "Avvia un timer (es. «5 minuti»).",
+    "timer": "Apre la regolazione manuale del timer.",
+    "pausa timer": "Mette in pausa il timer.",
+    "riprendi timer": "Fa ripartire il timer in pausa.",
+    "quanto manca al timer": "Dice il tempo che resta.",
+    "ferma timer": "Ferma il timer.",
+    "reset timer": "Azzera il timer.",
+    "che ore sono": "Dice l'ora.",
+    "passa a GPT": "Usa GPT per voce e chat.",
+    "torna a Gemma": "Usa il modello locale.",
+    "crea progetto {testo}": "Crea un progetto con quel nome.",
+    "apri progetto {testo}": "Apre un progetto.",
+    "elenca progetti": "Mostra i progetti.",
+    "torna alla conversazione generale": "Esce dal progetto.",
+    "imposta sveglia alle {testo}": "Imposta la sveglia (es. «alle 7:30»).",
+    "ferma la sveglia": "Spegne la sveglia che suona.",
+    "metti {testo}": "Suona un brano o un video (cartelle o YouTube).",
+    "aggiungi in coda {testo}": "Aggiunge un brano dopo quello in corso.",
+    "metti la playlist {testo}": "Suona una tua playlist.",
+    "pausa": "Mette in pausa la musica.",
+    "riprendi": "Riprende la musica.",
+    "ferma la musica": "Ferma la musica.",
+    "avanti": "Brano successivo.",
+    "indietro": "Brano precedente (o ricomincia).",
+    "alza il volume della musica": "Volume musica +10.",
+    "abbassa il volume della musica": "Volume musica −10.",
+    "finestre aperte": "Elenco numerato delle finestre aperte.",
+    "passa a {testo}": "Porta davanti una finestra (nome, numero o nome tuo).",
+    "chiudi la finestra {testo}": "Chiude quella finestra (chiede se salvare).",
+    "chiudi la finestra": "Chiude la finestra in uso.",
+    "clicca su {testo}": "Clic sul pulsante o campo con quel nome.",
+    "digita {testo}": "Scrive dove c'è il cursore.",
+    "premi {testo}": "Preme tasti (es. «Ctrl più C», «invio»).",
+    "scorri giù": "Scorre in basso la finestra in uso.",
+    "scorri su": "Scorre in alto la finestra in uso.",
+    "cosa posso cliccare": "Mette i numeri sugli elementi.",
+    "chiama questa finestra {testo}": "Dà un nome tuo alla finestra.",
+    "mostra i numeri": "Mette i numeri sugli elementi da cliccare.",
+    "seleziona il {testo}": "Seleziona per numero o posizione (il 3, il primo, l'ultimo).",
+    "apri il {testo}": "Apre per numero o posizione (doppio clic).",
+    "aprilo": "Apre l'elemento selezionato.",
+    "giù": "Selezione all'elemento sotto (mentre usi il Controllo PC).",
+    "su": "Selezione all'elemento sopra (mentre usi il Controllo PC).",
+    "su di un livello": "Esplora file: cartella superiore.",
+    "vai alla barra degli indirizzi": "Pronto a dettare un percorso.",
+    "scrivi {testo} nel campo cerca": "Svuota il campo Cerca e scrive.",
+    "pulisci la ricerca": "Svuota la casella di ricerca.",
+    "minimizza": "Riduce a icona la finestra in uso.",
+    "ingrandisci": "Ingrandisce la finestra in uso.",
+    "cosa posso fare qui": "Suggerisce i comandi per questa finestra.",
+}
+
+
+def describe(command: str) -> str:
+    if command in DESCRIPTIONS:
+        return DESCRIPTIONS[command]
+    if command.startswith("apri ") and "{" not in command:
+        return "Apre il programma " + command[5:] + "."
+    if command.startswith("metti la playlist "):
+        return "Suona la playlist " + command[18:] + "."
+    if command.startswith("passa a "):
+        return "Porta davanti la finestra «" + command[8:] + "»."
+    return ""
+
+
 # Comandi di base (Impostazioni > Personalizzazione comandi).
 BASE_SECTIONS = ("Comandi locali", "Timer", "Modelli e GPT", "Progetti e Telegram")
 # Comandi di un add-on (Gestisci add-on > sezione dell'add-on).
@@ -224,3 +306,48 @@ def replace_section(section: str, values: dict, items=None) -> list[dict]:
                 keep.append({"section": section, "phrase": phrase_for(phrase, command),
                              "command": command})
     return clean(keep)
+
+
+# --- una frase alla volta (Le mie parole: Aggiungi / Modifica / Elimina) --------------
+def phrases_for(command: str, items=None) -> list[str]:
+    items = load() if items is None else items
+    return [i["phrase"] for i in items if i["command"] == command]
+
+
+def add_phrase(section: str, command: str, phrase: str, path=None) -> str:
+    """Aggiunge un modo tuo di dire il comando (il comando standard resta valido)."""
+    items = load(path)
+    wanted = phrase_for(phrase, command)
+    key = _normal(wanted)
+    if not key:
+        return "Scrivi la frase."
+    other = next((i for i in items if _normal(i["phrase"]) == key), None)
+    if other is not None:
+        return ("C'è già." if other["command"] == command else
+                f"«{phrase}» è già usata per «{other['command']}».")
+    items.append({"section": section, "phrase": wanted, "command": command})
+    cleaned = clean(items)
+    if not any(i["phrase"] == wanted for i in cleaned):
+        return "Frase non valida."
+    save(cleaned, path)
+    return f"Aggiunta: «{wanted.replace(' {testo}', ' …')}»."
+
+
+def edit_phrase(old: str, new: str, path=None) -> str:
+    items = load(path)
+    target = next((i for i in items if i["phrase"] == old), None)
+    if target is None:
+        return "Frase non trovata."
+    rest = [i for i in items if i is not target]
+    save(rest, path)
+    message = add_phrase(target["section"], target["command"], new, path)
+    if not message.startswith("Aggiunta"):
+        save(items, path)                     # niente modifica a metà
+        return message
+    return "Modificata."
+
+
+def remove_phrase(phrase: str, path=None) -> str:
+    items = load(path)
+    save([i for i in items if i["phrase"] != phrase], path)
+    return "Eliminata."

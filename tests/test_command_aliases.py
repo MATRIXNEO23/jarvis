@@ -66,3 +66,21 @@ class CommandAliasTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PhraseOneByOneTests(unittest.TestCase):
+    def test_add_edit_remove_one_at_a_time(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "a.json"
+            self.assertIn("Aggiunta", ca.add_phrase("Musica", "metti {testo}", "sparami", path))
+            self.assertIn("Aggiunta", ca.add_phrase("Musica", "metti {testo}", "voglio sentire", path))
+            ca.add_phrase("Timer", "ferma timer", "basta", path)
+            self.assertIn("già usata", ca.add_phrase("Musica", "ferma la musica", "basta", path))
+            self.assertEqual(ca.phrases_for("metti {testo}", ca.load(path)),
+                             ["sparami {testo}", "voglio sentire {testo}"])
+            self.assertEqual(ca.edit_phrase("sparami {testo}", "dammi", path), "Modificata.")
+            ca.remove_phrase("voglio sentire {testo}", path)
+            self.assertEqual(ca.phrases_for("metti {testo}", ca.load(path)), ["dammi {testo}"])
+            self.assertEqual(ca.describe("apri Spotify"), "Apre il programma Spotify.")

@@ -16,7 +16,9 @@ import time
 import unicodedata
 from pathlib import Path
 
-from . import windows as win
+from controllo_comune import windows as win
+from controllo_comune.uia import focused_element, helper_path, list_elements
+from frasi_lumi import say
 
 CONFIRM_TIMEOUT = 60
 # Mai ricordate: chiedono sempre conferma.
@@ -45,24 +47,6 @@ def data_folder() -> Path:
         return Path.home() / ".lumi" / "addon-data" / "controllo_pc"
 
 
-def helper_path() -> Path:
-    return Path(__file__).resolve().parent / "uia_bin" / "LumiControl.exe"
-
-
-def list_elements(hwnd: int, timeout: float = 8.0) -> list[dict]:
-    """Elementi della finestra tramite LumiControl.exe (UI Automation, sola lettura)."""
-    exe = helper_path()
-    if not exe.is_file():
-        raise FileNotFoundError(f"Manca {exe} (reinstalla il pacchetto completo).")
-    flags = 0x08000000 if sys.platform == "win32" else 0      # CREATE_NO_WINDOW
-    done = subprocess.run([str(exe), "list", str(int(hwnd)), "400"], capture_output=True,
-                          timeout=timeout, creationflags=flags)
-    data = json.loads(done.stdout.decode("utf-8", "replace").strip() or "{}")
-    if not data.get("ok"):
-        raise RuntimeError(str(data.get("error", "lettura non riuscita"))[:160])
-    return [i for i in data.get("items", []) if isinstance(i, dict)]
-
-
 class ControlService:
     def __init__(self, is_enabled=lambda: False, folder: Path | None = None,
                  backend=win, elements=list_elements, clock=time.monotonic):
@@ -76,6 +60,17 @@ class ControlService:
         self.target = None            # ultima finestra usata da Lumi
         self._lock = threading.Lock()
         self.settings = self._load()
+        self.selected = None          # (hwnd, elemento) scelto per ultimo
+        self.numbered = None          # (hwnd, elementi numerati, momento)
+        self.last_used = -1e9         # ultimo comando del Controllo PC (per le parole corte)
+        self.help_page = 0
+        self.show_overlay = lambda items: None     # numeri sullo schermo (impostato da Lumi)
+        self.focused = focused_element
+        try:
+            from controllo_comune import gate
+            gate.register("controllo_pc", self.is_enabled)
+        except ImportError:
+            pass
 
     # --- impostazioni nel profilo ------------------------------------------
     def _load(self) -> dict:
@@ -185,7 +180,7 @@ class ControlService:
             return run()
         self.pending = (self.clock() + CONFIRM_TIMEOUT, key, delicate, description, run)
         tail = " (azione delicata: chiedo sempre)" if delicate else ""
-        return f"{description}? Di' «sì» per confermare o «no».{tail}"
+        return say("conferma", testo=description) + " Di' «sì» o «no»." + tail
 
     def answer(self, text: str):
         """Risposta a una conferma in sospeso: messaggio, oppure None se non è una risposta."""
@@ -208,7 +203,7 @@ class ControlService:
             return run()
         if word in ("no", "annulla", "lascia stare", "non farlo", "stop"):
             self.pending = None
-            return "Annullato."
+            return say("annullato")
         self.pending = None            # altra frase: la conferma decade
         return None
 
@@ -218,7 +213,26 @@ class ControlService:
         if not self.is_enabled():
             return None
         method = getattr(self, "_do_" + action, None)
-        return method(**values) if method else None
+        if method is None:
+            return None
+        reply = method(**values)
+        if reply is not None:
+            self.last_used = self.clock()
+        return reply
+
+    # Parole corte («giù», «indietro», «apri», «il 3»…) valgono come comando solo
+    # se il Controllo PC è stato usato da poco: altrimenti vanno agli altri comandi
+    # e al modello, così non si interrompe il parlare normale.
+    CONTEXT_SECONDS = 120
+    SHORT_ACTIONS = ("step", "nav", "open_bare", "open_selected", "click_selected", "more_help")
+
+    def recent(self) -> bool:
+        return self.clock() - self.last_used <= self.CONTEXT_SECONDS
+
+    def claims(self, action: str, values: dict) -> bool:
+        if action in self.SHORT_ACTIONS or (action == "pick" and values.get("bare")):
+            return self.recent()
+        return True
 
     def _do_list_windows(self):
         items = self.windows()
@@ -233,12 +247,30 @@ class ControlService:
         return "Finestre aperte (di' «passa alla 2» o il nome):\n" + "\n".join(lines)
 
     def _do_switch(self, window):
+        # «vai al 5» subito dopo «mostra i numeri» sceglie l'elemento 5;
+        # altrimenti «passa/vai alla 2» resta la finestra 2 dell'elenco finestre.
+        from .commands import number_of
+        number = number_of(window)
+        if (number is not None and self.numbered is not None
+                and self.clock() - self.numbered[2] <= self.CONTEXT_SECONDS):
+            return self._do_pick(number, "", "select")
+        # In Esplora file «vai su Download / Disco C» apre la voce nella finestra.
+        current = self._current(self.windows()) if self.recent() else None
+        if (current is not None and current["process"].lower() == "explorer.exe"
+                and normalized(window) and not _RESERVED.match(normalized(window))):
+            found, item, _error = self._element(None, window,
+                                                kinds=("TreeItem", "ListItem", "Hyperlink",
+                                                       "Button", "DataItem"))
+            if item is not None:
+                self._point(found, item, "click")
+                self.selected = (found["hwnd"], item)
+                return say("passo", finestra=item.get("name", window)[:60])
         found = self.find_window(window)
         if found is None:
             return None
         self.target = found["hwnd"]
         if self.backend.focus(found["hwnd"]):
-            return "Passo a " + found["title"][:60] + "."
+            return say("passo", finestra=found["title"][:60])
         return "Windows non mi ha lasciato portare davanti " + found["title"][:60] + "."
 
     def _do_close(self, window=None):
@@ -251,7 +283,8 @@ class ControlService:
             ok = self.backend.close(found["hwnd"])
             if self.target == found["hwnd"]:
                 self.target = None
-            return ("Chiudo " + found["title"][:60] + " (se c'è da salvare lo chiede lui)."
+            return (say("chiudo", finestra=found["title"][:60]) +
+                    " Se c'è da salvare, lo chiede il programma."
                     if ok else "Non riesco a chiudere " + found["title"][:60] + ".")
         return self._ask(key, False, "Chiudo " + found["title"][:60], run)
 
@@ -318,11 +351,12 @@ class ControlService:
             self.backend.focus(found["hwnd"])
             x, y = self._center(item)
             self.backend.click(x, y, self.settings["visible_mouse"], double)
-            return f"Clic su «{item.get('name', target)[:50]}»."
+            self.selected = (found["hwnd"], item)
+            return say("doppio" if double else "clic", nome=item.get("name", target)[:50])
         return self._ask(key, delicate, f"Clicco «{item.get('name', target)[:50]}» in "
                                         f"{found['title'][:40]}", run)
 
-    def _do_type_in(self, text, target, window=None):
+    def _do_type_in(self, text, target, window=None, append=False):
         found, item, error = self._element(window, target, kinds=("Edit", "Document", "ComboBox"))
         if found is None:
             return None
@@ -336,10 +370,42 @@ class ControlService:
             x, y = self._center(item)
             self.backend.click(x, y, self.settings["visible_mouse"])
             time.sleep(0.1)
+            if append:
+                self.backend.press(["fine"])          # in fondo al testo che c'è
+            else:
+                self.backend.press(["ctrl", "a"])     # sostituisce il testo che c'è
             self.backend.type_text(text)
-            return f"Scritto in «{item.get('name', target)[:40]}»."
-        return self._ask(key, False, f"Scrivo «{text[:40]}» in «{item.get('name', target)[:40]}»",
+            self.selected = (found["hwnd"], item)
+            return say("aggiunto" if append else "scritto", nome=item.get("name", target)[:40])
+        verb = "Aggiungo" if append else "Scrivo"
+        return self._ask(key, False, f"{verb} «{text[:40]}» in «{item.get('name', target)[:40]}»",
                          run)
+
+    def _do_clear_field(self, target):
+        found = self.find_window(None)
+        if found is None:
+            return None
+        try:
+            items = self.elements(found["hwnd"])
+        except Exception as exc:
+            return "Non riesco a leggere la finestra: " + str(exc)[:100]
+        # Prima la X «Cancella/Annulla ricerca» se c'è, poi il campo svuotato a mano.
+        clear = [i for i in items if i.get("type") == "Button" and re.search(
+            r"cancella|annulla ricerca|clear|cancel", i.get("name", ""), re.I)]
+        key = normalized(target)
+        fields = [i for i in items if i.get("type") in ("Edit", "ComboBox")
+                  and key in normalized(i.get("name", ""))]
+        self.target = found["hwnd"]
+        self.backend.focus(found["hwnd"])
+        if clear:
+            self._point(found, clear[0], "click")
+            return say("pulito")
+        if not fields:
+            return f"In {found['title'][:40]} non trovo il campo «{target}»."
+        self._point(found, fields[0], "click")
+        self.backend.press(["ctrl", "a"])
+        self.backend.press(["canc"])
+        return say("pulito")
 
     def _do_type(self, text):
         found = self.find_window(None)
@@ -366,7 +432,7 @@ class ControlService:
             self.target = found["hwnd"]
             self.backend.focus(found["hwnd"])
             ok = self.backend.press(keys)
-            return f"Premuto {combo.upper()} in {found['title'][:40]}." if ok else "Tasti non validi."
+            return say("tasti", tasti=combo.upper()) if ok else "Tasti non validi."
         return self._ask(key, delicate, f"Premo {combo.upper()} in {found['title'][:40]}", run)
 
     def _do_scroll(self, amount):
@@ -380,4 +446,260 @@ class ControlService:
             self.backend.move_mouse((rect[0] + rect[2]) // 2, (rect[1] + rect[3]) // 2,
                                     self.settings["visible_mouse"])
         self.backend.scroll(amount)
-        return "Scorro " + ("su." if amount > 0 else "giù.")
+        return say("scorro_su" if amount > 0 else "scorro_giu")
+
+    # --- puntatore visibile sull'elemento ------------------------------------------
+    def _point(self, found, item, how="move"):
+        """Porta davanti la finestra, sposta il puntatore (visibile) sull'elemento e,
+        se richiesto, fa clic o doppio clic."""
+        self.target = found["hwnd"]
+        self.backend.focus(found["hwnd"])
+        x, y = self._center(item)
+        if how == "move":
+            self.backend.move_mouse(x, y, True)
+        else:
+            self.backend.click(x, y, True, how == "double")
+
+    # --- numeri sullo schermo e scelta per numero o posizione -------------------------
+    CLICKABLE = ("Button", "ListItem", "TreeItem", "TabItem", "MenuItem", "Hyperlink", "Edit",
+                 "CheckBox", "RadioButton", "DataItem", "ComboBox", "SplitButton")
+    MAX_NUMBERS = 80
+
+    def _do_show_numbers(self):
+        found = self.find_window(None)
+        if found is None:
+            return None
+        try:
+            items = self.elements(found["hwnd"])
+        except Exception as exc:
+            return "Non riesco a leggere la finestra: " + str(exc)[:100]
+        shown = [i for i in items if i.get("type") in self.CLICKABLE][:self.MAX_NUMBERS]
+        if not shown:
+            return f"{found['title'][:50]} non dichiara elementi a Windows: prova «scorri» o i tasti."
+        self.target = found["hwnd"]
+        self.numbered = (found["hwnd"], shown, self.clock())
+        self.show_overlay(shown)
+        lines = [f"{n}. {i.get('name') or '(senza nome)'} ({i.get('type')})"
+                 for n, i in enumerate(shown, start=1)]
+        return say("numeri") + "\n" + "\n".join(lines)
+
+    def _do_hide_numbers(self):
+        self.numbered = None
+        self.show_overlay(None)
+        return "Numeri tolti."
+
+    _KIND_EXT = {
+        "immagine": (".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".heic", ".tif", ".tiff"),
+        "foto": (".jpg", ".jpeg", ".png", ".heic", ".webp"),
+        "video": (".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".m4v"),
+        "documento": (".pdf", ".doc", ".docx", ".txt", ".odt", ".xls", ".xlsx", ".ppt", ".pptx"),
+    }
+
+    def _content(self, items, kind):
+        """Elementi «del contenuto» (i file di una cartella, le righe di un elenco)."""
+        rows = [i for i in items if i.get("type") in ("ListItem", "DataItem")]
+        if not rows:
+            rows = [i for i in items if i.get("type") in ("TreeItem", "ListItem", "Button",
+                                                          "Hyperlink", "MenuItem", "TabItem")]
+        name = lambda i: i.get("name", "").lower()
+        if kind in self._KIND_EXT:
+            rows = [i for i in rows if name(i).endswith(self._KIND_EXT[kind])]
+        elif kind == "cartella":
+            rows = [i for i in rows if "." not in name(i)[-6:]]
+        elif kind == "file":
+            rows = [i for i in rows if "." in name(i)[-6:]]
+        return rows
+
+    def _do_pick(self, position, kind="", how="select", bare=False):
+        if position is None:
+            return None
+        recent_numbers = (self.numbered is not None
+                          and self.clock() - self.numbered[2] <= self.CONTEXT_SECONDS)
+        if recent_numbers and not kind and position > 0:
+            hwnd, shown, _when = self.numbered
+            found = next((w for w in self.windows() if w["hwnd"] == hwnd), None)
+            if found is None:
+                return "La finestra con i numeri non c'è più."
+            if position > len(shown):
+                return f"Ci sono solo {len(shown)} numeri."
+            item = shown[position - 1]
+        else:
+            if bare:
+                return None
+            found = self.find_window(None)
+            if found is None:
+                return None
+            try:
+                items = self.elements(found["hwnd"])
+            except Exception as exc:
+                return "Non riesco a leggere la finestra: " + str(exc)[:100]
+            rows = self._content(items, kind)
+            if not rows:
+                return "Non trovo " + (kind or "elementi") + " in " + found["title"][:40] + "."
+            index = position - 1 if position > 0 else len(rows) + position
+            if not 0 <= index < len(rows):
+                return f"Ce ne sono solo {len(rows)}."
+            item = rows[index]
+        name = item.get("name") or "(senza nome)"
+        delicate = how != "select" and bool(_DELICATE.search(name))
+
+        def run():
+            self._point(found, item, {"select": "click", "click": "click", "double": "double"}[how])
+            self.selected = (found["hwnd"], item)
+            self.show_overlay(None)
+            return say({"select": "selezionato", "click": "clic", "double": "doppio"}[how], nome=name[:60])
+        if delicate:
+            return self._ask("pick|" + normalized(name), True, f"Clicco «{name[:50]}»", run)
+        return run()
+
+    # --- elemento selezionato --------------------------------------------------------
+    def _selected_item(self):
+        if self.selected is None:
+            return None, None
+        hwnd, item = self.selected
+        found = next((w for w in self.windows() if w["hwnd"] == hwnd), None)
+        if found is None:
+            self.selected = None
+            return None, None
+        try:                              # posizione aggiornata (la finestra può essere scorsa)
+            fresh = [i for i in self.elements(hwnd) if i.get("name") == item.get("name")
+                     and i.get("type") == item.get("type")]
+            if fresh:
+                item = fresh[0]
+        except Exception:
+            pass
+        return found, item
+
+    def _do_open_selected(self):
+        found, item = self._selected_item()
+        if found is None:
+            return "Prima scegli un elemento (es. «seleziona il primo» o «mostra i numeri»)."
+        self._point(found, item, "double")
+        return say("doppio", nome=(item.get("name") or "elemento")[:60])
+
+    def _do_click_selected(self):
+        found, item = self._selected_item()
+        if found is None:
+            return "Prima scegli un elemento (es. «seleziona il primo» o «mostra i numeri»)."
+        self._point(found, item, "click")
+        return say("clic", nome=(item.get("name") or "elemento")[:60])
+
+    def _do_open_bare(self):
+        """«Apri» da solo: con un elemento selezionato chiede prima (poteva mancare il
+        nome di un programma)."""
+        found, item = self._selected_item()
+        if found is None:
+            return None
+        name = (item.get("name") or "elemento")[:60]
+        self.pending = (self.clock() + CONFIRM_TIMEOUT, "", True, "",
+                        lambda: (self._point(found, item, "double"), say("doppio", nome=name))[1])
+        return say("apri_selezionato", nome=name)
+
+    # --- passo passo con le frecce -------------------------------------------------------
+    _STEP_KEYS = {"giù": "giu", "giu": "giu", "sotto": "giu", "prossimo": "giu", "successivo": "giu",
+                  "su": "su", "sopra": "su", "precedente": "su", "destra": "destra",
+                  "sinistra": "sinistra"}
+
+    def _do_step(self, dir):
+        found = self.find_window(None)
+        if found is None:
+            return None
+        self.target = found["hwnd"]
+        self.backend.focus(found["hwnd"])
+        self.backend.press([self._STEP_KEYS[dir]])
+        time.sleep(0.15)
+        try:
+            item = self.focused()
+        except Exception:
+            item = None
+        if not item:
+            return "Spostato, ma Windows non mi dice su cosa sei."
+        self.backend.move_mouse(*self._center(item), True)
+        self.selected = (found["hwnd"], item)
+        return say("selezionato", nome=(item.get("name") or "(senza nome)")[:60])
+
+    # --- navigazione: indietro, avanti, su di un livello, barra degli indirizzi ----------
+    _NAV = {"indietro": (r"^(indietro|back)", ["alt", "sinistra"], "indietro"),
+            "torna indietro": (r"^(indietro|back)", ["alt", "sinistra"], "indietro"),
+            "avanti": (r"^(avanti|forward)", ["alt", "destra"], "avanti"),
+            "vai avanti": (r"^(avanti|forward)", ["alt", "destra"], "avanti")}
+
+    def _do_nav(self, dir):
+        found = self.find_window(None)
+        if found is None:
+            return None
+        pattern, keys, phrase = self._NAV.get(
+            dir, (r"^(su\b|up\b|livello superiore|cartella superiore|su a)", ["alt", "su"], "su_livello"))
+        try:
+            items = self.elements(found["hwnd"])
+        except Exception:
+            items = []
+        button = next((i for i in items if i.get("type") in ("Button", "SplitButton")
+                       and i.get("enabled", True) and re.search(pattern, i.get("name", ""), re.I)), None)
+        if button is not None:
+            self._point(found, button, "click")          # il puntatore va sulla freccia
+        else:
+            self.target = found["hwnd"]
+            self.backend.focus(found["hwnd"])
+            self.backend.press(keys)
+        return say(phrase)
+
+    def _do_address(self):
+        found = self.find_window(None)
+        if found is None:
+            return None
+        self.target = found["hwnd"]
+        self.backend.focus(found["hwnd"])
+        try:
+            items = self.elements(found["hwnd"])
+        except Exception:
+            items = []
+        bar = next((i for i in items if i.get("type") in ("Edit", "ComboBox", "ToolBar")
+                    and re.search(r"indirizz|address", i.get("name", ""), re.I)), None)
+        if bar is not None:
+            self.backend.move_mouse(*self._center(bar), True)
+        self.backend.press(["alt", "d"])                  # campo indirizzo pronto per scrivere
+        return say("indirizzi")
+
+    # --- finestre: minimizza, ingrandisci, ripristina -----------------------------------
+    def _do_window_state(self, how, window=None):
+        found = self.find_window(window)
+        if found is None:
+            return None
+        self.backend.show_window(found["hwnd"], how)
+        if how != "minimizza":
+            self.target = found["hwnd"]
+        return say(how, finestra=found["title"][:60])
+
+    # --- aiuto in base alla finestra --------------------------------------------------------
+    _HELP = {
+        "explorer.exe": ["«vai su Download»", "«mostra i numeri» e poi «il 3»", "«apri il primo»",
+                         "«giù» e «su» per scorrere i file uno alla volta", "«aprilo»", "«indietro»",
+                         "«su di un livello»", "«scrivi gatti nel campo cerca»", "«pulisci la ricerca»",
+                         "«vai alla barra degli indirizzi»", "«l'ultima cartella»", "«minimizza»"],
+        "notepad.exe": ["«digita buongiorno»", "«premi invio»", "«premi Ctrl più S» per salvare",
+                        "«scorri giù»", "«ingrandisci»", "«chiudi la finestra»"],
+        "": ["«mostra i numeri» e poi «clicca il» e il numero", "«clicca su» e il nome del pulsante",
+             "«scrivi … nel campo …»", "«scorri giù»", "«premi Invio»", "«finestre aperte»",
+             "«passa a» e il nome", "«minimizza» o «ingrandisci»", "«chiudi la finestra»"],
+    }
+
+    def _do_context_help(self):
+        found = self.find_window(None)
+        process = found["process"].lower() if found else ""
+        self.help_page = 0
+        self._help_items = self._HELP.get(process, self._HELP[""])
+        return self._help_text(found)
+
+    def _do_more_help(self):
+        if not getattr(self, "_help_items", None):
+            return None
+        self.help_page += 1
+        return self._help_text(None)
+
+    def _help_text(self, found):
+        items = self._help_items
+        start = (self.help_page * 4) % max(len(items), 1)
+        chunk = items[start:start + 4]
+        where = f"In {found['title'][:40]}" if found else "Qui"
+        return f"{where} puoi dire: " + ", ".join(chunk) + ". Di' «altri» per altri comandi."

@@ -36,7 +36,7 @@ def include(p):
     if parts[0] in {".github", "tests", "tools", "docs", "Download", "upstream-kobold",
                     "koboldcpp-src", "probe-models", "dist", ".agents", "superpowers"}:
         return False
-    if parts[:2] in {("musica", "video_host"), ("controllo_pc", "uia_host")}:
+    if parts[:2] in {("musica", "video_host"), ("controllo_comune", "uia_host")}:
         return False                                  # sorgente C#: nel pacchetto va solo il compilato
     if p.name in {"AGENTS.md", "RECUPERO.md", ".gitignore", "lumi_originale.png"}:
         return False
@@ -96,12 +96,12 @@ def build(engine_dir, number, out_dir, piper_dir=None, video_dir=None, uia_dir=N
         if "musica/video_bin/LumiVideo.exe" not in entries:
             raise SystemExit("LumiVideo.exe missing from --video-host")
     if uia_dir:
-        # Lettore elementi finestre (UI Automation) compilato in CI da controllo_pc/uia_host.
+        # Lettore elementi finestre (UI Automation) compilato in CI da controllo_comune/uia_host.
         uia_root = Path(uia_dir)
         for path in sorted(uia_root.rglob("*")):
             if path.is_file() and path.suffix.lower() not in {".pdb", ".xml"}:
-                entries["controllo_pc/uia_bin/" + path.relative_to(uia_root).as_posix()] = path.read_bytes()
-        if "controllo_pc/uia_bin/LumiControl.exe" not in entries:
+                entries["controllo_comune/uia_bin/" + path.relative_to(uia_root).as_posix()] = path.read_bytes()
+        if "controllo_comune/uia_bin/LumiControl.exe" not in entries:
             raise SystemExit("LumiControl.exe missing from --uia-host")
     entries[f"LEGGIMI-BUILD-{label}.txt"] = notice(label).encode("utf-8")
     mandatory = {"jarvis.py", "avvia_lumi.bat", "local_model/chat_templates.py",
@@ -240,7 +240,7 @@ def main(argv=None):
     p.add_argument("--model", help="GGUF used for the packaged generation proof")
     p.add_argument("--piper-engine", help="slim Piper folder from tools/fetch_piper_engine.py")
     p.add_argument("--video-host", help="built LumiVideo output folder (musica/video_host)")
-    p.add_argument("--uia-host", help="built LumiControl output folder (controllo_pc/uia_host)")
+    p.add_argument("--uia-host", help="built LumiControl output folder (controllo_comune/uia_host)")
     a = p.parse_args(argv)
     if os.name != "nt":
         raise SystemExit("Windows only.")

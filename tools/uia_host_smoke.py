@@ -12,12 +12,12 @@ sys.path.insert(0, str(ROOT))
 
 def main(out_dir: str) -> int:
     import shutil
-    target = ROOT / "controllo_pc" / "uia_bin"
+    target = ROOT / "controllo_comune" / "uia_bin"
     target.mkdir(parents=True, exist_ok=True)
     for path in Path(out_dir).iterdir():
         if path.is_file():
             shutil.copy2(path, target / path.name)
-    from controllo_pc import windows
+    from controllo_comune import windows
     from controllo_pc.service import ControlService, list_elements
     import subprocess
     # Finestra di prova WinForms in un altro processo: dichiara a Windows i nomi
@@ -54,6 +54,11 @@ def main(out_dir: str) -> int:
         print(service.handle("switch", {"window": "prova lumi"}))
         print(service.handle("type_in", {"text": "ciao Lumi", "target": "Cerca",
                                           "window": "prova lumi"}))
+        numbers = service.handle("show_numbers", {})
+        print(numbers)
+        assert "Saluta" in numbers, "numeri sugli elementi non letti"
+        from controllo_comune.uia import focused_element
+        print("elemento col fuoco:", focused_element())
         print(service.handle("click", {"target": "Saluta", "window": "prova lumi"}))
         for _ in range(50):
             if marker.exists():

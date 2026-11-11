@@ -16,6 +16,20 @@ def service():
     return _STATE["service"]
 
 
+def claims_first(spoken: str) -> bool:
+    """True se una parola corta («indietro», «giù», «apri», «il 3»…) va al Controllo PC
+    PRIMA degli altri comandi (es. «indietro» della musica), perché lo stai usando ora."""
+    current = _STATE["service"]
+    if current is None or not current.is_enabled():
+        return False
+    if current.pending is not None:
+        return True                         # risposta sì/no a una sua domanda
+    from .commands import parse_command
+    request = parse_command(spoken)
+    return (request is not None and request[0] in current.SHORT_ACTIONS + ("pick",)
+            and current.recent())
+
+
 def handle_text(spoken: str, write_line, speak) -> bool:
     """True se la frase era per il Controllo PC (gestita)."""
     current = _STATE["service"]
@@ -25,7 +39,7 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     if reply is None:
         from .commands import parse_command
         request = parse_command(spoken)
-        if request is None:
+        if request is None or not current.claims(*request):
             return False
         try:
             reply = current.handle(*request)
