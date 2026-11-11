@@ -268,3 +268,6 @@ Riscontri utente (voce/chat): avatar visibile tutto (capelli, un po' di busto) s
 - Riscontro 11/11 01:36 (foto): mini lettore su due righe e legato all'avatar. Ora avatar e lettore sono due finestrelle separate, ognuna trascinabile (lettore: anche dalla maniglia ⋮⋮), posizioni salvate insieme in `avatar-dock.json` (`x,y` avatar, `px,py` lettore; salvare una non perde l'altra). Lettore su una riga: titolo scorrevole (24 caratteri) + ⏮ ⏯ ⏭ ⏹.
 - Mini lettore: aggiunti 🔉 / 🔊 (volume musica −10/+10, stesso volume unico).
 - Riscontro 11/11 01:47 (foto): «Le mie parole» deve mostrare i comandi esistenti selezionabili, con la casella accanto a ognuno. Ora `command_aliases.catalog(engine)` elenca per sezione i comandi che Lumi esegue già (fissi + programmi abilitati in Programmi e app + esempi di Accesso file + playlist esistenti); in ogni sezione dell'Aiuto c'è una riga per comando con la casella «Le mie parole» (più frasi separate da «;», la parte variabile «…» va in fondo da sola) e «Salva le mie parole». Il comando standard resta valido.
+
+## Da decidere con l'utente (11/11 01:50) — NON implementare senza accordo
+- Riordino di Aiuto (F1) e Impostazioni/opzioni: oggi «abbastanza caotico». Criteri, posizioni e struttura vanno decisi insieme all'utente; l'assistente propone opzioni e chiede, non inventa dove mettere le cose.
