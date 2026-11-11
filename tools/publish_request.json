@@ -1,10 +1,10 @@
 {
-  "run_id": 42934512348,
-  "artifact": "lumi-035-prova-candidate",
-  "file": "Lumi-035-PROVA.zip",
-  "bytes": 27594193,
-  "sha256": "7147b10155010d2bd0eff1e549ea925ff06d4d8076506f1ea171739f9e5490da",
-  "source_commit": "d0cb04b",
-  "title": "Build 035 PROVA — Le mie parole accanto ai comandi, mini lettore separato",
-  "description": "Come la 034, più: «Le mie parole» in Aiuto mostra l'elenco dei comandi che Lumi esegue già (anche i programmi abilitati e le playlist) con la casella accanto a ognuno; più frasi separate da «;», «Salva le mie parole»; il comando standard resta valido. Mini lettore separato dall'avatar: una riga con titolo scorrevole, ⏮ ⏯ ⏭ ⏹ e volume 🔉 🔊; avatar e lettore si spostano ognuno per conto suo e le posizioni restano salvate fra le sessioni. Verificati in CI Windows: 1238 test, riquadro video reale in finestra Tk, voce inclusa, avvio UI e risposta del motore. Pavilion da collaudare."
+  "run_id": 43048551042,
+  "artifact": "lumi-036-prova-candidate",
+  "file": "Lumi-036-PROVA.zip",
+  "bytes": 27616744,
+  "sha256": "093288dee4faba206dbf9415797b7be9a0054cf00a3b5a698126debaf94d4c01",
+  "source_commit": "f031ffc",
+  "title": "Build 036 PROVA — Add-on Controllo PC, Gestisci add-on a sezioni",
+  "description": "Come la 035, più: add-on Controllo PC (installato spento): finestre aperte per nome, numero o nome tuo, passa/chiudi finestra, clic su pulsanti e campi tramite UI Automation di Windows, scrittura, scorciatoie, scorrimento; tutto offline. Conferma le prime volte poi ricorda; azioni delicate sempre. Gestisci add-on: elenco a sinistra, sezione dell'add-on a destra con Attiva/Disattiva, Configura e i suoi comandi personalizzabili. Comandi di base personalizzabili in Impostazioni > Personalizzazione comandi; F1 solo guida. Verificati in CI Windows: 1243 test, prova reale Controllo PC (campo Cerca scritto e pulsante Saluta cliccato in una finestra WinForms), riquadro video, voce, avvio UI e risposta del motore. Pavilion da collaudare."
 }
