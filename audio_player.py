@@ -43,6 +43,47 @@ def play(path: Path, *, max_seconds: float = 600) -> None:
     if os.name != "nt":
         raise OSError("Riproduzione audio disponibile solo su Windows.")
     _STOP.clear()
+    try:
+        _play_mci(path, max_seconds)
+    except AudioBusyError:
+        # Il lettore di Windows (MCI) resta fermo quando un'altra app, es. Netflix,
+        # tiene l'uscita audio: riprovo con WASAPI condiviso (sounddevice, già usato
+        # per il microfono), che suona insieme agli altri programmi.
+        if path.suffix.lower() != ".wav" or _STOP.is_set():
+            raise
+        _play_shared(path)
+
+
+def _play_shared(path: Path) -> None:
+    """WASAPI condiviso via sounddevice (RawOutputStream: niente numpy)."""
+    import wave
+    try:
+        import sounddevice as sd
+    except ImportError as exc:
+        raise AudioBusyError("Audio occupato da un altro programma e riproduzione "
+                             "alternativa non disponibile: " + str(exc)[:80]) from exc
+    with wave.open(str(path), "rb") as source:
+        rate, channels, width = source.getframerate(), source.getnchannels(), source.getsampwidth()
+        frames = source.readframes(source.getnframes())
+    if width != 2:
+        raise AudioBusyError("Audio occupato da un altro programma.")
+    step = rate // 20 * channels * 2                  # 50 ms per blocco
+    try:
+        with sd.RawOutputStream(samplerate=rate, channels=channels, dtype="int16") as stream:
+            for start in range(0, len(frames), step):
+                if _STOP.is_set():
+                    break
+                _notify(start / float(rate * channels * 2))
+                stream.write(frames[start:start + step])
+    except Exception as exc:
+        raise AudioBusyError("Audio occupato da un altro programma anche in modalità "
+                             "condivisa: togli «controllo esclusivo» nelle proprietà degli "
+                             "altoparlanti. " + str(exc)[:80]) from exc
+    finally:
+        _notify(-1.0)
+
+
+def _play_mci(path: Path, max_seconds: float) -> None:
     kind = "mpegvideo" if path.suffix.lower() == ".mp3" else "waveaudio"
     alias = f"lumiaudio{threading.get_ident()}"
     with _LOCK:
