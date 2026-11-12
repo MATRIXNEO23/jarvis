@@ -1,3 +1,6 @@
+## Divisione di jarvis.py (12/11/2026)
+Audit fatto e piano salvato in docs/PIANO-DIVISIONE-JARVIS.md (5 passi, uno per build). Direzione approvata dall'utente; codice non toccato, si parte dal passo 1 (contesto comune) solo col suo via.
+
 ## Lumi 040 — i 18 punti dopo i test della 039 (12 novembre 2026)
 Implementati (vedi docs/ARCH-01-F5-CHECKPOINT.md, «Build 040»): Lumi nell'elenco finestre con conferma, finestra in primo piano, sì/no senza nome (risposte.py, grammatica Vosk), «sveglia» riapre Lumi, riavvio dopo il messaggio, meno conferme, OCR e play offline (LumiControl.exe), righe/elementi, schermo intero per programma, Gestione attività e chiusura forzata, griglia e mouse a piccoli passi, cervello locale/online a voce, scritta LUMI. CI Windows verde (1279 test, prova UIA + play + OCR «Riproduci»), pubblicata Lumi-040-PROVA.zip (run 43142796299). Primi riscontri del Pavilion salvati in ARCH-01-F5-CHECKPOINT «Da fare dopo i primi test della 040» (griglia col solo numero, numeri storpiati/inglesi, titoli inglesi, sì/no ovunque). Nessuna build finché l'utente non lo chiede.
 
