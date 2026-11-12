@@ -12,7 +12,7 @@ Stato: **piano approvato dall'utente come direzione** («dividere così rende pi
 `jarvis.py` di poche centinaia di righe che avvia Lumi e collega i moduli; nessun cambiamento di comportamento. Ogni modulo ha un nome chiaro e test propri.
 
 ## Passi (uno per build, ciascuno con CI Windows e prova sul Pavilion)
-1. **[FATTO 12/11, da verificare in CI]** **Contesto comune** (`lumi_contesto.py`): oggetto con root, console (`write_line`), voce (`speak_result`), impostazioni e servizi; `main()` lo crea e lo passa. Nessuna funzione spostata ancora.
+1. **[FATTO 12/11, CI Windows verde: 1296 test, run 43303116959]** **Contesto comune** (`lumi_contesto.py`): oggetto con root, console (`write_line`), voce (`speak_result`), impostazioni e servizi; `main()` lo crea e lo passa. Nessuna funzione spostata ancora.
 2. **Telegram** → `telegram_addon/` (~500 righe).
 3. **Modello locale** → `local_model/` (~550 righe): anche primo passo per KoboldCpp come add-on separato.
 4. **`poll`** spezzato in gestori per tipo di evento (microfono, modelli, Telegram, diagnostica).
