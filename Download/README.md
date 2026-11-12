@@ -1,3 +1,11 @@
+## Build 040 PROVA — Netflix a voce, schermo intero, griglia del mouse, sì/no senza nome, cervelli on/off
+
+[Scarica Lumi-040-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-040-PROVA.zip)
+
+Come la 039, più i 18 punti dopo i test: Lumi compare nell'elenco finestre (chiuderla o ridurla chiede sempre); i comandi valgono per la finestra davanti adesso; «sì»/«no» dopo una domanda valgono senza dire «Lumi» e anche se il microfono capisce «s» o «se»; «sveglia» riapre sempre Lumi; «riavvia Lumi» dice il messaggio per intero prima di chiudersi; scorrere, giù/su e numeri non chiedono mai. Programmi senza elementi (Netflix): lettura delle scritte con l'OCR di Windows, offline; «riproduci/play» (scritta, pulsante tondo o Invio); file/riga successiva e precedente; «scorri a destra/sinistra» sulle frecce delle righe. Schermo intero col tasto giusto per programma, «esci». «apri gestione attività», «chiudi forzatamente X» (chiede sempre, mai Lumi). Mouse preciso: griglia 3×3 numerata, «mouse a destra», «di poco», «ancora», «clicca», «clic destro». «attiva/spegni cervello locale» e «cervello online». Scritta LUMI in alto a sinistra. Nessun modello per leggere lo schermo. Verificati in CI Windows: 1279 test, prova reale numeri + scrittura + clic, pulsante play disegnato e scritta «Riproduci» letta dall'OCR. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43142796299). SHA-256: `2a87d1ca0725a006adb7eb75322eee6fdef6d6256ae0b27be0293b12230230f4`.
+
 ## Build 039 PROVA — PC a voce senza mani, frasi di Lumi, comandi su Lumi
 
 [Scarica Lumi-039-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-039-PROVA.zip)
