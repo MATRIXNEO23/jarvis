@@ -61,7 +61,9 @@ def _test_pinned():
     pinned = set()
     for path in (ROOT / "tests").glob("*.py"):
         text = path.read_text(encoding="utf-8", errors="replace")
-        if "jarvis.py" in text:
+        # Qualunque test che nomina la funzione tra virgolette o la ridefinisce: molti
+        # estraggono funzioni da main() tramite helper comuni, senza scrivere «jarvis.py».
+        if True:
             pinned.update(re.findall(r"""['"]([A-Za-z_][A-Za-z0-9_]*)['"]""", text))
             pinned.update(re.findall(r"def ([A-Za-z_][A-Za-z0-9_]*)\(", text))
     return pinned

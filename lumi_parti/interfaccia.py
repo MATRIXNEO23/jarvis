@@ -84,7 +84,7 @@ from sveglia.service import Alarm, parse_command as parse_alarm_clock_command
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
-NOMI = ('settings_page', 'save_keep_awake', 'open_online_permissions', 'show_settings', 'save_timer_preferences', 'preview_timer_sound', 'orbit_open', 'active_addon_actions', 'addon_changed', 'refresh_buttons', 'save_dock_settings', 'run_understood_command', 'understood_catalog', 'understanding_output', 'chat_navigation_possible', 'on_chat_tab_change', 'selected_chat_target', 'schedule_style_save', 'close_with_goodbye', 'initial_launch', 'lumi_restart', 'lumi_shutdown_pc', 'lumi_cancel_shutdown', 'lumi_say', 'lumi_minimize', 'lumi_hide', 'lumi_wake', 'first_run_components')
+NOMI = ('settings_page', 'save_keep_awake', 'open_online_permissions', 'show_settings', 'save_timer_preferences', 'preview_timer_sound', 'orbit_open', 'addon_changed', 'refresh_buttons', 'save_dock_settings', 'run_understood_command', 'understood_catalog', 'understanding_output', 'chat_navigation_possible', 'on_chat_tab_change', 'selected_chat_target', 'schedule_style_save', 'close_with_goodbye', 'lumi_restart', 'lumi_shutdown_pc', 'lumi_cancel_shutdown', 'lumi_say', 'lumi_minimize', 'lumi_hide', 'lumi_wake', 'first_run_components')
 
 
 def installa(d):
@@ -169,16 +169,6 @@ def installa(d):
             d.open_project_manager()
         else:
             d.switch_context(identifier)
-    def active_addon_actions() -> tuple[dict,...]:
-        if d.addon_manager is None:
-            return ()
-        try:
-            return d.addon_manager.active_actions()
-        except (AddonError,OSError,ValueError,ImportError):
-            # Never let a broken or modified add-on directory break GPT chat.
-            for item in d.addon_capability_registry.available_addons():
-                d.addon_capability_registry.unregister(item["id"])
-            return ()
     def addon_changed() -> None:
         d.write_line("ADD-ON > Registro aggiornato. Le capacità attive saranno "
                    "comunicate al GPT alla prossima richiesta.")
@@ -280,21 +270,6 @@ def installa(d):
             d.root.after(2300, d.close)
         else:
             d.close()
-    def initial_launch() -> None:
-        """App-only autostart: never adds Windows login/run-at-boot entries."""
-        if d.closing:
-            return
-        for warning in d.settings_load_warnings:
-            d.write_line("IMPOSTAZIONI > " + warning)
-        d.settings_load_warnings.clear()
-        if d.auto_listen_enabled.get():
-            d.voice_mode.set(GPT_CONVERSATION)
-            d.change_voice_mode()
-        # The local SAPI voice is suppressed from Vosk input by
-        # ignore_audio=speaker.is_audible, also during the cooldown.
-        greeting = startup_greeting()
-        d.write_line("LUMI > " + greeting)
-        d.speak_result(greeting)
     def lumi_restart() -> None:
         from frasi_lumi import say
         text = say("riavvio")

@@ -146,14 +146,10 @@ def main() -> None:
     _lumi_parti_interfaccia = _lumi_parti_interfaccia_installa(__import__("lumi_contesto").Vivo(
         active_gpt=lambda: active_gpt,
         active_project_id=lambda: active_project_id,
-        addon_capability_registry=lambda: addon_capability_registry,
-        addon_manager=lambda: addon_manager,
         ask_button=lambda: ask_button,
-        auto_listen_enabled=lambda: auto_listen_enabled,
         avatar_dock=lambda: avatar_dock,
         busy_gpt=lambda: busy_gpt,
         busy_local=lambda: busy_local,
-        change_voice_mode=lambda: change_voice_mode,
         changing_chat_tab=lambda: changing_chat_tab,
         chat_console_tab=lambda: chat_console_tab,
         chat_local_tab=lambda: chat_local_tab,
@@ -186,7 +182,6 @@ def main() -> None:
         save_only_waiting=lambda: save_only_waiting,
         save_speech_preferences=lambda: save_speech_preferences,
         settings=lambda: settings,
-        settings_load_warnings=lambda: settings_load_warnings,
         settings_tabs=lambda: settings_tabs,
         settings_window=lambda: settings_window,
         speak_result=lambda: speak_result,
@@ -207,9 +202,8 @@ def main() -> None:
         try_model_switch=lambda: try_model_switch,
         try_program_command=lambda: try_program_command,
         try_timer_command=lambda: try_timer_command,
-        voice_mode=lambda: voice_mode,
         write_line=lambda: write_line))
-    (settings_page, save_keep_awake, open_online_permissions, show_settings, save_timer_preferences, preview_timer_sound, orbit_open, active_addon_actions, addon_changed, refresh_buttons, save_dock_settings, run_understood_command, understood_catalog, understanding_output, chat_navigation_possible, on_chat_tab_change, selected_chat_target, schedule_style_save, close_with_goodbye, initial_launch, lumi_restart, lumi_shutdown_pc, lumi_cancel_shutdown, lumi_say, lumi_minimize, lumi_hide, lumi_wake, first_run_components,) = (
+    (settings_page, save_keep_awake, open_online_permissions, show_settings, save_timer_preferences, preview_timer_sound, orbit_open, addon_changed, refresh_buttons, save_dock_settings, run_understood_command, understood_catalog, understanding_output, chat_navigation_possible, on_chat_tab_change, selected_chat_target, schedule_style_save, close_with_goodbye, lumi_restart, lumi_shutdown_pc, lumi_cancel_shutdown, lumi_say, lumi_minimize, lumi_hide, lumi_wake, first_run_components,) = (
         _lumi_parti_interfaccia[n] for n in _lumi_parti_interfaccia_installa.__globals__['NOMI'])
 
     frame = settings_page("Voce")
@@ -247,30 +241,22 @@ def main() -> None:
                command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
 
     # F5 experimental preview: deliberately NOT connected to the active model.
-    # Modello locale, memoria e cervelli: spostato in lumi_parti/modello_memoria.py (divisione di jarvis.py).
+    # Modello locale, memoria, cervelli e diagnostica: spostato in lumi_parti/modello_memoria.py (divisione di jarvis.py).
     from lumi_parti.modello_memoria import installa as _lumi_parti_modello_memoria_installa
     _lumi_parti_modello_memoria = _lumi_parti_modello_memoria_installa(__import__("lumi_contesto").Vivo(
-        active_project_id=lambda: active_project_id,
         addon_capability_registry=lambda: addon_capability_registry,
         addon_manager=lambda: addon_manager,
-        closing=lambda: closing,
-        conversation_memory=lambda: conversation_memory,
-        durable_brain=lambda: durable_brain,
-        gemma_memory_revision=lambda: gemma_memory_revision,
+        diagnostic_meter=lambda: diagnostic_meter,
+        diagnostic_percent=lambda: diagnostic_percent,
         get_gemma_session=lambda: get_gemma_session,
         gpt_enabled=lambda: gpt_enabled,
         gpt_toggle=lambda: gpt_toggle,
-        memory_enabled=lambda: memory_enabled,
-        memory_status=lambda: memory_status,
-        preference_store=lambda: preference_store,
         settings=lambda: settings,
         settings_window=lambda: settings_window,
         speak_result=lambda: speak_result,
         voice=lambda: voice,
-        workspace=lambda: workspace,
-        workspace_status=lambda: workspace_status,
         write_line=lambda: write_line))
-    (open_multimodel_f5_preview, open_memory_preferences, recent_memory_for_gpt, current_capability_snapshot, native_memory_request, lumi_brain_local, lumi_brain_online,) = (
+    (open_multimodel_f5_preview, open_memory_preferences, draw_diagnostic_meter, current_capability_snapshot, lumi_brain_local, lumi_brain_online,) = (
         _lumi_parti_modello_memoria[n] for n in _lumi_parti_modello_memoria_installa.__globals__['NOMI'])
 
     ttk.Button(native_settings_box, text="Anteprima multimodello Gemma / Qwen...",
@@ -619,22 +605,6 @@ def main() -> None:
         diagnostic_row,width=58,height=4,bg="#092438",bd=0,
         highlightthickness=0)
     diagnostic_meter.pack(side="right",padx=(6,3))
-    # Diagnostica dei servizi: spostato in lumi_parti/diagnostica.py (divisione di jarvis.py).
-    from lumi_parti.diagnostica import installa as _lumi_parti_diagnostica_installa
-    _lumi_parti_diagnostica = _lumi_parti_diagnostica_installa(__import__("lumi_contesto").Vivo(
-        diagnostic_meter=lambda: diagnostic_meter,
-        diagnostic_percent=lambda: diagnostic_percent,
-        gemma_session=lambda: gemma_session,
-        gpt_enabled=lambda: gpt_enabled,
-        memory_enabled=lambda: memory_enabled,
-        root=lambda: root,
-        selected_telegram_contacts=lambda: selected_telegram_contacts,
-        settings_window=lambda: settings_window,
-        snapshot_runtime_evidence=lambda: snapshot_runtime_evidence,
-        telegram_auto=lambda: telegram_auto,
-        telegram_bridge=lambda: telegram_bridge))
-    (draw_diagnostic_meter, snapshot_services_report, open_service_diagnostics,) = (
-        _lumi_parti_diagnostica[n] for n in _lumi_parti_diagnostica_installa.__globals__['NOMI'])
     diagnostic_meter.bind("<Configure>",draw_diagnostic_meter)
     doc_choices = ttk.Frame(hud.command_host)
     doc_choices.pack(fill="x", pady=(0, 5))
@@ -834,6 +804,7 @@ def main() -> None:
     _lumi_parti_documenti_progetti = _lumi_parti_documenti_progetti_installa(__import__("lumi_contesto").Vivo(
         active_gpt=lambda: active_gpt,
         active_project_id=lambda: active_project_id,
+        announce_document=lambda: announce_document,
         busy_gpt=lambda: busy_gpt,
         choose_save_button=lambda: choose_save_button,
         closing=lambda: closing,
@@ -847,7 +818,6 @@ def main() -> None:
         document_busy=lambda: document_busy,
         document_operation=lambda: document_operation,
         document_owner_project_id=lambda: document_owner_project_id,
-        document_status=lambda: document_status,
         document_topic=lambda: document_topic,
         engine=lambda: engine,
         finish_project_work=lambda: finish_project_work,
@@ -857,15 +827,12 @@ def main() -> None:
         input_row=lambda: input_row,
         local_execution_lock=lambda: local_execution_lock,
         planner_abort_event=lambda: planner_abort_event,
-        remember_exchange=lambda: remember_exchange,
         root=lambda: root,
         save_only_waiting=lambda: save_only_waiting,
         service=lambda: service,
-        speak_result=lambda: speak_result,
         workspace=lambda: workspace,
-        workspace_status=lambda: workspace_status,
-        write_line=lambda: write_line))
-    (begin_project_work, update_document_buttons, announce_document, ask_to_close_document, automatic_document_destination, execute_document_choice, press_discard_button, journal_plan_approved, journal_plan_step, journal_plan_finished, submit_plan,) = (
+        workspace_status=lambda: workspace_status))
+    (begin_project_work, update_document_buttons, automatic_document_destination, execute_document_choice, press_discard_button, journal_plan_approved, journal_plan_step, journal_plan_finished, submit_plan,) = (
         _lumi_parti_documenti_progetti[n] for n in _lumi_parti_documenti_progetti_installa.__globals__['NOMI'])
 
     def finish_project_work(ticket, status: str, detail: str,
@@ -881,6 +848,81 @@ def main() -> None:
             output_queue.put(("project_journal_error",str(exc)[:100]))
             return False
 
+    def recent_memory_for_gpt(spoken: str) -> str:
+        """Bounded recall with the *real* active project and latest question."""
+        short=conversation_memory.context(max_chars=860)
+        question=conversation_memory.last_question()
+
+        def attach(raw,*,project_name=""):
+            hint=focus_hint(spoken,active_project_name=project_name,
+                            last_question=question)
+            try:
+                parsed=json.loads(raw)
+            except (ValueError,TypeError):
+                return raw
+            if isinstance(parsed,list):
+                parsed={"breve":parsed}
+            if not isinstance(parsed,dict):
+                return raw
+            if (addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None
+                    and addon_manager.programs_enabled()):
+                program_hint=addon_manager.program_service.context_hint()
+                if program_hint:
+                    hint['program_request']=program_hint
+            if (addon_manager is not None and addon_manager._file_service is not None
+                    and addon_manager.files_enabled()):
+                file_hint=addon_manager.file_service.context_hint()
+                if file_hint:
+                    hint["file_results"]=file_hint
+            if hint:
+                parsed["focus"]=hint
+            if preference_store is not None:
+                try:
+                    parsed["preferences"]=list(preference_store.context())
+                except (OSError,sqlite3.Error,MemoryBoundaryError):
+                    pass
+            return json.dumps(parsed,ensure_ascii=False)
+
+        if active_project_id is not None:
+            if workspace is None:
+                return attach(short)
+            try:
+                project=workspace.project(active_project_id)
+                saved=json.loads(workspace.prompt_context(
+                    "project",active_project_id,spoken,budget=620))
+                evidence=saved.get("evidence",[])
+                if project and project["summary"]:
+                    evidence.insert(0,{"source":"conversation",
+                        "when":project["updated_utc"],
+                        "fact":"Stato progetto fornito dall'utente: "
+                                +project["summary"][:260]})
+                history=workspace.recent("project",active_project_id,3)
+                earlier=[{"utente":item["utente"],"lia":item["jarvis"],
+                          "tipo":item["tipo"]} for item in history]
+                progress=[{"title":step["title"][:95],
+                           "status":step["status"],
+                           "detail":step["detail"][:110],
+                           "verified":bool(step["verified"])}
+                          for step in workspace.project_steps(active_project_id,limit=4)]
+                return attach(json.dumps({
+                    "breve":earlier+json.loads(short),
+                    "progress":progress,
+                    "permanente":{"related":evidence},
+                },ensure_ascii=False),
+                project_name=project["name"] if project else "")
+            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                workspace_status.set("Ricerca progetto: "+str(exc)[:90])
+                return attach(short)
+        if not memory_enabled.get() or durable_brain is None:
+            return attach(short)
+        try:
+            long=durable_brain.prompt_context(spoken,budget=530)
+        except (OSError,sqlite3.Error,BrainError) as exc:
+            memory_status.set("Ricerca memoria: "+str(exc)[:90])
+            return attach(short)
+        return attach(json.dumps({
+            "breve":json.loads(short),
+            "permanente":json.loads(long)},ensure_ascii=False))
 
     project_dialog=None
 
@@ -1365,7 +1407,50 @@ def main() -> None:
             counters=runtime_events,
         )
 
+    def snapshot_services_report():
+        from runtime_diagnostics import format_service_report, RuntimeEvidence
+        import importlib.util
+        import shutil
+        try:
+            evidence = snapshot_runtime_evidence()
+        except Exception:
+            # One unavailable observation must not hide Telegram's journal.
+            evidence = RuntimeEvidence((), ())
+        current = gemma_session[0]
+        try:
+            state = "non_loaded" if current is None else "busy" if current.is_busy else "ready"
+        except (RuntimeError, AttributeError):
+            state = "unavailable"
+        bridge = telegram_bridge
+        try:
+            telegram = bridge.diagnostic_snapshot() if bridge is not None else None
+        except (RuntimeError, AttributeError):
+            telegram = None
+        try:
+            telethon = importlib.util.find_spec("telethon") is not None
+        except (ImportError, ValueError):
+            telethon = None
+        report = format_service_report(evidence, telegram=telegram,
+            automatic=bool(telegram_auto.get()), credentials=credentials_present(),
+            contacts=len(selected_telegram_contacts()),
+            selected="GPT" if gpt_enabled.get() else "Gemma", gemma=state,
+            memory=bool(memory_enabled.get()),
+            telethon=telethon,
+            ffmpeg=shutil.which("ffmpeg") is not None)
+        if not evidence.checks:
+            report += "\nStato generale parzialmente non disponibile; registro Telegram separato."
+        return report
 
+    def open_service_diagnostics():
+        from runtime_diagnostics_ui import ServiceDiagnosticsWindow
+        current = getattr(root, "_jarvis_services_diagnostic", None)
+        if current is not None and current.window.winfo_exists():
+            current.refresh()
+            current.window.deiconify()
+            current.window.lift()
+            return
+        root._jarvis_services_diagnostic = ServiceDiagnosticsWindow(
+            settings_window, get_report=snapshot_services_report)
 
     def offer_external_diagnostic_review() -> bool:
         """Explicitly confirm sending *redacted findings*, not local files."""
@@ -1614,6 +1699,16 @@ def main() -> None:
             engine=engine,
             section_builders={"telegram": build_telegram_section})
 
+    def active_addon_actions() -> tuple[dict,...]:
+        if addon_manager is None:
+            return ()
+        try:
+            return addon_manager.active_actions()
+        except (AddonError,OSError,ValueError,ImportError):
+            # Never let a broken or modified add-on directory break GPT chat.
+            for item in addon_capability_registry.available_addons():
+                addon_capability_registry.unregister(item["id"])
+            return ()
 
 
     def save_telegram_contact_selection(rows:list[dict]) -> bool:
@@ -2511,10 +2606,7 @@ def main() -> None:
     _lumi_parti_voce = _lumi_parti_voce_installa(__import__("lumi_contesto").Vivo(
         DEFAULT_VOICE_LABEL=lambda: DEFAULT_VOICE_LABEL,
         auto_listen_enabled=lambda: auto_listen_enabled,
-        closing=lambda: closing,
         dictation=lambda: dictation,
-        dictation_button=lambda: dictation_button,
-        dictation_status=lambda: dictation_status,
         download_paola_button=lambda: download_paola_button,
         download_serena_button=lambda: download_serena_button,
         mic_status=lambda: mic_status,
@@ -2530,10 +2622,11 @@ def main() -> None:
         spoken_status=lambda: spoken_status,
         spoken_voice=lambda: spoken_voice,
         spoken_volume=lambda: spoken_volume,
+        sync_dictation_ui=lambda: sync_dictation_ui,
         voice=lambda: voice,
         voice_mode=lambda: voice_mode,
         write_line=lambda: write_line))
-    (selected_voice, save_speech_preferences, refresh_voices, download_natural_voice, test_speech, sync_dictation_ui, toggle_dictation, save_auto_listen_preference, ptt_press, ptt_release,) = (
+    (selected_voice, save_speech_preferences, refresh_voices, download_natural_voice, test_speech, toggle_dictation, save_auto_listen_preference, ptt_press, ptt_release,) = (
         _lumi_parti_voce[n] for n in _lumi_parti_voce_installa.__globals__['NOMI'])
 
 
@@ -2580,6 +2673,11 @@ def main() -> None:
         write_line("DOCUMENTO > "+message)
         return True
 
+    def announce_document(message: str) -> None:
+        update_document_buttons()
+        document_status.set(message)
+        write_line("DOCUMENTO > " + message)
+        speak_result(message)
 
     def document_operation(operation: str, *, content: str = "",
                            target: str = "", document_id: str = "",
@@ -2638,6 +2736,27 @@ def main() -> None:
                               "Impossibile avviare la scrittura: "+
                               type(exc).__name__))
 
+    def ask_to_close_document(source_utterance: str = "") -> None:
+        if document_busy:
+            announce_document("Attendi la fine della scrittura prima di chiudere.")
+            return
+        if doc_dialog.phase != "editing" or doc_dialog.document_id is None:
+            announce_document("Non ho un documento Blocco note gestito da Lumi da chiudere.")
+            return
+        decision = doc_dialog.request_close()
+        if decision.kind == "close_clean":
+            # The user could have manually edited the text in the meantime.
+            # Never discard an apparently clean document without asking.
+            doc_dialog.phase = "awaiting_close_choice"
+            doc_dialog.dirty = True
+            question = "Vuoi salvare e chiudere, chiudere senza salvare oppure annullare?"
+            announce_document(question)
+            if source_utterance:
+                remember_exchange(source_utterance, question, "clarify")
+        else:
+            announce_document(decision.message)
+            if source_utterance:
+                remember_exchange(source_utterance, decision.message, "clarify")
 
 
     def save_document_now(spoken: str, *, explicit_name: str = "") -> None:
@@ -2714,6 +2833,12 @@ def main() -> None:
                 decision = doc_dialog.provide_destination(selected)
                 execute_document_choice(decision, path=Path(selected))
 
+    def sync_dictation_ui(message: str) -> None:
+        dictation_status.set(message)
+        dictation_button.configure(text="Disattiva dettatura" if dictation.enabled
+                                  else "Attiva dettatura")
+        if not closing:
+            write_line(message)
 
 
 
@@ -4232,6 +4357,63 @@ def main() -> None:
                      program_call=("suggest_id", {"query": matches[0]}))
         return True
 
+    def native_memory_request(context_id, spoken):
+        """Capture UI authorization; only the returned worker reader does I/O."""
+        revision = gemma_memory_revision
+        wanted = context_id is not None or memory_enabled.get()
+        owner = workspace if context_id is not None else (durable_brain if wanted else None)
+        warnings = []
+        if wanted and owner is None:
+            warnings.append("Archivio dei ricordi non disponibile.")
+
+        def read(budget):
+            if closing or owner is None:
+                return ""
+            try:
+                if context_id is None:
+                    if owner is not durable_brain or revision != gemma_memory_revision:
+                        return ""
+                    raw = owner.prompt_context(spoken[:180], budget=budget)
+                else:
+                    if owner is not workspace or budget < 160:
+                        return ""
+                    project = owner.project(context_id)
+                    if project is None or project["trashed"]:
+                        return ""
+                    raw = owner.prompt_context("project", context_id, spoken,
+                                               budget=budget, prefer_related=True)
+                value = json.loads(raw)
+                if not isinstance(value, dict) or not any(value.values()):
+                    return ""
+                if len(raw) > budget:
+                    raise ValueError("Memoria oltre il budget.")
+                return raw
+            except (OSError, sqlite3.Error, ValueError) as exc:
+                warnings.append("Ricordi precedenti non disponibili ("
+                                + type(exc).__name__ + ").")
+                return ""
+
+        def recent_pairs(count):
+            if closing or owner is None:
+                return ()
+            try:
+                if context_id is None:
+                    if owner is not durable_brain or revision != gemma_memory_revision:
+                        return ()
+                    pairs = owner.dialogue_pairs(count)
+                    if closing or owner is not durable_brain or revision != gemma_memory_revision:
+                        return ()
+                    return pairs
+                if owner is not workspace:
+                    return ()
+                pairs = owner.dialogue_pairs("project", context_id, count)
+                return () if closing or owner is not workspace else pairs
+            except (OSError, sqlite3.Error, ValueError) as exc:
+                warnings.append("Scambi recenti non disponibili (" + type(exc).__name__ + ").")
+                return ()
+
+        read.recent_pairs = recent_pairs
+        return (read if owner is not None else None), owner, revision, warnings
 
     def submit_gemma_voice(spoken, *, typed=False):
         if closing or gemma_trial_busy[0]:
@@ -4606,6 +4788,21 @@ def main() -> None:
         "memory": memory_enabled.get(),
         "orbit_nodes": orbit_nodes_cache,
     })
+    def initial_launch() -> None:
+        """App-only autostart: never adds Windows login/run-at-boot entries."""
+        if closing:
+            return
+        for warning in settings_load_warnings:
+            write_line("IMPOSTAZIONI > " + warning)
+        settings_load_warnings.clear()
+        if auto_listen_enabled.get():
+            voice_mode.set(GPT_CONVERSATION)
+            change_voice_mode()
+        # The local SAPI voice is suppressed from Vosk input by
+        # ignore_audio=speaker.is_audible, also during the cooldown.
+        greeting = startup_greeting()
+        write_line("LUMI > " + greeting)
+        speak_result(greeting)
 
     root.protocol("WM_DELETE_WINDOW", close_with_goodbye)
 

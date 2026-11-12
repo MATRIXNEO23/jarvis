@@ -8,8 +8,7 @@ valore attuale delle variabili di `main()` che usano.
 |---|---|
 | `voce.py` | scelta e prova delle voci, voci naturali, dettatura, premi per parlare, ascolto all'avvio |
 | `documenti_progetti.py` | documenti, progetti, piani di lavoro |
-| `diagnostica.py` | rapporto e finestra della diagnostica dei servizi |
-| `modello_memoria.py` | anteprima multimodello, memoria, richieste al modello locale, «cervello locale/online» |
+| `modello_memoria.py` | anteprima multimodello, memoria, «cervello locale/online», indicatore della diagnostica |
 | `interfaccia.py` | pagine delle impostazioni, chat, avvio, comandi su Lumi (riduci, riavvia, sveglia…) |
 
 Interfaccia Telegram: `telegram_addon/lumi_ui.py`. Strumento usato per spostare:

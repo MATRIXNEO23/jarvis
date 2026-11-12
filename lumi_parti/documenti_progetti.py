@@ -84,7 +84,7 @@ from sveglia.service import Alarm, parse_command as parse_alarm_clock_command
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
-NOMI = ('begin_project_work', 'update_document_buttons', 'announce_document', 'ask_to_close_document', 'automatic_document_destination', 'execute_document_choice', 'press_discard_button', 'journal_plan_approved', 'journal_plan_step', 'journal_plan_finished', 'submit_plan')
+NOMI = ('begin_project_work', 'update_document_buttons', 'automatic_document_destination', 'execute_document_choice', 'press_discard_button', 'journal_plan_approved', 'journal_plan_step', 'journal_plan_finished', 'submit_plan')
 
 
 def installa(d):
@@ -123,32 +123,6 @@ def installa(d):
             d.doc_choices.pack(fill="x", pady=(0, 5), before=d.input_row)
         elif not pending and d.doc_choices.winfo_manager():
             d.doc_choices.pack_forget()
-    def announce_document(message: str) -> None:
-        update_document_buttons()
-        d.document_status.set(message)
-        d.write_line("DOCUMENTO > " + message)
-        d.speak_result(message)
-    def ask_to_close_document(source_utterance: str = "") -> None:
-        if d.document_busy:
-            announce_document("Attendi la fine della scrittura prima di chiudere.")
-            return
-        if d.doc_dialog.phase != "editing" or d.doc_dialog.document_id is None:
-            announce_document("Non ho un documento Blocco note gestito da Lumi da chiudere.")
-            return
-        decision = d.doc_dialog.request_close()
-        if decision.kind == "close_clean":
-            # The user could have manually edited the text in the meantime.
-            # Never discard an apparently clean document without asking.
-            d.doc_dialog.phase = "awaiting_close_choice"
-            d.doc_dialog.dirty = True
-            question = "Vuoi salvare e chiudere, chiudere senza salvare oppure annullare?"
-            announce_document(question)
-            if source_utterance:
-                d.remember_exchange(source_utterance, question, "clarify")
-        else:
-            announce_document(decision.message)
-            if source_utterance:
-                d.remember_exchange(source_utterance, decision.message, "clarify")
     def automatic_document_destination(*, explicit_name: str = "") -> Path | None:
         """Use this document's original project, never a newly selected one."""
         if d.workspace is None or d.document_owner_project_id is None:
@@ -161,7 +135,7 @@ def installa(d):
             try:
                 path=automatic_document_destination()
             except (OSError,ValueError,WorkspaceError) as exc:
-                announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
+                d.announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
                 return
             if path is not None:
                 selected=d.doc_dialog.provide_destination(str(path))
@@ -177,17 +151,17 @@ def installa(d):
                 try:
                     destination=automatic_document_destination()
                 except (OSError,ValueError,WorkspaceError) as exc:
-                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
+                    d.announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
                     return
             if destination is None:
                 try:
                     destination=automatic_document_destination()
                 except (OSError,ValueError,WorkspaceError) as exc:
-                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
+                    d.announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
                     return
                 if destination is None:
                     d.doc_dialog.phase = "awaiting_save_destination"
-                    announce_document("Dove vuoi salvare? Per esempio: "
+                    d.announce_document("Dove vuoi salvare? Per esempio: "
                                       "sul desktop come storia di Venezia.")
                     d.choose_save_button.configure(state="normal")
                     return
@@ -200,7 +174,7 @@ def installa(d):
             d.choose_save_button.configure(state="disabled")
             d.document_operation("discard", document_id=decision.document_id)
         else:
-            announce_document(decision.message)
+            d.announce_document(decision.message)
             d.choose_save_button.configure(
                 state="normal" if d.doc_dialog.phase == "awaiting_save_destination"
                 else "disabled")

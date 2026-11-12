@@ -84,7 +84,7 @@ from sveglia.service import Alarm, parse_command as parse_alarm_clock_command
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
-NOMI = ('selected_voice', 'save_speech_preferences', 'refresh_voices', 'download_natural_voice', 'test_speech', 'sync_dictation_ui', 'toggle_dictation', 'save_auto_listen_preference', 'ptt_press', 'ptt_release')
+NOMI = ('selected_voice', 'save_speech_preferences', 'refresh_voices', 'download_natural_voice', 'test_speech', 'toggle_dictation', 'save_auto_listen_preference', 'ptt_press', 'ptt_release')
 
 
 def installa(d):
@@ -144,19 +144,13 @@ def installa(d):
                            volume=d.spoken_volume.get())
         if not d.speaker.speak("Pronto. Questa è la mia voce.", selected_voice()):
             d.spoken_status.set("Sintesi vocale occupata: riprova.")
-    def sync_dictation_ui(message: str) -> None:
-        d.dictation_status.set(message)
-        d.dictation_button.configure(text="Disattiva dettatura" if d.dictation.enabled
-                                  else "Attiva dettatura")
-        if not d.closing:
-            d.write_line(message)
     def toggle_dictation() -> None:
         if d.dictation.enabled:
-            sync_dictation_ui(d.dictation.disable())
+            d.sync_dictation_ui(d.dictation.disable())
         elif d.voice_mode.get() == CONTINUOUS:
-            sync_dictation_ui(d.dictation.enable())
+            d.sync_dictation_ui(d.dictation.enable())
         else:
-            sync_dictation_ui("Seleziona prima Ascolto continuo per dettare.")
+            d.sync_dictation_ui("Seleziona prima Ascolto continuo per dettare.")
     def save_auto_listen_preference() -> None:
         """Only changes NEXT app launch, never the current listening mode."""
         desired = bool(d.auto_listen_enabled.get())
