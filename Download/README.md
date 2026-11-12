@@ -1,3 +1,11 @@
+## Build 041 PROVA — griglia col solo numero, La mia voce, pausa tra le parole, titoli storpiati
+
+[Scarica Lumi-041-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-041-PROVA.zip)
+
+Come la 040, più le correzioni dopo i primi test: con la griglia aperta basta il numero (cinque, sei, anche six o capito storto), senza dire «Lumi»; «clicca X» senza «su»; «invio» come doppio clic; «clicca Deep Impact» trova il titolo anche se il microfono capisce «dip impact»; sì/no senza nome anche in Programmi e app. Video: pausa, play, indietro (pagina precedente), torna alla home. «mostra i comandi» / «nascondi i comandi». Nuova sezione Impostazioni → La mia voce: leggi parole e frasi, Lumi impara come ti capisce; pausa tra le parole regolabile. Verificati in CI Windows: test automatici, prova reale UIA, pulsante play e OCR. Pavilion da collaudare.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43164897456). SHA-256: `774f817df1711bb8f20afc89fed8087111fca542accea722a97991b42dca311c`.
+
 ## Build 040 PROVA — Netflix a voce, schermo intero, griglia del mouse, sì/no senza nome, cervelli on/off
 
 [Scarica Lumi-040-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-040-PROVA.zip)
