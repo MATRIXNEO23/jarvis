@@ -165,9 +165,9 @@ static class Program
             if (args.Length >= 2 && (args[0] == "ocr" || args[0] == "play"))
             {
                 var handle = new IntPtr(long.Parse(args[1]));
-                var found = args[0] == "ocr" ? Ocr(handle) : PlayButtons(handle);
+                var read = args[0] == "ocr" ? Ocr(handle) : PlayButtons(handle);
                 Console.Out.WriteLine(json.Serialize(new Dictionary<string, object> {
-                    {"ok", true}, {"items", found} }));
+                    {"ok", true}, {"items", read} }));
                 return 0;
             }
             if (args.Length >= 1 && args[0] == "focused")
