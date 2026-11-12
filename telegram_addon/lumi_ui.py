@@ -248,4 +248,5 @@ def installa(d):
         telegram_send_button.configure(command=open_telegram_manual_send)
         return telegram_panel
 
-    return {nome: locals()[nome] for nome in NOMI}
+    funzioni = locals()          # fuori dalla comprensione: lì locals() è un altro ambito
+    return {nome: funzioni[nome] for nome in NOMI}
