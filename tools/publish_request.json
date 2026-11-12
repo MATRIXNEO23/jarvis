@@ -1,10 +1,10 @@
 {
-  "run_id": 43142796299,
-  "artifact": "lumi-040-prova-candidate",
-  "file": "Lumi-040-PROVA.zip",
-  "bytes": 27674375,
-  "sha256": "2a87d1ca0725a006adb7eb75322eee6fdef6d6256ae0b27be0293b12230230f4",
-  "source_commit": "eb62c54",
-  "title": "Build 040 PROVA — Netflix a voce, schermo intero, griglia del mouse, sì/no senza nome, cervelli on/off",
-  "description": "Come la 039, più i 18 punti dopo i test: Lumi compare nell'elenco finestre (chiuderla o ridurla chiede sempre); i comandi valgono per la finestra davanti adesso; «sì»/«no» dopo una domanda valgono senza dire «Lumi» e anche se il microfono capisce «s» o «se»; «sveglia» riapre sempre Lumi; «riavvia Lumi» dice il messaggio per intero prima di chiudersi; scorrere, giù/su e numeri non chiedono mai. Programmi senza elementi (Netflix): lettura delle scritte con l'OCR di Windows, offline; «riproduci/play» (scritta, pulsante tondo o Invio); file/riga successiva e precedente; «scorri a destra/sinistra» sulle frecce delle righe. Schermo intero col tasto giusto per programma, «esci». «apri gestione attività», «chiudi forzatamente X» (chiede sempre, mai Lumi). Mouse preciso: griglia 3×3 numerata, «mouse a destra», «di poco», «ancora», «clicca», «clic destro». «attiva/spegni cervello locale» e «cervello online». Scritta LUMI in alto a sinistra. Nessun modello per leggere lo schermo. Verificati in CI Windows: 1279 test, prova reale numeri + scrittura + clic, pulsante play disegnato e scritta «Riproduci» letta dall'OCR. Pavilion da collaudare."
+  "run_id": 43164897456,
+  "artifact": "lumi-041-prova-candidate",
+  "file": "Lumi-041-PROVA.zip",
+  "bytes": 27681373,
+  "sha256": "774f817df1711bb8f20afc89fed8087111fca542accea722a97991b42dca311c",
+  "source_commit": "07601fb",
+  "title": "Build 041 PROVA — griglia col solo numero, La mia voce, pausa tra le parole, titoli storpiati",
+  "description": "Come la 040, più le correzioni dopo i primi test: con la griglia aperta basta il numero (cinque, sei, anche six o capito storto), senza dire «Lumi»; «clicca X» senza «su»; «invio» come doppio clic; «clicca Deep Impact» trova il titolo anche se il microfono capisce «dip impact»; sì/no senza nome anche in Programmi e app. Video: pausa, play, indietro (pagina precedente), torna alla home. «mostra i comandi» / «nascondi i comandi». Nuova sezione Impostazioni → La mia voce: leggi parole e frasi, Lumi impara come ti capisce; pausa tra le parole regolabile. Verificati in CI Windows: test automatici, prova reale UIA, pulsante play e OCR. Pavilion da collaudare."
 }
