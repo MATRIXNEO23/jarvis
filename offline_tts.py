@@ -95,6 +95,13 @@ def _kill_for_cleanup(process, error) -> bool:
         return False
 
 
+try:
+    from audio_player import AudioBusyError as _AudioBusy
+except ImportError:                         # pragma: no cover
+    class _AudioBusy(OSError):
+        pass
+
+
 def _invoke(payload: dict, *, timeout: int = 90, owner=None) -> str:
     if os.name != "nt":
         raise OSError("Risposta vocale disponibile solo su Windows.")
@@ -330,6 +337,8 @@ class OfflineSpeaker:
                         try:
                             self._speak_windows_with_lipsync(part, voice)
                             continue
+                        except _AudioBusy:
+                            raise
                         except (OSError, ValueError, subprocess.TimeoutExpired, EOFError):
                             if self._closed.is_set():
                                 break   # altrimenti si ripiega sulla voce diretta
@@ -340,12 +349,30 @@ class OfflineSpeaker:
                         _invoke(payload, timeout=90, owner=self)
                     else:
                         self._runner(payload, timeout=90)
+            except _AudioBusy as exc:
+                # L'uscita audio è bloccata (es. app Netflix): niente coda di frasi
+                # vecchie, il microfono torna subito ad ascoltare.
+                dropped = self._drain()
+                if self._notify_error and not self._closed.is_set():
+                    self._notify_error(str(exc) + (f" Saltate {dropped} frasi." if dropped else ""))
             except (OSError, ValueError, subprocess.TimeoutExpired):
                 if self._notify_error and not self._closed.is_set():
                     self._notify_error("Impossibile riprodurre la voce selezionata.")
             finally:
                 self._cooldown_until = time.monotonic() + 1.0
                 self._busy.clear()
+
+    def _drain(self) -> int:
+        dropped = 0
+        while True:
+            try:
+                item = self._messages.get_nowait()
+            except queue.Empty:
+                return dropped
+            if item is None:                 # chiusura: la rimetto in coda
+                self._messages.put_nowait(None)
+                return dropped
+            dropped += 1
 
     def close(self) -> None:
         with self._process_lock:

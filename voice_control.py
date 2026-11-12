@@ -342,7 +342,7 @@ class VoiceController:
                 suppressed = False
                 restricted = False
                 held: list[str] = []
-                held_at = 0.0
+                held_at = held_first = 0.0
                 activity = SpeechActivity()
                 while not stop.is_set() and self._is_current(generation):
                     data, overflow = stream.read(4000)
@@ -389,13 +389,18 @@ class VoiceController:
                             else:
                                 # Pausa tra le parole: la frase resta aperta un attimo,
                                 # se riprendi a parlare le parti si uniscono.
+                                if not held:
+                                    held_first = time.monotonic()
                                 held.append(part)
                                 held_at = time.monotonic()
                     if held and self.mode != PUSH_TO_TALK:
                         speaking = json.loads(recognizer.PartialResult()).get("partial", "").strip()
                         if speaking:
                             held_at = time.monotonic()
-                        elif time.monotonic() - held_at >= _pause_seconds():
+                        if (time.monotonic() - held_at >= _pause_seconds() and not speaking) or \
+                                time.monotonic() - held_first >= _pause_seconds() + 2.0:
+                            # Tetto: con rumore continuo (audio di Netflix nel microfono)
+                            # la frase parte comunque dopo pausa + 2 s.
                             self._report("voice_text", " ".join(held), generation)
                             held.clear()
                 if self._is_current(generation) and self.mode == PUSH_TO_TALK:

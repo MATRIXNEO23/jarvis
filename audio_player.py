@@ -13,6 +13,11 @@ import time
 
 POSITION_LISTENER = None          # callable(seconds) impostato da Lumi
 _STOP = threading.Event()
+STALL_SECONDS = 3.0               # audio fermo (dispositivo occupato, es. app Netflix)
+
+
+class AudioBusyError(OSError):
+    """L'uscita audio non va avanti: un altro programma la sta occupando."""
 _LOCK = threading.Lock()
 
 
@@ -51,16 +56,28 @@ def play(path: Path, *, max_seconds: float = 600) -> None:
         raise OSError(f"Riproduzione MP3 non disponibile (MCI {code}).")
     try:
         _mci(f"set {alias} time format milliseconds")
+        length = _mci(f"status {alias} length")[1]
+        if length.isdigit() and int(length) > 0:
+            # Mai più della durata vera + qualche secondo (prima: fino a 10 minuti).
+            max_seconds = min(max_seconds, int(length) / 1000.0 + STALL_SECONDS)
         if _mci(f"play {alias}")[0] != 0:
             raise OSError("Riproduzione non avviata.")
         started = time.monotonic()
-        while not _STOP.is_set() and time.monotonic() - started < max_seconds:
+        last_position, moved_at = None, started
+        while not _STOP.is_set():
+            now = time.monotonic()
             mode = _mci(f"status {alias} mode")[1]
             position = _mci(f"status {alias} position")[1]
             if position.isdigit():
                 _notify(int(position) / 1000.0)
+                if position != last_position:
+                    last_position, moved_at = position, now
             if mode not in ("playing", "seeking", "not ready", ""):
                 break
+            if now - moved_at > STALL_SECONDS or now - started > max_seconds:
+                _mci(f"stop {alias}")
+                raise AudioBusyError("Audio occupato da un altro programma: "
+                                     "la voce di Lumi non esce.")
             time.sleep(0.03)
         if _STOP.is_set():
             _mci(f"stop {alias}")
