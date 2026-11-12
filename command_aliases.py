@@ -151,7 +151,8 @@ _FIXED = {
         "scorri a destra", "scorri a sinistra", "schermo intero", "esci dallo schermo intero",
         "apri gestione attività", "chiudi forzatamente {testo}", "griglia", "chiudi griglia",
         "mouse a destra", "mouse a sinistra", "mouse su", "mouse giù",
-        "mouse di poco a destra", "mouse di poco a sinistra", "ancora", "clic destro"),
+        "mouse di poco a destra", "mouse di poco a sinistra", "ancora", "clic destro",
+        "invio", "torna alla home", "mostra i comandi", "nascondi i comandi"),
 }
 # Cosa fa ogni comando (mostrato accanto, in «Le mie parole»).
 DESCRIPTIONS = {
@@ -242,6 +243,10 @@ DESCRIPTIONS = {
     "mouse di poco a sinistra": "Sposta il puntatore di circa 10 pixel.",
     "ancora": "Ripete l'ultimo spostamento del mouse.",
     "clic destro": "Clic destro dove si trova il puntatore.",
+    "invio": "Apre l'elemento selezionato (come doppio clic).",
+    "torna alla home": "Home del programma o del sito (Netflix, browser).",
+    "mostra i comandi": "Striscia con i comandi validi per la finestra davanti.",
+    "nascondi i comandi": "Toglie la striscia dei comandi.",
 }
 
 

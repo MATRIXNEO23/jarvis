@@ -350,6 +350,7 @@ def main() -> None:
         pc_service.show_overlay = lambda items: (
             pc_overlay.show(root, items) if items else pc_overlay.hide(root))
         pc_service.show_grid = lambda rect: pc_overlay.grid(root, rect)
+        pc_service.show_strip = lambda text: pc_overlay.strip(root, text)
         if addon_manager is not None:
             addon_manager.pc_service = pc_service
     except (ImportError, OSError, ValueError) as exc:
@@ -2684,6 +2685,16 @@ def main() -> None:
             settings_window,engine)).pack(side="left",padx=(0,10))
     ttk.Label(command_words_panel,
               text="Timer, comandi locali, modelli, progetti: scegli tu le parole.",
+              wraplength=455).pack(side="left",fill="x",expand=True)
+
+    # «La mia voce»: frasi da leggere per correggere il riconoscimento e pausa tra le parole.
+    my_voice_panel=ttk.LabelFrame(integrations_settings_frame,text="La mia voce",padding=8)
+    my_voice_panel.pack(fill="x",pady=(3,9))
+    ttk.Button(my_voice_panel,text="La mia voce...",
+               command=lambda: __import__("la_mia_voce").VoiceWindow(settings_window)
+               ).pack(side="left",padx=(0,10))
+    ttk.Label(my_voice_panel,
+              text="Leggi parole e frasi: Lumi impara come ti capisce. Pausa tra le parole.",
               wraplength=455).pack(side="left",fill="x",expand=True)
 
     # Mini avatar quando Lumi è ridotta a icona: mostra/nascondi e trasparenza
@@ -5391,6 +5402,9 @@ def main() -> None:
             text = "Non riesco ad accendere il cervello online: controlla il collegamento GPT."
         write_line("LUMI > " + text)
         speak_result(text)
+
+    __import__("la_mia_voce").ON_LEARNED.append(
+        lambda: speech_lexicon is not None and speech_lexicon.reload())
 
     from lumi_comandi import register as register_lumi_commands
     register_lumi_commands(

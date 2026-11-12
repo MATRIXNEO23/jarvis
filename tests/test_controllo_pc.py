@@ -371,6 +371,42 @@ class Build040Tests(unittest.TestCase):
             del ELEMENTS[44]
 
 
+class Build041Tests(Build040Tests):
+    """Correzioni dopo i test della 040."""
+
+    def test_041_bare_number_words_and_invio(self):
+        self.assertEqual(parse_command("cinque")[1]["position"], 5)
+        self.assertEqual(parse_command("invio"), ("open_selected", {}))
+        self.assertEqual(parse_command("clicca Deep Impact")[1]["target"], "Deep Impact")
+        self.assertEqual(parse_command("pausa"), ("media_pause", {}))
+        self.assertEqual(parse_command("torna alla home"), ("home", {}))
+        self.assertEqual(parse_command("mostra i comandi"), ("show_commands", {}))
+
+    def test_041_grid_number_without_name(self):
+        import risposte
+        from voice_control import WakeWordGate
+        self.service.show_grid = lambda rect: None
+        try:
+            self.run_text("griglia")
+            gate = WakeWordGate(clock=lambda: 100.0)
+            self.assertEqual(gate.route("six", require_name=True), ("command", "il 6"))
+            self.assertEqual(gate.route("cinque", require_name=True), ("command", "il 5"))
+            self.assertEqual(gate.route("clicca", require_name=True), ("command", "clicca"))
+            self.assertEqual(gate.route("apri il browser", require_name=True), ("ignored", ""))
+            self.run_text("chiudi griglia")
+            self.assertFalse(risposte.numbers_waiting())
+        finally:
+            risposte.numbers_done()
+
+    def test_041_misheard_title(self):
+        OCR[33] = [{"name": "Deep Impact", "type": "Text", "x": 10, "y": 10, "w": 100, "h": 20},
+                   {"name": "Dirty Dancing", "type": "Text", "x": 10, "y": 50, "w": 100, "h": 20}]
+        self.backend.front = 33
+        self.service.handle("click", {"target": "dip impact", "window": None, "double": False})
+        self.service.answer("sì")
+        self.assertIn(("click", 60, 20), self.backend.calls)
+
+
 def runtime_claims(service, text):
     runtime.register(service)
     try:

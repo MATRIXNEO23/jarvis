@@ -48,6 +48,13 @@ _PATTERNS = [
     ("play", re.compile(
         r"^(?:riproduci|play|fai\s+partire(?:\s+il\s+video)?|metti\s+play|premi\s+play|"
         r"avvia\s+(?:il\s+)?video|guarda(?:\s+ora)?)" + _END, re.I)),
+    # --- comandi comuni per i video (Netflix, YouTube…): stesso significato ovunque
+    ("media_pause", re.compile(r"^(?:pausa|metti\s+in\s+pausa|ferma\s+il\s+video)" + _END, re.I)),
+    ("home", re.compile(r"^(?:home|vai\s+alla\s+home|torna\s+alla\s+home|menu\s+principale|"
+                        r"(?:vai|torna)\s+al\s+menu\s+principale|pagina\s+iniziale)" + _END, re.I)),
+    # --- striscia dei comandi del momento
+    ("show_commands", re.compile(r"^(?:mostra|fammi\s+vedere)\s+(?:i\s+)?comandi" + _END, re.I)),
+    ("hide_commands", re.compile(r"^(?:nascondi|togli|chiudi)\s+(?:i\s+)?comandi" + _END, re.I)),
     # --- schermo intero (tasto in base al programma davanti)
     ("fullscreen_on", re.compile(
         r"^(?:(?:metti|mettilo|mettila|vai|passa)\s+(?:lo\s+|a\s+|in\s+)?schermo\s+intero|"
@@ -72,7 +79,7 @@ _PATTERNS = [
     # --- elemento selezionato
     ("open_selected", re.compile(
         r"^(?:aprilo|aprila|apri\s+questo|apri\s+questa|apri\s+quello|apri\s+quella|"
-        r"doppio\s+clic(?:k)?|fai\s+doppio\s+clic(?:k)?)" + _END, re.I)),
+        r"doppio\s+clic(?:k)?|fai\s+doppio\s+clic(?:k)?|invio)" + _END, re.I)),
     ("click_selected", re.compile(r"^(?:clicca|clic(?:k)?|clicca\s+qui|clicca\s+lì)" + _END, re.I)),
     ("open_bare", re.compile(r"^apri" + _END, re.I)),
     # --- passo passo e navigazione (solo se stai usando il Controllo PC: vedi claims)
@@ -185,6 +192,8 @@ def parse_command(text: str):
         return None
     value = _WAKE.sub("", text).strip()
     bare = re.match(r"^(?:il|la|l'|numero|il\s+numero)\s*" + _ORD + _END, value, re.I)
+    if bare is None and value.lower().strip(" .!?") in _ORDINALS:
+        bare = re.match(_ORD + _END, str(_ORDINALS[value.lower().strip(" .!?")]))   # «cinque»
     if bare:                                  # «il 3», «numero 7»: dopo «mostra i numeri»
         return "pick", {"position": _position(bare.group("pos")), "kind": "", "how": "select",
                         "bare": True}
@@ -247,7 +256,8 @@ def parse_command(text: str):
             return "nudge", {"dir": "ancora"}
         if action == "click_here":
             return action, {"right": True}
-        if action in ("play", "task_manager", "grid_start", "grid_close"):
+        if action in ("play", "task_manager", "grid_start", "grid_close", "media_pause", "home",
+                      "show_commands", "hide_commands"):
             return action, {}
         if action in ("step", "nav"):
             values = {"dir": values["dir"].lower()}

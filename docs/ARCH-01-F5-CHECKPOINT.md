@@ -377,3 +377,14 @@ Limiti: OCR non legge bene i titoli stilizzati sulle copertine; posizione delle 
 13. **Senza «Lumi»/«Hey Lumi»:** con la griglia aperta il numero da solo vale senza nominare Lumi, anche nella modalità col nome obbligatorio (come la finestra delle risposte sì/no di `risposte.py`). Lo stesso per le risposte sì/no a tutte le domande (punto 4).
 **Metodo per la prossima correzione (richiesta utente 12/11, 05:09):** prima di toccare il codice studiare bene e provare INSIEME all'utente. Procedere sezione per sezione (es. Netflix, Esplora file, browser, griglia/mouse, aiuto per finestra, domande sì/no…) e per ognuna CHIEDERE all'utente quali comandi vuole e come li direbbe; non inventare comandi, parole o comportamenti. Solo dopo il suo via implementare; nessuna build senza richiesta. Comandi uguali in più finestre: una sola definizione comune (stesso significato ovunque, cambia solo il tasto per programma), controllo dei conflitti con musica/comandi su Lumi/add-on, nessun duplicato.
 Promemoria dato a voce all'utente: aiuto dei comandi con «cosa posso fare qui» (poi «altri») oppure F1 / «aiuto» → sezione Controllo PC.
+
+
+## Build 041 (12/11) — correzioni dopo i primi test della 040 (richiesta utente: «applica le correzioni, metti l'addestratore vocale e portami la build»)
+- Griglia: numero da solo, in cifre o lettere, senza «Lumi» (`risposte.expect_numbers`, `WakeWordGate.route` → «il N»); varianti storpiate/inglesi (six, faiv, tu…) solo con la griglia aperta; grammatica Vosk ristretta a numeri e comandi della griglia.
+- «clicca X» (resta accettato anche «clicca su X»); «invio» = doppio clic / apri selezionato.
+- Titoli storpiati: `_sounds_like` (difflib + scrittura «come suona»), soglia 0,72; se due nomi sono vicini chiede.
+- Sì/no senza nome anche in Programmi e app (`program_apps/service.py`).
+- Video (Netflix, YouTube, Disney+, Prime, VLC): «pausa»/«play» con lo spazio, «torna alla home» (elemento/OCR «Home», browser Alt+Home); «indietro» = pagina precedente (nav esistente). «pausa» va prima alla musica/timer se attivi.
+- «mostra i comandi» / «nascondi i comandi»: striscia in alto a destra con l'aiuto della finestra davanti (contenuti per finestra ancora da ridefinire con l'utente, punto 6).
+- «La mia voce» (Impostazioni → La mia voce…, `la_mia_voce.py`): 50 parole/frasi con S, P, F, vocali, numeri, titoli inglesi e frasi complete; ciò che Vosk capisce diverso viene salvato con `SpeechCorrections.learn_phrase` (stesso dizionario, usato con Second Brain attivo). Pausa tra le parole regolabile 0–2 s (predefinita 0,6 s, voce.json): le parti finali vicine vengono unite prima di inviare il comando.
+- Non fatti: aiuto per finestra ridefinito (serve decidere con l'utente), semplificazione generale dei movimenti (attende i difetti).

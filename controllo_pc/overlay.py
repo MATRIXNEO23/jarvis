@@ -106,3 +106,32 @@ def grid(root, rect) -> None:
                                font=("Segoe UI", max(8, size - 2), "bold"))
     _GRID["window"] = window
     _GRID["job"] = root.after(90000, lambda: hide_grid(root))
+
+
+# --- striscia con i comandi del momento («mostra i comandi» / «nascondi i comandi») ---------
+_STRIP = {"window": None}
+
+
+def strip(root, text) -> None:
+    window, _STRIP["window"] = _STRIP["window"], None
+    if window is not None:
+        try:
+            window.destroy()
+        except tk.TclError:
+            pass
+    if not text:
+        return
+    window = tk.Toplevel(root)
+    window.overrideredirect(True)
+    try:
+        window.attributes("-topmost", True)
+        window.attributes("-alpha", 0.92)
+    except tk.TclError:
+        pass
+    label = tk.Label(window, text=str(text)[:700], justify="left", anchor="w", bg="#101820",
+                     fg="#ffd400", font=("Segoe UI", 10), padx=10, pady=8, wraplength=360)
+    label.pack()
+    window.update_idletasks()
+    x = window.winfo_screenwidth() - window.winfo_reqwidth() - 12
+    window.geometry(f"+{max(0, x)}+60")
+    _STRIP["window"] = window

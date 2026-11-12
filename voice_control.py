@@ -107,14 +107,22 @@ def speech_to_local_command(text: str) -> str | None:
 def _answer_waiting() -> bool:
     try:
         import risposte
-        return risposte.waiting()
+        return risposte.waiting() or risposte.numbers_waiting()
     except ImportError:
         return False
 
 
 def _answer_grammar() -> str:
     import risposte
-    return json.dumps(risposte.GRAMMAR, ensure_ascii=False)
+    return json.dumps(risposte.grammar(), ensure_ascii=False)
+
+
+def _pause_seconds() -> float:
+    try:
+        import la_mia_voce
+        return la_mia_voce.pause_seconds()
+    except Exception:
+        return 0.0
 
 
 class WakeWordGate:
@@ -148,6 +156,12 @@ class WakeWordGate:
         # name opens a SHORT window for exactly one following phrase.
         if not isinstance(speech, str) or not speech.strip():
             return "ignored", ""
+        try:                          # «La mia voce»: la frase va all'addestratore
+            import la_mia_voce
+            if la_mia_voce.receive(speech):
+                return "ignored", ""
+        except ImportError:
+            pass
         spoken = " ".join(speech.casefold().replace(",", " ").replace(":", " ").strip(" .!?").split())
         # Dopo una domanda di Lumi la risposta sì/no vale anche senza il nome.
         try:
@@ -155,6 +169,10 @@ class WakeWordGate:
             if risposte.waiting() and risposte.is_answer(spoken):
                 risposte.done()
                 return "command", spoken
+            plain = re.sub(r"^(?:(?:ehi|hey|ok)\s+)?lumi\s*", "", spoken)
+            if risposte.numbers_waiting() and risposte.is_grid_command(plain):
+                number = risposte.number_of(plain)
+                return "command", (f"il {number}" if number is not None else plain)
         except ImportError:
             pass
         for name in ("ehi lumi", "hey lumi", "lumi"):
@@ -323,6 +341,8 @@ class VoiceController:
                 fragments: list[str] = []
                 suppressed = False
                 restricted = False
+                held: list[str] = []
+                held_at = 0.0
                 activity = SpeechActivity()
                 while not stop.is_set() and self._is_current(generation):
                     data, overflow = stream.read(4000)
@@ -364,8 +384,20 @@ class VoiceController:
                         if part:
                             if self.mode == PUSH_TO_TALK:
                                 fragments.append(part)
-                            else:
+                            elif restricted or _pause_seconds() <= 0:
                                 self._report("voice_text", part, generation)
+                            else:
+                                # Pausa tra le parole: la frase resta aperta un attimo,
+                                # se riprendi a parlare le parti si uniscono.
+                                held.append(part)
+                                held_at = time.monotonic()
+                    if held and self.mode != PUSH_TO_TALK:
+                        speaking = json.loads(recognizer.PartialResult()).get("partial", "").strip()
+                        if speaking:
+                            held_at = time.monotonic()
+                        elif time.monotonic() - held_at >= _pause_seconds():
+                            self._report("voice_text", " ".join(held), generation)
+                            held.clear()
                 if self._is_current(generation) and self.mode == PUSH_TO_TALK:
                     final = json.loads(recognizer.FinalResult()).get("text", "").strip()
                     message = " ".join([*fragments, final]).strip()

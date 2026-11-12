@@ -54,6 +54,7 @@ def _overlap(a, b) -> bool:
 
 
 # Tasto per lo schermo intero in base al programma (minuscolo, senza .exe).
+VIDEO_APPS = ("netflix", "youtube", "disney", "primevideo", "vlc")
 FULLSCREEN_KEYS = {"netflix": (["f"], ["esc"]), "vlc": (["f"], ["esc"]),
                    "wmplayer": (["alt", "invio"], ["esc"]), "mpc-hc64": (["alt", "invio"], ["esc"]),
                    "mpc-hc": (["alt", "invio"], ["esc"]), "potplayermini64": (["invio"], ["esc"])}
@@ -86,6 +87,7 @@ class ControlService:
         self.grid = None                  # (x, y, w, h, storico) mentre la griglia è attiva
         self.last_nudge = None
         self.show_grid = lambda rect: None
+        self.show_strip = lambda text: None
         self.pointer_mode = False
         try:
             from controllo_comune import gate
@@ -262,7 +264,8 @@ class ControlService:
     # se il Controllo PC è stato usato da poco: altrimenti vanno agli altri comandi
     # e al modello, così non si interrompe il parlare normale.
     CONTEXT_SECONDS = 120
-    SHORT_ACTIONS = ("step", "nav", "open_bare", "open_selected", "click_selected", "more_help")
+    SHORT_ACTIONS = ("step", "nav", "open_bare", "open_selected", "click_selected", "more_help",
+                     "media_pause")
 
     # Azioni che, se riconosciute, vanno al Controllo PC prima della musica.
     # «play» e «schermo intero» restano prima alla musica (riprendi / video di Lumi),
@@ -372,6 +375,7 @@ class ControlService:
         except Exception as exc:
             return found, None, "Non riesco a leggere la finestra: " + str(exc)[:100]
         key = normalized(target)
+        texts = []
         candidates = [i for i in items if i.get("enabled", True)
                       and (kinds is None or i.get("type") in kinds)]
         exact = [i for i in candidates if normalized(i.get("name", "")) == key]
@@ -386,6 +390,18 @@ class ControlService:
             exact = [i for i in texts if normalized(i.get("name", "")) == key]
             partial = [i for i in texts if key and key in normalized(i.get("name", ""))]
             chosen = (exact or partial or [None])[0]
+        if chosen is None and kinds is None:
+            # Titoli storpiati dal microfono («dip impact» → «Deep Impact»): somiglianza
+            # di scrittura e suono, offline. Se due nomi si somigliano troppo non indovino.
+            pool = candidates + texts
+            ranked = sorted(((_sounds_like(key, normalized(i.get("name", ""))), n, i)
+                             for n, i in enumerate(pool) if i.get("name")), reverse=True)
+            if ranked and ranked[0][0] >= 0.72 and (len(ranked) == 1 or ranked[0][0] - ranked[1][0] >= 0.08
+                                                   or normalized(ranked[0][2]["name"]) == normalized(ranked[1][2]["name"])):
+                chosen = ranked[0][2]
+            elif ranked and ranked[0][0] >= 0.72:
+                names = " o ".join("«" + r[2]["name"][:30] + "»" for r in ranked[:2])
+                return found, None, f"Intendi {names}? Dillo con «clicca» e il nome, o usa i numeri."
         if chosen is None:
             return found, None, f"In {found['title'][:40]} non trovo «{target}»."
         return found, chosen, ""
@@ -843,8 +859,50 @@ class ControlService:
             return say("clic", nome=candidates[0].get("name") or "play")
         self.target = found["hwnd"]
         self.backend.focus(found["hwnd"])
+        if self._app_name(found) in VIDEO_APPS:
+            self.backend.press(["spazio"])        # video in pausa: lo spazio riprende
+            return "Play."
         self.backend.press(["invio"])
         return "Non vedo il pulsante play: ho premuto Invio sull'elemento selezionato."
+
+    # --- comandi comuni dei video: pausa e home -------------------------------------------
+    def _do_media_pause(self):
+        found = self.find_window(None)
+        if found is None or self._app_name(found) not in VIDEO_APPS:
+            return None
+        self.target = found["hwnd"]
+        self.backend.focus(found["hwnd"])
+        self.backend.press(["spazio"])
+        return "Pausa."
+
+    def _do_home(self):
+        found = self.find_window(None)
+        if found is None:
+            return None
+        for source in (self.elements, self.ocr):
+            try:
+                items = [i for i in source(found["hwnd"])
+                         if normalized(i.get("name", "")) in ("home", "pagina iniziale", "inizio")]
+            except Exception:
+                items = []
+            if items:
+                self._point(found, items[0], "click")
+                return "Torno alla home."
+        if found["process"].lower().rsplit(".", 1)[0] in BROWSERS:
+            self.backend.focus(found["hwnd"])
+            self.backend.press(["alt", "home"])
+            return "Torno alla pagina iniziale."
+        return "Non trovo la home in questa finestra."
+
+    # --- striscia con i comandi del momento ----------------------------------------------------
+    def _do_show_commands(self):
+        text = self._do_context_help()
+        self.show_strip(text)
+        return "Ecco i comandi per questa finestra."
+
+    def _do_hide_commands(self):
+        self.show_strip(None)
+        return "Comandi nascosti."
 
     # --- frecce ai lati delle righe (es. Netflix) ---------------------------------------
     def _do_row_scroll(self, dir):
@@ -962,6 +1020,7 @@ class ControlService:
         screen = self.backend.screen_size() or (1280, 720)
         self.grid = (0, 0, screen[0], screen[1], [], self.clock())
         self.show_grid(self.grid[:4])
+        _numbers(True)
         return "Griglia: di' un numero da 1 a 9 per stringere, poi «clicca». «Chiudi griglia» per uscire."
 
     def _do_grid_pick(self, number):
@@ -990,6 +1049,7 @@ class ControlService:
             return None
         self.grid = None
         self.show_grid(None)
+        _numbers(False)
         return "Griglia chiusa."
 
     def _do_click_here(self, double=False, right=False):
@@ -999,6 +1059,7 @@ class ControlService:
             point = (x + w // 2, y + h // 2)
             self.grid = None
             self.show_grid(None)
+            _numbers(False)
         else:
             point = self.backend.cursor()
         if point is None:
@@ -1022,3 +1083,35 @@ class ControlService:
         self.backend.move_mouse(point[0] + dx * amount, point[1] + dy * amount, True)
         self.last_nudge = (dir, amount)
         return "Mouse " + ("di poco " if amount < 50 else "") + "a " + dir + "."
+
+
+def _numbers(on: bool) -> None:
+    """Con la griglia aperta i numeri valgono senza dire «Lumi» (vedi risposte.py)."""
+    try:
+        import risposte
+        risposte.expect_numbers(ControlService.GRID_SECONDS) if on else risposte.numbers_done()
+    except ImportError:
+        pass
+
+
+def _phonetic(text: str) -> str:
+    """Scrittura semplificata «come suona» (italiano/inglese): dip→dip, deep→dip."""
+    t = text.lower()
+    for a, b in (("ee", "i"), ("ea", "i"), ("oo", "u"), ("ou", "au"), ("ph", "f"), ("th", "t"),
+                 ("ck", "k"), ("ch", "k"), ("sh", "sc"), ("w", "u"), ("y", "i"), ("q", "k"),
+                 ("c", "k"), ("h", ""), ("x", "ks"), ("j", "g")):
+        t = t.replace(a, b)
+    out = []
+    for ch in t:
+        if not out or out[-1] != ch:
+            out.append(ch)
+    return "".join(out)
+
+
+def _sounds_like(spoken: str, name: str) -> float:
+    import difflib
+    if not spoken or not name:
+        return 0.0
+    written = difflib.SequenceMatcher(None, spoken, name).ratio()
+    sound = difflib.SequenceMatcher(None, _phonetic(spoken), _phonetic(name)).ratio()
+    return max(written, sound)
