@@ -1,10 +1,10 @@
 {
-  "run_id": 43164897456,
-  "artifact": "lumi-041-prova-candidate",
-  "file": "Lumi-041-PROVA.zip",
-  "bytes": 27681373,
-  "sha256": "774f817df1711bb8f20afc89fed8087111fca542accea722a97991b42dca311c",
-  "source_commit": "07601fb",
-  "title": "Build 041 PROVA — griglia col solo numero, La mia voce, pausa tra le parole, titoli storpiati",
-  "description": "Come la 040, più le correzioni dopo i primi test: con la griglia aperta basta il numero (cinque, sei, anche six o capito storto), senza dire «Lumi»; «clicca X» senza «su»; «invio» come doppio clic; «clicca Deep Impact» trova il titolo anche se il microfono capisce «dip impact»; sì/no senza nome anche in Programmi e app. Video: pausa, play, indietro (pagina precedente), torna alla home. «mostra i comandi» / «nascondi i comandi». Nuova sezione Impostazioni → La mia voce: leggi parole e frasi, Lumi impara come ti capisce; pausa tra le parole regolabile. Verificati in CI Windows: test automatici, prova reale UIA, pulsante play e OCR. Pavilion da collaudare."
+  "run_id": 43176216439,
+  "artifact": "lumi-042-prova-candidate",
+  "file": "Lumi-042-PROVA.zip",
+  "bytes": 27682678,
+  "sha256": "6583ab113dce28419c7f68bd0ccf318d6f008e07f466f295585a9cb878c74860",
+  "source_commit": "7a23f1b",
+  "title": "Build 042 PROVA — con Netflix Lumi continua ad ascoltare e a parlare",
+  "description": "Come la 041, più la correzione del blocco con l'app Netflix: prima, se Netflix occupava l'uscita audio, la voce di Lumi restava ferma fino a 10 minuti per frase e intanto il microfono era ignorato. Ora se l'audio non va avanti per 3 secondi Lumi riprova la frase in modalità condivisa (suona insieme a Netflix); se anche così non esce, salta le frasi in coda, lo scrive in console e torna subito ad ascoltare. La pausa tra le parole ha un tetto di 2 secondi in più. Verificati in CI Windows i test automatici e la prova reale. Da provare sul Pavilion con l'app Netflix."
 }
