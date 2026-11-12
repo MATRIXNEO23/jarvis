@@ -1,3 +1,6 @@
+## Lumi 040 — i 18 punti dopo i test della 039 (12 novembre 2026)
+Implementati (vedi docs/ARCH-01-F5-CHECKPOINT.md, «Build 040»): Lumi nell'elenco finestre con conferma, finestra in primo piano, sì/no senza nome (risposte.py, grammatica Vosk), «sveglia» riapre Lumi, riavvio dopo il messaggio, meno conferme, OCR e play offline (LumiControl.exe), righe/elementi, schermo intero per programma, Gestione attività e chiusura forzata, griglia e mouse a piccoli passi, cervello locale/online a voce, scritta LUMI. Prossimo: CI Windows (unit + prova UIA/OCR), pubblicazione 040, collaudo sul Pavilion.
+
 ## F5N.4 — Ricerca DLL runtime MinGW in ctypes Windows (9 novembre 2026)
 La CI 42592362936 ha fallito il solo loader F5N.4: PE imports di `koboldcpp_common.dll` e CPU backend indicano `libgcc_s_seh-1.dll`, `libstdc++-6.dll`, `libwinpthread-1.dll` disponibili in `C:\\mingw64\\bin`, ma la cartella non era stata aggiunta a `os.add_dll_directory` del processo figlio. Fix limitato smoke worker commit `cf041b765...`, nuovo candidato 42595625501 avviato; conferma success ancora pendente. Unit/GPT, tokenizer e diagnostica precedente green. Nessuna modifica a Jarvis014.
 

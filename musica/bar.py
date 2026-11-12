@@ -397,6 +397,8 @@ class MusicBar:
         # «esci» a voce dallo schermo intero (musica/runtime.py).
         service.is_fullscreen = lambda: self._full
         service.exit_fullscreen = lambda: self._full and self._toggle_full()
+        service.can_fullscreen = self._can_full
+        service.enter_fullscreen = lambda: (not self._full) and self._toggle_full()
         self.video_frame = None
         if video_host is not None and getattr(service, "video", None) is not None:
             self.video_frame = tk.Frame(self.top, bg="#000000", highlightthickness=0, bd=0)
@@ -464,6 +466,13 @@ class MusicBar:
             self.host.after(220, self._marquee)
         except tk.TclError:
             pass
+
+    def _can_full(self) -> bool:
+        """«schermo intero» a voce va al video solo se è visibile e Lumi è davanti."""
+        try:
+            return bool(self.full_button.winfo_ismapped() and self.top.focus_get() is not None)
+        except Exception:
+            return False
 
     def _toggle_full(self) -> None:
         self._set_full(not self._full)

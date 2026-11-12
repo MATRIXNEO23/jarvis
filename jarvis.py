@@ -349,6 +349,7 @@ def main() -> None:
         from controllo_pc import overlay as pc_overlay
         pc_service.show_overlay = lambda items: (
             pc_overlay.show(root, items) if items else pc_overlay.hide(root))
+        pc_service.show_grid = lambda rect: pc_overlay.grid(root, rect)
         if addon_manager is not None:
             addon_manager.pc_service = pc_service
     except (ImportError, OSError, ValueError) as exc:
@@ -4910,7 +4911,7 @@ def main() -> None:
         from intent_normalizer import before_model
         if before_model(spoken):
             return True              # capita dal motore interno (sinonimi) o domanda sì/no
-        from model_gate import enabled as model_enabled, refused as model_refused
+        from model_gate import local_enabled as model_enabled, refused_local as model_refused
         if not model_enabled():
             write_line(model_refused(spoken))
             return True              # gestita: nessun passaggio a un altro modello
@@ -5328,7 +5329,9 @@ def main() -> None:
              sys.executable, *sys.argv], cwd=os.getcwd(),
             creationflags=getattr(subprocess, "DETACHED_PROCESS", 0))
         goodbye_started[0] = True
-        root.after(1800, close)
+        # Chiude solo dopo aver detto il messaggio per intero (stima dalla lunghezza,
+        # minimo 2,5 s), così la voce non viene tagliata.
+        root.after(max(2500, int(len(text) * 80) + 1200) if spoken_enabled.get() else 600, close)
 
     def lumi_shutdown_pc() -> None:
         subprocess.run(["shutdown", "/s", "/t", "20"], check=False,
@@ -5374,11 +5377,30 @@ def main() -> None:
             pass
         lumi_say("sveglia")
 
+    def lumi_brain_local(value: bool) -> None:
+        text = __import__("model_gate").set_local(value)
+        write_line("LUMI > " + text)
+        speak_result(text)
+
+    def lumi_brain_online(value: bool) -> None:
+        # Stesso interruttore GPT delle Impostazioni (ChatGPT ora, gratuiti in futuro).
+        if bool(gpt_enabled.get()) != value:
+            gpt_toggle.invoke()
+        text = "Cervello online " + ("acceso." if gpt_enabled.get() else "spento.")
+        if value and not gpt_enabled.get():
+            text = "Non riesco ad accendere il cervello online: controlla il collegamento GPT."
+        write_line("LUMI > " + text)
+        speak_result(text)
+
     from lumi_comandi import register as register_lumi_commands
     register_lumi_commands(
         {"minimize": lumi_minimize, "close": close_with_goodbye, "restart": lumi_restart,
          "shutdown_pc": lumi_shutdown_pc, "cancel_shutdown": lumi_cancel_shutdown,
-         "hide": lumi_hide, "wake": lumi_wake},
+         "hide": lumi_hide, "wake": lumi_wake,
+         "brain_local_on": lambda: lumi_brain_local(True),
+         "brain_local_off": lambda: lumi_brain_local(False),
+         "brain_online_on": lambda: lumi_brain_online(True),
+         "brain_online_off": lambda: lumi_brain_online(False)},
         lambda: root.state() == "iconic" or avatar_dock.user_hidden)
     settings_window.bind("<Escape>", lambda _event: settings_window.withdraw())
     root.bind("<Control-comma>", lambda _event: show_settings())

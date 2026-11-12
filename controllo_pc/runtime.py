@@ -26,8 +26,13 @@ def claims_first(spoken: str) -> bool:
         return True                         # risposta sì/no a una sua domanda
     from .commands import parse_command
     request = parse_command(spoken)
-    return (request is not None and request[0] in current.SHORT_ACTIONS + ("pick",)
-            and current.recent())
+    if request is None:
+        return False
+    if request[0] == "play":
+        return current.recent()
+    if request[0] in current.FIRST_ACTIONS and request[0] != "pick":
+        return current.claims(*request)
+    return request[0] in current.SHORT_ACTIONS + ("pick",) and current.recent()
 
 
 def handle_text(spoken: str, write_line, speak) -> bool:

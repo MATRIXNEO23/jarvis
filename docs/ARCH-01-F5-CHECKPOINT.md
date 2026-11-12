@@ -318,7 +318,7 @@ Dopo le prove sul Pavilion si rivedono insieme le sezioni.
 - F1: pagine «Controllo PC» riscritta e «Lumi».
 - CI 039 prima prova: corretti 5 test. (1) test_name_alone… aggiornato al nuovo requisito utente (dopo «Lumi» da solo una frase entro 6 s), il resto della stanza resta ignorato; (2) messaggio «Ti ascolto» solo in modalità con nome obbligatorio (ripristinata la struttura attesa dal test di diagnostica); (3) limiti di revisione statica 8 → 12 (le cartelle runtime sono ora 10: ognuna deve comparire nel rapporto).
 
-## Da fare dopo i test della 039 (richieste utente 11/11 sera, a voce) — NON ancora implementate, nessuna build
+## Richieste dopo i test della 039 (11/11 sera, a voce) — implementate nella 040 (12/11), da collaudare sul Pavilion
 1. **Lumi nell'elenco delle finestre aperte.** Nella 039 era esclusa di mia iniziativa (scelta non concordata: andava chiesta). Va inclusa; quando un comando riguarda Lumi stessa (es. «chiudi la finestra» con Lumi davanti) chiede sempre conferma.
 2. **Finestra di riferimento = quella in primo piano adesso**, anche se l'utente l'ha portata davanti col mouse; non l'ultima usata da Lumi (oggi `service.target` ha la precedenza: da togliere/limitare).
 3. **Risposte sì/no senza dire «Lumi»** anche nella modalità con nome obbligatorio: dopo una domanda di Lumi, per qualche secondo vale la sola risposta, poi torna l'obbligo del nome.
@@ -339,3 +339,23 @@ Dopo le prove sul Pavilion si rivedono insieme le sezioni.
 17. **Cervello locale / cervello online a voce** (concordato 12/11 ~03:00, sostituisce la prima versione): due comandi distinti, uno per il modello locale e uno per quelli online (GPT e i futuri provider gratuiti, tutti sotto «online»). Forme: «attiva cervello locale» / «spegni cervello locale», «attiva cervello online» / «spegni cervello online», e in alternativa «cervello locale on/off», «cervello online on/off»; capire anche con l'articolo («il cervello…»). Deterministici (funzionano con tutto spento), personalizzabili in Le mie parole. Verificare conflitti con «spegni Lumi», «spegni il PC», «spegni la sveglia».
 18. **Scritta in alto a sinistra ancora «JARVIS»** → «LUMI» con un carattere più curato; anteprime proposte all'utente prima di scegliere. Controllare anche gli altri punti dove compare ancora «Jarvis» (titolo finestra, ecc.).
 Altre richieste arriveranno dopo i test sul Pavilion.
+
+
+## Build 040 (12/11) — i 18 punti: cosa è stato fatto
+Stato: codice scritto, test unitari aggiunti; collaudo Windows/CI e Pavilion da fare. Nessun modello usato per leggere lo schermo o per i comandi (punto 13): solo regole e analisi dei pixel.
+1. `controllo_comune/windows.py open_windows()` include Lumi (`"lumi": True`); elenco «(Lumi)»; chiudi/minimizza su Lumi chiedono sempre (`_ask("", True, …)`).
+2. `foreground()` decide la finestra (`_current`); se davanti c'è Lumi, le azioni vanno alla finestra successiva, tranne quelle su Lumi.
+3/14/15/16. Nuovo `risposte.py`: varianti sì/no («s», «se», «ci», «non», «nò»…) valide SOLO come risposta; `expect_answer()` apre una finestra (durata della frase + 10 s) in cui `WakeWordGate.route` accetta la risposta senza «Lumi» e il riconoscitore Vosk usa una grammatica ristretta. Le varianti non diventano correzioni vocali (causa del punto 15: «sì» è parola di controllo in adaptive_voice, la correzione «s»→«sì» era rifiutata apposta).
+4. `lumi_comandi`: «sveglia» riapre sempre Lumi; la sveglia solo con «imposta/metti la sveglia».
+5. `lumi_restart`: chiusura dopo max(2,5 s, 80 ms × caratteri + 1,2 s) con la voce attiva; riapertura dopo 5 s.
+6. Scorrere, giù/su, numeri, play, griglia e mouse non chiedono; restano le conferme per i clic per nome (le prime volte per programma) e le azioni delicate.
+7. `LumiControl.exe ocr <hwnd>`: OCR integrato di Windows (Windows.Media.Ocr, italiano o lingue del profilo), parole raggruppate; usato quando l'elemento per nome non c'è e da «mostra i numeri» se gli elementi cliccabili sono meno di 8.
+8. `_do_play`: elemento/OCR «Riproduci|Play|Riprendi|Guarda» → clic; poi `LumiControl.exe play` (cerchio chiaro con centro scuro, 20–90 px) → clic; altrimenti Invio.
+9. `step`: «file successivo/precedente» = destra/sinistra nei programmi a copertine (Netflix, Disney+, Prime Video, Spotify; anche nel browser dal titolo), giù/su negli elenchi; «riga successiva/precedente» = giù/su. `row_scroll` («scorri a destra/sinistra», «riga avanti/indietro»): pulsante UIA «Successivo/Next…», altrimenti clic al bordo della finestra all'altezza dell'elemento selezionato, altrimenti 4 frecce; poi rinumera se i numeri erano visibili.
+10. `fullscreen`: F per Netflix/YouTube/Disney/Prime/VLC, Alt+Invio per lettori Windows, F11 per browser/Esplora/altro; uscita Esc (F11 per i browser). «esci» da solo vale solo se la finestra davanti occupa tutto lo schermo; prima la musica di Lumi (`musica/runtime.py`, anche «schermo intero» col video visibile e Lumi davanti).
+11. «apri gestione attività» (Ctrl+Maiusc+Esc); «chiudi forzatamente X» (`TerminateProcess`, conferma sempre, mai Lumi).
+12. Griglia 3×3 (`controllo_pc/overlay.py grid`): numero = casella, «indietro» = griglia precedente, «clicca/doppio clic/clic destro», «chiudi griglia», 90 s. «mouse a destra/sinistra/su/giù» 50 px, «di poco» 10 px, «ancora». Nella base comune (`controllo_comune/windows.py`: screen_size, cursor, kill, click destro) per il futuro controllo browser.
+17. `lumi_comandi` + `model_gate.set_local`: «attiva/spegni (il) cervello locale», «cervello locale on/off»; «cervello online» usa l'interruttore GPT esistente. Personalizzabili da Le mie parole (sezione Modelli e GPT).
+18. `animated_hud.draw_lumi_wordmark`: scritta LUMI stile B al posto di «J A R V I S».
+Prove: `tests/test_controllo_pc.py` (Build040Tests), `tests/test_risposte.py`, `tests/test_frasi_lumi.py`; CI Windows estesa: `tools/uia_host_smoke.py` verifica il pulsante play disegnato e, se il runner ha una lingua OCR, la scritta «Riproduci».
+Limiti: OCR non legge bene i titoli stilizzati sulle copertine; posizione delle frecce di riga stimata se non dichiarate; tasti schermo intero dei programmi non in tabella = F11.

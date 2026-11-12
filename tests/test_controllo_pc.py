@@ -18,6 +18,9 @@ class FakeBackend:
     def open_windows(self):
         return list(self.items)
 
+    def foreground(self):
+        return getattr(self, "front", None) or (self.items[0]["hwnd"] if self.items else 0)
+
     def focus(self, hwnd):
         self.calls.append(("focus", hwnd))
         return True
@@ -26,8 +29,19 @@ class FakeBackend:
         self.calls.append(("close", hwnd))
         return True
 
-    def click(self, x, y, visible=True, double=False):
-        self.calls.append(("click", x, y))
+    def click(self, x, y, visible=True, double=False, right=False):
+        self.calls.append(("click", x, y) + (("right",) if right else ()))
+        self.pointer = (x, y)
+
+    def screen_size(self):
+        return (900, 900)
+
+    def cursor(self):
+        return getattr(self, "pointer", (100, 100))
+
+    def kill(self, pid):
+        self.calls.append(("kill", pid))
+        return True
 
     def type_text(self, text):
         self.calls.append(("type", text))
@@ -41,6 +55,7 @@ class FakeBackend:
 
     def move_mouse(self, x, y, visible=True):
         self.calls.append(("move", x, y))
+        self.pointer = (x, y)
 
     def scroll(self, amount):
         self.calls.append(("scroll", amount))
@@ -59,7 +74,12 @@ def make(folder, enabled=True, clock=lambda: 0):
     backend = FakeBackend()
     service = ControlService(lambda: enabled, Path(folder), backend,
                              elements=lambda hwnd: ELEMENTS.get(hwnd, []), clock=clock)
+    service.ocr = lambda hwnd: OCR.get(hwnd, [])
+    service.play_shapes = lambda hwnd: SHAPES.get(hwnd, [])
     return service, backend
+
+
+OCR, SHAPES = {}, {}
 
 
 class CommandTests(unittest.TestCase):
@@ -220,6 +240,143 @@ class NavigationTests(unittest.TestCase):
         self.assertIn(("show", 44, "minimizza"), self.backend.calls)
         self.assertIn("puoi dire", self.service.handle("context_help", {}))
         self.assertIn("puoi dire", self.service.handle("more_help", {}))
+
+
+class Build040Tests(unittest.TestCase):
+    """Comandi della 040: play, righe, schermo intero, Gestione attività, griglia, mouse."""
+
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.now = [0]
+        self.service, self.backend = make(self.folder.name, clock=lambda: self.now[0])
+        OCR.clear()
+        SHAPES.clear()
+
+    def tearDown(self):
+        self.folder.cleanup()
+
+    def run_text(self, text):
+        request = parse_command(text)
+        self.assertIsNotNone(request, text)
+        return self.service.handle(*request)
+
+    def test_parse_new_phrases(self):
+        self.assertEqual(parse_command("riproduci"), ("play", {}))
+        self.assertEqual(parse_command("Lumi, riga avanti"), ("row_scroll", {"dir": "destra"}))
+        self.assertEqual(parse_command("scorri a sinistra"), ("row_scroll", {"dir": "sinistra"}))
+        self.assertEqual(parse_command("scorri giù")[0], "scroll")
+        self.assertEqual(parse_command("metti lo schermo intero"), ("fullscreen", {"on": True, "bare": False}))
+        self.assertEqual(parse_command("esci"), ("fullscreen", {"on": False, "bare": True}))
+        self.assertEqual(parse_command("esci dallo schermo intero"), ("fullscreen", {"on": False, "bare": False}))
+        self.assertEqual(parse_command("apri gestione attività"), ("task_manager", {}))
+        self.assertEqual(parse_command("chiudi forzatamente chrome"), ("force_close", {"window": "chrome"}))
+        self.assertEqual(parse_command("mouse di poco a destra"), ("nudge", {"dir": "destra", "amount": 10}))
+        self.assertEqual(parse_command("sposta il mouse in basso"), ("nudge", {"dir": "giu", "amount": 50}))
+        self.assertEqual(parse_command("ancora"), ("nudge", {"dir": "ancora"}))
+        self.assertEqual(parse_command("griglia"), ("grid_start", {}))
+        self.assertEqual(parse_command("chiudi la griglia"), ("grid_close", {}))
+        self.assertEqual(parse_command("chiudi chrome"), ("close", {"window": "chrome"}))
+
+    def test_play_prefers_text_then_shape_then_enter(self):
+        self.backend.front = 33
+        OCR[33] = [{"name": "Riproduci", "type": "Text", "x": 50, "y": 60, "w": 80, "h": 20}]
+        self.run_text("riproduci")
+        self.assertIn(("click", 90, 70), self.backend.calls)
+        OCR.clear()
+        SHAPES[33] = [{"name": "", "type": "PlayShape", "x": 200, "y": 200, "w": 20, "h": 20}]
+        self.run_text("play")
+        self.assertIn(("click", 210, 210), self.backend.calls)
+        SHAPES.clear()
+        self.run_text("riproduci")
+        self.assertIn(("press", ("invio",)), self.backend.calls)
+
+    def test_step_on_grid_apps_moves_right(self):
+        self.backend.items.append({"hwnd": 44, "title": "Netflix", "process": "Netflix.exe", "pid": 4})
+        self.backend.front = 44
+        self.service.handle("step", {"dir": "file successivo"})
+        self.service.handle("step", {"dir": "riga successiva"})
+        self.backend.front = 11
+        self.service.handle("step", {"dir": "file successivo"})
+        presses = [c for c in self.backend.calls if c[0] == "press"]
+        self.assertEqual(presses, [("press", ("destra",)), ("press", ("giu",)), ("press", ("giu",))])
+
+    def test_fullscreen_keys_per_program(self):
+        self.backend.front = 22                       # YouTube in Chrome
+        self.run_text("schermo intero")
+        self.backend.front = 11                       # Blocco note: F11
+        self.run_text("schermo intero")
+        presses = [c for c in self.backend.calls if c[0] == "press"]
+        self.assertEqual(presses, [("press", ("f",)), ("press", ("f11",))])
+
+    def test_bare_esci_only_when_fullscreen(self):
+        self.assertFalse(self.service.claims("fullscreen", {"on": False, "bare": True}))
+        self.backend.window_rect = lambda hwnd: (0, 0, 900, 900)
+        self.assertTrue(self.service.claims("fullscreen", {"on": False, "bare": True}))
+        self.backend.front = 22
+        self.run_text("esci")
+        self.assertIn(("press", ("esc",)), self.backend.calls)
+
+    def test_task_manager_and_force_close_confirm_never_lumi(self):
+        self.run_text("apri gestione attività")
+        self.assertIn(("press", ("ctrl", "shift", "esc")), self.backend.calls)
+        reply = self.run_text("chiudi forzatamente whatsapp")
+        self.assertIn("sì", reply)
+        self.assertNotIn(("kill", 3), self.backend.calls)
+        self.service.answer("sì")
+        self.assertIn(("kill", 3), self.backend.calls)
+        self.backend.items.append({"hwnd": 55, "title": "Lumi", "process": "python.exe", "pid": 9,
+                                   "lumi": True})
+        self.assertIn("Non chiudo forzatamente Lumi", self.run_text("chiudi forzatamente lumi"))
+        self.assertNotIn(("kill", 9), self.backend.calls)
+
+    def test_grid_narrows_and_clicks(self):
+        shown = []
+        self.service.show_grid = shown.append
+        self.run_text("griglia")
+        self.assertEqual(shown[-1], (0, 0, 900, 900))
+        self.assertTrue(runtime_claims(self.service, "il 5"))
+        self.run_text("il 5")                          # centro: 300..600
+        self.assertEqual(shown[-1], (300, 300, 300, 300))
+        self.run_text("il 9")
+        self.assertEqual(shown[-1], (500, 500, 100, 100))
+        self.run_text("indietro")
+        self.assertEqual(shown[-1], (300, 300, 300, 300))
+        self.run_text("clicca")
+        self.assertIn(("click", 450, 450), self.backend.calls)
+        self.assertIsNone(shown[-1])
+        self.assertFalse(self.service.grid_active())
+
+    def test_nudge_and_again(self):
+        self.backend.pointer = (100, 100)
+        self.run_text("mouse a destra")
+        self.assertEqual(self.backend.pointer, (150, 100))
+        self.run_text("mouse di poco giù")
+        self.assertEqual(self.backend.pointer, (150, 110))
+        self.run_text("ancora")
+        self.assertEqual(self.backend.pointer, (150, 120))
+        self.run_text("clicca")
+        self.assertIn(("click", 150, 120), self.backend.calls)
+        self.run_text("clic destro")
+        self.assertIn(("click", 150, 120, "right"), self.backend.calls)
+
+    def test_row_scroll_clicks_declared_arrow(self):
+        ELEMENTS[44] = [{"name": "Vedi altri titoli", "type": "Button", "x": 0, "y": 0, "w": 5, "h": 5},
+                        {"name": "Successivo", "type": "Button", "x": 880, "y": 300, "w": 20, "h": 40}]
+        self.backend.items.append({"hwnd": 44, "title": "Netflix", "process": "Netflix.exe", "pid": 4})
+        self.backend.front = 44
+        try:
+            self.run_text("riga avanti")
+            self.assertIn(("click", 890, 320), self.backend.calls)
+        finally:
+            del ELEMENTS[44]
+
+
+def runtime_claims(service, text):
+    runtime.register(service)
+    try:
+        return runtime.claims_first(text)
+    finally:
+        runtime.register(None)
 
 
 if __name__ == "__main__":

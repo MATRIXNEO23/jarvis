@@ -130,7 +130,8 @@ _FIXED = {
     "Timer": (
         "imposta timer {testo}", "timer", "pausa timer", "riprendi timer",
         "quanto manca al timer", "ferma timer", "reset timer", "che ore sono"),
-    "Modelli e GPT": ("passa a GPT", "torna a Gemma"),
+    "Modelli e GPT": ("passa a GPT", "torna a Gemma", "attiva cervello locale",
+                      "spegni cervello locale", "attiva cervello online", "spegni cervello online"),
     "Progetti e Telegram": (
         "crea progetto {testo}", "apri progetto {testo}", "elenca progetti",
         "torna alla conversazione generale"),
@@ -145,7 +146,12 @@ _FIXED = {
         "aprilo", "giù", "su", "clicca su {testo}", "scrivi {testo} nel campo cerca",
         "pulisci la ricerca", "digita {testo}", "premi {testo}", "scorri giù", "scorri su",
         "indietro", "avanti", "su di un livello", "vai alla barra degli indirizzi",
-        "cosa posso fare qui", "chiama questa finestra {testo}"),
+        "cosa posso fare qui", "chiama questa finestra {testo}",
+        "riproduci", "file successivo", "file precedente", "riga successiva", "riga precedente",
+        "scorri a destra", "scorri a sinistra", "schermo intero", "esci dallo schermo intero",
+        "apri gestione attività", "chiudi forzatamente {testo}", "griglia", "chiudi griglia",
+        "mouse a destra", "mouse a sinistra", "mouse su", "mouse giù",
+        "mouse di poco a destra", "mouse di poco a sinistra", "ancora", "clic destro"),
 }
 # Cosa fa ogni comando (mostrato accanto, in «Le mie parole»).
 DESCRIPTIONS = {
@@ -211,6 +217,31 @@ DESCRIPTIONS = {
     "minimizza": "Riduce a icona la finestra in uso.",
     "ingrandisci": "Ingrandisce la finestra in uso.",
     "cosa posso fare qui": "Suggerisce i comandi per questa finestra.",
+    "attiva cervello locale": "Le frasi non capite tornano al modello sul PC (Gemma).",
+    "spegni cervello locale": "Niente modello sul PC: solo comandi interni (o GPT se acceso).",
+    "attiva cervello online": "Accende GPT (e in futuro i servizi online gratuiti).",
+    "spegni cervello online": "Spegne GPT: nessuna richiesta online.",
+    "riproduci": "Preme Riproduci/Play (scritta, pulsante tondo o Invio).",
+    "file successivo": "Elemento dopo (a destra nelle copertine, sotto negli elenchi).",
+    "file precedente": "Elemento prima.",
+    "riga successiva": "Riga sotto.",
+    "riga precedente": "Riga sopra.",
+    "scorri a destra": "Freccia a destra della riga (es. Netflix), poi rinumera.",
+    "scorri a sinistra": "Freccia a sinistra della riga.",
+    "schermo intero": "Schermo intero col tasto giusto del programma davanti.",
+    "esci dallo schermo intero": "Esce dallo schermo intero (anche solo «esci»).",
+    "apri gestione attività": "Apre Gestione attività (Ctrl+Maiusc+Esc).",
+    "chiudi forzatamente {testo}": "Chiude un programma bloccato (chiede sempre, mai Lumi).",
+    "griglia": "Griglia 3×3 numerata: un numero stringe, «clicca» clicca.",
+    "chiudi griglia": "Toglie la griglia.",
+    "mouse a destra": "Sposta il puntatore di circa 50 pixel.",
+    "mouse a sinistra": "Sposta il puntatore di circa 50 pixel.",
+    "mouse su": "Sposta il puntatore di circa 50 pixel.",
+    "mouse giù": "Sposta il puntatore di circa 50 pixel.",
+    "mouse di poco a destra": "Sposta il puntatore di circa 10 pixel.",
+    "mouse di poco a sinistra": "Sposta il puntatore di circa 10 pixel.",
+    "ancora": "Ripete l'ultimo spostamento del mouse.",
+    "clic destro": "Clic destro dove si trova il puntatore.",
 }
 
 

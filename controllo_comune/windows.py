@@ -137,8 +137,8 @@ def _cloaked(hwnd) -> bool:
 
 
 def open_windows() -> list[dict]:
-    """Finestre principali visibili, dalla più recente: {hwnd, title, process, pid}.
-    Esclude quelle di Lumi stessa, finestre strumento e nascoste."""
+    """Finestre principali visibili, dalla più recente: {hwnd, title, process, pid, lumi}.
+    Esclude finestre strumento e nascoste; quelle di Lumi hanno lumi=True."""
     if not IS_WINDOWS:
         return []
     own = os.getpid()
@@ -152,10 +152,12 @@ def open_windows() -> list[dict]:
                 return True
             title = _title(hwnd)
             pid = _pid(hwnd)
-            if not title or pid == own or title == "Program Manager":
+            if not title or title == "Program Manager":
                 return True
+            # Lumi compare nell'elenco (richiesta utente), segnata: le azioni su di
+            # lei chiedono sempre conferma.
             result.append({"hwnd": int(hwnd), "title": title[:200], "pid": pid,
-                           "process": _process_name(pid)})
+                           "process": _process_name(pid), "lumi": pid == own})
         except Exception:
             pass
         return True
@@ -220,13 +222,14 @@ def move_mouse(x: int, y: int, visible: bool = True) -> None:
     user32.SetCursorPos(int(x), int(y))
 
 
-def click(x: int, y: int, visible: bool = True, double: bool = False) -> None:
+def click(x: int, y: int, visible: bool = True, double: bool = False, right: bool = False) -> None:
     if not IS_WINDOWS:
         return
     move_mouse(x, y, visible)
+    down, up = (0x8, 0x10) if right else (MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP)
     for _ in range(2 if double else 1):
-        _send([INPUT(type=0, mi=MOUSEINPUT(0, 0, 0, MOUSEEVENTF_LEFTDOWN, 0, 0)),
-               INPUT(type=0, mi=MOUSEINPUT(0, 0, 0, MOUSEEVENTF_LEFTUP, 0, 0))])
+        _send([INPUT(type=0, mi=MOUSEINPUT(0, 0, 0, down, 0, 0)),
+               INPUT(type=0, mi=MOUSEINPUT(0, 0, 0, up, 0, 0))])
         time.sleep(0.05)
 
 
@@ -286,3 +289,41 @@ def show_window(hwnd: int, how: str) -> bool:
     code = {"minimizza": SW_MINIMIZE, "ingrandisci": SW_MAXIMIZE, "ripristina": SW_RESTORE}[how]
     user32.ShowWindow(hwnd, code)
     return True
+
+
+def foreground() -> int:
+    """La finestra in primo piano adesso (anche se l'hai portata davanti col mouse)."""
+    if not IS_WINDOWS:
+        return 0
+    return int(user32.GetForegroundWindow() or 0)
+
+
+def screen_size():
+    """Larghezza e altezza dello schermo principale."""
+    if not IS_WINDOWS:
+        return None
+    return int(user32.GetSystemMetrics(0)), int(user32.GetSystemMetrics(1))
+
+
+def cursor():
+    """Posizione attuale del puntatore."""
+    if not IS_WINDOWS:
+        return None
+    point = wintypes.POINT()
+    user32.GetCursorPos(ctypes.byref(point))
+    return int(point.x), int(point.y)
+
+
+def kill(pid: int) -> bool:
+    """Chiusura forzata (come «Termina attività»): solo dopo conferma, mai Lumi."""
+    gate.require()
+    if not IS_WINDOWS or not pid or int(pid) == os.getpid():
+        return False
+    PROCESS_TERMINATE = 0x1
+    handle = kernel32.OpenProcess(PROCESS_TERMINATE, False, int(pid))
+    if not handle:
+        return False
+    try:
+        return bool(kernel32.TerminateProcess(handle, 1))
+    finally:
+        kernel32.CloseHandle(handle)

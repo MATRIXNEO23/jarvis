@@ -202,6 +202,8 @@ _NO = {"no", "annulla", "niente", "lascia stare", "no grazie"}
 def ask(command: str, original: str = "") -> str:
     _PENDING["command"] = command
     _PENDING["original"] = original
+    import risposte
+    risposte.expect_answer(speech_text=command + " intendevi")
     try:
         from frasi_lumi import say
         return say("intendevi", comando=command) + " Di' «sì» o «no»."
@@ -216,9 +218,10 @@ def answer(text: str):
         return None
     word = " ".join(_plain(text).split())
     _PENDING["command"] = None
-    if word in _YES or word.startswith("si "):
+    import risposte
+    if risposte.is_yes(text) or word in _YES or word.startswith("si "):
         return ("si", command)
-    if word in _NO:
+    if risposte.is_no(text) or word in _NO:
         return ("no", _PENDING.pop("original", None) or None)
     return None                      # altra frase: la domanda decade
 

@@ -31,6 +31,40 @@ _PATTERNS = [
         r"^(?:(?:mostra|metti|fammi\s+vedere)\s+i\s+numeri|numera(?:\s+gli\s+elementi)?|"
         r"cosa\s+posso\s+cliccare)" + _END, re.I)),
     ("hide_numbers", re.compile(r"^(?:nascondi|togli|leva)\s+i\s+numeri" + _END, re.I)),
+    # --- griglia a 9 caselle e mouse a piccoli passi
+    ("grid_start", re.compile(
+        r"^(?:(?:mostra|apri|attiva)\s+(?:la\s+)?griglia(?:\s+(?:del\s+)?mouse)?|griglia(?:\s+mouse)?)"
+        + _END, re.I)),
+    ("grid_close", re.compile(r"^(?:chiudi|nascondi|togli|leva)\s+(?:la\s+)?griglia" + _END, re.I)),
+    ("click_here", re.compile(
+        r"^(?P<right>clic(?:k)?\s+destro|clicca\s+(?:col|con\s+il)\s+(?:tasto\s+)?destro|tasto\s+destro)"
+        + _END, re.I)),
+    ("nudge", re.compile(
+        r"^(?:sposta\s+(?:il\s+)?)?(?:mouse|puntatore|cursore)\s+(?P<small>di\s+poco\s+)?"
+        r"(?:a\s+|in\s+|verso\s+)?(?P<dir>destra|sinistra|su|giù|giu|alto|basso)"
+        r"(?P<small2>\s+di\s+poco)?" + _END, re.I)),
+    ("nudge_again", re.compile(r"^(?:ancora|di\s+nuovo|ancora\s+un\s+po')" + _END, re.I)),
+    # --- riproduci / play (scritta, pulsante tondo o Invio)
+    ("play", re.compile(
+        r"^(?:riproduci|play|fai\s+partire(?:\s+il\s+video)?|metti\s+play|premi\s+play|"
+        r"avvia\s+(?:il\s+)?video|guarda(?:\s+ora)?)" + _END, re.I)),
+    # --- schermo intero (tasto in base al programma davanti)
+    ("fullscreen_on", re.compile(
+        r"^(?:(?:metti|mettilo|mettila|vai|passa)\s+(?:lo\s+|a\s+|in\s+)?schermo\s+intero|"
+        r"(?:a\s+)?schermo\s+intero|ingrandisci\s+a\s+schermo\s+intero|full\s*screen)" + _END, re.I)),
+    ("fullscreen_off", re.compile(
+        r"^(?P<bare>esci)?(?:(?:esci|togli|leva|chiudi)\s+(?:dallo\s+|da\s+|lo\s+)?schermo\s+intero|"
+        r"schermo\s+normale|esci\s+dal\s+full\s*screen)?" + _END, re.I)),
+    # --- righe di copertine (frecce ai lati, es. Netflix)
+    ("row_scroll", re.compile(
+        r"^(?:scorri\s+(?:la\s+riga\s+)?(?:a\s+|verso\s+)?(?P<dir>destra|sinistra)|"
+        r"riga\s+(?P<dir2>avanti|indietro))" + _END, re.I)),
+    # --- Gestione attività e chiusura forzata (sempre con conferma, mai Lumi)
+    ("task_manager", re.compile(
+        r"^(?:apri\s+|mostra\s+)?(?:la\s+)?(?:gestione\s+attivit[aà]|task\s+manager)" + _END, re.I)),
+    ("force_close", re.compile(
+        r"^(?:chiudi\s+forzatamente|termina\s+forzatamente|forza\s+(?:la\s+)?chiusura\s+(?:di\s+|del\s+|della\s+)?)"
+        r"\s*(?P<window>.+?)" + _END, re.I)),
     # --- scelta per numero o posizione (il 3, il primo file, l'ultima cartella)
     ("pick", re.compile(
         r"^(?P<how>clicca|clic(?:k)?|seleziona|scegli|apri|doppio\s+clic(?:k)?\s+(?:su|sul|sulla)?)"
@@ -43,7 +77,8 @@ _PATTERNS = [
     ("open_bare", re.compile(r"^apri" + _END, re.I)),
     # --- passo passo e navigazione (solo se stai usando il Controllo PC: vedi claims)
     ("step", re.compile(r"^(?P<dir>giù|giu|sotto|su|sopra|prossimo|successivo|precedente|"
-                        r"destra|sinistra)" + _END, re.I)),
+                        r"destra|sinistra|(?:file|elemento)\s+(?:successivo|precedente)|"
+                        r"riga\s+(?:successiva|precedente|sotto|sopra))" + _END, re.I)),
     ("nav", re.compile(r"^(?P<dir>indietro|torna\s+indietro|avanti|vai\s+avanti|"
                        r"su\s+di\s+un\s+livello|livello\s+superiore|cartella\s+superiore|"
                        r"sali\s+di\s+un\s+livello)" + _END, re.I)),
@@ -165,7 +200,8 @@ def parse_command(text: str):
                 continue                      # «premi il pulsante X» -> click
             return "press", {"keys": keys}
         window = values.get("window")
-        if isinstance(window, str) and RESERVED.match(" ".join(window.lower().split())):
+        if (isinstance(window, str) and RESERVED.match(" ".join(window.lower().split()))
+                and not (action == "force_close" and window.lower() in ("lumi", "jarvis"))):
             return None                       # «passa a GPT», «chiudi la musica»…: non è una finestra
         if action == "click":
             values["double"] = bool(values.get("double"))
@@ -192,6 +228,27 @@ def parse_command(text: str):
             how = values["how"].lower()
             values = {"how": "ingrandisci" if how == "massimizza" else how,
                       "window": values.get("window")}
+        if action == "fullscreen_off":
+            if not value.strip(" .!?"):
+                continue
+            values = {"on": False, "bare": bool(values.get("bare")) and value.lower().strip(" .!?") == "esci"}
+            return "fullscreen", values
+        if action == "fullscreen_on":
+            return "fullscreen", {"on": True, "bare": False}
+        if action == "row_scroll":
+            direction = (values.get("dir") or values.get("dir2") or "").lower()
+            return action, {"dir": "destra" if direction in ("destra", "avanti") else "sinistra"}
+        if action == "nudge":
+            direction = values["dir"].lower().replace("giù", "giu")
+            direction = {"alto": "su", "basso": "giu"}.get(direction, direction)
+            return action, {"dir": direction,
+                            "amount": 10 if (values.get("small") or values.get("small2")) else 50}
+        if action == "nudge_again":
+            return "nudge", {"dir": "ancora"}
+        if action == "click_here":
+            return action, {"right": True}
+        if action in ("play", "task_manager", "grid_start", "grid_close"):
+            return action, {}
         if action in ("step", "nav"):
             values = {"dir": values["dir"].lower()}
         if action == "scroll":

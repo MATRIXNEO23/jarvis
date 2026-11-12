@@ -35,3 +35,16 @@ def focused_element(timeout: float = 5.0) -> dict | None:
     data = _run(["focused"], timeout)
     item = data.get("item")
     return item if isinstance(item, dict) else None
+
+
+def ocr_elements(hwnd: int, timeout: float = 15.0) -> list[dict]:
+    """Scritte visibili lette con l'OCR integrato di Windows 10 (offline): per i
+    programmi che non dichiarano i loro elementi (es. copertine, pulsanti disegnati)."""
+    data = _run(["ocr", str(int(hwnd))], timeout)
+    return [i for i in data.get("items", []) if isinstance(i, dict)]
+
+
+def play_shapes(hwnd: int, timeout: float = 10.0) -> list[dict]:
+    """Pulsanti «play» disegnati (cerchio chiaro con triangolo scuro), senza modelli."""
+    data = _run(["play", str(int(hwnd))], timeout)
+    return [i for i in data.get("items", []) if isinstance(i, dict)]

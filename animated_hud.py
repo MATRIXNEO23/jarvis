@@ -65,6 +65,23 @@ def memory_usage_windows() -> tuple[int, int] | None:
     return None
 
 
+def draw_lumi_wordmark(canvas, color, background, scale=0.62):
+    """Disegna «LUMI» (rombo, lettere a linee spesse con taglio, righe sottili)."""
+    def p(points):
+        return [v*scale for v in points]
+    canvas.create_polygon(p([4,24, 13,15, 22,24, 13,33]),outline=color,fill="",width=2)
+    thick=max(3,round(7*scale))
+    for points in ((44,6, 44,42, 70,42),
+                   (88,6, 88,36, 94,42, 112,42, 118,36, 118,6),
+                   (138,42, 138,6, 154,28, 170,6, 170,42),
+                   (192,6, 192,42)):
+        canvas.create_line(*p(points),fill=color,width=thick,capstyle="projecting",
+                           joinstyle="miter")
+    canvas.create_line(*p([38,24, 198,24]),fill=background,width=2)
+    for points in ((40,54, 68,54),(80,54, 196,54),(206,8, 218,8),(201,40, 226,40)):
+        canvas.create_line(*p(points),fill=color,width=1)
+
+
 class WindowsCPU:
     """CPU total-use sampling from the Windows kernel; no psutil install."""
 
@@ -255,10 +272,13 @@ class JarvisHUD:
                     x-1.5,y-1.5,x+1.5,y+1.5,
                     fill="#1d9bc4",outline="")
         header.bind("<Configure>",draw_header)
-        tk.Label(header,text="◈  J A R V I S",
-                 bg=BG,fg=CYAN,
-                 font=("Segoe UI",15,"bold")).pack(
-                     side="left",padx=(5,12))
+        # Scritta LUMI disegnata a linee (stile «B» scelto dall'utente il 12/11):
+        # rombo, lettere squadrate di tratto medio, taglio orizzontale e righe
+        # sottili. Non dipende da caratteri installati sul PC.
+        self.wordmark=tk.Canvas(header,width=168,height=40,bg=BG,
+                                highlightthickness=0,bd=0)
+        self.wordmark.pack(side="left",padx=(5,12))
+        draw_lumi_wordmark(self.wordmark,CYAN,BG)
         tk.Label(header,text="//  INTERFACCIA NEURALE",
                  bg=BG,fg="#4985a7",
                  font=("Consolas",9)).pack(side="left")

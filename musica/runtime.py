@@ -34,6 +34,14 @@ def handle_text(spoken: str, write_line, speak) -> bool:
             write_line("MUSICA > Schermo intero chiuso.")
             return True
         return False
+    if word in ("schermo intero", "metti lo schermo intero", "metti schermo intero",
+                "metti a schermo intero", "video a schermo intero", "a schermo intero"):
+        if (getattr(current, "can_fullscreen", lambda: False)()
+                and not getattr(current, "is_fullscreen", lambda: False)()):
+            current.enter_fullscreen()
+            write_line("MUSICA > Schermo intero.")
+            return True
+        return False
     from .commands import parse_command
     request = parse_command(spoken)
     if request is None:

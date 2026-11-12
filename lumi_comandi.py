@@ -23,6 +23,19 @@ _PATTERNS = (
     ("shutdown_pc", re.compile(r"^spegni\s+(?:il\s+)?(?:pc|computer)" + _END, re.I)),
     ("cancel_shutdown", re.compile(r"^annulla\s+(?:lo\s+)?spegnimento" + _END, re.I)),
     ("hide", re.compile(r"^(?:nascondi(?:ti)?|nascondi\s+(?:l'\s*)?avatar|sparisci)" + _END, re.I)),
+    # Cervelli: locale (Gemma sul PC) e online (GPT e futuri gratuiti), con o senza articolo.
+    ("brain_local_on", re.compile(
+        r"^(?:(?:attiva|accendi|riattiva|abilita)\s+(?:il\s+)?cervello\s+locale|"
+        r"(?:il\s+)?cervello\s+locale\s+(?:on|acceso|attivo))" + _END, re.I)),
+    ("brain_local_off", re.compile(
+        r"^(?:(?:spegni|disattiva|disabilita)\s+(?:il\s+)?cervello\s+locale|"
+        r"(?:il\s+)?cervello\s+locale\s+(?:off|spento))" + _END, re.I)),
+    ("brain_online_on", re.compile(
+        r"^(?:(?:attiva|accendi|riattiva|abilita)\s+(?:il\s+)?cervello\s+online|"
+        r"(?:il\s+)?cervello\s+online\s+(?:on|acceso|attivo))" + _END, re.I)),
+    ("brain_online_off", re.compile(
+        r"^(?:(?:spegni|disattiva|disabilita)\s+(?:il\s+)?cervello\s+online|"
+        r"(?:il\s+)?cervello\s+online\s+(?:off|spento))" + _END, re.I)),
     ("wake", re.compile(r"^(?:svegliati|sveglia|torna\s+qui|fatti\s+vedere|mostrati|"
                         r"mostra\s+(?:l'\s*)?avatar)" + _END, re.I)),
 )
@@ -58,10 +71,11 @@ def handle_text(spoken: str, write_line, speak) -> bool:
         _STATE["pending"] = None
         action, deadline = pending
         word = " ".join(_WAKE.sub("", spoken).casefold().strip(" .!?").split())
-        if time.monotonic() <= deadline and word in _YES:
+        import risposte
+        if time.monotonic() <= deadline and (word in _YES or risposte.is_yes(spoken)):
             actions[action]()
             return True
-        if time.monotonic() <= deadline and word in _NO:
+        if time.monotonic() <= deadline and (word in _NO or risposte.is_no(spoken)):
             reply = say("annullato")
             write_line("LUMI > " + reply)
             speak(reply)
@@ -69,17 +83,16 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     action = parse(spoken)
     if action is None:
         return False
-    # «sveglia» da sola resta la sveglia (add-on) quando Lumi è già davanti;
-    # serve a riaprire Lumi solo se è ridotta a icona o nascosta.
-    value = " ".join(_WAKE.sub("", spoken).casefold().strip(" .!?").split())
-    if action == "wake" and value == "sveglia" and not _STATE["is_hidden_ui"]():
-        return False
+    # «sveglia» / «Lumi, sveglia» riapre SEMPRE Lumi (richiesta utente): la sveglia
+    # dell'add-on si imposta solo con «imposta/metti la sveglia (alle …)».
     if action in ("restart", "shutdown_pc"):
         _STATE["pending"] = (action, time.monotonic() + 60)
         question = ("Mi riavvio adesso? Di' sì o no." if action == "restart" else
                     "Spengo davvero il computer? Salva prima il tuo lavoro. Di' sì o no.")
         write_line("LUMI > " + question)
         speak(question)
+        import risposte
+        risposte.expect_answer(speech_text=question)
         return True
     actions[action]()
     return True

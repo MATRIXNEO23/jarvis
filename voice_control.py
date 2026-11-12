@@ -104,6 +104,19 @@ def speech_to_local_command(text: str) -> str | None:
     return exact.get(words)
 
 
+def _answer_waiting() -> bool:
+    try:
+        import risposte
+        return risposte.waiting()
+    except ImportError:
+        return False
+
+
+def _answer_grammar() -> str:
+    import risposte
+    return json.dumps(risposte.GRAMMAR, ensure_ascii=False)
+
+
 class WakeWordGate:
     """Explicit wake name for continuous listening, never a microphone mode.
 
@@ -136,6 +149,14 @@ class WakeWordGate:
         if not isinstance(speech, str) or not speech.strip():
             return "ignored", ""
         spoken = " ".join(speech.casefold().replace(",", " ").replace(":", " ").strip(" .!?").split())
+        # Dopo una domanda di Lumi la risposta sì/no vale anche senza il nome.
+        try:
+            import risposte
+            if risposte.waiting() and risposte.is_answer(spoken):
+                risposte.done()
+                return "command", spoken
+        except ImportError:
+            pass
         for name in ("ehi lumi", "hey lumi", "lumi"):
             if spoken == name:
                 self.armed_until = self.clock() + (
@@ -301,6 +322,7 @@ class VoiceController:
                 self._report("voice_status", "Microfono attivo — riconoscimento offline.", generation)
                 fragments: list[str] = []
                 suppressed = False
+                restricted = False
                 activity = SpeechActivity()
                 while not stop.is_set() and self._is_current(generation):
                     data, overflow = stream.read(4000)
@@ -320,6 +342,17 @@ class VoiceController:
                     if suppressed:
                         recognizer = KaldiRecognizer(model, 16000)
                         suppressed = False
+                        restricted = False
+                    # Attesa di un sì/no: riconoscimento ristretto alle parole di
+                    # risposta (molto più preciso sulle parole corte); poi normale.
+                    answer_mode = _answer_waiting()
+                    if answer_mode != restricted:
+                        try:
+                            recognizer = (KaldiRecognizer(model, 16000, _answer_grammar())
+                                          if answer_mode else KaldiRecognizer(model, 16000))
+                        except Exception:
+                            recognizer = KaldiRecognizer(model, 16000)
+                        restricted = answer_mode
                     activity.feed(pcm)
                     with self._lock:
                         if self._is_current(generation) and not stop.is_set():

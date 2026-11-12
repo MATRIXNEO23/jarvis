@@ -52,10 +52,19 @@ class LumiCommandsTests(unittest.TestCase):
         actions = {k: (lambda k=k: done.append(k)) for k in
                    ("minimize", "close", "restart", "shutdown_pc", "cancel_shutdown", "hide", "wake")}
         l.register(actions, lambda: hidden[0])
-        self.assertFalse(l.handle_text("sveglia", lines.append, lines.append))   # Lumi visibile: è la sveglia
+        # «sveglia» riapre sempre Lumi; la sveglia si imposta con «imposta la sveglia».
+        self.assertTrue(l.handle_text("sveglia", lines.append, lines.append))
+        self.assertIsNone(l.parse("imposta la sveglia alle 7"))
         hidden[0] = True
         self.assertTrue(l.handle_text("Lumi, sveglia", lines.append, lines.append))
-        self.assertEqual(done, ["wake"])
+        self.assertEqual(done, ["wake", "wake"])
+        done.clear()
+        done.append("wake")
+        for text, key in (("attiva cervello locale", "brain_local_on"),
+                          ("Lumi, spegni il cervello online", "brain_online_off"),
+                          ("cervello locale off", "brain_local_off"),
+                          ("il cervello online on", "brain_online_on")):
+            self.assertEqual(l.parse(text), key)
         self.assertTrue(l.handle_text("spegni il computer", lines.append, lines.append))
         self.assertEqual(done, ["wake"])                                 # prima chiede
         self.assertTrue(l.handle_text("no", lines.append, lines.append))

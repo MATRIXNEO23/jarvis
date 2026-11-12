@@ -17,7 +17,8 @@ import unicodedata
 from pathlib import Path
 
 from controllo_comune import windows as win
-from controllo_comune.uia import focused_element, helper_path, list_elements
+from controllo_comune.uia import (focused_element, helper_path, list_elements, ocr_elements,
+                                  play_shapes)
 from frasi_lumi import say
 
 CONFIRM_TIMEOUT = 60
@@ -47,6 +48,20 @@ def data_folder() -> Path:
         return Path.home() / ".lumi" / "addon-data" / "controllo_pc"
 
 
+def _overlap(a, b) -> bool:
+    return not (a["x"] + a["w"] <= b["x"] or b["x"] + b["w"] <= a["x"]
+                or a["y"] + a["h"] <= b["y"] or b["y"] + b["h"] <= a["y"])
+
+
+# Tasto per lo schermo intero in base al programma (minuscolo, senza .exe).
+FULLSCREEN_KEYS = {"netflix": (["f"], ["esc"]), "vlc": (["f"], ["esc"]),
+                   "wmplayer": (["alt", "invio"], ["esc"]), "mpc-hc64": (["alt", "invio"], ["esc"]),
+                   "mpc-hc": (["alt", "invio"], ["esc"]), "potplayermini64": (["invio"], ["esc"])}
+BROWSERS = {"chrome", "msedge", "firefox", "brave", "opera", "vivaldi"}
+# Programmi a griglia (copertine): elemento = destra/sinistra, riga = giù/su.
+GRID_APPS = {"netflix", "disney", "primevideo", "spotify"}
+
+
 class ControlService:
     def __init__(self, is_enabled=lambda: False, folder: Path | None = None,
                  backend=win, elements=list_elements, clock=time.monotonic):
@@ -66,6 +81,12 @@ class ControlService:
         self.help_page = 0
         self.show_overlay = lambda items: None     # numeri sullo schermo (impostato da Lumi)
         self.focused = focused_element
+        self.ocr = ocr_elements           # scritte sullo schermo (OCR di Windows)
+        self.play_shapes = play_shapes    # pulsanti play disegnati
+        self.grid = None                  # (x, y, w, h, storico) mentre la griglia è attiva
+        self.last_nudge = None
+        self.show_grid = lambda rect: None
+        self.pointer_mode = False
         try:
             from controllo_comune import gate
             gate.register("controllo_pc", self.is_enabled)
@@ -137,11 +158,11 @@ class ControlService:
                 return item["label"]
         return ""
 
-    def find_window(self, query: str | None):
+    def find_window(self, query: str | None, allow_lumi=False):
         """Per numero dell'ultimo elenco, nome tuo, titolo o programma."""
         items = self.windows()
         if not query:
-            return self._current(items)
+            return self._current(items, allow_lumi)
         from .commands import number_of
         number = number_of(query)
         if number is not None and self.last_list:
@@ -166,12 +187,21 @@ class ControlService:
                     return w
         return None
 
-    def _current(self, items):
-        if self.target is not None:
-            match = next((w for w in items if w["hwnd"] == self.target), None)
-            if match:
-                return match
-        return items[0] if items else None       # la più recente dopo Lumi
+    def _current(self, items, allow_lumi=False):
+        """La finestra in primo piano ADESSO (richiesta utente: non l'ultima usata da
+        Lumi). Se davanti c'è Lumi stessa (es. comando scritto nella sua casella), le
+        azioni vanno alla finestra subito sotto, salvo chiudi/minimizza (con conferma)."""
+        try:
+            front = int(self.backend.foreground())
+        except Exception:
+            front = 0
+        match = next((w for w in items if w["hwnd"] == front), None)
+        if match is not None and (allow_lumi or not match.get("lumi")):
+            return match
+        others = [w for w in items if not w.get("lumi")]
+        if match is not None and match.get("lumi"):
+            return others[0] if others else None
+        return others[0] if others else (items[0] if allow_lumi and items else None)
 
     # --- conferme ---------------------------------------------------------------
     def _ask(self, key: str, delicate: bool, description: str, run) -> str:
@@ -179,6 +209,8 @@ class ControlService:
         if not delicate and self.settings["approved"].get(key, 0) >= times:
             return run()
         self.pending = (self.clock() + CONFIRM_TIMEOUT, key, delicate, description, run)
+        import risposte
+        risposte.expect_answer(speech_text=description)
         tail = " (azione delicata: chiedo sempre)" if delicate else ""
         return say("conferma", testo=description) + " Di' «sì» o «no»." + tail
 
@@ -191,7 +223,8 @@ class ControlService:
         if self.clock() > deadline:
             self.pending = None
             return None
-        if word in ("si", "sì", "conferma", "confermo", "ok", "va bene", "procedi", "vai", "fallo"):
+        import risposte
+        if risposte.is_yes(text) or word in ("conferma", "confermo", "procedi", "fallo"):
             self.pending = None
             if not delicate:
                 approved = self.settings["approved"]
@@ -201,7 +234,7 @@ class ControlService:
                 except OSError:
                     pass
             return run()
-        if word in ("no", "annulla", "lascia stare", "non farlo", "stop"):
+        if risposte.is_no(text) or word in ("non farlo",):
             self.pending = None
             return say("annullato")
         self.pending = None            # altra frase: la conferma decade
@@ -212,10 +245,15 @@ class ControlService:
         """Messaggio, oppure None se la frase non riguarda una finestra/elemento esistente."""
         if not self.is_enabled():
             return None
+        action, values = self._redirect(action, values)
         method = getattr(self, "_do_" + action, None)
         if method is None:
             return None
         reply = method(**values)
+        if action in ("nudge", "grid_start", "grid_pick", "grid_back"):
+            self.pointer_mode = True
+        elif action not in ("click_here",):
+            self.pointer_mode = False
         if reply is not None:
             self.last_used = self.clock()
         return reply
@@ -226,10 +264,36 @@ class ControlService:
     CONTEXT_SECONDS = 120
     SHORT_ACTIONS = ("step", "nav", "open_bare", "open_selected", "click_selected", "more_help")
 
+    # Azioni che, se riconosciute, vanno al Controllo PC prima della musica.
+    # «play» e «schermo intero» restano prima alla musica (riprendi / video di Lumi),
+    # tranne «play» mentre stai usando il Controllo PC.
+    FIRST_ACTIONS = ("pick", "row_scroll", "grid_start", "grid_close", "nudge",
+                     "click_here", "task_manager", "force_close")
+
+    def _redirect(self, action, values):
+        """Con la griglia aperta i numeri scelgono la casella, «indietro» torna alla
+        griglia più grande, «clicca» clicca al centro; dopo «mouse a destra» «clicca»
+        clicca dove si trova il puntatore."""
+        if self.grid_active():
+            if action == "pick" and values.get("bare") and 1 <= (values.get("position") or 0) <= 9:
+                return "grid_pick", {"number": values["position"]}
+            if action == "nav" and values.get("dir", "").endswith("indietro"):
+                return "grid_back", {}
+        if self.grid_active() or self.pointer_mode:
+            if action == "click_selected":
+                return "click_here", {}
+            if action == "open_selected":
+                return "click_here", {"double": True}
+        return action, values
+
     def recent(self) -> bool:
         return self.clock() - self.last_used <= self.CONTEXT_SECONDS
 
     def claims(self, action: str, values: dict) -> bool:
+        if action == "nudge" and values.get("dir") == "ancora":
+            return self.last_nudge is not None and self.recent()
+        if action == "fullscreen" and values.get("bare"):
+            return self.is_fullscreen_front()
         if action in self.SHORT_ACTIONS or (action == "pick" and values.get("bare")):
             return self.recent()
         return True
@@ -243,7 +307,7 @@ class ControlService:
         for index, w in enumerate(self.last_list, start=1):
             nick = self.nickname_of(w)
             lines.append(f"{index}. {w['title'][:70]}" + (f"  [«{nick}»]" if nick else "")
-                         + f"  ({w['process']})")
+                         + ("  (Lumi)" if w.get("lumi") else f"  ({w['process']})"))
         return "Finestre aperte (di' «passa alla 2» o il nome):\n" + "\n".join(lines)
 
     def _do_switch(self, window):
@@ -274,10 +338,13 @@ class ControlService:
         return "Windows non mi ha lasciato portare davanti " + found["title"][:60] + "."
 
     def _do_close(self, window=None):
-        found = self.find_window(window)
+        found = self.find_window(window, allow_lumi=True)
         if found is None:
             return None
         key = "close|" + found["process"].lower()
+        if found.get("lumi"):
+            return self._ask("", True, "Chiudo Lumi stessa",
+                             lambda: (self.backend.close(found["hwnd"]), say("chiudo", finestra="Lumi"))[1])
 
         def run():
             ok = self.backend.close(found["hwnd"])
@@ -310,6 +377,15 @@ class ControlService:
         exact = [i for i in candidates if normalized(i.get("name", "")) == key]
         partial = [i for i in candidates if key and key in normalized(i.get("name", ""))]
         chosen = (exact or partial or [None])[0]
+        if chosen is None and kinds is None:
+            # Il programma non dichiara quell'elemento: provo a leggere le scritte (OCR).
+            try:
+                texts = self.ocr(found["hwnd"])
+            except Exception:
+                texts = []
+            exact = [i for i in texts if normalized(i.get("name", "")) == key]
+            partial = [i for i in texts if key and key in normalized(i.get("name", ""))]
+            chosen = (exact or partial or [None])[0]
         if chosen is None:
             return found, None, f"In {found['title'][:40]} non trovo «{target}»."
         return found, chosen, ""
@@ -344,7 +420,9 @@ class ControlService:
         if item is None:
             return error
         delicate = bool(_DELICATE.search(item.get("name", "")) or _DELICATE.search(target))
-        key = f"click|{found['process'].lower()}|{normalized(item.get('name', ''))}"
+        # Ricordata per programma (non per singolo pulsante): dopo le prime conferme
+        # i clic in quel programma non chiedono più (le azioni delicate sì).
+        key = f"click|{found['process'].lower()}"
 
         def run():
             self.target = found["hwnd"]
@@ -362,7 +440,7 @@ class ControlService:
             return None
         if item is None:
             return error
-        key = f"type|{found['process'].lower()}|{normalized(item.get('name', ''))}"
+        key = f"type|{found['process'].lower()}"
 
         def run():
             self.target = found["hwnd"]
@@ -474,6 +552,17 @@ class ControlService:
         except Exception as exc:
             return "Non riesco a leggere la finestra: " + str(exc)[:100]
         shown = [i for i in items if i.get("type") in self.CLICKABLE][:self.MAX_NUMBERS]
+        if len(shown) < 8:
+            # Pochi elementi dichiarati (es. Netflix): aggiungo le scritte lette con l'OCR.
+            try:
+                texts = self.ocr(found["hwnd"])
+            except Exception:
+                texts = []
+            for text in texts:
+                if len(shown) >= self.MAX_NUMBERS:
+                    break
+                if not any(_overlap(text, other) for other in shown):
+                    shown.append(text)
         if not shown:
             return f"{found['title'][:50]} non dichiara elementi a Windows: prova «scorri» o i tasti."
         self.target = found["hwnd"]
@@ -593,6 +682,8 @@ class ControlService:
         name = (item.get("name") or "elemento")[:60]
         self.pending = (self.clock() + CONFIRM_TIMEOUT, "", True, "",
                         lambda: (self._point(found, item, "double"), say("doppio", nome=name))[1])
+        import risposte
+        risposte.expect_answer(speech_text=name)
         return say("apri_selezionato", nome=name)
 
     # --- passo passo con le frecce -------------------------------------------------------
@@ -600,13 +691,27 @@ class ControlService:
                   "su": "su", "sopra": "su", "precedente": "su", "destra": "destra",
                   "sinistra": "sinistra"}
 
+    def _step_key(self, dir, process):
+        """«file successivo» va a destra nei programmi a griglia (copertine), giù negli
+        elenchi; «riga successiva» va sempre giù."""
+        grid = process in GRID_APPS
+        if dir in ("file successivo", "elemento successivo", "prossimo", "successivo"):
+            return "destra" if grid else "giu"
+        if dir in ("file precedente", "elemento precedente", "precedente"):
+            return "sinistra" if grid else "su"
+        if dir in ("riga successiva", "riga sotto"):
+            return "giu"
+        if dir in ("riga precedente", "riga sopra"):
+            return "su"
+        return self._STEP_KEYS.get(dir, "giu")
+
     def _do_step(self, dir):
         found = self.find_window(None)
         if found is None:
             return None
         self.target = found["hwnd"]
         self.backend.focus(found["hwnd"])
-        self.backend.press([self._STEP_KEYS[dir]])
+        self.backend.press([self._step_key(dir, self._app_name(found))])
         time.sleep(0.15)
         try:
             item = self.focused()
@@ -663,9 +768,14 @@ class ControlService:
 
     # --- finestre: minimizza, ingrandisci, ripristina -----------------------------------
     def _do_window_state(self, how, window=None):
-        found = self.find_window(window)
+        found = self.find_window(window, allow_lumi=True)
         if found is None:
             return None
+        if found.get("lumi") and how != "ripristina":
+            return self._ask("", True, ("Riduco a icona" if how == "minimizza" else "Ingrandisco")
+                             + " Lumi stessa",
+                             lambda: (self.backend.show_window(found["hwnd"], how),
+                                      say(how, finestra="Lumi"))[1])
         self.backend.show_window(found["hwnd"], how)
         if how != "minimizza":
             self.target = found["hwnd"]
@@ -703,3 +813,212 @@ class ControlService:
         chunk = items[start:start + 4]
         where = f"In {found['title'][:40]}" if found else "Qui"
         return f"{where} puoi dire: " + ", ".join(chunk) + ". Di' «altri» per altri comandi."
+
+    # --- «riproduci» / «play» ------------------------------------------------------
+    def _do_play(self):
+        """Prima la scritta «Riproduci/Play» (elementi o OCR), poi il pulsante tondo con
+        il triangolo, infine Invio sull'elemento selezionato."""
+        found = self.find_window(None)
+        if found is None:
+            return None
+        candidates = []
+        try:
+            candidates = [i for i in self.elements(found["hwnd"])
+                          if re.match(r"^(riproduci|play|riprendi|guarda)\b", i.get("name", ""), re.I)]
+        except Exception:
+            pass
+        if not candidates:
+            try:
+                candidates = [i for i in self.ocr(found["hwnd"])
+                              if re.match(r"^(riproduci|play|riprendi|guarda)\b", i.get("name", ""), re.I)]
+            except Exception:
+                candidates = []
+        if not candidates:
+            try:
+                candidates = self.play_shapes(found["hwnd"])
+            except Exception:
+                candidates = []
+        if candidates:
+            self._point(found, candidates[0], "click")
+            return say("clic", nome=candidates[0].get("name") or "play")
+        self.target = found["hwnd"]
+        self.backend.focus(found["hwnd"])
+        self.backend.press(["invio"])
+        return "Non vedo il pulsante play: ho premuto Invio sull'elemento selezionato."
+
+    # --- frecce ai lati delle righe (es. Netflix) ---------------------------------------
+    def _do_row_scroll(self, dir):
+        return self._renumber(self._row_scroll(dir))
+
+    def _row_scroll(self, dir):
+        found = self.find_window(None)
+        if found is None:
+            return None
+        right = dir == "destra"
+        pattern = r"(successiv|next|avanti|destra|scorri a destra)" if right else \
+            r"(precedent|previous|indietro|sinistra|scorri a sinistra)"
+        try:
+            buttons = [i for i in self.elements(found["hwnd"]) if i.get("type") in ("Button", "Hyperlink")
+                       and re.search(pattern, i.get("name", ""), re.I)]
+        except Exception:
+            buttons = []
+        if buttons:
+            self._point(found, buttons[0], "click")
+            return "Riga " + ("avanti." if right else "indietro.")
+        # Freccia non dichiarata: la freccia compare al bordo della riga dell'elemento
+        # selezionato; ci porto il puntatore e clicco. Altrimenti uso i tasti.
+        rect = self.backend.window_rect(found["hwnd"])
+        if self.selected is not None and self.selected[0] == found["hwnd"] and rect:
+            item = self.selected[1]
+            x = rect[2] - 60 if right else rect[0] + 45
+            y = item["y"] + item["h"] // 2
+            self.backend.focus(found["hwnd"])
+            self.backend.click(x, y, True)
+            return "Riga " + ("avanti." if right else "indietro.")
+        self.backend.focus(found["hwnd"])
+        for _ in range(4):
+            self.backend.press(["destra" if right else "sinistra"])
+        return "Riga " + ("avanti" if right else "indietro") + " (con i tasti freccia)."
+
+    def _renumber(self, reply):
+        """Dopo lo scorrimento di una riga i numeri vecchi non valgono più: li rimetto."""
+        if reply is None or self.numbered is None or self.clock() - self.numbered[2] > self.CONTEXT_SECONDS:
+            return reply
+        time.sleep(0.7)                    # l'animazione della riga
+        again = self._do_show_numbers()
+        return reply + (" " + again.split("\n", 1)[0] if again else "")
+
+    # --- schermo intero per programma ------------------------------------------------------
+    @staticmethod
+    def _app_name(found) -> str:
+        """Nome del programma senza .exe; per browser e app dello Store il sito/app
+        dal titolo (Netflix, YouTube, Disney+, Prime Video)."""
+        process = found["process"].lower().rsplit(".", 1)[0]
+        if process in BROWSERS or process in ("applicationframehost", "wwahost", "msedgewebview2"):
+            title = found["title"].lower()
+            for name, key in (("netflix", "netflix"), ("youtube", "youtube"),
+                              ("disney", "disney"), ("prime video", "primevideo")):
+                if name in title:
+                    return key
+        return process
+
+    def _fullscreen_keys(self, found):
+        app = self._app_name(found)
+        if app in FULLSCREEN_KEYS:
+            return FULLSCREEN_KEYS[app]
+        if app in ("youtube", "disney", "primevideo"):
+            return (["f"], ["esc"])
+        return (["f11"], ["f11"])           # browser, Esplora file e programmi sconosciuti
+
+    def _do_fullscreen(self, on=True, bare=False):
+        if bare and not self.is_fullscreen_front():
+            return None                     # «esci» da solo: solo se qualcosa è a schermo intero
+        found = self.find_window(None)
+        if found is None:
+            return None
+        keys = self._fullscreen_keys(found)[0 if on else 1]
+        self.target = found["hwnd"]
+        self.backend.focus(found["hwnd"])
+        self.backend.press(keys)
+        return ("Schermo intero" if on else "Esco dallo schermo intero") + f" ({'+'.join(keys).upper()})."
+
+    def is_fullscreen_front(self) -> bool:
+        """La finestra davanti occupa tutto lo schermo?"""
+        try:
+            found = self._current(self.windows())
+            rect = self.backend.window_rect(found["hwnd"]) if found else None
+            screen = self.backend.screen_size()
+        except Exception:
+            return False
+        return bool(rect and screen and rect[0] <= 0 and rect[1] <= 0
+                    and rect[2] >= screen[0] and rect[3] >= screen[1])
+
+    # --- Gestione attività e chiusura forzata ------------------------------------------------
+    def _do_task_manager(self):
+        self.backend.press(["ctrl", "shift", "esc"])
+        return "Apro Gestione attività."
+
+    def _do_force_close(self, window):
+        found = self.find_window(window, allow_lumi=True)
+        if found is None:
+            return None
+        if found.get("lumi"):
+            return "Non chiudo forzatamente Lumi: di' «chiudi Lumi» o «riavvia Lumi»."
+
+        def run():
+            ok = self.backend.kill(found["pid"])
+            return ("Chiuso forzatamente " + found["title"][:50] + "." if ok else
+                    "Non riesco a chiudere " + found["title"][:50] + ".")
+        return self._ask("", True, "Chiudo forzatamente " + found["title"][:50]
+                         + " (si perde quello che non è salvato)", run)
+
+    # --- griglia a 9 caselle e mouse a piccoli passi -----------------------------------------
+    GRID_SECONDS = 90
+
+    def grid_active(self) -> bool:
+        return self.grid is not None and self.clock() - self.grid[5] <= self.GRID_SECONDS
+
+    def _do_grid_start(self):
+        screen = self.backend.screen_size() or (1280, 720)
+        self.grid = (0, 0, screen[0], screen[1], [], self.clock())
+        self.show_grid(self.grid[:4])
+        return "Griglia: di' un numero da 1 a 9 per stringere, poi «clicca». «Chiudi griglia» per uscire."
+
+    def _do_grid_pick(self, number):
+        if not self.grid_active() or not 1 <= number <= 9:
+            return None
+        x, y, w, h, history, _ = self.grid
+        col, row = (number - 1) % 3, (number - 1) // 3
+        cell = (x + col * w // 3, y + row * h // 3, max(1, w // 3), max(1, h // 3))
+        self.grid = (*cell, history + [(x, y, w, h)], self.clock())
+        self.backend.move_mouse(cell[0] + cell[2] // 2, cell[1] + cell[3] // 2, True)
+        self.show_grid(cell)
+        if cell[2] < 45 or cell[3] < 45:
+            return "Casella piccola: di' «clicca», oppure «mouse di poco a destra»."
+        return f"Casella {number}. Ancora un numero o «clicca»."
+
+    def _do_grid_back(self):
+        if not self.grid_active() or not self.grid[4]:
+            return None
+        previous = self.grid[4][-1]
+        self.grid = (*previous, self.grid[4][:-1], self.clock())
+        self.show_grid(previous)
+        return "Torno alla griglia più grande."
+
+    def _do_grid_close(self):
+        if self.grid is None:
+            return None
+        self.grid = None
+        self.show_grid(None)
+        return "Griglia chiusa."
+
+    def _do_click_here(self, double=False, right=False):
+        """Clic dove si trova il puntatore (centro della griglia o dopo uno spostamento)."""
+        if self.grid_active():
+            x, y, w, h = self.grid[:4]
+            point = (x + w // 2, y + h // 2)
+            self.grid = None
+            self.show_grid(None)
+        else:
+            point = self.backend.cursor()
+        if point is None:
+            return None
+        if right:
+            self.backend.click(point[0], point[1], True, double, True)
+        else:
+            self.backend.click(point[0], point[1], True, double)
+        return "Doppio clic." if double else ("Clic destro." if right else "Clic.")
+
+    def _do_nudge(self, dir, amount=50):
+        steps = {"destra": (1, 0), "sinistra": (-1, 0), "su": (0, -1), "giu": (0, 1), "giù": (0, 1)}
+        if dir == "ancora":
+            if self.last_nudge is None:
+                return None
+            dir, amount = self.last_nudge
+        dx, dy = steps[dir]
+        point = self.backend.cursor()
+        if point is None:
+            return None
+        self.backend.move_mouse(point[0] + dx * amount, point[1] + dy * amount, True)
+        self.last_nudge = (dir, amount)
+        return "Mouse " + ("di poco " if amount < 50 else "") + "a " + dir + "."

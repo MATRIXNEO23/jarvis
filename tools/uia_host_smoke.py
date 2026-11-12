@@ -28,11 +28,17 @@ def main(out_dir: str) -> int:
     marker.unlink(missing_ok=True)
     ps = (
         "Add-Type -AssemblyName System.Windows.Forms;"
-        "$f=New-Object Windows.Forms.Form;$f.Text='Prova Lumi Controllo';$f.Width=360;$f.Height=200;"
+        "$f=New-Object Windows.Forms.Form;$f.Text='Prova Lumi Controllo';$f.Width=360;$f.Height=240;$f.TopMost=$true;"
         "$t=New-Object Windows.Forms.TextBox;$t.AccessibleName='Cerca';$t.Top=10;$t.Left=10;$t.Width=200;"
         "$b=New-Object Windows.Forms.Button;$b.Text='Saluta';$b.Top=60;$b.Left=10;"
         f"$b.Add_Click({{Set-Content -Path '{marker}' -Value ('CLICCATO '+$t.Text);$f.Close()}});"
-        "$f.Controls.Add($t);$f.Controls.Add($b);"
+        "$l=New-Object Windows.Forms.Label;$l.Text='Riproduci';$l.Top=110;$l.Left=10;$l.AutoSize=$true;"
+        "$l.Font=New-Object Drawing.Font('Segoe UI',18);$l.BackColor='White';$l.ForeColor='Black';"
+        "$p=New-Object Windows.Forms.Panel;$p.Top=60;$p.Left=200;$p.Width=90;$p.Height=90;$p.BackColor='Black';"
+        "$p.Add_Paint({param($s,$e);$e.Graphics.FillEllipse([Drawing.Brushes]::White,15,15,56,56);"
+        "$e.Graphics.FillPolygon([Drawing.Brushes]::Black,[Drawing.Point[]]@("
+        "(New-Object Drawing.Point 36,29),(New-Object Drawing.Point 36,57),(New-Object Drawing.Point 58,43)))});"
+        "$f.Controls.Add($t);$f.Controls.Add($b);$f.Controls.Add($l);$f.Controls.Add($p);"
         "$k=New-Object Windows.Forms.Timer;$k.Interval=40000;$k.Add_Tick({$f.Close()});$k.Start();"
         "[void]$f.ShowDialog()")
     proc = subprocess.Popen(["powershell", "-NoProfile", "-STA", "-Command", ps])
@@ -57,6 +63,24 @@ def main(out_dir: str) -> int:
         numbers = service.handle("show_numbers", {})
         print(numbers)
         assert "Saluta" in numbers, "numeri sugli elementi non letti"
+        # Pulsante play disegnato (cerchio bianco con triangolo nero): analisi dei pixel.
+        from controllo_comune.uia import ocr_elements, play_shapes
+        windows.focus(hwnd)
+        time.sleep(0.5)
+        shapes = play_shapes(hwnd)
+        print("pulsanti play:", shapes)
+        assert any(170 <= s["x"] - windows.window_rect(hwnd)[0] + s["w"] // 2 <= 290 for s in shapes), \
+            "pulsante play disegnato non trovato"
+        # OCR di Windows: la scritta «Riproduci» (se il sistema ha una lingua OCR).
+        try:
+            texts = ocr_elements(hwnd)
+        except RuntimeError as exc:
+            texts = None
+            print("OCR NON VERIFICATO su questo runner:", exc)
+        if texts is not None:
+            print("scritte OCR:", texts)
+            assert any("riproduci" in t["name"].lower() for t in texts), "OCR: «Riproduci» non letto"
+            print("OCR OK")
         from controllo_comune.uia import focused_element
         print("elemento col fuoco:", focused_element())
         print(service.handle("click", {"target": "Saluta", "window": "prova lumi"}))
