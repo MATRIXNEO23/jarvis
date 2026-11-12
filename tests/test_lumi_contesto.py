@@ -36,3 +36,33 @@ class ContextTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TelegramUiMoveTests(unittest.TestCase):
+    """Passo 2a: le funzioni Telegram spostate leggono i valori ATTUALI di main()."""
+
+    def test_moved_functions_use_live_values(self):
+        try:
+            from telegram_addon.lumi_ui import NOMI, installa
+        except ImportError as exc:          # tkinter assente fuori da Windows
+            self.skipTest(str(exc))
+        state = {"settings": {"telegram_contacts": [{"id": 1, "enabled": True},
+                                                    {"id": 2, "enabled": False}]},
+                 "addon_manager": None}
+        funcs = installa(lumi_contesto.Vivo(settings=lambda: state["settings"],
+                                            addon_manager=lambda: state["addon_manager"]))
+        self.assertEqual(sorted(funcs), sorted(NOMI))
+        self.assertEqual(funcs["selected_telegram_contacts"](), [{"id": 1, "enabled": True}])
+        state["settings"] = {"telegram_contacts": []}           # main cambia il valore
+        self.assertEqual(funcs["selected_telegram_contacts"](), [])
+        self.assertTrue(funcs["telegram_addon_enabled"]())
+
+    def test_main_binds_every_moved_name(self):
+        source = Path(__file__).resolve().parents[1].joinpath("jarvis.py").read_text(encoding="utf-8")
+        ui = Path(__file__).resolve().parents[1].joinpath("telegram_addon", "lumi_ui.py").read_text(
+            encoding="utf-8")
+        names = ast.literal_eval(next(n.value for n in ast.parse(ui).body if isinstance(n, ast.Assign)
+                                      and n.targets[0].id == "NOMI"))
+        for name in names:
+            self.assertNotIn("    def " + name + "(", source, name)   # niente doppioni
+            self.assertIn(name, source)

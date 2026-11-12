@@ -151,8 +151,11 @@ class TelegramVoiceDialogTests(unittest.TestCase):
         body=source[start:end]
         self.assertLess(body.index("try_telegram_voice_send(message)"),
                         body.index("submit_gpt()"))
-        self.assertIn("telegram_contacts_button.configure(command=open_telegram_contact_list)",source)
-        self.assertIn("telegram_send_button.configure(command=open_telegram_manual_send)",source)
+        # Pulsanti della sezione Telegram: spostata in telegram_addon/lumi_ui.py (divisione
+        # di jarvis.py, passo 2a); il collegamento deve restare uguale.
+        ui=(Path(__file__).resolve().parent.parent/"telegram_addon"/"lumi_ui.py").read_text(encoding="utf8")
+        self.assertIn("telegram_contacts_button.configure(command=d.open_telegram_contact_list)",ui)
+        self.assertIn("telegram_send_button.configure(command=open_telegram_manual_send)",ui)
         self.assertIn("telegram_owner_sent",source)
         self.assertIn("telegram_owner_error",source)
 

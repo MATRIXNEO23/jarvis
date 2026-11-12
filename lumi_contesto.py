@@ -39,3 +39,22 @@ def crea(**values) -> Contesto:
 def attuale() -> Contesto | None:
     """Il contesto di questa esecuzione di Lumi (None prima dell'avvio)."""
     return _CURRENT["ctx"]
+
+
+class Vivo:
+    """Riferimenti «vivi» a variabili di main(): ogni lettura chiede il valore attuale.
+
+    main() passa una lambda per nome (es. telegram_bridge=lambda: telegram_bridge); il
+    modulo spostato legge d.telegram_bridge e ottiene sempre il valore del momento, anche
+    se main() lo ha cambiato dopo o lo definisce più avanti (come una funzione annidata).
+    """
+
+    def __init__(self, **getters):
+        object.__setattr__(self, "_getters", getters)
+
+    def __getattr__(self, name):
+        try:
+            getter = self._getters[name]
+        except KeyError:
+            raise AttributeError(name) from None
+        return getter()
