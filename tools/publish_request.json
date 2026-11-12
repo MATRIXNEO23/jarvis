@@ -1,10 +1,10 @@
 {
-  "run_id": 43176216439,
-  "artifact": "lumi-042-prova-candidate",
-  "file": "Lumi-042-PROVA.zip",
-  "bytes": 27682678,
-  "sha256": "6583ab113dce28419c7f68bd0ccf318d6f008e07f466f295585a9cb878c74860",
-  "source_commit": "7a23f1b",
-  "title": "Build 042 PROVA — con Netflix Lumi continua ad ascoltare e a parlare",
-  "description": "Come la 041, più la correzione del blocco con l'app Netflix: prima, se Netflix occupava l'uscita audio, la voce di Lumi restava ferma fino a 10 minuti per frase e intanto il microfono era ignorato. Ora se l'audio non va avanti per 3 secondi Lumi riprova la frase in modalità condivisa (suona insieme a Netflix); se anche così non esce, salta le frasi in coda, lo scrive in console e torna subito ad ascoltare. La pausa tra le parole ha un tetto di 2 secondi in più. Verificati in CI Windows i test automatici e la prova reale. Da provare sul Pavilion con l'app Netflix."
+  "run_id": 43318037935,
+  "artifact": "lumi-043-prova-candidate",
+  "file": "Lumi-043-PROVA.zip",
+  "bytes": 27699284,
+  "sha256": "aae2ee97afc1117847a4330023381e05092b00f926788892fd7c0d98de6b4d5d",
+  "source_commit": "1dc3095",
+  "title": "Build 043 PROVA — jarvis.py diviso in parti (stesso comportamento della 042)",
+  "description": "Nessuna funzione nuova: stesso comportamento della 042. Il file principale jarvis.py è stato diviso: da 5.457 a 4.865 righe; 62 funzioni spostate con il codice invariato in telegram_addon/lumi_ui.py e nella nuova cartella lumi_parti (voce, documenti e progetti, modello e memoria, interfaccia), più il contesto comune lumi_contesto.py. Verificati in CI Windows: 1298 test, diagnostica dei servizi, Telegram, pacchetto e prova reale UIA/OCR. Da provare sul Pavilion che tutto funzioni come nella 042."
 }
