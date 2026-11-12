@@ -141,21 +141,76 @@ def main() -> None:
     settings_tabs = ttk.Notebook(settings_window)
     settings_tabs.pack(fill="both", expand=True, padx=8, pady=8)
 
-    def settings_page(title: str) -> ttk.Frame:
-        host = ttk.Frame(settings_tabs)
-        settings_tabs.add(host, text=title)
-        canvas = tk.Canvas(host, bg=BG, highlightthickness=0)
-        scroll = ttk.Scrollbar(host, orient="vertical", command=canvas.yview)
-        scroll.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
-        canvas.configure(yscrollcommand=scroll.set)
-        inner = ttk.Frame(canvas, padding=15)
-        item = canvas.create_window((0, 0), window=inner, anchor="nw")
-        inner.bind("<Configure>", lambda event: canvas.configure(
-            scrollregion=canvas.bbox("all")))
-        canvas.bind("<Configure>", lambda event: canvas.itemconfigure(
-            item, width=event.width))
-        return inner
+    # Interfaccia: impostazioni, chat, comandi su Lumi: spostato in lumi_parti/interfaccia.py (divisione di jarvis.py).
+    from lumi_parti.interfaccia import installa as _lumi_parti_interfaccia_installa
+    _lumi_parti_interfaccia = _lumi_parti_interfaccia_installa(__import__("lumi_contesto").Vivo(
+        active_gpt=lambda: active_gpt,
+        active_project_id=lambda: active_project_id,
+        addon_capability_registry=lambda: addon_capability_registry,
+        addon_manager=lambda: addon_manager,
+        ask_button=lambda: ask_button,
+        auto_listen_enabled=lambda: auto_listen_enabled,
+        avatar_dock=lambda: avatar_dock,
+        busy_gpt=lambda: busy_gpt,
+        busy_local=lambda: busy_local,
+        change_voice_mode=lambda: change_voice_mode,
+        changing_chat_tab=lambda: changing_chat_tab,
+        chat_console_tab=lambda: chat_console_tab,
+        chat_local_tab=lambda: chat_local_tab,
+        chat_notebook=lambda: chat_notebook,
+        chat_selection_changed=lambda: chat_selection_changed,
+        chat_sessions_panel=lambda: chat_sessions_panel,
+        close=lambda: close,
+        closing=lambda: closing,
+        connect=lambda: connect,
+        disconnect=lambda: disconnect,
+        doc_dialog=lambda: doc_dialog,
+        dock_idle_var=lambda: dock_idle_var,
+        dock_show_var=lambda: dock_show_var,
+        document_busy=lambda: document_busy,
+        document_operation=lambda: document_operation,
+        engine=lambda: engine,
+        gemma_trial_busy=lambda: gemma_trial_busy,
+        goodbye_started=lambda: goodbye_started,
+        gpt_enabled=lambda: gpt_enabled,
+        keep_awake=lambda: keep_awake,
+        local_button=lambda: local_button,
+        open_project_manager=lambda: open_project_manager,
+        pending_conversation=lambda: pending_conversation,
+        pending_project_name=lambda: pending_project_name,
+        pending_project_rename_id=lambda: pending_project_rename_id,
+        pending_project_trash_id=lambda: pending_project_trash_id,
+        plan_button=lambda: plan_button,
+        previous_chat_tab=lambda: previous_chat_tab,
+        root=lambda: root,
+        save_only_waiting=lambda: save_only_waiting,
+        save_speech_preferences=lambda: save_speech_preferences,
+        settings=lambda: settings,
+        settings_load_warnings=lambda: settings_load_warnings,
+        settings_tabs=lambda: settings_tabs,
+        settings_window=lambda: settings_window,
+        speak_result=lambda: speak_result,
+        spoken_enabled=lambda: spoken_enabled,
+        style_save_job=lambda: style_save_job,
+        submit_local=lambda: submit_local,
+        switch_context=lambda: switch_context,
+        telegram_activity_window=lambda: telegram_activity_window,
+        telegram_addon_enabled=lambda: telegram_addon_enabled,
+        telegram_auto=lambda: telegram_auto,
+        timer_audio_beep=lambda: timer_audio_beep,
+        timer_audio_status=lambda: timer_audio_status,
+        timer_repeat=lambda: timer_repeat,
+        timer_sound_label=lambda: timer_sound_label,
+        timer_volume=lambda: timer_volume,
+        toggle_telegram_automatic=lambda: toggle_telegram_automatic,
+        try_file_command=lambda: try_file_command,
+        try_model_switch=lambda: try_model_switch,
+        try_program_command=lambda: try_program_command,
+        try_timer_command=lambda: try_timer_command,
+        voice_mode=lambda: voice_mode,
+        write_line=lambda: write_line))
+    (settings_page, save_keep_awake, open_online_permissions, show_settings, save_timer_preferences, preview_timer_sound, orbit_open, active_addon_actions, addon_changed, refresh_buttons, save_dock_settings, run_understood_command, understood_catalog, understanding_output, chat_navigation_possible, on_chat_tab_change, selected_chat_target, schedule_style_save, close_with_goodbye, initial_launch, lumi_restart, lumi_shutdown_pc, lumi_cancel_shutdown, lumi_say, lumi_minimize, lumi_hide, lumi_wake, first_run_components,) = (
+        _lumi_parti_interfaccia[n] for n in _lumi_parti_interfaccia_installa.__globals__['NOMI'])
 
     frame = settings_page("Voce")
     assistant_settings_frame = settings_page("GPT e memoria")
@@ -165,15 +220,6 @@ def main() -> None:
     keep_awake = tk.BooleanVar(value=settings["keep_awake_fullscreen"])
     power = ForegroundPower(root, keep_awake.get)
 
-    def save_keep_awake():
-        previous = settings["keep_awake_fullscreen"]
-        settings["keep_awake_fullscreen"] = keep_awake.get()
-        try:
-            save_settings(settings)
-        except (OSError, ValueError) as exc:
-            settings["keep_awake_fullscreen"] = previous
-            keep_awake.set(previous)
-            messagebox.showerror("Impostazioni", str(exc), parent=settings_window)
 
     ttk.Checkbutton(interface_settings_frame,
                     text="Tieni acceso il PC con Lumi massimizzato in primo piano",
@@ -201,42 +247,44 @@ def main() -> None:
                command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
 
     # F5 experimental preview: deliberately NOT connected to the active model.
-    def open_multimodel_f5_preview():
-        try:
-            from local_model.multimodel_ui_f5 import MultiModelSettingsF5Window
-            MultiModelSettingsF5Window(settings_window)
-        except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Lumi / Multimodello F5", str(exc),
-                                 parent=settings_window)
+    # Modello locale, memoria e cervelli: spostato in lumi_parti/modello_memoria.py (divisione di jarvis.py).
+    from lumi_parti.modello_memoria import installa as _lumi_parti_modello_memoria_installa
+    _lumi_parti_modello_memoria = _lumi_parti_modello_memoria_installa(__import__("lumi_contesto").Vivo(
+        active_project_id=lambda: active_project_id,
+        addon_capability_registry=lambda: addon_capability_registry,
+        addon_manager=lambda: addon_manager,
+        closing=lambda: closing,
+        conversation_memory=lambda: conversation_memory,
+        durable_brain=lambda: durable_brain,
+        gemma_memory_revision=lambda: gemma_memory_revision,
+        get_gemma_session=lambda: get_gemma_session,
+        gpt_enabled=lambda: gpt_enabled,
+        gpt_toggle=lambda: gpt_toggle,
+        memory_enabled=lambda: memory_enabled,
+        memory_status=lambda: memory_status,
+        preference_store=lambda: preference_store,
+        settings=lambda: settings,
+        settings_window=lambda: settings_window,
+        speak_result=lambda: speak_result,
+        voice=lambda: voice,
+        workspace=lambda: workspace,
+        workspace_status=lambda: workspace_status,
+        write_line=lambda: write_line))
+    (open_multimodel_f5_preview, open_memory_preferences, recent_memory_for_gpt, current_capability_snapshot, native_memory_request, lumi_brain_local, lumi_brain_online,) = (
+        _lumi_parti_modello_memoria[n] for n in _lumi_parti_modello_memoria_installa.__globals__['NOMI'])
 
     ttk.Button(native_settings_box, text="Anteprima multimodello Gemma / Qwen...",
                command=open_multimodel_f5_preview).pack(anchor="w", padx=8, pady=6)
 
-    def open_memory_preferences():
-        try:
-            from local_model.memory_ui import MemoryPreferencesWindow
-            MemoryPreferencesWindow(settings_window, get_session=get_gemma_session)
-        except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Lumi / Memoria", str(exc), parent=settings_window)
 
     ttk.Button(native_settings_box, text="Configura memoria e inattivita...",
                command=open_memory_preferences).pack(anchor="w", padx=8, pady=6)
 
-    def open_online_permissions():
-        try:
-            from local_model.online_permissions_ui import OnlinePermissionsWindow
-            OnlinePermissionsWindow(settings_window)
-        except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Lumi / Permessi GPT", str(exc), parent=settings_window)
 
     ttk.Button(native_settings_box, text="Autorizzazioni GPT per funzione...",
                command=open_online_permissions).pack(anchor="w", padx=8, pady=6)
 
 
-    def show_settings() -> None:
-        settings_window.deiconify()
-        settings_window.lift()
-        settings_window.focus_set()
 
     hud = JarvisHUD(root, show_settings)
     timer = TimerPopup(root, lambda: settings)
@@ -491,41 +539,9 @@ def main() -> None:
                                 values=list(SOUNDS.values()), width=25)
     timer_picker.pack(side="left", padx=(0, 9))
 
-    def save_timer_preferences() -> None:
-        old = {key: settings[key] for key in
-               ("timer_sound", "timer_volume", "timer_repeat", "timer_audio_mode")}
-        selected = next((key for key, name in SOUNDS.items()
-                         if name == timer_sound_label.get()), "digital")
-        settings.update(timer_sound=selected,
-                        timer_volume=int(round(timer_volume.get())),
-                        timer_repeat=bool(timer_repeat.get()),
-                        timer_audio_mode="beep" if timer_audio_beep.get() else "auto")
-        try:
-            save_settings(settings)
-        except (OSError, ValueError) as exc:
-            settings.update(old)
-            timer_sound_label.set(SOUNDS[old["timer_sound"]])
-            timer_volume.set(old["timer_volume"])
-            timer_repeat.set(old["timer_repeat"])
-            timer_audio_beep.set(old["timer_audio_mode"] == "beep")
-            messagebox.showerror("Impostazioni timer", str(exc), parent=settings_window)
 
     timer_picker.bind("<<ComboboxSelected>>",
                       lambda event: save_timer_preferences())
-    def preview_timer_sound(force_beep: bool = False) -> None:
-        chosen = next((key for key, name in SOUNDS.items()
-                       if name == timer_sound_label.get()), "digital")
-        mode = ("beep" if force_beep else
-                ("beep" if timer_audio_beep.get() else "auto"))
-        timer_audio_status.set("Invio del suono a Windows...")
-        def audio_result(success: bool, message: str) -> None:
-            try:
-                root.after(0, lambda: timer_audio_status.set(
-                    ("Audio: " if success else "Errore: ") + message))
-            except (RuntimeError, tk.TclError):
-                pass
-        preview_sound(chosen, int(round(timer_volume.get())),
-                      mode=mode, on_status=audio_result)
 
     ttk.Button(sound_row, text="▶ Prova",
                command=preview_timer_sound).pack(side="left")
@@ -603,14 +619,22 @@ def main() -> None:
         diagnostic_row,width=58,height=4,bg="#092438",bd=0,
         highlightthickness=0)
     diagnostic_meter.pack(side="right",padx=(6,3))
-    def draw_diagnostic_meter(_event=None):
-        diagnostic_meter.delete("progress")
-        w=max(1,diagnostic_meter.winfo_width())
-        h=max(1,diagnostic_meter.winfo_height())
-        progress=max(0,min(100,diagnostic_percent.get()))
-        diagnostic_meter.create_rectangle(
-            0,0,w*progress/100,h,fill="#17b8e5",outline="",
-            tags="progress")
+    # Diagnostica dei servizi: spostato in lumi_parti/diagnostica.py (divisione di jarvis.py).
+    from lumi_parti.diagnostica import installa as _lumi_parti_diagnostica_installa
+    _lumi_parti_diagnostica = _lumi_parti_diagnostica_installa(__import__("lumi_contesto").Vivo(
+        diagnostic_meter=lambda: diagnostic_meter,
+        diagnostic_percent=lambda: diagnostic_percent,
+        gemma_session=lambda: gemma_session,
+        gpt_enabled=lambda: gpt_enabled,
+        memory_enabled=lambda: memory_enabled,
+        root=lambda: root,
+        selected_telegram_contacts=lambda: selected_telegram_contacts,
+        settings_window=lambda: settings_window,
+        snapshot_runtime_evidence=lambda: snapshot_runtime_evidence,
+        telegram_auto=lambda: telegram_auto,
+        telegram_bridge=lambda: telegram_bridge))
+    (draw_diagnostic_meter, snapshot_services_report, open_service_diagnostics,) = (
+        _lumi_parti_diagnostica[n] for n in _lumi_parti_diagnostica_installa.__globals__['NOMI'])
     diagnostic_meter.bind("<Configure>",draw_diagnostic_meter)
     doc_choices = ttk.Frame(hud.command_host)
     doc_choices.pack(fill="x", pady=(0, 5))
@@ -805,22 +829,44 @@ def main() -> None:
         except (OSError, sqlite3.Error, BrainError) as exc:
             memory_status.set("Ricevuta non registrata: " + str(exc)[:90])
 
-    def begin_project_work(title: str, source: str = "local",
-                           *, project_id: str | None = None,
-                           planned: bool = False):
-        """Persist a work ticket BEFORE executing a project operation."""
-        ident=project_id if project_id is not None else active_project_id
-        if ident is None:
-            return None
-        if workspace is None:
-            workspace_status.set("Memoria progetto non disponibile: azione bloccata.")
-            return False
-        try:
-            return (ident,workspace.begin_step(
-                ident,title[:240],source=source,planned=planned))
-        except (OSError,sqlite3.Error,WorkspaceError) as exc:
-            workspace_status.set("Checkpoint non scritto: "+str(exc)[:110])
-            return False
+    # Documenti, progetti e piani: spostato in lumi_parti/documenti_progetti.py (divisione di jarvis.py).
+    from lumi_parti.documenti_progetti import installa as _lumi_parti_documenti_progetti_installa
+    _lumi_parti_documenti_progetti = _lumi_parti_documenti_progetti_installa(__import__("lumi_contesto").Vivo(
+        active_gpt=lambda: active_gpt,
+        active_project_id=lambda: active_project_id,
+        busy_gpt=lambda: busy_gpt,
+        choose_save_button=lambda: choose_save_button,
+        closing=lambda: closing,
+        confirm_gpt_inference=lambda: confirm_gpt_inference,
+        conversation_epoch=lambda: conversation_epoch,
+        doc_cancel_button=lambda: doc_cancel_button,
+        doc_choices=lambda: doc_choices,
+        doc_dialog=lambda: doc_dialog,
+        doc_discard_button=lambda: doc_discard_button,
+        doc_save_button=lambda: doc_save_button,
+        document_busy=lambda: document_busy,
+        document_operation=lambda: document_operation,
+        document_owner_project_id=lambda: document_owner_project_id,
+        document_status=lambda: document_status,
+        document_topic=lambda: document_topic,
+        engine=lambda: engine,
+        finish_project_work=lambda: finish_project_work,
+        gpt_enabled=lambda: gpt_enabled,
+        handle_document_confirmation=lambda: handle_document_confirmation,
+        hud_save_file_button=lambda: hud_save_file_button,
+        input_row=lambda: input_row,
+        local_execution_lock=lambda: local_execution_lock,
+        planner_abort_event=lambda: planner_abort_event,
+        remember_exchange=lambda: remember_exchange,
+        root=lambda: root,
+        save_only_waiting=lambda: save_only_waiting,
+        service=lambda: service,
+        speak_result=lambda: speak_result,
+        workspace=lambda: workspace,
+        workspace_status=lambda: workspace_status,
+        write_line=lambda: write_line))
+    (begin_project_work, update_document_buttons, announce_document, ask_to_close_document, automatic_document_destination, execute_document_choice, press_discard_button, journal_plan_approved, journal_plan_step, journal_plan_finished, submit_plan,) = (
+        _lumi_parti_documenti_progetti[n] for n in _lumi_parti_documenti_progetti_installa.__globals__['NOMI'])
 
     def finish_project_work(ticket, status: str, detail: str,
                             *, receipt: str = "", observed: bool = False) -> bool:
@@ -835,81 +881,6 @@ def main() -> None:
             output_queue.put(("project_journal_error",str(exc)[:100]))
             return False
 
-    def recent_memory_for_gpt(spoken: str) -> str:
-        """Bounded recall with the *real* active project and latest question."""
-        short=conversation_memory.context(max_chars=860)
-        question=conversation_memory.last_question()
-
-        def attach(raw,*,project_name=""):
-            hint=focus_hint(spoken,active_project_name=project_name,
-                            last_question=question)
-            try:
-                parsed=json.loads(raw)
-            except (ValueError,TypeError):
-                return raw
-            if isinstance(parsed,list):
-                parsed={"breve":parsed}
-            if not isinstance(parsed,dict):
-                return raw
-            if (addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None
-                    and addon_manager.programs_enabled()):
-                program_hint=addon_manager.program_service.context_hint()
-                if program_hint:
-                    hint['program_request']=program_hint
-            if (addon_manager is not None and addon_manager._file_service is not None
-                    and addon_manager.files_enabled()):
-                file_hint=addon_manager.file_service.context_hint()
-                if file_hint:
-                    hint["file_results"]=file_hint
-            if hint:
-                parsed["focus"]=hint
-            if preference_store is not None:
-                try:
-                    parsed["preferences"]=list(preference_store.context())
-                except (OSError,sqlite3.Error,MemoryBoundaryError):
-                    pass
-            return json.dumps(parsed,ensure_ascii=False)
-
-        if active_project_id is not None:
-            if workspace is None:
-                return attach(short)
-            try:
-                project=workspace.project(active_project_id)
-                saved=json.loads(workspace.prompt_context(
-                    "project",active_project_id,spoken,budget=620))
-                evidence=saved.get("evidence",[])
-                if project and project["summary"]:
-                    evidence.insert(0,{"source":"conversation",
-                        "when":project["updated_utc"],
-                        "fact":"Stato progetto fornito dall'utente: "
-                                +project["summary"][:260]})
-                history=workspace.recent("project",active_project_id,3)
-                earlier=[{"utente":item["utente"],"lia":item["jarvis"],
-                          "tipo":item["tipo"]} for item in history]
-                progress=[{"title":step["title"][:95],
-                           "status":step["status"],
-                           "detail":step["detail"][:110],
-                           "verified":bool(step["verified"])}
-                          for step in workspace.project_steps(active_project_id,limit=4)]
-                return attach(json.dumps({
-                    "breve":earlier+json.loads(short),
-                    "progress":progress,
-                    "permanente":{"related":evidence},
-                },ensure_ascii=False),
-                project_name=project["name"] if project else "")
-            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
-                workspace_status.set("Ricerca progetto: "+str(exc)[:90])
-                return attach(short)
-        if not memory_enabled.get() or durable_brain is None:
-            return attach(short)
-        try:
-            long=durable_brain.prompt_context(spoken,budget=530)
-        except (OSError,sqlite3.Error,BrainError) as exc:
-            memory_status.set("Ricerca memoria: "+str(exc)[:90])
-            return attach(short)
-        return attach(json.dumps({
-            "breve":json.loads(short),
-            "permanente":json.loads(long)},ensure_ascii=False))
 
     project_dialog=None
 
@@ -1394,50 +1365,7 @@ def main() -> None:
             counters=runtime_events,
         )
 
-    def snapshot_services_report():
-        from runtime_diagnostics import format_service_report, RuntimeEvidence
-        import importlib.util
-        import shutil
-        try:
-            evidence = snapshot_runtime_evidence()
-        except Exception:
-            # One unavailable observation must not hide Telegram's journal.
-            evidence = RuntimeEvidence((), ())
-        current = gemma_session[0]
-        try:
-            state = "non_loaded" if current is None else "busy" if current.is_busy else "ready"
-        except (RuntimeError, AttributeError):
-            state = "unavailable"
-        bridge = telegram_bridge
-        try:
-            telegram = bridge.diagnostic_snapshot() if bridge is not None else None
-        except (RuntimeError, AttributeError):
-            telegram = None
-        try:
-            telethon = importlib.util.find_spec("telethon") is not None
-        except (ImportError, ValueError):
-            telethon = None
-        report = format_service_report(evidence, telegram=telegram,
-            automatic=bool(telegram_auto.get()), credentials=credentials_present(),
-            contacts=len(selected_telegram_contacts()),
-            selected="GPT" if gpt_enabled.get() else "Gemma", gemma=state,
-            memory=bool(memory_enabled.get()),
-            telethon=telethon,
-            ffmpeg=shutil.which("ffmpeg") is not None)
-        if not evidence.checks:
-            report += "\nStato generale parzialmente non disponibile; registro Telegram separato."
-        return report
 
-    def open_service_diagnostics():
-        from runtime_diagnostics_ui import ServiceDiagnosticsWindow
-        current = getattr(root, "_jarvis_services_diagnostic", None)
-        if current is not None and current.window.winfo_exists():
-            current.refresh()
-            current.window.deiconify()
-            current.window.lift()
-            return
-        root._jarvis_services_diagnostic = ServiceDiagnosticsWindow(
-            settings_window, get_report=snapshot_services_report)
 
     def offer_external_diagnostic_review() -> bool:
         """Explicitly confirm sending *redacted findings*, not local files."""
@@ -1654,20 +1582,6 @@ def main() -> None:
     (telegram_activity_window, queue_telegram_note, leave_telegram_note_dialog, selected_telegram_contacts, load_telegram_contacts_for_ui, open_telegram_history, clear_telegram_history, edit_telegram_contact_profile, open_telegram_manual_send, telegram_addon_enabled, telegram_open_setup, build_telegram_section) = (
         _telegram_ui[n] for n in ('telegram_activity_window', 'queue_telegram_note', 'leave_telegram_note_dialog', 'selected_telegram_contacts', 'load_telegram_contacts_for_ui', 'open_telegram_history', 'clear_telegram_history', 'edit_telegram_contact_profile', 'open_telegram_manual_send', 'telegram_addon_enabled', 'telegram_open_setup', 'build_telegram_section'))
 
-    def orbit_open(identifier:str) -> None:
-        if identifier.startswith("telegram:"):
-            parts=identifier.split(":")
-            if len(parts)==3 and parts[1]=="pending":
-                write_line("TELEGRAM > Messaggi da riferire ancora in attesa.")
-            try:
-                peer_id=int(parts[-1])
-            except ValueError:
-                return
-            telegram_activity_window(peer_id)
-        elif identifier=="projects:more":
-            open_project_manager()
-        else:
-            switch_context(identifier)
 
 
 
@@ -1682,26 +1596,6 @@ def main() -> None:
         return True
 
 
-    def current_capability_snapshot(has_document:bool=False) -> dict:
-        """Re-evaluate runtime permissions on every external GPT request."""
-        if addon_manager is not None:
-            try:
-                addon_manager.refresh()
-            except (AddonError,OSError,ValueError):
-                # Fail closed: do not claim stale addon actions are available.
-                for binding in addon_capability_registry.available_addons():
-                    addon_capability_registry.unregister(binding["id"])
-        try:
-            stream=voice.is_listening()
-        except (AttributeError,RuntimeError,OSError):
-            stream=False
-        return snapshot_capabilities(
-            settings=settings,
-            has_document=has_document,
-            telegram_credentials=credentials_present(),
-            telegram_voice_dependencies=(not missing_voice_dependencies()),
-            voice_stream_open=stream,
-            registry=addon_capability_registry)
 
     def open_addon_settings() -> None:
         nonlocal addon_settings_window
@@ -1720,16 +1614,6 @@ def main() -> None:
             engine=engine,
             section_builders={"telegram": build_telegram_section})
 
-    def active_addon_actions() -> tuple[dict,...]:
-        if addon_manager is None:
-            return ()
-        try:
-            return addon_manager.active_actions()
-        except (AddonError,OSError,ValueError,ImportError):
-            # Never let a broken or modified add-on directory break GPT chat.
-            for item in addon_capability_registry.available_addons():
-                addon_capability_registry.unregister(item["id"])
-            return ()
 
 
     def save_telegram_contact_selection(rows:list[dict]) -> bool:
@@ -1943,13 +1827,6 @@ def main() -> None:
             approval.set_result(approved_epoch)
 
 
-    def addon_changed() -> None:
-        write_line("ADD-ON > Registro aggiornato. Le capacità attive saranno "
-                   "comunicate al GPT alla prossima richiesta.")
-        # Add-on Telegram spento: si fermano anche le risposte automatiche.
-        if not telegram_addon_enabled() and telegram_auto.get():
-            telegram_auto.set(False)
-            toggle_telegram_automatic()
 
     def toggle_telegram_automatic() -> None:
         nonlocal telegram_bridge
@@ -2047,13 +1924,6 @@ def main() -> None:
             gpt_status.set("GPT: non connesso. Premi 'Connetti ChatGPT' per accedere.")
         refresh_buttons()
 
-    def refresh_buttons() -> None:
-        can_gpt = gpt_enabled.get() and not busy_gpt and not closing
-        connect.configure(state="normal" if can_gpt else "disabled")
-        disconnect.configure(state="normal" if can_gpt and active_gpt else "disabled")
-        ask_button.configure(state="normal" if can_gpt and active_gpt else "disabled")
-        plan_button.configure(state="normal" if can_gpt and active_gpt else "disabled")
-        local_button.configure(state="disabled" if busy_local or closing else "normal")
 
     def confirm_gpt_inference(detail: str) -> bool:
         nonlocal online_consent_pending
@@ -2487,16 +2357,6 @@ def main() -> None:
         integrations_settings_frame,text="Mini avatar (Lumi ridotta a icona)",padding=8)
     dock_panel.pack(fill="x",pady=(3,9))
 
-    def save_dock_settings() -> None:
-        from lumi_avatar import _dock_file, save_dock_options
-        try:
-            seconds=int(dock_idle_var.get())
-        except (tk.TclError,ValueError):
-            seconds=30
-        save_dock_options(_dock_file(),dock_show_var.get(),seconds)
-        write_line("IMPOSTAZIONI > Mini avatar: "+("visibile" if dock_show_var.get() else "nascosto")
-                   +(f", trasparente dopo {seconds} s di mouse fermo." if seconds else
-                     ", sempre visibile anche col mouse fermo."))
 
     from lumi_avatar import _dock_file as _dock_options_file, load_dock_options
     _dock_options=load_dock_options(_dock_options_file())
@@ -2646,88 +2506,44 @@ def main() -> None:
     wake_gate = WakeWordGate()
     dictation = DesktopDictation()
 
-    def selected_voice() -> str:
-        choice = spoken_voice.get()
-        return "" if choice == DEFAULT_VOICE_LABEL else choice
+    # Voce: voci, dettatura, ascolto: spostato in lumi_parti/voce.py (divisione di jarvis.py).
+    from lumi_parti.voce import installa as _lumi_parti_voce_installa
+    _lumi_parti_voce = _lumi_parti_voce_installa(__import__("lumi_contesto").Vivo(
+        DEFAULT_VOICE_LABEL=lambda: DEFAULT_VOICE_LABEL,
+        auto_listen_enabled=lambda: auto_listen_enabled,
+        closing=lambda: closing,
+        dictation=lambda: dictation,
+        dictation_button=lambda: dictation_button,
+        dictation_status=lambda: dictation_status,
+        download_paola_button=lambda: download_paola_button,
+        download_serena_button=lambda: download_serena_button,
+        mic_status=lambda: mic_status,
+        output_queue=lambda: output_queue,
+        refresh_voices_button=lambda: refresh_voices_button,
+        root=lambda: root,
+        settings=lambda: settings,
+        speaker=lambda: speaker,
+        spoken_effect=lambda: spoken_effect,
+        spoken_enabled=lambda: spoken_enabled,
+        spoken_pitch=lambda: spoken_pitch,
+        spoken_rate=lambda: spoken_rate,
+        spoken_status=lambda: spoken_status,
+        spoken_voice=lambda: spoken_voice,
+        spoken_volume=lambda: spoken_volume,
+        voice=lambda: voice,
+        voice_mode=lambda: voice_mode,
+        write_line=lambda: write_line))
+    (selected_voice, save_speech_preferences, refresh_voices, download_natural_voice, test_speech, sync_dictation_ui, toggle_dictation, save_auto_listen_preference, ptt_press, ptt_release,) = (
+        _lumi_parti_voce[n] for n in _lumi_parti_voce_installa.__globals__['NOMI'])
 
-    def save_speech_preferences() -> None:
-        settings["tts_enabled"] = bool(spoken_enabled.get())
-        settings["tts_voice"] = selected_voice()
-        settings["tts_effect"] = max(0, min(100, int(spoken_effect.get())))
-        speaker.effect = settings["tts_effect"] / 100
-        import voice_style
-        style = voice_style.update(rate=spoken_rate.get(), pitch=spoken_pitch.get(),
-                                   volume=spoken_volume.get())
-        settings["tts_rate"], settings["tts_pitch"], settings["tts_volume"] = (
-            style["rate"], style["pitch"], style["volume"])
-        try:
-            save_settings(settings)
-            spoken_status.set("Risposte vocali salvate; nessun servizio a pagamento.")
-        except (OSError, ValueError) as exc:
-            spoken_status.set("Impossibile salvare le preferenze vocali: " + str(exc)[:130])
 
-    def refresh_voices() -> None:
-        spoken_status.set("Rilevamento delle voci già installate in Windows...")
-        refresh_voices_button.configure(state="disabled")
 
-        def worker() -> None:
-            try:
-                output_queue.put(("tts_voices", installed_voices()))
-            except (OSError, ValueError, TimeoutError) as exc:
-                output_queue.put(("tts_error", str(exc)[:140]))
 
-        threading.Thread(target=worker, daemon=True, name="jarvis-voices-list").start()
-
-    def download_natural_voice(key: str) -> None:
-        from piper_voice import LABELS, PiperVoiceError, download_voice
-        spoken_status.set("Download della voce " + LABELS[key] + " dal repository...")
-        for button in (download_paola_button, download_serena_button):
-            button.configure(state="disabled")
-
-        def worker() -> None:
-            try:
-                download_voice(key)
-                output_queue.put(("tts_status", "Voce " + LABELS[key]
-                                  + " scaricata e verificata. Selezionala nel menu Voce."))
-                output_queue.put(("tts_voices", installed_voices()))
-            except Exception as exc:   # ogni errore arriva all'interfaccia
-                output_queue.put(("tts_error", "Download voce non riuscito: "
-                                  + (str(exc) or type(exc).__name__)[:140]))
-            finally:
-                output_queue.put(("tts_download_done", None))
-
-        threading.Thread(target=worker, daemon=True, name="lumi-voice-download").start()
-
-    def test_speech() -> None:
-        speaker.effect = max(0, min(100, int(spoken_effect.get()))) / 100
-        import voice_style
-        voice_style.update(rate=spoken_rate.get(), pitch=spoken_pitch.get(),
-                           volume=spoken_volume.get())
-        if not speaker.speak("Pronto. Questa è la mia voce.", selected_voice()):
-            spoken_status.set("Sintesi vocale occupata: riprova.")
 
     def speak_result(message: str) -> None:
         if spoken_enabled.get() and message:
             speaker.speak(message, selected_voice())
 
-    def update_document_buttons() -> None:
-        pending = (doc_dialog.phase.startswith("awaiting_") or save_only_waiting) and not document_busy
-        can_choose = doc_dialog.phase == "awaiting_close_choice" and not document_busy
-        doc_save_button.configure(state="normal" if can_choose else "disabled")
-        doc_discard_button.configure(
-            state="normal" if can_choose else "disabled")
-        doc_cancel_button.configure(state="normal" if pending else "disabled")
-        destination_ready = (
-            (doc_dialog.phase == "awaiting_save_destination" or save_only_waiting)
-            and not document_busy)
-        choose_save_button.configure(
-            state="normal" if destination_ready else "disabled")
-        hud_save_file_button.configure(
-            state="normal" if destination_ready else "disabled")
-        if pending and not doc_choices.winfo_manager():
-            doc_choices.pack(fill="x", pady=(0, 5), before=input_row)
-        elif not pending and doc_choices.winfo_manager():
-            doc_choices.pack_forget()
 
     def reconcile_document_session(*, force: bool = False) -> bool:
         """Reconcile a manually closed owned Notepad with the UI state.
@@ -2764,11 +2580,6 @@ def main() -> None:
         write_line("DOCUMENTO > "+message)
         return True
 
-    def announce_document(message: str) -> None:
-        update_document_buttons()
-        document_status.set(message)
-        write_line("DOCUMENTO > " + message)
-        speak_result(message)
 
     def document_operation(operation: str, *, content: str = "",
                            target: str = "", document_id: str = "",
@@ -2827,35 +2638,7 @@ def main() -> None:
                               "Impossibile avviare la scrittura: "+
                               type(exc).__name__))
 
-    def ask_to_close_document(source_utterance: str = "") -> None:
-        if document_busy:
-            announce_document("Attendi la fine della scrittura prima di chiudere.")
-            return
-        if doc_dialog.phase != "editing" or doc_dialog.document_id is None:
-            announce_document("Non ho un documento Blocco note gestito da Lumi da chiudere.")
-            return
-        decision = doc_dialog.request_close()
-        if decision.kind == "close_clean":
-            # The user could have manually edited the text in the meantime.
-            # Never discard an apparently clean document without asking.
-            doc_dialog.phase = "awaiting_close_choice"
-            doc_dialog.dirty = True
-            question = "Vuoi salvare e chiudere, chiudere senza salvare oppure annullare?"
-            announce_document(question)
-            if source_utterance:
-                remember_exchange(source_utterance, question, "clarify")
-        else:
-            announce_document(decision.message)
-            if source_utterance:
-                remember_exchange(source_utterance, decision.message, "clarify")
 
-    def automatic_document_destination(*, explicit_name: str = "") -> Path | None:
-        """Use this document's original project, never a newly selected one."""
-        if workspace is None or document_owner_project_id is None:
-            return None
-        return project_save_destination(
-            workspace,document_owner_project_id,document_topic,
-            explicit_name=explicit_name)
 
     def save_document_now(spoken: str, *, explicit_name: str = "") -> None:
         nonlocal save_only_waiting
@@ -2895,54 +2678,6 @@ def main() -> None:
         document_operation("save_only",document_id=doc_dialog.document_id,
                            path=path,source_utterance=spoken)
 
-    def execute_document_choice(decision, *, path: Path | None = None) -> None:
-        if decision.kind == "ask_destination":
-            try:
-                path=automatic_document_destination()
-            except (OSError,ValueError,WorkspaceError) as exc:
-                announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
-                return
-            if path is not None:
-                selected=doc_dialog.provide_destination(str(path))
-                execute_document_choice(selected,path=path)
-                return
-        if decision.kind in ("save_then_close", "save_as_then_close"):
-            destination = path if path is not None else (
-                Path(doc_dialog.saved_path) if doc_dialog.saved_path else None)
-            if (path is None and doc_dialog.saved_path and
-                    document_owner_project_id is not None):
-                # Fresh version if the editor changed since the last save.
-                # ManagedDocuments will reuse the old file if unchanged.
-                try:
-                    destination=automatic_document_destination()
-                except (OSError,ValueError,WorkspaceError) as exc:
-                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
-                    return
-            if destination is None:
-                try:
-                    destination=automatic_document_destination()
-                except (OSError,ValueError,WorkspaceError) as exc:
-                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
-                    return
-                if destination is None:
-                    doc_dialog.phase = "awaiting_save_destination"
-                    announce_document("Dove vuoi salvare? Per esempio: "
-                                      "sul desktop come storia di Venezia.")
-                    choose_save_button.configure(state="normal")
-                    return
-                if doc_dialog.phase=="awaiting_save_destination":
-                    doc_dialog.provide_destination(str(destination))
-            choose_save_button.configure(state="disabled")
-            document_operation("save", document_id=decision.document_id,
-                               path=destination)
-        elif decision.kind == "discard_then_close":
-            choose_save_button.configure(state="disabled")
-            document_operation("discard", document_id=decision.document_id)
-        else:
-            announce_document(decision.message)
-            choose_save_button.configure(
-                state="normal" if doc_dialog.phase == "awaiting_save_destination"
-                else "disabled")
 
     def handle_document_confirmation(spoken: str) -> None:
         nonlocal last_user_for_document
@@ -2961,11 +2696,6 @@ def main() -> None:
                 return
         execute_document_choice(doc_dialog.reply(spoken))
 
-    def press_discard_button() -> None:
-        if doc_dialog.phase == "awaiting_close_choice":
-            # The named button itself is an explicit decision after Jarvis
-            # requested a choice; no extra spoken magic phrase.
-            handle_document_confirmation("chiudi senza salvare")
 
     def choose_save_destination() -> None:
         nonlocal save_only_waiting
@@ -2984,41 +2714,10 @@ def main() -> None:
                 decision = doc_dialog.provide_destination(selected)
                 execute_document_choice(decision, path=Path(selected))
 
-    def sync_dictation_ui(message: str) -> None:
-        dictation_status.set(message)
-        dictation_button.configure(text="Disattiva dettatura" if dictation.enabled
-                                  else "Attiva dettatura")
-        if not closing:
-            write_line(message)
-
-    def toggle_dictation() -> None:
-        if dictation.enabled:
-            sync_dictation_ui(dictation.disable())
-        elif voice_mode.get() == CONTINUOUS:
-            sync_dictation_ui(dictation.enable())
-        else:
-            sync_dictation_ui("Seleziona prima Ascolto continuo per dettare.")
 
 
 
-    def save_auto_listen_preference() -> None:
-        """Only changes NEXT app launch, never the current listening mode."""
-        desired = bool(auto_listen_enabled.get())
-        previous = settings["auto_listen"]
-        settings["auto_listen"] = desired
-        try:
-            save_settings(settings)
-        except (OSError, ValueError) as exc:
-            settings["auto_listen"] = previous
-            auto_listen_enabled.set(previous)
-            messagebox.showerror(
-                "Impossibile salvare l'avvio automatico",
-                str(exc)[:160], parent=root)
-            return
-        write_line(
-            "SISTEMA > Al prossimo avvio microfono "
-            + ("in conversazione locale con hotword Lumi." if desired
-               else "in standby, come selezionato nelle impostazioni."))
+
 
     def change_voice_mode() -> None:
         nonlocal conversation_epoch
@@ -3051,64 +2750,11 @@ def main() -> None:
             mic_status.set("Ascolto continuo: parla direttamente. "
                            "La dettatura richiede l’attivazione manuale.")
 
-    def ptt_press(event=None) -> None:
-        if voice.press():
-            mic_status.set("Premi per parlare: attivazione del microfono...")
 
-    def ptt_release(event=None) -> None:
-        voice.release()
 
-    def journal_plan_approved(plan):
-        """Capture the project identity before the plan's worker starts."""
-        if active_project_id is None:
-            return None
-        tickets=[]
-        project_id=active_project_id
-        for step in plan.steps:
-            ticket=begin_project_work(step.description,"planner",
-                                      project_id=project_id,planned=True)
-            if ticket is False:
-                for prior in tickets:
-                    finish_project_work(prior,"interrupted","Avvio piano non riuscito.")
-                raise WorkspaceError("Impossibile memorizzare i passi: nessuna esecuzione.")
-            tickets.append(ticket)
-        return tuple(tickets)
 
-    def journal_plan_step(tickets,index,status,message,receipt):
-        if not tickets:
-            return
-        if not 1 <= index <= len(tickets):
-            raise WorkspaceError("Indice passo fuori piano.")
-        result=finish_project_work(
-            tickets[index-1],
-            "completed" if status=="completed" else "failed",
-            message,receipt=receipt if status=="completed" else "")
-        if not result:
-            raise WorkspaceError("Esito del piano non registrato.")
 
-    def journal_plan_finished(tickets,reason):
-        if not tickets:
-            return
-        for ticket in tickets:
-            # Completed steps are immutable; remaining planned steps are
-            # interrupted. Nothing will be silently replayed on restart.
-            finish_project_work(ticket,"interrupted","Piano terminato: "+reason)
 
-    def submit_plan() -> None:
-        if not gpt_enabled.get() or not active_gpt or busy_gpt or closing:
-            return
-        from local_model.online_permissions import authorize_online_request
-        open_planner(
-            root, service, engine,
-            lambda: bool(gpt_enabled.get() and active_gpt and not busy_gpt and not closing),
-            local_execution_lock, planner_abort_event,
-            on_approved=journal_plan_approved,
-            on_step=journal_plan_step,
-            on_finished=journal_plan_finished,
-            confirm_inference=lambda detail: authorize_online_request(
-                "planner.create", confirm=lambda: confirm_gpt_inference(detail)),
-            consent_generation=lambda: conversation_epoch,
-        )
 
     def try_timer_command(spoken: str) -> bool:
         # Comandi su Lumi stessa (riduci, chiudi, riavvia, nascondi/sveglia):
@@ -4495,29 +4141,9 @@ def main() -> None:
         memory=memory_toggle.invoke,
         model=lambda: write_line(__import__("model_gate").toggle_message()))
 
-    def run_understood_command(text: str) -> None:
-        # Comando capito dal motore interno: stessi gestori dei comandi diretti.
-        from voice_control import model_switch_target
-        if model_switch_target(text) is not None and try_model_switch(text):
-            return
-        if try_file_command(text) or try_program_command(text) or try_timer_command(text):
-            return
-        command = speech_to_local_command(text)
-        if command == "apri blocco note":
-            document_operation("open", source_utterance=text)
-            return
-        submit_local(message_override=command or text, source_utterance=text)
 
-    def understood_catalog() -> list:
-        import command_aliases
-        return [c for items in command_aliases.catalog(engine).values() for c in items]
 
     from intent_normalizer import register as register_understanding
-    def understanding_output(line: str) -> None:
-        # Le domande «Intendevi…?» si sentono anche a voce (uso senza mani).
-        write_line(line)
-        if line.startswith("LUMI > "):
-            speak_result(line[7:])
 
     register_understanding(
         run_understood_command, understood_catalog, understanding_output,
@@ -4558,14 +4184,6 @@ def main() -> None:
 
     gemma_recent_reply = [None]
 
-    def chat_navigation_possible():
-        return not (
-            closing or busy_gpt or busy_local or gemma_trial_busy[0]
-            or document_busy or save_only_waiting
-            or doc_dialog.phase.startswith("awaiting_")
-            or pending_project_name or pending_project_rename_id is not None
-            or pending_project_trash_id is not None
-            or bool(pending_conversation))
 
     def chat_selection_changed(_old, _new):
         nonlocal conversation_epoch
@@ -4579,37 +4197,9 @@ def main() -> None:
     previous_chat_tab = [str(chat_console_tab)]
     changing_chat_tab = [False]
 
-    def on_chat_tab_change(_event=None):
-        if changing_chat_tab[0]:
-            return
-        selected = chat_notebook.select()
-        if selected == previous_chat_tab[0]:
-            return
-        if not chat_navigation_possible():
-            changing_chat_tab[0] = True
-            chat_notebook.select(previous_chat_tab[0])
-            changing_chat_tab[0] = False
-            write_line("CHAT > Termina la richiesta corrente prima di cambiare vista.")
-            return
-        if selected == str(chat_local_tab):
-            if not chat_sessions_panel.activate():
-                changing_chat_tab[0] = True
-                chat_notebook.select(chat_console_tab)
-                changing_chat_tab[0] = False
-                return
-        else:
-            chat_selection_changed(None, None)
-        previous_chat_tab[0] = selected
 
     chat_notebook.bind("<<NotebookTabChanged>>", on_chat_tab_change)
 
-    def selected_chat_target():
-        if chat_notebook.select() != str(chat_local_tab):
-            return None
-        target = chat_sessions_panel.current_target()
-        if target is None or target[1] != active_project_id:
-            return None
-        return target
 
     def try_gemma_app_followup(utterance):
         from program_apps.service import normalized
@@ -4642,63 +4232,6 @@ def main() -> None:
                      program_call=("suggest_id", {"query": matches[0]}))
         return True
 
-    def native_memory_request(context_id, spoken):
-        """Capture UI authorization; only the returned worker reader does I/O."""
-        revision = gemma_memory_revision
-        wanted = context_id is not None or memory_enabled.get()
-        owner = workspace if context_id is not None else (durable_brain if wanted else None)
-        warnings = []
-        if wanted and owner is None:
-            warnings.append("Archivio dei ricordi non disponibile.")
-
-        def read(budget):
-            if closing or owner is None:
-                return ""
-            try:
-                if context_id is None:
-                    if owner is not durable_brain or revision != gemma_memory_revision:
-                        return ""
-                    raw = owner.prompt_context(spoken[:180], budget=budget)
-                else:
-                    if owner is not workspace or budget < 160:
-                        return ""
-                    project = owner.project(context_id)
-                    if project is None or project["trashed"]:
-                        return ""
-                    raw = owner.prompt_context("project", context_id, spoken,
-                                               budget=budget, prefer_related=True)
-                value = json.loads(raw)
-                if not isinstance(value, dict) or not any(value.values()):
-                    return ""
-                if len(raw) > budget:
-                    raise ValueError("Memoria oltre il budget.")
-                return raw
-            except (OSError, sqlite3.Error, ValueError) as exc:
-                warnings.append("Ricordi precedenti non disponibili ("
-                                + type(exc).__name__ + ").")
-                return ""
-
-        def recent_pairs(count):
-            if closing or owner is None:
-                return ()
-            try:
-                if context_id is None:
-                    if owner is not durable_brain or revision != gemma_memory_revision:
-                        return ()
-                    pairs = owner.dialogue_pairs(count)
-                    if closing or owner is not durable_brain or revision != gemma_memory_revision:
-                        return ()
-                    return pairs
-                if owner is not workspace:
-                    return ()
-                pairs = owner.dialogue_pairs("project", context_id, count)
-                return () if closing or owner is not workspace else pairs
-            except (OSError, sqlite3.Error, ValueError) as exc:
-                warnings.append("Scambi recenti non disponibili (" + type(exc).__name__ + ").")
-                return ()
-
-        read.recent_pairs = recent_pairs
-        return (read if owner is not None else None), owner, revision, warnings
 
     def submit_gemma_voice(spoken, *, typed=False):
         if closing or gemma_trial_busy[0]:
@@ -4993,13 +4526,6 @@ def main() -> None:
     # l'ultimo spostamento, senza scrivere su disco a ogni pixel.
     style_save_job = [None]
 
-    def schedule_style_save(*_args) -> None:
-        if style_save_job[0] is not None:
-            try:
-                root.after_cancel(style_save_job[0])
-            except tk.TclError:
-                pass
-        style_save_job[0] = root.after(700, save_speech_preferences)
 
     for style_var in (spoken_effect, spoken_rate, spoken_pitch, spoken_volume):
         style_var.trace_add("write", schedule_style_save)
@@ -5054,20 +4580,6 @@ def main() -> None:
         anchor="e", pady=(9, 0))
     # Settings are intentionally hidden until the gear is pressed.
     # The normal window-close control invokes the same safe shutdown.
-    def close_with_goodbye() -> None:
-        # Saluto alla chiusura (frasi variabili); con la voce attiva aspetta che lo dica.
-        if closing or goodbye_started[0]:
-            return
-        goodbye_started[0] = True
-        from datetime import datetime
-        from frasi_lumi import greeting as lumi_greeting
-        text = lumi_greeting("chiusura", datetime.now().hour)
-        write_line("LUMI > " + text)
-        if spoken_enabled.get():
-            speak_result(text)
-            root.after(2300, close)
-        else:
-            close()
 
     goodbye_started = [False]
     hud.set_close_handler(close_with_goodbye)
@@ -5094,98 +4606,17 @@ def main() -> None:
         "memory": memory_enabled.get(),
         "orbit_nodes": orbit_nodes_cache,
     })
-    def initial_launch() -> None:
-        """App-only autostart: never adds Windows login/run-at-boot entries."""
-        if closing:
-            return
-        for warning in settings_load_warnings:
-            write_line("IMPOSTAZIONI > " + warning)
-        settings_load_warnings.clear()
-        if auto_listen_enabled.get():
-            voice_mode.set(GPT_CONVERSATION)
-            change_voice_mode()
-        # The local SAPI voice is suppressed from Vosk input by
-        # ignore_audio=speaker.is_audible, also during the cooldown.
-        greeting = startup_greeting()
-        write_line("LUMI > " + greeting)
-        speak_result(greeting)
 
     root.protocol("WM_DELETE_WINDOW", close_with_goodbye)
 
-    def lumi_restart() -> None:
-        from frasi_lumi import say
-        text = say("riavvio")
-        write_line("LUMI > " + text)
-        speak_result(text)
-        # Un piccolo processo separato riapre Lumi quando questa si è chiusa.
-        subprocess.Popen(
-            [sys.executable, "-c",
-             "import subprocess,sys,time;time.sleep(5);subprocess.Popen(sys.argv[1:])",
-             sys.executable, *sys.argv], cwd=os.getcwd(),
-            creationflags=getattr(subprocess, "DETACHED_PROCESS", 0))
-        goodbye_started[0] = True
-        # Chiude solo dopo aver detto il messaggio per intero (stima dalla lunghezza,
-        # minimo 2,5 s), così la voce non viene tagliata.
-        root.after(max(2500, int(len(text) * 80) + 1200) if spoken_enabled.get() else 600, close)
 
-    def lumi_shutdown_pc() -> None:
-        subprocess.run(["shutdown", "/s", "/t", "20"], check=False,
-                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-        message = ("Spengo il computer tra 20 secondi. Per fermarlo di' "
-                   "«annulla lo spegnimento».")
-        write_line("LUMI > " + message)
-        speak_result(message)
 
-    def lumi_cancel_shutdown() -> None:
-        subprocess.run(["shutdown", "/a"], check=False,
-                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-        write_line("LUMI > Spegnimento annullato.")
-        speak_result("Spegnimento annullato.")
 
-    def lumi_say(key: str) -> None:
-        from frasi_lumi import say
-        text = say(key)
-        write_line("LUMI > " + text)
-        speak_result(text)
 
-    def lumi_minimize() -> None:
-        lumi_say("minimizzo")
-        root.iconify()
 
-    def lumi_hide() -> None:
-        lumi_say("nascondo")
-        avatar_dock.hide_by_user()
-        if root.state() != "iconic":
-            root.iconify()
 
-    def lumi_wake() -> None:
-        avatar_dock.unhide()
-        root.deiconify()
-        try:
-            root.state("zoomed")
-        except tk.TclError:
-            pass
-        root.lift()
-        try:
-            root.focus_force()
-        except tk.TclError:
-            pass
-        lumi_say("sveglia")
 
-    def lumi_brain_local(value: bool) -> None:
-        text = __import__("model_gate").set_local(value)
-        write_line("LUMI > " + text)
-        speak_result(text)
 
-    def lumi_brain_online(value: bool) -> None:
-        # Stesso interruttore GPT delle Impostazioni (ChatGPT ora, gratuiti in futuro).
-        if bool(gpt_enabled.get()) != value:
-            gpt_toggle.invoke()
-        text = "Cervello online " + ("acceso." if gpt_enabled.get() else "spento.")
-        if value and not gpt_enabled.get():
-            text = "Non riesco ad accendere il cervello online: controlla il collegamento GPT."
-        write_line("LUMI > " + text)
-        speak_result(text)
 
     # Contesto comune (piano di divisione di jarvis.py, passo 1): i moduli spostati fuori
     # da main() useranno questi riferimenti invece delle variabili interne.
@@ -5218,17 +4649,6 @@ def main() -> None:
     root.after(400, refresh_voices)
     root.after(650, initial_launch)
     root.after(1100, refresh_orbit_nodes)
-    def first_run_components() -> None:
-        # Primo avvio: finestra per installare i componenti facoltativi da dentro
-        # Lumi (niente .bat). Dopo la chiusura non ricompare: si riapre da
-        # Gestisci add-on > «Installa componenti...».
-        try:
-            from componenti import catalog as components_catalog
-            if not components_catalog.load_state()["wizard_shown"]:
-                from componenti.ui import ComponentsWindow
-                ComponentsWindow(root)
-        except (ImportError, OSError, tk.TclError) as exc:
-            write_line("COMPONENTI > Finestra non disponibile: " + str(exc)[:120])
 
     root.after(2500, first_run_components)
     if telegram_auto.get():

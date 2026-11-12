@@ -59,10 +59,21 @@ class TelegramUiMoveTests(unittest.TestCase):
 
     def test_main_binds_every_moved_name(self):
         source = Path(__file__).resolve().parents[1].joinpath("jarvis.py").read_text(encoding="utf-8")
-        ui = Path(__file__).resolve().parents[1].joinpath("telegram_addon", "lumi_ui.py").read_text(
-            encoding="utf-8")
-        names = ast.literal_eval(next(n.value for n in ast.parse(ui).body if isinstance(n, ast.Assign)
-                                      and n.targets[0].id == "NOMI"))
-        for name in names:
-            self.assertNotIn("    def " + name + "(", source, name)   # niente doppioni
-            self.assertIn(name, source)
+        root = Path(__file__).resolve().parents[1]
+        modules = [root / "telegram_addon" / "lumi_ui.py", *sorted((root / "lumi_parti").glob("*.py"))]
+        seen = set()
+        for module in modules:
+            tree = ast.parse(module.read_text(encoding="utf-8"))
+            nomi = [n for n in tree.body if isinstance(n, ast.Assign)
+                    and getattr(n.targets[0], "id", "") == "NOMI"]
+            if not nomi:
+                continue
+            for name in ast.literal_eval(nomi[0].value):
+                self.assertNotIn("    def " + name + "(", source, name)   # niente doppioni
+                self.assertIn(name, source)
+                self.assertNotIn(name, seen, name)
+                seen.add(name)
+            installa = next(n for n in tree.body if isinstance(n, ast.FunctionDef)
+                            and n.name == "installa")
+            defined = {n.name for n in installa.body if isinstance(n, ast.FunctionDef)}
+            self.assertEqual(defined, set(ast.literal_eval(nomi[0].value)), module.name)
