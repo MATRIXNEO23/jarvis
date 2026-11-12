@@ -5403,6 +5403,13 @@ def main() -> None:
         write_line("LUMI > " + text)
         speak_result(text)
 
+    # Contesto comune (piano di divisione di jarvis.py, passo 1): i moduli spostati fuori
+    # da main() useranno questi riferimenti invece delle variabili interne.
+    __import__("lumi_contesto").crea(
+        root=root, write_line=write_line, speak_result=speak_result, settings=settings,
+        output_queue=output_queue, service=service, workspace=workspace,
+        addon_manager=addon_manager)
+
     __import__("la_mia_voce").ON_LEARNED.append(
         lambda: speech_lexicon is not None and speech_lexicon.reload())
 

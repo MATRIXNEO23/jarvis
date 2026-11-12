@@ -12,7 +12,7 @@ Stato: **piano approvato dall'utente come direzione** («dividere così rende pi
 `jarvis.py` di poche centinaia di righe che avvia Lumi e collega i moduli; nessun cambiamento di comportamento. Ogni modulo ha un nome chiaro e test propri.
 
 ## Passi (uno per build, ciascuno con CI Windows e prova sul Pavilion)
-1. **Contesto comune** (`lumi_contesto.py`): oggetto con root, console (`write_line`), voce (`speak_result`), impostazioni e servizi; `main()` lo crea e lo passa. Nessuna funzione spostata ancora.
+1. **[FATTO 12/11, da verificare in CI]** **Contesto comune** (`lumi_contesto.py`): oggetto con root, console (`write_line`), voce (`speak_result`), impostazioni e servizi; `main()` lo crea e lo passa. Nessuna funzione spostata ancora.
 2. **Telegram** → `telegram_addon/` (~500 righe).
 3. **Modello locale** → `local_model/` (~550 righe): anche primo passo per KoboldCpp come add-on separato.
 4. **`poll`** spezzato in gestori per tipo di evento (microfono, modelli, Telegram, diagnostica).
@@ -22,3 +22,7 @@ Stato: **piano approvato dall'utente come direzione** («dividere così rende pi
 - Spostare, non riscrivere: stesso codice, stesse frasi, stessi tasti.
 - Test estratti adattati insieme al codice; suite Windows completa verde prima della build.
 - Se un passo rompe qualcosa, si torna alla build precedente e si registra causa e lezione qui.
+
+## Registro dei passi
+- Passo 1 (12/11): `lumi_contesto.py` (dataclass `Contesto`, `crea()`, `attuale()`); `main()` lo crea subito prima di `la_mia_voce.ON_LEARNED`, quando tutti i riferimenti esistono. Nessuna funzione spostata, nessun comportamento cambiato. Test: `tests/test_lumi_contesto.py` (anche controllo statico che i riferimenti siano definiti prima della creazione). Limite noto: il contesto conserva i riferimenti al momento della creazione; se in futuro un servizio viene sostituito durante l'esecuzione, il modulo spostato dovrà aggiornarlo nel contesto.
+- Prossimo, passo 2 (Telegram): 23 funzioni, usano 31 nomi di main(); 8 file di test le estraggono da jarvis.py (test_activity_status, test_hud_quick_toggles, test_selected_conversation_model, test_telegram_multi_contacts, test_file_access, test_file_refinement, test_program_apps_integration, test_addon_lifecycle) e vanno adattati insieme.
