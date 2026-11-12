@@ -1,3 +1,11 @@
+## Build 042 PROVA — con Netflix Lumi continua ad ascoltare e a parlare
+
+[Scarica Lumi-042-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-042-PROVA.zip)
+
+Come la 041, più la correzione del blocco con l'app Netflix: prima, se Netflix occupava l'uscita audio, la voce di Lumi restava ferma fino a 10 minuti per frase e intanto il microfono era ignorato. Ora se l'audio non va avanti per 3 secondi Lumi riprova la frase in modalità condivisa (suona insieme a Netflix); se anche così non esce, salta le frasi in coda, lo scrive in console e torna subito ad ascoltare. La pausa tra le parole ha un tetto di 2 secondi in più. Verificati in CI Windows i test automatici e la prova reale. Da provare sul Pavilion con l'app Netflix.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43176216439). SHA-256: `6583ab113dce28419c7f68bd0ccf318d6f008e07f466f295585a9cb878c74860`.
+
 ## Build 041 PROVA — griglia col solo numero, La mia voce, pausa tra le parole, titoli storpiati
 
 [Scarica Lumi-041-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-041-PROVA.zip)
