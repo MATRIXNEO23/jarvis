@@ -1,3 +1,6 @@
+## Controllo PC / Lumi 040+: decidere e provare con l'utente, sezione per sezione — 2026-11-12
+Richiesta esplicita: prima della prossima correzione studiare bene e testare insieme. Per ogni sezione (programma o funzione) chiedere all'utente comandi, parole e comportamento desiderati; non inventarli. Implementare solo dopo la sua conferma; build solo su richiesta.
+
 ## Portabilità e indice del PC corrente — 2026-11-01
 Precisazione utente: Jarvis deve individuare profilo/unità/cartelle e poter costruire/usare un indice autonomo sul PC Windows su cui viene eseguito, non dipendere dalla struttura del Pavilion o da percorsi insegnati a mano. Rilevare percorsi da Windows; indice/configurazione legati a PC/volumi correnti, nessun riuso autorevole dell’indice di un altro PC. Autonomia non concede accesso fuori dalle spunte/permessi. Prima valutare Windows Search e strumenti esistenti (es. Everything) per mantenere Jarvis leggero: niente nuovo indicizzatore/servizio o dipendenza installata senza progetto/review. Distinguere rilevamento Known Folders già reale da indice completo portabile ancora da realizzare.
 
