@@ -359,3 +359,12 @@ Stato: codice scritto, test unitari aggiunti; collaudo Windows/CI e Pavilion da 
 18. `animated_hud.draw_lumi_wordmark`: scritta LUMI stile B al posto di «J A R V I S».
 Prove: `tests/test_controllo_pc.py` (Build040Tests), `tests/test_risposte.py`, `tests/test_frasi_lumi.py`; CI Windows estesa: `tools/uia_host_smoke.py` verifica il pulsante play disegnato e, se il runner ha una lingua OCR, la scritta «Riproduci».
 Limiti: OCR non legge bene i titoli stilizzati sulle copertine; posizione delle frecce di riga stimata se non dichiarate; tasti schermo intero dei programmi non in tabella = F11.
+
+
+## Da fare dopo i primi test della 040 (12/11 notte, a voce) — NON ancora implementate, nessuna build
+1. **Griglia: basta il numero.** Con la griglia aperta l'utente dice solo «sei», «cinque» (senza «il»). Causa verificata nel codice 040: in `controllo_pc/commands.py` il numero «nudo» è accettato solo con l'articolo (`il|la|numero …`) e `_ORD` non contiene i numeri in lettere («cinque», «sei»: sono in `_ORDINALS` ma non nella regex). Correzione prevista: con la griglia attiva (o i numeri visibili) accettare il numero da solo, in cifre o in lettere.
+2. **Numeri capiti male o detti in inglese** («six», «de», un «sei» storpiato): tabella di varianti valida solo mentre griglia/numeri sono attivi (come `risposte.py` per sì/no), più grammatica Vosk ristretta ai numeri in quella finestra. Le varianti esatte vanno raccolte dalla console del Pavilion: non inventarle.
+3. **«clicca su» con titoli in inglese storpiati** (es. «clicca su dip impact» → «Deep Impact»): confronto per somiglianza di suono/scrittura tra la frase e i nomi letti (UI Automation + OCR), offline e senza modello; se più candidati sono vicini, chiedere quale (numeri) invece di indovinare.
+4. **Sì/no senza «Lumi» per TUTTE le domande**: controllare ogni punto che fa una domanda (Controllo PC, «Intendevi…?», riavvio/spegnimento, Telegram, add-on, impostazioni, Programmi e app, Accesso file…) e farlo passare da `risposte.expect_answer` / `is_yes` / `is_no`; aggiungere un test che cerchi le domande sì/no non collegate.
+5. **Muoversi è ancora complicato**: l'utente manderà altri difetti; non proporre modifiche finché non li descrive.
+Promemoria dato a voce all'utente: aiuto dei comandi con «cosa posso fare qui» (poi «altri») oppure F1 / «aiuto» → sezione Controllo PC.
