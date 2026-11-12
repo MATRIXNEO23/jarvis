@@ -1,3 +1,11 @@
+## Build 043 PROVA — jarvis.py diviso in parti (stesso comportamento della 042)
+
+[Scarica Lumi-043-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-043-PROVA.zip)
+
+Nessuna funzione nuova: stesso comportamento della 042. Il file principale jarvis.py è stato diviso: da 5.457 a 4.865 righe; 62 funzioni spostate con il codice invariato in telegram_addon/lumi_ui.py e nella nuova cartella lumi_parti (voce, documenti e progetti, modello e memoria, interfaccia), più il contesto comune lumi_contesto.py. Verificati in CI Windows: 1298 test, diagnostica dei servizi, Telegram, pacchetto e prova reale UIA/OCR. Da provare sul Pavilion che tutto funzioni come nella 042.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43318037935). SHA-256: `aae2ee97afc1117847a4330023381e05092b00f926788892fd7c0d98de6b4d5d`.
+
 ## Build 042 PROVA — con Netflix Lumi continua ad ascoltare e a parlare
 
 [Scarica Lumi-042-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-042-PROVA.zip)
