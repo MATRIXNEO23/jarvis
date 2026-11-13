@@ -1,3 +1,11 @@
+## Build 045 PROVA — motore del modello in un processo separato (da attivare) e «riavvia il modello»
+
+[Scarica Lumi-045-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-045-PROVA.zip)
+
+Come la 044, più: in Impostazioni → GPT e memoria c'è «Motore in un processo separato (prova)», SPENTO di serie. Acceso, il modello locale gira in un processo interno a parte (stessa DLL, stessi template, nessuna seconda finestra): «riavvia il modello» lo chiude liberando la memoria e lo ricarica alla domanda dopo, e cambiando modello nelle impostazioni non serve più riavviare Lumi; se il modello si blocca cade solo il motore. Spento, tutto come prima. Verificati in CI Windows: test (anche il processo separato con un motore finto), diagnostica, Telegram, pacchetto e prova reale UIA/OCR. Non provato con la DLL e un modello veri: da confrontare sul Pavilion (velocità, memoria, caricamento).
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43375395592). SHA-256: `029021c0197a944ee750dc1f623b56d73475b1d3dd8b562b298fab6b835a3bb9`.
+
 ## Build 044 PROVA — modello locale come add-on (acceso di serie) e correzione «minimizza»
 
 [Scarica Lumi-044-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-044-PROVA.zip)
