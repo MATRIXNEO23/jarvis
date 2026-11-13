@@ -1,10 +1,10 @@
 {
-  "run_id": 43375395592,
-  "artifact": "lumi-045-prova-candidate",
-  "file": "Lumi-045-PROVA.zip",
-  "bytes": 27708031,
-  "sha256": "029021c0197a944ee750dc1f623b56d73475b1d3dd8b562b298fab6b835a3bb9",
-  "source_commit": "7a0eaab",
-  "title": "Build 045 PROVA — motore del modello in un processo separato (da attivare) e «riavvia il modello»",
-  "description": "Come la 044, più: in Impostazioni → GPT e memoria c'è «Motore in un processo separato (prova)», SPENTO di serie. Acceso, il modello locale gira in un processo interno a parte (stessa DLL, stessi template, nessuna seconda finestra): «riavvia il modello» lo chiude liberando la memoria e lo ricarica alla domanda dopo, e cambiando modello nelle impostazioni non serve più riavviare Lumi; se il modello si blocca cade solo il motore. Spento, tutto come prima. Verificati in CI Windows: test (anche il processo separato con un motore finto), diagnostica, Telegram, pacchetto e prova reale UIA/OCR. Non provato con la DLL e un modello veri: da confrontare sul Pavilion (velocità, memoria, caricamento)."
+  "run_id": 43392772539,
+  "artifact": "lumi-046-prova-candidate",
+  "file": "Lumi-046-PROVA.zip",
+  "bytes": 27708142,
+  "sha256": "bda30573c68168ff9a35af9371bfc8587241ee6e9becac4a1999f5a341569ad4",
+  "source_commit": "39dbc38",
+  "title": "Build 046 PROVA — correzione del motore separato (errore 'utf-8' … surrogates)",
+  "description": "Come la 045, con una correzione: con «Motore in un processo separato» acceso, ogni domanda al modello dava «'utf-8' codec can't encode character '\\udc8d' … surrogates not allowed» quando memoria o cronologia contenevano un carattere rotto. Ora il testo passa al motore separato in una forma che accetta qualsiasi carattere (e non dipende dalla codifica di Windows). Verificati in CI Windows: test (anche questo caso), diagnostica, Telegram, pacchetto e prova reale UIA/OCR. Motore separato ancora da confrontare sul Pavilion con la DLL e il modello veri."
 }
