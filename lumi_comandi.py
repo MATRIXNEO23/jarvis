@@ -96,3 +96,14 @@ def handle_text(spoken: str, write_line, speak) -> bool:
         return True
     actions[action]()
     return True
+
+
+def run_action(action: str) -> bool:
+    """Esegue un'azione su Lumi registrata da jarvis.py (es. «minimize»); False se manca.
+    Usata dal Controllo PC: le finestre di Lumi (senza cornice di Windows) non vanno
+    ridotte con ShowWindow, che le nasconde senza icona e sembrano chiuse."""
+    actions = _STATE["actions"] or {}
+    if action not in actions:
+        return False
+    actions[action]()
+    return True

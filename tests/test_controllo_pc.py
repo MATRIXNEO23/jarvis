@@ -407,6 +407,26 @@ class Build041Tests(Build040Tests):
         self.assertIn(("click", 60, 20), self.backend.calls)
 
 
+class LumiMinimizeTests(Build040Tests):
+    def test_minimize_lumi_uses_lumi_own_action_not_showwindow(self):
+        import lumi_comandi
+        done = []
+        old = dict(lumi_comandi._STATE)
+        lumi_comandi._STATE["actions"] = {"minimize": lambda: done.append("minimize")}
+        try:
+            self.backend.items.append({"hwnd": 55, "title": "Lumi", "process": "python.exe",
+                                       "pid": 9, "lumi": True})
+            self.backend.front = 55
+            reply = self.run_text("minimizza")
+            self.assertIn("Lumi", reply)
+            self.assertEqual(done, [])                     # prima chiede
+            self.service.answer("sì")
+            self.assertEqual(done, ["minimize"])
+            self.assertFalse([c for c in self.backend.calls if c[0] in ("show", "close")])
+        finally:
+            lumi_comandi._STATE.update(old)
+
+
 def runtime_claims(service, text):
     runtime.register(service)
     try:

@@ -788,10 +788,15 @@ class ControlService:
         if found is None:
             return None
         if found.get("lumi") and how != "ripristina":
+            def on_lumi():
+                # Lumi si riduce da sola (come «Lumi, minimizzati»): ShowWindow su una sua
+                # finestra senza cornice la nascondeva senza icona e sembrava chiusa.
+                if how == "minimizza" and _lumi_action("minimize"):
+                    return ""
+                self.backend.show_window(found["hwnd"], how)
+                return say(how, finestra="Lumi")
             return self._ask("", True, ("Riduco a icona" if how == "minimizza" else "Ingrandisco")
-                             + " Lumi stessa",
-                             lambda: (self.backend.show_window(found["hwnd"], how),
-                                      say(how, finestra="Lumi"))[1])
+                             + " Lumi stessa", on_lumi)
         self.backend.show_window(found["hwnd"], how)
         if how != "minimizza":
             self.target = found["hwnd"]
@@ -1115,3 +1120,11 @@ def _sounds_like(spoken: str, name: str) -> float:
     written = difflib.SequenceMatcher(None, spoken, name).ratio()
     sound = difflib.SequenceMatcher(None, _phonetic(spoken), _phonetic(name)).ratio()
     return max(written, sound)
+
+
+def _lumi_action(action: str) -> bool:
+    try:
+        import lumi_comandi
+        return lumi_comandi.run_action(action)
+    except ImportError:
+        return False
