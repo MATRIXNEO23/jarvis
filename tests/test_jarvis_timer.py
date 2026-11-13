@@ -15,12 +15,12 @@ from jarvis_timer import SOUNDS, TimerPopup, alarm_wav, parse_timer_command, pla
 class TimerParsingTests(unittest.TestCase):
     def test_voice_and_short_commands(self):
         for text in ("timer 10 minuti", "metti un timer di 10 minuti",
-                     "Jarvis, avvia timer da 10 minuti",
-                     "Ehi Jarvis timer per 10 min"):
+                     "Lumi, avvia timer da 10 minuti",
+                     "Ehi Lumi timer per 10 min"):
             self.assertEqual(parse_timer_command(text).seconds, 600, text)
             self.assertEqual(parse_timer_command(text).action, "start")
         self.assertEqual(parse_timer_command("timer").action, "open")
-        self.assertEqual(parse_timer_command("Jarvis timer di 1 ora 2 minuti 3 secondi").seconds,
+        self.assertEqual(parse_timer_command("Lumi timer di 1 ora 2 minuti 3 secondi").seconds,
                          3723)
         self.assertEqual(parse_timer_command("timer 45 secondi").seconds, 45)
 

@@ -9,7 +9,23 @@ from pathlib import Path
 import threading
 import time
 
+from .chat_templates import model_family, stop_sequence
 from .native_config import NativeModelConfig
+
+
+class NativeRestartRequired(RuntimeError):
+    """A second native model load in one process is refused (F5N.7).
+
+    KoboldCpp exposes no safe unload: native state of a previous load_model
+    is not guaranteed to be released or reset. Model, context or thread
+    changes therefore apply when Lumi is restarted.
+    """
+
+
+RESTART_MESSAGE = ("Motore locale già caricato in questa sessione: riavvia Lumi "
+                   "per usare il nuovo modello o le nuove impostazioni del motore.")
+# Resolved DLL paths whose native load_model already ran in this process.
+_PROCESS_NATIVE_LOADS = set()
 
 
 class NativeGemmaBridge:
@@ -24,6 +40,7 @@ class NativeGemmaBridge:
         self._stop_requested = threading.Event()
         self.last_generation_finish = "unknown"
         self.last_generation_tokens = None
+        self.family = "gemma2"
 
     def load(self):
         """Load once. Caller must supply a verified, pinned upstream adapter."""
@@ -35,16 +52,27 @@ class NativeGemmaBridge:
                 raise RuntimeError("Modello GGUF non disponibile.")
             if not self.config.dll or not Path(self.config.dll).is_file():
                 raise RuntimeError("Libreria nativa non disponibile.")
+            # Template/stop follow the GGUF architecture (F5N.7).
+            self.family = model_family(self.config.model)
             if not callable(self.initialize):
                 raise RuntimeError("Inizializzazione ABI nativa non configurata.")
+            dll_key = str(Path(self.config.dll).resolve())
+            if dll_key in _PROCESS_NATIVE_LOADS:
+                raise NativeRestartRequired(RESTART_MESSAGE)
             self.initialize(self.upstream, self.config)
             self._check_cancelled()
             if not hasattr(self.upstream, "load_model"):
                 raise RuntimeError("Adattatore nativo non compatibile.")
+            # Reserve before the native call: a failed load also leaves state.
+            _PROCESS_NATIVE_LOADS.add(dll_key)
             if not self.upstream.load_model(str(Path(self.config.model).resolve())):
                 raise RuntimeError("Caricamento modello nativo fallito.")
             self._check_cancelled()
             self._loaded = True
+
+    @property
+    def loaded(self):
+        return self._loaded
 
     def _check_cancelled(self):
         if self._stop_requested.is_set():
@@ -90,6 +118,54 @@ class NativeGemmaBridge:
                 raise RuntimeError("Conteggio token nativo non valido.")
             return len(ids)
 
+    def _start_stream(self, done):
+        """Poll partial output for the thread's stream callback (chat only)."""
+        from .token_stream import current, visible_text
+        callback = current()
+        handle = getattr(self.upstream, "handle", None)
+        pending = getattr(handle, "get_pending_output", None)
+        if callback is None or pending is None:
+            return None
+        try:
+            stop = stop_sequence(self.family)[0]
+        except Exception:
+            stop = None
+
+        def read():
+            raw = pending()
+            if isinstance(raw, bytes):
+                raw = raw.decode("utf-8", "ignore")
+            return raw if isinstance(raw, str) else ""
+
+        try:
+            stale = read()   # previous answer until the engine resets it
+        except Exception:
+            return None
+
+        def poll():
+            sent = ""
+            started = False
+            while not done.wait(0.12):
+                try:
+                    raw = read()
+                except Exception:
+                    return
+                if not started:
+                    if raw == stale:
+                        continue
+                    started = True
+                text = visible_text(raw, stop)
+                if text.strip() and text != sent:
+                    sent = text
+                    try:
+                        callback(text)
+                    except Exception:
+                        return
+
+        thread = threading.Thread(target=poll, daemon=True, name="lumi-token-stream")
+        thread.start()
+        return thread
+
     def generate(self, prompt, *, timeout=120):
         if not isinstance(prompt, str) or not prompt.strip():
             raise ValueError("Prompt vuoto.")
@@ -124,6 +200,8 @@ class NativeGemmaBridge:
             watchdog = threading.Timer(timeout, expire)
             watchdog.daemon = True
             watchdog.start()
+            stream_done = threading.Event()
+            streamer = self._start_stream(stream_done)
             failure = None
             try:
                 # Timer.start() may schedule a stop/deadline before native
@@ -136,11 +214,14 @@ class NativeGemmaBridge:
                     "max_length": c.max_output, "temperature": c.temperature,
                     "top_k": c.top_k, "top_p": c.top_p,
                     "sampler_seed": c.seed,
-                    "stop_sequence": ["<end_of_turn>"],
+                    "stop_sequence": stop_sequence(self.family),
                 })
             except Exception as exc:
                 failure = exc
             finally:
+                stream_done.set()
+                if streamer is not None:
+                    streamer.join(2)
                 with deadline_lock:
                     finished = True
                     watchdog.cancel()

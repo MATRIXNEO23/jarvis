@@ -1,0 +1,94 @@
+name: "Publish Lumi voices (one ZIP per voice)"
+on:
+  push:
+    branches: [feature/jarvis-kobold-f5-profiles-20261109]
+    paths: ['tools/fetch_piper_voices.py', '.github/workflows/publish-piper-voices.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  voices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: voci-lumi-v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch voices from publishers with SHA-256 verification
+        run: python tools/fetch_piper_voices.py voci
+      - name: One ZIP per voice in release "Voci Lumi"; clean Download/voci on main
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os, zipfile
+          from pathlib import Path
+          repo, tag = os.environ["GITHUB_REPOSITORY"], os.environ["TAG"]
+          cat = json.loads(Path("voci/voci.json").read_text(encoding="utf-8"))
+          for key, voice in cat["voices"].items():
+              name = "Voce-" + key.capitalize() + ".zip"
+              with zipfile.ZipFile(Path("voci") / name, "w", zipfile.ZIP_DEFLATED) as z:
+                  for f in voice["files"]:
+                      z.write(Path("voci") / f, f)
+                  z.writestr("LICENZA.txt", voice["attribution"] + "\n" + voice["license"] + "\n")
+              data = (Path("voci") / name).read_bytes()
+              for f, info in voice["files"].items():  # 019 compatibility: per-file links
+                  info["url"] = f"https://github.com/{repo}/releases/download/{tag}/{f}"
+              voice["zip"] = {"name": name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(),
+                              "url": f"https://github.com/{repo}/releases/download/{tag}/{name}"}
+          Path("voci/voci.json").write_text(json.dumps(cat, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+          PY
+          gh release view voci-piper-v1 >/dev/null 2>&1 && gh release delete voci-piper-v1 --yes --cleanup-tag || true
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "Voci Lumi" --target main \
+            --notes "Voci italiane naturali per Lumi. Un file per voce: Voce-Paola.zip, Voce-Serena.zip. Si scaricano da Lumi (Impostazioni > Voce). Licenze in LICENZA.txt dentro ogni ZIP."
+          gh release upload "$TAG" voci/Voce-Paola.zip voci/Voce-Serena.zip voci/*.onnx voci/*.onnx.json --clobber
+          git fetch origin main
+          git worktree add publish-main origin/main
+          cd publish-main
+          git rm -q -r --ignore-unmatch Download/voci
+          mkdir -p Download/voci
+          cp ../voci/voci.json Download/voci/voci.json
+          {
+            echo "# Voci di Lumi"
+            echo
+            echo "Non serve scaricare nulla a mano: in Lumi vai in **Impostazioni > Voce** e premi **Scarica Paola** o **Scarica Serena**."
+            echo
+            echo "Se vuoi il file comunque, una voce = un file ZIP:"
+            echo
+            echo "| Voce | File | Licenza |"
+            echo "|---|---|---|"
+            echo "| Paola (media qualità, più leggera) | [Voce-Paola.zip](https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Voce-Paola.zip) | voce ufficiale Piper (rhasspy/piper-voices) |"
+            echo "| Serena (alta qualità) | [Voce-Serena.zip](https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Voce-Serena.zip) | CC BY 4.0, it_IT-serena-high by Marco Baccarani (Committa) |"
+            echo
+            echo "\`voci.json\` è l'elenco tecnico che Lumi usa per scaricare e verificare le voci: non va aperto né modificato."
+          } > Download/voci/LEGGIMI.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A Download/voci
+          git diff --cached --quiet || git commit -m "Voci Lumi: per-file links for build 019 download buttons"
+          git push origin HEAD:main
+      - name: Re-download both ZIPs and verify
+        run: |
+          set -euo pipefail
+          sleep 20
+          python - <<'PY'
+          import hashlib, json, time, urllib.request
+          from pathlib import Path
+          cat = json.loads(Path("voci/voci.json").read_text(encoding="utf-8"))
+          for voice in cat["voices"].values():
+              z = voice["zip"]
+              for _ in range(10):
+                  try:
+                      data = urllib.request.urlopen(z["url"], timeout=180).read()
+                      if hashlib.sha256(data).hexdigest() == z["sha256"]:
+                          print("OK", z["name"], len(data)); break
+                  except Exception as exc:
+                      print("retry", exc)
+                  time.sleep(30)
+              else:
+                  raise SystemExit("not verified " + z["name"])
+          PY

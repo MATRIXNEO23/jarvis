@@ -11,7 +11,7 @@ class PreferenceIntent:
     value: str = ""
 
 
-_PREFIX = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]*",re.I)
+_PREFIX = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?lumi[\s,.:;-]*",re.I)
 _SET = re.compile(r"^(?:ricorda(?:ti)?\s+(?:la\s+preferenza\s+)?(?:che\s+)?|"
                   r"salva\s+(?:la\s+)?preferenza\s+)(.+)$",re.I)
 _LIST = re.compile(r"^(?:quali\s+sono\s+le\s+mie\s+preferenze|"

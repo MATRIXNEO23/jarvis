@@ -14,6 +14,7 @@ import unittest
 from unittest.mock import patch
 
 import test_native_trial_ownership as ownership
+from local_model.native_bridge import NativeRestartRequired
 from local_model.native_config import NativeModelConfig
 from local_model.memory_preferences import MemoryPreferences, default_memory_preferences_path
 from local_model.native_settings import default_native_settings_path
@@ -84,24 +85,29 @@ class NativeSettingsPropagationTests(unittest.TestCase):
                 self.abort.assert_not_called()
         self.assertIn("Prima domanda controllata", self.abi.calls[-1]["prompt"])
 
-    def test_each_saved_load_setting_reloads_once_and_keeps_history(self):
+    def test_each_saved_load_setting_requires_restart_and_keeps_model_and_history(self):
+        # F5N.7: no second native load in one process (no safe upstream unload).
         self.session.ask("Ricordo del progetto da conservare")
+        original = NativeModelConfig.load(default_native_settings_path())
         model = self.harness.root / "second.gguf"
         model.write_bytes(b"fixture: never loaded")
-        for index, (key, value) in enumerate((("threads", 3), ("batch_threads", 4),
-                                             ("context_size", 4096), ("model", str(model))), 2):
+        for key, value in (("threads", 3), ("batch_threads", 4),
+                           ("context_size", 4096), ("model", str(model))):
             with self.subTest(field=key):
                 config = self.save(**{key: value})
-                history = list(self.session.history)
-                self.session.ask("Dopo cambio " + key)
-                self.assert_parameters(config)
-                self.assertEqual(len(self.abi.loads), index)
-                self.assertEqual(self.initialized[-1], config)
-                self.assertTrue(os.path.samefile(self.abi.loads[-1], config.model))
-                self.assertEqual(list(self.session.history)[:len(history)], history)
+                history, calls = list(self.session.history), len(self.abi.calls)
+                with self.assertRaises(NativeRestartRequired):
+                    self.session.ask("Dopo cambio " + key)
+                with self.assertRaises(NativeRestartRequired):
+                    self.session.ask_isolated(lambda _: "Richiesta isolata")
+                self.assertEqual(len(self.abi.loads), 1)
+                self.assertEqual(len(self.abi.calls), calls)
+                self.assertEqual(list(self.session.history), history)
+                self.assertEqual(NativeModelConfig.load(default_native_settings_path()), config)
+                self.save(**{key: getattr(original, key)})
+                self.session.ask("Dopo ripristino " + key)
+                self.assertEqual(len(self.abi.loads), 1)
                 self.assertIn("Ricordo del progetto", self.abi.calls[-1]["prompt"])
-                self.session.ask_isolated(lambda _: "Richiesta isolata senza cambio")
-                self.assertEqual(len(self.abi.loads), index)
         self.harness.assert_serialized()
 
     def test_saved_settings_apply_to_isolated_and_picker_without_history_changes(self):
@@ -141,7 +147,7 @@ class NativeSettingsPropagationTests(unittest.TestCase):
         self.assert_parameters(self.harness.config)
         self.assertEqual(len(self.abi.loads), 1)
 
-    def test_invalid_budget_never_generates_then_valid_settings_recover(self):
+    def test_invalid_budget_never_generates_then_restart_is_required(self):
         self.session.ask("Prima domanda")
         history, calls = list(self.session.history), len(self.abi.calls)
         self.save(context_size=256, max_output=200)
@@ -149,10 +155,11 @@ class NativeSettingsPropagationTests(unittest.TestCase):
             self.session.ask("Ciao")
         self.assertEqual(len(self.abi.calls), calls)
         self.assertEqual(list(self.session.history), history)
-        config = self.save(max_output=64)
-        self.session.ask("Ciao")
-        self.assert_parameters(config)
-        self.assertEqual(len(self.abi.loads), 2)
+        self.save(max_output=64)
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask("Ciao")
+        self.assertEqual(len(self.abi.calls), calls)
+        self.assertEqual(len(self.abi.loads), 1)
 
     def test_missing_saved_model_never_falls_back_and_recovery_keeps_history(self):
         self.session.ask("Prima domanda")
@@ -181,10 +188,9 @@ class NativeSettingsPropagationTests(unittest.TestCase):
         self.assert_parameters(self.harness.config)
         self.assertTrue(os.path.samefile(self.abi.loads[-1], self.harness.config.model))
         self.session.config_loader = loader
-        self.session.ask("Richiesta successiva")
-        self.assert_parameters(revised)
-        self.assertEqual(len(self.abi.loads), 2)
-        self.assertTrue(os.path.samefile(self.abi.loads[-1], revised.model))
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask("Richiesta successiva")
+        self.assertEqual(len(self.abi.loads), 1)
 
     def test_save_during_inference_updates_only_the_next_queued_request(self):
         self.abi.release.clear()
@@ -206,44 +212,45 @@ class NativeSettingsPropagationTests(unittest.TestCase):
         self.session.lock = ObserveLock()
         self.harness.make_thread(target=lambda: ask("Richiesta in coda")).start()
         self.assertTrue(waiting.wait(2))
-        config = self.save(context_size=4096, threads=3, max_output=64, temperature=0.3)
+        self.save(context_size=4096, threads=3, max_output=64, temperature=0.3)
         self.assertEqual(self.abi.calls[0]["max_length"], 128)
-        self.assertEqual(len(self.abi.loads), 1)
         self.harness.assert_serialized()
-        self.assertEqual(errors, [])
-        self.assertEqual(len(self.abi.calls), 2)
-        self.assert_parameters(config)
-        self.assertEqual(len(self.abi.loads), 2)
-        self.assertEqual(self.initialized[-1], config)
+        # The running request is unaffected; the queued one needs a restart.
+        self.assertEqual(errors, ["NativeRestartRequired"])
+        self.assertEqual(len(self.abi.calls), 1)
+        self.assertEqual(len(self.abi.loads), 1)
 
-    def test_explicit_trial_then_saved_sampler_uses_current_values_without_extra_reload(self):
+    def test_explicit_trial_reuses_loaded_model_and_saved_samplers(self):
         self.session.ask("Nota privata")
-        config = self.save(threads=3, max_output=96)
+        config = self.save(max_output=96)
         self.session.test_generation(config=config)
         history = list(self.session.history)
-        self.assertEqual(len(self.abi.loads), 2)
+        self.assertEqual(len(self.abi.loads), 1)
         self.assertNotIn("Nota privata", self.abi.calls[-1]["prompt"])
         config = self.save(max_output=48, temperature=0.1)
         self.session.ask_isolated(lambda _: "Messaggio dopo prova")
         self.assert_parameters(config)
-        self.assertEqual(len(self.abi.loads), 2)
+        self.assertEqual(len(self.abi.loads), 1)
         self.assertEqual(list(self.session.history), history)
+        config = self.save(threads=3)
+        with self.assertRaises(NativeRestartRequired):
+            self.session.test_generation(config=config)
+        self.assertEqual(len(self.abi.loads), 1)
 
-    def test_changed_internal_dll_reloads_from_validated_saved_snapshot(self):
+    def test_changed_internal_dll_requires_restart(self):
         self.session.ask("Prima domanda")
         dll = self.harness.root / "second-noavx2.dll"
         dll.write_bytes(b"fixture: never loaded")
         config = replace(NativeModelConfig.load(default_native_settings_path()), dll=str(dll))
         config.save(default_native_settings_path())
-        self.session.ask("Dopo cambio DLL controllato")
-        self.assertEqual(len(self.abi.loads), 2)
-        self.assertEqual(self.initialized[-1], config)
-        self.assertTrue(os.path.samefile(self.session.adapter.provider.bridge.config.dll, dll))
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask("Dopo cambio DLL controllato")
+        self.assertEqual(len(self.abi.loads), 1)
+        self.assertTrue(os.path.samefile(self.session.adapter.provider.bridge.config.dll,
+                                        self.harness.config.dll))
 
-    def test_load_failure_after_replacement_keeps_history_and_can_retry(self):
-        self.session.ask("Ricordo controllato")
-        history, calls = list(self.session.history), len(self.abi.calls)
-        config = self.save(context_size=4096)
+    def test_failed_native_load_requires_restart_and_keeps_history(self):
+        # A failed load_model still leaves native state: never retried in-process.
         original_load = self.abi.load
         def failed_load(path):
             original_load(path)
@@ -251,46 +258,39 @@ class NativeSettingsPropagationTests(unittest.TestCase):
         with patch.object(self.abi, "load", side_effect=failed_load):
             with self.assertRaises(RuntimeError):
                 self.session.ask("Caricamento fallito")
-        self.assertEqual(len(self.abi.calls), calls)
-        self.assertEqual(list(self.session.history), history)
-        self.assertGreaterEqual(self.abort.call_count, 1)
-        self.session.ask("Riprova dopo errore")
-        self.assert_parameters(config)
-        self.assertEqual(len(self.abi.calls), calls + 1)
-        self.assertIn("Ricordo controllato", self.abi.calls[-1]["prompt"])
-        self.harness.assert_serialized()
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask("Riprova dopo errore")
+        self.assertEqual(self.abi.calls, [])
+        self.assertEqual(list(self.session.history), [])
 
-    def test_failed_old_provider_stop_cannot_be_reused_as_ready(self):
+    def test_load_setting_change_never_stops_the_working_provider(self):
         self.session.ask("Ricordo controllato")
         history, calls = list(self.session.history), len(self.abi.calls)
-        config = self.save(threads=3)
-        with patch.object(self.abi, "abort", side_effect=RuntimeError("Controlled stop failure")):
-            with self.assertRaises(RuntimeError):
-                self.session.ask("Stop fallito")
+        self.save(threads=3)
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask("Cambio thread")
+        self.abort.assert_not_called()
         self.assertEqual(len(self.abi.calls), calls)
         self.assertEqual(list(self.session.history), history)
-        self.session.ask("Riprendi dopo stop fallito")
-        self.assert_parameters(config)
-        self.assertEqual(len(self.abi.calls), calls + 1)
-        self.assertEqual(len(self.abi.loads), 2)
+        self.assertTrue(self.session.adapter.provider.bridge.loaded)
 
-    def test_isolated_and_picker_can_initiate_reload_after_save(self):
+    def test_isolated_and_picker_also_require_restart_after_load_setting_save(self):
         self.session.ask("Nota privata controllata")
         history = list(self.session.history)
-        for count, (name, changes, generate) in enumerate((
+        original = NativeModelConfig.load(default_native_settings_path())
+        for name, changes, generate in (
             ("isolated", dict(context_size=4096),
              lambda: self.session.ask_isolated(lambda _: "Messaggio controllato")),
             ("picker", dict(threads=3),
              lambda: self.session.pick_program("Film", ("Posta", "Video"))),
-        ), 2):
+        ):
             with self.subTest(flow=name):
-                config = self.save(**changes)
-                generate()
-                self.assertEqual(len(self.abi.loads), count)
-                self.assertEqual(self.initialized[-1], config)
-                self.assert_parameters(config)
-                self.assertNotIn("Nota privata", self.abi.calls[-1]["prompt"])
+                self.save(**changes)
+                with self.assertRaises(NativeRestartRequired):
+                    generate()
+                self.assertEqual(len(self.abi.loads), 1)
                 self.assertEqual(list(self.session.history), history)
+                self.save(**{k: getattr(original, k) for k in changes})
 
     def test_packaged_factory_preserves_bundled_dll_when_samplers_change(self):
         # Copy the exact source factory to the temporary packaged directory.
@@ -315,27 +315,20 @@ class NativeSettingsPropagationTests(unittest.TestCase):
         self.assertTrue(os.path.samefile(self.session.adapter.provider.bridge.config.dll,
                                         self.harness.config.dll))
 
-    def test_stop_releases_ready_or_retained_provider_after_abort_failure(self):
-        for retained in (False, True):
-            with self.subTest(retained_after_invalid_reconfiguration=retained):
-                self.session.ask("Ricordo prima dello stop")
-                history, calls = list(self.session.history), len(self.abi.calls)
-                if retained:
-                    self.save(model=str(self.harness.root / "missing-again.gguf"))
-                    with self.assertRaises((OSError, RuntimeError)):
-                        self.session.ask("Configurazione non caricabile")
-                with patch.object(self.abi, "abort", side_effect=RuntimeError("Stop failure")):
-                    with self.assertRaises(RuntimeError):
-                        self.session.stop()
-                self.assertEqual(len(self.abi.calls), calls)
-                self.assertEqual(list(self.session.history), history)
-                config = self.save(model=self.harness.config.model)
-                self.session.ask("Dopo stop fallito")
-                self.assert_parameters(config)
-                self.assertEqual(len(self.abi.calls), calls + 1)
-                self.assertIn("Ricordo prima dello stop", self.abi.calls[-1]["prompt"])
+    def test_stop_after_abort_failure_never_reuses_provider_and_requires_restart(self):
+        self.session.ask("Ricordo prima dello stop")
+        history, calls = list(self.session.history), len(self.abi.calls)
+        with patch.object(self.abi, "abort", side_effect=RuntimeError("Stop failure")):
+            with self.assertRaises(RuntimeError):
+                self.session.stop()
+        self.assertIsNone(self.session.adapter.provider)
+        self.assertEqual(len(self.abi.calls), calls)
+        self.assertEqual(list(self.session.history), history)
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask("Dopo stop fallito")
+        self.assertEqual(len(self.abi.loads), 1)
 
-    def test_explicit_trial_reloads_provider_retained_after_invalid_save(self):
+    def test_trial_after_invalid_then_restored_save_reuses_loaded_model(self):
         self.session.ask("Ricordo da conservare")
         history = list(self.session.history)
         self.save(model=str(self.harness.root / "missing-before-trial.gguf"))
@@ -343,9 +336,9 @@ class NativeSettingsPropagationTests(unittest.TestCase):
             self.session.ask("Configurazione non caricabile")
         config = self.save(model=self.harness.config.model)
         self.session.test_generation(config=config)
-        self.assertEqual(len(self.abi.loads), 2, "Explicit trial must reload retained provider")
+        self.assertEqual(len(self.abi.loads), 1)
         self.assertEqual(list(self.session.history), history)
         self.assertNotIn("Ricordo da conservare", self.abi.calls[-1]["prompt"])
         self.session.ask("Riprendi dopo prova")
-        self.assertEqual(len(self.abi.loads), 2)
+        self.assertEqual(len(self.abi.loads), 1)
         self.assertIn("Ricordo da conservare", self.abi.calls[-1]["prompt"])

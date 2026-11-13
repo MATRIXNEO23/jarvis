@@ -3,13 +3,13 @@ from pathlib import Path
 import hashlib, os, subprocess, zipfile
 
 root=Path(".")
-launcher=root/"avvia_jarvis.bat"
+launcher=root/"avvia_lumi.bat"
 s=launcher.read_text(encoding="utf-8")
-s=s.replace("Jarvis-AccessoFile-Trial","Jarvis-Gemma-Trial").replace("JARVIS // ACCESSO FILE","JARVIS // GEMMA")
+s=s.replace("Jarvis-AccessoFile-Trial","Jarvis-Gemma-Trial").replace("LUMI // ACCESSO FILE","LUMI // GEMMA")
 launcher.write_text(s,encoding="utf-8")
 readme="""JARVIS GEMMA - PROVA ISOLATA
 1. Estrai in una cartella nuova, senza sovrascrivere Jarvis stabile.
-2. Avvia avvia_jarvis.bat con Python 3.11/3.12 x64 e dipendenze installate.
+2. Avvia avvia_lumi.bat con Python 3.11/3.12 x64 e dipendenze installate.
 3. In Impostazioni > GPT e memoria > Configura Gemma locale seleziona il tuo GGUF.
 4. Premi Salva, poi Prova generazione: verra mostrata la risposta o l'errore.
 5. DLL CPU no-AVX2 inclusa, non serve koboldcpp.exe.
@@ -28,7 +28,7 @@ def include(p):
     if p.suffix.lower() in {".md",".yml",".yaml",".toml"} and p.name!="README.md": return False
     return p.is_file() and not p.is_symlink()
 entries=[p for p in entries if include(p)]
-mandatory={"jarvis.py","avvia_jarvis.bat","local_model/native_ui.py","local_model/native_factory.py"}|OPERATIONAL_GUIDES
+mandatory={"jarvis.py","avvia_lumi.bat","local_model/native_ui.py","local_model/native_factory.py"}|OPERATIONAL_GUIDES
 assert mandatory.issubset({p.as_posix() for p in entries})
 native=root/"upstream-kobold"
 assert (native/"koboldcpp.py").is_file()

@@ -3,6 +3,7 @@
 No real model, Telegram account or microphone. Every worker is gated, released
 and joined by the existing ownership fixture, including on the Red revision.
 """
+from local_model.native_bridge import NativeRestartRequired
 import os
 import gc
 import threading
@@ -86,10 +87,12 @@ class NativeHudActivityTests(unittest.TestCase):
         self.snapshot(busy=False)
 
     def test_actual_telegram_local_callback_updates_same_hud_owner(self):
-        from telegram_bridge import telegram_assistant_prompt, telegram_local_prompt
+        from telegram_bridge import (telegram_assistant_prompt, telegram_local_messages,
+                                     telegram_local_prompt)
         self.env.update(get_gemma_session=Mock(return_value=self.session),
                         ask_telegram_gpt=Mock(), telegram_assistant_prompt=telegram_assistant_prompt,
-                        telegram_local_prompt=telegram_local_prompt, settings={"gpt_enabled": False})
+                        telegram_local_prompt=telegram_local_prompt,
+                        telegram_local_messages=telegram_local_messages, settings={"gpt_enabled": False})
         reply = self.callbacks.callback('ask_telegram_reply', self.env)
         bridge = SimpleNamespace(is_enabled=lambda: True)
         job = self.active(lambda: reply('Ciao', '', bridge, 123))
@@ -192,7 +195,9 @@ class NativeHudActivityTests(unittest.TestCase):
         self.assertTrue(job.done.wait(2))
         self.assertIsInstance(job.error, RuntimeError)
         self.snapshot(busy=False)
-        self.assertEqual(self.session.ask('Riprendi'), 'Risposta locale controllata')
+        # F5N.7: no in-process native reload after stop; busy still unwinds.
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask('Riprendi')
         self.snapshot(busy=False)
 
     def test_errors_and_closed_requests_do_not_leave_stale_busy_metadata(self):
@@ -234,7 +239,9 @@ class NativeHudActivityTests(unittest.TestCase):
         self.assertIsInstance(job.error, RuntimeError)
         self.assertIsNone(stopped.error)
         self.snapshot(busy=False)
-        self.assertEqual(self.session.ask('Riprendi'), 'Risposta locale controllata')
+        # F5N.7: no in-process native reload after stop; busy still unwinds.
+        with self.assertRaises(NativeRestartRequired):
+            self.session.ask('Riprendi')
         self.snapshot(busy=False)
 
     def test_pending_chat_flag_and_existing_gpt_local_document_flags_are_preserved(self):
@@ -268,10 +275,10 @@ class NativeHudActivityTests(unittest.TestCase):
         try:
             hud._advance()
             root.update_idletasks()
-            self.assertIn('JARVIS STA RAGIONANDO', hud.chat_info.get())
+            self.assertIn('LUMI STA RAGIONANDO', hud.chat_info.get())
             self.env['speaker'].is_speaking = lambda: True
             hud._advance()
-            self.assertIn('JARVIS STA PARLANDO', hud.chat_info.get())
+            self.assertIn('LUMI STA PARLANDO', hud.chat_info.get())
         finally:
             self.abi.release.set()
             finished = job.done.wait(2)

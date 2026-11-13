@@ -56,7 +56,7 @@ class MemoryBoundariesTests(unittest.TestCase):
 
     def test_preference_voice_is_explicit_not_from_general_chatter(self):
         self.assertEqual(
-            parse_preference_intent("Jarvis, ricorda che preferisco risposte brevi").value,
+            parse_preference_intent("Lumi, ricorda che preferisco risposte brevi").value,
             "brief")
         self.assertEqual(
             parse_preference_intent("mostra preferenze").kind, "list")

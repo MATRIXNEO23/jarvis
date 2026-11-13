@@ -1,4 +1,4 @@
-"""Approval-gated GPT planning window for Jarvis.
+"""Approval-gated GPT planning window for Lumi.
 
 No GPT output is interpreted as Python, shell, path or executable code.
 Only locally validated commands are sent to the existing LocalEngine.
@@ -28,7 +28,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
 
     window = tk.Toplevel(parent)
     parent._jarvis_planner_window = window
-    window.title("Jarvis — Pianificazione controllata con GPT")
+    window.title("Lumi — Pianificazione controllata con GPT")
     window.geometry("690x560")
     window.minsize(570, 410)
 
@@ -90,7 +90,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
         if not is_available():
             messagebox.showwarning(
                 "GPT non disponibile",
-                "Connetti GPT nella finestra principale di Jarvis prima di pianificare.",
+                "Connetti GPT nella finestra principale di Lumi prima di pianificare.",
                 parent=window,
             )
             return
@@ -157,7 +157,7 @@ def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool
                             for idx, s in enumerate(pending.steps, 1))
         if not messagebox.askyesno(
             "Autorizzazione esplicita",
-            "Autorizzi Jarvis a eseguire, nell'ordine, questi comandi locali?\n\n"
+            "Autorizzi Lumi a eseguire, nell'ordine, questi comandi locali?\n\n"
             + choices + "\n\nNessun comando diverso è permesso.",
             parent=window,
         ):

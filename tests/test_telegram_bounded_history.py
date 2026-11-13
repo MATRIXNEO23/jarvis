@@ -48,17 +48,17 @@ class HistoryTests(unittest.TestCase):
         self.assertEqual(len(restarted.telegram_activity(123,limit=100)),50)
         self.assertEqual(restarted.telegram_counts(456)["received"],1)
 
-    def test_context_exactly_four_previous_events_no_historical_search(self):
-        for n in range(1,9):
+    def test_context_exactly_six_previous_events_no_historical_search(self):
+        # 9/11: last 3 exchanges (6 events) for a fluent conversation.
+        for n in range(1,10):
             direction="incoming" if n%2 else "outgoing"
             self.db.telegram_event(123,direction,n,"text",f"msg-{n}")
-        result=self.db.telegram_recent_context(123,7)
-        self.assertIn("msg-6",result)
+        result=self.db.telegram_recent_context(123,9)
+        self.assertIn("msg-8",result)
         self.assertIn("msg-3",result)
         self.assertNotIn("msg-2",result)
-        self.assertNotIn("msg-7",result)
-        self.assertNotIn("msg-8",result)
-        self.assertEqual(result.count('"da"'),4)
+        self.assertNotIn("msg-9",result)
+        self.assertEqual(result.count('"da"'),6)
         self.assertNotIn("segreto",result)
         self.assertEqual(self.db.add_turn("telegram","123","test","test"),False)
 
@@ -86,7 +86,7 @@ class HistoryTests(unittest.TestCase):
                     peer_id,direction,message_id,kind,text,time_utc)
                     VALUES(?,?,?,?,?,?)""",
                     (123,"outgoing" if n==1 else "incoming",
-                     n,"voice",("Sono Jarvis, l'assistente di Alberto" if n==1 else f"old {n}"),"2026-10-31T12:00:00+00:00"))
+                     n,"voice",("Sono Lumi, l'assistente di Alberto" if n==1 else f"old {n}"),"2026-10-31T12:00:00+00:00"))
             conn.execute("""INSERT INTO messages(
                 scope,scope_id,user_text,reply,kind,time_utc)
                 VALUES('telegram','123','old','duplicate','chat','2026-10-31')""")
@@ -142,7 +142,7 @@ class IntroductionTests(unittest.IsolatedAsyncioTestCase):
             path=Path(tmp)/"jarvis_workspaces.sqlite3"
             db=WorkspaceMemory(path)
             bridge=TelegramBridge(db,123,"Amico",
-                                  lambda p:"Ciao, sono Jarvis, l'assistente di Alberto. Tutto bene!",
+                                  lambda p:"Ciao, sono Lumi, l'assistente di Alberto. Tutto bene!",
                                   lambda x:None)
             bridge._enabled.set()
             client=FakeClient()
@@ -155,7 +155,7 @@ class IntroductionTests(unittest.IsolatedAsyncioTestCase):
             outgoing=[x["text"] for x in db.telegram_activity(123,limit=50)
                       if x["direction"]=="outgoing"]
             self.assertEqual(len(outgoing),2)
-            self.assertEqual(sum("sono Jarvis" in s for s in outgoing),1)
+            self.assertEqual(sum("sono Lumi" in s for s in outgoing),1)
             self.assertFalse(WorkspaceMemory(path).telegram_needs_introduction(123))
             with closing(sqlite3.connect(path)) as conn:
                 self.assertEqual(conn.execute("SELECT COUNT(*) FROM messages "

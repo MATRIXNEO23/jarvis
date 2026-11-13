@@ -248,7 +248,7 @@ class RasterArtWorker:
                 self._result.put((key,None))
 
         threading.Thread(target=work,daemon=True,
-                         name="JARVIS-HUD-Raster").start()
+                         name="LUMI-HUD-Raster").start()
 
     def get(self,kind: str,size: int):
         while not self._result.empty():

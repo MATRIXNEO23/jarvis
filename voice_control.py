@@ -52,7 +52,7 @@ def speech_to_local_command(text: str) -> str | None:
     if not isinstance(text, str):
         return None
     words = " ".join(text.casefold().strip(" .!?").split())
-    words = re.sub(r"^(?:(?:ehi|ok)\s+)?jarvis[,\s:]+", "", words)
+    words = re.sub(r"^(?:(?:ehi|ok)\s+)?lumi[,\s:]+", "", words)
     words = re.sub(r"^(?:per favore|gentilmente)\s+", "", words)
     words = re.sub(r"\s+per favore$", "", words)
     words = re.sub(r"^(?:mi )?(?:puoi|potresti)\s+", "", words)
@@ -104,17 +104,46 @@ def speech_to_local_command(text: str) -> str | None:
     return exact.get(words)
 
 
+def _answer_waiting() -> bool:
+    try:
+        import risposte
+        return risposte.waiting() or risposte.numbers_waiting()
+    except ImportError:
+        return False
+
+
+def _answer_grammar() -> str:
+    import risposte
+    return json.dumps(risposte.grammar(), ensure_ascii=False)
+
+
+def _pause_seconds() -> float:
+    try:
+        import la_mia_voce
+        return la_mia_voce.pause_seconds()
+    except Exception:
+        return 0.0
+
+
 class WakeWordGate:
     """Explicit wake name for continuous listening, never a microphone mode.
 
-    A standalone 'Ehi Jarvis' arms exactly one subsequent utterance, for up to
-    10 seconds. Speech without a wake name is ignored as a command. During
+    A standalone 'Ehi Lumi' arms exactly one subsequent utterance, for up to
+    10 seconds (6 seconds in the modes that require the name in every command). Speech without a wake name is ignored as a command. During
     manual dictation it is text, except recognized wake commands.
     """
 
+    # «Lumi» da solo nelle modalità che vogliono il nome in ogni comando: Lumi
+    # resta in ascolto per una sola frase, entro pochi secondi (richiesta utente:
+    # «almeno 2-3 secondi»; il tempo conta fino alla fine della frase riconosciuta,
+    # quindi c'è margine per pronunciarla). Poi torna a ignorare la stanza.
+    SHORT_WAKE_SECONDS = 6.0
+
     def __init__(self, *, timeout: float = 10.0,
-                 clock: Callable[[], float] = time.monotonic):
+                 clock: Callable[[], float] = time.monotonic,
+                 short_timeout: float | None = None):
         self.timeout = timeout
+        self.short_timeout = self.SHORT_WAKE_SECONDS if short_timeout is None else short_timeout
         self.clock = clock
         self.armed_until = 0.0
 
@@ -123,17 +152,33 @@ class WakeWordGate:
 
     def route(self, speech: str, *, dictation_active: bool = False,
               require_name: bool = False) -> tuple[str, str]:
-        # Passive microphone modes require a name in EVERY command. A bare
-        # wake name must not open a window for subsequent room conversation.
-        if require_name:
-            self.reset()
+        # Passive microphone modes require a name in every command; a bare
+        # name opens a SHORT window for exactly one following phrase.
         if not isinstance(speech, str) or not speech.strip():
             return "ignored", ""
+        try:                          # «La mia voce»: la frase va all'addestratore
+            import la_mia_voce
+            if la_mia_voce.receive(speech):
+                return "ignored", ""
+        except ImportError:
+            pass
         spoken = " ".join(speech.casefold().replace(",", " ").replace(":", " ").strip(" .!?").split())
-        for name in ("ehi jarvis", "hey jarvis", "jarvis"):
+        # Dopo una domanda di Lumi la risposta sì/no vale anche senza il nome.
+        try:
+            import risposte
+            if risposte.waiting() and risposte.is_answer(spoken):
+                risposte.done()
+                return "command", spoken
+            plain = re.sub(r"^(?:(?:ehi|hey|ok)\s+)?lumi\s*", "", spoken)
+            if risposte.numbers_waiting() and risposte.is_grid_command(plain):
+                number = risposte.number_of(plain)
+                return "command", (f"il {number}" if number is not None else plain)
+        except ImportError:
+            pass
+        for name in ("ehi lumi", "hey lumi", "lumi"):
             if spoken == name:
-                if not require_name:
-                    self.armed_until = self.clock() + self.timeout
+                self.armed_until = self.clock() + (
+                    self.short_timeout if require_name else self.timeout)
                 return "wake", ""
             if spoken.startswith(name + " "):
                 self.reset()
@@ -295,6 +340,9 @@ class VoiceController:
                 self._report("voice_status", "Microfono attivo — riconoscimento offline.", generation)
                 fragments: list[str] = []
                 suppressed = False
+                restricted = False
+                held: list[str] = []
+                held_at = held_first = 0.0
                 activity = SpeechActivity()
                 while not stop.is_set() and self._is_current(generation):
                     data, overflow = stream.read(4000)
@@ -314,6 +362,17 @@ class VoiceController:
                     if suppressed:
                         recognizer = KaldiRecognizer(model, 16000)
                         suppressed = False
+                        restricted = False
+                    # Attesa di un sì/no: riconoscimento ristretto alle parole di
+                    # risposta (molto più preciso sulle parole corte); poi normale.
+                    answer_mode = _answer_waiting()
+                    if answer_mode != restricted:
+                        try:
+                            recognizer = (KaldiRecognizer(model, 16000, _answer_grammar())
+                                          if answer_mode else KaldiRecognizer(model, 16000))
+                        except Exception:
+                            recognizer = KaldiRecognizer(model, 16000)
+                        restricted = answer_mode
                     activity.feed(pcm)
                     with self._lock:
                         if self._is_current(generation) and not stop.is_set():
@@ -325,8 +384,25 @@ class VoiceController:
                         if part:
                             if self.mode == PUSH_TO_TALK:
                                 fragments.append(part)
-                            else:
+                            elif restricted or _pause_seconds() <= 0:
                                 self._report("voice_text", part, generation)
+                            else:
+                                # Pausa tra le parole: la frase resta aperta un attimo,
+                                # se riprendi a parlare le parti si uniscono.
+                                if not held:
+                                    held_first = time.monotonic()
+                                held.append(part)
+                                held_at = time.monotonic()
+                    if held and self.mode != PUSH_TO_TALK:
+                        speaking = json.loads(recognizer.PartialResult()).get("partial", "").strip()
+                        if speaking:
+                            held_at = time.monotonic()
+                        if (time.monotonic() - held_at >= _pause_seconds() and not speaking) or \
+                                time.monotonic() - held_first >= _pause_seconds() + 2.0:
+                            # Tetto: con rumore continuo (audio di Netflix nel microfono)
+                            # la frase parte comunque dopo pausa + 2 s.
+                            self._report("voice_text", " ".join(held), generation)
+                            held.clear()
                 if self._is_current(generation) and self.mode == PUSH_TO_TALK:
                     final = json.loads(recognizer.FinalResult()).get("text", "").strip()
                     message = " ".join([*fragments, final]).strip()
@@ -358,7 +434,7 @@ class VoiceController:
 def model_switch_target(text: str):
     """Explicit full-phrase model selection; mentions/negations do not switch."""
     text = ' '.join(str(text).casefold().strip(' .!?').split())
-    text = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,:;-]+', '', text)
+    text = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?lumi[\s,:;-]+', '', text)
     match = re.fullmatch(
         r'(?:passa(?:mi)?\s+a|torna\s+a|usa|utilizza|attiva|avvia)\s+'
         r'(?:il\s+modello\s+)?(gpt|chat\s*gpt|gemma)(?:\s+per favore)?', text)

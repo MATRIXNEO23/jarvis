@@ -1,4 +1,4 @@
-"""Small fail-closed state machine for a visible, bounded JARVIS source audit.
+"""Small fail-closed state machine for a visible, bounded LUMI source audit.
 
 Controls UI state only; never starts/executes files or calls a model.
 Timed-out worker threads cannot be forcibly killed. Their later queue events

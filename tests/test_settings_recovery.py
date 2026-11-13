@@ -1,7 +1,7 @@
 """JRV-AUD-018: temporary Windows profiles, actual settings/owner callbacks.
 
 No live settings, credentials, microphone or account is touched. Manual recovery
-below is fixture setup, not an automatic reset feature of Jarvis.
+below is fixture setup, not an automatic reset feature of Lumi.
 """
 import ast
 import copy

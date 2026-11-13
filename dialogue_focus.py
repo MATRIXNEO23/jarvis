@@ -1,4 +1,4 @@
-"""Small deterministic conversation focus hints for JARVIS.
+"""Small deterministic conversation focus hints for LUMI.
 
 These are *data* for conversation, never a command or authorization to act.
 No database, filesystem, model, network, or background processing.
@@ -37,7 +37,7 @@ def normalized_utterance(value: str) -> str:
     if not isinstance(value,str):
         return ""
     text=unicodedata.normalize("NFKC",value).strip(" ,.!?;:")
-    return re.sub(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+",
+    return re.sub(r"^(?:(?:ehi|hey|ok)\s+)?lumi[\s,.:;-]+",
                   "",text,flags=re.I).strip(" ,.!?;:")
 
 

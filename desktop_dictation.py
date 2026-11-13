@@ -18,7 +18,7 @@ def dictation_voice_action(phrase: str) -> str | None:
     if not isinstance(phrase, str):
         return None
     words = " ".join(phrase.casefold().strip(" ,.!?").split())
-    words = re.sub(r"^(?:(?:ehi|ok)\s+)?jarvis[,\s:]+", "", words)
+    words = re.sub(r"^(?:(?:ehi|ok)\s+)?lumi[,\s:]+", "", words)
     if words in ("attiva dettatura", "attiva dettatura vocale",
                  "inizia dettatura", "inizia dettatura vocale"):
         return "start"
@@ -187,7 +187,7 @@ class DesktopDictation:
         if (current.window, current.focus, current.pid) != (
                 self.target.window, self.target.focus, self.target.pid):
             return ("La finestra o il campo selezionato è cambiato: dettatura sospesa. "
-                    "Di' 'Jarvis, disattiva dettatura', poi riattivala nella nuova finestra.")
+                    "Di' 'Lumi, disattiva dettatura', poi riattivala nella nuova finestra.")
         rendered = "\n" if speech in ("a capo", "vai a capo", "nuova riga") else speech + " "
         # Revalidate immediately before input (the user may switch windows).
         fresh = self.focus_provider()

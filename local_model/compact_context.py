@@ -114,7 +114,7 @@ class CompactContext:
         entries = list(self.recent)
         while entries:
             text = prefix + "\n".join(
-                ("Utente: " if x["role"] == "user" else "Jarvis: ")
+                ("Utente: " if x["role"] == "user" else "Lumi: ")
                 + x["text"] for x in entries)
             if len(text) <= self.prompt_chars:
                 return text

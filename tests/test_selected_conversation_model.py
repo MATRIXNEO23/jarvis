@@ -92,8 +92,12 @@ class SelectedConversationModelTests(unittest.TestCase):
                 # follows the old console routing instead of a missing symbol.
                 main = next(n for n in ast.parse(Path('jarvis.py').read_text(encoding='utf-8')).body
                             if isinstance(n, ast.FunctionDef) and n.name == 'main')
-                handler = next((n for n in main.body if isinstance(n, ast.FunctionDef)
-                                and n.name == 'try_model_switch'), None)
+                from test_activity_status import GlobalCallbacks, find_main_function
+                try:
+                    handler = ast.fix_missing_locations(GlobalCallbacks().visit(
+                        find_main_function(main, 'try_model_switch')))
+                except KeyError:
+                    handler = None
                 if handler:
                     exec(compile(ast.Module(body=[handler],type_ignores=[]),'model-switch','exec'),env)
                 env['send_console_input']()
@@ -106,8 +110,8 @@ class SelectedConversationModelTests(unittest.TestCase):
         for text in ('non usare GPT', 'come si attiva GPT?', 'se dico usa Gemma',
                      'GPT è interessante', 'attiva GPT e apri browser'):
             self.assertIsNone(model_switch_target(text), text)
-        self.assertTrue(model_switch_target('Jarvis, passa a GPT'))
-        self.assertFalse(model_switch_target('Jarvis torna a Gemma'))
+        self.assertTrue(model_switch_target('Lumi, passa a GPT'))
+        self.assertFalse(model_switch_target('Lumi torna a Gemma'))
 
     def test_console_disconnected_gpt_keeps_selection_and_does_not_use_gemma(self):
         import test_typed_timer_routing as fixture
@@ -213,7 +217,7 @@ class SelectedConversationModelTests(unittest.TestCase):
                 if channel == 'console':
                     env['send_console_input']()
                 else:
-                    harness.receive_voice('Jarvis usa GPT')
+                    harness.receive_voice('Lumi usa GPT')
                 env['try_telegram_voice_send'].assert_called_once_with(
                     'usa GPT' if channel == 'console' else 'usa gpt')
                 env['toggle_gpt'].assert_not_called()

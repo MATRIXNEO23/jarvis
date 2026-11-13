@@ -1212,3 +1212,65 @@ Prove: la suite Windows deve controllare persistenza, rimozione, isolamento tra 
 
 ### Checkpoint API grandi — lezione009
 Un tentativo di serializzare insieme jarvis.py e tutti i documenti di continuità ha prodotto stdout troncato, quindi JSON non valido; nessun commit è stato creato da quel tentativo. Leggere i file a gruppi piccoli, verificare parse/exitcode, poi creare un solo albero/commit coerente e verificare i blob remoti. Non ripetere upload ciechi o interpretare output troncato come salvataggio riuscito.
+
+
+## 2026-11-09 — ARCH-01 F5.0: profili locali, non ancora selettore
+**Decisione:** partendo dal ramo F4.2 isolato (PR #66), creato F5.0 (PR #67) come solo contratto immutabile Gemma/Qwen in `local_model/model_profiles_f5.py`, con test di limiti e campi sconosciuti. Nessun runtime, UI, backend o memoria modificati. Il cambio di modello reale va implementato solo dopo discovery dei punti di integrazione e test Windows; le misure Pavilion F4.2 restano da eseguire.
+**Motivo:** evitare di introdurre la complessità di un secondo GGUF e cambio backend prima di accertare velocità, template e rollback. Profilo validato non significa modello installato.
+**Prove e limiti:** file e PR presenti sul remoto; CI F5.0 non ancora attestata, nessuna esecuzione Windows o Pavilion provata. Primo test di isolamento reso indipendente dall'ordine di import della suite con commit `c1190b0414d68086f225a33601797226a2f65c7c`. Nessun ZIP pubblicato; 014 resta base utente.
+**Ripresa:** gate Windows CI e audit del diff, poi F5.1 rilevamento disponibilità/modello reale e F5.2 selettore configurabile. F8 API gratuite resta pianificata, non aggiunta.
+
+## 2026-11-09 — ARCH-01 F5.1: discovery conservativa senza selezione
+**Decisione:** usare il percorso GGUF/DLL già richiesto dalla bridge embedded e il probe read-only già disponibile nella F4.1. Il nuovo modulo `model_availability_f5.py` non deduce identità del GGUF dal filename; informa solo che i file esistono. Per KoboldCpp richiede `expected_model` e uguaglianza esatta con `probe()`, senza inviare prompt. Conflitti/mancanze producono stati sicuri, nessun fallback.
+**Motivo e limite:** evitare di scambiare un'etichetta Qwen per conferma del modello, avviare due GGUF in 10 GB RAM o integrare prematuramente il server senza benchmark Pavilion. Qwen non dispone ancora di template chat convalidato in Jarvis. **Test:** nuovi casi mock/local filesystem `tests/test_model_availability_f5.py`, CI Windows al momento in corso [42539072431](https://github.com/MATRIXNEO23/jarvis/actions/runs/42539072431); non dichiarare verde fino a esito. Second Brain/Telegram/profili storici non modificati, nessuna release. Rollback 014.
+
+## 2026-11-09 — ARCH-01 F5.2: editor in anteprima prima del vero cambio modello
+**Decisione:** piccolo pulsante lazy import in Impostazioni/GPT e memoria richiama un dialog di prova che valida bozze Gemma/Qwen in memoria e non scrive né applica alcun profilo. Salvataggio permanente, selezione backend effettiva e compatibilità Qwen richiedono ulteriori prove e verranno implementati in una fase successiva con rollback. Il pannello Gemma esistente rimane invariato. **Verifiche:** test unitari aggiunti; esito CI e prova GUI Windows reali ancora pendenti. Nessuna release nuova; ZIP014 inalterato.
+
+## 2026-11-09 — ARCH-01 F5.3a: blocco hot-switch finché manca unload garantito
+**Osservazione dal codice:** `NativeChatAdapter.stop()` usa arresto cooperativo; `NativeGemmaBridge` non dimostra release del GGUF. La sessione formatta Gemma, non Qwen. **Scelta:** costruire solo gate testabile, senza connetterlo alla chat; negare transizione finché busy/release/template/startup non risultino confermati. In caso di impossibilità a scaricare la DLL in sicurezza, valutare cambio a riavvio separato e conservazione DB anziché hot-switch. **Stato:** nuova implementazione e test mock pubblicati su PR #67; CI Windows ancora da verificare, nessuna build; 014 resta rollback.
+
+## 2026-11-09 — ARCH-01 F5.3b.1: isolare il processo proprietario prima del collegamento
+**Ragione:** in-process DLL Gemma non dispone di unload verificabile. **Decisione:** gestore opzionale del solo figlio avviato direttamente, chiusura con `terminate()` e conferma `wait()`, non riavviare se il precedente è incerto. Non termina processi estranei e non esegue automaticamente KoboldCpp. **Limiti:** i mock non dimostrano RAM liberata sul Pavilion, né discendenza processi, performance, template Qwen o validità dei comandi. Non integrare in Jarvis senza validazioni esplicite e collaudo Windows. PR #67, test nuovi CI pendenti, ZIP014 conservata.
+
+## 2026-11-09 — ARCH-01 F5.3b.2: laboratorio prima del cambio provider
+**Decisione:** usare il già esistente `OwnedModelProcess` e `KoboldServerCanary` con un controller di lifecycle esplicito, soltanto in laboratorio. Per ridurre collisioni con server estranei fare preflight porta con bind su 127.0.0.1 e verifica `probe()` su nome esatto. Un processo non chiuso in modo certo blocca il riavvio; nessuna azione distruttiva su altri PID. **Limiti:** race tra bind e ascolto server; probe HTTP non conferma proprietà del listener, né memoria deallocata da eventuali figli. Non connettere a chat né inserire credenziali/prompt privati fino a prova più robusta. **Test:** nuovi mock, Windows CI da confermare, F4.2 Pavilion assente. Jarvis 014 e cronologie preservati.
+
+## 2026-11-09 — F5.3b.2: failure della suite e fix del test
+I workflow Windows 42543240218 (3.11/3.12) hanno riscontrato cinque errori tutti nel nuovo test controller: il mock diceva `is_running=True` prima dell'avvio, causando blocco corretto del gate. Corretto soltanto fixture con stato `False` prima di `start`; mantenuto il rifiuto di sovrapporre processi. Nuovo esito CI da verificare. Separatamente i log evidenziano eccezione Tk `window_chrome.py:158` che non è tra i cinque errori finali e richiede audit indipendente.
+
+## 2026-11-09 — F5.3b.3: una sola app e famiglia Qwen esplicita
+Utente conferma **non due programmi separati**: una sola UI Jarvis, processo del motore eventualmente figlio e invisibile gestito dall'app. La prova Python F5.3b.2 è verde dopo correzioni alle simulazioni (`6a693e23...`, run 42544915058), non dimostra rendimento o GGUF reale. Serializer separato Qwen2.5 Instruct text-only testabile con fixture; NON riusarlo automaticamente con Qwen3. Nessun avvio autonomo del motore né modifica della memoria. I test e metadata modello reale restano gate prima di integrare.
+
+## 2026-11-09 — Rettifica F5: equivalenza KoboldCpp dalla sorgente, non server esterno
+Interpretazione precedente non aderente: l'utente non chiede un frontend Jarvis del KoboldCpp standalone. Richiede le stesse funzioni del motore ufficiale tramite integrazione nativa in Jarvis, eventualmente DLL ricompilata/patch minima mantenuta allineata a upstream. Stop alla promozione del prototipo subprocess/server a soluzione principale; codice laboratorio isolato soltanto. Fare audit ABI e sorgente upstream, mappatura impostazioni e template, test Windows no AVX2, prestazioni Pavilion e verifica della licenza AGPL/attribuzioni prima di affermare parità o pubblicare.
+
+## 2026-11-09 — Audit F5N.0: riusare ABI nativa già in Jarvis
+**Prova:** `native_factory.py` e `native_initializer.py` importano `koboldcpp.py` e caricano in-process `koboldcpp_noavx2.dll`, senza richiedere server; il bridge ha `load/generate/abort`, ma no unload attestato. Sul `koboldcpp.py` ufficiale esaminato compare `get_chat_template` e non un binding `handle.unload_model`; bisogna ancora verificare C/C++ prima di dichiarare impossibile scaricare. La build DLL Windows no-AVX2 è supportata dal Makefile upstream. **Decisione:** pin sorgente e confronto ABI, compilazione riproducibile, parità dei parametri, test Windows e Pavilion, senza duplicare un engine o introdurre server. Matrice dettagliata in `docs/ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md`; nessuna modifica alla 014 o dati.
+
+## 2026-11-09 — F5N.1: impossibile certificare unload dalla sola API corrente
+Sul commit upstream `6d2fedf...`, `kcpp_src/expose.cpp` non esporta unload del modello, mentre `kcpp_src/gpttype_adapter.cpp` in `gpttype_load_model` contiene allocazione `new kcpp_params()` con commento esplicito `yes this leaks memory`. I `llama_free` presenti riguardano anche percorsi secondari, non attestano release completa del GGUF principale. Non introdurre unload ABI inventato: inventariare tutte le allocazioni e verificare distruttori/riavvio in test reali Windows. Creato strumento di checksum e inventario sorgenti statico (F5N.1), non una prova runtime. Nessun cambio a Jarvis 014, server esterno non è il prodotto richiesto.
+
+## 2026-11-09 — ARCH-01 F5N.2: bundle upstream non monolitico
+Il Makefile ufficiale al commit `6d2fedf...` usa DLL comune, variante default, noavx2 e forwarder per Windows. Di conseguenza una semplice sostituzione di `koboldcpp_noavx2.dll` potrebbe rompere l'integrazione. Decisione: workflow manuale di compilazione isolato con revisione bloccata e verifica di tutti gli artefatti, senza modifica della DLL installata o release. La verifica statica dei binari non attesta parità ABI, ISA o velocità. Attendere compilazione vera su Windows, licenza/sorgente corrispondente e prova Pavilion prima di distribuire.
+
+## 2026-11-09 — F5N.2: come collaudare un workflow nuovo su ramo feature
+`workflow_dispatch` di un nuovo workflow non necessariamente appare prima che il workflow esista su default branch; per testarne la compilazione senza cambiare `main`, aggiunto `pull_request` filtrato solo su workflow/tool/test F5N.2. Non confondere configurazione CI con la prova effettiva: il run va osservato e i suoi errori corretti prima di attestare successo.
+
+## 2026-11-09 — F5N.2: toolchain MinGW e Win8+ SDK
+La build upstream fissata fallisce nella compilazione di `gpttype_adapter_default.o`: tipi `PWIN32_MEMORY_RANGE_ENTRY` e `WIN32_MEMORY_RANGE_ENTRY` non dichiarati, non regressione Jarvis. Tentato fix nel solo workflow `CFLAGS`/`CXXFLAGS` con `_WIN32_WINNT=0x0602` e `WINVER=0x0602`, senza cambiare sorgente ufficiale o DLL distribuita. CI nuova da verificare; non dichiarare compilazione riuscita senza esito.
+
+## 2026-11-09 — F5N.2: il Makefile azzera le variabili di ambiente
+Le variabili `CFLAGS` e `CXXFLAGS` esportate dal workflow non funzionavano: Makefile upstream le reimposta con `=`, quindi nessuna macro Win8 raggiungeva `g++`. Correzione circoscritta: specificare i wrapper `CC`/`CXX` come argomenti `make` con `-D_WIN32_WINNT=0x0602 -DWINVER=0x0602`; si conservano i flag upstream (inclusi no-AVX2), non si modifica il motore. Attendere nuova prova CI Windows run 42555705472. Non confondere test Jarvis verdi con build DLL riuscita.
+
+## 2026-11-09 — F5N.3: la DLL comune è l'ABI della build split
+Dal `koboldcpp.py` ufficiale fissato emerge che Windows apre prima il forwarder del backend selezionato tramite directory dedicata, poi la DLL comune con l'API ctypes. La vecchia DLL monolitica non può essere sostituita da una singola DLL del bundle nuovo. Aggiunto controllo PE puramente statico con export `load_model/generate/abort_generate/token_count/get_chat_template`, import backend route e prove mock. Le esportazioni non certificano layout ctypes, caricabilità DLL o inferenza; gate bootstrap Windows futuro e prova Pavilion obbligatori. Nessuna modifica runtime o release.
+
+## 2026-11-09 — F5N.3: separare build verde da gate ABI rosso
+Due workflow (42557729052, 42557848456) hanno prodotto le quattro DLL e validato il bundle, ma sono falliti al gate PE per nomi richiesti non trovati nella DLL comune. Non ammorbidire la barriera né affermare che l'ABI è compatibile; prima leggere i nomi PE effettivi. Aggiunta diagnostica fail-closed con conteggio/primi simboli, run 42559582501. Rischio possibile di export mancanti nella nuova disposizione split DLL. Nessun cambiamento alla chat Jarvis o DLL 014.
+
+## 2026-11-09 — F5N.3: non interpretare un parser troncato come ABI assente
+Il gate statico segnala cinque exports mancanti, ma i log enumeravano esattamente 8192 simboli, coincidenti col limite predefinito del parser pefile `0x2000`. Quindi non modificare upstream/linker o disabilitare il controllo. Passare cap esplicito a `PE(max_symbol_exports=65536)` e verificare `NumberOfNames`; testare in CI Windows. La diagnosi del parser non prova ancora la presenza di tutte le funzioni: attendere esito. Nessuna modifica Jarvis 014.
+
+## 2026-11-09 — Un test fallito in Windows non prova difetto del motore
+Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perché la fixture normalizzava il percorso con `replace` su due separatori consecutivi. Corretta esclusivamente la fixture usando `chr(92)`, mantenendo invariati i gate PE di produzione. Workflow unit e build devono essere controllati separatamente. Prima di modificare runtime o linker leggere sempre traceback esatto e non interpretare warnings laterali come root cause.

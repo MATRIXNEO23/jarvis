@@ -14,6 +14,8 @@ import threading
 from types import ModuleType, SimpleNamespace
 from dataclasses import replace
 import unittest
+
+from local_model.native_bridge import NativeRestartRequired
 from unittest.mock import patch
 
 from local_model.native_config import NativeModelConfig
@@ -191,12 +193,13 @@ class NativeTrialOwnershipTests(unittest.TestCase):
         self.assertNotIn("RISERVATO_CHAT", self.abi.calls[-1]["prompt"])
         self.assertIn("Ironia secca controllata", self.abi.calls[-1]["prompt"])
         self.assertEqual(list(self.session.history), history)
-        self.assertEqual(len(self.abi.loads), 2)
+        self.assertEqual(len(self.abi.loads), 1, "Trial must reuse the loaded model")
         self.session.ask("Riprendi la chat")
-        self.assertEqual(len(self.abi.loads), 2, "Chat should reuse the tested loaded model")
+        self.assertEqual(len(self.abi.loads), 1, "Chat should reuse the tested loaded model")
         self.assertIn("RISERVATO_CHAT", self.abi.calls[-1]["prompt"])
 
-    def test_trial_applies_new_saved_model_and_inference_settings(self):
+    def test_new_saved_model_requires_restart_and_keeps_loaded_model(self):
+        # F5N.7: no in-process native reload; the working model stays usable.
         self.abi.release.set()
         self.session.ask("Prima configurazione")
         model = self.root / "second.gguf"
@@ -204,15 +207,21 @@ class NativeTrialOwnershipTests(unittest.TestCase):
         revised = replace(self.config, model=str(model), threads=3,
                           max_output=160, temperature=0.3)
         revised.save(default_native_settings_path())
+        with self.assertRaises(NativeRestartRequired):
+            self.session.test_generation(config=revised)
+        self.assertEqual(len(self.abi.loads), 1)
+        self.assertTrue(os.path.samefile(self.abi.loads[0], self.config.model))
+        self.assertEqual(NativeModelConfig.load(default_native_settings_path()), revised)
+
+    def test_trial_applies_inference_settings_without_reload(self):
+        self.abi.release.set()
+        self.session.ask("Prima configurazione")
+        revised = replace(self.config, max_output=160, temperature=0.3)
+        revised.save(default_native_settings_path())
         self.session.test_generation(config=revised)
-        self.assertEqual(len(self.abi.loads), 2)
-        for actual, expected in zip(self.abi.loads, (self.config.model, revised.model)):
-            self.assertTrue(os.path.samefile(actual, expected))
+        self.assertEqual(len(self.abi.loads), 1)
         self.assertEqual(self.abi.calls[-1]["max_length"], 160)
         self.assertEqual(self.abi.calls[-1]["temperature"], 0.3)
-        self.session.ask_isolated(lambda _: "Telegram dopo la prova")
-        self.assertEqual(len(self.abi.loads), 2)
-        self.assertEqual(self.abi.calls[-1]["max_length"], 160)
 
     def test_stale_trial_cannot_replace_current_backend(self):
         self.abi.release.set()
@@ -286,7 +295,7 @@ class NativeTrialOwnershipTests(unittest.TestCase):
         self.assertEqual(list(self.session.history), history)
         self.assertEqual(self.session.ask("Continua dopo errore"),
                          "Risposta locale controllata")
-        self.assertEqual(len(self.abi.loads), 2)
+        self.assertEqual(len(self.abi.loads), 1)
 
     def test_telegram_waits_for_trial_without_history_changes(self):
         panel = self.window()

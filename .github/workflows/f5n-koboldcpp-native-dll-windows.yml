@@ -1,0 +1,231 @@
+name: "F5N.2 KoboldCpp pinned native DLL candidate (Windows manual)"
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/f5n-koboldcpp-native-dll-windows.yml'
+      - 'tools/f5n_bundle_audit.py'
+      - 'tests/test_f5n_bundle_audit.py'
+      - 'tools/f5n_pe_abi_audit.py'
+      - 'tests/test_f5n_pe_abi_audit.py'
+      - 'tools/f5n_native_load_smoke.py'
+      - 'tests/test_f5n_native_load_smoke.py'
+      - 'tools/f5n_initializer_smoke.py'
+      - 'local_model/native_initializer.py'
+      - 'tools/fetch_probe_models.py'
+      - 'tools/f5n_gguf_smoke.py'
+      - 'local_model/qwen3_template_f5.py'
+      - 'local_model/chat_templates.py'
+      - 'tools/build_jarvis_f5_candidate.py'
+      - 'piper_voice.py'
+      - 'tools/piper_voice_smoke.py'
+      - 'tools/fetch_piper_engine.py'
+      - 'edge_voice.py'
+      - 'tools/edge_voice_smoke.py'
+      - 'musica/**'
+      - 'tools/video_host_smoke.py'
+      - 'controllo_pc/**'
+      - 'controllo_comune/**'
+      - 'componenti/**'
+      - 'telegram_addon/**'
+      - 'tools/uia_host_smoke.py'
+      - 'local_model/native_bridge.py'
+      - 'local_model/native_provider.py'
+
+permissions:
+  contents: read
+
+jobs:
+  build-upstream-noavx2:
+    runs-on: windows-2022
+    timeout-minutes: 150
+    steps:
+      - name: Checkout Jarvis audit tools only
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up w64devkit toolchain (same as upstream oldpc release)
+        shell: pwsh
+        run: |
+          # Upstream kcpp-build-release-win-oldpc.yaml at 6d2fedf uses
+          # w64devkit 1.22.0. Its GCC links the C++ runtime statically, so the
+          # bundle needs no libstdc++/libgcc_s/libwinpthread DLLs on the PC.
+          curl -L https://github.com/skeeto/w64devkit/releases/download/v1.22.0/w64devkit-1.22.0.zip --output w64devkit.zip
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Expand-Archive w64devkit.zip -DestinationPath .
+          echo "$(Get-Location)\w64devkit\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+
+      - name: Clone exact upstream and build isolated DLL bundle
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Write-Output "F5N_TOOLCHAIN=$((Get-Command gcc).Source)"
+          gcc --version | Select-Object -First 1
+          git clone https://github.com/LostRuins/koboldcpp.git koboldcpp-src
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Set-Location koboldcpp-src
+          git checkout --detach 6d2fedf8624e5f05926af3191f9efdcb13c4133c
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $actual = git rev-parse HEAD
+          Write-Output "F5N_UPSTREAM_COMMIT=$actual"
+          if ($actual -ne "6d2fedf8624e5f05926af3191f9efdcb13c4133c") { throw "unexpected_upstream_commit" }
+          git submodule update --init --recursive
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # The upstream Makefile resets CFLAGS/CXXFLAGS, so environment flags are lost.
+          # Set Win8+ target via compiler command while preserving upstream ISA flags.
+          make -j2 koboldcpp_noavx2 LLAMA_PORTABLE=1 LLAMA_NOAVX2=1 "CC=gcc -D_WIN32_WINNT=0x0602 -DWINVER=0x0602" "CXX=g++ -D_WIN32_WINNT=0x0602 -DWINVER=0x0602"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($f in "koboldcpp_common.dll","koboldcpp_default.dll","koboldcpp_noavx2.dll","backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll") {
+            if (-not (Test-Path $f)) { throw "missing $f" }
+          }
+
+      - name: Inventory artifact manifest (no DLL load or GGUF)
+        shell: pwsh
+        run: |
+          python -m tools.f5n_bundle_audit "koboldcpp-src" > "f5n-dll-manifest.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content "f5n-dll-manifest.json"
+
+      - name: Audit PE exports and internal DLL imports (static, no LoadLibrary)
+        shell: pwsh
+        run: |
+          python -m pip install pefile==2024.8.26
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m tools.f5n_pe_abi_audit "koboldcpp-src" > "f5n-pe-abi-manifest.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content "f5n-pe-abi-manifest.json" | Select-Object -First 40
+
+      - name: F5N.4 Windows loader smoke in isolated child (no GGUF)
+        shell: pwsh
+        timeout-minutes: 3
+        run: |
+          python -m tools.f5n_native_load_smoke "koboldcpp-src" > "f5n-native-loader-proof.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content "f5n-native-loader-proof.json"
+
+      - name: F5N.5 Jarvis initializer on split bundle in isolated child (no GGUF)
+        shell: pwsh
+        timeout-minutes: 4
+        run: |
+          python -m tools.f5n_initializer_smoke "koboldcpp-src" "f5n-initializer-proof.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: F5N.6 fetch probe GGUF (Gemma 2 2B, Qwen2.5 1.5B, Qwen3 1.7B; publisher SHA-256)
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          python -m tools.fetch_probe_models "probe-models"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: F5N.6 GGUF load, short generation and Gemma abort (one child per model)
+        shell: pwsh
+        timeout-minutes: 50
+        env:
+          PYTHONUTF8: '1'
+          PYTHONIOENCODING: utf-8
+        run: |
+          python -m tools.f5n_gguf_smoke "koboldcpp-src" "probe-models" "f5n-gguf-proof.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Natural voice proof (piper-tts + Paola from repository, effect, envelope)
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          python -m pip install "piper-tts>=1.4,<2" numpy --quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/piper_voice_smoke.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Edge online voice proof (informative, network service)
+        shell: pwsh
+        timeout-minutes: 5
+        continue-on-error: true
+        run: |
+          python -m pip install "edge-tts>=7.2,<8" --quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/edge_voice_smoke.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build Lumi video panel host (WebView2, .NET Framework 4.8)
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          dotnet build musica/video_host/LumiVideo.csproj -c Release -o video-host-out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem video-host-out -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+
+      - name: Video panel proof (real WebView2 inside a Tk window)
+        shell: pwsh
+        timeout-minutes: 5
+        env:
+          PYTHONUTF8: '1'
+        run: |
+          python tools/video_host_smoke.py video-host-out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build Lumi window reader (UI Automation, .NET Framework 4.8)
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          dotnet build controllo_comune/uia_host/LumiControl.csproj -c Release -o uia-host-out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Controllo PC proof (real UI Automation read + click on a Tk window)
+        shell: pwsh
+        timeout-minutes: 5
+        env:
+          PYTHONUTF8: '1'
+        run: |
+          python tools/uia_host_smoke.py uia-host-out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Fetch slim Piper engine (official 2023.11.14-2, pinned SHA-256, Italian only)
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          python tools/fetch_piper_engine.py "piper-engine"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build and verify test candidate ZIP (extracted package, real engine, UI boot, Gemma answer, bundled voice)
+        shell: pwsh
+        timeout-minutes: 30
+        env:
+          PYTHONUTF8: '1'
+          PYTHONIOENCODING: utf-8
+        run: |
+          python -m tools.build_jarvis_f5_candidate "koboldcpp-src" --number 46 --out dist --model "probe-models/gemma2.gguf" --piper-engine "piper-engine" --video-host "video-host-out" --uia-host "uia-host-out"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload test candidate (CI artifact, not published)
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumi-046-prova-candidate
+          path: |
+            dist/Lumi-046-PROVA.zip
+            dist/Lumi-046-PROVA.json
+          if-no-files-found: error
+
+      - name: Archive only unverified research candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: f5n-unverified-koboldcpp-noavx2-windows
+          if-no-files-found: error
+          retention-days: 3
+          path: |
+            koboldcpp-src/koboldcpp_common.dll
+            koboldcpp-src/koboldcpp_default.dll
+            koboldcpp-src/koboldcpp_noavx2.dll
+            koboldcpp-src/backend_routes/koboldcpp_noavx2/koboldcpp_backend.dll
+            koboldcpp-src/koboldcpp.py
+            f5n-dll-manifest.json
+            f5n-pe-abi-manifest.json
+            f5n-native-loader-proof.json
+            f5n-initializer-proof.json
+            f5n-gguf-proof.json
+            probe-models/probe-models-source.json

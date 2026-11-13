@@ -13,15 +13,15 @@ if not defined LOCALAPPDATA (
   exit /b 1
 )
 rem Questa ZIP e' una prova: il launcher UNICO usa sempre dati isolati.
-rem Il vecchio Jarvis nella sua cartella mantiene il suo launcher originale.
+rem Il vecchio Lumi nella sua cartella mantiene il suo launcher originale.
 set "JARVIS_TRIAL_HOME=%LOCALAPPDATA%\Jarvis-AccessoFile-Trial"
 set "JARVIS_TRIAL_SOURCE=%LOCALAPPDATA%\Jarvis"
 if exist "%LOCALAPPDATA%\Jarvis-Telegram50-Trial\settings.json" set "JARVIS_TRIAL_SOURCE=%LOCALAPPDATA%\Jarvis-Telegram50-Trial"
-echo JARVIS // ACCESSO FILE - AVVIO IN PROFILO ISOLATO
+echo LUMI // ACCESSO FILE - AVVIO IN PROFILO ISOLATO
 echo.
 py -3 prepara_test_telegram50.py
 if errorlevel 1 (
-  echo Preparazione del profilo di prova non riuscita. Jarvis originale intatto.
+  echo Preparazione del profilo di prova non riuscita. Lumi originale intatto.
   pause
   exit /b 1
 )
@@ -32,7 +32,7 @@ echo Non usare due istanze Telegram contemporaneamente.
 echo.
 py -3 jarvis.py
 if errorlevel 1 (
-  echo Jarvis non e' stato avviato correttamente. Leggi l'errore qui sopra.
+  echo Lumi non e' stato avviato correttamente. Leggi l'errore qui sopra.
   pause
   exit /b 1
 )

@@ -53,8 +53,9 @@ class NativeDurableMemoryTests(unittest.TestCase):
         self.env["messagebox"].askyesno.return_value = True
         # Compile existing callbacks now. The optional new helper is wired only
         # once it exists; original callbacks never reference it in Red source.
+        from test_activity_status import moved_functions
         names = {node.name for node in self.fixture.harness.main.body
-                 if hasattr(node, "name")}
+                 if hasattr(node, "name")} | set(moved_functions())
         for name in ("remember_exchange", "toggle_memory", "clear_saved_memory",
                      "native_memory_request"):
             if name in names:

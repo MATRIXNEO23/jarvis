@@ -28,7 +28,7 @@ from threading import Lock, RLock
 
 from .memory_preferences import MemoryPreferences, default_memory_preferences_path
 from .native_config import NativeModelConfig
-from .native_provider import format_gemma_messages
+from .chat_templates import format_messages as _format_family, model_family
 from .native_settings import default_native_settings_path
 
 
@@ -253,7 +253,12 @@ class NativeConversationSession:
             pairs = [(turns[i], turns[i + 1]) for i in range(0, len(turns), 2)][-pair_limit:]
             restored = 0
             recent_reader = getattr(memory_context, "recent_pairs", None)
-            if exact and not pairs and callable(recent_reader):
+            # Review bug 2 (9/11): the RAM buffer is shared by all contexts
+            # (maxlen 16), so a chat can keep only part of its exchanges after
+            # another chat was used. For isolated chats/projects the archive
+            # is authoritative: re-read it whenever RAM holds fewer pairs.
+            partial = context_id is not None and 0 < len(pairs) < pair_limit
+            if exact and (not pairs or partial) and callable(recent_reader):
                 self._check_revision(revision)
                 previous = recent_reader(pair_limit)
                 self._check_revision(revision)
@@ -271,21 +276,28 @@ class NativeConversationSession:
                     archived_pairs.append(canonical)
                 restored = len(archived_pairs)
                 pairs = archived_pairs[-pair_limit:]
-            instructions = "Rispondi in italiano, senza JSON né analisi. Se consigli, spiega perché.\n"
+            instructions = "Ti chiami Lumi. Rispondi in italiano, senza JSON né analisi. Se consigli, spiega perché.\n"
             allowed_actions = None
             intent_warning = ""
             base_instruction_source = "local_model.native_conversation_session: chat naturale"
 
+            # 026: the only part that changes with the question (length rule)
+            # goes at the END, next to it; fixed parts stay at the top so the
+            # engine's fast forwarding can reuse them.
+            from .persona import length_rule, persona_block
+            rule = length_rule(config, latest)
+            tail = ("\n(" + rule + ")") if rule else ""
+
             def messages_for(history, prefix, recall=""):
                 messages = [{"role": role, "content": text}
                             for pair in history for role, text in pair]
-                messages.append({"role": "user", "content": recall + latest})
+                messages.append({"role": "user", "content": recall + latest + tail})
                 if prefix:
                     messages[0] = dict(messages[0], content=prefix + messages[0]["content"])
                 return messages
 
             def size(history, prefix, recall=""):
-                return measure(format_gemma_messages(messages_for(history, prefix, recall)))
+                return measure(_format_family(messages_for(history, prefix, recall), model_family(config.model)))
 
             if size([], "") > budget:
                 raise ValueError("Domanda troppo lunga per il contesto configurato.")
@@ -303,9 +315,11 @@ class NativeConversationSession:
                                       'chat e comandi diretti restano disponibili.')
             base_instructions = instructions
             applied_personality = ""
-            style = "Stile di risposta: " + " ".join(config.personality.split()) + "\n"
-            if config.personality.strip() and size([], instructions + style) <= budget:
-                instructions += style
+            # Fixed persona FIRST (same text in chat and action mode), then the
+            # mode instructions: the common start is reused by fast forwarding.
+            style = persona_block(config)
+            if style and size([], style + instructions) <= budget:
+                instructions = style + instructions
                 applied_personality = style
             if size([], instructions) > budget:
                 if exact:
@@ -348,17 +362,40 @@ class NativeConversationSession:
                              - size([], instructions) <= memory.history_max_tokens)):
                         recall = candidate
             messages = messages_for(history, instructions, recall)
-            final_size = measure(format_gemma_messages(messages))
+            final_size = measure(_format_family(messages, model_family(config.model)))
             if final_size > budget:
                 raise ValueError("Prompt oltre il contesto configurato.")
             with self._state_lock:
                 inspect_prompt = self._prompt_diagnostic_armed
                 capture_generation = self._prompt_diagnostic_generation
                 self._prompt_diagnostic_armed = False
-            self._prepare(config, revision)
-            self._check_revision(revision)
-            result = self.adapter.call("ask", messages=messages, timeout=timeout,
-                                       prompt_budget=budget)
+            try:
+                self._prepare(config, revision)
+                self._check_revision(revision)
+                # Plain chat streams its text to the UI; with the action catalog
+                # only the "reply" of a chat/clarify answer is streamed.
+                from .token_stream import streaming, visible_reply
+                stream_cb = getattr(self, "on_stream", None)
+                if stream_cb is not None and allowed_actions is not None:
+                    # Action-capable prompt: stream only the chat "reply" text,
+                    # never a capability proposal (validated after generation).
+                    sink = stream_cb
+
+                    def stream_cb(raw, sink=sink):
+                        shown = visible_reply(raw)
+                        if shown.strip():
+                            sink(shown)
+                with streaming(stream_cb):
+                    result = self.adapter.call("ask", messages=messages, timeout=timeout,
+                                               prompt_budget=budget)
+            except BaseException:
+                # Review bug 5 (9/11): a failed generation must not silently
+                # consume the armed capture; keep it for the next question.
+                if inspect_prompt:
+                    with self._state_lock:
+                        if capture_generation == self._prompt_diagnostic_generation:
+                            self._prompt_diagnostic_armed = True
+                raise
             if inspect_prompt:
                 # Inspect after generation to avoid touching native prefill timings.
                 # Never execute, persist or transmit the report.
@@ -397,7 +434,7 @@ class NativeConversationSession:
                         ("Domanda corrente", "jarvis.submit_gemma_voice: voce o testo", latest),
                     ])
                     report = render_prompt_diagnostic(
-                        messages=messages, sections=sections,
+                        messages=messages, sections=sections, family=model_family(config.model),
                         count=counter if exact else None, total_tokens=final_size,
                         budget=budget, context_size=config.context_size,
                         max_output=config.max_output,
@@ -445,13 +482,61 @@ class NativeConversationSession:
             config = self.config_loader().validate()
             memory = self.memory_loader().validate()
             budget = memory.available_prompt_tokens(config.context_size, config.max_output)
-            overhead = len(format_gemma_messages([{"role": "user", "content": "x"}])) - 1
+            overhead = len(_format_family([{"role": "user", "content": "x"}], model_family(config.model))) - 1
             if budget <= overhead:
                 raise ValueError("Budget insufficiente per il template Gemma.")
-            prompt = build_prompt(budget - overhead)
             self._prepare(config, revision)
             self._check_revision(revision)
+            # 9/11 Telegram fix: ``budget`` is in model tokens, but builders
+            # count characters (~3-4 per token). With the native tokenizer,
+            # build with a character allowance and verify the real size,
+            # shrinking only if needed; otherwise keep the legacy char rule.
+            counter = None
+            try:
+                counter = self.adapter.context_token_counter()
+            except (RuntimeError, AttributeError):
+                counter = None
+            family = model_family(config.model)
+            if callable(counter):
+                allowance = (budget - overhead) * 3
+                for _ in range(5):
+                    prompt = build_prompt(allowance)
+                    if counter(_format_family([{"role": "user", "content": prompt}],
+                                              family)) <= budget:
+                        break
+                    allowance = int(allowance * 0.8)
+                else:
+                    raise ValueError("Prompt isolato oltre il contesto del modello.")
+            else:
+                prompt = build_prompt(budget - overhead)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
+            return clean_native_answer(result.get("text"))
+
+    def ask_isolated_messages(self, build_messages, *, timeout=180, max_pairs=3):
+        """Like ask_isolated, with real turns: drop the oldest pair until it fits.
+
+        ``build_messages(pairs)`` returns alternating user/assistant messages
+        ending with the user. Never reads or changes the chat history.
+        """
+        with self._operation() as revision:
+            config = self.config_loader().validate()
+            memory = self.memory_loader().validate()
+            budget = memory.available_prompt_tokens(config.context_size, config.max_output)
+            self._prepare(config, revision)
+            self._check_revision(revision)
+            family = model_family(config.model)
+            try:
+                counter = self.adapter.context_token_counter()
+            except (RuntimeError, AttributeError):
+                counter = None
+            measure = counter if callable(counter) else len
+            for pairs in range(max_pairs, -1, -1):
+                messages = build_messages(pairs)
+                if measure(_format_family(messages, family)) <= budget:
+                    break
+            else:
+                raise ValueError("Contesto insufficiente per la risposta isolata.")
+            result = self.adapter.call("ask", messages=messages, timeout=timeout)
             return clean_native_answer(result.get("text"))
 
     def test_generation(self, *, config=None, timeout=180):
@@ -467,16 +552,19 @@ class NativeConversationSession:
                 raise ValueError("Impostazioni Gemma cambiate: ripeti la prova.")
             memory = self.memory_loader().validate()
             budget = memory.available_prompt_tokens(current.context_size, current.max_output)
-            budget -= len(format_gemma_messages([{"role": "user", "content": "x"}])) - 1
+            budget -= len(_format_family([{"role": "user", "content": "x"}], model_family(current.model))) - 1
             prompt = "Presentati con una breve frase in italiano."
-            style = "Stile di risposta: " + " ".join(current.personality.split()) + "\n"
-            if current.personality.strip() and len(style) + len(prompt) <= budget:
+            from .persona import persona_block
+            style = persona_block(current)
+            if style and len(style) + len(prompt) <= budget:
                 prompt = style + prompt
             if len(prompt) > budget:
                 raise ValueError("Budget di contesto insufficiente per la prova Gemma.")
-            # The old trial loaded a fresh model every time. Preserve that
-            # explicit reload, but only after all earlier generations finish.
-            self._reset_adapter()
+            # F5N.7: reuse an already loaded native model (no second load in
+            # one process); only an unloaded backend is reset before the trial.
+            bridge = getattr(getattr(self.adapter, "provider", None), "bridge", None)
+            if not getattr(bridge, "loaded", False):
+                self._reset_adapter()
             self._prepare(current, revision)
             self._check_revision(revision)
             result = self.adapter.call("ask", prompt=prompt, timeout=timeout)
@@ -491,7 +579,7 @@ class NativeConversationSession:
         with self._operation() as revision:
             config = self.config_loader().validate()
             memory = self.memory_loader().validate()
-            if len(format_gemma_messages([{"role": "user", "content": prompt}])) > memory.available_prompt_tokens(config.context_size, config.max_output):
+            if len(_format_family([{"role": "user", "content": prompt}], model_family(config.model))) > memory.available_prompt_tokens(config.context_size, config.max_output):
                 raise ValueError("Richiesta o elenco troppo lungo per il contesto Gemma.")
             self._prepare(config, revision)
             self._check_revision(revision)

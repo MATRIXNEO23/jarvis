@@ -1,4 +1,4 @@
-"""Reference-inspired animated JARVIS HUD, lightweight Tkinter edition.
+"""Reference-inspired animated LUMI HUD, lightweight Tkinter edition.
 
 Faithful layout and layered vector artwork without false live telemetry.
 Appearance never controls the microphone, GPT, executable tools or documents.
@@ -63,6 +63,23 @@ def memory_usage_windows() -> tuple[int, int] | None:
     except (AttributeError, OSError, ValueError):
         return None
     return None
+
+
+def draw_lumi_wordmark(canvas, color, background, scale=0.62):
+    """Disegna «LUMI» (rombo, lettere a linee spesse con taglio, righe sottili)."""
+    def p(points):
+        return [v*scale for v in points]
+    canvas.create_polygon(p([4,24, 13,15, 22,24, 13,33]),outline=color,fill="",width=2)
+    thick=max(3,round(7*scale))
+    for points in ((44,6, 44,42, 70,42),
+                   (88,6, 88,36, 94,42, 112,42, 118,36, 118,6),
+                   (138,42, 138,6, 154,28, 170,6, 170,42),
+                   (192,6, 192,42)):
+        canvas.create_line(*p(points),fill=color,width=thick,capstyle="projecting",
+                           joinstyle="miter")
+    canvas.create_line(*p([38,24, 198,24]),fill=background,width=2)
+    for points in ((40,54, 68,54),(80,54, 196,54),(206,8, 218,8),(201,40, 226,40)):
+        canvas.create_line(*p(points),fill=color,width=1)
 
 
 class WindowsCPU:
@@ -202,7 +219,7 @@ class MetricTile:
 
 
 class JarvisHUD:
-    """Chat left, animated JARVIS nucleus center, rotating Earth right."""
+    """Chat left, animated LUMI nucleus center, rotating Earth right."""
 
     def __init__(self,parent,on_settings):
         self.parent=parent
@@ -255,10 +272,13 @@ class JarvisHUD:
                     x-1.5,y-1.5,x+1.5,y+1.5,
                     fill="#1d9bc4",outline="")
         header.bind("<Configure>",draw_header)
-        tk.Label(header,text="◈  J A R V I S",
-                 bg=BG,fg=CYAN,
-                 font=("Segoe UI",15,"bold")).pack(
-                     side="left",padx=(5,12))
+        # Scritta LUMI disegnata a linee (stile «B» scelto dall'utente il 12/11):
+        # rombo, lettere squadrate di tratto medio, taglio orizzontale e righe
+        # sottili. Non dipende da caratteri installati sul PC.
+        self.wordmark=tk.Canvas(header,width=168,height=40,bg=BG,
+                                highlightthickness=0,bd=0)
+        self.wordmark.pack(side="left",padx=(5,12))
+        draw_lumi_wordmark(self.wordmark,CYAN,BG)
         tk.Label(header,text="//  INTERFACCIA NEURALE",
                  bg=BG,fg="#4985a7",
                  font=("Consolas",9)).pack(side="left")
@@ -282,7 +302,8 @@ class JarvisHUD:
         quick_controls = tk.Frame(header, bg=BG)
         quick_controls.pack(side="right", padx=(0, 12))
         for index, (key, label) in enumerate((
-                ("mic", "MIC OFF"), ("gpt", "GPT OFF"), ("memory", "MEMORIA OFF"))):
+                ("mic", "MIC OFF"), ("gpt", "GPT OFF"), ("model", "MODELLO ON"),
+                ("memory", "MEMORIA OFF"))):
             if index:
                 tk.Label(quick_controls, text="/", bg=BG, fg=MUTED,
                          font=("Consolas", 9)).pack(side="left", padx=3)
@@ -351,7 +372,7 @@ class JarvisHUD:
         self.orbit_markers=OrbitMarkers(
             self.core_canvas,lambda ident:self._orbit_click(ident))
 
-        self.visual_status=tk.StringVar(value="JARVIS  //  STANDBY")
+        self.visual_status=tk.StringVar(value="LUMI  //  STANDBY")
         tk.Label(self.visual,textvariable=self.visual_status,
                  bg=BG,fg="#60abc5",
                  font=("Consolas",9),pady=3).pack(fill="x")
@@ -422,9 +443,11 @@ class JarvisHUD:
     def set_state_provider(self,callback):
         self.state_provider=callback
 
-    def set_quick_toggle_handlers(self, *, microphone, gpt, memory):
+    def set_quick_toggle_handlers(self, *, microphone, gpt, memory, model=None):
         """Bind trusted existing controls; this HUD owns no setting state."""
         handlers = {"mic": microphone, "gpt": gpt, "memory": memory}
+        if model is not None:
+            handlers["model"] = model
         if not all(callable(callback) for callback in handlers.values()):
             raise TypeError("Quick controls require callable handlers.")
         self._quick_toggle_handlers = handlers
@@ -513,20 +536,21 @@ class JarvisHUD:
         memory=bool(state.get("memory",False))
         mic_enabled=bool(state.get("mic_enabled",listening))
         mode=core_mode(speaking=speaking,listening=listening)
+        self._last_mode=mode
         title=(
             f"MIC  {'ATTIVO' if mic_enabled else 'OFF'}    /    "
             f"GPT  {'ON' if connected else 'OFF'}    /    "
             f"MEMORIA  {'ON' if memory else 'OFF'}")
-        status=("JARVIS // TRASMISSIONE VOCALE" if speaking else
-                "JARVIS // VOCE RILEVATA" if listening else
-                "JARVIS // STA RAGIONANDO" if reasoning else
-                "JARVIS // RICERCA SUL PC" if searching else
-                "JARVIS // ELABORAZIONE" if thinking else
-                "JARVIS // MICROFONO ATTIVO - IN ATTESA" if mic_enabled else
-                "JARVIS // STANDBY")
-        info=("JARVIS STA PARLANDO" if speaking else
+        status=("LUMI // TRASMISSIONE VOCALE" if speaking else
+                "LUMI // VOCE RILEVATA" if listening else
+                "LUMI // STA RAGIONANDO" if reasoning else
+                "LUMI // RICERCA SUL PC" if searching else
+                "LUMI // ELABORAZIONE" if thinking else
+                "LUMI // MICROFONO ATTIVO - IN ATTESA" if mic_enabled else
+                "LUMI // STANDBY")
+        info=("LUMI STA PARLANDO" if speaking else
               "LA TUA VOCE È RILEVATA" if listening else
-              "JARVIS STA RAGIONANDO" if reasoning else
+              "LUMI STA RAGIONANDO" if reasoning else
               "RICERCA SUL PC IN CORSO" if searching else
               "ELABORAZIONE IN CORSO" if thinking else
               "MICROFONO ATTIVO  •  ATTESA VOCE" if mic_enabled else
@@ -540,8 +564,11 @@ class JarvisHUD:
                      "MIC NON ATTIVO" if mic_selected else "MIC OFF")
         gpt_label = ("GPT ON" if connected and gpt_enabled else
                      "GPT NON CONNESSO" if gpt_enabled else "GPT OFF")
+        from model_gate import enabled as model_enabled
+        model_on = bool(state.get("model_enabled", model_enabled()))
         controls = (("mic", mic_label, mic_enabled or mic_selected),
                     ("gpt", gpt_label, gpt_enabled),
+                    ("model", "MODELLO ON" if model_on else "MODELLO OFF", model_on),
                     ("memory", "MEMORIA ON" if memory else "MEMORIA OFF", memory))
         if controls != self._quick_state_cache:
             for key, label, enabled in controls:

@@ -1,4 +1,4 @@
-"""JARVIS project-scoped Second Brain: indexed SQLite + durable continuity.
+"""LUMI project-scoped Second Brain: indexed SQLite + durable continuity.
 
 A project, the general chat and a Telegram contact are distinct partitions.
 Historic v1 SecondBrain files are not modified or migrated automatically.
@@ -155,7 +155,7 @@ class WorkspaceMemory:
                 self.fts_available=False
 
     TELEGRAM_HISTORY_LIMIT = 50
-    TELEGRAM_CONTEXT_LIMIT = 4
+    TELEGRAM_CONTEXT_LIMIT = 6  # last 3 exchanges (9/11)
 
     def _prune_telegram_backup(self, backup: Path) -> None:
         """Keep the rollback snapshot bounded too, including legacy chat turns.
@@ -301,10 +301,10 @@ class WorkspaceMemory:
         rows=list(reversed(self.telegram_activity(
             peer_id,limit=self.TELEGRAM_HISTORY_LIMIT)))
         output=["Conversazione Telegram: "+(title or str(peer_id)),
-                "Ultimi "+str(len(rows))+" messaggi conservati da Jarvis.",
+                "Ultimi "+str(len(rows))+" messaggi conservati da Lumi.",
                 "Il file non comprende messaggi Telegram non registrati.",""]
         for entry in rows:
-            who="CONTATTO" if entry["direction"]=="incoming" else "JARVIS"
+            who="CONTATTO" if entry["direction"]=="incoming" else "LUMI"
             output.extend([entry["when"]+"  "+who+" ["+entry["kind"]+"]",
                            entry["text"] or "(nessuna trascrizione disponibile)",""])
         destination=self.telegram_export_path(peer_id)
@@ -447,7 +447,7 @@ class WorkspaceMemory:
         self._save_snapshot(ident)
 
     def restore_project(self,ident):
-        """Restore from Jarvis's logical trash with the same stable ID."""
+        """Restore from Lumi's logical trash with the same stable ID."""
         project=self.project(ident)
         if not project or not project["trashed"]:
             raise WorkspaceError("Progetto non trovato nel cestino.")
@@ -576,7 +576,7 @@ class WorkspaceMemory:
         recent=[{"utente":r["utente"][:115],"jarvis":r["jarvis"][:140],
                  "tipo":r["tipo"]} for r in self.recent(scope,scope_id,4)]
         evidence=[{"source":"conversation","when":r["when"],
-                   "fact":"Utente: "+r["user"]+" | Jarvis: "+r["reply"]}
+                   "fact":"Utente: "+r["user"]+" | Lumi: "+r["reply"]}
                   for r in self.search(scope,scope_id,query,4)]
         groups=[("recent",recent),("evidence",evidence)]
         for key,items in (reversed(groups) if prefer_related else groups):
@@ -607,7 +607,7 @@ class WorkspaceMemory:
         return json.dumps(context,ensure_ascii=False,separators=(",",":"))
 
     def project_directory(self,ident):
-        """Stable folder inside AppData/Jarvis/projects; never use spoken names as paths."""
+        """Stable folder inside AppData/Lumi/projects; never use spoken names as paths."""
         if not _project_id(ident) or not self.project(ident):
             raise WorkspaceError("Progetto inesistente.")
         return self.continuities/ident
@@ -835,7 +835,7 @@ class WorkspaceMemory:
             lines.extend(["","## Ultimi scambi (estratto automatico, non decisioni verificate)"])
             for item in history:
                 lines.extend(["", "- ["+item["when"]+"] Utente: "+item["utente"][:240],
-                              "  - JARVIS: "+item["jarvis"][:260]])
+                              "  - LUMI: "+item["jarvis"][:260]])
             folder=self.continuities/ident
             self.project_files_directory(ident)
             identity=folder/"PROGETTO.txt"

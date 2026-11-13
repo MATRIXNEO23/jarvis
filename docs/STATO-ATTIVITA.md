@@ -1,3 +1,75 @@
+## Divisione di jarvis.py (12/11/2026)
+Audit fatto e piano salvato in docs/PIANO-DIVISIONE-JARVIS.md (5 passi, uno per build). Direzione approvata dall'utente; codice non toccato, si parte dal passo 1 (contesto comune) solo col suo via.
+
+## Lumi 040 — i 18 punti dopo i test della 039 (12 novembre 2026)
+Implementati (vedi docs/ARCH-01-F5-CHECKPOINT.md, «Build 040»): Lumi nell'elenco finestre con conferma, finestra in primo piano, sì/no senza nome (risposte.py, grammatica Vosk), «sveglia» riapre Lumi, riavvio dopo il messaggio, meno conferme, OCR e play offline (LumiControl.exe), righe/elementi, schermo intero per programma, Gestione attività e chiusura forzata, griglia e mouse a piccoli passi, cervello locale/online a voce, scritta LUMI. CI Windows verde (1279 test, prova UIA + play + OCR «Riproduci»), pubblicata Lumi-040-PROVA.zip (run 43142796299). Primi riscontri del Pavilion salvati in ARCH-01-F5-CHECKPOINT «Da fare dopo i primi test della 040» (griglia col solo numero, numeri storpiati/inglesi, titoli inglesi, sì/no ovunque). Nessuna build finché l'utente non lo chiede.
+
+## F5N.4 — Ricerca DLL runtime MinGW in ctypes Windows (9 novembre 2026)
+La CI 42592362936 ha fallito il solo loader F5N.4: PE imports di `koboldcpp_common.dll` e CPU backend indicano `libgcc_s_seh-1.dll`, `libstdc++-6.dll`, `libwinpthread-1.dll` disponibili in `C:\\mingw64\\bin`, ma la cartella non era stata aggiunta a `os.add_dll_directory` del processo figlio. Fix limitato smoke worker commit `cf041b765...`, nuovo candidato 42595625501 avviato; conferma success ancora pendente. Unit/GPT, tokenizer e diagnostica precedente green. Nessuna modifica a Jarvis014.
+
+## F5N.4 — Fix percorso 8.3 test Windows e diagnostica DLL missing (9 novembre 2026)
+La prima F5N.4 falliva in due gate: test temporaneo confrontava short path `RUNNER~1` vs long path `runneradmin`; smoke nativo common DLL falliva perché Windows non risolve un modulo o una dipendenza non ancora identificata. Fix test-only `3b563ded...` e nuovo logging import PE read-only `ae724dae...`; **nessuna DLL corretta o sostituita** finché non emerge il dependency name. Nuovi run 42592363012 (unit), 42592362936 (DLL) in corso. F5N.4 ancora aperta. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
+
+## F5N.4 — Windows DLL loader smoke isolato (9 novembre 2026)
+**F5N.3 verde**, due committaggi confermati green unit/GPT, tokenizer, diagnosi e compilazione DLL (42562880047, 42562944575). Implementato il solo gate test F5N.4: child Python Windows per caricare route + comune e cercare export senza caricare GGUF; test guardia e workflow candidato con report dedicato (commit `23044874...`). Esito CI F5N.4 da verificare, nulla pubblicato e runtime Jarvis 014 intatto. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
+
+## F5N.3 — Fix suite Windows: test path Windows errato (9 novembre 2026)
+Test unit/protocollo Windows fallito nella sola fixture PE F5N.3 (StopIteration: doppio backslash nel `replace`, contro percorsi Windows con singolo backslash). Fix test-only commit `5c401f28...`, normalizzazione con `chr(92)`; CI nuova 42562880082 in coda, non ancora validata. Diagnostica e tokenizer verdi. Build/ABI candidato ancora in verifica separata run 42562880047. [Dettagli](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 invariata.
+
+## F5N.3 — Fix cap parser PE 8192 simboli (9 novembre 2026)
+Due run candidati F5N.3 rossi (42559582501 e 42559697598), mentre build DLL, unit test Jarvis, tokenizer e diagnostica superati. Confermato limite `pefile.MAX_SYMBOL_EXPORT_COUNT = 0x2000`, usato come default dal costruttore: vengono letti solo i primi 8192 export. Nuova chiamata `PE(..., max_symbol_exports=65536)` con controllo integrità `NumberOfNames` e test regressione; CI nuova ancora da confermare. [Report](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 non modificata.
+
+## F5N.3 — Diagnostica dei due run PE falliti (9 novembre 2026)
+Run 42557729052 e 42557848456 FAILED **esclusivamente al controllo export PE** dopo compilazione DLL e hash corretti. Jarvis unit/protocollo, tokenizer e diagnosi SUCCESS. Il gate non trova `load_model/generate/abort_generate/token_count/get_chat_template` in `koboldcpp_common.dll`, ma resta da verificare la lista esatta delle esportazioni. Aggiunta diagnostica senza bypass del gate (`53181925...`), nuovo run F5N.3 42559582501 in esecuzione alla verifica. Non dichiarare bug risolto prima dell'evidenza. [Dettagli](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 invariata.
+
+## F5N.3 — Inventario ABI PE del candidato KoboldCpp (9 novembre 2026)
+F5N.2 compilazione Windows completata SUCCESS (run 42555705472). F5N.3 ha introdotto `tools/f5n_pe_abi_audit.py`, `tests/test_f5n_pe_abi_audit.py` e gate statico nel workflow candidato, con esportazioni native obbligatorie, import `koboldcpp_backend.dll` e manifest checksum. `koboldcpp_common.dll` è il punto di accesso ufficiale della versione split; il nuovo bootstrap in Jarvis non è ancora testato e NON è stato collegato alla chat. Workflow Windows [42557729052](https://github.com/MATRIXNEO23/jarvis/actions/runs/42557729052) in corso alla prima verifica. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 invariata.
+
+## F5N.2 — Corretta propagazione macro Windows al compilatore (9 novembre 2026)
+Causa reale del fallimento run 42554779032: Makefile KoboldCpp azzera CFLAGS/CXXFLAGS di ambiente. Commit `ca9f43a...` applica `_WIN32_WINNT=0x0602` e `WINVER=0x0602` nei comandi `CC`/`CXX` passati a `make` senza alterare i flag del motore o i sorgenti upstream. Nuovo run Windows F5N.2 42555705472 in corso; non dichiarare DLL pronta. [Audit](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). ZIP014 intatta.
+
+## F5N.2 — Fix compilazione Windows (9 novembre 2026)
+Prime build F5N.2 Windows fallite su `otherarch/llama-util.h` per tipi `WIN32_MEMORY_RANGE_ENTRY` mancanti nella toolchain MinGW (run 42550927869). Correzione esclusivamente al workflow: `-D_WIN32_WINNT=0x0602 -DWINVER=0x0602` per compatibilità API Windows 8+/Windows 10, commit `7a02769a...`. Nuova build run 42551929989 in corso alla verifica. Suite generale Jarvis, diagnosi e tokenizer **verdi** nell'ultimo ciclo concluso. [Log/decisioni tecniche](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). Nessuna sostituzione DLL o ZIP.
+
+## ARCH-01 F5N.2 — Trigger build candidato Windows (9 novembre 2026)
+Aggiunto evento PR filtrato alla build candidata Windows oltre a dispatch manuale (`3bbe376a...`) perché il nuovo workflow esiste soltanto sul ramo feature. Nessuna esecuzione compilazione verificata al primo controllo; restano i gate ABI, licenza, CPU e Pavilion. [Dettagli](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md).
+
+## ARCH-01 F5N.2 — Build DLL KoboldCpp Windows fissata (9 novembre 2026)
+Preparato workflow manuale `.github/workflows/f5n-koboldcpp-native-dll-windows.yml` con upstream pinned `6d2fedf...` e target MinGW64 no-AVX2. L'upstream costruisce **più DLL** (common/default/noavx2/forwarder): non sostituire soltanto la DLL vecchia. Aggiunti `tools/f5n_bundle_audit.py` e `tests/test_f5n_bundle_audit.py` per manifest statico; workflow build **non ancora avviato**. Test Windows dei nuovi tool da confermare. [Audit e piano](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md). Nessuna modifica a runtime, main, zip o dati.
+
+## ARCH-01 F5N.1 — Audit ABI nativa riproducibile (9 novembre 2026)
+Verificati sorgenti ufficiali C++ `kcpp_src/expose.cpp`, `model_adapter.h` e `gpttype_adapter.cpp` (commit upstream `6d2fedf...`). Nessuna API `unload_model` in `expose.cpp`; `gpttype_load_model` contiene allocazione `new kcpp_params()` con commento upstream `yes this leaks memory`, perciò non è sicuro ipotizzare uno switch hot mediante sola DLL. Creato `tools/f5n_abi_audit.py` + test `tests/test_f5n_abi_audit.py` (sola lettura/statica); CI Windows pendente. Documento [F5N ABI](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md); ZIP014 e dati invariati.
+
+## ARCH-01 F5N.0 — Audit integrazione DLL KoboldCpp (9 novembre 2026)
+Confermato percorso approvato: stesso motore ufficiale KoboldCpp da sorgenti tramite DLL nativa integrata, una sola Jarvis, niente server standalone come soluzione. Pubblicata [matrice ABI e piano F5N](ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md): già disponibili `load_model`, `generate`, `abort_generate`, prompt Gemma; mancano prova unload, template Qwen dinamici, parità sampler e performance Pavilion. Prima verificare C++ upstream + DLL corrispondente e build Windows no-AVX2 riproducibile. ZIP014 invariata; nessun cambio runtime.
+
+## F5 — Correzione architetturale richiesta (9 novembre 2026)
+L'utente vuole **KoboldCpp ufficiale integrato nativamente in Jarvis**, auspicabilmente con DLL compilata dalla stessa sorgente e aggiornata pari passo, e parità di comportamento/impostazioni: non un secondo programma o un server pilotato. Il percorso `OwnedKoboldLab` rimane solo laboratorio e non va collegato al runtime. Prossimo audit API/ABI upstream, build DLL Windows no-AVX2 con sorgente fissata e prova parità; ZIP014 preservata. [Checkpoint F5](ARCH-01-F5-CHECKPOINT.md).
+
+## ARCH-01 F5.3b.3 — Jarvis unico programma e template Qwen2.5 (9 novembre 2026)
+Vincolo confermato: unica app/interfaccia Jarvis, engine interno invisibile e gestito da Jarvis. Gate Windows F5.3b.2 ora SUCCESS (runs 42544915058, 42544915314, 42544915068). Creati `local_model/qwen25_template_f5.py` e `tests/test_qwen25_template_f5.py`: serializer ChatML Qwen2.5 text-only isolato, nessun collegamento runtime. CI nuova da verificare; Qwen GGUF reale e Pavilion non ancora provati. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67, ZIP014 invariata.
+
+## F5.3b.2 — Correzione CI (9 novembre 2026)
+Il run Windows 42543240218 è FALLITO (4 fail, 1 error, Python 3.11 e 3.12) per mock erroneamente attivo prima di start in `tests/test_owned_kobold_lab_f5.py`. Sistemato il mock al commit `96c76a39...`, senza modifiche al controller produttivo. Nuova verifica Windows pendente; F5.3b.3 bloccata fino a esito verde. [Checkpoint F5](ARCH-01-F5-CHECKPOINT.md).
+
+## ARCH-01 F5.3b.2 — Controller laboratorio KoboldCpp (9 novembre 2026)
+Creato `local_model/owned_kobold_lab_f5.py` + test `tests/test_owned_kobold_lab_f5.py`. Avvio solo esplicito da codice attendibile, preflight porta loopback, probe identità modello, cleanup del processo posseduto e blocco in caso di release non verificata. **Non integrato nel runtime; nessuna generazione, prova GGUF reale o prova Pavilion.** Il preflight porta e probe non garantiscono ownership del listener, quindi nessun prompt privato o hot-switch. CI Windows da verificare. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67, rollback 014.
+
+## ARCH-01 F5.3b.1 — Owner subprocess locale (9 novembre 2026)
+Creato `local_model/owned_process_f5.py` con arresto verificato via `wait` del solo processo figlio avviato, timeout fail-closed e test mock `tests/test_owned_process_f5.py`. NON collegato al runtime Jarvis e non esegue GGUF o KoboldCpp; non certifica che processi nipoti siano terminati. Test Windows nuovi da confermare; F4.2 sul Pavilion pendente; rollback ZIP014. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67.
+
+## ARCH-01 F5.3a — Gate cambio modello sicuro (9 novembre 2026)
+Audit: Gemma embedded ha abort cooperativo ma nessuna prova di unload/deallocazione; Qwen non ha template chat convalidato. Implementato esclusivamente `local_model/model_switch_gate_f5.py` e `tests/test_model_switch_gate_f5.py`: barriera su busy, disponibilità, template, rilascio modello precedente e startup target, senza integrare il runtime. CI Windows da confermare; nessuna prova Pavilion né release. [Checkpoint F5](ARCH-01-F5-CHECKPOINT.md), PR #67, rollback 014.
+
+## ARCH-01 F5.2 — Anteprima multimodello visibile (9 novembre 2026)
+Aggiunta finestra opzionale Gemma/Qwen da Impostazioni > GPT e memoria, con bozze di parametri in RAM soltanto; `local_model/multimodel_ui_f5.py`, nuovo bottone lazy import in `jarvis.py`, tests `tests/test_multimodel_ui_f5.py`. Nessun cambio di motore, nessun salvataggio, nessuna build e nessuna modifica a chat/Second Brain/Telegram. Gate Windows CI e prova visuale ancora pendenti. [Checkpoint](ARCH-01-F5-CHECKPOINT.md), PR #67, rollback 014.
+
+## ARCH-01 F5.1 — Discovery locale read-only (9 novembre 2026)
+Aggiunto modulo `local_model/model_availability_f5.py` con controlli puramente espliciti dei file embedded GGUF/DLL e probe KoboldCpp F4.1 con identità esatta; test `tests/test_model_availability_f5.py`, checkpoint [F5](ARCH-01-F5-CHECKPOINT.md). **CI nuova ancora da confermare**; nessuna UI, switch, generazione, runtime Jarvis, Second Brain o ZIP modificati. F4.2 su Pavilion pendente, rollback 014. Corretto il rifiuto NaN/infinito nei sampler F5.0.
+
+## ARCH-01 F5.0 — Profili Gemma/Qwen isolati (9 novembre 2026)
+Branch `feature/jarvis-kobold-f5-profiles-20261109`, derivato da F4.2: contratto profili `local_model/model_profiles_f5.py`, test `tests/test_model_profiles_f5.py` e [checkpoint](ARCH-01-F5-CHECKPOINT.md). **NON ancora verificato da CI**; nessuna UI, wiring/runtime, build, modifica memoria o provider API. La prova F4.2 sul Pavilion resta pendente. Prossimo passo: gate test Windows e ispezione integrazione prima di F5.1. Rollback utente ZIP014, sorgenti F4.2 conservati.
+
 ## Pubblicazione013 autorizzata — in preparazione
 Richiesta utente «Me la pubblichi?». Fonte76054b7, runtime verificato c91ebb5/58b8059. Registro main letto:latest12/next13. Riutilizzo builder/verifica ZIP/publisher con gate una tantum PR59 stesso repository e ramo, numero013 e1006test attesi. Nessun runtime modificato; verifiche sorgenti/DLL già documentate. Prossimo passo: suite Windows e ZIP estratto, verifica pubblicazione e hash pubblico, disattivazione gate; poi stop.012/profilo preservati, nessuna nuova funzione o promessa prestazioni Pavilion/account.
 

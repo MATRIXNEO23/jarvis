@@ -65,7 +65,8 @@ print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
             dictation_voice_action=dictation_voice_action,
             speech_to_local_command=__import__('voice_control').speech_to_local_command)
         for name in ('try_program_command','try_file_command','send_console_input'):
-            node=copy.deepcopy(next(n for n in main.body if isinstance(n,ast.FunctionDef) and n.name==name))
+            node=copy.deepcopy(__import__('test_activity_status').find_main_function(main,name))
+            node=__import__('test_activity_status').GlobalCallbacks().visit(node)
             node=GlobalCallbacks().visit(node)
             exec(compile(ast.fix_missing_locations(ast.Module(body=[node],type_ignores=[])),
                          'real-app-callback','exec'),env)
@@ -119,7 +120,7 @@ print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
                     # Simulate a legacy/in-memory conflicting phrase to exercise
                     # runtime precedence independently of save-time validation.
                     self.apps._preferences[self.mail]=dict(enabled=True,phrase='salva')
-                    phrase='ehi jarvis salva' if mode in (CONTINUOUS,GPT_CONVERSATION) else 'salva'
+                    phrase='ehi lumi salva' if mode in (CONTINUOUS,GPT_CONVERSATION) else 'salva'
                     fixture.receive_voice(phrase)
                     self.assertEqual(saved,['salva'])
                     self.assertFalse(self.launched)
@@ -138,7 +139,7 @@ print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
                 main,env=self.environment()
                 fixture.env.update(env)
                 before=len(self.launched)
-                phrase='ehi jarvis avvia la posta' if mode in (CONTINUOUS,GPT_CONVERSATION) else 'avvia la posta'
+                phrase='ehi lumi avvia la posta' if mode in (CONTINUOUS,GPT_CONVERSATION) else 'avvia la posta'
                 fixture.receive_voice(phrase)
                 self.assertEqual(self.launched[before:],[self.mail])
                 fixture.env['start_conversation_gpt'].assert_not_called()
@@ -155,7 +156,7 @@ print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
             main,env=self.environment()
             fixture.env.update(env)
             phrase='metti in moto la posta'
-            fixture.receive_voice('Jarvis '+phrase)
+            fixture.receive_voice('Lumi '+phrase)
             fixture.env['start_conversation_gpt'].assert_called_once_with(phrase)
             self.assertFalse(self.launched)
         finally:
@@ -171,7 +172,9 @@ print('PROGRAM_APPS_REAL_UI_BOOT_CLOSE_AND_DEFAULT_OFF_OK')
         self.assertIn('arguments.query',prompt)
         intent=parse_conversation_intent(json.dumps(dict(kind='capability',action_id='addon.programmi_app.avvia',
             arguments={'query':'posta'})),addon_resolver=self.manager.resolve,utterance=phrase)
-        branch=next(n for n in ast.walk(main) if isinstance(n,ast.If)
+        moved=__import__('test_activity_status')
+        scopes=[main,*(moved.GlobalCallbacks().visit(copy.deepcopy(f)) for f in moved.moved_functions().values())]
+        branch=next(n for scope in scopes for n in ast.walk(scope) if isinstance(n,ast.If)
                     and isinstance(n.test,ast.Compare) and isinstance(n.test.left,ast.Attribute)
                     and n.test.left.attr=='handler' and any(isinstance(c,ast.Constant) and c.value=='program_apps' for c in n.test.comparators))
         code=compile(ast.fix_missing_locations(ast.Module(body=copy.deepcopy(branch.body),type_ignores=[])),

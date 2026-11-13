@@ -1,6 +1,6 @@
 """ARCH-01 F1: independent, explicit, durable chat instances.
 
-This suite must not touch the real Jarvis profile, model, Second Brain or
+This suite must not touch the real Lumi profile, model, Second Brain or
 workspace DB. Uses a temporary SQLite file on each test.
 """
 import tempfile

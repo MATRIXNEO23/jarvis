@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from collections.abc import Callable
 
 SEND_COMMAND = re.compile(
-    r"^(?:(?:ehi|ok)\s+)?(?:jarvis[,\s:]+)?"
+    r"^(?:(?:ehi|ok)\s+)?(?:lumi[,\s:]+)?"
     r"(?:manda|invia|spedisci)\s+(?:un\s+)?"
     r"(?:messaggio(?:\s+vocale)?|vocale|audio)\s+(?:a|ad)\s+"
     r"(.{2,90}?)\s*[.!?]?$", re.I
@@ -102,7 +102,7 @@ class VoiceSendDialog:
             return SendAction("revoked")
         text = " ".join(str(speech).split())
         word = text.casefold().strip(" .!?")
-        word = re.sub(r"^(?:jarvis[,\s:]+)", "", word).strip()
+        word = re.sub(r"^(?:lumi[,\s:]+)", "", word).strip()
         if word in CANCEL_WORDS:
             self.reset()
             return SendAction("cancelled")

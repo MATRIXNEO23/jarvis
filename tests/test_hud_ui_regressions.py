@@ -69,9 +69,9 @@ class CenterOnlyColorTests(unittest.TestCase):
 class BuildLayoutTests(unittest.TestCase):
     def test_single_launcher_still_uses_isolated_profile(self):
         root=Path(__file__).resolve().parent.parent
-        self.assertTrue((root/"avvia_jarvis.bat").is_file())
+        self.assertTrue((root/"avvia_lumi.bat").is_file())
         self.assertFalse((root/"AVVIA_TEST_TELEGRAM50.bat").exists())
-        launcher=(root/"avvia_jarvis.bat").read_text(encoding="utf-8")
+        launcher=(root/"avvia_lumi.bat").read_text(encoding="utf-8")
         self.assertIn("JARVIS_TRIAL_HOME",launcher)
         self.assertIn("prepara_test_telegram50.py",launcher)
         self.assertIn("py -3 jarvis.py",launcher)

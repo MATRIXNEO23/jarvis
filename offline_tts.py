@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import queue
+import re
 import subprocess
 import threading
 import time
@@ -27,10 +28,28 @@ try {
         $voices = @($synth.GetInstalledVoices() | Where-Object { $_.Enabled } |
             ForEach-Object { $_.VoiceInfo.Name })
         ConvertTo-Json -InputObject $voices -Compress
-    } elseif ($request.mode -eq 'speak') {
+    } elseif ($request.mode -eq 'speak' -or $request.mode -eq 'file') {
         if ($request.voice) { $synth.SelectVoice([string]$request.voice) }
         $synth.Rate = 0
-        $synth.Speak([string]$request.text)
+        if ($null -ne $request.rate) { $synth.Rate = [Math]::Max(-10, [Math]::Min(10, [int]$request.rate)) }
+        if ($null -ne $request.volume) { $synth.Volume = [Math]::Max(0, [Math]::Min(100, [int]$request.volume)) }
+        if ($request.mode -eq 'file') { $synth.SetOutputToWaveFile([string]$request.path) }
+        $pitch = 0
+        if ($null -ne $request.pitch) { $pitch = [int]$request.pitch }
+        $spoken = $false
+        if ($pitch -ne 0) {
+            try {
+                $t = [System.Security.SecurityElement]::Escape([string]$request.text)
+                $lang = $synth.Voice.Culture.Name
+                $p = [int]($pitch / 2)
+                $sign = if ($p -ge 0) { '+' } else { '' }
+                $ssml = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='$lang'><prosody pitch='$sign$p%'>$t</prosody></speak>"
+                $synth.SpeakSsml($ssml)
+                $spoken = $true
+            } catch { $spoken = $false }
+        }
+        if (-not $spoken) { $synth.Speak([string]$request.text) }
+        if ($request.mode -eq 'file') { $synth.SetOutputToNull() }
     } else {
         throw 'Unsupported operation'
     }
@@ -74,6 +93,13 @@ def _kill_for_cleanup(process, error) -> bool:
     except OSError:
         error.add_note("Impossibile terminare l'helper vocale durante la pulizia.")
         return False
+
+
+try:
+    from audio_player import AudioBusyError as _AudioBusy
+except ImportError:                         # pragma: no cover
+    class _AudioBusy(OSError):
+        pass
 
 
 def _invoke(payload: dict, *, timeout: int = 90, owner=None) -> str:
@@ -133,7 +159,32 @@ def installed_voices() -> list[str]:
         data = [data]
     if not isinstance(data, list):
         raise ValueError("Elenco delle voci Windows non valido.")
-    return [name for name in data if isinstance(name, str) and name.strip()][:100]
+    windows = [name for name in data if isinstance(name, str) and name.strip()][:100]
+    # Downloaded natural voices (Piper) first; Windows voices stay available.
+    from piper_voice import installed_piper_voices
+    from edge_voice import installed_edge_voices
+    return installed_piper_voices() + installed_edge_voices() + windows
+
+
+_EMOJI = re.compile(
+    "[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF"
+    "\U00002B00-\U00002BFF\U0000FE0F\U0000200D\U000020E3\U00002190-\U000021FF]+")
+_MARKUP = re.compile(r"[*_#`~>|]+")
+
+
+def speech_text(text: str) -> str:
+    """Text to read aloud: no emoji, no markdown symbols (asterischi, #, `)."""
+    text = _EMOJI.sub(" ", text)
+    text = re.sub(r"^\s*[-•]\s+", "", text, flags=re.M)       # punti elenco
+    text = _MARKUP.sub(" ", text)
+    parts = []
+    for line in text.splitlines():           # a capo / elenchi -> pausa
+        line = " ".join(line.split())
+        if line:
+            parts.append(line if line[-1] in ".,;:!?…" else line + ".")
+    text = " ".join(parts) if len(parts) > 1 else " ".join(text.split())
+    text = re.sub(r"\s+([,.;:!?])", r"\1", text)
+    return " ".join(text.split())
 
 
 class OfflineSpeaker:
@@ -143,13 +194,18 @@ class OfflineSpeaker:
                  notify_error: Callable[[str], None] | None = None):
         self._runner = runner
         self._notify_error = notify_error
-        self._messages: queue.Queue[tuple[str, str] | None] = queue.Queue(maxsize=3)
+        self._messages: queue.Queue[tuple[str, str] | None] = queue.Queue(maxsize=16)
         self._busy = threading.Event()
         self._closed = threading.Event()
         self._cooldown_until = 0.0
         self._worker: threading.Thread | None = None
         self._process_lock = threading.Lock()
         self._process: subprocess.Popen | None = None
+        # Natural voice options (Piper): effect 0..1 and lip-sync callback.
+        self.effect = 0.0
+        self.on_envelope: Callable[[list], None] | None = None
+        self._piper_speaker = None
+        self._edge_speaker = None
 
     def _attach_process(self, process) -> bool:
         with self._process_lock:
@@ -169,7 +225,7 @@ class OfflineSpeaker:
                 process.terminate()
         except OSError:
             if self._notify_error:
-                self._notify_error("Impossibile interrompere il processo vocale di Jarvis.")
+                self._notify_error("Impossibile interrompere il processo vocale di Lumi.")
 
     def is_audible(self) -> bool:
         """Guard recognition against the computer's own spoken output."""
@@ -180,6 +236,8 @@ class OfflineSpeaker:
         return self._busy.is_set()
 
     def speak(self, text: str, voice: str = "") -> bool:
+        if isinstance(text, str):
+            text = speech_text(text)
         if self._closed.is_set() or not isinstance(text, str) or not text.strip():
             return False
         if not isinstance(voice, str) or len(voice) > 180:
@@ -198,6 +256,32 @@ class OfflineSpeaker:
                 self._worker.start()
         return True
 
+    def _speak_windows_with_lipsync(self, part: str, voice: str) -> None:
+        from piper_voice import _audio_dir, loudness_envelope, play_wav
+        path = _audio_dir() / f"sapi-{os.getpid()}-{threading.get_ident()}.wav"
+        try:
+            import voice_style
+            payload = {"mode": "file", "text": part, "voice": voice, "path": str(path)}
+            payload.update(voice_style.sapi_params())
+            _invoke(payload, timeout=90, owner=self)
+            if self._closed.is_set() or not path.is_file():
+                return
+            self.on_envelope(loudness_envelope(path))
+            play_wav(path)
+        finally:
+            try:
+                path.unlink()
+            except OSError:
+                pass
+
+    def _peek_next(self, voice: str) -> str | None:
+        """Next queued sentence with the same voice: synthesized while this one plays."""
+        with self._messages.mutex:
+            nxt = self._messages.queue[0] if self._messages.queue else None
+        if isinstance(nxt, tuple) and nxt[1] == voice:
+            return nxt[0]
+        return None
+
     def _run(self) -> None:
         while not self._closed.is_set():
             try:
@@ -211,20 +295,84 @@ class OfflineSpeaker:
                 break
             self._busy.set()
             try:
+                import edge_voice
+                edge_key = edge_voice.key_from_label(voice)
+                if edge_key is not None:
+                    try:
+                        extra = {}
+                        upcoming = self._peek_next(voice)
+                        if upcoming:
+                            extra["upcoming"] = upcoming
+                        speaker = self._edge_speaker or edge_voice.speak_with_edge
+                        speaker(text, edge_key, on_envelope=self.on_envelope, **extra)
+                        continue
+                    except edge_voice.EdgeVoiceError as exc:
+                        if self._notify_error and not self._closed.is_set():
+                            self._notify_error("Voce Edge non disponibile (serve Internet), uso "
+                                               "la voce Windows. " + str(exc)[:160])
+                        voice = ""
+                from piper_voice import PiperVoiceError, key_from_label, speak_with_piper
+                piper_key = key_from_label(voice)
+                if piper_key is not None:
+                    try:
+                        speaker = self._piper_speaker or speak_with_piper
+                        extra = {}
+                        upcoming = self._peek_next(voice)
+                        if upcoming:
+                            extra["upcoming"] = upcoming
+                        speaker(text, piper_key, effect=self.effect,
+                                on_envelope=self.on_envelope, **extra)
+                        continue
+                    except PiperVoiceError as exc:
+                        if self._notify_error and not self._closed.is_set():
+                            self._notify_error("Voce naturale non disponibile, uso la voce "
+                                               "Windows. " + str(exc)[:160])
+                        voice = ""
                 for part in _speech_chunks(text):
                     if self._closed.is_set():
                         break
+                    if self._runner is None and self.on_envelope is not None:
+                        # Voce Windows su file, poi riproduzione con la curva
+                        # del volume: la bocca dell'avatar segue anche questa voce.
+                        try:
+                            self._speak_windows_with_lipsync(part, voice)
+                            continue
+                        except _AudioBusy:
+                            raise
+                        except (OSError, ValueError, subprocess.TimeoutExpired, EOFError):
+                            if self._closed.is_set():
+                                break   # altrimenti si ripiega sulla voce diretta
                     payload = {"mode": "speak", "text": part, "voice": voice}
                     if self._runner is None:
+                        import voice_style
+                        payload.update(voice_style.sapi_params())
                         _invoke(payload, timeout=90, owner=self)
                     else:
                         self._runner(payload, timeout=90)
+            except _AudioBusy as exc:
+                # L'uscita audio è bloccata (es. app Netflix): niente coda di frasi
+                # vecchie, il microfono torna subito ad ascoltare.
+                dropped = self._drain()
+                if self._notify_error and not self._closed.is_set():
+                    self._notify_error(str(exc) + (f" Saltate {dropped} frasi." if dropped else ""))
             except (OSError, ValueError, subprocess.TimeoutExpired):
                 if self._notify_error and not self._closed.is_set():
                     self._notify_error("Impossibile riprodurre la voce selezionata.")
             finally:
                 self._cooldown_until = time.monotonic() + 1.0
                 self._busy.clear()
+
+    def _drain(self) -> int:
+        dropped = 0
+        while True:
+            try:
+                item = self._messages.get_nowait()
+            except queue.Empty:
+                return dropped
+            if item is None:                 # chiusura: la rimetto in coda
+                self._messages.put_nowait(None)
+                return dropped
+            dropped += 1
 
     def close(self) -> None:
         with self._process_lock:
@@ -239,3 +387,9 @@ class OfflineSpeaker:
             process = self._process
         if process is not None:
             self._terminate_process(process)
+        from piper_voice import shutdown_workers, stop_playback
+        stop_playback()
+        shutdown_workers()
+        import edge_voice
+        edge_voice.stop_playback()
+        edge_voice.shutdown_worker()

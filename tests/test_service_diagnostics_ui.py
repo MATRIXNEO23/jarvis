@@ -84,7 +84,7 @@ class ServiceDiagnosticsUITests(unittest.TestCase):
                  diagnostic_busy=False,pending_external_review=False,last_diagnostic_audit=None,
                  last_runtime_evidence=None)
         callback=harness.callback('try_self_diagnostic',env)
-        self.assertTrue(callback('Jarvis, apri diagnostica servizi'))
+        self.assertTrue(callback('Lumi, apri diagnostica servizi'))
         env['open_service_diagnostics'].assert_called_once()
         env['inspect_jarvis'].assert_not_called()
         for phrase in ('non aprire diagnostica servizi','cosa è la diagnostica servizi?'):

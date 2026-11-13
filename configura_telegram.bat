@@ -1,7 +1,11 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-echo JARVIS - Accesso account Telegram (contatti selezionabili in Jarvis)
+rem Stesso profilo dati di avvia_lumi.bat anche se aperto da Esplora file:
+rem prima le credenziali finivano nel profilo base e Lumi non le vedeva.
+if not defined JARVIS_TRIAL_HOME set "JARVIS_TRIAL_HOME=%LOCALAPPDATA%\Jarvis-AccessoFile-Trial"
+echo Profilo dati: %JARVIS_TRIAL_HOME%
+echo LUMI - Accesso account Telegram (contatti selezionabili in Lumi)
 echo Configurazione utente: NON invia alcun messaggio.
 where py >nul 2>&1
 if %errorlevel%==0 (

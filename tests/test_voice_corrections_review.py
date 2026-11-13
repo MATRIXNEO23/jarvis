@@ -90,7 +90,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             pending_project_trash_id=None, submit_local=Mock(),
         )
         self.callback("poll_gemma_trial")()
-        self.env["write_line"].assert_called_with("GEMMA > Apri Netflix.")
+        self.env["write_line"].assert_called_with("LUMI > Apri Netflix.")
         self.env["submit_local"].assert_not_called()
 
         self.env["closing"] = False
@@ -119,13 +119,12 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
         self.assertEqual([call.args[0] for call in self.env["speak_result"].call_args_list],
                          ["Risposta corrente", "Risposta scritta"])
         self.assertEqual([call.args[0] for call in self.env["write_line"].call_args_list],
-                         ["GEMMA > Risposta corrente", "GEMMA > Risposta scritta"])
+                         ["LUMI > Risposta corrente", "LUMI > Risposta scritta"])
 
     def callback(self, name):
-        node = copy.deepcopy(next(n for n in self.main.body
-                                  if isinstance(n, ast.FunctionDef)
-                                  and n.name == name))
-        node = GlobalCallbacks().visit(node)
+        from test_activity_status import GlobalCallbacks as MovedAware, find_main_function
+        node = copy.deepcopy(find_main_function(self.main, name))
+        node = MovedAware().visit(GlobalCallbacks().visit(node))
         module = ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[]))
         exec(compile(module, "actual-jarvis-" + name, "exec"), self.env)
         return self.env[name]
@@ -294,18 +293,18 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             with self.subTest(mode=mode):
                 self.voice_environment(mode)
                 self.env["try_file_command"].return_value = True
-                self.receive_voice("ehi jarvis cerca file blocco moto")
+                self.receive_voice("ehi lumi cerca file blocco moto")
                 expected = ("cerca file blocco note" if mode in (CONTINUOUS, GPT_CONVERSATION)
-                            else "ehi jarvis cerca file blocco note")
+                            else "ehi lumi cerca file blocco note")
                 self.env["try_file_command"].assert_called_once_with(expected)
                 self.assertEqual(self.env["last_voice_sample"].get(),
-                                 "ehi jarvis cerca file blocco moto")
+                                 "ehi lumi cerca file blocco moto")
                 self.env["start_conversation_gpt"].assert_not_called()
 
     def test_corrected_local_command_is_dispatched_once_without_gpt(self):
         self.words.add("brouser", "browser", user_confirmed=True)
         self.voice_environment()
-        self.receive_voice("Jarvis apri brouser")
+        self.receive_voice("Lumi apri brouser")
         self.env["submit_local"].assert_called_once_with(
             message_override="apri browser", source_utterance="apri browser")
         self.env["start_conversation_gpt"].assert_not_called()
@@ -313,7 +312,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
     def test_unresolved_corrected_text_reaches_gpt_once_without_changing_mode(self):
         self.words.add("blocco moto", "blocco note", user_confirmed=True)
         self.voice_environment()
-        self.receive_voice("Jarvis mi racconti di blocco moto")
+        self.receive_voice("Lumi mi racconti di blocco moto")
         self.env["start_conversation_gpt"].assert_called_once_with(
             "mi racconti di blocco note")
         self.env["submit_local"].assert_not_called()
@@ -323,7 +322,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
         self.words.add("blocco moto", "blocco note", user_confirmed=True)
         self.voice_environment(memory=False)
         self.env["try_file_command"].return_value = True
-        self.receive_voice("Jarvis cerca file blocco moto")
+        self.receive_voice("Lumi cerca file blocco moto")
         self.env["try_file_command"].assert_called_once_with("cerca file blocco moto")
         self.voice_environment(STANDBY)
         self.receive_voice("cerca file blocco moto")

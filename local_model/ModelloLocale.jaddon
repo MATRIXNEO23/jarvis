@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "modello_locale",
+  "name": "Modello locale",
+  "version": "1.0.0",
+  "description": "Il cervello locale sul PC: KoboldCpp già incluso con il modello .gguf scelto nelle impostazioni. Spento: comandi e GPT restano.",
+  "actions": [
+    {
+      "id": "addon.modello_locale.conversa",
+      "description": "Risponde alle frasi che non sono comandi con il modello sul PC (Gemma o altro .gguf), senza internet.",
+      "example": "attiva cervello locale",
+      "core_action": "model.local"
+    }
+  ]
+}

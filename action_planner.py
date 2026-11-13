@@ -78,7 +78,7 @@ def build_planning_prompt(request: str) -> str:
                    "reason": "motivo breve"}
     # The user phrase is JSON-escaped and explicitly marked as untrusted data.
     return (
-        "Sei il pianificatore di Jarvis su Windows. NON esegui azioni. "
+        "Sei il pianificatore di Lumi su Windows. NON esegui azioni. "
         "Restituisci SOLO un oggetto JSON valido, senza markdown e senza testo extra. "
         "Formato esempio: " + json.dumps(example, ensure_ascii=False) + ". "
         "Usa esclusivamente questi tool_id: " + tools + ". "

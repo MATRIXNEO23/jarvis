@@ -25,7 +25,7 @@ _META_START = re.compile(
     r"^(?:se\b|quando\b|come\b|cosa\b|perch[eé]\b|"
     r"mi\s+spieghi\b|che\s+succede\b|"
     r"che\s+significa\b|ti\s+chiedo\s+se\b)")
-_WAKE = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?jarvis\s+")
+_WAKE = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?lumi\s+")
 
 
 def clean_speech(utterance: str) -> str:
@@ -40,7 +40,7 @@ def clean_speech(utterance: str) -> str:
 def classify_document_choice(utterance: str, *, pending: bool) -> str | None:
     """Return save, discard, cancel or None.
 
-    pending=True means Jarvis has just offered save/discard/cancel for its
+    pending=True means Lumi has just offered save/discard/cancel for its
     own identified Notepad window; a short reply like 'non salvare' is enough.
     pending=False requires an explicit close/discard request, never a bare
     'salva' or 'non salvare' from ordinary conversation.

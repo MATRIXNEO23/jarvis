@@ -1,7 +1,7 @@
-"""Opt-in local chat instances for a future Kobold-style Jarvis interface.
+"""Opt-in local chat instances for a future Kobold-style Lumi interface.
 
 ARCH-01/F1 only: metadata and atomic, paired transcripts, NO runtime wiring.
-No imports from Jarvis, Second Brain, native model or internet. Instantiation
+No imports from Lumi, Second Brain, native model or internet. Instantiation
 requires an explicit file path and creates only that database.
 """
 from __future__ import annotations
@@ -222,6 +222,20 @@ class ChatSessionStore:
                 "UPDATE chat_sessions SET updated_utc=? WHERE id=?",
                 (now, chat_id))
             return cursor.lastrowid
+
+    def display_pairs(self, chat_id, *, project_id=None, limit=500):
+        """Read-only full transcript for the chat view (never sent to a model)."""
+        scope, scope_id = _scope(project_id)
+        _id(chat_id)
+        if type(limit) is not int or not 1 <= limit <= 5000:
+            raise ChatSessionError("Numero scambi richiesti non valido.")
+        with self._db() as db:
+            self._require(db, chat_id, scope, scope_id)
+            rows = db.execute(
+                """SELECT user_text, assistant_text FROM chat_exchanges
+                   WHERE chat_id=? ORDER BY id DESC LIMIT ?""",
+                (chat_id, limit)).fetchall()
+        return tuple((row["user_text"], row["assistant_text"]) for row in reversed(rows))
 
     def recent_pairs(self, chat_id, *, project_id=None, count=8):
         """Return last N complete exchanges, chronological, no LLM side effects.

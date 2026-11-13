@@ -304,7 +304,7 @@ class FileAccessService:
             self._begin_target_question(*missing)
             return True
         normalized = ' '.join(original.casefold().split())
-        requested = re.match(r"^(?:(?:jarvis[, :]+)|(?:mi puoi |puoi |potresti ))*(?:trova(?:mi|re)?|cerca(?:mi|re)?)\b", normalized)
+        requested = re.match(r"^(?:(?:lumi[, :]+)|(?:mi puoi |puoi |potresti ))*(?:trova(?:mi|re)?|cerca(?:mi|re)?)\b", normalized)
         if (self.available() and requested and 'cartella' in normalized
                 and ('installazion' in normalized or 'installat' in normalized)):
             self._pending_app = (time.monotonic()+120, self.policy.revision)
@@ -313,7 +313,7 @@ class FileAccessService:
 
     @staticmethod
     def _missing_file_request(text):
-        clean=re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+','',text.strip(),flags=re.I)
+        clean=re.sub(r'^(?:(?:ehi|hey|ok)\s+)?lumi[, :]+','',text.strip(),flags=re.I)
         match=re.fullmatch(r"(?:(?:mi puoi|puoi|potresti)\s+)?(apri(?:mi)?|aprire|leggi(?:mi)?|leggere|spiega(?:mi)?|spiegare|cerca(?:mi|re)?|trova(?:mi|re)?)\s+(?:(?:il|la|un|una|questo|questa|quel|quella)\s+)?(file|cartella)(?: (?:in|nella cartella) (documenti|download|desktop|profilo|appdata))?[ .!?]*",clean,re.I)
         if not match:
             return None
@@ -378,7 +378,7 @@ class FileAccessService:
     def parse_command(self, text):
         if not isinstance(text, str):
             return None
-        clean = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?jarvis[, :]+', '', text.strip(), flags=re.I).strip()
+        clean = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?lumi[, :]+', '', text.strip(), flags=re.I).strip()
         from voice_control import speech_to_local_command
         clean = speech_to_local_command(clean) or clean
         low = clean.casefold().strip(' .!?')
@@ -902,7 +902,7 @@ class FileAccessService:
                 raise PermissionError('Destinazione cambiata o accesso revocato.')
             raw = stream.read(262145)
         if len(raw) > 262144:
-            raise ValueError('File oltre 256 KiB: lettura non eseguita per non appesantire Jarvis.')
+            raise ValueError('File oltre 256 KiB: lettura non eseguita per non appesantire Lumi.')
         if raw.startswith((b'\xff\xfe', b'\xfe\xff')):
             text = raw.decode('utf-16')
         else:

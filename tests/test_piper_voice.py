@@ -1,0 +1,178 @@
+"""Natural voices (Piper): verified download, isolated synthesis, fallback, effect."""
+import hashlib
+import importlib.util
+import io
+import json
+from pathlib import Path
+import struct
+import subprocess
+import tempfile
+import unittest
+import wave
+
+import piper_voice
+from offline_tts import OfflineSpeaker
+
+
+def make_wav(path, samples, rate=22050):
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(struct.pack("<%dh" % len(samples), *samples))
+
+
+class Opener:
+    def __init__(self, files):
+        self.files = files
+
+    def __call__(self, url, timeout=None):
+        return io.BytesIO(self.files[url])
+
+
+class PiperVoiceTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.dir = Path(temp.name)
+
+    def catalog(self, onnx=b"ONNX", meta=b"{}", tamper=False):
+        import zipfile
+        files = {"it_IT-paola-medium.onnx": onnx, "it_IT-paola-medium.onnx.json": meta}
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as z:
+            for name, data in files.items():
+                z.writestr(name, data)
+            z.writestr("../evil.txt", b"never extracted")
+        blob = buffer.getvalue()
+        entries = {n: {"sha256": hashlib.sha256(d).hexdigest(), "bytes": len(d)}
+                   for n, d in files.items()}
+        if tamper:
+            entries["it_IT-paola-medium.onnx"]["sha256"] = "0" * 64
+        cat = {"voices": {"paola": {"files": entries, "license": "L", "attribution": "A",
+                                    "zip": {"url": "https://x/Voce-Paola.zip", "bytes": len(blob),
+                                            "sha256": hashlib.sha256(blob).hexdigest()}}}}
+        return Opener({"https://x/Voce-Paola.zip": blob,
+                       "https://cat": json.dumps(cat).encode()})
+
+    def test_download_verifies_hash_and_lists_voice(self):
+        model = piper_voice.download_voice("paola", catalog_url="https://cat",
+                                           folder=self.dir, opener=self.catalog())
+        self.assertEqual(model.name, "it_IT-paola-medium.onnx")
+        self.assertEqual(piper_voice.installed_piper_voices(self.dir), ["Piper: Paola"])
+        self.assertEqual(piper_voice.key_from_label("Piper: Paola"), "paola")
+        self.assertIsNone(piper_voice.key_from_label("Microsoft Elsa"))
+
+    def test_tampered_download_is_rejected_and_not_installed(self):
+        with self.assertRaises(piper_voice.PiperVoiceError):
+            piper_voice.download_voice("paola", catalog_url="https://cat", folder=self.dir,
+                                       opener=self.catalog(tamper=True))
+        self.assertEqual(piper_voice.installed_piper_voices(self.dir), [])
+        self.assertFalse(list(self.dir.glob("*.part")))
+        self.assertFalse((self.dir.parent / "evil.txt").exists())
+
+    def test_synthesis_failure_in_child_raises_clear_error(self):
+        piper_voice.download_voice("paola", catalog_url="https://cat",
+                                   folder=self.dir, opener=self.catalog())
+        def crashing(cmd, **kwargs):
+            self.assertEqual(cmd[1:3], ["-m", "piper"])
+            return subprocess.CompletedProcess(cmd, 3221225501, "", "illegal instruction")
+        with self.assertRaisesRegex(piper_voice.PiperVoiceError, "non disponibile"):
+            piper_voice.synthesize("Ciao", "paola", self.dir / "o.wav",
+                                   folder=self.dir, runner=crashing)
+
+    def test_upcoming_sentence_is_prepared_once_and_reused(self):
+        piper_voice.download_voice("paola", catalog_url="https://cat",
+                                   folder=self.dir, opener=self.catalog())
+        made = []
+        def fake(cmd, **kwargs):
+            made.append(kwargs["input"])
+            make_wav(Path(cmd[-1]), [1000, -1000] * 2205)
+            return subprocess.CompletedProcess(cmd, 0, "", "")
+        played = []
+        piper_voice.speak_with_piper("Prima.", "paola", folder=self.dir, runner=fake,
+                                     player=played.append, upcoming="Seconda.")
+        piper_voice.speak_with_piper("Seconda.", "paola", folder=self.dir, runner=fake,
+                                     player=played.append)
+        self.assertEqual(sorted(made), ["Prima.", "Seconda."])
+        self.assertEqual(len(played), 2)
+        self.assertFalse(any(Path(p).exists() for p in played))
+
+    def test_envelope_and_effect(self):
+        loud = [0] * 2205 + [20000, -20000] * 1102
+        make_wav(self.dir / "a.wav", loud)
+        env = piper_voice.loudness_envelope(self.dir / "a.wav", fps=10)
+        self.assertLess(env[0], 0.1)
+        self.assertGreater(max(env), 0.9)
+        out = piper_voice.apply_digital_effect(self.dir / "a.wav", self.dir / "b.wav", 0)
+        self.assertEqual(out.read_bytes(), (self.dir / "a.wav").read_bytes())
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "numpy not installed")
+    def test_plain_effect_matches_numpy_effect(self):
+        make_wav(self.dir / "a.wav", [int(8000 * ((i % 50) / 25 - 1)) for i in range(4410)])
+        piper_voice.apply_digital_effect(self.dir / "a.wav", self.dir / "np.wav", 0.3)
+        with wave.open(str(self.dir / "a.wav")) as w:
+            params, frames = w.getparams(), w.readframes(w.getnframes())
+        piper_voice._digital_effect_plain(frames, params, self.dir / "py.wav", 0.3)
+        import array
+        def read(name):
+            with wave.open(str(self.dir / name)) as w:
+                return array.array("h", w.readframes(w.getnframes()))
+        a, b = read("np.wav"), read("py.wav")
+        self.assertEqual(len(a), len(b))
+        self.assertLess(max(abs(x - y) for x, y in zip(a, b)), 40)
+
+    def test_slim_engine_keeps_only_italian_and_binaries(self):
+        from tools.fetch_piper_engine import keep
+        self.assertTrue(keep("piper/piper.exe"))
+        self.assertTrue(keep("piper/espeak-ng-data/it_dict"))
+        self.assertTrue(keep("piper/espeak-ng-data/lang/roa/it"))
+        self.assertFalse(keep("piper/espeak-ng-data/ru_dict"))
+        self.assertFalse(keep("piper/libtashkeel_model.ort"))
+        self.assertFalse(keep("other/piper.exe"))
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "numpy not installed")
+    def test_digital_effect_keeps_length_and_changes_audio(self):
+        make_wav(self.dir / "a.wav", [int(8000 * ((i % 50) / 25 - 1)) for i in range(22050)])
+        piper_voice.apply_digital_effect(self.dir / "a.wav", self.dir / "b.wav", 0.3)
+        with wave.open(str(self.dir / "b.wav")) as w:
+            self.assertEqual(w.getnframes(), 22050)
+        self.assertNotEqual((self.dir / "a.wav").read_bytes(), (self.dir / "b.wav").read_bytes())
+
+
+class SpeakerFallbackTests(unittest.TestCase):
+    def test_piper_failure_falls_back_to_windows_voice_and_notifies(self):
+        calls, errors = [], []
+        speaker = OfflineSpeaker(runner=lambda payload, timeout: calls.append(payload),
+                                 notify_error=errors.append)
+        def failing(text, key, **kwargs):
+            raise piper_voice.PiperVoiceError("Motore Piper non disponibile (codice 1).")
+        speaker._piper_speaker = failing
+        self.assertTrue(speaker.speak("Ciao Alberto", "Piper: Paola"))
+        for _ in range(100):
+            if calls:
+                break
+            import time
+            time.sleep(0.02)
+        speaker.close()
+        self.assertEqual(calls[0]["voice"], "")
+        self.assertIn("Voce naturale non disponibile", errors[0])
+
+    def test_piper_success_does_not_use_windows_voice(self):
+        calls, spoken = [], []
+        speaker = OfflineSpeaker(runner=lambda payload, timeout: calls.append(payload))
+        speaker._piper_speaker = lambda text, key, **kw: spoken.append((text, key, kw["effect"]))
+        speaker.effect = 0.25
+        speaker.speak("Ciao", "Piper: Serena")
+        for _ in range(100):
+            if spoken:
+                break
+            import time
+            time.sleep(0.02)
+        speaker.close()
+        self.assertEqual(spoken, [("Ciao", "serena", 0.25)])
+        self.assertEqual(calls, [])
+
+
+if __name__ == "__main__":
+    unittest.main()

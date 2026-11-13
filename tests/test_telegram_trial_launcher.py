@@ -26,7 +26,7 @@ class TelegramTrialTests(unittest.TestCase):
         current["telegram_contacts"]=[{"id":123,"name":"Amico","enabled":True}]
         save_settings(current,self.original/"settings.json")
         self.original_auth=self.original/"telegram-auth.dpapi"
-        self.original_auth.write_bytes(b"JARVIS-TG1\nEncrypted-test-data")
+        self.original_auth.write_bytes(b"LUMI-TG1\nEncrypted-test-data")
         self.original_db=self.original/"jarvis_workspaces.sqlite3"
         with closing(sqlite3.connect(self.original_db)) as db:
             db.execute("CREATE TABLE sample(value TEXT)")
@@ -109,7 +109,7 @@ class TelegramTrialTests(unittest.TestCase):
                              "owner")
 
     def test_single_launcher_always_prepares_isolated_trial(self):
-        launcher=(Path(__file__).resolve().parent.parent/"avvia_jarvis.bat").read_text(
+        launcher=(Path(__file__).resolve().parent.parent/"avvia_lumi.bat").read_text(
             encoding="utf-8")
         self.assertIn("JARVIS_TRIAL_HOME",launcher)
         self.assertIn("prepara_test_telegram50.py",launcher)

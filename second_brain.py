@@ -1,4 +1,4 @@
-"""Jarvis Second Brain v1: local, durable and evidence-backed continuity.
+"""Lumi Second Brain v1: local, durable and evidence-backed continuity.
 
 Stores bounded conversational episodes and *verified* task receipts in SQLite.
 No cloud database, model training, API costs, executable memories or automatic
@@ -199,7 +199,7 @@ class SecondBrain:
                           provider_message_id: str, verified: bool) -> bool:
         """Future mail adapter hook: called ONLY after real provider success.
 
-        Mail sending is NOT implemented in Jarvis yet. No email body is stored.
+        Mail sending is NOT implemented in Lumi yet. No email body is stored.
         """
         if (not recipient.strip() or not subject.strip()
                 or not provider_message_id.strip()):

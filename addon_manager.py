@@ -1,4 +1,4 @@
-"""Jarvis add-on lifecycle: data-only packages, reviewed local execution.
+"""Lumi add-on lifecycle: data-only packages, reviewed local execution.
 
 Installing a .jaddon file NEVER executes code, installs dependencies, runs a
 shell, opens a network connection, or grants new operating-system privileges.
@@ -31,6 +31,8 @@ _SAFE_TARGETS = frozenset(("system.status", "downloads.list", "history.list"))
 _FILE_TARGETS = {"files.list": "elenca", "files.search": "cerca", "files.read": "leggi",
                  "files.open": "apri", "files.locate": "localizza"}
 _APP_TARGETS = {"apps.launch": "avvia"}
+# Handled by Lumi's local command parser, never offered to the model.
+_LOCAL_ONLY = frozenset(("alarm.local", "music.local", "pc.local", "telegram.local", "model.local"))
 MAX_ADDONS = 20
 MAX_ACTIONS = 5
 MAX_FILE_BYTES = 12_000
@@ -74,7 +76,7 @@ def validate_manifest(value: object) -> dict:
                 or name in seen):
             raise AddonError("ID azione duplicato o non appartenente all'add-on.")
         if (not isinstance(item["core_action"],str)
-                or item["core_action"] not in (_SAFE_TARGETS | _FILE_TARGETS.keys() | _APP_TARGETS.keys() | {"alarm.local"})):
+                or item["core_action"] not in (_SAFE_TARGETS | _FILE_TARGETS.keys() | _APP_TARGETS.keys() | _LOCAL_ONLY)):
             raise AddonError("Funzione add-on non approvata: nessun codice viene eseguito.")
         if item["core_action"] in _FILE_TARGETS and (addon_id != "accesso_file" or
                 name != "addon.accesso_file."+_FILE_TARGETS[item["core_action"]]):
@@ -84,6 +86,14 @@ def validate_manifest(value: object) -> dict:
             raise AddonError("Identità del componente Programmi e app non valida.")
         if item["core_action"] == "alarm.local" and (addon_id, name) != ("sveglia", "addon.sveglia.imposta"):
             raise AddonError("Identità del componente Sveglia non valida.")
+        if item["core_action"] == "music.local" and (addon_id, name) != ("musica", "addon.musica.riproduci"):
+            raise AddonError("Identità del componente Musica non valida.")
+        if item["core_action"] == "pc.local" and (addon_id, name) != ("controllo_pc", "addon.controllo_pc.comando"):
+            raise AddonError("Identità del componente Controllo PC non valida.")
+        if item["core_action"] == "telegram.local" and (addon_id, name) != ("telegram", "addon.telegram.messaggi"):
+            raise AddonError("Identità del componente Telegram non valida.")
+        if item["core_action"] == "model.local" and (addon_id, name) != ("modello_locale", "addon.modello_locale.conversa"):
+            raise AddonError("Identità del componente Modello locale non valida.")
         if not _safe_text(item["description"], 125) or not _safe_text(
                 item["example"], 85):
             raise AddonError("Testo dell'azione non valido.")
@@ -307,7 +317,7 @@ class AddonManager:
                 fresh={}
             for addon_id,record in fresh.items():
                 for action in record["manifest"]["actions"]:
-                    if action["core_action"] == "alarm.local":
+                    if action["core_action"] in _LOCAL_ONLY:
                         continue
                     action_id=action["id"]
                     bindings[action_id]=AddonBinding(
@@ -422,7 +432,7 @@ class AddonManager:
                 if not item["enabled"]:
                     continue
                 for action in item["manifest"]["actions"]:
-                    if action["core_action"] == "alarm.local":
+                    if action["core_action"] in _LOCAL_ONLY:
                         continue
                     if action["core_action"] in _FILE_TARGETS and not self.file_service.available():
                         continue

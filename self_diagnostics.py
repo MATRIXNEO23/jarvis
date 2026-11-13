@@ -1,4 +1,4 @@
-"""Bounded, offline, read-only JARVIS source inventory and static diagnostics.
+"""Bounded, offline, read-only LUMI source inventory and static diagnostics.
 
 Never executes, imports, modifies, uploads or evaluates application sources.
 The static audit cannot certify safety or verify runtime correctness.
@@ -18,8 +18,8 @@ from source_review import (
 )
 
 _SOURCE_SUFFIXES = frozenset({".py",".bat",".ps1",".mjs"})
-_RUNTIME_FOLDERS = ("local_model", "file_access", "program_apps", "sveglia")
-_MAX_FILES = 140
+_RUNTIME_FOLDERS = ("local_model", "file_access", "program_apps", "sveglia", "musica", "controllo_pc", "telegram_addon", "componenti", "controllo_comune", "lumi_parti")
+_MAX_FILES = 240
 _MAX_DIRECTORIES = 140
 _MAX_BYTES = 260_000
 _MODULE = re.compile(r"[A-Za-z0-9_]{1,72}\.py\Z",re.I)
@@ -36,7 +36,7 @@ _SELF_REVIEW_COMPOUND = re.compile(
     r"(?:funzionamento|codice|programma|file|sorgenti))"
     r"(?:\s+(?:del|della|dei|delle|sul|sui|di)\s+"
     r"(?:(?:tuo|tuoi|tua|tue)\s+)?"
-    r"(?:funzionamento|codice|programma|file|sorgenti|funzioni|moduli|jarvis))?"
+    r"(?:funzionamento|codice|programma|file|sorgenti|funzioni|moduli|lumi))?"
     r"(?:\s+e\s+(?:"
     r"(?:proponi|suggerisci|dimmi|indicami|consigliami)\s+"
     r"(?:(?:eventuali|possibili|dei|delle|qualche)\s+)*"
@@ -124,14 +124,14 @@ def _source_list(root: Path, *, data_root=None, notices=None) -> list[Path]:
         walk(root / folder, True)
     walk(root / "tests", False)
     if len(files) >= _MAX_FILES:
-        note("Inventario limitato a 140 file; priorità ai moduli runtime, poi ai test.")
+        note("Inventario limitato a 240 file; priorità ai moduli runtime, poi ai test.")
     return files
 
 def diagnostic_request(text: str) -> tuple[str,str] | None:
     """Recognize deliberate local self-analysis requests, not general questions."""
     if not isinstance(text,str) or len(text)>450:
         return None
-    phrase=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",
+    phrase=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?lumi[\s,.:;-]+","",
                   text.strip(" ,.!?;:"),flags=re.I).casefold()
     phrase=" ".join(phrase.split())
     if re.fullmatch(r"(?:(?:apri|mostra|avvia)\s+(?:la\s+)?)?"
@@ -146,7 +146,7 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
     if re.fullmatch(
             r"(?:dove\s+(?:sono|tieni)\s+(?:i\s+)?tuoi\s+file|"
             r"mostra(?:mi)?\s+(?:i\s+)?tuoi\s+file|"
-            r"(?:dove|in\s+quale\s+cartella)\s+(?:si\s+trova|è)\s+jarvis|"
+            r"(?:dove|in\s+quale\s+cartella)\s+(?:si\s+trova|è)\s+lumi|"
             r"apri\s+la\s+cartella\s+(?:del\s+)?programma)",phrase):
         return ("paths","")
     if re.fullmatch(
@@ -169,7 +169,7 @@ def diagnostic_request(text: str) -> tuple[str,str] | None:
     if re.fullmatch(
             r"(?:analizza|esamina|controlla|verifica|studia)\s+"
             r"(?:(?:il|i)\s+)?(?:tuo\s+)?(?:codice|programma|file|sorgenti)"
-            r"(?:\s+(?:di\s+jarvis))?"
+            r"(?:\s+(?:di\s+lumi))?"
             r"|(?:fai|esegui|prepara)\s+(?:una\s+)?"
             r"(?:diagnosi|analisi|revisione)\s+(?:del\s+)?"
             r"(?:tuo\s+)?(?:codice|programma|sorgenti)"
@@ -284,10 +284,10 @@ def inspect_jarvis(*,source_root: Path | None=None,
                 "Moduli chiave trovati: "+", ".join(p for p in important if p in found)
                 +"\nTest Python rilevati: "+
                 str(sum(1 for m in modules if m[0].startswith("tests/test_"))))
-    # Coverage must remain visible even when eight earlier I/O findings fill
+    # Coverage must remain visible even when twelve earlier I/O findings fill
     # the compact observations list; never imply a complete inventory.
     detail += coverage_detail
-    suggestions=(tuple(findings[:8]) if findings else
+    suggestions=(tuple(findings[:12]) if findings else
          ("Nessun errore di sintassi individuato dai controlli statici.",
           "Questo controllo non verifica funzioni in esecuzione, malware o bug logici.",
           "Per proporre patch servono test di riproduzione e revisione del codice qui in chat."))

@@ -6,7 +6,7 @@ import tkinter as tk
 from unittest.mock import patch
 import unittest
 
-from configura_telegram import valid_api_hash
+from configura_telegram import clean_api_hash, normalize_phone, parse_api_id, valid_api_hash
 from telegram_secret_dialog import prompt_masked_secret, secret_length_ok
 
 
@@ -78,6 +78,23 @@ class TelegramSecretDialogTests(unittest.TestCase):
                 "Telegram test", "Annulla setup", min_length=32, max_length=80)
         self.assertIsNone(result)
 
+
+
+class ConfigInputTests(unittest.TestCase):
+    def test_inputs_are_normalized_instead_of_rejected(self):
+        self.assertEqual(normalize_phone("+39 333 1234567"), "+393331234567")
+        self.assertEqual(normalize_phone("3331234567"), "+393331234567")
+        self.assertEqual(normalize_phone("0039 333-1234567"), "+393331234567")
+        self.assertIsNone(normalize_phone("abc"))
+        self.assertEqual(parse_api_id(" 1234 567 "), 1234567)
+        self.assertIsNone(parse_api_id("12a"))
+        self.assertEqual(clean_api_hash(' "abcdef0123456789abcdef0123456789"\n'),
+                         "abcdef0123456789abcdef0123456789")
+
+    def test_new_login_does_not_wipe_selected_contacts(self):
+        from pathlib import Path
+        source = Path("configura_telegram.py").read_text(encoding="utf-8")
+        self.assertNotIn('settings["telegram_contacts"]=[]', source)
 
 if __name__ == "__main__":
     unittest.main()

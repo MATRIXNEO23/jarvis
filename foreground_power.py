@@ -1,4 +1,4 @@
-"""Keep the display and PC awake while Jarvis is maximized in front."""
+"""Keep the display and PC awake while Lumi is maximized in front."""
 import ctypes
 from ctypes import wintypes
 import sys
