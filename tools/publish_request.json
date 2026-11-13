@@ -1,10 +1,10 @@
 {
-  "run_id": 43318037935,
-  "artifact": "lumi-043-prova-candidate",
-  "file": "Lumi-043-PROVA.zip",
-  "bytes": 27699284,
-  "sha256": "aae2ee97afc1117847a4330023381e05092b00f926788892fd7c0d98de6b4d5d",
-  "source_commit": "1dc3095",
-  "title": "Build 043 PROVA — jarvis.py diviso in parti (stesso comportamento della 042)",
-  "description": "Nessuna funzione nuova: stesso comportamento della 042. Il file principale jarvis.py è stato diviso: da 5.457 a 4.865 righe; 62 funzioni spostate con il codice invariato in telegram_addon/lumi_ui.py e nella nuova cartella lumi_parti (voce, documenti e progetti, modello e memoria, interfaccia), più il contesto comune lumi_contesto.py. Verificati in CI Windows: 1298 test, diagnostica dei servizi, Telegram, pacchetto e prova reale UIA/OCR. Da provare sul Pavilion che tutto funzioni come nella 042."
+  "run_id": 43366268896,
+  "artifact": "lumi-044-prova-candidate",
+  "file": "Lumi-044-PROVA.zip",
+  "bytes": 27703812,
+  "sha256": "3c52367ab961403a0d73378151461c7f557df7b0963c303bb7caef8ebde68e98",
+  "source_commit": "467e6fa",
+  "title": "Build 044 PROVA — modello locale come add-on (acceso di serie) e correzione «minimizza»",
+  "description": "Come la 043, più: il modello locale (KoboldCpp, stessa DLL già inclusa) è ora l'add-on «Modello locale» in Gestisci add-on, ACCESO di serie: non cambia niente finché non lo spegni. Spento, Lumi non carica il modello e il cervello locale non risponde (comandi, MODELLO e GPT restano); «attiva cervello locale» spiega come riaccenderlo. Il file .gguf si sceglie come prima. Conversazione col modello spostata in local_model/conversazione_lumi.py con codice invariato (jarvis.py: 4.446 righe). Corretto «minimizza» senza «Lumi» con Lumi davanti: ora si riduce a icona invece di sparire. Verificati in CI Windows: test, diagnostica, Telegram, pacchetto e prova reale UIA/OCR. Da provare sul Pavilion."
 }
