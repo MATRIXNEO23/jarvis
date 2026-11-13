@@ -1,3 +1,11 @@
+## Build 044 PROVA — modello locale come add-on (acceso di serie) e correzione «minimizza»
+
+[Scarica Lumi-044-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-044-PROVA.zip)
+
+Come la 043, più: il modello locale (KoboldCpp, stessa DLL già inclusa) è ora l'add-on «Modello locale» in Gestisci add-on, ACCESO di serie: non cambia niente finché non lo spegni. Spento, Lumi non carica il modello e il cervello locale non risponde (comandi, MODELLO e GPT restano); «attiva cervello locale» spiega come riaccenderlo. Il file .gguf si sceglie come prima. Conversazione col modello spostata in local_model/conversazione_lumi.py con codice invariato (jarvis.py: 4.446 righe). Corretto «minimizza» senza «Lumi» con Lumi davanti: ora si riduce a icona invece di sparire. Verificati in CI Windows: test, diagnostica, Telegram, pacchetto e prova reale UIA/OCR. Da provare sul Pavilion.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43366268896). SHA-256: `3c52367ab961403a0d73378151461c7f557df7b0963c303bb7caef8ebde68e98`.
+
 ## Build 043 PROVA — jarvis.py diviso in parti (stesso comportamento della 042)
 
 [Scarica Lumi-043-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-043-PROVA.zip)
