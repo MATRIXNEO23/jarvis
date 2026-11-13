@@ -32,7 +32,8 @@ class FileRefinementTests(unittest.TestCase):
         cls.poll=next(n for n in cls.main.body if isinstance(n,ast.FunctionDef) and n.name=='poll')
 
     def callback(self,name,env):
-        node=copy.deepcopy(next(n for n in self.main.body if isinstance(n,ast.FunctionDef) and n.name==name))
+        node=copy.deepcopy(__import__('test_activity_status').find_main_function(self.main,name))
+        node=__import__('test_activity_status').GlobalCallbacks().visit(node)
         node=GlobalCallbacks().visit(node)
         exec(compile(ast.fix_missing_locations(ast.Module(body=[node],type_ignores=[])),name,'exec'),env)
         return env[name]
