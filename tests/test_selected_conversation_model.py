@@ -92,8 +92,12 @@ class SelectedConversationModelTests(unittest.TestCase):
                 # follows the old console routing instead of a missing symbol.
                 main = next(n for n in ast.parse(Path('jarvis.py').read_text(encoding='utf-8')).body
                             if isinstance(n, ast.FunctionDef) and n.name == 'main')
-                handler = next((n for n in main.body if isinstance(n, ast.FunctionDef)
-                                and n.name == 'try_model_switch'), None)
+                from test_activity_status import GlobalCallbacks, find_main_function
+                try:
+                    handler = ast.fix_missing_locations(GlobalCallbacks().visit(
+                        find_main_function(main, 'try_model_switch')))
+                except KeyError:
+                    handler = None
                 if handler:
                     exec(compile(ast.Module(body=[handler],type_ignores=[]),'model-switch','exec'),env)
                 env['send_console_input']()

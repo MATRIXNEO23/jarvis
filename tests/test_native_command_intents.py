@@ -33,7 +33,8 @@ class NativeCommandIntentTests(unittest.TestCase):
             self.engine.execute(message_override)
         self.env['submit_local'] = submit_local
         # Bind the shared dispatcher when introduced; the Red owner has none.
-        names = {getattr(n, 'name', '') for n in self.owner.harness.main.body}
+        from test_activity_status import moved_functions
+        names = {getattr(n, 'name', '') for n in self.owner.harness.main.body} | set(moved_functions())
         if 'dispatch_model_capability' in names:
             self.owner.harness.callback('dispatch_model_capability', self.env)
 

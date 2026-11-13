@@ -60,7 +60,8 @@ class TelegramUiMoveTests(unittest.TestCase):
     def test_main_binds_every_moved_name(self):
         source = Path(__file__).resolve().parents[1].joinpath("jarvis.py").read_text(encoding="utf-8")
         root = Path(__file__).resolve().parents[1]
-        modules = [root / "telegram_addon" / "lumi_ui.py", *sorted((root / "lumi_parti").glob("*.py"))]
+        modules = [root / "telegram_addon" / "lumi_ui.py", root / "local_model" / "conversazione_lumi.py",
+                   *sorted((root / "lumi_parti").glob("*.py"))]
         seen = set()
         for module in modules:
             tree = ast.parse(module.read_text(encoding="utf-8"))

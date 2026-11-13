@@ -36,6 +36,36 @@ class GlobalCallbacks(ast.NodeTransformer):
     def visit_Nonlocal(self, node):
         return ast.copy_location(ast.Global(names=node.names), node)
 
+    def visit_Attribute(self, node):
+        # Funzioni spostate fuori da jarvis.py: «d.nome» (lumi_contesto.Vivo) torna «nome»,
+        # così il test fornisce i valori nello stesso dizionario di prima.
+        self.generic_visit(node)
+        if isinstance(node.value, ast.Name) and node.value.id == "d":
+            return ast.copy_location(ast.Name(id=node.attr, ctx=node.ctx), node)
+        return node
+
+
+def moved_functions():
+    """Funzioni annidate di main() spostate in moduli (docs/PIANO-DIVISIONE-JARVIS.md)."""
+    root = Path(__file__).resolve().parents[1]
+    found = {}
+    for path in [*sorted(root.glob("lumi_parti/*.py")), *sorted(root.glob("*/lumi_*.py")),
+                 *sorted(root.glob("local_model/conversazione_lumi.py"))]:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef) and node.name == "installa":
+                for fn in node.body:
+                    if isinstance(fn, ast.FunctionDef):
+                        found[fn.name] = fn
+    return found
+
+
+def find_main_function(main, name):
+    for node in main.body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return node
+    return moved_functions()[name]
+
 
 @unittest.skipUnless(os.name == "nt", "User requires Windows-only runtime tests")
 class ActivityStatusTests(unittest.TestCase):
@@ -91,8 +121,7 @@ class ActivityStatusTests(unittest.TestCase):
         return env, workers, eval(self.provider_code, env)
 
     def callback(self, name, env):
-        node = copy.deepcopy(next(n for n in self.main.body
-                                  if isinstance(n, ast.FunctionDef) and n.name == name))
+        node = copy.deepcopy(find_main_function(self.main, name))
         node = GlobalCallbacks().visit(node)
         code = ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[]))
         exec(compile(code, "real-"+name, "exec"), env)

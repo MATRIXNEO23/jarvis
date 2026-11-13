@@ -2204,25 +2204,56 @@ def main() -> None:
             threading.Thread(target=service.stop, daemon=True).start()
             refresh_buttons()
 
-    def try_model_switch(spoken: str) -> bool:
-        from voice_control import model_switch_target
-        selected = model_switch_target(spoken)
-        if (selected is None or closing or document_busy or save_only_waiting
-                or doc_dialog.phase.startswith("awaiting_")
-                or doc_dialog.phase == "executing" or pending_project_name
-                or pending_project_rename_id is not None
-                or pending_project_trash_id is not None
-                or telegram_voice_dialog.pending):
-            return False
-        if bool(gpt_enabled.get()) != selected:
-            gpt_enabled.set(selected)
-            toggle_gpt()
-        # toggle_gpt restores the old setting if persistence fails.
-        model = "GPT" if gpt_enabled.get() else "Gemma"
-        message = "Modello selezionato: " + model + "."
-        write_line("LUMI > " + message)
-        speak_result(message)
-        return True
+    # Conversazione con il modello locale (Gemma/KoboldCpp): spostato in local_model/conversazione_lumi.py (divisione di jarvis.py).
+    from local_model.conversazione_lumi import installa as _local_model_conversazione_lumi_installa
+    _local_model_conversazione_lumi = _local_model_conversazione_lumi_installa(__import__("lumi_contesto").Vivo(
+        active_addon_actions=lambda: active_addon_actions,
+        active_project_id=lambda: active_project_id,
+        addon_manager=lambda: addon_manager,
+        announce_document=lambda: announce_document,
+        ask_to_close_document=lambda: ask_to_close_document,
+        busy_local=lambda: busy_local,
+        chat_local_tab=lambda: chat_local_tab,
+        chat_notebook=lambda: chat_notebook,
+        chat_sessions_panel=lambda: chat_sessions_panel,
+        chat_transport=lambda: chat_transport,
+        closing=lambda: closing,
+        conversation_epoch=lambda: conversation_epoch,
+        doc_dialog=lambda: doc_dialog,
+        document_busy=lambda: document_busy,
+        document_operation=lambda: document_operation,
+        documents=lambda: documents,
+        durable_brain=lambda: durable_brain,
+        engine=lambda: engine,
+        gemma_button=lambda: gemma_button,
+        gemma_memory_revision=lambda: gemma_memory_revision,
+        gemma_recent_reply=lambda: gemma_recent_reply,
+        gemma_session=lambda: gemma_session,
+        gemma_session_lock=lambda: gemma_session_lock,
+        gemma_source=lambda: gemma_source,
+        gemma_trial_busy=lambda: gemma_trial_busy,
+        gemma_trial_queue=lambda: gemma_trial_queue,
+        gpt_enabled=lambda: gpt_enabled,
+        memory_enabled=lambda: memory_enabled,
+        pending_project_name=lambda: pending_project_name,
+        pending_project_reference=lambda: pending_project_reference,
+        pending_project_rename_id=lambda: pending_project_rename_id,
+        pending_project_trash_id=lambda: pending_project_trash_id,
+        remember_exchange=lambda: remember_exchange,
+        request=lambda: request,
+        root=lambda: root,
+        save_only_waiting=lambda: save_only_waiting,
+        selected_chat_target=lambda: selected_chat_target,
+        speak_result=lambda: speak_result,
+        submit_local=lambda: submit_local,
+        telegram_voice_dialog=lambda: telegram_voice_dialog,
+        toggle_gpt=lambda: toggle_gpt,
+        try_program_command=lambda: try_program_command,
+        try_telegram_voice_send=lambda: try_telegram_voice_send,
+        workspace=lambda: workspace,
+        write_line=lambda: write_line))
+    (try_model_switch, dispatch_model_capability, get_gemma_session, try_gemma_app_followup, native_memory_request, submit_gemma_voice, submit_gemma_trial, poll_gemma_trial,) = (
+        _local_model_conversazione_lumi[n] for n in _local_model_conversazione_lumi_installa.__globals__['NOMI'])
 
     def toggle_memory() -> None:
         nonlocal durable_brain, speech_lexicon
@@ -3130,96 +3161,6 @@ def main() -> None:
                     "Errore locale ("+type(exc).__name__+"): operazione non completata.")))
         threading.Thread(target=worker, daemon=True).start()
 
-    def dispatch_model_capability(cap, original_phrase, doc_snapshot, refinement_token=None):
-        """Shared validated capability dispatch for online and native replies."""
-        current_id = (documents.current.ident
-                      if documents.current else None)
-        if cap is None:
-            announce_document("Azione non disponibile.")
-        elif cap.handler == 'program_apps':
-            from program_apps.service import blocked, protected
-            if (blocked(original_phrase) or protected(original_phrase)
-                    or save_only_waiting or document_busy
-                    or doc_dialog.phase.startswith('awaiting_')
-                    or doc_dialog.phase=='executing'):
-                speak_result('Nessuna app avviata: richiesta negata o altro dialogo in corso.')
-            elif addon_manager is None or not addon_manager.is_active(cap.action_id):
-                speak_result('Programmi e app non è più attivo.')
-            elif not busy_local:
-                submit_local(message_override=original_phrase,
-                    source_utterance=original_phrase,addon_action_id=cap.action_id,
-                    program_call=('launch',{'query':cap.target}))
-            else:
-                speak_result('Operazione locale in corso, riprova.')
-        elif cap.handler == "file_access":
-            if (addon_manager is None or not addon_manager.is_active(cap.action_id)):
-                speak_result("Accesso file non è più attivo.")
-            elif not busy_local:
-                submit_local(message_override=original_phrase,
-                    source_utterance=original_phrase,addon_action_id=cap.action_id,
-                    file_call=(cap.file_operation,
-                        addon_manager.file_service.arguments_for_utterance(
-                            cap.file_operation,dict(cap.file_arguments),original_phrase),
-                        refinement_token) if refinement_token else (cap.file_operation,
-                        addon_manager.file_service.arguments_for_utterance(
-                            cap.file_operation,dict(cap.file_arguments),original_phrase)))
-            else:
-                speak_result("Operazione file già in corso.")
-        elif cap.handler == "local" and cap.plan is not None:
-            # A GPT proposal cannot retain permission after
-            # a local add-on is disabled or uninstalled.
-            if (cap.action_id.startswith("addon.") and
-                    (addon_manager is None or not
-                     addon_manager.is_active(cap.action_id))):
-                speak_result("L'add-on non è più attivo.")
-            elif not busy_local:
-                submit_local(
-                    message_override=cap.plan.steps[0].command,
-                    source_utterance=original_phrase,
-                    addon_action_id=(cap.action_id if
-                        cap.action_id.startswith("addon.")
-                        else ""))
-            else:
-                speak_result("Operazione in corso, riprova.")
-        elif cap.handler == "telegram_voice_dialog":
-            # GPT proposes a name, it never authorizes
-            # a contact or sends audio. Local selection
-            # and two-step owner confirmation are final.
-            try_telegram_voice_send(
-                "manda un messaggio a "+cap.recipient)
-        elif cap.handler == "document_open":
-            if current_id is None:
-                document_operation(
-                    "open", source_utterance=original_phrase)
-            else:
-                announce_document(
-                    "C'è già un Blocco note gestito da Lumi. "
-                    "Dimmi cosa vuoi scriverci.")
-        elif cap.handler == "document_close":
-            if (doc_snapshot is not None
-                    and current_id == doc_snapshot):
-                ask_to_close_document(original_phrase)
-            else:
-                announce_document(
-                    "Il documento è cambiato; non chiudo nulla.")
-        elif cap.handler == "document_write":
-            if cap.target == "selected_document" and (
-                    doc_snapshot is None
-                    or current_id != doc_snapshot):
-                announce_document(
-                    "La finestra è cambiata: nessun testo inserito.")
-            elif cap.target == "new_notepad" and current_id:
-                announce_document(
-                    "C'è già un documento aperto. "
-                    "Vuoi aggiungere il testo a quello?")
-            else:
-                document_operation(
-                    "compose", content=cap.content,
-                    target=cap.target,
-                    close_after=cap.close_after,
-                    source_utterance=original_phrase)
-        else:
-            announce_document("Azione del catalogo non attiva.")
 
     def submit_gpt() -> None:
         if closing:
@@ -4294,18 +4235,6 @@ def main() -> None:
     gemma_session = [None]
     gemma_session_lock = threading.Lock()
 
-    def get_gemma_session():
-        with gemma_session_lock:
-            if closing:
-                raise RuntimeError("Lumi in chiusura: richiesta Gemma annullata.")
-            if gemma_session[0] is None:
-                from local_model.native_chat_adapter import NativeChatAdapter
-                from local_model.native_conversation_session import NativeConversationSession
-                source = gemma_source[0]
-                if not source or not Path(source).is_file():
-                    raise ValueError("Sorgente Gemma non configurata.")
-                gemma_session[0] = NativeConversationSession(NativeChatAdapter(source))
-            return gemma_session[0]
 
     gemma_recent_reply = [None]
 
@@ -4326,358 +4255,10 @@ def main() -> None:
     chat_notebook.bind("<<NotebookTabChanged>>", on_chat_tab_change)
 
 
-    def try_gemma_app_followup(utterance):
-        from program_apps.service import normalized
-        if normalized(utterance) not in (
-            "me lo apri", "me la apri", "puoi aprirlo", "puoi aprirla",
-            "aprilo", "aprila", "avvialo", "avviala", "fallo",
-        ):
-            return False
-        recent = gemma_recent_reply[0]
-        provider = getattr(engine, "program_apps", None)
-        if (recent is None or recent[0] != conversation_epoch
-                or time.monotonic() - recent[1] > 120
-                or provider is None or not provider.available()
-                or closing or busy_local or gemma_trial_busy[0]
-                or save_only_waiting or document_busy or doc_dialog.phase != "idle"
-                or pending_project_name or pending_project_rename_id is not None
-                or pending_project_trash_id is not None):
-            return False
-        context = normalized(recent[2])
-        matches = [
-            row["id"] for row in provider.entries()
-            if row["enabled"] and row["available"]
-            and re.search(r"(?<!\w)" + re.escape(normalized(row["name"])) + r"(?!\w)", context)
-        ]
-        gemma_recent_reply[0] = None
-        if len(matches) != 1:
-            return False
-        submit_local(message_override=utterance, source_utterance=utterance,
-                     addon_action_id="addon.programmi_app.avvia",
-                     program_call=("suggest_id", {"query": matches[0]}))
-        return True
 
-    def native_memory_request(context_id, spoken):
-        """Capture UI authorization; only the returned worker reader does I/O."""
-        revision = gemma_memory_revision
-        wanted = context_id is not None or memory_enabled.get()
-        owner = workspace if context_id is not None else (durable_brain if wanted else None)
-        warnings = []
-        if wanted and owner is None:
-            warnings.append("Archivio dei ricordi non disponibile.")
 
-        def read(budget):
-            if closing or owner is None:
-                return ""
-            try:
-                if context_id is None:
-                    if owner is not durable_brain or revision != gemma_memory_revision:
-                        return ""
-                    raw = owner.prompt_context(spoken[:180], budget=budget)
-                else:
-                    if owner is not workspace or budget < 160:
-                        return ""
-                    project = owner.project(context_id)
-                    if project is None or project["trashed"]:
-                        return ""
-                    raw = owner.prompt_context("project", context_id, spoken,
-                                               budget=budget, prefer_related=True)
-                value = json.loads(raw)
-                if not isinstance(value, dict) or not any(value.values()):
-                    return ""
-                if len(raw) > budget:
-                    raise ValueError("Memoria oltre il budget.")
-                return raw
-            except (OSError, sqlite3.Error, ValueError) as exc:
-                warnings.append("Ricordi precedenti non disponibili ("
-                                + type(exc).__name__ + ").")
-                return ""
 
-        def recent_pairs(count):
-            if closing or owner is None:
-                return ()
-            try:
-                if context_id is None:
-                    if owner is not durable_brain or revision != gemma_memory_revision:
-                        return ()
-                    pairs = owner.dialogue_pairs(count)
-                    if closing or owner is not durable_brain or revision != gemma_memory_revision:
-                        return ()
-                    return pairs
-                if owner is not workspace:
-                    return ()
-                pairs = owner.dialogue_pairs("project", context_id, count)
-                return () if closing or owner is not workspace else pairs
-            except (OSError, sqlite3.Error, ValueError) as exc:
-                warnings.append("Scambi recenti non disponibili (" + type(exc).__name__ + ").")
-                return ()
 
-        read.recent_pairs = recent_pairs
-        return (read if owner is not None else None), owner, revision, warnings
-
-    def submit_gemma_voice(spoken, *, typed=False):
-        if closing or gemma_trial_busy[0]:
-            return False
-        from intent_normalizer import before_model
-        if before_model(spoken):
-            return True              # capita dal motore interno (sinonimi) o domanda sì/no
-        from model_gate import local_enabled as model_enabled, refused_local as model_refused
-        if not model_enabled():
-            write_line(model_refused(spoken))
-            return True              # gestita: nessun passaggio a un altro modello
-        try:
-            chat_tab_active = chat_notebook.select() == str(chat_local_tab)
-        except NameError:
-            chat_tab_active = False
-        chat_target = selected_chat_target() if chat_tab_active else None
-        if chat_tab_active and chat_target is None:
-            write_line("CHAT > Impossibile identificare la conversazione corrente.")
-            return False
-        explicit = re.match(r"^con gemma(?:[ ,:]+)(.+)$", spoken, re.I)
-        candidates = ()
-        if explicit:
-            from program_apps.service import blocked
-            provider = engine.program_apps
-            question = explicit.group(1).strip()
-            if blocked(question):
-                write_line("LUMI > Per scegliere un’app indica un obiettivo da svolgere.")
-                return False
-            if provider is not None and provider.available():
-                candidates = tuple(row for row in provider.entries()
-                                   if row["enabled"] and row["available"])
-            if not 1 <= len(candidates) <= 12:
-                write_line("LUMI > Per la prova abilita da 1 a 12 app in Programmi e app.")
-                return False
-        if gemma_source[0] is None or not Path(gemma_source[0]).is_file():
-            source = filedialog.askopenfilename(
-                parent=root, title="Configura Gemma: seleziona koboldcpp.py",
-                filetypes=[("Sorgente KoboldCpp", "koboldcpp.py"), ("Python", "*.py")])
-            if not source:
-                write_line("LUMI > Configurazione locale mancante. Nessun invio online.")
-                return False
-            if Path(source).name.lower() != "koboldcpp.py":
-                write_line("LUMI > File sorgente non valido. Nessun invio online.")
-                return False
-            gemma_source[0] = source
-        native_context = chat_target[0] if chat_target is not None else active_project_id
-        native_document = documents.current.ident if documents.current else None
-        native_actions = () if explicit else active_addon_actions()
-        if explicit:
-            reader, memory_owner, memory_revision, memory_warnings = (
-                None, None, gemma_memory_revision, [])
-        elif chat_target is not None:
-            from local_model.chat_context import make_chat_history_reader
-            try:
-                reader = make_chat_history_reader(
-                    chat_sessions_panel.store, chat_target[0],
-                    project_id=chat_target[1])
-            except (OSError, sqlite3.Error, ValueError) as exc:
-                write_line("CHAT > Archivio locale non disponibile: " + type(exc).__name__)
-                chat_sessions_panel.report_error(
-                    "Archivio chat non accessibile. Nessuna richiesta inviata.")
-                return False
-            # The sole memory source of a chat instance is its own history.
-            # No automatic global/project Second Brain recall in F2.
-            memory_owner, memory_revision, memory_warnings = (
-                None, gemma_memory_revision, [])
-        else:
-            reader, memory_owner, memory_revision, memory_warnings = (
-                native_memory_request(active_project_id, spoken))
-        # Make the session busy only after the selected chat and its reader
-        # are valid: errors cannot strand the Gemma UI in a busy state.
-        gemma_trial_busy[0] = True
-        gemma_recent_reply[0] = None
-        gemma_button.configure(state="disabled")
-        # Typed text is the user's own message, like voice ("TU" role).
-        write_line(("TU > " if typed else "UTENTE / VOCE > ") + spoken)
-        voice_epoch = conversation_epoch
-        from chat_stream import STREAM
-        STREAM.start_request()
-
-        def voice_worker():
-            try:
-                session = get_gemma_session()
-                if explicit:
-                    index = session.pick_program(
-                        question, tuple(row["name"] for row in candidates))
-                    app_id = candidates[index]["id"] if index is not None else None
-                    gemma_trial_queue.put(("program_choice", (spoken, app_id), voice_epoch))
-                else:
-                    from conversation_router import native_intent_context_for_request
-                    # Informational questions use ordinary Gemma chat: no Windows
-                    # catalog and no JSON action parser. Executable requests keep
-                    # the existing strict validated-intent path.
-                    intent_context = native_intent_context_for_request(
-                        spoken, has_document=native_document is not None,
-                        addon_actions=native_actions)
-                    from chat_stream import STREAM
-                    session.on_stream = STREAM.sink(voice_epoch)
-                    try:
-                        turn = chat_transport.ask_local_first(
-                            spoken, session=session, timeout=180,
-                            context_id=native_context, defer_history=True,
-                            memory_context=reader, intent_context=intent_context)
-                    finally:
-                        session.on_stream = None
-                    from local_model.native_conversation_session import NativeChatTurn
-                    if isinstance(turn, NativeChatTurn):
-                        turn.memory_owner = memory_owner
-                        turn.memory_revision = memory_revision
-                        turn.memory_warning = " ".join(memory_warnings)
-                        turn.document_snapshot = native_document
-                        turn.chat_target = chat_target
-                        turn.project_snapshot = active_project_id
-                    gemma_trial_queue.put(("ok" if typed else "voice_ok", turn, voice_epoch))
-            except Exception as exc:
-                gemma_trial_queue.put(("error" if typed else "voice_error", str(exc)[:350], voice_epoch))
-        threading.Thread(target=voice_worker, daemon=True,
-                         name="jarvis-gemma").start()
-        return True
-
-    def submit_gemma_trial():
-        if closing or gemma_trial_busy[0]:
-            return
-        question = request.get().strip()
-        if not question:
-            write_line("LUMI > Scrivi una domanda prima di avviare la prova.")
-            return
-        if (try_program_command(question) or try_gemma_app_followup(question)
-                or submit_gemma_voice(question, typed=True)):
-            request.set("")
-
-    def poll_gemma_trial():
-        from chat_stream import STREAM
-        STREAM.drain(conversation_epoch, gemma_trial_busy[0] and not closing)
-        try:
-            while True:
-                kind, value, voice_epoch = gemma_trial_queue.get_nowait()
-                STREAM.drain(conversation_epoch, gemma_trial_busy[0] and not closing)
-                STREAM.clear()
-                gemma_trial_busy[0] = False
-                gemma_button.configure(state="normal")
-                if voice_epoch is not None and voice_epoch != conversation_epoch:
-                    continue
-                if kind in ("ok", "voice_ok"):
-                    from local_model.native_conversation_session import NativeChatTurn
-                    if isinstance(value, NativeChatTurn):
-                        chat_target = getattr(value, "chat_target", None)
-                        if closing or getattr(value, "project_snapshot", active_project_id) != active_project_id:
-                            continue
-                        if chat_target is not None:
-                            if (value.context_id != chat_target[0]
-                                    or selected_chat_target() != chat_target):
-                                continue
-                        elif value.context_id != active_project_id:
-                            continue
-                        if (value.context_id is None and value.memory_revision is not None
-                                and value.memory_revision != gemma_memory_revision):
-                            continue
-                        if value.allowed_actions is not None:
-                            from conversation_router import parse_native_conversation_intent, ConversationRejected
-                            from dialogue_focus import is_ambiguous_short_reply
-                            try:
-                                intent = parse_native_conversation_intent(
-                                    value.text, utterance=value.question,
-                                    has_document=value.document_snapshot is not None,
-                                    addon_resolver=(addon_manager.resolve if addon_manager is not None else None))
-                                if intent.kind == 'capability':
-                                    from program_apps.service import blocked
-                                    if (intent.capability is None or
-                                            intent.capability.action_id not in value.allowed_actions
-                                            or is_ambiguous_short_reply(value.question)
-                                            or blocked(value.question)):
-                                        raise ConversationRejected('Richiesta di azione non identificata.')
-                                    if (save_only_waiting or document_busy or doc_dialog.phase.startswith('awaiting_')
-                                            or pending_project_name or pending_project_rename_id is not None
-                                            or pending_project_trash_id is not None
-                                            or pending_project_reference.question or telegram_voice_dialog.pending):
-                                        raise ConversationRejected('Un altro dialogo richiede la tua risposta.')
-                                    if value.accept_action():
-                                        dispatch_model_capability(intent.capability, value.question,
-                                                                  value.document_snapshot)
-                                    continue
-                                if intent.kind not in ('chat', 'clarify'):
-                                    raise ConversationRejected('Formato di risposta locale non supportato.')
-                                value.text = intent.reply
-                            except ConversationRejected as exc:
-                                if value.finish_reason == 'length':
-                                    write_line('LUMI > Risposta incompleta: limite Max Output raggiunto; '
-                                               'azione non eseguita. ' + str(exc))
-                                    speak_result('La risposta di Gemma è stata interrotta dal limite di output. '
-                                                 'Non ho eseguito alcuna azione.')
-                                else:
-                                    write_line('LUMI > Risposta non interpretabile: ' + str(exc))
-                                    speak_result('Non riesco a interpretare la risposta di Gemma. Puoi riprovare?')
-                                continue
-                        # UI context/epoch cannot change during this synchronous
-                        # acceptance. The metadata commit never waits for native inference.
-                        # A memory switch preserves the current live dialogue,
-                        # but must not newly hydrate a revoked durable owner.
-                        if (value.context_id is None and value.memory_owner is not None
-                                and (value.memory_owner is not durable_brain or not memory_enabled.get())):
-                            value.restored_history = ()
-                        if not value.commit():
-                            continue
-                        # Distinct transcripts are stored only in the opted-in
-                        # chat DB, never in the general Second Brain.
-                        context_state = (value.intent_warning, value.context_note)
-                        if getattr(value._session, "_last_context_notice", None) != context_state:
-                            value._session._last_context_notice = context_state
-                            for notice in context_state:
-                                if notice:
-                                    write_line('LUMI > ' + notice)
-                        if value.memory_warning:
-                            write_line("MEMORIA > " + value.memory_warning)
-                        owner = value.memory_owner
-                        can_save = owner is not None and (
-                            owner is workspace if value.context_id is not None else
-                            owner is durable_brain and memory_enabled.get())
-                        if chat_target is not None:
-                            try:
-                                chat_sessions_panel.persist_answer(
-                                    chat_target[0], value.question, value.text,
-                                    project_id=chat_target[1])
-                            except (OSError, sqlite3.Error, ValueError) as exc:
-                                write_line("CHAT > Risposta non archiviata: "
-                                           + type(exc).__name__)
-                                chat_sessions_panel.report_error(
-                                    "Risposta non salvata su disco ("
-                                    + str(chat_sessions_panel.pending_count)
-                                    + " in attesa): nuovo tentativo al prossimo messaggio. "
-                                    "Se chiudi Lumi prima, andranno perse.")
-                        elif can_save and remember_exchange(value.question, value.text, "chat") is False:
-                            write_line("MEMORIA > Scambio non archiviato.")
-                        gemma_recent_reply[0] = (
-                            voice_epoch, time.monotonic(),
-                            value.question[:500] + " " + value.text[:500])
-                        value = value.text
-                if kind == "program_choice":
-                    spoken, app_id = value
-                    if app_id is None:
-                        message = "Quale programma vuoi aprire?"
-                        write_line("LUMI > " + message)
-                        speak_result(message)
-                    elif busy_local:
-                        write_line("LUMI > Motore locale occupato. Riprova.")
-                    else:
-                        submit_local(message_override=spoken, source_utterance=spoken,
-                                     addon_action_id="addon.programmi_app.avvia",
-                                     program_call=("suggest_id", {"query": app_id}))
-                elif kind == "voice_ok":
-                    write_line("LUMI > " + value)
-                    STREAM.speak_final(value, speak_result)
-                elif kind == "voice_error":
-                    write_line("GEMMA / ERRORE > " + value)
-                    speak_result("Gemma locale non disponibile. Controlla la configurazione.")
-                elif kind == "ok":
-                    write_line("LUMI > " + value)
-                    STREAM.speak_final(value, speak_result)
-                else:
-                    write_line("GEMMA / ERRORE > " + value)
-        except queue.Empty:
-            pass
-        if not closing:
-            root.after(150, poll_gemma_trial)
 
     root.after(250, poll_gemma_trial)
     gemma_button.configure(command=submit_gemma_trial)

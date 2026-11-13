@@ -122,10 +122,9 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
                          ["LUMI > Risposta corrente", "LUMI > Risposta scritta"])
 
     def callback(self, name):
-        node = copy.deepcopy(next(n for n in self.main.body
-                                  if isinstance(n, ast.FunctionDef)
-                                  and n.name == name))
-        node = GlobalCallbacks().visit(node)
+        from test_activity_status import GlobalCallbacks as MovedAware, find_main_function
+        node = copy.deepcopy(find_main_function(self.main, name))
+        node = MovedAware().visit(GlobalCallbacks().visit(node))
         module = ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[]))
         exec(compile(module, "actual-jarvis-" + name, "exec"), self.env)
         return self.env[name]

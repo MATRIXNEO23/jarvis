@@ -14,6 +14,11 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+# --anche-test: sposta anche funzioni lette dai test tramite l'estrattore comune
+# (tests/test_activity_status.py → callback), che cerca pure nei moduli spostati.
+ANCHE_TEST = "--anche-test" in sys.argv
+if ANCHE_TEST:
+    sys.argv.remove("--anche-test")
 JARVIS = ROOT / "jarvis.py"
 
 
@@ -93,7 +98,7 @@ def analizza(names=None):
         if names is not None and fn.name not in names:
             continue
         why = []
-        if fn.name in pinned:
+        if fn.name in pinned and not ANCHE_TEST:
             why.append("usata dai test su jarvis.py")
         if fn.decorator_list:
             why.append("decoratore")
