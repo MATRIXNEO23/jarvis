@@ -32,7 +32,7 @@ _FILE_TARGETS = {"files.list": "elenca", "files.search": "cerca", "files.read": 
                  "files.open": "apri", "files.locate": "localizza"}
 _APP_TARGETS = {"apps.launch": "avvia"}
 # Handled by Lumi's local command parser, never offered to the model.
-_LOCAL_ONLY = frozenset(("alarm.local", "music.local", "pc.local", "telegram.local"))
+_LOCAL_ONLY = frozenset(("alarm.local", "music.local", "pc.local", "telegram.local", "model.local"))
 MAX_ADDONS = 20
 MAX_ACTIONS = 5
 MAX_FILE_BYTES = 12_000
@@ -92,6 +92,8 @@ def validate_manifest(value: object) -> dict:
             raise AddonError("Identità del componente Controllo PC non valida.")
         if item["core_action"] == "telegram.local" and (addon_id, name) != ("telegram", "addon.telegram.messaggi"):
             raise AddonError("Identità del componente Telegram non valida.")
+        if item["core_action"] == "model.local" and (addon_id, name) != ("modello_locale", "addon.modello_locale.conversa"):
+            raise AddonError("Identità del componente Modello locale non valida.")
         if not _safe_text(item["description"], 125) or not _safe_text(
                 item["example"], 85):
             raise AddonError("Testo dell'azione non valido.")

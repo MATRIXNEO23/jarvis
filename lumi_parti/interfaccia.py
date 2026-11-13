@@ -176,6 +176,10 @@ def installa(d):
         if not d.telegram_addon_enabled() and d.telegram_auto.get():
             d.telegram_auto.set(False)
             d.toggle_telegram_automatic()
+        # Add-on Modello locale spento: niente nuove risposte dal modello sul PC.
+        if not __import__("model_gate").addon_on():
+            d.write_line("MODELLO LOCALE > Add-on spento: il cervello locale non risponde. Se il "
+                         "modello era già caricato, la sua memoria si libera al prossimo avvio di Lumi.")
     def refresh_buttons() -> None:
         can_gpt = d.gpt_enabled.get() and not d.busy_gpt and not d.closing
         d.connect.configure(state="normal" if can_gpt else "disabled")

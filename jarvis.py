@@ -318,7 +318,8 @@ def main() -> None:
                 ("sveglia", "sveglia", "Sveglia.jaddon"),
                 ("musica", "musica", "Musica.jaddon"),
                 ("controllo_pc", "controllo_pc", "ControlloPC.jaddon"),
-                ("telegram", "telegram_addon", "Telegram.jaddon")):
+                ("telegram", "telegram_addon", "Telegram.jaddon"),
+                ("modello_locale", "local_model", "ModelloLocale.jaddon")):
             if any(item["id"] == addon_id for item in addon_manager.list_installed()):
                 continue
             bundled = Path(__file__).parent / folder / file_name
@@ -331,10 +332,17 @@ def main() -> None:
                 if addon_id == "telegram" and (settings.get("telegram_enabled")
                                                or credentials_present()):
                     addon_manager.set_enabled("telegram", True)
+                # Il modello locale era già una funzione di Lumi: l'add-on nasce ACCESO,
+                # così chi aggiorna non perde niente; si spegne da Gestisci add-on.
+                if addon_id == "modello_locale":
+                    addon_manager.set_enabled("modello_locale", True)
             except (AddonError, OSError, ValueError) as exc:
                 addon_bundled_errors.append(file_name + ": " + str(exc)[:120])
     except (AddonError,OSError,ValueError) as exc:
         addon_setup_error=str(exc)[:150]
+    __import__("model_gate").register_addon(lambda: addon_manager is None or any(
+        item["id"] == "modello_locale" and item["enabled"]
+        for item in addon_manager.list_installed()))
     alarm_status = tk.StringVar(value="Nessuna sveglia impostata.")
     alarm = Alarm(root, lambda: bool(addon_manager and any(
         item["id"] == "sveglia" and item["enabled"]

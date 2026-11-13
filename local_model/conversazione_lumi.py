@@ -202,6 +202,9 @@ def installa(d):
         with d.gemma_session_lock:
             if d.closing:
                 raise RuntimeError("Lumi in chiusura: richiesta Gemma annullata.")
+            gate = __import__("model_gate")
+            if d.gemma_session[0] is None and not gate.addon_on():
+                raise RuntimeError(gate.ADDON_OFF)     # add-on spento: il modello non si carica
             if d.gemma_session[0] is None:
                 from local_model.native_chat_adapter import NativeChatAdapter
                 from local_model.native_conversation_session import NativeConversationSession

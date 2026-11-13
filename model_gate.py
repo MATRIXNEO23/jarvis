@@ -35,12 +35,33 @@ def refused(text: str) -> str:
 # --- «cervello locale» a voce (Gemma/KoboldCpp sul PC) -----------------------------------
 # Come MODELLO: non salvato, a ogni avvio riparte acceso. Il cervello online (GPT e i
 # futuri gratuiti) usa l'interruttore GPT già esistente.
+# Add-on «Modello locale» (Gestisci add-on): jarvis.py registra chi dice se è acceso.
+_ADDON = {"on": lambda: True}
+
+
+def register_addon(is_on) -> None:
+    _ADDON["on"] = is_on
+
+
+def addon_on() -> bool:
+    try:
+        return bool(_ADDON["on"]())
+    except Exception:
+        return True
+
+
+ADDON_OFF = ("L'add-on «Modello locale» è spento: accendilo in Gestisci add-on per usare "
+             "il cervello locale. Comandi e GPT funzionano lo stesso.")
+
+
 def local_enabled() -> bool:
-    return _STATE["enabled"] and _STATE["local"]
+    return _STATE["enabled"] and _STATE["local"] and addon_on()
 
 
 def set_local(value: bool) -> str:
     _STATE["local"] = bool(value)
+    if value and not addon_on():
+        return ADDON_OFF
     if not value:
         return "Cervello locale spento: le frasi non vanno più al modello sul PC."
     if not _STATE["enabled"]:
@@ -51,6 +72,8 @@ def set_local(value: bool) -> str:
 def refused_local(text: str) -> str:
     if not _STATE["enabled"]:
         return refused(text)
+    if not addon_on():
+        return "MODELLO LOCALE > " + ADDON_OFF
     short = " ".join(str(text).split())[:80]
     return (f"CERVELLO LOCALE SPENTO > «{short}» non è un comando interno: nessun modello usato. "
             "Di' «attiva cervello locale» per riaccenderlo.")
