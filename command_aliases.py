@@ -131,7 +131,7 @@ _FIXED = {
         "imposta timer {testo}", "timer", "pausa timer", "riprendi timer",
         "quanto manca al timer", "ferma timer", "reset timer", "che ore sono"),
     "Modelli e GPT": ("passa a GPT", "torna a Gemma", "attiva cervello locale",
-                      "spegni cervello locale", "attiva cervello online", "spegni cervello online"),
+                      "spegni cervello locale", "attiva cervello online", "riavvia il modello", "spegni cervello online"),
     "Progetti e Telegram": (
         "crea progetto {testo}", "apri progetto {testo}", "elenca progetti",
         "torna alla conversazione generale"),
@@ -221,6 +221,7 @@ DESCRIPTIONS = {
     "attiva cervello locale": "Le frasi non capite tornano al modello sul PC (Gemma).",
     "spegni cervello locale": "Niente modello sul PC: solo comandi interni (o GPT se acceso).",
     "attiva cervello online": "Accende GPT (e in futuro i servizi online gratuiti).",
+    "riavvia il modello": "Chiude e ricarica il modello locale senza chiudere Lumi (motore separato).",
     "spegni cervello online": "Spegne GPT: nessuna richiesta online.",
     "riproduci": "Preme Riproduci/Play (scritta, pulsante tondo o Invio).",
     "file successivo": "Elemento dopo (a destra nelle copertine, sotto negli elenchi).",

@@ -239,6 +239,26 @@ def main() -> None:
               wraplength=540).pack(anchor="w", padx=8, pady=5)
     ttk.Button(native_settings_box, text="Configura Gemma locale...",
                command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
+    # Motore in un processo separato (prova): cambio/riavvio del modello senza chiudere Lumi.
+    engine_process = __import__("local_model.motore_processo", fromlist=["separate_enabled"])
+    engine_separate_var = tk.BooleanVar(value=engine_process.separate_enabled())
+
+    def save_engine_separate() -> None:
+        try:
+            engine_process.set_separate(engine_separate_var.get())
+        except OSError as exc:
+            write_line("MODELLO LOCALE > Scelta non salvata: " + str(exc)[:120])
+            return
+        write_line("MODELLO LOCALE > " + (
+            "Motore separato: vale dal prossimo caricamento del modello (di' «riavvia il modello»)."
+            if engine_separate_var.get() else
+            "Motore dentro Lumi come prima: vale dal prossimo avvio di Lumi."))
+
+    ttk.Checkbutton(native_settings_box,
+                    text="Motore in un processo separato (prova): cambio e riavvio del modello "
+                         "senza chiudere Lumi",
+                    variable=engine_separate_var, command=save_engine_separate
+                    ).pack(anchor="w", padx=8, pady=(0, 6))
 
     # F5 experimental preview: deliberately NOT connected to the active model.
     # Modello locale, memoria, cervelli e diagnostica: spostato in lumi_parti/modello_memoria.py (divisione di jarvis.py).
@@ -4411,6 +4431,27 @@ def main() -> None:
         output_queue=output_queue, service=service, workspace=workspace,
         addon_manager=addon_manager)
 
+    def lumi_model_restart() -> None:
+        """«riavvia il modello»: con il motore separato lo chiude (memoria liberata) e lo
+        ricarica alla prossima domanda, senza chiudere Lumi."""
+        motore = __import__("local_model.motore_processo", fromlist=["separate_enabled"])
+        with gemma_session_lock:
+            session = gemma_session[0]
+            in_lumi = session is not None and not isinstance(
+                getattr(session, "adapter", None), motore.ProcessChatAdapter)
+            if not motore.separate_enabled():
+                text = ("Il motore è dentro Lumi: per riavviare il modello senza chiudere Lumi "
+                        "attiva «Motore in un processo separato» in Impostazioni, GPT e memoria.")
+            else:
+                if session is not None:
+                    session.stop()
+                    gemma_session[0] = None
+                text = "Riavvio il modello: si ricarica alla prossima domanda."
+                if in_lumi:
+                    text += " Il vecchio motore dentro Lumi libera la memoria solo al prossimo avvio."
+        write_line("MODELLO LOCALE > " + text)
+        speak_result(text)
+
     __import__("la_mia_voce").ON_LEARNED.append(
         lambda: speech_lexicon is not None and speech_lexicon.reload())
 
@@ -4419,6 +4460,7 @@ def main() -> None:
         {"minimize": lumi_minimize, "close": close_with_goodbye, "restart": lumi_restart,
          "shutdown_pc": lumi_shutdown_pc, "cancel_shutdown": lumi_cancel_shutdown,
          "hide": lumi_hide, "wake": lumi_wake,
+         "model_restart": lumi_model_restart,
          "brain_local_on": lambda: lumi_brain_local(True),
          "brain_local_off": lambda: lumi_brain_local(False),
          "brain_online_on": lambda: lumi_brain_online(True),

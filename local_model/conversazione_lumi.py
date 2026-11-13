@@ -211,7 +211,10 @@ def installa(d):
                 source = d.gemma_source[0]
                 if not source or not Path(source).is_file():
                     raise ValueError("Sorgente Gemma non configurata.")
-                d.gemma_session[0] = NativeConversationSession(NativeChatAdapter(source))
+                # Motore separato (scelta nelle impostazioni) o dentro Lumi come prima.
+                adapter = __import__("local_model.motore_processo",
+                                     fromlist=["adattatore"]).adattatore(source)
+                d.gemma_session[0] = NativeConversationSession(adapter)
             return d.gemma_session[0]
     def try_gemma_app_followup(utterance):
         from program_apps.service import normalized

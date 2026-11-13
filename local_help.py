@@ -104,6 +104,8 @@ def help_sections(engine):
             'riavvia Lumi → chiede conferma, dice il messaggio per intero e si riapre da sola\n'
             'attiva / spegni cervello locale (anche «cervello locale on/off»): il modello sul PC; '
             'l\'add-on «Modello locale» in Gestisci add-on lo spegne del tutto (non si carica)\n'
+            'riavvia il modello: con «Motore in un processo separato» (Impostazioni, GPT e memoria) '
+            'chiude il motore, libera la memoria e lo ricarica alla domanda dopo, senza chiudere Lumi\n'
             'attiva / spegni cervello online (anche «cervello online on/off»): GPT\n'
             'spegni il PC → solo detto così, chiede conferma; «annulla lo spegnimento» lo ferma\n\n'
             '«Lumi» da solo non fa ricomparire niente: aspetta il comando per qualche secondo. '

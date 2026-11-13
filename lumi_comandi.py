@@ -36,6 +36,9 @@ _PATTERNS = (
     ("brain_online_off", re.compile(
         r"^(?:(?:spegni|disattiva|disabilita)\s+(?:il\s+)?cervello\s+online|"
         r"(?:il\s+)?cervello\s+online\s+(?:off|spento))" + _END, re.I)),
+    ("model_restart", re.compile(
+        r"^(?:riavvia|ricarica)\s+(?:il\s+)?(?:modello(?:\s+locale)?|cervello\s+locale|motore)"
+        + _END, re.I)),
     ("wake", re.compile(r"^(?:svegliati|sveglia|torna\s+qui|fatti\s+vedere|mostrati|"
                         r"mostra\s+(?:l'\s*)?avatar)" + _END, re.I)),
 )
