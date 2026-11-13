@@ -1,10 +1,10 @@
 {
-  "run_id": 43366268896,
-  "artifact": "lumi-044-prova-candidate",
-  "file": "Lumi-044-PROVA.zip",
-  "bytes": 27703812,
-  "sha256": "3c52367ab961403a0d73378151461c7f557df7b0963c303bb7caef8ebde68e98",
-  "source_commit": "467e6fa",
-  "title": "Build 044 PROVA — modello locale come add-on (acceso di serie) e correzione «minimizza»",
-  "description": "Come la 043, più: il modello locale (KoboldCpp, stessa DLL già inclusa) è ora l'add-on «Modello locale» in Gestisci add-on, ACCESO di serie: non cambia niente finché non lo spegni. Spento, Lumi non carica il modello e il cervello locale non risponde (comandi, MODELLO e GPT restano); «attiva cervello locale» spiega come riaccenderlo. Il file .gguf si sceglie come prima. Conversazione col modello spostata in local_model/conversazione_lumi.py con codice invariato (jarvis.py: 4.446 righe). Corretto «minimizza» senza «Lumi» con Lumi davanti: ora si riduce a icona invece di sparire. Verificati in CI Windows: test, diagnostica, Telegram, pacchetto e prova reale UIA/OCR. Da provare sul Pavilion."
+  "run_id": 43375395592,
+  "artifact": "lumi-045-prova-candidate",
+  "file": "Lumi-045-PROVA.zip",
+  "bytes": 27708031,
+  "sha256": "029021c0197a944ee750dc1f623b56d73475b1d3dd8b562b298fab6b835a3bb9",
+  "source_commit": "7a0eaab",
+  "title": "Build 045 PROVA — motore del modello in un processo separato (da attivare) e «riavvia il modello»",
+  "description": "Come la 044, più: in Impostazioni → GPT e memoria c'è «Motore in un processo separato (prova)», SPENTO di serie. Acceso, il modello locale gira in un processo interno a parte (stessa DLL, stessi template, nessuna seconda finestra): «riavvia il modello» lo chiude liberando la memoria e lo ricarica alla domanda dopo, e cambiando modello nelle impostazioni non serve più riavviare Lumi; se il modello si blocca cade solo il motore. Spento, tutto come prima. Verificati in CI Windows: test (anche il processo separato con un motore finto), diagnostica, Telegram, pacchetto e prova reale UIA/OCR. Non provato con la DLL e un modello veri: da confrontare sul Pavilion (velocità, memoria, caricamento)."
 }
