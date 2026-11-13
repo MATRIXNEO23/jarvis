@@ -1,3 +1,11 @@
+## Build 046 PROVA — correzione del motore separato (errore 'utf-8' … surrogates)
+
+[Scarica Lumi-046-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-046-PROVA.zip)
+
+Come la 045, con una correzione: con «Motore in un processo separato» acceso, ogni domanda al modello dava «'utf-8' codec can't encode character '\udc8d' … surrogates not allowed» quando memoria o cronologia contenevano un carattere rotto. Ora il testo passa al motore separato in una forma che accetta qualsiasi carattere (e non dipende dalla codifica di Windows). Verificati in CI Windows: test (anche questo caso), diagnostica, Telegram, pacchetto e prova reale UIA/OCR. Motore separato ancora da confrontare sul Pavilion con la DLL e il modello veri.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43392772539). SHA-256: `bda30573c68168ff9a35af9371bfc8587241ee6e9becac4a1999f5a341569ad4`.
+
 ## Build 045 PROVA — motore del modello in un processo separato (da attivare) e «riavvia il modello»
 
 [Scarica Lumi-045-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-045-PROVA.zip)
