@@ -91,7 +91,9 @@ class ProcessChatAdapter:
         if proc is None or proc.poll() is not None:
             raise EngineStopped("Motore del modello locale non attivo.")
         try:
-            proc.stdin.write((json.dumps(message, ensure_ascii=False) + "\n").encode("utf-8"))
+            # Solo ASCII (\uXXXX): passa anche testo con caratteri «rotti» (surrogati, es.
+            # \udc8d da memoria o file) e non dipende dalla codifica di Windows del figlio.
+            proc.stdin.write((json.dumps(message, ensure_ascii=True) + "\n").encode("ascii"))
             proc.stdin.flush()
         except (OSError, ValueError) as exc:
             raise EngineStopped("Motore del modello locale chiuso.") from exc
@@ -198,7 +200,7 @@ def _child(source):
 
     def send(message):
         with write_lock:
-            proto.write(json.dumps(message, ensure_ascii=False) + "\n")
+            proto.write(json.dumps(message, ensure_ascii=True) + "\n")
             proto.flush()
 
     from .native_chat_adapter import NativeChatAdapter

@@ -68,6 +68,9 @@ class EngineProcessTests(unittest.TestCase):
                 result = self.adapter.call("ask", prompt="ciao", timeout=5)
             self.assertEqual(chunks, ["Cia", "Ciao"])
             self.assertTrue(result["text"].endswith("a.gguf"))
+            # Testo con un carattere «rotto» (surrogato) e accenti: errore visto sul Pavilion
+            # («'utf-8' codec can't encode character '\udc8d'»), ora deve passare.
+            self.assertIn("Ciao", self.adapter.call("ask", prompt="perché \udc8d così", timeout=5)["text"])
             with self.assertRaises(ValueError):
                 self.adapter.call("ask", prompt="errore", timeout=5)
             self.adapter.prepare(config=self.config(self.models[1]))   # cambio modello
