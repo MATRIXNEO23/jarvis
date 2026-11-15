@@ -62,7 +62,15 @@ def chiedi_al_ponte(op: str, args: dict, path: Path | None = None, timeout: floa
     except (OSError, ValueError):
         return {"ok": False, "errore": "Lumi non è aperta o l'add-on Diagnostica per Claude è spento."}
     try:
-        with socket.create_connection(("127.0.0.1", int(info["port"])), timeout=timeout) as conn:
+        # Collegamento separato dalla risposta: se non si collega, il file è vecchio (chiusura
+        # brusca) e Lumi non è aperta. Su Windows una porta chiusa può dare anche un timeout.
+        conn = socket.create_connection(("127.0.0.1", int(info["port"])), timeout=min(timeout, 3))
+    except (OSError, ValueError, KeyError, TypeError):
+        return {"ok": False, "errore": "Lumi non è aperta o la Diagnostica per Claude è spenta "
+                                       "(c'è un collegamento vecchio, di una chiusura brusca)."}
+    try:
+        with conn:
+            conn.settimeout(timeout)
             conn.sendall(json.dumps({"token": info["token"], "op": op, "args": args}).encode("utf-8") + b"\n")
             data = b""
             while b"\n" not in data:
@@ -71,10 +79,6 @@ def chiedi_al_ponte(op: str, args: dict, path: Path | None = None, timeout: floa
                     break
                 data += chunk
         return json.loads(data.split(b"\n", 1)[0].decode("utf-8"))
-    except ConnectionRefusedError:
-        # File rimasto da una chiusura brusca: Lumi non è aperta (prova 15/11).
-        return {"ok": False, "errore": "Lumi non è aperta o la Diagnostica per Claude è spenta "
-                                       "(c'è un collegamento vecchio, di una chiusura brusca)."}
     except (OSError, ValueError, KeyError, TypeError):
         return {"ok": False, "errore": "Lumi non risponde."}
 

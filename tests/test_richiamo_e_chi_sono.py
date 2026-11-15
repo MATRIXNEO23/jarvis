@@ -21,8 +21,9 @@ class RichiamoTest(unittest.TestCase):
             richiamo.registra(text)
         written, _ = richiamo.rispondi("cosa ti ho detto prima?", PAIRS)
         self.assertEqual(written, "Prima mi hai detto: «chi sei?».")
+        richiamo.registra("cosa ti ho detto 3 messaggi fa?")     # anche la domanda di prima conta
         written, _ = richiamo.rispondi("cosa ti ho detto 3 messaggi fa?", PAIRS)
-        self.assertIn("apri chrome", written)
+        self.assertIn("ricordati che ho un gatto", written)
 
     def test_ricordi_pertinenti_arrivano_a_gemma(self):
         import json
