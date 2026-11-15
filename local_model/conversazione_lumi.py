@@ -376,8 +376,10 @@ def installa(d):
         d.gemma_trial_busy[0] = True
         d.gemma_recent_reply[0] = None
         d.gemma_button.configure(state="disabled")
-        # Typed text is the user's own message, like voice ("TU" role).
-        d.write_line(("TU > " if typed else "UTENTE / VOCE > ") + spoken)
+        # Il messaggio dell'utente compare una volta sola: a voce lo ha già scritto
+        # la parte che riceve il microfono («TU > …»); qui solo quello digitato.
+        if typed:
+            d.write_line("TU > " + spoken)
         voice_epoch = d.conversation_epoch
         from chat_stream import STREAM
         STREAM.start_request()

@@ -418,3 +418,4 @@ Analisi di SuperFarfix-main (zip dell'utente, non salvato nel repo, licenza CC B
 4. File allegati: Lumi divide e cerca i pezzi utili senza modello (punteggio per parole rare, stile motore di ricerca), al modello locale solo 2–3 pezzi; file grandi o domande complesse → proposta di passare all'online. Valutare lo stesso motore di ricerca per il Second Brain.
 5. Sezione GPT: elenco servizi online con spunte e chiavi API, in fila, KoboldCpp ultima scelta.
 6. Confronto con SuperFarfix per prendere idee (solo idee, licenza CC BY-NC).
+Passo 1 fatto (15/11, conferma utente «Ok»): messaggio doppio. Causa: a voce il microfono scriveva «TU > frase» e poi `submit_gemma_voice` riscriveva «UTENTE / VOCE > frase», che `write_line` non riconosce come messaggio dell'utente e mostrava come SISTEMA. Correzione: `submit_gemma_voice` scrive il messaggio solo se digitato. Test: tests/test_messaggio_singolo.py.
