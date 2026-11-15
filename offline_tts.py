@@ -151,15 +151,33 @@ def _invoke(payload: dict, *, timeout: int = 90, owner=None) -> str:
     return output.decode("utf-8-sig", errors="replace").strip()
 
 
-def installed_voices() -> list[str]:
-    """Return only voices installed locally, without network downloads."""
-    raw = _invoke({"mode": "list"}, timeout=25)
+LIST_TIMEOUT = 60          # PowerShell a freddo sul Pavilion può superare i 25 s (15/11)
+LAST_LIST_ERROR = {"text": ""}
+
+
+def _windows_voices() -> list[str]:
+    raw = _invoke({"mode": "list"}, timeout=LIST_TIMEOUT)
     data = json.loads(raw) if raw else []
     if isinstance(data, str):
         data = [data]
     if not isinstance(data, list):
         raise ValueError("Elenco delle voci Windows non valido.")
-    windows = [name for name in data if isinstance(name, str) and name.strip()][:100]
+    return [name for name in data if isinstance(name, str) and name.strip()][:100]
+
+
+def installed_voices() -> list[str]:
+    """Return only voices installed locally, without network downloads.
+
+    Se l'elenco delle voci di Windows non arriva (PowerShell lento o bloccato), le voci
+    naturali e online restano comunque nell'elenco e il motivo va in LAST_LIST_ERROR."""
+    LAST_LIST_ERROR["text"] = ""
+    try:
+        windows = _windows_voices()
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+        windows = []
+        LAST_LIST_ERROR["text"] = ("Elenco delle voci di Windows non disponibile ("
+                                   + ("tempo scaduto" if isinstance(exc, subprocess.TimeoutExpired)
+                                      else type(exc).__name__) + "): restano le altre voci.")
     # Downloaded natural voices (Piper) first; Windows voices stay available.
     from piper_voice import installed_piper_voices
     from edge_voice import installed_edge_voices

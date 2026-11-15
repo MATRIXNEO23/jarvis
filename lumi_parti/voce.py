@@ -114,8 +114,11 @@ def installa(d):
         def worker() -> None:
             try:
                 d.output_queue.put(("tts_voices", installed_voices()))
-            except (OSError, ValueError, TimeoutError) as exc:
-                d.output_queue.put(("tts_error", str(exc)[:140]))
+                note = __import__("offline_tts").LAST_LIST_ERROR["text"]
+                if note:
+                    d.output_queue.put(("tts_error", note[:140]))
+            except Exception as exc:   # ogni errore arriva all'interfaccia (15/11)
+                d.output_queue.put(("tts_error", (str(exc) or type(exc).__name__)[:140]))
 
         threading.Thread(target=worker, daemon=True, name="jarvis-voices-list").start()
     def download_natural_voice(key: str) -> None:
