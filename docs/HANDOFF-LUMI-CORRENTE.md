@@ -80,3 +80,17 @@ Lumi-047-PROVA.zip in Download su main: run 43713943448, 27.764.632 byte, SHA-25
 ## Build 048 (15/11) — pubblicata
 Lumi-048-PROVA.zip: run 43719492123, 27.773.085 byte, SHA-256 22304bad…f302. Aggiunge tutorial guidato, cambio parola dei comandi, orchestratore online con cartelle sicure.
 Resta da fare: parole incerte evidenziate in dettatura (passo 11).
+
+## Nuova lista concordata a voce (15/11 sera) — da fare in ordine, menu proposti all'utente pezzo per pezzo
+Regola: niente iniziative sull'organizzazione dei menu; ogni argomento al suo posto (Interfaccia, Voce, Memoria, Modelli, Add-on); tutto in verticale come il riquadro d'aiuto; menu che si aprono con un clic e si chiudono da soli cliccando altrove; unica finestra che resta in primo piano: l'aiuto comandi.
+1. Menu laterale come ChatGPT: progetti come cartelle (+ nuovo progetto), dentro le chat; chat fuori dai progetti spostabili dentro; le chat dello stesso progetto si vedono tra loro. Vecchi progetti: cancellati del tutto (deciso dall'utente), si riparte col sistema nuovo.
+2. Menu a tendina dei modelli in alto, ACCANTO al pulsante GPT (che resta): servizi con chiave, più spunte tra i gratuiti, modello attivo evidenziato, barra della quota per servizio (azzurra, arancione oltre metà, rossa quasi finita). GPT dal browser nella stessa fila per le risposte normali; per i lavori a più passi solo i servizi che sanno farli, nell'ordine scelto.
+3. Quote: avviso all'80% della quota del giorno, conferma se una richiesta manda più di ~8.000 token (soglie modificabili); per ogni servizio scritto quanto offre gratis (verificato sui siti ufficiali) e quanto è stato usato. Di serie si manda il meno possibile.
+4. Link cliccabile per creare la chiave accanto a ogni campo (servizi online e GitHub) + sezione nell'aiuto «Come creare le chiavi», passo per passo.
+5. Telegram: indicatore in alto (azzurrino attivo e niente di nuovo; verde messaggi arrivati e bot ha risposto; arancione bloccato/non ha risposto; rosso disattivato; torna azzurrino quando apri la chat Telegram); chat «Telegram» nel menu laterale con i messaggi passati dal bot, a bolle, e possibilità di scrivere (solo ai contatti autorizzati); spunte veloci dei contatti già autorizzati senza ricaricare tutti i contatti. Le chat personali vere: NO (pesante e accesso a tutto l'account).
+6. Impostazioni riorganizzate: menu a tendina in cascata dentro la finestra principale (niente finestre separate), sezioni Interfaccia / Voce / Memoria (locale e online separati) / Modelli / Add-on (elenco verticale con icona, clic → menu dell'add-on) / Tutorial (elenco dei tutorial) / Info (versione di Lumi, build, licenze delle parti incluse).
+7. Una sola finestra: niente console nera (avvio senza finestra, uscita in Diagnostica e in un file).
+8. Motore del modello SEMPRE in un processo separato; la casella sparisce.
+9. Orchestratore: esecuzione di codice Python solo nelle cartelle sicure, dopo aver mostrato lo script e con il sì, tempo massimo configurabile (1 minuto di serie), comandi pericolosi bloccati. PowerShell più avanti.
+10. Conferme: «sì»/«no» senza dire «Lumi» (verificare che sia sempre così).
+Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), documenti negli allegati (PDF con pypdf, Office, LibreOffice, RTF, HTML, EPUB).
