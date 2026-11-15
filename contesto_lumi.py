@@ -196,3 +196,27 @@ def costruisci_sezione(parent, notify):
     combo.pack(side="left", padx=6)
     combo.bind("<<ComboboxSelected>>", save)
     return box
+
+
+def altre_chat(max_chats: int = 3, pairs: int = 2, limit: int = 600) -> list[str]:
+    """Le chat dello stesso progetto si vedono tra loro (15/11 sera): gli ultimi scambi
+    delle altre chat del progetto attivo, corti, come dati di riferimento."""
+    import chat_elenco
+    elenco = chat_elenco._CURRENT["elenco"]
+    if elenco is None:
+        return []
+    project = elenco._scope()
+    if project is None:
+        return []
+    current = elenco.current()
+    out = []
+    try:
+        chats = [c for c in elenco.store.list_chats(project_id=project) if c.id != current]
+        for chat in chats[:max_chats]:
+            recent = elenco.store.recent_pairs(chat.id, project_id=project, count=pairs)
+            if recent:
+                lines = ["Tu: %s\nLumi: %s" % (q[1][:limit // 2], a[1][:limit // 2]) for q, a in recent]
+                out.append("[Altra chat del progetto: %s]\n%s" % (chat.title, "\n".join(lines)))
+    except Exception:
+        return []
+    return out

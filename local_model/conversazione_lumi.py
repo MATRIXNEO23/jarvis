@@ -415,7 +415,10 @@ def installa(d):
             reader = __import__("contesto_lumi").lettore_chat(
                 reader, forget=lambda: (d.gemma_session[0].forget_context(native_context)
                                         if d.gemma_session[0] is not None else None))
-            reader.attachment = __import__("allegati").per_modello_locale(spoken)
+            # Prima gli allegati, poi le altre chat del progetto (escono per prime se
+            # il contesto è pieno).
+            reader.attachment = (__import__("allegati").per_modello_locale(spoken)
+                                 + __import__("contesto_lumi").altre_chat())
             if __import__("scheda_lumi").domanda_su_lumi(spoken):
                 # Passo 7: domanda su Lumi → la scheda di sé con i dati veri, prima di tutto.
                 reader.attachment = [__import__("scheda_lumi").scheda(
@@ -454,7 +457,8 @@ def installa(d):
                         spoken, tools=tools,
                         history=__import__("chat_elenco").contesto_recente(6),
                         pieces=([online_card] if online_card else [])
-                        + __import__("allegati").per_online(spoken),
+                        + __import__("allegati").per_online(spoken)
+                        + __import__("contesto_lumi").altre_chat(),
                         notify=lambda text: d.gemma_trial_queue.put(("online_note", text, voice_epoch)))
                     if name:
                         d.gemma_trial_queue.put(("online_ok", (spoken, name, answer), voice_epoch))

@@ -2622,7 +2622,7 @@ def main() -> None:
     ttk.Label(scope_row,textvariable=active_context_label,
               font=("Consolas",8)).pack(side="left",fill="x",expand=True)
     scope_button=ttk.Button(scope_row,text="Progetti")
-    scope_button.pack(side="right")
+    # I progetti ora stanno nel menu laterale (☰): il vecchio pulsante non si mostra più.
     # Riga di stato a 5 colori con «■ Ferma» (passo 3, stato_lumi.py).
     def read_lumi_state() -> str:
         session = gemma_session[0]
@@ -2754,14 +2754,29 @@ def main() -> None:
         chat_archive = chat_elenco.ElencoChat(
             ChatSessionStore(default_path().with_name("jarvis_chat_sessions.sqlite3")),
             lambda: active_project_id, show_chat_history, notify=write_line)
-        chat_elenco.ElencoView(
-            chat_header, chat_panel, chat_panel.winfo_children()[0], chat_archive,
+        # Menu laterale come ChatGPT (15/11 sera): progetti come cartelle, chat dentro.
+        menu_side = __import__("menu_laterale")
+        chat_tree = menu_side.Albero(
+            chat_archive.store,
+            projects=lambda: ([(p["id"], p["name"]) for p in workspace.projects(limit=200)]
+                              if workspace is not None else []),
+            create_project=lambda name: workspace.create_project(name),
+            rename_project=lambda ident, name: workspace.rename_project(ident, name),
+            trash_project=lambda ident: workspace.trash_project(ident),
+            current_project=lambda: active_project_id,
+            switch=lambda ident: switch_context(ident),
+            after_change=lambda: chat_archive.refresh(show=True),
+            notify=write_line)
+        chat_menu = menu_side.MenuView(
+            chat_header, chat_panel, chat_panel.winfo_children()[0], chat_tree,
             ask_text=lambda title, prompt: simpledialog.askstring(title, prompt, parent=root),
             confirm=lambda title, prompt: messagebox.askyesno(title, prompt, parent=root),
             ask_file=lambda: filedialog.askopenfilename(
                 parent=root, title="Export di ChatGPT o Claude (conversations.json o .zip)",
                 filetypes=[("Export chat", "*.json *.zip"), ("Tutti i file", "*.*")]),
-            choose=lambda items: __import__("chat_import").scegli_dialogo(root, items))
+            import_chat=lambda path: chat_archive.importa(
+                path, lambda items: __import__("chat_import").scegli_dialogo(root, items)))
+        chat_archive.view = chat_menu
         chat_archive.refresh(show=False)
     except (OSError, sqlite3.Error, ValueError) as exc:
         write_line("CHAT > Archivio chat non disponibile: " + type(exc).__name__)
@@ -4741,6 +4756,35 @@ def main() -> None:
     root.after(1100, refresh_orbit_nodes)
 
     root.after(2500, first_run_components)
+
+    def ask_old_projects() -> None:
+        """Nuovo menu dei progetti: i vecchi si cancellano, dopo un sì (decisione 15/11 sera)."""
+        menu_side = __import__("menu_laterale")
+        flag = default_path().parent / "progetti_nuovi.json"
+        if workspace is None or not menu_side.vecchi_progetti_da_chiedere(flag):
+            return
+        try:
+            old = workspace.projects(limit=200)
+        except (OSError, sqlite3.Error, WorkspaceError):
+            return
+        if not old:
+            menu_side.segna_fatto(flag)
+            return
+        if messagebox.askyesno(
+                "Lumi // Progetti",
+                "Nuovo menu dei progetti (☰). Cancello i %d progetti vecchi e le loro chat? "
+                "Le loro cartelle vanno nel Cestino di Windows." % len(old), parent=root):
+            if active_project_id is not None:
+                switch_context(None)
+            count = menu_side.cancella_vecchi_progetti(
+                workspace, chat_archive.store, flag,
+                trash_folders=lambda folders: __import__("pulizia_dati").al_cestino(folders))
+            write_line("PROGETTI > Cancellati %d progetti vecchi. Crea i nuovi da ☰ → «＋ Nuovo progetto»." % count)
+            chat_archive.refresh(show=True)
+        else:
+            menu_side.segna_fatto(flag)
+
+    root.after(4000, ask_old_projects)
     if telegram_auto.get():
         root.after(1400,toggle_telegram_automatic)
     if gpt_enabled.get():
