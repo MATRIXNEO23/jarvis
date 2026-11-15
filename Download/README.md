@@ -1,3 +1,11 @@
+## Build 047 PROVA — chat unica, stop immediato, contesto, allegati, pulizia, aiuto comandi, servizi online, Diagnostica per Claude, GitHub, La mia voce
+
+[Scarica Lumi-047-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-047-PROVA.zip)
+
+Tutti i passi concordati il 15/11 in una sola build. Chat unica per modello locale e GPT con elenco chat per progetto (☰, +, rinomina, elimina, importa da ChatGPT/Claude) e bolle con copia/leggi/rigenera. Riga di stato a 5 colori con «■ Ferma» e «Lumi, fermati». Contesto: la cronologia della chat scelta, «Chat continua» (spenta di serie), ricordi mai/pertinenti/sempre. Allegati con 📎, trascinamento e Ctrl+V (testo e Word; al modello locale). Pulizia dati con Cestino. Riquadro comandi per finestra con tutorial e scheda di Lumi. Servizi online con caselle e chiavi cifrate (Gemini, Groq, Mistral, OpenRouter, NVIDIA; a consumo Grok, OpenAI, Claude) e ripiego sul modello locale. Add-on spenti di serie: Diagnostica per Claude (MCP locale) e GitHub in sola lettura. La mia voce: parlato dal vivo, correzioni a mano e togliibili, lettere perse; classificatore opzionale. Verificati in CI Windows: 1409 test, diagnostica, Telegram, tokenizer, pacchetto e avvio. Da provare sul Pavilion: velocità, voce, microfono, account e chiavi reali.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43713943448). SHA-256: `336e853c6535492c5e55df8b37d02c6f045b0733ff518f11b86e47cc395b3be9`.
+
 ## Build 046 PROVA — correzione del motore separato (errore 'utf-8' … surrogates)
 
 [Scarica Lumi-046-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-046-PROVA.zip)
