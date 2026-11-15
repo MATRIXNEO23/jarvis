@@ -98,6 +98,7 @@ class AnimatedHUDGeometryTests(unittest.TestCase):
             hud.select_tab("CONSOLE")
             self.assertFalse(bool(int(console.tag_cget("utente","elide"))))
             # Un solo livello (15/11): DIAGNOSTICA apre una copia filtrabile.
+            console.configure(state="normal")   # select_tab lascia la console disabilitata
             console.insert("end","TU > ciao\n","utente")
             console.insert("end","PROGRAMMI > interno\n","sistema")
             hud.open_diagnostics()
