@@ -1,3 +1,11 @@
+## Build 049 PROVA — impostazioni a cascata, add-on con interruttore, ricordi, simboli delle chat, menu laterale, servizi online con quote, Telegram, finestra unica
+
+[Scarica Lumi-049-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-049-PROVA.zip)
+
+Tutto della 048 più: impostazioni con categorie a sinistra (Interfaccia, Voce, Memoria, Modelli, Add-on, Tutorial, Info) e voci di fianco, si chiudono cliccando su Lumi; add-on con icona azzurra/arancione e interruttore a scorrimento, menu dell'add-on con un clic sull'icona; menu laterale a cartelle (progetti e chat, sposta, rinomina, elimina, Esporta JSON) con 🤖 offline e 📡 online davanti al nome; pulsante ONLINE ▾ con servizi, barre delle quote e soglie; servizi online un file per servizio; icona ✈ Telegram con colori e chat nel menu laterale; una sola finestra (niente console nera); motore del modello sempre separato; script Python dall'orchestratore solo col tuo sì; sì/no senza «Lumi»; «cosa ti ho detto prima / N turni fa» dalla cronologia; «chi sei» e «cosa puoi fare» con frasi varie configurabili; ricordi: l'online decide cosa salvare (breve per Gemma, completo per l'online), «ricordati che…», «cancellalo», pagina Ricordi con ricerca e categorie; documenti negli allegati (PDF, ODT, DOCX, XLSX, PPTX, EPUB…); correzione lista voci. Diagnostica per Claude con strumenti nuovi (impostazioni, add-on, ricordi, chat). Verificati in CI Windows: 1482 test, diagnostica, Telegram, tokenizer, pacchetto e avvio. Da provare sul Pavilion.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43755471110). SHA-256: `717854610d655082fbbff3f83a2c8ec9616f3867cb9f1e44cecdf0ae3373d333`.
+
 ## Build 048 PROVA — tutorial guidato, parola dei comandi a scelta, orchestratore online con cartelle sicure
 
 [Scarica Lumi-048-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-048-PROVA.zip)
