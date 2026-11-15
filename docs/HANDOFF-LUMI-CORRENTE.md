@@ -74,3 +74,7 @@ Aggiornare questo file a ogni consegna o decisione importante.
 Dettagli e motivazioni: sezioni datate in fondo a `docs/ARCH-01-F5-CHECKPOINT.md`.
 10. Bug voce online Microsoft: corretto (attesa iniziale 10 s, niente alternanza nella stessa risposta), da provare sul Pavilion.
 11. **Fatto in parte (vedi CI)**: La mia voce con parlato dal vivo, conflitti, correzioni a mano e togliibili, lettere perse; classificatore opzionale; frasi variate. Manca: parole incerte evidenziate in dettatura.
+
+## Build 047 (15/11) — pubblicata
+Lumi-047-PROVA.zip in Download su main: run 43713943448, 27.764.632 byte, SHA-256 336e853c…3be9, sorgente 51c6b3b. Contiene i passi 2–11. Da provare sul Pavilion.
+Restano da progettare con l'utente: orchestratore online con strumenti di Lumi (passo 8), parole incerte evidenziate in dettatura (passo 11).
