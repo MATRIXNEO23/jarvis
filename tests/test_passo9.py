@@ -209,6 +209,16 @@ class DiagnosticaTest(unittest.TestCase):
         finally:
             bridge.ferma()
 
+    def test_collegamento_vecchio_dice_che_lumi_e_chiusa(self):
+        import socket
+        free = socket.socket()
+        free.bind(("127.0.0.1", 0))
+        port = free.getsockname()[1]
+        free.close()                              # porta chiusa: nessuno ascolta
+        self.path.write_text(json.dumps({"port": port, "token": "x"}), encoding="utf-8")
+        reply = server_mcp.chiedi_al_ponte("stato", {}, path=self.path, timeout=2)
+        self.assertIn("non è aperta", reply["errore"])
+
     def test_protocollo_mcp(self):
         init = server_mcp.gestisci({"jsonrpc": "2.0", "id": 1, "method": "initialize",
                                     "params": {"protocolVersion": "2025-06-18"}})

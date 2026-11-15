@@ -3691,6 +3691,7 @@ def main() -> None:
                             continue
                         if voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
                             write_line("TU > " + spoken)
+                            __import__("richiamo").registra(spoken)
                             if try_file_command(spoken):
                                 continue
                             if try_timer_command(spoken):
@@ -4265,6 +4266,7 @@ def main() -> None:
         message=request.get().strip()
         if not message:
             return
+        __import__("richiamo").registra(message)
         try:
             chat_is_visible = chat_notebook.select() == str(chat_local_tab)
         except NameError:

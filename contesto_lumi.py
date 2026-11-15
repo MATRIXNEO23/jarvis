@@ -90,10 +90,11 @@ def filtra_ricordi(raw: str, mode: str) -> str:
     if not isinstance(value, dict):
         return ""
     value.pop("recent", None)
-    if not any(value.get(key) for key in ("related", "evidence")):
+    # I ricordi salvati pertinenti restano sempre (prova sul Pavilion 15/11: venivano tolti).
+    if not any(value.get(key) for key in ("related", "evidence", "ricordi")):
         # Niente trovato per questa domanda: nessun ricordo (lo stato del progetto
         # resta, è il contesto stesso del progetto attivo).
-        value = {k: v for k, v in value.items() if k in ("project", "state", "steps")}
+        value = {k: v for k, v in value.items() if k in ("project", "state", "steps", "ricordi")}
     if not any(value.values()):
         return ""
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))

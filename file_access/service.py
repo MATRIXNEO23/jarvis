@@ -434,7 +434,7 @@ class FileAccessService:
             return ('open', {'target': 'download'})
         if low in ('apri disco locale c', 'apri unità c', 'apri unita c'):
             return ('open', {'target': 'C:\\'})
-        if low in ('aiuto', 'comandi', 'cosa puoi fare', 'cosa sai fare'):
+        if low in ('aiuto', 'comandi'):   # «cosa puoi fare»: frase di Lumi (15/11 sera)
             return ('help', {})
         number = result_number(low)
         if number is not None:

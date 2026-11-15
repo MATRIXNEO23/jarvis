@@ -71,6 +71,10 @@ def chiedi_al_ponte(op: str, args: dict, path: Path | None = None, timeout: floa
                     break
                 data += chunk
         return json.loads(data.split(b"\n", 1)[0].decode("utf-8"))
+    except ConnectionRefusedError:
+        # File rimasto da una chiusura brusca: Lumi non è aperta (prova 15/11).
+        return {"ok": False, "errore": "Lumi non è aperta o la Diagnostica per Claude è spenta "
+                                       "(c'è un collegamento vecchio, di una chiusura brusca)."}
     except (OSError, ValueError, KeyError, TypeError):
         return {"ok": False, "errore": "Lumi non risponde."}
 

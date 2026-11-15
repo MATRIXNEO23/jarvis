@@ -22,6 +22,18 @@ _DOMANDA = re.compile(
 
 ARGOMENTO = 3   # quanti scambi mostrare per «prima di questo argomento»
 
+# Tutto quello che l'utente dice o scrive da quando Lumi è aperta, anche i comandi risolti
+# da Lumi senza modello (prova sul Pavilion 15/11: «cosa ti ho detto prima» saltava
+# «ricordati che…», «chi sei», timer…). Dopo un riavvio si usa la cronologia della chat.
+from collections import deque
+ULTIMI = deque(maxlen=50)
+
+
+def registra(text: str) -> None:
+    text = " ".join(str(text or "").split())
+    if text and not (ULTIMI and ULTIMI[-1] == text):
+        ULTIMI.append(text)
+
 
 def capisci(text: str):
     """None se non è una domanda di richiamo, altrimenti ("ultimo", n) o ("argomento", 0)."""
@@ -49,7 +61,11 @@ def rispondi(text: str, pairs) -> tuple[str, str] | None:
     request = capisci(text)
     if request is None:
         return None
-    asked = [q for q, _a in pairs if str(q).strip()]
+    current = " ".join(str(text).split())
+    said = list(ULTIMI)
+    while said and said[-1] == current:          # la domanda stessa non conta
+        said.pop()
+    asked = said or [q for q, _a in pairs if str(q).strip()]
     if not asked:
         return ("In questa chat non mi hai ancora detto niente.",) * 2
     kind, n = request

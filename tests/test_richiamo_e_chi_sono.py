@@ -9,6 +9,28 @@ PAIRS = [("apri chrome", "fatto"), ("che tempo fa", "non lo so"), ("metti musica
 
 
 class RichiamoTest(unittest.TestCase):
+    def setUp(self):
+        richiamo.ULTIMI.clear()
+
+    def tearDown(self):
+        richiamo.ULTIMI.clear()
+
+    def test_anche_i_comandi_risolti_da_lumi(self):
+        for text in ("apri chrome", "ricordati che ho un gatto", "chi sei?",
+                     "cosa ti ho detto prima?"):
+            richiamo.registra(text)
+        written, _ = richiamo.rispondi("cosa ti ho detto prima?", PAIRS)
+        self.assertEqual(written, "Prima mi hai detto: «chi sei?».")
+        written, _ = richiamo.rispondi("cosa ti ho detto 3 messaggi fa?", PAIRS)
+        self.assertIn("apri chrome", written)
+
+    def test_ricordi_pertinenti_arrivano_a_gemma(self):
+        import json
+        import contesto_lumi
+        raw = json.dumps({"ricordi": ["Il mio gatto si chiama Fuffi"], "recent": [{"user": "x"}]})
+        kept = json.loads(contesto_lumi.filtra_ricordi(raw, "pertinenti"))
+        self.assertEqual(kept, {"ricordi": ["Il mio gatto si chiama Fuffi"]})
+
     def test_capisce_le_domande(self):
         self.assertEqual(richiamo.capisci("cosa ti ho detto prima?"), ("ultimo", 1))
         self.assertEqual(richiamo.capisci("Lumi, cosa ti ho chiesto poco fa"), ("ultimo", 1))
