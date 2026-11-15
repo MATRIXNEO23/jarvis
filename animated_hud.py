@@ -331,14 +331,17 @@ class JarvisHUD:
             x=0,y=19,relheight=.89)
         nav=tk.Frame(self.left,bg=PANEL,height=45)
         nav.pack(fill="x",padx=9,pady=(8,4))
-        for name in ("CONSOLE","ATTIVITÀ","SISTEMA"):
-            button=tk.Button(
-                nav,text=name,command=lambda tab=name:self.select_tab(tab),
-                bg=PANEL,fg=MUTED,activeforeground=WHITE,
-                activebackground="#0b3650",font=("Consolas",9),
-                bd=0,relief="flat",padx=9,pady=8,cursor="hand2")
-            button.pack(side="left",fill="x",expand=True)
-            self._tabs[name]=button
+        # Un solo livello (15/11): la chat resta qui; attività e messaggi di
+        # sistema si aprono quando servono dal pulsantino DIAGNOSTICA.
+        tk.Label(nav,text="CHAT",bg=PANEL,fg=CYAN,font=("Consolas",9),
+                 padx=9,pady=8).pack(side="left")
+        self.diagnostics_button=tk.Button(
+            nav,text="DIAGNOSTICA ▸",command=self.open_diagnostics,
+            bg=PANEL,fg=MUTED,activeforeground=WHITE,
+            activebackground="#0b3650",font=("Consolas",8),
+            bd=0,relief="flat",padx=7,pady=6,cursor="hand2")
+        self.diagnostics_button.pack(side="right")
+        self._diagnostics=None
         tk.Frame(self.left,height=1,bg="#12608a").pack(
             fill="x",padx=11,pady=(0,8))
         self.console_host=tk.Frame(self.left,bg=PANEL)
@@ -406,6 +409,86 @@ class JarvisHUD:
         self.last_metrics=time.monotonic()
         self.select_tab("CONSOLE")
         self.parent.after(TICK_MS,self._tick)
+
+    def open_diagnostics(self):
+        """Finestra separata con tutti i messaggi (Tutto / Attività / Sistema).
+        È una copia di sola lettura della console: la chat non cambia."""
+        if self._diagnostics is not None:
+            try:
+                self._diagnostics["window"].deiconify()
+                self._diagnostics["window"].lift()
+                return
+            except tk.TclError:
+                self._diagnostics=None
+        window=tk.Toplevel(self.parent)
+        window.title("Lumi - Diagnostica")
+        window.geometry("620x460")
+        window.configure(bg=BG)
+        bar=tk.Frame(window,bg=PANEL)
+        bar.pack(fill="x")
+        text=tk.Text(window,bg=PANEL,fg=WHITE,font=("Consolas",9),wrap="word",
+                     bd=0,highlightthickness=0,state="disabled")
+        text.pack(fill="both",expand=True,padx=6,pady=6)
+        state={"window":window,"text":text,"filter":"TUTTO","buttons":{}}
+        roles=("utente","jarvis","azione","errore","sistema")
+        colors={"utente":CYAN,"jarvis":WHITE,"azione":"#7fe0a0","errore":"#ff7a7a",
+                "sistema":MUTED}
+        for role in roles:
+            text.tag_configure(role,foreground=colors[role])
+
+        def apply(name):
+            state["filter"]=name
+            visible=(set(roles) if name=="TUTTO" else
+                     {"azione","errore"} if name=="ATTIVITÀ" else {"sistema","errore"})
+            for role in roles:
+                text.tag_configure(role,elide=(role not in visible))
+            for key,button in state["buttons"].items():
+                button.configure(bg="#0b2c43" if key==name else PANEL,
+                                 fg=CYAN if key==name else MUTED)
+            text.see("end")
+
+        def refresh():
+            if self._diagnostics is not state:
+                return
+            source=self._console
+            try:
+                if not window.winfo_exists():
+                    return
+                end=source.index("end-1c") if source is not None else None
+                if source is not None and end!=state.get("end"):
+                    # Ricopia solo se la console è cambiata (leggero sull'i3).
+                    state["end"]=end
+                    dump=source.dump("1.0","end-1c",text=True,tag=True)
+                    text.configure(state="normal")
+                    text.delete("1.0","end")
+                    active=[]
+                    for kind,value,_index in dump:
+                        if kind=="tagon":
+                            active.append(value)
+                        elif kind=="tagoff" and value in active:
+                            active.remove(value)
+                        elif kind=="text":
+                            text.insert("end",value,tuple(t for t in active if t in roles))
+                    text.configure(state="disabled")
+                    apply(state["filter"])
+                window.after(2000,refresh)
+            except tk.TclError:
+                pass
+
+        for name in ("TUTTO","ATTIVITÀ","SISTEMA"):
+            button=tk.Button(bar,text=name,command=lambda n=name:apply(n),bg=PANEL,fg=MUTED,
+                             activebackground="#0b3650",activeforeground=WHITE,
+                             font=("Consolas",9),bd=0,relief="flat",padx=9,pady=7)
+            button.pack(side="left")
+            state["buttons"][name]=button
+
+        def close():
+            self._diagnostics=None
+            window.destroy()
+
+        window.protocol("WM_DELETE_WINDOW",close)
+        self._diagnostics=state
+        refresh()
 
     def attach_console(self,console):
         """Bind existing history without changing its content or commands."""
