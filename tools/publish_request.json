@@ -1,10 +1,10 @@
 {
-  "run_id": 43719492123,
-  "artifact": "lumi-048-prova-candidate",
-  "file": "Lumi-048-PROVA.zip",
-  "bytes": 27773085,
-  "sha256": "22304bad4a5a135b81f323ee02dc4a0475623e211240a16cd1791066a2e0f302",
-  "source_commit": "efd5eed",
-  "title": "Build 048 PROVA — tutorial guidato, parola dei comandi a scelta, orchestratore online con cartelle sicure",
-  "description": "Tutto della 047 più: tutorial guidato passo per passo la prima volta in ogni finestra del Controllo PC («Ti guido passo passo?», «salta passo», «esci dal tutorial», «fammi il tutorial»); in La mia voce «Cambia la parola di questo comando…» (la parola originale resta valida); orchestratore online: con il cervello online acceso e un servizio online con chiave, Lumi chiede «Uso l'online per questa richiesta? sì, no o sempre» e il modello online fa le richieste a più passi. Nelle cartelle sicure (Impostazioni) legge e scrive da solo; fuori e per i comandi chiede il tuo sì; non cancella mai file. I comandi base restano offline. Verificati in CI Windows: 1422 test, diagnostica, Telegram, tokenizer, pacchetto e avvio. Da provare sul Pavilion."
+  "run_id": 43755471110,
+  "artifact": "lumi-049-prova-candidate",
+  "file": "Lumi-049-PROVA.zip",
+  "bytes": 28245326,
+  "sha256": "717854610d655082fbbff3f83a2c8ec9616f3867cb9f1e44cecdf0ae3373d333",
+  "source_commit": "bf7518b",
+  "title": "Build 049 PROVA — impostazioni a cascata, add-on con interruttore, ricordi, simboli delle chat, menu laterale, servizi online con quote, Telegram, finestra unica",
+  "description": "Tutto della 048 più: impostazioni con categorie a sinistra (Interfaccia, Voce, Memoria, Modelli, Add-on, Tutorial, Info) e voci di fianco, si chiudono cliccando su Lumi; add-on con icona azzurra/arancione e interruttore a scorrimento, menu dell'add-on con un clic sull'icona; menu laterale a cartelle (progetti e chat, sposta, rinomina, elimina, Esporta JSON) con 🤖 offline e 📡 online davanti al nome; pulsante ONLINE ▾ con servizi, barre delle quote e soglie; servizi online un file per servizio; icona ✈ Telegram con colori e chat nel menu laterale; una sola finestra (niente console nera); motore del modello sempre separato; script Python dall'orchestratore solo col tuo sì; sì/no senza «Lumi»; «cosa ti ho detto prima / N turni fa» dalla cronologia; «chi sei» e «cosa puoi fare» con frasi varie configurabili; ricordi: l'online decide cosa salvare (breve per Gemma, completo per l'online), «ricordati che…», «cancellalo», pagina Ricordi con ricerca e categorie; documenti negli allegati (PDF, ODT, DOCX, XLSX, PPTX, EPUB…); correzione lista voci. Diagnostica per Claude con strumenti nuovi (impostazioni, add-on, ricordi, chat). Verificati in CI Windows: 1482 test, diagnostica, Telegram, tokenizer, pacchetto e avvio. Da provare sul Pavilion."
 }
