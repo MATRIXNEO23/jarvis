@@ -419,3 +419,12 @@ Analisi di SuperFarfix-main (zip dell'utente, non salvato nel repo, licenza CC B
 5. Sezione GPT: elenco servizi online con spunte e chiavi API, in fila, KoboldCpp ultima scelta.
 6. Confronto con SuperFarfix per prendere idee (solo idee, licenza CC BY-NC).
 Passo 1 fatto (15/11, conferma utente «Ok»): messaggio doppio. Causa: a voce il microfono scriveva «TU > frase» e poi `submit_gemma_voice` riscriveva «UTENTE / VOCE > frase», che `write_line` non riconosce come messaggio dell'utente e mostrava come SISTEMA. Correzione: `submit_gemma_voice` scrive il messaggio solo se digitato. Test: tests/test_messaggio_singolo.py.
+
+## Decisioni a voce del 15/11 (seconda chiamata)
+- Chat: un solo livello di schede (oggi doppione: CONSOLE/ATTIVITÀ/SISTEMA e sotto Chat locali/Console). Si vede solo la chat; stato, diagnostica (e SISTEMA, da verificare cosa mostra) dietro un pulsantino sempre visibile, non invasivo.
+- Progetti come in ChatGPT: un progetto contiene più chat (con i suoi file e la sua memoria); a sinistra i progetti e dentro le chat.
+- Bug: «passa a …» (finestre del Controllo PC) a volte va ai progetti. Decisione: progetti con «progetto <nome>» o «apri progetto <nome>» (senza articolo); «passa a» solo per le finestre. Personalizzabili da Le mie parole.
+- Allegati: pulsante, trascinamento, Ctrl+V; testo lungo incollato trattato come allegato.
+- Sotto ogni risposta del modello: copia, leggi (voce), rigenera. In futuro piccola etichetta del modello che ha risposto; la finestra non cambia con orchestratore e altri modelli.
+- Contesto diverso per modello: locale poco (ultimi messaggi, riassunto breve, pochi pezzi di file); online di più ma ottimizzato per non consumare quota; ricordi solo se la domanda li riguarda (mai per domande tecniche). Sezione «Contesto» nelle impostazioni, separata locale/online: messaggi recenti interi, riassunto vecchi on/off, ricordi (mai / se pertinenti [predefinito] / sempre), pezzi di file per domanda, tetto di token per richiesta.
+- Add-on «Diagnostica per Claude» (server MCP locale per l'app Claude desktop), spento di serie: lettura di console, errori, motore.log, stato; comandi SOLO dentro Lumi (scrivere in chat, impostazioni di Lumi, riavvio del modello, provare comandi come se detti dall'utente); escluso il resto del PC (Controllo PC, finestre, mouse, programmi).
