@@ -109,6 +109,5 @@ class Aiuto:
             self.state["usi"] += 1
             if self.state["usi"] >= USI_PRIMA_DI_CHIEDERE and not self.state["chiesto"]:
                 self.state["chiesto"] = True
-                ask("Vuoi che tolga il riquadro dei comandi? Di' sì o no. "
-                    "Lo riaccendi quando vuoi con «mostra i comandi».")
+                ask(__import__("frasi_lumi").say("togli_riquadro"))
         self._save()

@@ -1141,6 +1141,14 @@ def _sounds_like(spoken: str, name: str) -> float:
         return 0.0
     written = difflib.SequenceMatcher(None, spoken, name).ratio()
     sound = difflib.SequenceMatcher(None, _phonetic(spoken), _phonetic(name)).ratio()
+    try:            # passo 11: lettere che la voce dell'utente perde di continuo (es. la S)
+        import la_mia_voce
+        if la_mia_voce.facoltative():
+            loose = difflib.SequenceMatcher(None, la_mia_voce.senza_facoltative(spoken),
+                                            la_mia_voce.senza_facoltative(name)).ratio()
+            return max(written, sound, loose)
+    except ImportError:
+        pass
     return max(written, sound)
 
 

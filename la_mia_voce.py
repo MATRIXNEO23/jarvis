@@ -91,6 +91,69 @@ def set_pause(value: float) -> float:
     return value
 
 
+# --- passo 11: conflitti, lettere perse, trascrizione dal vivo ---------------------------
+PARZIALE = {"testo": "", "ascolta": None}       # finestra aperta: riceve il parlato dal vivo
+LETTERE = "sz"                                   # lettere che Vosk perde più spesso
+
+
+def conflitto(source: str, phrases=None) -> str:
+    """Motivo se la parola da correggere è anche un comando (o parte di uno)."""
+    word = _norm(source)
+    if not word:
+        return ""
+    for phrase in phrases or PHRASES:
+        if word == _norm(phrase) or (" " + word + " ") in (" " + _norm(phrase) + " "):
+            return "«%s» è anche nel comando «%s»" % (word, phrase)
+    return ""
+
+
+def lettere_perse(results) -> list[str]:
+    """Lettere che mancano di continuo nelle frasi capite (≥3 volte): es. la S."""
+    counts = {}
+    for expected, heard, _outcome in results:
+        want, got = _norm(expected).split(), _norm(heard).split()
+        if len(want) != len(got):
+            continue
+        for w, g in zip(want, got):
+            for letter in LETTERE:
+                if w != g and w.replace(letter, "") == g.replace(letter, "") and w.count(letter) > g.count(letter):
+                    counts[letter] = counts.get(letter, 0) + 1
+    return sorted(letter for letter, count in counts.items() if count >= 3)
+
+
+def facoltative() -> str:
+    return "".join(_load().get("lettere_facoltative", []))
+
+
+def salva_facoltative(letters) -> None:
+    path = _path()
+    if path is None:
+        return
+    data = _load()
+    data["lettere_facoltative"] = sorted(set(letters) & set(LETTERE))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+
+def senza_facoltative(text: str) -> str:
+    """Confronto con i comandi: le lettere che la tua voce perde non contano."""
+    value = _norm(text)
+    for letter in facoltative():
+        value = value.replace(letter, "")
+    return value
+
+
+def parziale(text: str) -> None:
+    """Dal microfono: parlato in corso (solo mentre la finestra è aperta)."""
+    PARZIALE["testo"] = text
+    listener = PARZIALE["ascolta"]
+    if listener is not None:
+        try:
+            listener(text)
+        except Exception:
+            pass
+
+
 def _norm(text: str) -> str:
     return " ".join(str(text).casefold().replace(",", " ").replace("'", " ").strip(" .!?").split())
 
@@ -117,8 +180,13 @@ class Session:
         if expected is None:
             return ""
         got, want = _norm(heard), _norm(expected)
+        changed = " ".join(w for w in got.split() if w not in want.split())
+        clash = conflitto(changed, [p for p in self.phrases if _norm(p) != want]) if changed else ""
         if got == want:
             outcome = "Capito bene."
+        elif clash:
+            # Passo 11: niente correzioni che confonderebbero un altro comando.
+            outcome = "Capito «%s», non imparo per non confondere i comandi: %s." % (heard, clash)
         else:
             try:
                 source, target = self.lexicon.learn_phrase(got, want, user_confirmed=True)
@@ -195,6 +263,98 @@ class VoiceWindow:
         ttk.Label(pause, textvariable=self.pause_text, width=12).pack(side="left", padx=8)
         self._pause_changed()
         self.session = None
+        # Passo 11: parlato dal vivo, lettere perse, correzioni da vedere e togliere,
+        # frase capita male scritta a mano.
+        self.live = tk.StringVar(value="")
+        ttk.Label(frame, textvariable=self.live, foreground="#46a0c8", wraplength=520).pack(anchor="w")
+        PARZIALE["ascolta"] = lambda text: self.window.after(0, self.live.set, "Sento: " + text)
+        letters = ttk.Frame(frame)
+        letters.pack(fill="x", pady=(8, 0))
+        ttk.Label(letters, text="Lettere che la tua voce perde (nei comandi non contano):").pack(side="left")
+        self.letters = {}
+        for letter in LETTERE:
+            var = tk.BooleanVar(value=letter in facoltative())
+            self.letters[letter] = var
+            ttk.Checkbutton(letters, text=letter.upper(), variable=var,
+                            command=self._save_letters).pack(side="left", padx=4)
+        smart = tk.BooleanVar(value=__import__("classificatore").attivo())
+        ttk.Checkbutton(frame, variable=smart, text=(
+            "Classificatore leggero: se nessun comando corrisponde, Lumi chiede «Intendevi…?» "
+            "(spento di serie)"),
+            command=lambda: __import__("classificatore").imposta(smart.get())).pack(anchor="w", pady=(6, 0))
+        fix = ttk.LabelFrame(frame, text="Lumi ha capito male un comando?", padding=6)
+        fix.pack(fill="x", pady=(8, 0))
+        self.heard = tk.StringVar(value=_ultima_frase())
+        self.meant = tk.StringVar()
+        for label, var in (("Lumi ha capito:", self.heard), ("Io avevo detto:", self.meant)):
+            row = ttk.Frame(fix)
+            row.pack(fill="x", pady=1)
+            ttk.Label(row, text=label, width=16).pack(side="left")
+            ttk.Entry(row, textvariable=var).pack(side="left", fill="x", expand=True)
+        ttk.Button(fix, text="Impara la differenza", command=self.learn_typed).pack(anchor="e", pady=(3, 0))
+        listing = ttk.LabelFrame(frame, text="Correzioni imparate", padding=6)
+        listing.pack(fill="both", expand=True, pady=(8, 0))
+        self.list = tk.Listbox(listing, height=5, activestyle="none")
+        self.list.pack(side="left", fill="both", expand=True)
+        ttk.Button(listing, text="Togli", command=self.remove_selected).pack(side="left", padx=6)
+        self.window.geometry("580x700")
+        self.refresh_list()
+
+    def _lexicon(self):
+        from adaptive_voice import SpeechCorrections
+        return SpeechCorrections()
+
+    def _save_letters(self):
+        salva_facoltative([l for l, var in self.letters.items() if var.get()])
+
+    def learn_typed(self):
+        heard, meant = self.heard.get().strip(), self.meant.get().strip()
+        if not heard or not meant:
+            self.status.set("Scrivi cosa ha capito Lumi e cosa avevi detto.")
+            return
+        changed = " ".join(w for w in _norm(heard).split() if w not in _norm(meant).split())
+        clash = conflitto(changed) if changed else ""
+        if clash:
+            self.status.set("Non imparo per non confondere i comandi: " + clash + ".")
+            return
+        try:
+            source, target = self._lexicon().learn_phrase(heard, meant, user_confirmed=True)
+        except Exception as exc:
+            self.status.set("Non imparo: " + str(exc)[:100])
+            return
+        for callback in ON_LEARNED:
+            try:
+                callback()
+            except Exception:
+                pass
+        self.status.set(f"Imparato: «{source}» → «{target}».")
+        self.meant.set("")
+        self.refresh_list()
+
+    def refresh_list(self):
+        self.list.delete(0, "end")
+        try:
+            self.items = self._lexicon().elenco()
+        except Exception:
+            self.items = []
+        for heard, meant in self.items:
+            self.list.insert("end", f"«{heard}» → «{meant}»")
+
+    def remove_selected(self):
+        if not self.list.curselection():
+            return
+        heard = self.items[self.list.curselection()[0]][0]
+        try:
+            self._lexicon().rimuovi(heard)
+        except Exception as exc:
+            self.status.set("Non tolta: " + str(exc)[:100])
+            return
+        for callback in ON_LEARNED:
+            try:
+                callback()
+            except Exception:
+                pass
+        self.refresh_list()
 
     def _pause_changed(self, *_):
         value = set_pause(self.pause.get())
@@ -219,8 +379,17 @@ class VoiceWindow:
         if expected is None:
             learned = sum(1 for r in self.session.results if r[2].startswith("Imparato"))
             self.phrase.set("Fatto!")
-            self.status.set(f"Finito: {learned} correzioni nuove su {total} frasi.")
+            lost = lettere_perse(self.session.results)
+            note = ""
+            if lost:
+                salva_facoltative(set(facoltative()) | set(lost))
+                for letter in lost:
+                    self.letters[letter].set(True)
+                note = (" La tua voce perde spesso la " + ", ".join(l.upper() for l in lost)
+                        + ": nei comandi non conterà (togli la spunta per annullare).")
+            self.status.set(f"Finito: {learned} correzioni nuove su {total} frasi." + note)
             self.session = None
+            self.refresh_list()
         else:
             self.phrase.set(expected)
 
@@ -238,4 +407,17 @@ class VoiceWindow:
 
     def close(self):
         stop()
+        PARZIALE["ascolta"] = None
         self.window.destroy()
+
+
+def _ultima_frase() -> str:
+    """L'ultima frase tua mostrata in chat (per correggerla a mano)."""
+    try:
+        from diagnostica_claude.ponte import RIGHE
+        for _time, role, text in reversed(RIGHE):
+            if role == "utente":
+                return text
+    except ImportError:
+        pass
+    return ""

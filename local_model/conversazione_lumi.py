@@ -310,12 +310,21 @@ def installa(d):
         if before_model(spoken):
             return True              # capita dal motore interno (sinonimi) o domanda sì/no
         from model_gate import local_enabled as model_enabled, refused_local as model_refused
+        # Passo 11: classificatore leggero (spento di serie), solo a voce e solo se nessuna
+        # regola ha capito: «Intendevi …?».
+        guess = None if (typed or route is not None) else __import__("classificatore").indovina(spoken)
+        if guess is not None:
+            __import__("classificatore").IN_ATTESA["frase"] = (spoken, guess[0])
+            __import__("lumi_comandi").chiedi(
+                "nlu_yes", __import__("frasi_lumi").say("intendevi", comando=guess[0]),
+                d.write_line, d.speak_result, no_action="nlu_no")
+            return True
         # Passo 8: servizi online (forzati con «ragiona online», sempre, o proposti).
         route, spoken = __import__("servizi_online").percorso(spoken, route)
         if route == "proponi":
             __import__("servizi_online").IN_ATTESA["domanda"] = (spoken, typed)
             __import__("lumi_comandi").chiedi(
-                "online_yes", "È una domanda lunga: la passo all'online? Di' sì o no.",
+                "online_yes", __import__("frasi_lumi").say("proponi_online"),
                 d.write_line, d.speak_result, no_action="online_no")
             return True
         local_ok = model_enabled()

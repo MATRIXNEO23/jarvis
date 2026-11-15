@@ -190,6 +190,20 @@ class SpeechCorrections:
         result.append(recognized[position:])
         return "".join(result)
 
+    def elenco(self) -> list[tuple[str, str]]:
+        """Correzioni salvate (capito → voluto), per vederle e toglierle (passo 11)."""
+        with self._db() as db:
+            return [(h, i) for h, i in db.execute(
+                "SELECT heard, intended FROM speech_corrections ORDER BY heard").fetchall()]
+
+    def rimuovi(self, heard: str) -> bool:
+        """Toglie una correzione; solo da un'azione esplicita dell'utente."""
+        with self._db() as db:
+            removed = db.execute("DELETE FROM speech_corrections WHERE heard=?",
+                                 (_normalize(heard),)).rowcount
+        self.reload()
+        return bool(removed)
+
     def count(self) -> int:
         return len(self._rules)
 

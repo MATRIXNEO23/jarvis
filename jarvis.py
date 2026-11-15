@@ -4587,6 +4587,16 @@ def main() -> None:
         threading.Thread(target=work, daemon=True, name="lumi-github").start()
         return True
 
+    def resume_guessed_command(accepted: bool) -> None:
+        waiting = __import__("classificatore").IN_ATTESA
+        pending, waiting["frase"] = waiting["frase"], None
+        if pending is None:
+            return
+        if accepted:
+            submit_local(message_override=pending[1], source_utterance=pending[0])
+        else:
+            submit_gemma_voice(pending[0], route="locale")
+
     def resume_online_question(route: str) -> None:
         waiting = __import__("servizi_online").IN_ATTESA
         pending, waiting["domanda"] = waiting["domanda"], None
@@ -4613,7 +4623,7 @@ def main() -> None:
             conversation_epoch += 1      # la risposta GPT in arrivo viene scartata
             pending_conversation.clear()
             planner_abort_event.set()
-        write_line("LUMI > Mi fermo.")
+        write_line("LUMI > " + __import__("frasi_lumi").say("fermo"))
         return True
 
     def lumi_model_restart() -> None:
@@ -4651,6 +4661,9 @@ def main() -> None:
          # Passo 8: risposta a «la passo all'online?» per una domanda lunga.
          "online_yes": lambda: resume_online_question("online"),
          "online_no": lambda: resume_online_question("locale"),
+         # Passo 11: risposta a «Intendevi …?» del classificatore leggero.
+         "nlu_yes": lambda: resume_guessed_command(True),
+         "nlu_no": lambda: resume_guessed_command(False),
          "help_off": lambda: (pc_help_box is not None and pc_help_box.imposta_riquadro(False),
                               pc_service.show_strip(None),
                               write_line("LUMI > Riquadro dei comandi tolto: «mostra i comandi» "

@@ -125,6 +125,20 @@ def _pause_seconds() -> float:
         return 0.0
 
 
+def _trainer_open() -> bool:
+    try:
+        import la_mia_voce
+        return la_mia_voce.PARZIALE["ascolta"] is not None
+    except ImportError:
+        return False
+
+
+def _show_partial(text: str) -> None:
+    import la_mia_voce
+    if text != la_mia_voce.PARZIALE["testo"]:
+        la_mia_voce.parziale(text)
+
+
 class WakeWordGate:
     """Explicit wake name for continuous listening, never a microphone mode.
 
@@ -379,7 +393,11 @@ class VoiceController:
                             self._speech_active_until = activity.active_until
                     if overflow:
                         self._report("voice_status", "Audio in ritardo: parla più lentamente.", generation)
-                    if recognizer.AcceptWaveform(pcm):
+                    accepted = recognizer.AcceptWaveform(pcm)
+                    if not accepted and _trainer_open():
+                        # Passo 11: con «La mia voce» aperta si vede il parlato dal vivo.
+                        _show_partial(json.loads(recognizer.PartialResult()).get("partial", ""))
+                    if accepted:
                         part = json.loads(recognizer.Result()).get("text", "").strip()
                         if part:
                             if self.mode == PUSH_TO_TALK:

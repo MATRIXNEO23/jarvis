@@ -73,4 +73,4 @@ Aggiornare questo file a ogni consegna o decisione importante.
 9. **Fatto (vedi CI)**: Diagnostica per Claude (`diagnostica_claude/`, MCP locale), import di una chat da ChatGPT/Claude (`chat_import.py`), GitHub sola lettura (`github_lettura.py`).
 Dettagli e motivazioni: sezioni datate in fondo a `docs/ARCH-01-F5-CHECKPOINT.md`.
 10. Bug voce online Microsoft: corretto (attesa iniziale 10 s, niente alternanza nella stessa risposta), da provare sul Pavilion.
-11. Tutorial con correzione dei comandi, lettere perse (S), parole incerte in dettatura, classificatore opzionale, frasi variate (decisioni 15/11 10:50 nel checkpoint).
+11. **Fatto in parte (vedi CI)**: La mia voce con parlato dal vivo, conflitti, correzioni a mano e togliibili, lettere perse; classificatore opzionale; frasi variate. Manca: parole incerte evidenziate in dettatura.

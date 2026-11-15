@@ -104,6 +104,17 @@ DEFAULTS: dict[str, dict[str, tuple[str, tuple[str, ...]]]] = {
             "Mi nascondo. Di' «Lumi, sveglia» per riavermi.", "Ok, sparisco.",
             "Nascosta. Mi ritrovi con «sveglia».")),
         "riavvio": ("Si riavvia", ("Mi riavvio, torno subito.", "Riavvio in corso, a tra poco.")),
+        "fermo": ("«Lumi, fermati» o pulsante Ferma", (
+            "Mi fermo.", "Ok, fermo tutto.", "Fermata.", "Smetto subito.", "Va bene, mi fermo qui.")),
+        "proponi_online": ("Domanda lunga: chiede se passarla all'online", (
+            "È una domanda lunga: la passo all'online? Di' sì o no.",
+            "Questa la faccio ragionare online? Di' sì o no.",
+            "Domanda impegnativa: la mando ai servizi online? Di' sì o no.",
+            "Vuoi che la passi all'online? Rispondi sì o no.")),
+        "togli_riquadro": ("Dopo molti comandi chiede se togliere il riquadro", (
+            "Vuoi che tolga il riquadro dei comandi? Di' sì o no. Lo riaccendi con «mostra i comandi».",
+            "Tolgo il riquadro dei comandi? Rispondi sì o no. Torna con «mostra i comandi».",
+            "Ormai i comandi li sai: tolgo il riquadro? Di' sì o no.")),
     },
 }
 
