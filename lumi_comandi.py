@@ -39,6 +39,10 @@ _PATTERNS = (
     ("model_restart", re.compile(
         r"^(?:riavvia|ricarica)\s+(?:il\s+)?(?:modello(?:\s+locale)?|cervello\s+locale|motore)"
         + _END, re.I)),
+    ("tutorial_skip", re.compile(r"^(?:salta(?:\s+il)?\s+passo|passo\s+successivo)" + _END, re.I)),
+    ("tutorial_stop", re.compile(r"^(?:esci\s+dal\s+tutorial|basta\s+tutorial|chiudi\s+il\s+tutorial)"
+                                 + _END, re.I)),
+    ("tutorial_start", re.compile(r"^(?:avvia|fammi|inizia|fai)\s+(?:il\s+)?tutorial" + _END, re.I)),
     ("data_cleanup", re.compile(
         r"^(?:apri\s+)?(?:la\s+)?(?:pulizia(?:\s+(?:dei\s+)?dati)?|libera\s+spazio(?:\s+su\s+disco)?)"
         + _END, re.I)),

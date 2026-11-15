@@ -487,11 +487,11 @@ def main() -> None:
         # Riquadro dei comandi per modalità e tutorial brevi (passo 7, aiuto_comandi.py).
         pc_help_box = __import__("aiuto_comandi").Aiuto(base_help=ControlService._HELP)
         pc_service.on_handled = lambda action: pc_help_box.dopo_comando(
-            pc_service.current_mode(),
+            pc_service.current_mode(), action=action,
             show=lambda text: pc_overlay.strip(root, text),
             speak=lambda text: (write_line("AIUTO > " + text), speak_result(text)),
-            ask=lambda question: __import__("lumi_comandi").chiedi(
-                "help_off", question, write_line, speak_result))
+            ask=lambda question, yes, no: __import__("lumi_comandi").chiedi(
+                yes, question, write_line, speak_result, no_action=no))
 
         def pc_help_toggle(on: bool) -> None:
             pc_help_box.imposta_riquadro(on)
@@ -4587,6 +4587,14 @@ def main() -> None:
         threading.Thread(target=work, daemon=True, name="lumi-github").start()
         return True
 
+    def help_box_say(action) -> None:
+        if pc_help_box is None:
+            write_line("AIUTO > Il Controllo PC non è attivo.")
+            return
+        text = action(pc_help_box)
+        write_line("AIUTO > " + text)
+        speak_result(text)
+
     def resume_guessed_command(accepted: bool) -> None:
         waiting = __import__("classificatore").IN_ATTESA
         pending, waiting["frase"] = waiting["frase"], None
@@ -4657,6 +4665,14 @@ def main() -> None:
          "hide": lumi_hide, "wake": lumi_wake,
          "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
          "data_cleanup": lambda: open_data_cleanup(),
+         # Tutorial guidato del Controllo PC (aiuto_comandi.PASSI).
+         "tutorial_yes": lambda: help_box_say(lambda box: box.avvia_guida()),
+         "tutorial_no": lambda: help_box_say(lambda box: (
+             setattr(box, "offerta", None) or "Va bene. I comandi restano nel riquadro.")),
+         "tutorial_skip": lambda: help_box_say(lambda box: box.salta()),
+         "tutorial_stop": lambda: help_box_say(lambda box: box.esci()),
+         "tutorial_start": lambda: help_box_say(lambda box: box.avvia_guida(
+             pc_service.current_mode())),
          "github": lambda spoken: lumi_github(spoken),
          # Passo 8: risposta a «la passo all'online?» per una domanda lunga.
          "online_yes": lambda: resume_online_question("online"),

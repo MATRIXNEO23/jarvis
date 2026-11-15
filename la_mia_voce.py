@@ -253,6 +253,8 @@ class VoiceWindow:
         ttk.Button(buttons, text="Inizia", command=self.begin).pack(side="left", padx=(0, 8))
         ttk.Button(buttons, text="Salta frase", command=self.skip).pack(side="left", padx=(0, 8))
         ttk.Button(buttons, text="Ferma", command=self.end).pack(side="left")
+        ttk.Button(buttons, text="Cambia la parola di questo comando…",
+                   command=self.change_word).pack(side="left", padx=(8, 0))
         pause = ttk.LabelFrame(frame, text="Pausa tra le parole prima che il comando parta",
                                padding=8)
         pause.pack(fill="x", pady=(10, 0))
@@ -299,6 +301,37 @@ class VoiceWindow:
         ttk.Button(listing, text="Togli", command=self.remove_selected).pack(side="left", padx=6)
         self.window.geometry("580x700")
         self.refresh_list()
+
+    def last_phrase(self) -> str | None:
+        """Il comando appena letto (o quello in lettura se non ce n'è uno prima)."""
+        session = self.session or getattr(self, "_finished", None)
+        if session is None:
+            return None
+        if session.results:
+            return session.results[-1][0]
+        return session.expected
+
+    def change_word(self, ask=None):
+        """Passo 11: un modo tuo di dire il comando (il comando standard resta valido)."""
+        phrase = self.last_phrase()
+        if phrase is None:
+            self.status.set("Premi «Inizia» e leggi un comando, poi puoi cambiarne la parola.")
+            return None
+        if ask is None:
+            from tkinter import simpledialog
+            ask = lambda: simpledialog.askstring(
+                "La mia voce", "Come vuoi dire «%s»?" % phrase, parent=self.window)
+        new = ask()
+        if not new or not new.strip():
+            return None
+        clash = conflitto(new)
+        if clash and _norm(new) != _norm(phrase):
+            self.status.set("Non la uso per non confondere i comandi: " + clash + ".")
+            return None
+        import command_aliases
+        result = command_aliases.add_phrase("La mia voce", phrase, new.strip())
+        self.status.set(result + " Anche «%s» resta valido." % phrase)
+        return result
 
     def _lexicon(self):
         from adaptive_voice import SpeechCorrections
@@ -375,7 +408,9 @@ class VoiceWindow:
         expected = self.session.expected
         done = self.session.index
         total = len(self.session.phrases)
-        self.status.set((outcome + "   " if outcome else "") + f"Frase {min(done + 1, total)} di {total}.")
+        ask = ("  Va bene questa parola o la vuoi cambiare? («Cambia la parola…»)"
+               if outcome and not outcome.startswith("Saltata") else "")
+        self.status.set((outcome + ask + "   " if outcome else "") + f"Frase {min(done + 1, total)} di {total}.")
         if expected is None:
             learned = sum(1 for r in self.session.results if r[2].startswith("Imparato"))
             self.phrase.set("Fatto!")
@@ -388,6 +423,7 @@ class VoiceWindow:
                 note = (" La tua voce perde spesso la " + ", ".join(l.upper() for l in lost)
                         + ": nei comandi non conterà (togli la spunta per annullare).")
             self.status.set(f"Finito: {learned} correzioni nuove su {total} frasi." + note)
+            self._finished = self.session
             self.session = None
             self.refresh_list()
         else:
