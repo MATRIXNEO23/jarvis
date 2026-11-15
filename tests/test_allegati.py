@@ -139,3 +139,87 @@ class VistaTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _pdf_bytes(text):
+    stream = ("BT /F1 12 Tf 20 100 Td (%s) Tj ET" % text).encode("latin-1")
+    objects = [b"<< /Type /Catalog /Pages 2 0 R >>",
+               b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+               b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R "
+               b"/Resources << /Font << /F1 5 0 R >> >> >>",
+               b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream",
+               b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"]
+    out, offsets = b"%PDF-1.4\n", []
+    for number, body in enumerate(objects, 1):
+        offsets.append(len(out))
+        out += b"%d 0 obj\n" % number + body + b"\nendobj\n"
+    xref = len(out)
+    out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+    out += b"".join(b"%010d 00000 n \n" % o for o in offsets)
+    out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objects) + 1, xref)
+    return out
+
+
+class DocumentiTest(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.dir = Path(self.folder.name)
+
+    def tearDown(self):
+        self.folder.cleanup()
+
+    def zipped(self, name, files):
+        path = self.dir / name
+        with zipfile.ZipFile(path, "w") as archive:
+            for inner, content in files.items():
+                archive.writestr(inner, content)
+        return path
+
+    def test_pdf_con_pypdf_incluso(self):
+        path = self.dir / "libro.pdf"
+        path.write_bytes(_pdf_bytes("Ciao dal PDF"))
+        self.assertIn("Ciao dal PDF", leggi_file(path).testo)
+        self.assertIn("[Pagina 1]", leggi_file(path).testo)
+
+    def test_office_e_libreoffice(self):
+        odt = self.zipped("a.odt", {"content.xml": "<o><text:p>Uno &amp; due</text:p><text:p>Tre</text:p></o>"})
+        self.assertEqual(leggi_file(odt).testo, "Uno & due\nTre")
+        pptx = self.zipped("b.pptx", {"ppt/slides/slide2.xml": "<p><a:p><a:t>Secondo</a:t></a:p></p>",
+                                      "ppt/slides/slide1.xml": "<p><a:p><a:t>Titolo</a:t></a:p></p>"})
+        text = leggi_file(pptx).testo
+        self.assertLess(text.index("Titolo"), text.index("Secondo"))
+        xlsx = self.zipped("c.xlsx", {
+            "xl/sharedStrings.xml": "<sst><si><t>Nome</t></si><si><t>Mario</t></si></sst>",
+            "xl/worksheets/sheet1.xml": ('<w><row><c t="s"><v>0</v></c><c><v>42</v></c></row>'
+                                         '<row><c t="s"><v>1</v></c><c t="inlineStr"><is><t>ok</t></is></c></row></w>')})
+        self.assertIn("Nome\t42", leggi_file(xlsx).testo)
+        self.assertIn("Mario\tok", leggi_file(xlsx).testo)
+
+    def test_html_epub_rtf(self):
+        page = self.dir / "p.html"
+        page.write_text("<html><style>x{}</style><p>Ciao</p><p>Mondo &egrave;</p></html>", encoding="utf-8")
+        self.assertEqual(leggi_file(page).testo.split(), ["Ciao", "Mondo", "è"])
+        epub = self.zipped("l.epub", {"OEBPS/c1.xhtml": "<html><body><p>Capitolo uno</p></body></html>"})
+        self.assertIn("Capitolo uno", leggi_file(epub).testo)
+        rtf = self.dir / "r.rtf"
+        rtf.write_text(r"{\rtf1\ansi{\fonttbl{\f0 Arial;}}\f0 Perch\'e8 s\'ec\par Fine}", encoding="ascii")
+        self.assertEqual(leggi_file(rtf).testo.split(), ["Perchè", "sì", "Fine"])
+
+    def test_formati_vecchi_e_immagini(self):
+        for name, words in (("v.doc", ".docx"), ("i.png", "non è un documento")):
+            (self.dir / name).write_bytes(b"x")
+            with self.assertRaises(AllegatoError) as ctx:
+                leggi_file(self.dir / name)
+            self.assertIn(words, str(ctx.exception))
+
+    def test_lettura_in_un_thread_poi_aggiunta(self):
+        path = self.dir / "n.txt"
+        path.write_text("nota", encoding="utf-8")
+        added, notes = [], []
+        view = allegati.AllegatiView.__new__(allegati.AllegatiView)
+        view.notify = notes.append
+        view._added = added.append
+        allegati.AllegatiView.aggiungi_file(view, [path, self.dir / "manca.txt"],
+                                           run_async=lambda fn: fn(), run_ui=lambda fn: fn())
+        self.assertEqual([a.nome for a in added], ["n.txt"])
+        self.assertIn("non trovato", notes[-1])

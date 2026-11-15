@@ -25,7 +25,7 @@ OPERATIONAL_GUIDES = frozenset({"docs/VOCE_OFFLINE.md", "docs/RECUPERO-IMPOSTAZI
                                 "musica/LEGGIMI.md", "controllo_pc/LEGGIMI.md",
                                 "telegram_addon/LEGGIMI.md", "componenti/LEGGIMI.md",
                                 "controllo_comune/LEGGIMI.md", "lumi_parti/LEGGIMI.md",
-                                "diagnostica_claude/LEGGIMI.md"})
+                                "diagnostica_claude/LEGGIMI.md", "terze_parti/LEGGIMI.md"})
 STAMP = (2026, 11, 9, 0, 0, 0)
 
 

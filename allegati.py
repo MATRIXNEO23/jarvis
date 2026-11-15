@@ -1,7 +1,9 @@
 """Allegati della chat (passo 5, 15/11): pulsante 📎, trascinamento, Ctrl+V.
 
-- File di testo (txt, md, csv, json, log, codice…) e Word .docx (letto con la libreria
-  standard). PDF e immagini: non letti per ora (manca una libreria nel pacchetto).
+- File di testo (txt, md, csv, json, log, codice…) e documenti: Word .docx, PDF (pypdf
+  incluso in terze_parti/), LibreOffice .odt/.ods/.odp, PowerPoint .pptx, Excel .xlsx, .rtf,
+  pagine .html, libri .epub. Formati vecchi .doc/.xls/.ppt: chiede di salvarli nel nuovo
+  formato. Immagini e PDF scansionati: niente testo (servirebbe l'OCR).
 - Testo lungo incollato con Ctrl+V (oltre INCOLLA_COME_ALLEGATO caratteri) diventa un
   allegato invece di finire nella casella.
 - Niente modello per scegliere: il testo è diviso in pezzi e Lumi tiene quelli con più
@@ -19,6 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 MAX_BYTES = 5 * 1024 * 1024
+MAX_BYTES_DOCUMENTI = 60 * 1024 * 1024     # PDF e documenti (libri impaginati)
 MAX_CHARS = 400_000
 PEZZO = 700
 PEZZI_LOCALE = 3
@@ -52,13 +55,19 @@ def leggi_file(path) -> Allegato:
     path = Path(path)
     if not path.is_file():
         raise AllegatoError("File non trovato: " + path.name)
-    if path.stat().st_size > MAX_BYTES:
-        raise AllegatoError(path.name + ": file oltre 5 MB, non allegato.")
     suffix = path.suffix.lower()
-    if suffix == ".docx":
-        text = _docx(path)
-    elif suffix == ".pdf":
-        raise AllegatoError(path.name + ": i PDF per ora non sono leggibili da Lumi.")
+    limit = MAX_BYTES_DOCUMENTI if suffix in DOCUMENTI else MAX_BYTES
+    if path.stat().st_size > limit:
+        raise AllegatoError(path.name + ": file oltre %d MB, non allegato." % (limit // (1024 * 1024)))
+    if suffix in DOCUMENTI:
+        text = DOCUMENTI[suffix](path)
+    elif suffix in (".doc", ".xls", ".ppt"):
+        raise AllegatoError(path.name + ": formato vecchio di Office; salvalo come "
+                            + {".doc": ".docx", ".xls": ".xlsx", ".ppt": ".pptx"}[suffix]
+                            + " e riprova.")
+    elif suffix in (".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".mp3", ".mp4", ".wav",
+                    ".zip", ".exe"):
+        raise AllegatoError(path.name + ": non è un documento di testo.")
     else:
         data = path.read_bytes()
         if suffix not in TESTO and b"\0" in data[:4096]:
@@ -99,6 +108,133 @@ def _docx(path: Path) -> str:
                          ("&amp;", "&")):
         text = text.replace(entity, char)
     return text
+
+
+# --- documenti (16/11: «documenti in generale») ------------------------------------------
+def _zip_xml(path: Path, names) -> list[str]:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            wanted = [n for n in archive.namelist() if names(n)]
+            return [archive.read(n).decode("utf-8", errors="replace") for n in sorted(wanted, key=_natural)]
+    except (OSError, KeyError, zipfile.BadZipFile) as exc:
+        raise AllegatoError(path.name + ": documento non leggibile.") from exc
+
+
+def _natural(name: str):
+    return [int(p) if p.isdigit() else p for p in re.split(r"(\d+)", name)]
+
+
+def _xml_text(xml: str, paragraph=r"</(?:w:p|text:p|text:h|a:p)>") -> str:
+    xml = re.sub(paragraph, "\n", xml)
+    xml = re.sub(r"<(?:w:tab|text:tab)\s*/>", "\t", xml)
+    xml = re.sub(r"<(?:w:br|text:line-break)\s*/>", "\n", xml)
+    return _entities(re.sub(r"<[^>]+>", "", xml))
+
+
+def _entities(text: str) -> str:
+    import html
+    return html.unescape(text)
+
+
+def _odf(path: Path) -> str:
+    return "\n".join(_xml_text(x) for x in _zip_xml(path, lambda n: n == "content.xml"))
+
+
+def _pptx(path: Path) -> str:
+    slides = _zip_xml(path, lambda n: re.fullmatch(r"ppt/slides/slide\d+\.xml", n) is not None)
+    return "\n\n".join("[Diapositiva %d]\n%s" % (i + 1, _xml_text(x).strip())
+                       for i, x in enumerate(slides))
+
+
+def _xlsx(path: Path) -> str:
+    shared_xml = _zip_xml(path, lambda n: n == "xl/sharedStrings.xml")
+    shared = [_entities(re.sub(r"<[^>]+>", "", si))
+              for si in re.findall(r"<si>(.*?)</si>", shared_xml[0], re.S)] if shared_xml else []
+    out = []
+    for index, sheet in enumerate(_zip_xml(path, lambda n: re.fullmatch(
+            r"xl/worksheets/sheet\d+\.xml", n) is not None)):
+        out.append("[Foglio %d]" % (index + 1))
+        for row in re.findall(r"<row[^>]*>(.*?)</row>", sheet, re.S):
+            cells = []
+            for attrs, body in re.findall(r"<c([^>]*)>(.*?)</c>", row, re.S):
+                value = re.search(r"<v>(.*?)</v>", body, re.S)
+                inline = re.search(r"<t[^>]*>(.*?)</t>", body, re.S)
+                if 't="s"' in attrs and value:
+                    try:
+                        cells.append(shared[int(value.group(1))])
+                    except (ValueError, IndexError):
+                        cells.append("")
+                elif inline:
+                    cells.append(_entities(inline.group(1)))
+                elif value:
+                    cells.append(_entities(value.group(1)))
+            if any(c.strip() for c in cells):
+                out.append("\t".join(cells))
+    return "\n".join(out)
+
+
+def _html_text(markup: str) -> str:
+    markup = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", "", markup)
+    markup = re.sub(r"(?i)<(?:br|/p|/div|/h\d|/li|/tr)[^>]*>", "\n", markup)
+    return _entities(re.sub(r"<[^>]+>", "", markup))
+
+
+def _html(path: Path) -> str:
+    return _html_text(_decode(path.read_bytes()))
+
+
+def _epub(path: Path) -> str:
+    return "\n\n".join(_html_text(x) for x in _zip_xml(
+        path, lambda n: n.lower().endswith((".xhtml", ".html", ".htm"))))
+
+
+def _rtf(path: Path) -> str:
+    text = _decode(path.read_bytes())
+    text = re.sub(r"\{\\\*[^{}]*\}", "", text)
+    text = re.sub(r"\{\\(?:fonttbl|colortbl|stylesheet|info)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", "", text)
+    text = re.sub(r"\\'([0-9a-fA-F]{2})",
+                  lambda m: bytes([int(m.group(1), 16)]).decode("cp1252", errors="replace"), text)
+    text = re.sub(r"\\(?:par|line)\b ?", "\n", text)
+    text = re.sub(r"\\[a-zA-Z]+-?\d* ?", "", text)
+    return text.replace("{", "").replace("}", "").replace("\\", "")
+
+
+def _pdf(path: Path) -> str:
+    """Testo dei PDF con pypdf (terze_parti/pypdf, BSD; o quello già installato)."""
+    try:
+        import pypdf
+    except ImportError:
+        import sys
+        sys.path.append(str(Path(__file__).with_name("terze_parti")))
+        try:
+            import pypdf
+        except ImportError as exc:
+            raise AllegatoError(path.name + ": manca il lettore PDF (terze_parti/pypdf): "
+                                "reinstalla il pacchetto di Lumi.") from exc
+    try:
+        reader = pypdf.PdfReader(str(path))
+        if reader.is_encrypted and not reader.decrypt(""):
+            raise AllegatoError(path.name + ": PDF protetto da password.")
+        parts, total = [], 0
+        for index, page in enumerate(reader.pages):
+            text = (page.extract_text() or "").strip()
+            if text:
+                parts.append("[Pagina %d]\n%s" % (index + 1, text))
+                total += len(text)
+            if total > MAX_CHARS:
+                break
+    except AllegatoError:
+        raise
+    except Exception as exc:          # PDF rovinati o particolari
+        raise AllegatoError(path.name + ": PDF non leggibile (" + type(exc).__name__ + ").") from exc
+    if not parts:
+        raise AllegatoError(path.name + ": il PDF non contiene testo (forse è una scansione).")
+    return "\n\n".join(parts)
+
+
+DOCUMENTI = {".docx": lambda p: _docx(p), ".pdf": _pdf, ".odt": _odf, ".ods": _odf, ".odp": _odf,
+             ".pptx": _pptx, ".xlsx": _xlsx, ".html": _html, ".htm": _html, ".epub": _epub,
+             ".rtf": _rtf}
 
 
 def dividi(text: str, size: int = PEZZO) -> list[str]:
@@ -314,16 +450,32 @@ class AllegatiView:
         if paths:
             self.aggiungi_file(list(paths))
 
-    def aggiungi_file(self, paths):
-        for path in paths[:10]:
-            try:
-                item = leggi_file(path)
-            except (AllegatoError, OSError) as exc:
-                self.notify("ALLEGATI / ERRORE > " + str(exc)[:160])
-                continue
-            ATTUALI.aggiungi(item)
-            self.notify("ALLEGATI > «%s» allegato (%d caratteri): %s"
-                        % (item.nome, len(item.testo), NOTA_GPT))
+    def aggiungi_file(self, paths, *, run_async=None, run_ui=None):
+        """Legge i file in un thread (un PDF grande può metterci un po' sull'i3) e li
+        aggiunge sull'interfaccia."""
+        import threading
+        run_ui = run_ui or (lambda fn: self.row.after(0, fn))
+        run_async = run_async or (lambda fn: threading.Thread(
+            target=fn, daemon=True, name="lumi-allegati").start())
+        paths = list(paths)[:10]
+        if any(Path(p).suffix.lower() in DOCUMENTI for p in paths):
+            self.notify("ALLEGATI > Leggo il documento…")
+
+        def work():
+            for path in paths:
+                try:
+                    item = leggi_file(path)
+                except (AllegatoError, OSError) as exc:
+                    message = "ALLEGATI / ERRORE > " + str(exc)[:160]
+                    run_ui(lambda m=message: self.notify(m))
+                    continue
+                run_ui(lambda i=item: self._added(i))
+        run_async(work)
+
+    def _added(self, item):
+        ATTUALI.aggiungi(item)
+        self.notify("ALLEGATI > «%s» allegato (%d caratteri): %s"
+                    % (item.nome, len(item.testo), NOTA_GPT))
 
     def incolla(self, _event=None):
         files = file_negli_appunti()
