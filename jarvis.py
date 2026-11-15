@@ -4544,6 +4544,25 @@ def main() -> None:
 
     ttk.Button(frame, text="Chiudi impostazioni", command=settings_window.withdraw).pack(
         anchor="e", pady=(9, 0))
+    # Impostazioni riordinate (15/11 sera): Interfaccia, Voce, Memoria, Modelli, Add-on,
+    # Tutorial, Info; voci di fianco con un clic; si chiudono cliccando nella finestra di Lumi.
+    settings_menu = __import__("impostazioni_menu")
+    tutorial_settings_frame = settings_page("Tutorial")
+    settings_menu.pagina_tutorial(
+        tutorial_settings_frame,
+        start_tutorial=lambda mode: help_box_say(lambda box: box.avvia_guida(mode)),
+        reset_tutorials=lambda: (current_help_box().rivedi_tutorial(),
+                                 write_line("AIUTO > I tutorial ripartono alla prossima modalità che usi.")),
+        open_voice_training=lambda: __import__("la_mia_voce").VoiceWindow(root))
+    info_settings_frame = settings_page("Info")
+    settings_menu.pagina_info(info_settings_frame)
+    settings_navigation = settings_menu.Navigazione(
+        settings_window, settings_tabs,
+        {"Voce": frame, "GPT e memoria": assistant_settings_frame,
+         "Progetti e servizi": integrations_settings_frame, "Timer e allarmi": timer_settings_frame,
+         "Interfaccia": interface_settings_frame, "Tutorial": tutorial_settings_frame,
+         "Info": info_settings_frame},
+        main_root=root)
     # Settings are intentionally hidden until the gear is pressed.
     # The normal window-close control invokes the same safe shutdown.
 
