@@ -303,14 +303,23 @@ def installa(d):
 
         read.recent_pairs = recent_pairs
         return (read if owner is not None else None), owner, revision, warnings
-    def submit_gemma_voice(spoken, *, typed=False):
+    def submit_gemma_voice(spoken, *, typed=False, route=None):
         if d.closing or d.gemma_trial_busy[0]:
             return False
         from intent_normalizer import before_model
         if before_model(spoken):
             return True              # capita dal motore interno (sinonimi) o domanda sì/no
         from model_gate import local_enabled as model_enabled, refused_local as model_refused
-        if not model_enabled():
+        # Passo 8: servizi online (forzati con «ragiona online», sempre, o proposti).
+        route, spoken = __import__("servizi_online").percorso(spoken, route)
+        if route == "proponi":
+            __import__("servizi_online").IN_ATTESA["domanda"] = (spoken, typed)
+            __import__("lumi_comandi").chiedi(
+                "online_yes", "È una domanda lunga: la passo all'online? Di' sì o no.",
+                d.write_line, d.speak_result, no_action="online_no")
+            return True
+        local_ok = model_enabled()
+        if not local_ok and route != "online":
             if __import__("scheda_lumi").domanda_su_lumi(spoken):
                 # Passo 7: «chi sei» col modello spento → frase pronta con dati veri.
                 reply = __import__("scheda_lumi").risposta_pronta(
@@ -400,8 +409,29 @@ def installa(d):
         from chat_stream import STREAM
         STREAM.start_request()
 
+        online_card = (__import__("scheda_lumi").scheda(__import__("scheda_lumi").fatti_da(d))
+                       if route == "online" and __import__("scheda_lumi").domanda_su_lumi(spoken)
+                       else "")
+
         def voice_worker():
             try:
+                if route == "online" and not explicit:
+                    from conversation_router import native_intent_context_for_request
+                    # Le richieste di azioni restano al motore locale, che le controlla.
+                    if native_intent_context_for_request(
+                            spoken, has_document=native_document is not None,
+                            addon_actions=native_actions) is None:
+                        name, answer = __import__("servizi_online").rispondi(
+                            spoken, card=online_card)
+                        if name:
+                            d.gemma_trial_queue.put(("online_ok", (spoken, name, answer), voice_epoch))
+                            return
+                        note = "Servizi online non disponibili: " + "; ".join(answer)[:300]
+                        if not local_ok:
+                            d.gemma_trial_queue.put(("online_fail", note, voice_epoch))
+                            return
+                        d.gemma_trial_queue.put(("online_note", note + ". Rispondo col modello locale.",
+                                                 voice_epoch))
                 session = get_gemma_session()
                 if explicit:
                     index = session.pick_program(
@@ -455,6 +485,10 @@ def installa(d):
         try:
             while True:
                 kind, value, voice_epoch = d.gemma_trial_queue.get_nowait()
+                if kind == "online_note":
+                    # Avviso a metà lavoro: il modello locale sta ancora rispondendo.
+                    d.write_line("ONLINE > " + value)
+                    continue
                 STREAM.drain(d.conversation_epoch, d.gemma_trial_busy[0] and not d.closing)
                 STREAM.clear()
                 d.gemma_trial_busy[0] = False
@@ -567,10 +601,20 @@ def installa(d):
                         d.submit_local(message_override=spoken, source_utterance=spoken,
                                      addon_action_id="addon.programmi_app.avvia",
                                      program_call=("suggest_id", {"query": app_id}))
-                elif (kind in ("voice_ok", "voice_error", "ok", "error")
+                elif (kind in ("voice_ok", "voice_error", "ok", "error", "online_ok", "online_fail")
                       and __import__("stato_lumi").consume_model_stop()):
                     # «Lumi, fermati» durante la risposta: niente errore né risposta tardiva.
                     d.write_line("LUMI > Risposta interrotta.")
+                elif kind == "online_ok":
+                    question, service_name, answer = value
+                    d.write_line("ONLINE > Risposta da " + service_name + ".")
+                    d.write_line("LUMI > " + answer)
+                    d.speak_result(answer)
+                    if d.remember_exchange(question, answer, "chat") is False:
+                        d.write_line("MEMORIA > Scambio non archiviato.")
+                elif kind == "online_fail":
+                    d.write_line("ONLINE / ERRORE > " + value)
+                    d.speak_result("I servizi online non rispondono e il modello locale è spento.")
                 elif kind == "voice_ok":
                     d.write_line("LUMI > " + value)
                     STREAM.speak_final(value, d.speak_result)

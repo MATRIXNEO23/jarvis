@@ -78,11 +78,16 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     pending = _STATE["pending"]
     if pending is not None:
         _STATE["pending"] = None
-        action, deadline = pending
+        action, deadline, *rest = pending
+        no_action = rest[0] if rest else None
         word = " ".join(_WAKE.sub("", spoken).casefold().strip(" .!?").split())
         import risposte
         if time.monotonic() <= deadline and (word in _YES or risposte.is_yes(spoken)):
             actions[action]()
+            return True
+        if (time.monotonic() <= deadline and no_action in actions
+                and (word in _NO or risposte.is_no(spoken))):
+            actions[no_action]()
             return True
         if time.monotonic() <= deadline and (word in _NO or risposte.is_no(spoken)):
             reply = say("annullato")
@@ -110,9 +115,11 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     return True
 
 
-def chiedi(action: str, question: str, write_line, speak, seconds: float = 60) -> None:
-    """Domanda sì/no per un'azione registrata (es. «help_off»): sì la esegue."""
-    _STATE["pending"] = (action, time.monotonic() + seconds)
+def chiedi(action: str, question: str, write_line, speak, seconds: float = 60,
+           no_action: str | None = None) -> None:
+    """Domanda sì/no per un'azione registrata (es. «help_off»): sì la esegue; no esegue
+    `no_action` se c'è, altrimenti «annullato»."""
+    _STATE["pending"] = (action, time.monotonic() + seconds) + ((no_action,) if no_action else ())
     write_line("LUMI > " + question)
     speak(question)
     import risposte

@@ -288,6 +288,9 @@ def main() -> None:
                                 write_line("AIUTO > I tutorial ripartono alla prossima "
                                            "modalità che usi."))
                ).pack(anchor="w", padx=8, pady=(2, 6))
+    # Servizi online con caselle e chiavi API (passo 8, servizi_online.py).
+    __import__("servizi_online").costruisci_sezione(
+        assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
     # Sezione «Contesto» (passo 4): chat continua e ricordi del modello locale.
     __import__("contesto_lumi").costruisci_sezione(
         assistant_settings_frame, lambda text: write_line(text))
@@ -4525,6 +4528,12 @@ def main() -> None:
         output_queue=output_queue, service=service, workspace=workspace,
         addon_manager=addon_manager)
 
+    def resume_online_question(route: str) -> None:
+        waiting = __import__("servizi_online").IN_ATTESA
+        pending, waiting["domanda"] = waiting["domanda"], None
+        if pending is not None:
+            submit_gemma_voice(pending[0], typed=pending[1], route=route)
+
     def lumi_stop_all() -> bool:
         """«Lumi, fermati» e pulsante «■ Ferma»: voce, risposta del modello, GPT in attesa.
 
@@ -4579,6 +4588,9 @@ def main() -> None:
          "hide": lumi_hide, "wake": lumi_wake,
          "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
          "data_cleanup": lambda: open_data_cleanup(),
+         # Passo 8: risposta a «la passo all'online?» per una domanda lunga.
+         "online_yes": lambda: resume_online_question("online"),
+         "online_no": lambda: resume_online_question("locale"),
          "help_off": lambda: (pc_help_box is not None and pc_help_box.imposta_riquadro(False),
                               pc_service.show_strip(None),
                               write_line("LUMI > Riquadro dei comandi tolto: «mostra i comandi» "
