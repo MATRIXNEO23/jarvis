@@ -287,6 +287,7 @@ class OfflineSpeaker:
             try:
                 item = self._messages.get(timeout=0.3)
             except queue.Empty:
+                self._edge_down = False       # risposta finita: si riprova la voce online
                 continue
             if item is None:
                 break
@@ -297,6 +298,10 @@ class OfflineSpeaker:
             try:
                 import edge_voice
                 edge_key = edge_voice.key_from_label(voice)
+                if edge_key is not None and getattr(self, "_edge_down", False):
+                    # Niente alternanza: dopo un errore la stessa risposta finisce con la
+                    # voce di Windows; la voce online torna alla risposta successiva.
+                    edge_key, voice = None, ""
                 if edge_key is not None:
                     try:
                         extra = {}
@@ -307,6 +312,7 @@ class OfflineSpeaker:
                         speaker(text, edge_key, on_envelope=self.on_envelope, **extra)
                         continue
                     except edge_voice.EdgeVoiceError as exc:
+                        self._edge_down = True
                         if self._notify_error and not self._closed.is_set():
                             self._notify_error("Voce Edge non disponibile (serve Internet), uso "
                                                "la voce Windows. " + str(exc)[:160])

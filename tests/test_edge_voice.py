@@ -65,6 +65,30 @@ class SpeakerEdgeFallbackTests(unittest.TestCase):
         self.assertTrue(errors and "Edge" in errors[0])
         self.assertEqual(payloads[0]["voice"], "")
 
+    def test_after_an_edge_error_the_same_answer_stays_on_windows_voice(self):
+        """15/11: niente alternanza online/Windows dentro la stessa risposta."""
+        import threading
+        import time
+        from offline_tts import OfflineSpeaker
+        calls, payloads = [], []
+        gate = threading.Event()
+        speaker = OfflineSpeaker(notify_error=lambda m: None,
+                                 runner=lambda payload, timeout: (gate.wait(2), payloads.append(payload)))
+        def flaky(text, *a, **k):
+            calls.append(text)
+            raise edge_voice.EdgeVoiceError("ritardo")
+        speaker._edge_speaker = flaky
+        speaker.speak("Prima frase.", "Edge: Elsa (online)")
+        speaker.speak("Seconda frase.", "Edge: Elsa (online)")
+        gate.set()
+        for _ in range(60):
+            if len(payloads) >= 2:
+                break
+            time.sleep(0.05)
+        speaker.close()
+        self.assertEqual(calls, ["Prima frase."])              # la seconda non riprova online
+        self.assertEqual([p["voice"] for p in payloads[:2]], ["", ""])
+
 
 if __name__ == "__main__":
     unittest.main()

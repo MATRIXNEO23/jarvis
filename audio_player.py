@@ -13,7 +13,8 @@ import time
 
 POSITION_LISTENER = None          # callable(seconds) impostato da Lumi
 _STOP = threading.Event()
-STALL_SECONDS = 3.0               # audio fermo (dispositivo occupato, es. app Netflix)
+STALL_SECONDS = 3.0               # audio fermo a metà (dispositivo occupato, es. app Netflix)
+START_GRACE = 10.0                # prima che parta: un MP3 della voce online può metterci di più
 
 
 class AudioBusyError(OSError):
@@ -100,11 +101,13 @@ def _play_mci(path: Path, max_seconds: float) -> None:
         length = _mci(f"status {alias} length")[1]
         if length.isdigit() and int(length) > 0:
             # Mai più della durata vera + qualche secondo (prima: fino a 10 minuti).
-            max_seconds = min(max_seconds, int(length) / 1000.0 + STALL_SECONDS)
+            max_seconds = min(max_seconds, int(length) / 1000.0 + START_GRACE + STALL_SECONDS)
         if _mci(f"play {alias}")[0] != 0:
             raise OSError("Riproduzione non avviata.")
         started = time.monotonic()
-        last_position, moved_at = None, started
+        # 15/11: 3 s di posizione ferma valgono solo DOPO che l'audio è partito; prima si
+        # aspetta START_GRACE (con la 042 la voce online passava a Windows per sbaglio).
+        last_position, moved_at, begun = None, started, False
         while not _STOP.is_set():
             now = time.monotonic()
             mode = _mci(f"status {alias} mode")[1]
@@ -113,9 +116,11 @@ def _play_mci(path: Path, max_seconds: float) -> None:
                 _notify(int(position) / 1000.0)
                 if position != last_position:
                     last_position, moved_at = position, now
+                    begun = begun or int(position) > 0
             if mode not in ("playing", "seeking", "not ready", ""):
                 break
-            if now - moved_at > STALL_SECONDS or now - started > max_seconds:
+            if (now - moved_at > (STALL_SECONDS if begun else START_GRACE)
+                    or now - started > max_seconds):
                 _mci(f"stop {alias}")
                 raise AudioBusyError("Audio occupato da un altro programma: "
                                      "la voce di Lumi non esce.")

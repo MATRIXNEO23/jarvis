@@ -70,5 +70,5 @@ Aggiornare questo file a ogni consegna o decisione importante.
 8. Servizi online con spunte e chiavi; orchestratore ibrido (attese/polling in Lumi, zero token).
 9. Add-on «Diagnostica per Claude» (MCP locale, comandi solo dentro Lumi), import JSON di una chat, add-on GitHub.
 Dettagli e motivazioni: sezioni datate in fondo a `docs/ARCH-01-F5-CHECKPOINT.md`.
-10. Bug voce online Microsoft (interruzioni, alternanza con la voce di Windows, rallentamenti) — analisi in corso.
+10. Bug voce online Microsoft: corretto (attesa iniziale 10 s, niente alternanza nella stessa risposta), da provare sul Pavilion.
 11. Tutorial con correzione dei comandi, lettere perse (S), parole incerte in dettatura, classificatore opzionale, frasi variate (decisioni 15/11 10:50 nel checkpoint).
