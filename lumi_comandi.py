@@ -39,6 +39,9 @@ _PATTERNS = (
     ("model_restart", re.compile(
         r"^(?:riavvia|ricarica)\s+(?:il\s+)?(?:modello(?:\s+locale)?|cervello\s+locale|motore)"
         + _END, re.I)),
+    ("data_cleanup", re.compile(
+        r"^(?:apri\s+)?(?:la\s+)?(?:pulizia(?:\s+(?:dei\s+)?dati)?|libera\s+spazio(?:\s+su\s+disco)?)"
+        + _END, re.I)),
     ("attachments_clear", re.compile(
         r"^(?:togli|rimuovi|elimina|cancella)\s+(?:gli\s+|l'\s*|tutti\s+gli\s+)?allegat[oi]"
         + _END, re.I)),

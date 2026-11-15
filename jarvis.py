@@ -259,6 +259,17 @@ def main() -> None:
                          "senza chiudere Lumi",
                     variable=engine_separate_var, command=save_engine_separate
                     ).pack(anchor="w", padx=8, pady=(0, 6))
+    # Pulizia dati su disco (passo 6): cartelle, spazio, ascolto, Cestino.
+    def open_data_cleanup() -> None:
+        __import__("pulizia_dati").PuliziaWindow(
+            root, notify=lambda text: write_line(text),
+            play_audio=lambda path: __import__("audio_player").play(path),
+            stop_audio=lambda: __import__("audio_player").stop())
+
+    cleanup_box = ttk.LabelFrame(assistant_settings_frame, text="Spazio su disco")
+    cleanup_box.pack(fill="x", padx=8, pady=8)
+    ttk.Button(cleanup_box, text="Pulizia dati… (anche a voce: «pulizia dati»)",
+               command=open_data_cleanup).pack(anchor="w", padx=8, pady=6)
     # Sezione «Contesto» (passo 4): chat continua e ricordi del modello locale.
     __import__("contesto_lumi").costruisci_sezione(
         assistant_settings_frame, lambda text: write_line(text))
@@ -4533,6 +4544,7 @@ def main() -> None:
          "shutdown_pc": lumi_shutdown_pc, "cancel_shutdown": lumi_cancel_shutdown,
          "hide": lumi_hide, "wake": lumi_wake,
          "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
+         "data_cleanup": lambda: open_data_cleanup(),
          "attachments_clear": lambda: write_line("ALLEGATI > " + (
              "Allegati tolti." if __import__("allegati").ATTUALI.togli()
              else "Non ci sono allegati.")),
