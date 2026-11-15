@@ -551,6 +551,10 @@ def installa(d):
                         d.submit_local(message_override=spoken, source_utterance=spoken,
                                      addon_action_id="addon.programmi_app.avvia",
                                      program_call=("suggest_id", {"query": app_id}))
+                elif (kind in ("voice_ok", "voice_error", "ok", "error")
+                      and __import__("stato_lumi").consume_model_stop()):
+                    # «Lumi, fermati» durante la risposta: niente errore né risposta tardiva.
+                    d.write_line("LUMI > Risposta interrotta.")
                 elif kind == "voice_ok":
                     d.write_line("LUMI > " + value)
                     STREAM.speak_final(value, d.speak_result)

@@ -13,6 +13,7 @@ import time
 
 POSITION_LISTENER = None          # callable(seconds) impostato da Lumi
 _STOP = threading.Event()
+_HOLD = threading.Event()   # «fermati»: la frase in preparazione non parte
 STALL_SECONDS = 3.0               # audio fermo a metà (dispositivo occupato, es. app Netflix)
 START_GRACE = 10.0                # prima che parta: un MP3 della voce online può metterci di più
 
@@ -43,6 +44,8 @@ def play(path: Path, *, max_seconds: float = 600) -> None:
     path = Path(path)
     if os.name != "nt":
         raise OSError("Riproduzione audio disponibile solo su Windows.")
+    if _HOLD.is_set():
+        return
     _STOP.clear()
     try:
         _play_mci(path, max_seconds)
@@ -140,3 +143,13 @@ def stop() -> None:
             winsound.PlaySound(None, winsound.SND_PURGE)
         except (ImportError, RuntimeError):
             pass
+
+
+def hold() -> None:
+    """Ferma la riproduzione e blocca le prossime finché release()."""
+    _HOLD.set()
+    stop()
+
+
+def release() -> None:
+    _HOLD.clear()

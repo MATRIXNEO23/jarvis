@@ -83,6 +83,9 @@ def handle_text(spoken: str, write_line, speak) -> bool:
             write_line("LUMI > " + reply)
             speak(reply)
             return True
+    stop_all = actions.get("stop_all")
+    if stop_all is not None and __import__("stato_lumi").is_stop(spoken) and stop_all():
+        return True
     action = parse(spoken)
     if action is None:
         return False

@@ -2518,6 +2518,22 @@ def main() -> None:
               font=("Consolas",8)).pack(side="left",fill="x",expand=True)
     scope_button=ttk.Button(scope_row,text="Progetti")
     scope_button.pack(side="right")
+    # Riga di stato a 5 colori con «■ Ferma» (passo 3, stato_lumi.py).
+    def read_lumi_state() -> str:
+        session = gemma_session[0]
+        return __import__("stato_lumi").stato(
+            speaking=speaker.is_speaking(),
+            busy=busy_local or document_busy,
+            thinking=bool(gemma_trial_busy[0] or (session is not None and session.is_busy)
+                          or (busy_gpt and gpt_enabled.get())),
+            mic_on=voice.is_listening(),
+            always_listening=voice_mode.get() in (CONTINUOUS, PUSH_TO_TALK),
+            armed=time.monotonic() < wake_gate.armed_until)
+
+    lumi_status_line = __import__("stato_lumi").RigaStato(
+        hud.command_host, read_state=read_lumi_state,
+        on_stop=lambda: lumi_stop_all(), bg=PANEL)
+    lumi_status_line.frame.pack(fill="x", pady=(0, 4))
     input_row = tk.Frame(hud.command_host, bg=PANEL)
     input_row.pack(fill="x")
     request = tk.StringVar()
@@ -4468,6 +4484,29 @@ def main() -> None:
         output_queue=output_queue, service=service, workspace=workspace,
         addon_manager=addon_manager)
 
+    def lumi_stop_all() -> bool:
+        """«Lumi, fermati» e pulsante «■ Ferma»: voce, risposta del modello, GPT in attesa.
+
+        False se non c'è niente da fermare: la frase passa agli altri comandi."""
+        nonlocal conversation_epoch
+        session = gemma_session[0]
+        model_busy = bool(gemma_trial_busy[0] or (session is not None and session.is_busy))
+        gpt_waiting = bool(busy_gpt and gpt_enabled.get())
+        if not (speaker.is_speaking() or model_busy or gpt_waiting):
+            return False
+        speaker.interrupt()
+        if model_busy and session is not None:
+            # Interrompe la generazione; il modello si ricarica alla prossima domanda.
+            __import__("stato_lumi").mark_model_stop()
+            threading.Thread(target=session.stop, daemon=True,
+                             name="lumi-ferma-modello").start()
+        if gpt_waiting:
+            conversation_epoch += 1      # la risposta GPT in arrivo viene scartata
+            pending_conversation.clear()
+            planner_abort_event.set()
+        write_line("LUMI > Mi fermo.")
+        return True
+
     def lumi_model_restart() -> None:
         """«riavvia il modello»: con il motore separato lo chiude (memoria liberata) e lo
         ricarica alla prossima domanda, senza chiudere Lumi."""
@@ -4497,7 +4536,7 @@ def main() -> None:
         {"minimize": lumi_minimize, "close": close_with_goodbye, "restart": lumi_restart,
          "shutdown_pc": lumi_shutdown_pc, "cancel_shutdown": lumi_cancel_shutdown,
          "hide": lumi_hide, "wake": lumi_wake,
-         "model_restart": lumi_model_restart,
+         "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
          "brain_local_on": lambda: lumi_brain_local(True),
          "brain_local_off": lambda: lumi_brain_local(False),
          "brain_online_on": lambda: lumi_brain_online(True),

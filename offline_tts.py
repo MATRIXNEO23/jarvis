@@ -286,6 +286,7 @@ class OfflineSpeaker:
         while not self._closed.is_set():
             try:
                 item = self._messages.get(timeout=0.3)
+                seen = getattr(self, "_interrupts", 0)
             except queue.Empty:
                 self._edge_down = False       # risposta finita: si riprova la voce online
                 continue
@@ -294,7 +295,10 @@ class OfflineSpeaker:
             text, voice = item
             if self._closed.is_set():
                 break
-            self._busy.set()
+            with self._process_lock:
+                if getattr(self, "_interrupts", 0) != seen:
+                    continue          # presa dalla coda proprio mentre arrivava «fermati»
+                self._busy.set()
             try:
                 import edge_voice
                 edge_key = edge_voice.key_from_label(voice)
@@ -366,7 +370,12 @@ class OfflineSpeaker:
                     self._notify_error("Impossibile riprodurre la voce selezionata.")
             finally:
                 self._cooldown_until = time.monotonic() + 1.0
-                self._busy.clear()
+                with self._process_lock:
+                    self._busy.clear()
+                    if getattr(self, "_release_audio", False):
+                        self._release_audio = False
+                        import audio_player
+                        audio_player.release()
 
     def _drain(self) -> int:
         dropped = 0
@@ -379,6 +388,26 @@ class OfflineSpeaker:
                 self._messages.put_nowait(None)
                 return dropped
             dropped += 1
+
+    def interrupt(self) -> int:
+        """«Lumi, fermati»: toglie le frasi in coda e zittisce quella in corso.
+
+        La frase già in preparazione (voce online/naturale) non parte: l'audio resta
+        bloccato finché il ciclo della voce non ha finito quella frase."""
+        import audio_player
+        dropped = self._drain()
+        with self._process_lock:
+            self._interrupts = getattr(self, "_interrupts", 0) + 1
+            process = self._process
+            busy = self._busy.is_set()
+            if busy:
+                self._release_audio = True
+                audio_player.hold()
+            else:
+                audio_player.stop()
+        if process is not None:
+            self._terminate_process(process)
+        return dropped
 
     def close(self) -> None:
         with self._process_lock:

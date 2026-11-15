@@ -49,6 +49,8 @@ Aggiornare questo file a ogni consegna o decisione importante.
   (addestratore e pausa tra le parole), `audio_player.py` (voce con controllo di blocco).
 - Chat: `chat_ruoli.py` (chi ha scritto ogni messaggio: utente, jarvis, comando, azione, errore, sistema);
   HUD (`animated_hud.py`) con «CHAT» + pulsante «DIAGNOSTICA ▸» (finestra filtrabile).
+  `chat_elenco.py` (archivio per progetto in `jarvis_chat_sessions.sqlite3`), `chat_bolle.py` (bolle e pulsanti).
+- Build: una sola alla fine di tutti i passi (prossima 047), su richiesta già data il 15/11.
 
 ## Lezioni da non ripetere
 - `locals()` dentro una comprensione ha un ambito suo (Lumi non partiva): salvarlo prima.
@@ -60,8 +62,8 @@ Aggiornare questo file a ogni consegna o decisione importante.
 
 ## In corso e prossimi passi (ordine concordato il 15/11)
 1. **Fatto (CI verde)**: ruoli dei messaggi (`chat_ruoli`, ruolo «comando» con intestazione della fonte).
-2. Fumetti (opzione B: riquadro per messaggio, copia/leggi/rigenera, ultimi ~100 disegnati) + archivio unico
-   delle chat per progetto (niente migrazione delle vecchie) + elenco progetti/chat a sinistra.
+2. **Fatto (CI verde, non ancora in build)**: chat unica locale+GPT con elenco chat per progetto (`chat_elenco.py`,
+   ☰ / + / Rinomina / Elimina) e bolle con copia/leggi/rigenera, ultimi 100 disegnati (`chat_bolle.py`).
 3. Riga di stato a 5 stati colorati e stop immediato («Lumi, fermati» + pulsante; «stop/pausa/play» solo audio-video; «annulla» invariato).
 4. «Chat continua» con cache come KoboldCpp (opzione, spenta di serie); sezione «Contesto» locale/online.
 5. Allegati (pulsante, trascinamento, Ctrl+V; ricerca dei pezzi utili senza modello).
