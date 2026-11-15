@@ -4404,6 +4404,10 @@ def main() -> None:
         gpt=gpt_toggle.invoke,
         memory=memory_toggle.invoke,
         model=lambda: write_line(__import__("model_gate").toggle_message()))
+    # Menu «ONLINE ▾» accanto a GPT (15/11 sera): servizi online, spunte e quote.
+    online_menu_button = hud.add_quick_button("online", "ONLINE ▾", lambda: None, after="gpt")
+    models_menu = __import__("menu_modelli").MenuModelli(
+        root, online_menu_button, open_settings=lambda: show_settings())
 
 
 

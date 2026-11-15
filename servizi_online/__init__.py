@@ -19,40 +19,28 @@ import os
 import re
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
 from pathlib import Path
 
 TIMEOUT = 60
 
 
-@dataclass(frozen=True)
-class Servizio:
-    id: str
-    nome: str
-    base_url: str
-    modello: str
-    gratis: bool
-    chiavi: str          # pagina ufficiale dove si crea la chiave
+from .base import Servizio  # noqa: E402  (un file per servizio, 15/11 sera)
 
 
-SERVIZI = (
-    Servizio("gemini", "Google Gemini", "https://generativelanguage.googleapis.com/v1beta/openai",
-             "gemini-flash-latest", True, "https://aistudio.google.com/apikey"),
-    Servizio("groq", "Groq", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", True,
-             "https://console.groq.com/keys"),
-    Servizio("mistral", "Mistral", "https://api.mistral.ai/v1", "mistral-small-latest", True,
-             "https://console.mistral.ai/api-keys"),
-    Servizio("openrouter", "OpenRouter", "https://openrouter.ai/api/v1",
-             "meta-llama/llama-3.3-70b-instruct:free", True, "https://openrouter.ai/keys"),
-    Servizio("nvidia", "NVIDIA (DeepSeek, Llama…)", "https://integrate.api.nvidia.com/v1",
-             "meta/llama-3.3-70b-instruct", True, "https://build.nvidia.com/"),
-    Servizio("xai", "xAI Grok", "https://api.x.ai/v1", "grok-3-mini", False,
-             "https://console.x.ai/"),
-    Servizio("openai", "OpenAI GPT (API)", "https://api.openai.com/v1", "gpt-4o-mini", False,
-             "https://platform.openai.com/api-keys"),
-    Servizio("anthropic", "Anthropic Claude (API)", "https://api.anthropic.com/v1",
-             "claude-haiku-4-5", False, "https://console.anthropic.com/settings/keys"),
-)
+def _carica_servizi() -> tuple:
+    import importlib
+    import pkgutil
+    from . import servizi as package
+    found = []
+    for info in pkgutil.iter_modules(package.__path__):
+        module = importlib.import_module(package.__name__ + "." + info.name)
+        service = getattr(module, "SERVIZIO", None)
+        if isinstance(service, Servizio):
+            found.append(service)
+    return tuple(sorted(found, key=lambda s: (s.ordine, s.id)))
+
+
+SERVIZI = _carica_servizi()
 PER_ID = {s.id: s for s in SERVIZI}
 
 SISTEMA = ("Ti chiami Lumi, assistente vocale per Windows. Rispondi in italiano, in modo "
@@ -84,7 +72,10 @@ def _cartella() -> Path:
 
 def carica_impostazioni(path: Path | None = None) -> dict:
     data = {"ordine": [s.id for s in SERVIZI], "attivi": [], "modelli": {},
-            "usa_sempre": False, "proponi_lunghe": True}
+            "usa_sempre": False, "proponi_lunghe": True,
+            # Quote (15/11 sera): avviso all'80% del giorno, conferma sopra ~8.000 token,
+            # limiti al giorno scritti dall'utente per i servizi che non li pubblicano.
+            "avviso_quota": 80, "conferma_token": 8000, "limiti": {}}
     try:
         saved = json.loads((path or _cartella() / "servizi_online.json").read_text(encoding="utf-8"))
         if isinstance(saved, dict):
@@ -97,6 +88,12 @@ def carica_impostazioni(path: Path | None = None) -> dict:
     data["ordine"] = order + [s.id for s in SERVIZI if s.id not in order]
     data["attivi"] = [i for i in data["attivi"] if i in PER_ID]
     data["modelli"] = {k: str(v)[:120] for k, v in data["modelli"].items() if k in PER_ID and str(v).strip()}
+    data["limiti"] = {k: int(v) for k, v in data["limiti"].items()
+                      if k in PER_ID and isinstance(v, int) and 0 < v < 10_000_000}
+    if not 10 <= data["avviso_quota"] <= 100:
+        data["avviso_quota"] = 80
+    if not 500 <= data["conferma_token"] <= 1_000_000:
+        data["conferma_token"] = 8000
     return data
 
 
@@ -169,7 +166,10 @@ def _post(url: str, key: str, body: dict, timeout: float) -> dict:
         headers={"Content-Type": "application/json", "Authorization": "Bearer " + key,
                  "User-Agent": "Lumi"})
     with urllib.request.urlopen(request, timeout=timeout) as response:   # noqa: S310 — https fisso
-        return json.loads(response.read().decode("utf-8"))
+        data = json.loads(response.read().decode("utf-8"))
+        if isinstance(data, dict):
+            data["_headers"] = dict(response.headers.items())   # quote rimaste (Groq)
+        return data
 
 
 def _motivo(exc: Exception) -> str:
@@ -217,10 +217,23 @@ def chiedi(messages: list[dict], *, settings: dict | None = None, keys: Chiavi |
             text = data["choices"][0]["message"]["content"]
             if not isinstance(text, str) or not text.strip():
                 raise ServizioErrore("vuota")
+            _conta(service_id, data, settings)
             return service.nome, text.strip()
         except Exception as exc:     # ogni guasto: si passa al servizio successivo
             reasons.append(service.nome + ": " + _motivo(exc))
     return None, reasons
+
+
+def _conta(service_id: str, data: dict, settings: dict) -> str:
+    """Quote: conta la richiesta; un errore del conteggio non ferma mai la risposta."""
+    try:
+        from . import quote
+        usage = data.get("usage") if isinstance(data.get("usage"), dict) else {}
+        return quote.registra(service_id, usage.get("total_tokens"), data.get("_headers"),
+                              soglia=settings.get("avviso_quota", 80) / 100,
+                              limite_utente=settings.get("limiti", {}).get(service_id))
+    except Exception:
+        return ""
 
 
 def chiama(messages: list[dict], *, tools=None, only: str | None = None,
@@ -245,9 +258,11 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
         if tools:
             body["tools"] = tools
         try:
-            message = post(service.base_url + "/chat/completions", key, body, timeout)["choices"][0]["message"]
+            data = post(service.base_url + "/chat/completions", key, body, timeout)
+            message = data["choices"][0]["message"]
             if not isinstance(message, dict) or not (message.get("content") or message.get("tool_calls")):
                 raise ServizioErrore("vuota")
+            message = dict(message, _avviso=_conta(service_id, data, settings))
             return service_id, service.nome, message
         except Exception as exc:
             reasons.append(service.nome + ": " + _motivo(exc))
@@ -316,6 +331,16 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
 
     def save(*_):
         settings["attivi"] = [i for i in settings["ordine"] if state["vars"][i].get()]
+        limits = {}
+        for service_id, var in state.get("limits", {}).items():
+            value = var.get().strip().replace(".", "")
+            if value.isdigit() and 0 < int(value) < 10_000_000:
+                limits[service_id] = int(value)
+        settings["limiti"] = limits
+        for key, var in state.get("thresholds", {}).items():
+            value = var.get().strip().replace(".", "")
+            if value.isdigit():
+                settings[key] = int(value)
         settings["modelli"] = {i: v.get().strip() for i, v in state["models"].items()
                                if v.get().strip() and v.get().strip() != PER_ID[i].modello}
         settings["usa_sempre"] = usa.get()
@@ -376,12 +401,35 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
             ttk.Button(line, text="↓", width=2, command=lambda i=service_id: move(i, 1)).pack(side="left")
             ttk.Button(line, text="Prendi la chiave", command=lambda u=service.chiavi: open_url(u)
                        ).pack(side="left", padx=2)
+            # Seconda riga: cosa offre gratis e un limite al giorno scritto da te (per i
+            # servizi che non lo pubblicano), usato dalle barre della quota.
+            info = ttk.Frame(rows)
+            info.pack(fill="x", padx=(28, 0), pady=(0, 4))
+            ttk.Label(info, text=service.limite, foreground="#888", wraplength=380,
+                      justify="left").pack(side="left")
+            limit = state.setdefault("limits", {}).setdefault(service_id, tk.StringVar(
+                value=str(settings["limiti"].get(service_id, ""))))
+            entry = ttk.Entry(info, textvariable=limit, width=7)
+            entry.pack(side="right")
+            entry.bind("<FocusOut>", save)
+            ttk.Label(info, text="max richieste/giorno:").pack(side="right", padx=4)
 
     draw()
     ttk.Checkbutton(box, text="Usa i servizi online per tutte le domande di chat", variable=usa,
                     command=save).pack(anchor="w", padx=8, pady=(4, 0))
     ttk.Checkbutton(box, text="Per le domande lunghe chiedi «la passo all'online?»", variable=proponi,
                     command=save).pack(anchor="w", padx=8, pady=(0, 6))
+    thresholds = ttk.Frame(box)
+    thresholds.pack(fill="x", padx=8, pady=(0, 4))
+    for key, label in (("avviso_quota", "Avvisami quando ho usato questa % della quota del giorno:"),
+                       ("conferma_token", "Chiedimi prima di mandare più di questi token:")):
+        line = ttk.Frame(thresholds)
+        line.pack(fill="x", pady=1)
+        ttk.Label(line, text=label).pack(side="left")
+        var = state.setdefault("thresholds", {}).setdefault(key, tk.StringVar(value=str(settings[key])))
+        entry = ttk.Entry(line, textvariable=var, width=8)
+        entry.pack(side="right")
+        entry.bind("<FocusOut>", save)
     ttk.Label(box, text="($) = a consumo: costa, non usarlo se vuoi restare a costo zero.",
               foreground="#888").pack(anchor="w", padx=8, pady=(0, 6))
     box.redraw = draw

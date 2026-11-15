@@ -209,11 +209,20 @@ def rispondi(question: str, *, tools: Strumenti, history=(), pieces=(), call=Non
     folders = ", ".join(tools.folders) or "nessuna"
     messages = servizi_online.messaggi(question, history, pieces)
     messages[0] = {"role": "system", "content": SISTEMA.format(cartelle=folders)}
+    # Quote (15/11 sera): sopra la soglia di token Lumi chiede prima di mandare.
+    limit = servizi_online.carica_impostazioni().get("conferma_token", 8000)
+    size = __import__("servizi_online.quote", fromlist=["stima_token"]).stima_token(messages)
+    if size > limit and not tools.ask(
+            "Sto per mandare circa %d token (tanto testo, consuma la quota). Va bene?" % size):
+        return None, ["annullato: troppo testo per la quota"]
     service_id = name = None
     for _step in range(MAX_PASSI):
         service_id, name, message = call(messages, tools=STRUMENTI, only=service_id)
         if service_id is None:
             return None, message
+        if message.get("_avviso"):
+            notify(message["_avviso"])
+        message = {k: v for k, v in message.items() if k != "_avviso"}
         calls = message.get("tool_calls") or []
         if not calls:
             return name, str(message.get("content") or "").strip() or "Fatto."

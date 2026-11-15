@@ -317,6 +317,7 @@ class JarvisHUD:
                 padx=5, pady=4, cursor="hand2", takefocus=True)
             button.pack(side="left")
             setattr(self, key + "_toggle_button", button)
+        self.quick_controls = quick_controls
 
         # Reference's full-height console. Fixed min to preserve readability.
         layout=tk.Frame(self.frame,bg=BG)
@@ -538,6 +539,24 @@ class JarvisHUD:
         self._quick_toggle_handlers = handlers
         for key in handlers:
             getattr(self, key + "_toggle_button").configure(state="normal")
+
+    def add_quick_button(self, key, text, command, *, after=None):
+        """Pulsante in più nella fila in alto (menu ONLINE ▾, ✈ Telegram), dopo `after`."""
+        anchor = getattr(self, after + "_toggle_button", None) if after else None
+        separator = tk.Label(self.quick_controls, text="/", bg=BG, fg=MUTED, font=("Consolas", 9))
+        button = tk.Button(self.quick_controls, text=text, command=command, bg=BG, fg=MUTED,
+                           activebackground="#092238", activeforeground=CYAN,
+                           font=("Consolas", 9), bd=0, relief="flat", highlightthickness=1,
+                           highlightbackground="#164257", highlightcolor=CYAN,
+                           padx=5, pady=4, cursor="hand2", takefocus=True)
+        if anchor is not None:
+            separator.pack(side="left", padx=3, after=anchor)
+            button.pack(side="left", after=separator)
+        else:
+            separator.pack(side="left", padx=3)
+            button.pack(side="left")
+        setattr(self, key + "_extra_button", button)
+        return button
 
     def _invoke_quick_toggle(self, name):
         callback = self._quick_toggle_handlers.get(name)

@@ -176,7 +176,7 @@ class SezioneTest(BaseTest):
                                         run_async=lambda fn: fn(),
                                         post=lambda *a: {"choices": [{"message": {"content": "ok"}}]})
             lines = box.winfo_children()[1].winfo_children()
-            self.assertEqual(len(lines), len(so.SERVIZI))
+            self.assertEqual(len(lines), 2 * len(so.SERVIZI))      # riga + riga dei limiti
             first = lines[0].winfo_children()
             first[0].invoke()                       # casella del primo servizio
             first[3].invoke()                       # «Chiave…»
