@@ -72,6 +72,9 @@ class AddonSettingsWindow:
             scrollregion=self.section_canvas.bbox("all")))
         self.section_canvas.bind("<Configure>",lambda e:self.section_canvas.itemconfigure(
             window_id,width=e.width))
+        self.sezione=SezioneAddon(self.section,manager,window=self.window,on_change=self.on_change,
+                                  engine=engine,section_builders=self.section_builders,
+                                  after_change=self.reload)
         self.reload()
 
     def exists(self):
@@ -121,11 +124,67 @@ class AddonSettingsWindow:
             self._error("Installazione componenti non disponibile: "+str(exc)[:100])
 
     def show_section(self):
+        self.sezione.mostra(self._selected())
+
+    def install(self):
+        path=filedialog.askopenfilename(
+            parent=self.window,title="Scegli un add-on verificato",
+            filetypes=[("Pacchetto Lumi (.jaddon)","*.jaddon")])
+        if not path:
+            return
+        if not messagebox.askyesno(
+            "Lumi / Conferma installazione",
+            "Installare o aggiornare questo add-on descrittivo? "
+            "Non verrà avviato automaticamente e non verrà eseguito alcun codice.",
+            parent=self.window,default="no"):
+            return
+        try:
+            result=self.manager.install(Path(path))
+            self.reload()
+            self.on_change()
+            self.status.set(
+                ("Aggiornato " if result["updated"] else "Installato ")+
+                result["id"]+" "+result["version"]+". Resta SPENTO.")
+        except (AddonError,OSError,ValueError) as exc:
+            self._error(exc)
+
+    def toggle(self):
+        self.sezione.cambia(self._selected())
+
+    def configure(self):
+        self.sezione.configura(self._selected())
+
+    def remove(self):
+        self.sezione.rimuovi(self._selected())
+
+
+class SezioneAddon:
+    """Sezione di un add-on (stato, Attiva/Disattiva, Configura, requisiti, comandi).
+    Usata dalla finestra «Gestisci add-on» e dalle Impostazioni (categoria Add-on)."""
+
+    def __init__(self, section, manager, *, window, on_change=None, engine=None,
+                 section_builders=None, after_change=None):
+        self.section=section
+        self.manager=manager
+        self.window=window
+        self.engine=engine
+        self.on_change=on_change or (lambda:None)
+        self.section_builders=dict(section_builders or {})
+        self.after_change=after_change or (lambda:None)
+        self.ident=None
+
+    def _error(self, exc):
+        messagebox.showerror("Lumi / Add-on",str(exc)[:240],parent=self.window)
+
+    def _item(self, ident):
+        return next((c for c in self.manager.list_installed() if c["id"]==ident),None)
+
+    def mostra(self, ident):
         """Sezione dell'add-on scelto: descrizione, stato, azioni, comandi."""
+        self.ident=ident
         for child in self.section.winfo_children():
             child.destroy()
-        ident=self._selected()
-        item=next((c for c in self.manager.list_installed() if c["id"]==ident),None)
+        item=self._item(ident)
         if item is None:
             ttk.Label(self.section,text="Scegli un add-on dall'elenco.").pack(anchor="w")
             return
@@ -139,10 +198,11 @@ class AddonSettingsWindow:
         row=ttk.Frame(self.section)
         row.pack(fill="x",pady=(6,8))
         ttk.Button(row,text="Disattiva" if item["enabled"] else "Attiva",
-                   command=self.toggle).pack(side="left",padx=(0,6))
+                   command=lambda:self.cambia(ident)).pack(side="left",padx=(0,6))
         if ident in _DESCRIPTIONS_CONFIG:
-            ttk.Button(row,text="Configura...",command=self.configure).pack(side="left",padx=(0,6))
-        ttk.Button(row,text="Rimuovi",command=self.remove).pack(side="left")
+            ttk.Button(row,text="Configura...",command=lambda:self.configura(ident)).pack(
+                side="left",padx=(0,6))
+        ttk.Button(row,text="Rimuovi",command=lambda:self.rimuovi(ident)).pack(side="left")
         builder=self.section_builders.get(ident)
         if builder is not None:
             try:
@@ -170,55 +230,36 @@ class AddonSettingsWindow:
         except (ImportError,tk.TclError) as exc:
             ttk.Label(self.section,text="Comandi non disponibili: "+str(exc)[:80]).pack(anchor="w")
 
-    def install(self):
-        path=filedialog.askopenfilename(
-            parent=self.window,title="Scegli un add-on verificato",
-            filetypes=[("Pacchetto Lumi (.jaddon)","*.jaddon")])
-        if not path:
-            return
-        if not messagebox.askyesno(
-            "Lumi / Conferma installazione",
-            "Installare o aggiornare questo add-on descrittivo? "
-            "Non verrà avviato automaticamente e non verrà eseguito alcun codice.",
-            parent=self.window,default="no"):
-            return
-        try:
-            result=self.manager.install(Path(path))
-            self.reload()
-            self.on_change()
-            self.status.set(
-                ("Aggiornato " if result["updated"] else "Installato ")+
-                result["id"]+" "+result["version"]+". Resta SPENTO.")
-        except (AddonError,OSError,ValueError) as exc:
-            self._error(exc)
-
-    def toggle(self):
-        ident=self._selected()
+    def cambia(self, ident, enabled=None) -> bool:
+        """Accende o spegne; per accendere chiede conferma come prima. True se cambiato."""
         if ident is None:
-            self.status.set("Seleziona un add-on dall'elenco.")
-            return
-        try:
-            item=next(c for c in self.manager.list_installed() if c["id"]==ident)
-        except StopIteration:
-            self.reload()
-            return
-        enabled=not item["enabled"]
+            return False
+        item=self._item(ident)
+        if item is None:
+            self.after_change()
+            return False
+        if enabled is None:
+            enabled=not item["enabled"]
+        if enabled==item["enabled"]:
+            return False
         if enabled and not messagebox.askyesno(
                 "Autorizza add-on",
                 "Attivare "+item["name"]+"? Le azioni descritte saranno visibili "
                 "a Lumi GPT e richiamabili solo tramite il motore locale "
                 "con le normali verifiche.",
                 parent=self.window,default="no"):
-            return
+            return False
         try:
             self.manager.set_enabled(ident,enabled)
-            self.reload()
-            self.on_change()
         except (AddonError,OSError,ValueError) as exc:
             self._error(exc)
+            return False
+        self.after_change()
+        self.on_change()
+        return True
 
-    def configure(self):
-        if self._selected() == 'musica':
+    def configura(self, ident):
+        if ident == 'musica':
             service = getattr(self.manager, 'music_service', None)
             if service is None:
                 self._error('Musica non disponibile: reinstalla la cartella musica dal pacchetto completo.')
@@ -229,7 +270,7 @@ class AddonSettingsWindow:
             except (ImportError, OSError, ValueError) as exc:
                 self._error('Musica non disponibile: ' + str(exc)[:120])
             return
-        if self._selected() == 'controllo_pc':
+        if ident == 'controllo_pc':
             service = getattr(self.manager, 'pc_service', None)
             if service is None:
                 self._error('Controllo PC non disponibile: reinstalla la cartella controllo_pc dal pacchetto completo.')
@@ -240,7 +281,7 @@ class AddonSettingsWindow:
             except (ImportError, OSError, ValueError) as exc:
                 self._error('Controllo PC non disponibile: ' + str(exc)[:120])
             return
-        if self._selected() == 'programmi_app':
+        if ident == 'programmi_app':
             try:
                 from program_apps.ui import ProgramSettings
                 ProgramSettings(self.window,self.manager.program_service,on_change=self.on_change)
@@ -248,8 +289,7 @@ class AddonSettingsWindow:
                 self._error('Programmi e app non disponibile: '+str(exc)+
                             '. Reinstalla la cartella program_apps dal pacchetto completo.')
             return
-        if self._selected() != "accesso_file":
-            self.status.set("Seleziona un’add-on con configurazione disponibile.")
+        if ident != "accesso_file":
             return
         try:
             from file_access.ui import FolderSettings
@@ -258,10 +298,8 @@ class AddonSettingsWindow:
             self._error("Configurazione Accesso file non disponibile: "+str(exc)+
                         ". Reinstalla il pacchetto completo se manca file_access/.")
 
-    def remove(self):
-        ident=self._selected()
+    def rimuovi(self, ident):
         if ident is None:
-            self.status.set("Seleziona un add-on.")
             return
         if not messagebox.askyesno(
                 "Rimuovi add-on",
@@ -271,7 +309,7 @@ class AddonSettingsWindow:
             return
         try:
             self.manager.remove(ident)
-            self.reload()
+            self.after_change()
             self.on_change()
         except (AddonError,OSError,ValueError) as exc:
             self._error(exc)

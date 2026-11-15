@@ -4556,13 +4556,44 @@ def main() -> None:
         open_voice_training=lambda: __import__("la_mia_voce").VoiceWindow(root))
     info_settings_frame = settings_page("Info")
     settings_menu.pagina_info(info_settings_frame)
+    # Add-on (15/11 sera): ogni add-on con la sua icona (azzurra acceso, arancione spento) e
+    # un interruttore a scorrimento; clic sull'icona → il suo menu a destra.
+    addon_rows = __import__("addon_righe")
+    addon_chosen_frame = settings_page("Add-on scelto")
+    addon_rows_now = [None]
+
+    def addon_rows_sync() -> None:
+        if addon_rows_now[0] is not None:
+            addon_rows_now[0].sincronizza()
+        if addon_chosen.ident:
+            addon_chosen.mostra(addon_chosen.ident)
+
+    addon_chosen = __import__("addon_ui").SezioneAddon(
+        addon_chosen_frame, addon_manager, window=settings_window, on_change=addon_changed,
+        engine=engine, section_builders={"telegram": build_telegram_section},
+        after_change=addon_rows_sync)
+
+    def open_addon_menu(addon_id: str) -> None:
+        addon_chosen.mostra(addon_id)
+        settings_navigation.mostra_pagina("Add-on scelto")
+
+    def build_addon_rows(container):
+        if addon_manager is None:
+            return tk.Label(container, text="Add-on non disponibili: " + addon_setup_error[:80],
+                            bg=addon_rows.PANEL, fg=addon_rows.ARANCIONE, wraplength=220,
+                            justify="left")
+        addon_rows_now[0] = addon_rows.RigheAddon(
+            container, elenco=addon_manager.list_installed, apri=open_addon_menu,
+            cambia=lambda addon_id, on: addon_chosen.cambia(addon_id, on))
+        return addon_rows_now[0].frame
+
     settings_navigation = settings_menu.Navigazione(
         settings_window, settings_tabs,
         {"Voce": frame, "GPT e memoria": assistant_settings_frame,
          "Progetti e servizi": integrations_settings_frame, "Timer e allarmi": timer_settings_frame,
          "Interfaccia": interface_settings_frame, "Tutorial": tutorial_settings_frame,
-         "Info": info_settings_frame},
-        main_root=root)
+         "Info": info_settings_frame, "Add-on scelto": addon_chosen_frame},
+        main_root=root, righe={"Add-on": build_addon_rows}, proprie=("Add-on scelto",))
     # Settings are intentionally hidden until the gear is pressed.
     # The normal window-close control invokes the same safe shutdown.
 

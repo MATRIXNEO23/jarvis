@@ -82,7 +82,7 @@ Lumi-048-PROVA.zip: run 43719492123, 27.773.085 byte, SHA-256 22304bad…f302. A
 Resta da fare: parole incerte evidenziate in dettatura (passo 11).
 
 ## Stato lista 15/11 sera (16/11)
-Fatti con test: 1, 2, 3, 4, 5, 7, 8, 9, 10 e il primo pezzo del 6 (navigazione impostazioni, Tutorial, Info; vedi checkpoint). Prossimo: proporre all'utente, uno alla volta, menu degli add-on con icona, memoria locale/online, finestre separate rimaste. Build 049 solo su richiesta.
+Fatti con test: 1, 2, 3, 4, 5, 7, 8, 9, 10 e del 6: navigazione impostazioni, Tutorial, Info, righe add-on con icona colorata e interruttore (vedi checkpoint). Prossimo: proporre all'utente memoria locale/online separate, poi le finestre separate rimaste. Build 049 solo su richiesta.
 
 ## Nuova lista concordata a voce (15/11 sera) — da fare in ordine, menu proposti all'utente pezzo per pezzo
 Regola: niente iniziative sull'organizzazione dei menu; ogni argomento al suo posto (Interfaccia, Voce, Memoria, Modelli, Add-on); tutto in verticale come il riquadro d'aiuto; menu che si aprono con un clic e si chiudono da soli cliccando altrove; unica finestra che resta in primo piano: l'aiuto comandi.

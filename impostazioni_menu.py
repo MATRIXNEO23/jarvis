@@ -88,10 +88,15 @@ def raccogli(pages: dict) -> dict:
 class Navigazione:
     """Due colonne a sinistra e la parte scelta a destra, dentro la finestra esistente."""
 
-    def __init__(self, window, notebook, pages: dict, *, main_root=None):
+    def __init__(self, window, notebook, pages: dict, *, main_root=None, righe=None, proprie=()):
         self.window = window
         self.notebook = notebook
         self.pages = pages                       # titolo scheda -> frame interno
+        # righe: {categoria: costruttore(contenitore) -> widget} messo in cima alla colonna
+        # delle voci (es. gli add-on con icona e interruttore); proprie: pagine gestite da
+        # chi le ha create (es. il menu dell'add-on scelto), mai nascoste dalla navigazione.
+        self.righe = dict(righe or {})
+        self.proprie = set(proprie)
         self.tabs = {}                           # frame interno -> scheda del notebook
         for tab in notebook.tabs():
             title = notebook.tab(tab, "text")
@@ -104,7 +109,7 @@ class Navigazione:
                     info = widget.pack_info()
                     info.pop("in", None)
                     self.packing[str(widget)] = info
-        self.tree = raccogli(pages)
+        self.tree = raccogli({t: p for t, p in pages.items() if t not in self.proprie})
         style = __import__("tkinter.ttk", fromlist=["Style"]).Style(window)
         style.layout("LumiNoTabs.TNotebook.Tab", [])
         notebook.configure(style="LumiNoTabs.TNotebook")
@@ -116,7 +121,7 @@ class Navigazione:
         self.items.pack(side="left", fill="y", padx=6, pady=6)
         self.buttons = {}
         for category in CATEGORIE:
-            if not self.tree.get(category):
+            if not self.tree.get(category) and category not in self.righe:
                 continue
             button = tk.Button(self.cats, text=category + "  ▸", anchor="w", width=13,
                                command=lambda c=category: self.apri_categoria(c), bg=PANEL, fg=TEXT,
@@ -140,6 +145,14 @@ class Navigazione:
         for child in self.items.winfo_children():
             child.destroy()
         self.item_buttons = {}
+        builder = self.righe.get(category)
+        if builder is not None:
+            try:
+                builder(self.items).pack(fill="x", pady=(0, 6))
+            except (tk.TclError, AttributeError) as exc:
+                tk.Label(self.items, text="Non disponibile: " + str(exc)[:60], bg=PANEL,
+                         fg=MUTED).pack(anchor="w")
+            tk.Frame(self.items, bg=MUTED, height=1).pack(fill="x", pady=(0, 4))
         for item in self.tree.get(category, {}):
             button = tk.Button(self.items, text=item, anchor="w", width=24,
                                command=lambda i=item: self.mostra(category, i), bg=PANEL, fg=TEXT,
@@ -157,7 +170,9 @@ class Navigazione:
         if not entries:
             return
         inner = entries[0][0]
-        for page in self.pages.values():
+        for title, page in self.pages.items():
+            if title in self.proprie:
+                continue
             for widget in page.winfo_children():
                 if widget.winfo_manager() == "pack":
                     widget.pack_forget()
@@ -172,6 +187,21 @@ class Navigazione:
         try:                                      # in cima alla parte scelta
             canvas = inner.master
             canvas.yview_moveto(0)
+        except (tk.TclError, AttributeError):
+            pass
+
+    def mostra_pagina(self, title):
+        """Mostra una pagina «propria» (es. il menu dell'add-on scelto)."""
+        page = self.pages.get(title)
+        tab = self.tabs.get(str(page)) if page is not None else None
+        if tab is None:
+            return
+        self.notebook.select(tab)
+        for button in self.item_buttons.values():
+            button.configure(bg=PANEL, fg=TEXT)
+        self.current = (self.current[0], title)
+        try:
+            page.master.yview_moveto(0)
         except (tk.TclError, AttributeError):
             pass
 
