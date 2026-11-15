@@ -239,26 +239,7 @@ def main() -> None:
               wraplength=540).pack(anchor="w", padx=8, pady=5)
     ttk.Button(native_settings_box, text="Configura Gemma locale...",
                command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
-    # Motore in un processo separato (prova): cambio/riavvio del modello senza chiudere Lumi.
-    engine_process = __import__("local_model.motore_processo", fromlist=["separate_enabled"])
-    engine_separate_var = tk.BooleanVar(value=engine_process.separate_enabled())
-
-    def save_engine_separate() -> None:
-        try:
-            engine_process.set_separate(engine_separate_var.get())
-        except OSError as exc:
-            write_line("MODELLO LOCALE > Scelta non salvata: " + str(exc)[:120])
-            return
-        write_line("MODELLO LOCALE > " + (
-            "Motore separato: vale dal prossimo caricamento del modello (di' «riavvia il modello»)."
-            if engine_separate_var.get() else
-            "Motore dentro Lumi come prima: vale dal prossimo avvio di Lumi."))
-
-    ttk.Checkbutton(native_settings_box,
-                    text="Motore in un processo separato (prova): cambio e riavvio del modello "
-                         "senza chiudere Lumi",
-                    variable=engine_separate_var, command=save_engine_separate
-                    ).pack(anchor="w", padx=8, pady=(0, 6))
+    # Il motore gira sempre in un processo a parte (decisione 15/11 sera): niente casella.
     # Pulizia dati su disco (passo 6): cartelle, spazio, ascolto, Cestino.
     def open_data_cleanup() -> None:
         __import__("pulizia_dati").PuliziaWindow(
@@ -824,13 +805,14 @@ def main() -> None:
         # Diagnostica per Claude (passo 9): copia in memoria per il ponte, niente Tk.
         __import__("diagnostica_claude.ponte", fromlist=["registra"]).registra(role, body)
         output.configure(state="normal")
-        bubble_mark = chat_bubbles.inizio() if chat_bubbles else ""
+        # Le righe «sistema» (es. la vecchia console) non contano tra i 100 messaggi della chat.
+        bubble_mark = chat_bubbles.inizio() if chat_bubbles and role != "sistema" else ""
         output.insert(
             "end", identity + "         " +
             datetime.now().strftime("%H:%M:%S") + "\n",
             (role, "message_head"))
         output.insert("end", body + "\n\n", role)
-        if chat_bubbles:
+        if chat_bubbles and bubble_mark:
             chat_bubbles.fine(role, body, bubble_mark)
         # Keep the UI responsive even during long voice conversations.
         # Drop only old visible console messages, never task/memory records.
@@ -4789,6 +4771,14 @@ def main() -> None:
             menu_side.segna_fatto(flag)
 
     root.after(4000, ask_old_projects)
+
+    def flush_internal_console() -> None:
+        """Righe della vecchia console nera → righe «sistema» (visibili in DIAGNOSTICA)."""
+        for line in __import__("console_interna").preleva():
+            write_line("CONSOLE > " + line, role="sistema")
+        root.after(700, flush_internal_console)
+
+    root.after(700, flush_internal_console)
     if telegram_auto.get():
         root.after(1400,toggle_telegram_automatic)
     if gpt_enabled.get():
@@ -4801,6 +4791,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # Una sola finestra (15/11 sera): l'uscita della console va in console.log e in Diagnostica.
+    __import__("console_interna").installa()
+    try:
+        main()
+    except Exception:
+        __import__("console_interna").errore_fatale()
+        raise
 
 

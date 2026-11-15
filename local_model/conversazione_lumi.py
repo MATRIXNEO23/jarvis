@@ -452,7 +452,8 @@ def installa(d):
                             lambda question, reply: orch.chiedi_ui(
                                 question, reply, d.write_line, d.speak_result)),
                         run_command=lambda text: d.root.after(
-                            0, lambda: d.submit_local(message_override=text)))
+                            0, lambda: d.submit_local(message_override=text)),
+                        notify=lambda text: d.gemma_trial_queue.put(("online_note", text, voice_epoch)))
                     name, answer = orch.rispondi(
                         spoken, tools=tools,
                         history=__import__("chat_elenco").contesto_recente(6),

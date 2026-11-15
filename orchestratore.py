@@ -54,6 +54,10 @@ STRUMENTI = [
         "parameters": {"type": "object", "properties": {
             "percorso": {"type": "string"}, "testo": {"type": "string"}}, "required": ["percorso", "testo"]}}},
     {"type": "function", "function": {
+        "name": "esegui_python", "description": "Esegue codice Python nella prima cartella sicura, dopo che l'utente ha visto lo script e detto sì; tempo massimo limitato; niente cancellazioni, comandi di sistema o altri programmi. Restituisce l'output.",
+        "parameters": {"type": "object", "properties": {"codice": {"type": "string"}},
+                       "required": ["codice"]}}},
+    {"type": "function", "function": {
         "name": "comando_lumi", "description": "Esegue un comando di Lumi come se l'utente lo dicesse (es. «apri blocco note», «imposta un timer di 5 minuti», «metti la musica»). Chiede sempre il permesso.",
         "parameters": {"type": "object", "properties": {"comando": {"type": "string"}},
                        "required": ["comando"]}}},
@@ -66,25 +70,52 @@ def _file() -> Path:
     return default_path().parent / "orchestratore.json"
 
 
-def cartelle_sicure(path: Path | None = None) -> list[str]:
+def _leggi(path: Path | None = None) -> dict:
     try:
         data = json.loads((path or _file()).read_text(encoding="utf-8"))
-        return [str(p) for p in data.get("cartelle_sicure", []) if isinstance(p, str)][:20]
-    except (OSError, ValueError, AttributeError, RuntimeError):
-        return []
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError, RuntimeError):
+        return {}
+
+
+def _scrivi(data: dict, path: Path | None = None) -> None:
+    path = path or _file()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix(".tmp")
+    temp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    os.replace(temp, path)
+
+
+def cartelle_sicure(path: Path | None = None) -> list[str]:
+    value = _leggi(path).get("cartelle_sicure", [])
+    return [str(p) for p in value if isinstance(p, str)][:20] if isinstance(value, list) else []
 
 
 def salva_cartelle(folders, path: Path | None = None) -> None:
-    path = path or _file()
-    path.parent.mkdir(parents=True, exist_ok=True)
     clean = []
     for folder in folders:
         value = str(Path(folder).resolve())
         if value not in clean:
             clean.append(value)
-    temp = path.with_suffix(".tmp")
-    temp.write_text(json.dumps({"cartelle_sicure": clean[:20]}, indent=2), encoding="utf-8")
-    os.replace(temp, path)
+    data = _leggi(path)
+    data["cartelle_sicure"] = clean[:20]
+    _scrivi(data, path)
+
+
+TEMPO_PYTHON = 60          # secondi, modificabile in Impostazioni
+
+
+def tempo_python(path: Path | None = None) -> int:
+    value = _leggi(path).get("tempo_python", TEMPO_PYTHON)
+    return value if isinstance(value, int) and 5 <= value <= 3600 else TEMPO_PYTHON
+
+
+def salva_tempo_python(seconds: int, path: Path | None = None) -> None:
+    if not isinstance(seconds, int) or not 5 <= seconds <= 3600:
+        raise ValueError("Tempo massimo tra 5 e 3600 secondi.")
+    data = _leggi(path)
+    data["tempo_python"] = seconds
+    _scrivi(data, path)
 
 
 def dentro(path, folders) -> bool:
@@ -112,10 +143,12 @@ class Strumenti:
     """Esegue gli strumenti. ask(domanda) -> bool (blocca finché l'utente risponde);
     run_command(testo) esegue un comando di Lumi sul thread dell'interfaccia."""
 
-    def __init__(self, *, ask, run_command, folders=None):
+    def __init__(self, *, ask, run_command, folders=None, notify=None, timeout=None):
         self.ask = ask
         self.run_command = run_command
         self.folders = list(folders if folders is not None else cartelle_sicure())
+        self.notify = notify or (lambda text: None)
+        self.timeout = timeout or tempo_python()
 
     def _permesso(self, question: str, path=None) -> bool:
         if path is not None and dentro(path, self.folders):
@@ -134,6 +167,8 @@ class Strumenti:
                 return self.scrivi(str(args.get("percorso", "")), str(args.get("testo", "")))
             if name == "comando_lumi":
                 return self.comando(str(args.get("comando", "")))
+            if name == "esegui_python":
+                return self.python(str(args.get("codice", "")))
         except OSError as exc:
             return "Errore: " + str(exc)[:200]
         return "Strumento sconosciuto."
@@ -190,6 +225,37 @@ class Strumenti:
         target.write_text(text, encoding="utf-8")
         return "Scritto: %s (%d caratteri)." % (target, len(text))
 
+    def python(self, code: str) -> str:
+        """Codice Python: solo nella prima cartella sicura, dopo il sì, con tempo massimo."""
+        if not code.strip() or len(code) > 20000:
+            return "Codice vuoto o troppo lungo."
+        if not self.folders:
+            return "Nessuna cartella sicura: il codice si esegue solo lì. Chiedi all'utente di aggiungerne una."
+        reason = codice_pericoloso(code)
+        if reason:
+            return "Codice rifiutato da Lumi: " + reason + ". Riscrivilo senza."
+        folder = Path(self.folders[0])
+        if not folder.is_dir():
+            return "La cartella sicura non esiste più: %s" % folder
+        self.notify("Script Python da eseguire in %s:\n%s" % (folder, code[:3000]))
+        if not self.ask("Eseguo lo script Python che vedi in chat (al massimo %d secondi)?" % self.timeout):
+            return "Permesso negato."
+        script = folder / "lumi_script.py"
+        script.write_text(code, encoding="utf-8")
+        import subprocess
+        import sys
+        python = sys.executable
+        if python.lower().endswith("pythonw.exe"):
+            python = python[:-len("pythonw.exe")] + "python.exe"
+        try:
+            done = subprocess.run([python, "-I", str(script)], cwd=str(folder), capture_output=True,
+                                  timeout=self.timeout, text=True, encoding="utf-8", errors="replace",
+                                  creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        except subprocess.TimeoutExpired:
+            return "Fermato: superato il tempo massimo di %d secondi." % self.timeout
+        output = (done.stdout or "") + (("\n[errori]\n" + done.stderr) if done.stderr else "")
+        return ("Uscita %d.\n" % done.returncode + output)[:MAX_LETTURA]
+
     def comando(self, text: str) -> str:
         text = " ".join(text.split())[:200]
         if not text:
@@ -198,6 +264,27 @@ class Strumenti:
             return "Permesso negato."
         self.run_command(text)
         return "Comando eseguito da Lumi; l'esito è nella chat dell'utente."
+
+
+_PERICOLOSI = (
+    (r"\b(?:os|shutil|pathlib)\s*\.\s*(?:remove|unlink|rmdir|removedirs|rmtree)\b|\.unlink\s*\(|\.rmdir\s*\(|\brmtree\b",
+     "cancellazione di file o cartelle"),
+    (r"\bsubprocess\b|\bos\s*\.\s*(?:system|popen|exec\w*|spawn\w*|startfile)\b|\bpty\b",
+     "avvio di altri programmi o comandi di sistema"),
+    (r"\bctypes\b|\bwinreg\b|\b_winapi\b|\bmsvcrt\b", "accesso diretto a Windows"),
+    (r"\bshutdown\b|\bformat\s+[a-z]:", "spegnimento o formattazione"),
+    (r"\b__import__\s*\(|\bimportlib\b|\bexec\s*\(|\beval\s*\(|\bcompile\s*\(", "codice nascosto"),
+)
+
+
+def codice_pericoloso(code: str) -> str:
+    """Motivo se il codice contiene cose bloccate (protezione in più, non perfetta: la vera
+    sicurezza è il sì dell'utente dopo aver visto lo script)."""
+    import re
+    for pattern, reason in _PERICOLOSI:
+        if re.search(pattern, code, re.I):
+            return reason
+    return ""
 
 
 # --- ciclo a più passi ------------------------------------------------------------------------
@@ -273,7 +360,8 @@ def costruisci_sezione(parent, notify, *, ask_folder=None, path: Path | None = N
     ttk.Label(box, wraplength=540, text=(
         "Con il cervello online acceso Lumi può far fare al modello online richieste a più "
         "passi. Qui dentro può leggere e scrivere da solo; altrove e per i comandi chiede il "
-        "tuo sì. Non cancella mai file.")).pack(anchor="w", padx=8, pady=5)
+        "tuo sì. Il codice Python gira solo nella prima cartella, dopo che hai visto lo "
+        "script e detto sì. Non cancella mai file.")).pack(anchor="w", padx=8, pady=5)
     listbox = tk.Listbox(box, height=4, activestyle="none")
     listbox.pack(fill="x", padx=8)
 
@@ -301,6 +389,22 @@ def costruisci_sezione(parent, notify, *, ask_folder=None, path: Path | None = N
     row.pack(fill="x", padx=8, pady=(3, 6))
     ttk.Button(row, text="Aggiungi cartella…", command=add).pack(side="left")
     ttk.Button(row, text="Togli", command=remove).pack(side="left", padx=6)
+    timing = ttk.Frame(box)
+    timing.pack(fill="x", padx=8, pady=(0, 6))
+    ttk.Label(timing, text="Codice Python: tempo massimo (secondi), sempre dopo il tuo sì:").pack(side="left")
+    seconds = tk.StringVar(value=str(tempo_python(path)))
+    entry = ttk.Entry(timing, textvariable=seconds, width=6)
+    entry.pack(side="left", padx=6)
+
+    def save_time(_event=None):
+        try:
+            salva_tempo_python(int(seconds.get().strip()), path)
+            notify("ORCHESTRATORE > Tempo massimo del codice Python: %s secondi." % seconds.get().strip())
+        except ValueError:
+            seconds.set(str(tempo_python(path)))
+            notify("ORCHESTRATORE / ERRORE > Scrivi un numero tra 5 e 3600.")
+    entry.bind("<FocusOut>", save_time)
+    entry.bind("<Return>", save_time)
     fill()
     box.fill = fill
     return box

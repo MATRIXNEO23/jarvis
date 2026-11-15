@@ -89,11 +89,10 @@ class EngineProcessTests(unittest.TestCase):
             with self.assertRaises(motore_processo.EngineStopped):
                 self.adapter.call("ask", prompt="ciao", timeout=5)
 
-    def test_choice_defaults_to_engine_inside_lumi(self):
-        self.assertFalse(motore_processo.separate_enabled())
-        from local_model.native_chat_adapter import NativeChatAdapter
-        self.assertIsInstance(motore_processo.adattatore("x"), NativeChatAdapter)
-        motore_processo.set_separate(True)
+    def test_engine_always_in_separate_process(self):
+        """15/11 sera: sempre a parte, anche con un vecchio motore.json «dentro Lumi»."""
+        motore_processo.set_separate(False)
+        self.assertTrue(motore_processo.separate_enabled())
         self.assertIsInstance(motore_processo.adattatore("x"), motore_processo.ProcessChatAdapter)
 
 

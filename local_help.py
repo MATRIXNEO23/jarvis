@@ -197,7 +197,8 @@ def help_sections(engine):
             '5. In Lumi: Gestisci add-on > Telegram > «Configura account», scrivi ID, hash e numero, '
             'poi «Collegati» e inserisci il codice nel pop-up.\n'
             'Non condividere mai API hash, codici o sessione con nessuno.\n\n'
-            'Se un link cambia, nella sezione dell’add-on puoi scrivere quello nuovo e premere «Salva link».',
+            'Se un link cambia, nella sezione dell’add-on puoi scrivere quello nuovo e premere «Salva link».'
+            + '\n\n' + _chiavi_servizi(),
         'Tastiera':
             'F1 — Apri o richiama questa guida.\n'
             'Ctrl+L — Metti il cursore nella casella di comando, senza inviare nulla.\n'
@@ -225,6 +226,14 @@ FULL_TITLES = {
     'Chiavi API': 'Chiavi API (come crearle)',
     'Tastiera': 'Scorciatoie da tastiera',
 }
+
+def _chiavi_servizi():
+    try:
+        import servizi_online
+        return servizi_online.aiuto_chiavi()
+    except Exception:            # l'aiuto si apre comunque
+        return ''
+
 
 _LINK = __import__('re').compile(r'https://[^\s)»"]+')
 

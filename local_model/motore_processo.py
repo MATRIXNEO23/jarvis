@@ -32,10 +32,10 @@ def _settings_path() -> Path:
 
 
 def separate_enabled() -> bool:
-    try:
-        return bool(json.loads(_settings_path().read_text(encoding="utf-8")).get("separato"))
-    except (OSError, ValueError, AttributeError):
-        return False
+    """Decisione utente 15/11 sera: il motore gira SEMPRE in un processo a parte (se si
+    blocca, Lumi resta aperta e «riavvia il modello» lo fa ripartire). La casella nelle
+    impostazioni è stata tolta; motore.json vecchi vengono ignorati."""
+    return True
 
 
 def set_separate(value: bool) -> None:

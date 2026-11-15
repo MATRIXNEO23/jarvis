@@ -434,3 +434,24 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
               foreground="#888").pack(anchor="w", padx=8, pady=(0, 6))
     box.redraw = draw
     return box
+
+
+def aiuto_chiavi() -> str:
+    """Sezione dell'aiuto «Come creare le chiavi»: dai file dei servizi (link cliccabili)."""
+    out = ["SERVIZI ONLINE (menu ONLINE ▾ in alto; chiavi in Impostazioni → Servizi online)",
+           "Le chiavi restano cifrate solo su questo PC. Gratis = con limiti; ($) = a pagamento.", ""]
+    for service in SERVIZI:
+        out.append(service.nome.upper() + ("" if service.gratis else " ($)"))
+        out.append("Pagina della chiave: " + service.chiavi)
+        out += ["%d. %s" % (n + 1, step) for n, step in enumerate(service.passi)]
+        if service.limite:
+            out.append("Cosa offre: " + service.limite)
+        out.append("")
+    out += ["GITHUB (add-on GitHub, sola lettura)",
+            "Pagina del token: https://github.com/settings/personal-access-tokens/new",
+            "1. Accedi a GitHub e apri la pagina qui sopra (Settings → Developer settings → "
+            "Personal access tokens → Fine-grained tokens).",
+            "2. Dai un nome (es. Lumi), una scadenza e scegli i repository da leggere.",
+            "3. Nei permessi lascia solo lettura (Contents, Issues: Read-only), poi «Generate token».",
+            "4. Copia il token (inizia con github_pat_…) e incollalo in Lumi: dopo non si rivede.", ""]
+    return "\n".join(out)

@@ -30,10 +30,12 @@ echo ATTENZIONE: GPT e Telegram sono account reali quando attivati.
 echo Telegram automatico inizialmente OFF; microfono ON all'avvio se disponibile.
 echo Non usare due istanze Telegram contemporaneamente.
 echo.
-py -3 jarvis.py
+rem Una sola finestra: Lumi parte senza console nera (pyw). L'uscita va in console.log
+rem e in Diagnostica; se Lumi non parte compare una finestra con l'errore.
+where pyw >nul 2>nul
 if errorlevel 1 (
-  echo Lumi non e' stato avviato correttamente. Leggi l'errore qui sopra.
-  pause
-  exit /b 1
+  py -3 jarvis.py
+) else (
+  start "" pyw -3 jarvis.py
 )
 endlocal

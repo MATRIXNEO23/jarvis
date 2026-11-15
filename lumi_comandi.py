@@ -137,7 +137,9 @@ def chiedi(action: str, question: str, write_line, speak, seconds: float = 60,
     write_line("LUMI > " + question)
     speak(question)
     import risposte
-    risposte.expect_answer(speech_text=question)
+    # «sì»/«no» senza dire «Lumi» (punto 10): finestra di 20 s dopo la domanda, non di più,
+    # perché intanto il riconoscimento ascolta solo le parole di risposta.
+    risposte.expect_answer(seconds=20, speech_text=question)
 
 
 def run_action(action: str) -> bool:
