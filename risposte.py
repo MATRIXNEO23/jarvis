@@ -19,7 +19,9 @@ NO = {"no", "non", "nò", "noo", "nooo", "no grazie", "annulla", "lascia stare",
       "non farlo", "nulla", "stop"}
 # Parole per il riconoscimento ristretto (grammatica Vosk) durante l'attesa.
 GRAMMAR = ["sì", "si", "no", "non", "certo", "ok", "conferma", "esatto", "giusto", "procedi",
-           "va bene", "annulla", "lascia stare", "niente", "lumi", "[unk]"]
+           "va bene", "annulla", "lascia stare", "niente", "sempre", "lumi", "[unk]"]
+# «Sempre» (es. «uso l'online per questa richiesta? sì, no o sempre»): vale come risposta.
+ALWAYS = {"sempre", "sempre attivo", "tienilo attivo", "tienilo acceso", "si sempre", "sì sempre"}
 _WAKE = re.compile(r"^\s*(?:(?:ehi|hey|ok)\s+)?lumi[\s,!.:]*", re.IGNORECASE)
 _STATE = {"until": 0.0}
 ANSWER_SECONDS = 10.0
@@ -39,7 +41,7 @@ def is_no(text: str) -> bool:
 
 
 def is_answer(text: str) -> bool:
-    return is_yes(text) or is_no(text)
+    return is_yes(text) or is_no(text) or _clean(text) in ALWAYS
 
 
 def expect_answer(seconds: float = ANSWER_SECONDS, speech_text: str = "") -> None:

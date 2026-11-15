@@ -326,6 +326,9 @@ def main() -> None:
     # Servizi online con caselle e chiavi API (passo 8, servizi_online.py).
     __import__("servizi_online").costruisci_sezione(
         assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
+    # Orchestratore online: cartelle sicure (lavoro a più passi, orchestratore.py).
+    __import__("orchestratore").costruisci_sezione(
+        assistant_settings_frame, lambda text: write_line(text))
     # Sezione «Contesto» (passo 4): chat continua e ricordi del modello locale.
     __import__("contesto_lumi").costruisci_sezione(
         assistant_settings_frame, lambda text: write_line(text))
@@ -2231,7 +2234,7 @@ def main() -> None:
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
         return True
 
-    def start_conversation_gpt(spoken: str) -> None:
+    def start_conversation_gpt(spoken: str, orchestrate: bool = True) -> None:
         """Use the owner's selected model; connection failure never selects Gemma."""
         if closing or voice_mode.get() not in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
             return
@@ -2255,6 +2258,19 @@ def main() -> None:
             return
         if not gpt_enabled.get():
             submit_gemma_voice(spoken)
+            return
+        if orchestrate and __import__("servizi_online").disponibili():
+            # Orchestratore (15/11): con un servizio online pronto Lumi chiede prima
+            # «uso l'online per questa richiesta?»; no = GPT come prima.
+            orchestrator = __import__("orchestratore")
+            if not orchestrator.consenso_necessario(True):
+                submit_gemma_voice(spoken, route="online")
+                return
+            orchestrator.IN_ATTESA["richiesta"] = (spoken, False, "gpt")
+            __import__("lumi_comandi").chiedi(
+                "orch_once", "Uso l'online per questa richiesta? Di' sì, no, oppure «sempre» "
+                "per tenerlo finché non lo spegni.", write_line, speak_result,
+                no_action="orch_local", always_action="orch_always")
             return
         if not active_gpt:
             write_line("GPT > GPT selezionato ma non connesso. Connetti ChatGPT nelle impostazioni.")
@@ -4605,6 +4621,16 @@ def main() -> None:
         else:
             submit_gemma_voice(pending[0], route="locale")
 
+    def resume_orchestrated(route: str) -> None:
+        waiting = __import__("orchestratore").IN_ATTESA
+        pending, waiting["richiesta"] = waiting["richiesta"], None
+        if pending is None:
+            return
+        if route == "locale" and pending[2:] == ("gpt",):
+            start_conversation_gpt(pending[0], orchestrate=False)   # no: GPT come prima
+        else:
+            submit_gemma_voice(pending[0], typed=pending[1], route=route)
+
     def resume_online_question(route: str) -> None:
         waiting = __import__("servizi_online").IN_ATTESA
         pending, waiting["domanda"] = waiting["domanda"], None
@@ -4677,6 +4703,14 @@ def main() -> None:
          # Passo 8: risposta a «la passo all'online?» per una domanda lunga.
          "online_yes": lambda: resume_online_question("online"),
          "online_no": lambda: resume_online_question("locale"),
+         # Orchestratore: «uso l'online per questa richiesta?» e permessi dei passi.
+         "orch_once": lambda: resume_orchestrated("online"),
+         "orch_always": lambda: (__import__("orchestratore").SESSIONE.update(sempre=True),
+                                 write_line("ONLINE > Online attivo finché non spegni il cervello online."),
+                                 resume_orchestrated("online")),
+         "orch_local": lambda: resume_orchestrated("locale"),
+         "orch_yes": lambda: __import__("orchestratore").rispondi_permesso(True),
+         "orch_no": lambda: __import__("orchestratore").rispondi_permesso(False),
          # Passo 11: risposta a «Intendevi …?» del classificatore leggero.
          "nlu_yes": lambda: resume_guessed_command(True),
          "nlu_no": lambda: resume_guessed_command(False),

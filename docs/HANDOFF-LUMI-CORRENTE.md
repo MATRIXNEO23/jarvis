@@ -69,7 +69,7 @@ Aggiornare questo file a ogni consegna o decisione importante.
 5. **Fatto (vedi CI)**: allegati (`allegati.py`: 📎, trascinamento, Ctrl+V; pezzi utili senza modello; solo modello locale finché non c'è il passo 8).
 6. **Fatto (vedi CI)**: pulizia dati su disco (`pulizia_dati.py`, Cestino, doppia conferma per i file importanti).
 7. **Fatto (vedi CI)**: scheda di sé (`scheda_lumi.py`) e riquadro comandi per modalità con tutorial brevi (`aiuto_comandi.py`).
-8. **Fatto in parte (vedi CI)**: servizi online con caselle, chiavi DPAPI, ordine e ripiego locale (`servizi_online.py`); orchestratore con strumenti ancora da progettare.
+8. **Fatto (vedi CI)**: servizi online (`servizi_online.py`) e orchestratore a passi con cartelle sicure e permessi (`orchestratore.py`).
 9. **Fatto (vedi CI)**: Diagnostica per Claude (`diagnostica_claude/`, MCP locale), import di una chat da ChatGPT/Claude (`chat_import.py`), GitHub sola lettura (`github_lettura.py`).
 Dettagli e motivazioni: sezioni datate in fondo a `docs/ARCH-01-F5-CHECKPOINT.md`.
 10. Bug voce online Microsoft: corretto (attesa iniziale 10 s, niente alternanza nella stessa risposta), da provare sul Pavilion.

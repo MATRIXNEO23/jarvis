@@ -52,6 +52,8 @@ _PATTERNS = (
     ("wake", re.compile(r"^(?:svegliati|sveglia|torna\s+qui|fatti\s+vedere|mostrati|"
                         r"mostra\s+(?:l'\s*)?avatar)" + _END, re.I)),
 )
+_ALWAYS = {"sempre", "sempre attivo", "tienilo attivo", "tienilo acceso", "sì sempre", "si sempre",
+           "finché non lo spengo", "fino a quando non lo spengo"}
 _YES = {"si", "sì", "conferma", "confermo", "ok", "va bene", "certo", "procedi"}
 _NO = {"no", "annulla", "lascia stare", "no grazie"}
 
@@ -84,8 +86,13 @@ def handle_text(spoken: str, write_line, speak) -> bool:
         _STATE["pending"] = None
         action, deadline, *rest = pending
         no_action = rest[0] if rest else None
+        always_action = rest[1] if len(rest) > 1 else None
         word = " ".join(_WAKE.sub("", spoken).casefold().strip(" .!?").split())
         import risposte
+        if (time.monotonic() <= deadline and always_action in actions
+                and word in _ALWAYS):
+            actions[always_action]()
+            return True
         if time.monotonic() <= deadline and (word in _YES or risposte.is_yes(spoken)):
             actions[action]()
             return True
@@ -123,10 +130,10 @@ def handle_text(spoken: str, write_line, speak) -> bool:
 
 
 def chiedi(action: str, question: str, write_line, speak, seconds: float = 60,
-           no_action: str | None = None) -> None:
+           no_action: str | None = None, always_action: str | None = None) -> None:
     """Domanda sì/no per un'azione registrata (es. «help_off»): sì la esegue; no esegue
-    `no_action` se c'è, altrimenti «annullato»."""
-    _STATE["pending"] = (action, time.monotonic() + seconds) + ((no_action,) if no_action else ())
+    `no_action` se c'è, altrimenti «annullato»; «sempre» esegue `always_action` se c'è."""
+    _STATE["pending"] = (action, time.monotonic() + seconds, no_action, always_action)
     write_line("LUMI > " + question)
     speak(question)
     import risposte

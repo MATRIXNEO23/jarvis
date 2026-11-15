@@ -306,6 +306,7 @@ def installa(d):
     def submit_gemma_voice(spoken, *, typed=False, route=None):
         if d.closing or d.gemma_trial_busy[0]:
             return False
+        orig_route = route
         from intent_normalizer import before_model
         if before_model(spoken):
             return True              # capita dal motore interno (sinonimi) o domanda sì/no
@@ -321,6 +322,20 @@ def installa(d):
             return True
         # Passo 8: servizi online (forzati con «ragiona online», sempre, o proposti).
         route, spoken = __import__("servizi_online").percorso(spoken, route)
+        # Orchestratore (decisione 15/11): con il cervello online acceso e un servizio con la
+        # chiave, Lumi chiede «uso l'online per questa richiesta?» (sì / no / sempre).
+        if route == "locale" and orig_route is None and __import__("servizi_online").disponibili():
+            if __import__("orchestratore").consenso_necessario(bool(d.gpt_enabled.get())):
+                if d.gpt_enabled.get():
+                    __import__("orchestratore").IN_ATTESA["richiesta"] = (spoken, typed)
+                    __import__("lumi_comandi").chiedi(
+                        "orch_once", "Uso l'online per questa richiesta? Di' sì, no, "
+                        "oppure «sempre» per tenerlo finché non lo spegni.",
+                        d.write_line, d.speak_result, no_action="orch_local",
+                        always_action="orch_always")
+                    return True
+            elif d.gpt_enabled.get():
+                route = "online"
         if route == "proponi":
             __import__("servizi_online").IN_ATTESA["domanda"] = (spoken, typed)
             __import__("lumi_comandi").chiedi(
@@ -425,22 +440,31 @@ def installa(d):
         def voice_worker():
             try:
                 if route == "online" and not explicit:
-                    from conversation_router import native_intent_context_for_request
-                    # Le richieste di azioni restano al motore locale, che le controlla.
-                    if native_intent_context_for_request(
-                            spoken, has_document=native_document is not None,
-                            addon_actions=native_actions) is None:
-                        name, answer = __import__("servizi_online").rispondi(
-                            spoken, card=online_card)
-                        if name:
-                            d.gemma_trial_queue.put(("online_ok", (spoken, name, answer), voice_epoch))
-                            return
-                        note = "Servizi online non disponibili: " + "; ".join(answer)[:300]
-                        if not local_ok:
-                            d.gemma_trial_queue.put(("online_fail", note, voice_epoch))
-                            return
-                        d.gemma_trial_queue.put(("online_note", note + ". Rispondo col modello locale.",
-                                                 voice_epoch))
+                    # Orchestratore: il modello online lavora a passi con gli strumenti;
+                    # fuori dalle cartelle sicure e per i comandi chiede il sì all'utente.
+                    orch = __import__("orchestratore")
+                    tools = orch.Strumenti(
+                        ask=orch.permesso_da_thread(
+                            lambda fn: d.root.after(0, fn),
+                            lambda question, reply: orch.chiedi_ui(
+                                question, reply, d.write_line, d.speak_result)),
+                        run_command=lambda text: d.root.after(
+                            0, lambda: d.submit_local(message_override=text)))
+                    name, answer = orch.rispondi(
+                        spoken, tools=tools,
+                        history=__import__("chat_elenco").contesto_recente(6),
+                        pieces=([online_card] if online_card else [])
+                        + __import__("allegati").per_online(spoken),
+                        notify=lambda text: d.gemma_trial_queue.put(("online_note", text, voice_epoch)))
+                    if name:
+                        d.gemma_trial_queue.put(("online_ok", (spoken, name, answer), voice_epoch))
+                        return
+                    note = "Servizi online non disponibili: " + "; ".join(answer)[:300]
+                    if not local_ok:
+                        d.gemma_trial_queue.put(("online_fail", note, voice_epoch))
+                        return
+                    d.gemma_trial_queue.put(("online_note", note + ". Rispondo col modello locale.",
+                                             voice_epoch))
                 session = get_gemma_session()
                 if explicit:
                     index = session.pick_program(

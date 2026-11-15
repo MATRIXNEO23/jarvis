@@ -223,6 +223,37 @@ def chiedi(messages: list[dict], *, settings: dict | None = None, keys: Chiavi |
     return None, reasons
 
 
+def chiama(messages: list[dict], *, tools=None, only: str | None = None,
+           settings: dict | None = None, keys: Chiavi | None = None, post=_post,
+           timeout: float = TIMEOUT):
+    """Come chiedi, ma con gli strumenti (function calling) e il messaggio intero:
+    (id servizio, nome, messaggio) oppure (None, None, motivi). `only`: resta sullo stesso
+    servizio durante un lavoro a più passi."""
+    settings = settings or carica_impostazioni()
+    keys = keys or Chiavi()
+    reasons = []
+    for service_id in settings["ordine"]:
+        if service_id not in settings["attivi"] or (only and service_id != only):
+            continue
+        service = PER_ID[service_id]
+        key = keys.leggi(service_id)
+        if not key:
+            reasons.append(service.nome + ": manca la chiave")
+            continue
+        body = {"model": settings["modelli"].get(service_id, service.modello),
+                "messages": messages, "max_tokens": 900}
+        if tools:
+            body["tools"] = tools
+        try:
+            message = post(service.base_url + "/chat/completions", key, body, timeout)["choices"][0]["message"]
+            if not isinstance(message, dict) or not (message.get("content") or message.get("tool_calls")):
+                raise ServizioErrore("vuota")
+            return service_id, service.nome, message
+        except Exception as exc:
+            reasons.append(service.nome + ": " + _motivo(exc))
+    return None, None, reasons
+
+
 def disponibili(settings: dict | None = None, keys: Chiavi | None = None) -> bool:
     settings = settings or carica_impostazioni()
     keys = keys or Chiavi()
