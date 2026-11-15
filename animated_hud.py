@@ -430,16 +430,16 @@ class JarvisHUD:
                      bd=0,highlightthickness=0,state="disabled")
         text.pack(fill="both",expand=True,padx=6,pady=6)
         state={"window":window,"text":text,"filter":"TUTTO","buttons":{}}
-        roles=("utente","jarvis","azione","errore","sistema")
-        colors={"utente":CYAN,"jarvis":WHITE,"azione":"#7fe0a0","errore":"#ff7a7a",
-                "sistema":MUTED}
+        roles=("utente","jarvis","comando","azione","errore","sistema")
+        colors={"utente":CYAN,"jarvis":WHITE,"comando":"#9fe3c8","azione":"#7fe0a0",
+                "errore":"#ff7a7a","sistema":MUTED}
         for role in roles:
             text.tag_configure(role,foreground=colors[role])
 
         def apply(name):
             state["filter"]=name
             visible=(set(roles) if name=="TUTTO" else
-                     {"azione","errore"} if name=="ATTIVITÀ" else {"sistema","errore"})
+                     {"comando","azione","errore"} if name=="ATTIVITÀ" else {"sistema","errore"})
             for role in roles:
                 text.tag_configure(role,elide=(role not in visible))
             for key,button in state["buttons"].items():
@@ -507,10 +507,10 @@ class JarvisHUD:
         if self._console is None:
             return
         # Tk's elide tags filter existing text in place. Nothing is deleted.
-        roles=("utente","jarvis","azione","errore","sistema")
+        roles=("utente","jarvis","comando","azione","errore","sistema")
         visible=(
             set(roles) if tab=="CONSOLE" else
-            {"azione","errore"} if tab=="ATTIVITÀ" else
+            {"comando","azione","errore"} if tab=="ATTIVITÀ" else
             {"sistema","errore"}
         )
         try:

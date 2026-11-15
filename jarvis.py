@@ -723,37 +723,15 @@ def main() -> None:
     else:
         memory_status.set("Second Brain: disattivato, conversazione breve solo in RAM.")
 
-    def write_line(text: str) -> None:
+    def write_line(text: str, role: str | None = None) -> None:
         # The reference design uses a conversational timeline, not raw logs.
         # All actions and errors remain visible, with timestamp and source.
+        # Chi ha scritto il messaggio: deciso in chat_ruoli (esplicito o per prefisso).
         label = str(text).strip()
         if not label:
             return
-        low = label.casefold()
-        role = ("utente" if low.startswith((
-                    "utente >", "tu >", "domanda a gpt >", "comando locale >"))
-                else "azione" if low.startswith((
-                    "documento >", "[completed]", "correzione voce >"))
-                else "jarvis" if low.startswith((
-                    "jarvis >", "gpt >", "lia >", "lumi >"))
-                else "errore" if (
-                    "[failed]" in low or "[rejected]" in low
-                    or low.startswith(("errore", "gpt: impossibile")))
-                else "sistema")
-        identity = {"utente":"●  TU",
-                    "jarvis":"◉  LUMI",
-                    "azione":"✓  OPERAZIONE",
-                    "errore":"!  ERRORE",
-                    "sistema":"·  SISTEMA"}[role]
-        # Strip repeated provider prefixes without hiding the actual result.
-        prefixes = ("utente >", "tu >", "domanda a gpt >", "comando locale >",
-                    "jarvis >", "gpt >", "lia >", "lumi >", "documento >",
-                    "correzione voce >")
-        body = label
-        for prefix in prefixes:
-            if low.startswith(prefix):
-                body = label[len(prefix):].strip()
-                break
+        from chat_ruoli import classify as classify_message
+        role, identity, body = classify_message(label, role)
         output.configure(state="normal")
         output.insert(
             "end", identity + "         " +
@@ -2606,6 +2584,7 @@ def main() -> None:
     output.tag_configure("azione", foreground=GREEN, spacing3=9)
     output.tag_configure("errore", foreground=AMBER, spacing3=9)
     output.tag_configure("sistema", foreground="#83a8ba", spacing3=9)
+    output.tag_configure("comando", foreground="#9fe3c8", spacing3=9)
     output.tag_configure("message_head",
                          font=("Segoe UI", 10, "bold"),
                          spacing1=9)

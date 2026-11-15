@@ -1,3 +1,6 @@
+## Handoff corrente — 2026-11-15
+Riprendere da docs/HANDOFF-LUMI-CORRENTE.md (stato, ramo, CI/build/pubblicazione, mappa moduli, lezioni, prossimi passi). Aggiornarlo a ogni consegna o decisione importante, così chi continua (anche Codex) non riparte da zero.
+
 ## Controllo PC / Lumi 040+: decidere e provare con l'utente, sezione per sezione — 2026-11-12
 Richiesta esplicita: prima della prossima correzione studiare bene e testare insieme. Per ogni sezione (programma o funzione) chiedere all'utente comandi, parole e comportamento desiderati; non inventarli. Implementare solo dopo la sua conferma; build solo su richiesta.
 Comandi uguali in più finestre (es. play, pausa, indietro, home): definirli una sola volta come comandi comuni, con lo stesso significato ovunque; per ogni programma cambia solo il tasto/elemento usato. Verificare conflitti con musica, comandi su Lumi e altri add-on e niente duplicati.
