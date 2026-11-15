@@ -135,7 +135,7 @@ class ElencoChat:
             title = "Nuova chat"
             if current is not None:
                 try:
-                    pairs = self.store.display_pairs(current, project_id=self._scope(), limit=100)
+                    pairs = self.store.display_pairs(current, project_id=self._scope(), limit=1000)
                     title = next((c.title for c in chats if c.id == current), title)
                 except (OSError, sqlite3.Error, ValueError):
                     pairs = []

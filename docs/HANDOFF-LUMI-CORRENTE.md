@@ -64,7 +64,7 @@ Aggiornare questo file a ogni consegna o decisione importante.
 1. **Fatto (CI verde)**: ruoli dei messaggi (`chat_ruoli`, ruolo «comando» con intestazione della fonte).
 2. **Fatto (CI verde, non ancora in build)**: chat unica locale+GPT con elenco chat per progetto (`chat_elenco.py`,
    ☰ / + / Rinomina / Elimina) e bolle con copia/leggi/rigenera, ultimi 100 disegnati (`chat_bolle.py`).
-3. Riga di stato a 5 stati colorati e stop immediato («Lumi, fermati» + pulsante; «stop/pausa/play» solo audio-video; «annulla» invariato).
+3. **Fatto (CI verde)**: riga di stato a 5 colori e stop immediato, `stato_lumi.py` («Lumi, fermati» + pulsante; «stop/pausa/play» solo audio-video; «annulla» invariato).
 4. «Chat continua» con cache come KoboldCpp (opzione, spenta di serie); sezione «Contesto» locale/online.
 5. Allegati (pulsante, trascinamento, Ctrl+V; ricerca dei pezzi utili senza modello).
 6. Pulizia dei dati su disco (audio, registri, cache) con accesso alle cartelle.

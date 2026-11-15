@@ -57,6 +57,22 @@ class ChatBolleTest(unittest.TestCase):
         self.assertIn("domanda 4", content)
         self.assertIn("risposta 5", content)
 
+    def test_cronologia_mostra_gli_ultimi_e_carica_i_precedenti(self):
+        identity = {"utente": "TU", "jarvis": "LUMI"}
+        pairs = [("domanda %d" % n, "risposta %d" % n) for n in range(5)]
+        self.bolle.cronologia("Prova", pairs, identity, shown=2)
+        content = self.text.get("1.0", "end")
+        self.assertNotIn("domanda 2", content)
+        self.assertIn("domanda 3", content)
+        more = self.bolle.bars["__precedenti__"]
+        self.assertIn("(3)", more.cget("text"))
+        more.invoke()
+        self.root.update()
+        content = self.text.get("1.0", "end")
+        self.assertIn("domanda 0", content)
+        self.assertNotIn("__precedenti__", self.bolle.bars)
+        self.assertEqual(len(self.bolle.bars), 5)
+
     def test_azzera_toglie_pulsanti(self):
         self.scrivi("utente", "a")
         self.scrivi("jarvis", "b")

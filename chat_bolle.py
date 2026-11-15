@@ -52,6 +52,39 @@ class Bolle:
             self._barra(body, self.last_user)
         self._taglia()
 
+    def cronologia(self, title: str, pairs, identity: dict, shown: int = LIMITE // 2) -> None:
+        """Chat aperta dall'elenco: gli ultimi `shown` scambi; sopra, se ce ne sono
+        altri, «▲ messaggi precedenti» ne carica altri 50 (decisione 15/11)."""
+        pairs = list(pairs)
+        text = self.text
+        text.configure(state="normal")
+        text.delete("1.0", "end")
+        self.azzera()
+        self.limit = max(LIMITE, 2 * shown)
+        older = len(pairs) - shown
+        if older > 0:
+            more = tk.Button(
+                text, text="▲ messaggi precedenti (%d)" % older,
+                command=lambda: text.after_idle(
+                    lambda: self.cronologia(title, pairs, identity, shown + 50)),
+                bg="#0b2f44", fg="#9fd8f0", relief="flat", bd=0, padx=8,
+                font=("Segoe UI", 8), cursor="hand2")
+            text.window_create("end", window=more)
+            self.bars["__precedenti__"] = more
+            text.insert("end", "\n")
+        text.insert("end", "— " + title + " —\n\n", ("sistema_titolo",))
+        for question, answer in pairs[-shown:] if shown else []:
+            for role, body in (("utente", question), ("jarvis", answer)):
+                mark = self.inizio()
+                text.insert("end", identity[role] + "\n", (role, "message_head"))
+                text.insert("end", body + "\n\n", role)
+                self.fine(role, body, mark)
+        if older > 0:
+            text.see("1.0")
+        else:
+            text.see("end")
+        text.configure(state="disabled")
+
     def azzera(self) -> None:
         for widget in self.bars.values():
             widget.destroy()

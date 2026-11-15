@@ -2633,21 +2633,7 @@ def main() -> None:
     def show_chat_history(title: str, pairs) -> None:
         """Chat aperta dall'elenco: la cronologia salvata al posto dei messaggi di prima."""
         from chat_ruoli import IDENTITY
-        output.configure(state="normal")
-        output.delete("1.0", "end")
-        chat_bubbles.azzera()
-        output.insert("end", "— " + title + " —\n\n", ("sistema_titolo",))
-        for question, answer in pairs:
-            mark = chat_bubbles.inizio()
-            output.insert("end", IDENTITY["utente"] + "\n", ("utente", "message_head"))
-            output.insert("end", question + "\n\n", "utente")
-            chat_bubbles.fine("utente", question, mark)
-            mark = chat_bubbles.inizio()
-            output.insert("end", IDENTITY["jarvis"] + "\n", ("jarvis", "message_head"))
-            output.insert("end", answer + "\n\n", "jarvis")
-            chat_bubbles.fine("jarvis", answer, mark)
-        output.see("end")
-        output.configure(state="disabled")
+        chat_bubbles.cronologia(title, pairs, IDENTITY)
 
     output.tag_configure("sistema_titolo", foreground="#729bb3", justify="center")
     import chat_elenco
