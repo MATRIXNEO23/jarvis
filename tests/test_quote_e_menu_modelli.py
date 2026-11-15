@@ -69,7 +69,8 @@ class ConfermaTokenTest(unittest.TestCase):
         tools = orchestratore.Strumenti(ask=lambda q: asked.append(q) or False,
                                         run_command=lambda t: None, folders=[])
         calls = []
-        result = orchestratore.rispondi("x" * 40000, tools=tools,
+        history = [("domanda " * 400, "risposta " * 400)] * 8        # ~12.000 token
+        result = orchestratore.rispondi("riassumi", tools=tools, history=history,
                                         call=lambda *a, **k: calls.append(1))
         self.assertEqual(result, (None, ["annullato: troppo testo per la quota"]))
         self.assertEqual(calls, [])
