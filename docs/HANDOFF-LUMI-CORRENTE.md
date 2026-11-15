@@ -59,11 +59,10 @@ Aggiornare questo file a ogni consegna o decisione importante.
 - Il ruolo dei messaggi non va indovinato dal testo in giro per il codice: usare `chat_ruoli`.
 
 ## In corso e prossimi passi (ordine concordato il 15/11)
-1. **Fatto, da verificare in CI**: ruoli dei messaggi (`chat_ruoli`, ruolo «comando» con intestazione della fonte).
+1. **Fatto (CI verde)**: ruoli dei messaggi (`chat_ruoli`, ruolo «comando» con intestazione della fonte).
 2. Fumetti (opzione B: riquadro per messaggio, copia/leggi/rigenera, ultimi ~100 disegnati) + archivio unico
    delle chat per progetto (niente migrazione delle vecchie) + elenco progetti/chat a sinistra.
-3. Riga di stato a 5 stati colorati e stop immediato («Lumi, fermati», «Lumi stop», «annulla» + pulsante):
-   da chiarire con l'utente i conflitti con «stop» della musica e «annulla» delle domande.
+3. Riga di stato a 5 stati colorati e stop immediato («Lumi, fermati» + pulsante; «stop/pausa/play» solo audio-video; «annulla» invariato).
 4. «Chat continua» con cache come KoboldCpp (opzione, spenta di serie); sezione «Contesto» locale/online.
 5. Allegati (pulsante, trascinamento, Ctrl+V; ricerca dei pezzi utili senza modello).
 6. Pulizia dei dati su disco (audio, registri, cache) con accesso alle cartelle.
@@ -71,3 +70,5 @@ Aggiornare questo file a ogni consegna o decisione importante.
 8. Servizi online con spunte e chiavi; orchestratore ibrido (attese/polling in Lumi, zero token).
 9. Add-on «Diagnostica per Claude» (MCP locale, comandi solo dentro Lumi), import JSON di una chat, add-on GitHub.
 Dettagli e motivazioni: sezioni datate in fondo a `docs/ARCH-01-F5-CHECKPOINT.md`.
+10. Bug voce online Microsoft (interruzioni, alternanza con la voce di Windows, rallentamenti) — analisi in corso.
+11. Tutorial con correzione dei comandi, lettere perse (S), parole incerte in dettatura, classificatore opzionale, frasi variate (decisioni 15/11 10:50 nel checkpoint).
