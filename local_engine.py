@@ -107,7 +107,11 @@ class LocalEngine:
                                            "Comando troppo lungo (massimo 300 caratteri)."))
         from voice_control import speech_to_local_command
         request = speech_to_local_command(request) or request
-        if " ".join(request.casefold().strip(" .!?").split()) in ("aiuto","comandi","help","cosa puoi fare","cosa sai fare"):
+        # «Cosa puoi fare?» (15/11 sera): frase di Lumi a parole sue, niente elenco.
+        own = __import__("scheda_lumi").risposta_propria(request)
+        if own:
+            return self._record(TaskResult(uuid4().hex,"about","completed",own))
+        if " ".join(request.casefold().strip(" .!?").split()) in ("aiuto","comandi","help"):
             extra = ("\n"+self.file_access.commands()) if self.file_access is not None else ""
             if self.program_apps is not None:
                 extra += '\n'+self.program_apps.commands()

@@ -89,6 +89,8 @@ NOMI = ('try_model_switch', 'dispatch_model_capability', 'get_gemma_session', 't
 
 def installa(d):
     """Crea le funzioni per questa esecuzione di Lumi; restituisce {nome: funzione}."""
+    # «Cosa puoi fare?»: dati veri (add-on accesi, servizi online) letti al momento.
+    __import__("scheda_lumi").FONTE["fatti"] = lambda: __import__("scheda_lumi").fatti_da(d)
     def try_model_switch(spoken: str) -> bool:
         from voice_control import model_switch_target
         selected = model_switch_target(spoken)
@@ -310,6 +312,16 @@ def installa(d):
         from intent_normalizer import before_model
         if before_model(spoken):
             return True              # capita dal motore interno (sinonimi) o domanda sì/no
+        # 15/11 sera: «chi sei», «cosa puoi fare» e «cosa ti ho detto prima» li risolve Lumi,
+        # dalle sue frasi e dalla cronologia della chat, senza modello (esatto e veloce).
+        own = __import__("scheda_lumi").risposta_propria(spoken)
+        recall = None if own else __import__("richiamo").rispondi(
+            spoken, __import__("richiamo").coppie_chat_aperta())
+        if own or recall:
+            written, said = (own, own) if own else recall
+            d.write_line("LUMI > " + written)
+            d.speak_result(said)
+            return True
         from model_gate import local_enabled as model_enabled, refused_local as model_refused
         # Passo 11: classificatore leggero (spento di serie), solo a voce e solo se nessuna
         # regola ha capito: «Intendevi …?».
@@ -613,6 +625,8 @@ def installa(d):
                                 d.chat_sessions_panel.persist_answer(
                                     chat_target[0], value.question, value.text,
                                     project_id=chat_target[1])
+                                __import__("chat_elenco").segna_chat(
+                                    d.chat_sessions_panel.store, chat_target[0], "offline")
                             except (OSError, sqlite3.Error, ValueError) as exc:
                                 d.write_line("CHAT > Risposta non archiviata: "
                                            + type(exc).__name__)
@@ -621,7 +635,9 @@ def installa(d):
                                     + str(d.chat_sessions_panel.pending_count)
                                     + " in attesa): nuovo tentativo al prossimo messaggio. "
                                     "Se chiudi Lumi prima, andranno perse.")
-                        elif can_save and d.remember_exchange(value.question, value.text, "chat") is False:
+                        elif can_save and (__import__("chat_elenco").segna_modello("offline")
+                                           or d.remember_exchange(value.question, value.text,
+                                                                  "chat") is False):
                             d.write_line("MEMORIA > Scambio non archiviato.")
                         d.gemma_recent_reply[0] = (
                             voice_epoch, time.monotonic(),
@@ -648,6 +664,7 @@ def installa(d):
                     d.write_line("ONLINE > Risposta da " + service_name + ".")
                     d.write_line("LUMI > " + answer)
                     d.speak_result(answer)
+                    __import__("chat_elenco").segna_modello("online")
                     if d.remember_exchange(question, answer, "chat") is False:
                         d.write_line("MEMORIA > Scambio non archiviato.")
                 elif kind == "online_fail":

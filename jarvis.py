@@ -2758,7 +2758,12 @@ def main() -> None:
                 parent=root, title="Export di ChatGPT o Claude (conversations.json o .zip)",
                 filetypes=[("Export chat", "*.json *.zip"), ("Tutti i file", "*.*")]),
             import_chat=lambda path: chat_archive.importa(
-                path, lambda items: __import__("chat_import").scegli_dialogo(root, items)))
+                path, lambda items: __import__("chat_import").scegli_dialogo(root, items)),
+            ask_save=lambda title: filedialog.asksaveasfilename(
+                parent=root, title="Esporta la chat", defaultextension=".json",
+                initialfile="".join(c for c in title if c.isalnum() or c in " -_")[:60] or "chat",
+                filetypes=[("JSON", "*.json")]),
+            notify=write_line)
         chat_archive.view = chat_menu
         chat_archive.refresh(show=False)
     except (OSError, sqlite3.Error, ValueError) as exc:
@@ -4054,6 +4059,7 @@ def main() -> None:
                                     addon_manager.file_service.remember_file_clarification(original_phrase)
                                 write_line("LUMI > " + intent.reply)
                                 speak_result(intent.reply)
+                                __import__("chat_elenco").segna_modello("online")
                                 remember_exchange(original_phrase, intent.reply,
                                                   intent.kind)
                             elif intent.kind == "capability":
@@ -4125,6 +4131,7 @@ def main() -> None:
                                 kind=("clarify" if isinstance(answer,str)
                                       and answer.strip().endswith("?")
                                       and answer.count("?")==1 else "chat")
+                                __import__("chat_elenco").segna_modello("online")
                                 remember_exchange(rest[0],answer,kind)
                             gpt_status.set("GPT: connesso")
                             active_gpt = True
@@ -4239,7 +4246,7 @@ def main() -> None:
         except NameError:
             chat_is_visible = False  # Standalone legacy router tests.
         if " ".join(message.casefold().strip(" .!?").split()) in (
-                "aiuto", "help", "comandi", "cosa puoi fare", "cosa sai fare"):
+                "aiuto", "help", "comandi"):
             show_help()
             request.set("")
             return "break"

@@ -3,7 +3,7 @@ volte di fila), personalizzabili. Le predefinite restano sempre; le frasi dell'u
 si aggiungono, si modificano o si tolgono una alla volta (profilo: frasi.json).
 Una predefinita tolta dall'utente si recupera con «Ripristina predefinite».
 
-Segnaposto nelle frasi: {nome}, {finestra}, {comando}, {testo}, {numero}, {tasti}.
+Segnaposto nelle frasi: {nome}, {finestra}, {comando}, {testo}, {numero}, {tasti}, {capacita}.
 """
 from __future__ import annotations
 
@@ -111,6 +111,19 @@ DEFAULTS: dict[str, dict[str, tuple[str, tuple[str, ...]]]] = {
             "Questa la faccio ragionare online? Di' sì o no.",
             "Domanda impegnativa: la mando ai servizi online? Di' sì o no.",
             "Vuoi che la passi all'online? Rispondi sì o no.")),
+        "chi_sono": ("«Chi sei?» (a caso, seria o spiritosa)", (
+            "Sono Lumi, l'assistente che Alberto ha costruito per usare il PC con la voce.",
+            "Lumi, piacere! Mi ha creata Alberto: io parlo, il PC esegue. Di solito.",
+            "Sono Lumi: un'assistente vocale per Windows, fatta da Alberto. Ascolto, capisco e faccio.",
+            "Mi chiamo Lumi. Alberto mi ha dato una voce e un PC da comandare: cerco di meritarmeli.",
+            "Sono Lumi, la tua assistente sul PC. Creata da Alberto, migliorata a forza di prove.",
+            "Lumi, al tuo servizio. Alberto mi ha programmata, il resto lo imparo con te.")),
+        "cosa_so_fare": ("«Cosa puoi fare?» ({capacita} = quello che è acceso adesso)", (
+            "Adesso posso {capacita}. Chiedimelo a voce, come lo diresti a una persona.",
+            "Un po' di tutto: {capacita}. Se non capisco, te lo chiedo.",
+            "Oggi sono in forma: {capacita}. L'elenco preciso è in «comandi».",
+            "Posso {capacita}. E chiacchierare, ovviamente.",
+            "Ti do una mano a {capacita}. Dimmi tu da dove partiamo.")),
         "togli_riquadro": ("Dopo molti comandi chiede se togliere il riquadro", (
             "Vuoi che tolga il riquadro dei comandi? Di' sì o no. Lo riaccendi con «mostra i comandi».",
             "Tolgo il riquadro dei comandi? Rispondi sì o no. Torna con «mostra i comandi».",

@@ -130,6 +130,42 @@ class AltreChatTest(Base):
         self.assertIsNotNone(outside)
 
 
+class SimboliEdEsportaTest(Base):
+    def test_simboli_dei_modelli(self):
+        chat = self.store.create_chat("Prova", activate=True)
+        self.assertEqual(menu_laterale.etichetta("Prova", None), "💬 Prova")
+        self.assertTrue(self.store.mark_model(chat.id, "offline"))
+        self.assertFalse(self.store.mark_model(chat.id, "offline"))     # già segnato
+        self.assertEqual(menu_laterale.etichetta("Prova", self.store.models()[chat.id]), "🤖 Prova")
+        self.store.mark_model(chat.id, "online")
+        self.assertEqual(menu_laterale.etichetta("Prova", self.albero.modelli()[chat.id]), "🤖📡 Prova")
+        self.store.delete_chat(chat.id)
+        self.assertEqual(self.store.models(), {})
+
+    def test_registra_scambio_segna_chi_ha_risposto(self):
+        elenco = chat_elenco.ElencoChat(self.store, lambda: None, lambda *a: None)
+        chat_elenco._CURRENT["elenco"] = elenco
+        chat_elenco.segna_modello("online")
+        self.assertTrue(chat_elenco.registra_scambio("ciao", "ciao a te"))
+        chat_elenco.registra_scambio("azione", "fatto")        # nessun modello: niente simbolo
+        chat_id = elenco.current()
+        self.assertEqual(self.store.models(), {chat_id: {"online"}})
+
+    def test_esporta_json_tutta_la_chat(self):
+        import json
+        chat = self.store.create_chat("Progetto lungo", project_id=P1, activate=True)
+        for n in range(3):
+            self.store.append_exchange(chat.id, "domanda %d" % n, "risposta %d" % n, project_id=P1)
+        self.store.mark_model(chat.id, "online")
+        path = Path(self.folder.name) / "chat.json"
+        self.assertEqual(menu_laterale.esporta_json(self.store, chat.id, P1, path), 6)
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(data["title"], "Progetto lungo")
+        self.assertEqual(data["models"], ["online"])
+        self.assertEqual([m["role"] for m in data["messages"][:2]], ["user", "assistant"])
+        self.assertEqual(data["messages"][-1]["content"], "risposta 2")
+
+
 class VistaTest(Base):
     def test_albero_disegnato_e_clic(self):
         try:

@@ -102,6 +102,12 @@ class ChatSessionStore:
             db.execute(
                 """CREATE INDEX IF NOT EXISTS chat_exchanges_recent
                    ON chat_exchanges(chat_id,id DESC)""")
+            # Quali modelli hanno lavorato sulla chat (simboli nel menu, 15/11 sera).
+            db.execute(
+                """CREATE TABLE IF NOT EXISTS chat_models(
+                    chat_id TEXT NOT NULL REFERENCES chat_sessions(id),
+                    model TEXT NOT NULL CHECK(model IN ('online','offline')),
+                    PRIMARY KEY(chat_id, model))""")
             db.execute(
                 """CREATE TABLE IF NOT EXISTS chat_selection(
                     scope TEXT NOT NULL,
@@ -215,6 +221,7 @@ class ChatSessionStore:
             self._require(db, chat_id, scope, scope_id)
             db.execute("DELETE FROM chat_selection WHERE chat_id=?", (chat_id,))
             db.execute("DELETE FROM chat_exchanges WHERE chat_id=?", (chat_id,))
+            db.execute("DELETE FROM chat_models WHERE chat_id=?", (chat_id,))
             db.execute("DELETE FROM chat_sessions WHERE id=?", (chat_id,))
 
     def move_chat(self, chat_id, *, from_project=None, to_project=None):
@@ -243,6 +250,46 @@ class ChatSessionStore:
                 "UPDATE chat_sessions SET updated_utc=? WHERE id=?",
                 (now, chat_id))
             return cursor.lastrowid
+
+    def mark_model(self, chat_id, model):
+        """Segna che un modello («online» o «offline») ha risposto qui; True se è nuovo."""
+        chat_id = _id(chat_id)
+        if model not in ("online", "offline"):
+            raise ChatSessionError("Modello non valido.")
+        with self._db() as db:
+            if db.execute("SELECT 1 FROM chat_sessions WHERE id=?", (chat_id,)).fetchone():
+                return db.execute("INSERT OR IGNORE INTO chat_models VALUES(?,?)",
+                                  (chat_id, model)).rowcount > 0
+        return False
+
+    def models(self):
+        """{chat_id: {"online", "offline"}} per tutte le chat segnate."""
+        with self._db() as db:
+            rows = db.execute("SELECT chat_id, model FROM chat_models").fetchall()
+        result = {}
+        for row in rows:
+            result.setdefault(row["chat_id"], set()).add(row["model"])
+        return result
+
+    def export_chat(self, chat_id, *, project_id=None):
+        """Tutta la chat come dizionario pronto per JSON (Esporta, 15/11 sera)."""
+        scope, scope_id = _scope(project_id)
+        chat_id = _id(chat_id)
+        with self._db() as db:
+            info = self._info(self._require(db, chat_id, scope, scope_id))
+            rows = db.execute(
+                """SELECT user_text, assistant_text, created_utc FROM chat_exchanges
+                   WHERE chat_id=? ORDER BY id""", (chat_id,)).fetchall()
+            models = sorted(r["model"] for r in db.execute(
+                "SELECT model FROM chat_models WHERE chat_id=?", (chat_id,)))
+        messages = []
+        for item in rows:
+            messages.append({"role": "user", "content": item["user_text"],
+                             "time_utc": item["created_utc"]})
+            messages.append({"role": "assistant", "content": item["assistant_text"],
+                             "time_utc": item["created_utc"]})
+        return {"format": "lumi-chat-1", "title": info.title, "created_utc": info.created_utc,
+                "updated_utc": info.updated_utc, "models": models, "messages": messages}
 
     def display_pairs(self, chat_id, *, project_id=None, limit=500):
         """Read-only full transcript for the chat view (never sent to a model)."""

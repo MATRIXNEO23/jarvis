@@ -11,16 +11,33 @@ from __future__ import annotations
 import sqlite3
 import threading
 
-_CURRENT = {"elenco": None}
+_CURRENT = {"elenco": None, "modello": None}
 _LOCK = threading.Lock()
+
+
+def segna_modello(model: str | None) -> None:
+    """Chi sta per rispondere («online»/«offline»): lo usa il prossimo registra_scambio."""
+    _CURRENT["modello"] = model if model in ("online", "offline") else None
+
+
+def segna_chat(store, chat_id, model) -> None:
+    """Segna il modello su una chat salvata altrove e aggiorna il menu, senza errori."""
+    try:
+        if store is not None and store.mark_model(chat_id, model):
+            elenco = _CURRENT["elenco"]
+            if elenco is not None:
+                elenco.refresh(show=False)
+    except (OSError, sqlite3.Error, ValueError):
+        pass
 
 
 def registra_scambio(question: str, answer: str) -> bool:
     """Salva domanda e risposta nella chat selezionata; False se l'elenco non c'è."""
     elenco = _CURRENT["elenco"]
+    model, _CURRENT["modello"] = _CURRENT.get("modello"), None
     if elenco is None or not str(question).strip() or not str(answer).strip():
         return False
-    return elenco.save(str(question), str(answer))
+    return elenco.save(str(question), str(answer), model=model)
 
 
 def contesto_recente(count: int = 6) -> list[tuple[str, str]]:
@@ -101,7 +118,7 @@ class ElencoChat:
         self.refresh(show=True)
         return True
 
-    def save(self, question, answer):
+    def save(self, question, answer, model=None):
         with _LOCK:
             chat_id = self.current()
             try:
@@ -112,6 +129,8 @@ class ElencoChat:
                     self.refresh(show=False)
                 self.store.append_exchange(chat_id, question, answer,
                                            project_id=self._scope())
+                if model and self.store.mark_model(chat_id, model):
+                    self.refresh(show=False)
                 return True
             except (OSError, sqlite3.Error, ValueError):
                 return False

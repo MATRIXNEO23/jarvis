@@ -42,6 +42,13 @@ class Albero:
         except (OSError, sqlite3.Error, ValueError):
             return []
 
+    def modelli(self):
+        """{chat_id: {"online","offline"}}; vuoto se il database non risponde."""
+        try:
+            return self.store.models()
+        except (OSError, sqlite3.Error, ValueError, AttributeError):
+            return {}
+
     def active(self, project_id):
         try:
             return self.store.active_chat(project_id=project_id)
@@ -141,15 +148,35 @@ class Albero:
         return True
 
 
+SIMBOLI = {"offline": "🤖", "online": "📡"}
+
+
+def etichetta(title, models=None) -> str:
+    """Simboli piccoli prima del nome: 🤖 modello offline, 📡 online; 💬 se nessuno."""
+    marks = "".join(SIMBOLI[m] for m in ("offline", "online") if m in (models or ()))
+    return (marks or "💬") + " " + title
+
+
+def esporta_json(store, chat_id, project_id, path) -> int:
+    """Scrive tutta la chat in un file JSON; ritorna il numero di messaggi."""
+    import json
+    from pathlib import Path
+    data = store.export_chat(chat_id, project_id=project_id)
+    Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    return len(data["messages"])
+
+
 class MenuView:
     """Il menu in Tk: albero verticale, clic per aprire, clic destro per le azioni."""
 
     def __init__(self, header, body, before, albero: Albero, *, ask_text, confirm,
-                 ask_file=None, import_chat=None):
+                 ask_file=None, import_chat=None, ask_save=None, notify=None):
         import tkinter as tk
         from tkinter import ttk
         self.tk = tk
         self.albero = albero
+        self.ask_save = ask_save
+        self.notify = notify or (lambda text: None)
         self.ask_text = ask_text
         self.confirm = confirm
         self.items = {}                        # iid -> (tipo, project_id, chat_id)
@@ -194,13 +221,16 @@ class MenuView:
         self.items.clear()
         current_project = self.albero.current_project()
         current_chat = self.albero.active(current_project)
+        marks = self.albero.modelli()
+        self.titles = {}
         selected = None
         for project_id, name in self.albero.projects():
             is_open = project_id in self.open_projects or project_id == current_project
             node = tree.insert("", "end", text="📁 " + name, open=is_open)
             self.items[node] = ("progetto", project_id, None)
             for chat in self.albero.chats(project_id):
-                iid = tree.insert(node, "end", text="💬 " + chat.title)
+                iid = tree.insert(node, "end", text=etichetta(chat.title, marks.get(chat.id)))
+                self.titles[iid] = chat.title
                 self.items[iid] = ("chat", project_id, chat.id)
                 if project_id == current_project and chat.id == current_chat:
                     selected = iid
@@ -209,7 +239,8 @@ class MenuView:
         sep = tree.insert("", "end", text="──────────")
         self.items[sep] = ("sep", None, None)
         for chat in self.albero.chats(None):
-            iid = tree.insert("", "end", text="💬 " + chat.title)
+            iid = tree.insert("", "end", text=etichetta(chat.title, marks.get(chat.id)))
+            self.titles[iid] = chat.title
             self.items[iid] = ("chat", None, chat.id)
             if current_project is None and chat.id == current_chat:
                 selected = iid
@@ -225,7 +256,7 @@ class MenuView:
         if selected is not None:
             tree.selection_set(selected)
             tree.see(selected)
-            title = tree.item(selected, "text")[2:]
+            title = self.titles.get(selected, title)
         self.title.set(title)
 
     def _click(self, _event=None):
@@ -269,6 +300,9 @@ class MenuView:
                 move.add_command(label="Fuori dai progetti",
                                  command=lambda: self.albero.sposta_chat(chat_id, project_id, None))
             menu.add_cascade(label="Sposta in progetto", menu=move)
+            if self.ask_save is not None:
+                menu.add_command(label="Esporta (JSON)…",
+                                 command=lambda: self._export_chat(iid, project_id, chat_id))
             menu.add_separator()
             menu.add_command(label="Elimina", command=lambda: self._delete_chat(iid, project_id, chat_id))
         else:
@@ -281,13 +315,26 @@ class MenuView:
         finally:
             menu.grab_release()
 
+    def _export_chat(self, iid, project_id, chat_id):
+        title = getattr(self, "titles", {}).get(iid, "chat")
+        path = self.ask_save(title)
+        if not path:
+            return
+        try:
+            count = esporta_json(self.albero.store, chat_id, project_id, path)
+        except (OSError, sqlite3.Error, ValueError) as exc:
+            self.notify("CHAT / ERRORE > Esportazione non riuscita: " + str(exc)[:100])
+            return
+        self.notify("CHAT > Esportata «%s»: %d messaggi in %s" % (title, count, path))
+
     def _rename_chat(self, iid, project_id, chat_id):
         name = self.ask_text("Rinomina chat", "Nuovo nome:")
         if name:
             self.albero.rinomina_chat(chat_id, project_id, name)
 
     def _delete_chat(self, iid, project_id, chat_id):
-        if self.confirm("Elimina chat", "Eliminare «%s» e i suoi messaggi?" % self.tree.item(iid, "text")[2:]):
+        if self.confirm("Elimina chat", "Eliminare «%s» e i suoi messaggi?"
+                        % getattr(self, "titles", {}).get(iid, self.tree.item(iid, "text")[2:])):
             self.albero.elimina_chat(chat_id, project_id)
 
     def _rename_project(self, iid, project_id):

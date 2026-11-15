@@ -199,7 +199,7 @@ class FileAccessTests(unittest.TestCase):
             self.assertIsNone(self.files.parse_command(chat))
         self.assertEqual(self.files.parse_command('Lumi cerca file preventivo')[0], 'search')
         self.assertEqual(self.files.parse_command('spiegami file 1'), ('read', {'target':'1','kind':'file','explain':True}))
-        self.assertIn('Accesso file attivo', self.engine.execute('cosa puoi fare?').message)
+        self.assertIn('Accesso file attivo', self.engine.execute('comandi').message)
         self.assertIn('apri calcolatrice', self.engine.execute('aiuto').message)
 
     def test_ui_checkbox_inheritance_and_viewer_real_tk(self):
