@@ -12,7 +12,12 @@ class RoleTests(unittest.TestCase):
         self.assertEqual(classify("TIMER > Timer di 5 minuti"),
                          ("comando", "▸  TIMER", "Timer di 5 minuti"))
         self.assertEqual(classify("CONTROLLO PC > Fatto")[0], "comando")
-        self.assertEqual(classify("DIAGNOSTICA > controllo")[0], "sistema")
+        self.assertEqual(classify("DIAGNOSTICA > controllo")[0], "comando")   # risposta all'utente
+        self.assertEqual(classify("VOCABOLARIO LIA > testo")[0], "sistema")   # interno
+        self.assertEqual(classify("GEMMA / ERRORE > rotto")[0], "errore")
+        self.assertEqual(classify("MICROFONO > Voce non disponibile")[0], "errore")
+        self.assertEqual(classify("Motore locale occupato: riprova."),
+                         ("comando", "▸  LUMI", "Motore locale occupato: riprova."))
         self.assertEqual(classify("errore: qualcosa")[0], "errore")
         self.assertEqual(classify("DOCUMENTO > salvato")[0], "azione")
 

@@ -508,8 +508,10 @@ class JarvisHUD:
             return
         # Tk's elide tags filter existing text in place. Nothing is deleted.
         roles=("utente","jarvis","comando","azione","errore","sistema")
+        # 15/11 passo 2a: in chat i messaggi interni («sistema») non si vedono;
+        # restano in DIAGNOSTICA.
         visible=(
-            set(roles) if tab=="CONSOLE" else
+            set(roles)-{"sistema"} if tab=="CONSOLE" else
             {"comando","azione","errore"} if tab=="ATTIVITÀ" else
             {"sistema","errore"}
         )

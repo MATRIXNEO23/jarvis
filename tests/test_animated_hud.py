@@ -97,6 +97,7 @@ class AnimatedHUDGeometryTests(unittest.TestCase):
             self.assertTrue(bool(console.tag_cget("utente","elide")))
             hud.select_tab("CONSOLE")
             self.assertFalse(bool(int(console.tag_cget("utente","elide"))))
+            self.assertTrue(bool(int(console.tag_cget("sistema","elide"))))   # interni nascosti
             # Un solo livello (15/11): DIAGNOSTICA apre una copia filtrabile.
             console.configure(state="normal")   # select_tab lascia la console disabilitata
             console.insert("end","TU > ciao\n","utente")

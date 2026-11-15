@@ -21,7 +21,10 @@ _ACTION = ("documento >", "[completed]", "correzione voce >")
 # Risposte ai comandi: il nome prima di «>» diventa l'intestazione del messaggio.
 _COMMAND = ("timer", "sveglia", "orologio", "musica", "programmi", "file", "accesso file",
             "controllo pc", "pc", "telegram", "modello locale", "modello off", "memoria",
-            "documenti", "comando personale", "cervello", "progetti", "progetto")
+            "documenti", "comando personale", "cervello", "progetti", "progetto",
+            "diagnostica", "chat", "impostazioni", "componenti", "cervello locale spento")
+# Solo questi sono interni: in chat non si vedono, restano in DIAGNOSTICA (15/11, passo 2a).
+_INTERNAL = ("vocabolario lia",)
 
 IDENTITY = {"utente": "●  TU", "jarvis": "◉  LUMI", "azione": "✓  OPERAZIONE",
             "errore": "!  ERRORE", "sistema": "·  SISTEMA", "comando": "▸  COMANDO"}
@@ -39,12 +42,15 @@ def classify(text: str, role: str | None = None) -> tuple[str, str, str]:
         elif low.startswith(_LUMI):
             role = "jarvis"
         elif ("[failed]" in low or "[rejected]" in low
-              or low.startswith(("errore", "gpt: impossibile"))):
+              or low.startswith(("errore", "gpt: impossibile", "microfono >"))
+              or (" > " in label and label.split(" > ", 1)[0].strip().casefold().endswith(
+                  ("/ errore", "/ configurazione")))):
             role = "errore"
-        elif " > " in label and label.split(" > ", 1)[0].strip().casefold() in _COMMAND:
-            role = "comando"
-        else:
+        elif " > " in label and label.split(" > ", 1)[0].strip().casefold() in _INTERNAL:
             role = "sistema"
+        else:
+            # Tutto il resto è una risposta visibile: niente si perde dalla chat.
+            role = "comando"
     elif role not in ROLES:
         role = "sistema"
     identity = IDENTITY[role]
@@ -53,8 +59,10 @@ def classify(text: str, role: str | None = None) -> tuple[str, str, str]:
         if low.startswith(prefix):
             body = label[len(prefix):].strip()
             break
-    if role == "comando" and " > " in label:
-        source, rest = label.split(" > ", 1)
+    if role == "comando":
+        source, rest = label.split(" > ", 1) if " > " in label else ("LUMI", label)
+        if len(source) > 40:                      # non è un prefisso: testo intero
+            source, rest = "LUMI", label
         identity = "▸  " + source.strip().upper()
         body = rest.strip()
     return role, identity, body
