@@ -110,6 +110,15 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     return True
 
 
+def chiedi(action: str, question: str, write_line, speak, seconds: float = 60) -> None:
+    """Domanda sì/no per un'azione registrata (es. «help_off»): sì la esegue."""
+    _STATE["pending"] = (action, time.monotonic() + seconds)
+    write_line("LUMI > " + question)
+    speak(question)
+    import risposte
+    risposte.expect_answer(speech_text=question)
+
+
 def run_action(action: str) -> bool:
     """Esegue un'azione su Lumi registrata da jarvis.py (es. «minimize»); False se manca.
     Usata dal Controllo PC: le finestre di Lumi (senza cornice di Windows) non vanno

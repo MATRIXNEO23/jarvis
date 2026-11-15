@@ -311,6 +311,13 @@ def installa(d):
             return True              # capita dal motore interno (sinonimi) o domanda sì/no
         from model_gate import local_enabled as model_enabled, refused_local as model_refused
         if not model_enabled():
+            if __import__("scheda_lumi").domanda_su_lumi(spoken):
+                # Passo 7: «chi sei» col modello spento → frase pronta con dati veri.
+                reply = __import__("scheda_lumi").risposta_pronta(
+                    __import__("scheda_lumi").fatti_da(d))
+                d.write_line("LUMI > " + reply)
+                d.speak_result(reply)
+                return True
             d.write_line(model_refused(spoken))
             return True              # gestita: nessun passaggio a un altro modello
         try:
@@ -376,6 +383,10 @@ def installa(d):
                 reader, forget=lambda: (d.gemma_session[0].forget_context(native_context)
                                         if d.gemma_session[0] is not None else None))
             reader.attachment = __import__("allegati").per_modello_locale(spoken)
+            if __import__("scheda_lumi").domanda_su_lumi(spoken):
+                # Passo 7: domanda su Lumi → la scheda di sé con i dati veri, prima di tutto.
+                reader.attachment = [__import__("scheda_lumi").scheda(
+                    __import__("scheda_lumi").fatti_da(d))] + reader.attachment
         # Make the session busy only after the selected chat and its reader
         # are valid: errors cannot strand the Gemma UI in a busy state.
         d.gemma_trial_busy[0] = True

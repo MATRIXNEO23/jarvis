@@ -88,6 +88,9 @@ class ControlService:
         self.last_nudge = None
         self.show_grid = lambda rect: None
         self.show_strip = lambda text: None
+        # Passo 7: riquadro dei comandi per modalità (jarvis.py collega aiuto_comandi).
+        self.on_handled = lambda action: None
+        self.on_help_toggle = lambda on: None
         self.pointer_mode = False
         try:
             from controllo_comune import gate
@@ -258,7 +261,24 @@ class ControlService:
             self.pointer_mode = False
         if reply is not None:
             self.last_used = self.clock()
+            if action not in ("show_commands", "hide_commands"):
+                try:
+                    self.on_handled(action)
+                except Exception:          # l'aiuto non deve mai fermare un comando
+                    pass
         return reply
+
+    def current_mode(self) -> str:
+        """Modalità per il riquadro dei comandi: griglia, video, explorer, notepad, generale."""
+        if self.grid_active():
+            return "griglia"
+        found = self.find_window(None)
+        if found is None:
+            return "generale"
+        if self._app_name(found) in VIDEO_APPS:
+            return "video"
+        return {"explorer.exe": "explorer", "notepad.exe": "notepad"}.get(
+            found["process"].lower(), "generale")
 
     # Parole corte («giù», «indietro», «apri», «il 3»…) valgono come comando solo
     # se il Controllo PC è stato usato da poco: altrimenti vanno agli altri comandi
@@ -903,10 +923,12 @@ class ControlService:
     def _do_show_commands(self):
         text = self._do_context_help()
         self.show_strip(text)
+        self.on_help_toggle(True)          # jarvis.py: riquadro acceso e testo completo
         return "Ecco i comandi per questa finestra."
 
     def _do_hide_commands(self):
         self.show_strip(None)
+        self.on_help_toggle(False)
         return "Comandi nascosti."
 
     # --- frecce ai lati delle righe (es. Netflix) ---------------------------------------

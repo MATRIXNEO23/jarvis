@@ -125,10 +125,10 @@ def strip(root, text) -> None:
     window.overrideredirect(True)
     try:
         window.attributes("-topmost", True)
-        window.attributes("-alpha", 0.92)
+        window.attributes("-alpha", 0.82)   # semitrasparente (passo 7)
     except tk.TclError:
         pass
-    label = tk.Label(window, text=str(text)[:700], justify="left", anchor="w", bg="#101820",
+    label = tk.Label(window, text=str(text)[:1400], justify="left", anchor="w", bg="#101820",
                      fg="#ffd400", font=("Segoe UI", 10), padx=10, pady=8, wraplength=360)
     label.pack()
     window.update_idletasks()

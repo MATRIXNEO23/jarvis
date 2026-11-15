@@ -68,7 +68,7 @@ Aggiornare questo file a ogni consegna o decisione importante.
 4. **Fatto (vedi CI)**: «Chat continua» e sezione «Contesto» del modello locale (`contesto_lumi.py`); parte online rimandata al passo 8.
 5. **Fatto (vedi CI)**: allegati (`allegati.py`: 📎, trascinamento, Ctrl+V; pezzi utili senza modello; solo modello locale finché non c'è il passo 8).
 6. **Fatto (vedi CI)**: pulizia dati su disco (`pulizia_dati.py`, Cestino, doppia conferma per i file importanti).
-7. Scheda di sé automatica; aiuto comandi semitrasparente per modalità con tutorial.
+7. **Fatto (vedi CI)**: scheda di sé (`scheda_lumi.py`) e riquadro comandi per modalità con tutorial brevi (`aiuto_comandi.py`).
 8. Servizi online con spunte e chiavi; orchestratore ibrido (attese/polling in Lumi, zero token).
 9. Add-on «Diagnostica per Claude» (MCP locale, comandi solo dentro Lumi), import JSON di una chat, add-on GitHub.
 Dettagli e motivazioni: sezioni datate in fondo a `docs/ARCH-01-F5-CHECKPOINT.md`.

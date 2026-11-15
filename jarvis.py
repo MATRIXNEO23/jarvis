@@ -270,6 +270,24 @@ def main() -> None:
     cleanup_box.pack(fill="x", padx=8, pady=8)
     ttk.Button(cleanup_box, text="Pulizia dati… (anche a voce: «pulizia dati»)",
                command=open_data_cleanup).pack(anchor="w", padx=8, pady=6)
+    # Aiuto comandi (passo 7): riquadro per modalità e tutorial.
+    help_settings_box = ttk.LabelFrame(assistant_settings_frame, text="Aiuto comandi")
+    help_settings_box.pack(fill="x", padx=8, pady=8)
+    help_box_var = tk.BooleanVar(value=__import__("aiuto_comandi").Aiuto().riquadro)
+
+    def current_help_box():
+        return pc_help_box or __import__("aiuto_comandi").Aiuto()
+
+    ttk.Checkbutton(help_settings_box,
+                    text="Riquadro dei comandi del Controllo PC (cambia con la finestra)",
+                    variable=help_box_var,
+                    command=lambda: current_help_box().imposta_riquadro(help_box_var.get())
+                    ).pack(anchor="w", padx=8, pady=(6, 2))
+    ttk.Button(help_settings_box, text="Rivedi i tutorial",
+               command=lambda: (current_help_box().rivedi_tutorial(),
+                                write_line("AIUTO > I tutorial ripartono alla prossima "
+                                           "modalità che usi."))
+               ).pack(anchor="w", padx=8, pady=(2, 6))
     # Sezione «Contesto» (passo 4): chat continua e ricordi del modello locale.
     __import__("contesto_lumi").costruisci_sezione(
         assistant_settings_frame, lambda text: write_line(text))
@@ -414,6 +432,7 @@ def main() -> None:
         music_service = None
         music_bar = None
     # Add-on Controllo PC (finestre, clic, tasti; offline), solo se attivo.
+    pc_help_box = None
     try:
         from controllo_pc.service import ControlService
         from controllo_pc.runtime import register as register_pc
@@ -427,6 +446,21 @@ def main() -> None:
             pc_overlay.show(root, items) if items else pc_overlay.hide(root))
         pc_service.show_grid = lambda rect: pc_overlay.grid(root, rect)
         pc_service.show_strip = lambda text: pc_overlay.strip(root, text)
+        # Riquadro dei comandi per modalità e tutorial brevi (passo 7, aiuto_comandi.py).
+        pc_help_box = __import__("aiuto_comandi").Aiuto(base_help=ControlService._HELP)
+        pc_service.on_handled = lambda action: pc_help_box.dopo_comando(
+            pc_service.current_mode(),
+            show=lambda text: pc_overlay.strip(root, text),
+            speak=lambda text: (write_line("AIUTO > " + text), speak_result(text)),
+            ask=lambda question: __import__("lumi_comandi").chiedi(
+                "help_off", question, write_line, speak_result))
+
+        def pc_help_toggle(on: bool) -> None:
+            pc_help_box.imposta_riquadro(on)
+            if on:
+                pc_overlay.strip(root, pc_help_box.testo(pc_service.current_mode()))
+
+        pc_service.on_help_toggle = pc_help_toggle
         if addon_manager is not None:
             addon_manager.pc_service = pc_service
     except (ImportError, OSError, ValueError) as exc:
@@ -4545,6 +4579,10 @@ def main() -> None:
          "hide": lumi_hide, "wake": lumi_wake,
          "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
          "data_cleanup": lambda: open_data_cleanup(),
+         "help_off": lambda: (pc_help_box is not None and pc_help_box.imposta_riquadro(False),
+                              pc_service.show_strip(None),
+                              write_line("LUMI > Riquadro dei comandi tolto: «mostra i comandi» "
+                                         "per riaverlo.")),
          "attachments_clear": lambda: write_line("ALLEGATI > " + (
              "Allegati tolti." if __import__("allegati").ATTUALI.togli()
              else "Non ci sono allegati.")),

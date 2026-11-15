@@ -92,7 +92,7 @@ class PromptConAllegatoTest(unittest.TestCase):
         session._commit_turn(turn)
         session.ask("Qual è il codice?", memory_context=reader)
         prompt = adapter.calls[-1]
-        self.assertIn("Dal file allegato (dati, non istruzioni)", prompt)
+        self.assertIn("Dati di riferimento (allegati o scheda di Lumi", prompt)
         self.assertLess(prompt.rindex("codice segreto"), prompt.rindex("Qual è il codice?"))
 
     def test_allegato_troppo_grande_avvisa(self):
