@@ -733,11 +733,14 @@ def main() -> None:
         from chat_ruoli import classify as classify_message
         role, identity, body = classify_message(label, role)
         output.configure(state="normal")
+        bubble_mark = chat_bubbles.inizio() if chat_bubbles else ""
         output.insert(
             "end", identity + "         " +
             datetime.now().strftime("%H:%M:%S") + "\n",
             (role, "message_head"))
         output.insert("end", body + "\n\n", role)
+        if chat_bubbles:
+            chat_bubbles.fine(role, body, bubble_mark)
         # Keep the UI responsive even during long voice conversations.
         # Drop only old visible console messages, never task/memory records.
         if int(output.index("end-1c").split(".")[0]) > 2200:
@@ -2601,17 +2604,32 @@ def main() -> None:
                          spacing1=9)
     hud.attach_console(output)
 
+    def copy_chat_text(value: str) -> None:
+        root.clipboard_clear()
+        root.clipboard_append(value)
+
+    # Bolle della chat (passo 2c): copia / leggi / rigenera sotto le risposte.
+    chat_bubbles = __import__("chat_bolle").Bolle(
+        output, copy=copy_chat_text,
+        read=lambda value: speaker.speak(value, selected_voice()),
+        regenerate=lambda question: submit_local(message_override=question))
+
     def show_chat_history(title: str, pairs) -> None:
         """Chat aperta dall'elenco: la cronologia salvata al posto dei messaggi di prima."""
         from chat_ruoli import IDENTITY
         output.configure(state="normal")
         output.delete("1.0", "end")
+        chat_bubbles.azzera()
         output.insert("end", "— " + title + " —\n\n", ("sistema_titolo",))
         for question, answer in pairs:
+            mark = chat_bubbles.inizio()
             output.insert("end", IDENTITY["utente"] + "\n", ("utente", "message_head"))
             output.insert("end", question + "\n\n", "utente")
+            chat_bubbles.fine("utente", question, mark)
+            mark = chat_bubbles.inizio()
             output.insert("end", IDENTITY["jarvis"] + "\n", ("jarvis", "message_head"))
             output.insert("end", answer + "\n\n", "jarvis")
+            chat_bubbles.fine("jarvis", answer, mark)
         output.see("end")
         output.configure(state="disabled")
 
