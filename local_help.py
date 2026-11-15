@@ -171,7 +171,8 @@ def help_sections(engine):
             'L’indice autonomo di Lumi non è implementato: ricerca tramite Windows Search e scansione limitata. '
             'Guide del pacchetto: file_access/LEGGIMI.md e program_apps/LEGGIMI.md.',
         'Progetti e Telegram':
-            'crea progetto Casa\napri progetto Casa\nelenca progetti\ntorna alla conversazione generale\n\n'
+            'crea progetto Casa\napri progetto Casa (oppure «progetto Casa»)\nelenca progetti\ntorna alla conversazione generale\n'
+            'Serve sempre la parola «progetto»: «passa a Chrome» o «apri Netflix» vanno a finestre e programmi.\n\n'
             'I progetti mantengono contesti separati. Le preferenze memoria controllano il recupero dei ricordi.\n\n'
             'Telegram è un add-on: attivalo in Gestisci add-on > Telegram, dove trovi account '
             '(ID, hash, numero e codice in un pop-up), contatti, cronologia e consensi. '

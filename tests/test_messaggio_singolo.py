@@ -22,3 +22,17 @@ class SingleMessageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProjectWordTests(unittest.TestCase):
+    """«passa a …» senza la parola progetto resta a finestre e programmi (15/11)."""
+
+    def test_project_needs_the_word_progetto(self):
+        from project_voice import parse_project_voice
+        for text in ("progetto Alfa", "apri progetto Alfa", "Lumi, passa a progetto Alfa",
+                     "torna al progetto Alfa", "riprendi il progetto Alfa"):
+            command = parse_project_voice(text)
+            self.assertEqual((command.action, command.name), ("open", "Alfa"), text)
+        for text in ("passa a Chrome", "apri Netflix", "torna a Blocco note", "riprendi timer"):
+            self.assertIsNone(parse_project_voice(text), text)
+        self.assertEqual(parse_project_voice("torna alla generale").action, "general")

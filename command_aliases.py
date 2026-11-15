@@ -179,7 +179,7 @@ DESCRIPTIONS = {
     "passa a GPT": "Usa GPT per voce e chat.",
     "torna a Gemma": "Usa il modello locale.",
     "crea progetto {testo}": "Crea un progetto con quel nome.",
-    "apri progetto {testo}": "Apre un progetto.",
+    "apri progetto {testo}": "Apre un progetto (anche «progetto Casa»; serve la parola progetto).",
     "elenca progetti": "Mostra i progetti.",
     "torna alla conversazione generale": "Esce dal progetto.",
     "imposta sveglia alle {testo}": "Imposta la sveglia (es. «alle 7:30»).",

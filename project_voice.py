@@ -26,12 +26,14 @@ _CREATE = re.compile(
     r"(?:un\s+)?(?:nuovo\s+)?progetto"
     r"(?:\s+(?:chiamato|denominato|dal nome|che si chiama))?"
     r"(?:\s+(.+))?$", re.I)
+# La parola «progetto» è obbligatoria (decisione utente 15/11): «passa a Chrome»,
+# «apri Netflix» ecc. restano a finestre e programmi. Anche «progetto Alfa» da solo.
 _OPEN = re.compile(
     r"^(?:(?:per favore|puoi|potresti)\s+)?"
-    r"(?:apri(?:mi)?|riprendi|continua(?:re)?(?:\s+con)?|"
+    r"(?:(?:apri(?:mi)?|riprendi|continua(?:re)?(?:\s+con)?|"
     r"passa(?:re)?\s+(?:al|a|sul)|torna(?:re)?\s+(?:al|a)|"
-    r"torniamo\s+(?:al|a)|lavora(?:re)?\s+(?:sul|al))\s+"
-    r"(?:il\s+|lo\s+)?(?:progetto\s+)?(.+)$", re.I)
+    r"torniamo\s+(?:al|a)|lavora(?:re)?\s+(?:sul|al|a))\s+"
+    r"(?:il\s+|lo\s+)?)?progetto\s+(.+)$", re.I)
 _LIST = re.compile(
     r"^(?:elenca(?:mi)?|mostra(?:mi)?|dimmi|quali\s+sono|"
     r"fammi\s+vedere)\s+(?:(?:tutti|gli|i|miei|nostri|quali|sono)\s+)*"
