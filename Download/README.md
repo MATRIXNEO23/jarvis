@@ -1,3 +1,11 @@
+## Build 048 PROVA — tutorial guidato, parola dei comandi a scelta, orchestratore online con cartelle sicure
+
+[Scarica Lumi-048-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-048-PROVA.zip)
+
+Tutto della 047 più: tutorial guidato passo per passo la prima volta in ogni finestra del Controllo PC («Ti guido passo passo?», «salta passo», «esci dal tutorial», «fammi il tutorial»); in La mia voce «Cambia la parola di questo comando…» (la parola originale resta valida); orchestratore online: con il cervello online acceso e un servizio online con chiave, Lumi chiede «Uso l'online per questa richiesta? sì, no o sempre» e il modello online fa le richieste a più passi. Nelle cartelle sicure (Impostazioni) legge e scrive da solo; fuori e per i comandi chiede il tuo sì; non cancella mai file. I comandi base restano offline. Verificati in CI Windows: 1422 test, diagnostica, Telegram, tokenizer, pacchetto e avvio. Da provare sul Pavilion.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43719492123). SHA-256: `22304bad4a5a135b81f323ee02dc4a0475623e211240a16cd1791066a2e0f302`.
+
 ## Build 047 PROVA — chat unica, stop immediato, contesto, allegati, pulizia, aiuto comandi, servizi online, Diagnostica per Claude, GitHub, La mia voce
 
 [Scarica Lumi-047-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-047-PROVA.zip)
