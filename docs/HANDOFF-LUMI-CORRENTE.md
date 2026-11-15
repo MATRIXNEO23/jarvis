@@ -77,4 +77,6 @@ Dettagli e motivazioni: sezioni datate in fondo a `docs/ARCH-01-F5-CHECKPOINT.md
 
 ## Build 047 (15/11) — pubblicata
 Lumi-047-PROVA.zip in Download su main: run 43713943448, 27.764.632 byte, SHA-256 336e853c…3be9, sorgente 51c6b3b. Contiene i passi 2–11. Da provare sul Pavilion.
-Restano da progettare con l'utente: orchestratore online con strumenti di Lumi (passo 8), parole incerte evidenziate in dettatura (passo 11).
+## Build 048 (15/11) — pubblicata
+Lumi-048-PROVA.zip: run 43719492123, 27.773.085 byte, SHA-256 22304bad…f302. Aggiunge tutorial guidato, cambio parola dei comandi, orchestratore online con cartelle sicure.
+Resta da fare: parole incerte evidenziate in dettatura (passo 11).
