@@ -31,6 +31,22 @@ STRUMENTI = [
      "op": "prova_comando", "props": {"testo": {"type": "string"}}, "required": ["testo"]},
     {"name": "lumi_riavvia_modello", "description": "Riavvia il modello locale di Lumi.",
      "op": "riavvia_modello", "props": {}},
+    # 15/11 sera: strumenti per le novità (regola: diagnostica sempre aggiornata).
+    {"name": "lumi_impostazioni",
+     "description": ("Impostazioni di Lumi: senza argomenti elenca categorie e voci; con "
+                     "categoria (e voce) apre la finestra delle impostazioni in quel punto."),
+     "op": "impostazioni", "props": {"categoria": {"type": "string"}, "voce": {"type": "string"}}},
+    {"name": "lumi_addon",
+     "description": ("Add-on di Lumi: elenco con stato acceso/spento; con id e acceso "
+                     "(true/false) li accende o spegne come l'interruttore nelle impostazioni."),
+     "op": "addon", "props": {"id": {"type": "string"}, "acceso": {"type": "boolean"}}},
+    {"name": "lumi_ricordi", "description": "Ricordi salvati da Lumi (sola lettura), con ricerca.",
+     "op": "ricordi", "props": {"cerca": {"type": "string"},
+                                "categoria": {"type": "string"}}},
+    {"name": "lumi_chat",
+     "description": ("Chat del menu laterale con i simboli dei modelli (🤖 offline, 📡 online) e "
+                     "gli ultimi scambi della chat aperta (sola lettura)."),
+     "op": "chat", "props": {"scambi": {"type": "integer", "description": "quanti (max 32)"}}},
 ]
 PER_NOME = {t["name"]: t for t in STRUMENTI}
 

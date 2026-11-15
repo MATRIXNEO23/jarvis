@@ -157,6 +157,58 @@ class DiagnosticaTest(unittest.TestCase):
         self.assertFalse(self.path.exists())
         self.assertIn("spento", ask("stato", {})["errore"])
 
+    def test_strumenti_nuovi_impostazioni_addon_ricordi_chat(self):
+        from types import SimpleNamespace
+        from diagnostica_claude import strumenti
+
+        class Nav:
+            current = ("Voce", "Voci")
+
+            def voci(self):
+                return {"Voce": ["Voci", "La mia voce"], "Add-on": ["Gestisci add-on"]}
+
+            def apri_categoria(self, category):
+                self.current = (category, None)
+
+            def mostra(self, category, item):
+                self.current = (category, item)
+
+        nav, opened = Nav(), []
+        addons = [{"id": "musica", "name": "Musica", "enabled": False}]
+        manager = SimpleNamespace(list_installed=lambda: addons)
+
+        def cambia(ident, on):
+            addons[0]["enabled"] = on
+            return True
+        brain = SimpleNamespace(ricordi=lambda q, categoria=None, limit=100: [{"breve": q}])
+        store = SimpleNamespace(models=lambda: {"c1": {"online"}})
+        elenco = SimpleNamespace(store=store, current=lambda: "c1",
+                                 chats=lambda: [SimpleNamespace(id="c1", title="Prova")],
+                                 recent=lambda n: [(("user", "ciao"), ("assistant", "ehi"))])
+        tools = strumenti.crea(navigazione=lambda: nav, apri_impostazioni=lambda: opened.append(1),
+                               addon_manager=lambda: manager, cambia_addon=cambia,
+                               cervello=lambda: brain, elenco_chat=lambda: elenco)
+        bridge = ponte.Ponte(stato=dict, in_chat=print, prova=print, riavvia_modello=print,
+                             run_ui=lambda fn: fn(), path=self.path, extra=tools)
+        bridge.avvia()
+        try:
+            ask = lambda op, args: server_mcp.chiedi_al_ponte(op, args, path=self.path)
+            self.assertEqual(ask("impostazioni", {})["voci"]["Voce"], ["Voci", "La mia voce"])
+            self.assertEqual(ask("impostazioni", {"categoria": "Voce", "voce": "La mia voce"})["aperta"],
+                             ["Voce", "La mia voce"])
+            self.assertEqual(opened, [1])
+            self.assertFalse(ask("impostazioni", {"categoria": "Boh"})["ok"])
+            self.assertEqual(ask("addon", {})["addon"][0]["acceso"], False)
+            self.assertEqual(ask("addon", {"id": "musica", "acceso": True})["acceso"], True)
+            self.assertEqual(ask("ricordi", {"cerca": "pavilion"})["ricordi"], [{"breve": "pavilion"}])
+            chat = ask("chat", {"scambi": 3})
+            self.assertEqual(chat["chat"][0]["modelli"], ["online"])
+            self.assertEqual(chat["ultimi_scambi"], [{"utente": "ciao", "lumi": "ehi"}])
+            names = {t["name"] for t in server_mcp.STRUMENTI}
+            self.assertTrue({"lumi_impostazioni", "lumi_addon", "lumi_ricordi", "lumi_chat"} <= names)
+        finally:
+            bridge.ferma()
+
     def test_protocollo_mcp(self):
         init = server_mcp.gestisci({"jsonrpc": "2.0", "id": 1, "method": "initialize",
                                     "params": {"protocolVersion": "2025-06-18"}})

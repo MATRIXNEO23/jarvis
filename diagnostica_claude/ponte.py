@@ -55,13 +55,15 @@ class Ponte:
     riavvia_modello(). Le ultime tre vengono eseguite sul thread di Tk (run_ui)."""
 
     def __init__(self, *, stato, in_chat, prova, riavvia_modello, run_ui, log_motore=None,
-                 path: Path | None = None):
+                 path: Path | None = None, extra=None):
         self.stato = stato
         self.in_chat = in_chat
         self.prova = prova
         self.riavvia_modello = riavvia_modello
         self.run_ui = run_ui
         self.log_motore = log_motore
+        # op -> funzione(args) -> dict, eseguita sul thread di Tk e attesa (strumenti nuovi).
+        self.extra = dict(extra or {})
         self.path = path or percorso_porta()
         self.token = ""
         self.sock = None
@@ -158,4 +160,24 @@ class Ponte:
         if op == "riavvia_modello":
             self.run_ui(self.riavvia_modello)
             return {"ok": True}
+        if op in self.extra:
+            return self._sul_thread_ui(lambda: self.extra[op](args if isinstance(args, dict) else {}))
         return {"ok": False, "errore": "operazione sconosciuta"}
+
+    def _sul_thread_ui(self, fn, timeout: float = 10.0) -> dict:
+        """Esegue fn sul thread di Tk e aspetta il risultato (i widget si toccano solo lì)."""
+        done = threading.Event()
+        box = {}
+
+        def run():
+            try:
+                box["value"] = fn()
+            except Exception as exc:          # l'errore va a Claude, Lumi resta in piedi
+                box["value"] = {"ok": False, "errore": type(exc).__name__ + ": " + str(exc)[:200]}
+            finally:
+                done.set()
+        self.run_ui(run)
+        if not done.wait(timeout):
+            return {"ok": False, "errore": "Lumi non ha risposto in tempo (finestra occupata?)"}
+        value = box.get("value")
+        return value if isinstance(value, dict) else {"ok": True, "valore": value}

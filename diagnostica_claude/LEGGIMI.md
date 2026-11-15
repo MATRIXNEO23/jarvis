@@ -10,6 +10,10 @@ Permette all'app **Claude desktop** di leggere lo stato di Lumi e di provare com
 
 Cosa può fare Claude: leggere console, errori, `motore.log` e stato; scrivere un messaggio
 in chat; provare un comando come se l'avessi scritto tu; riavviare il modello locale.
+Dal 15/11 sera (`strumenti.py`): vedere e aprire le impostazioni in una categoria/voce
+(`lumi_impostazioni`), vedere e accendere/spegnere gli add-on (`lumi_addon`), leggere i
+ricordi (`lumi_ricordi`) e le chat con i simboli 🤖/📡 e gli ultimi scambi (`lumi_chat`).
+Regola: ogni funzione nuova di Lumi porta con sé lo strumento per provarla da qui.
 Cosa NON può fare: Controllo PC (finestre, mouse, tasti), aprire o chiudere programmi,
 file, spegnere il PC. Questi comandi vengono rifiutati dal ponte.
 

@@ -292,7 +292,14 @@ def main() -> None:
                            "progetto": active_context_label.get()},
             in_chat=lambda text: write_line("CLAUDE > " + text),
             prova=try_command, riavvia_modello=lambda: lumi_model_restart(),
-            run_ui=lambda fn: root.after(0, fn), log_motore=engine_log)
+            run_ui=lambda fn: root.after(0, fn), log_motore=engine_log,
+            # 15/11 sera: impostazioni, add-on, ricordi e chat visibili anche da Claude.
+            extra=__import__("diagnostica_claude.strumenti", fromlist=["crea"]).crea(
+                navigazione=lambda: settings_navigation, apri_impostazioni=show_settings,
+                addon_manager=lambda: addon_manager,
+                cambia_addon=lambda addon_id, on: addon_chosen.cambia(addon_id, on),
+                cervello=lambda: durable_brain,
+                elenco_chat=lambda: __import__("chat_elenco")._CURRENT["elenco"]))
 
     def copy_to_clipboard(text: str) -> None:
         root.clipboard_clear()
