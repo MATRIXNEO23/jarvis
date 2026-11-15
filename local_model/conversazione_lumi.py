@@ -314,7 +314,8 @@ def installa(d):
             return True              # capita dal motore interno (sinonimi) o domanda sì/no
         # 15/11 sera: «chi sei», «cosa puoi fare» e «cosa ti ho detto prima» li risolve Lumi,
         # dalle sue frasi e dalla cronologia della chat, senza modello (esatto e veloce).
-        own = __import__("scheda_lumi").risposta_propria(spoken)
+        own = (__import__("ricordi").cancella_se_chiesto(__import__("ricordi").cervello(), spoken)
+               or __import__("scheda_lumi").risposta_propria(spoken))
         recall = None if own else __import__("richiamo").rispondi(
             spoken, __import__("richiamo").coppie_chat_aperta())
         if own or recall:
@@ -471,7 +472,9 @@ def installa(d):
                         history=__import__("chat_elenco").contesto_recente(6),
                         pieces=([online_card] if online_card else [])
                         + __import__("allegati").per_online(spoken)
-                        + __import__("contesto_lumi").altre_chat(),
+                        + __import__("contesto_lumi").altre_chat()
+                        + [x for x in [__import__("ricordi").per_online(
+                            __import__("ricordi").cervello(), spoken)] if x],
                         notify=lambda text: d.gemma_trial_queue.put(("online_note", text, voice_epoch)))
                     if name:
                         d.gemma_trial_queue.put(("online_ok", (spoken, name, answer), voice_epoch))
@@ -661,9 +664,16 @@ def installa(d):
                     d.write_line("LUMI > Risposta interrotta.")
                 elif kind == "online_ok":
                     question, service_name, answer = value
+                    # Ricordi decisi dall'online: righe tolte dal testo, salvate e mostrate.
+                    memory = __import__("ricordi")
+                    answer, found = memory.estrai(answer)
+                    saved = memory.salva(memory.cervello(), found, fonte="online",
+                                         project_id=getattr(d, "active_project_id", None))
                     d.write_line("ONLINE > Risposta da " + service_name + ".")
                     d.write_line("LUMI > " + answer)
                     d.speak_result(answer)
+                    if saved:
+                        d.write_line("MEMORIA > " + memory.avviso(saved))
                     __import__("chat_elenco").segna_modello("online")
                     if d.remember_exchange(question, answer, "chat") is False:
                         d.write_line("MEMORIA > Scambio non archiviato.")

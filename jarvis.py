@@ -792,6 +792,8 @@ def main() -> None:
             memory_status.set("Second Brain non disponibile: " + str(exc)[:90])
     else:
         memory_status.set("Second Brain: disattivato, conversazione breve solo in RAM.")
+    # Ricordi (15/11 sera): chi li salva o li legge usa sempre il Second Brain di adesso.
+    __import__("ricordi").CERVELLO["get"] = lambda: durable_brain
 
     def write_line(text: str, role: str | None = None) -> None:
         # The reference design uses a conversational timeline, not raw logs.
@@ -1456,6 +1458,10 @@ def main() -> None:
                 message="Impossibile leggere le preferenze."
         elif intent.kind=="unsupported":
             message="Posso ricordare solo preferenze su risposte, lingua o interazione."
+        elif intent.kind=="ricordo":
+            # «Ricordati che …» con frase libera (15/11 sera): ricordo salvato subito.
+            message=__import__("ricordi").da_utente(
+                __import__("ricordi").cervello(),intent.value)
         else:
             pending_preference=intent
             message=("Vuoi "+("rimuovere" if intent.kind=="remove" else "salvare")+
@@ -2525,6 +2531,10 @@ def main() -> None:
              "non vengono salvati i corpi completi delle email.",
         wraplength=710
     ).pack(anchor="w", pady=(0, 4))
+    # Pagina «Ricordi» (15/11 sera): ricerca, categorie come cartelle, cancella.
+    memory_page = __import__("ricordi_ui").PaginaRicordi(
+        assistant_settings_frame, lambda: durable_brain,
+        confirm=lambda title, text: messagebox.askyesno(title, text, parent=settings_window))
 
     workspace_panel=ttk.LabelFrame(
         integrations_settings_frame,text="Progetti — contesto indipendente e continuità",padding=8)
@@ -4124,8 +4134,15 @@ def main() -> None:
                         continue
                     if gpt_enabled.get():
                         if action == "ask":
-                            write_line("GPT > " + result.get("text", "(nessuna risposta)"))
-                            speak_result(result.get("text", ""))
+                            # Ricordi decisi da GPT (riga [[RICORDO|…]]): tolti e salvati.
+                            result["text"], found_memories = __import__("ricordi").estrai(
+                                result.get("text", ""))
+                            write_line("GPT > " + (result["text"] or "(nessuna risposta)"))
+                            speak_result(result["text"])
+                            saved_memories = __import__("ricordi").salva(
+                                __import__("ricordi").cervello(), found_memories, fonte="online")
+                            if saved_memories:
+                                write_line("MEMORIA > " + __import__("ricordi").avviso(saved_memories))
                             if rest and rest[0]:
                                 answer=result.get("text", "")
                                 kind=("clarify" if isinstance(answer,str)

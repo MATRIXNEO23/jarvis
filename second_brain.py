@@ -125,6 +125,21 @@ class SecondBrain:
                 AFTER DELETE ON conversations BEGIN
                 DELETE FROM recent_dialogue WHERE turn_id=OLD.id; END""")
             db.execute("DELETE FROM recent_dialogue WHERE turn_id NOT IN (SELECT id FROM conversations)")
+            # Ricordi (15/11 sera): fatti con categoria, in due versioni: «breve» per il
+            # modello locale, «completo» per l'online. Tabella nuova, i dati vecchi restano.
+            db.execute("""CREATE TABLE IF NOT EXISTS ricordi(
+                id INTEGER PRIMARY KEY,
+                time_utc TEXT NOT NULL,
+                categoria TEXT NOT NULL,
+                breve TEXT NOT NULL,
+                completo TEXT NOT NULL,
+                fonte TEXT NOT NULL,
+                project_id TEXT)""")
+            try:
+                db.execute("CREATE VIRTUAL TABLE IF NOT EXISTS ricordi_fts USING "
+                           "fts5(breve, completo, content='ricordi', content_rowid='id')")
+            except sqlite3.OperationalError:
+                pass                     # SQLite senza FTS5: si cerca con LIKE
 
     def remember_turn(self, user: str, reply: str, kind: str = "chat") -> bool:
         """Persist brief episodes and bounded recent chat; never auto-import file bodies."""
@@ -280,6 +295,16 @@ class SecondBrain:
             return "{}"
         budget = min(budget, MAX_PROMPT_MEMORY)
         candidate = {"related": [], "recent": []}
+        # Ricordi brevi pertinenti (al massimo 3) per primi: a Gemma solo la versione corta.
+        try:
+            facts = [r["breve"] for r in self.ricordi(query, limit=3)] if query.strip() else []
+        except (sqlite3.Error, ValueError):
+            facts = []
+        for fact in facts:
+            draft = dict(candidate)
+            draft["ricordi"] = candidate.get("ricordi", []) + [fact]
+            if len(json.dumps(draft, ensure_ascii=False)) <= budget:
+                candidate = draft
         for evidence in self.search(query, limit=5):
             item = {"when": evidence.time_utc, "source": evidence.source,
                     "fact": evidence.summary}
@@ -297,6 +322,75 @@ class SecondBrain:
             if len(json.dumps(draft, ensure_ascii=False)) <= budget:
                 candidate = draft
         return json.dumps(candidate, ensure_ascii=False, separators=(",", ":"))
+
+    # --- ricordi -----------------------------------------------------------------------
+    CATEGORIE = ("su_di_te", "persone", "progetti", "cose_da_fare", "su_lumi", "altro")
+
+    def _fts(self, db) -> bool:
+        return db.execute("SELECT 1 FROM sqlite_master WHERE name='ricordi_fts'").fetchone() is not None
+
+    def salva_ricordo(self, breve: str, completo: str = "", *, categoria: str = "altro",
+                      fonte: str = "utente", project_id: str | None = None) -> int | None:
+        """Salva un ricordo; None se vuoto, sensibile o già presente uguale."""
+        breve = _clean(breve, 200)
+        completo = _clean(completo or breve, 1500)
+        if not breve or _SENSITIVE.search(breve + " " + completo):
+            return None
+        if categoria not in self.CATEGORIE:
+            categoria = "altro"
+        if fonte not in ("utente", "online", "gemma"):
+            fonte = "utente"
+        with self._db() as db:
+            if db.execute("SELECT 1 FROM ricordi WHERE lower(breve)=lower(?)", (breve,)).fetchone():
+                return None
+            rowid = db.execute(
+                "INSERT INTO ricordi(time_utc,categoria,breve,completo,fonte,project_id)"
+                " VALUES(?,?,?,?,?,?)", (_now(), categoria, breve, completo, fonte,
+                                         project_id)).lastrowid
+            if self._fts(db):
+                db.execute("INSERT INTO ricordi_fts(rowid,breve,completo) VALUES(?,?,?)",
+                           (rowid, breve, completo))
+        return rowid
+
+    def cancella_ricordo(self, ident: int) -> bool:
+        with self._db() as db:
+            row = db.execute("SELECT breve,completo FROM ricordi WHERE id=?", (int(ident),)).fetchone()
+            if row is None:
+                return False
+            if self._fts(db):
+                db.execute("INSERT INTO ricordi_fts(ricordi_fts,rowid,breve,completo) "
+                           "VALUES('delete',?,?,?)", (int(ident), row[0], row[1]))
+            db.execute("DELETE FROM ricordi WHERE id=?", (int(ident),))
+        return True
+
+    def ricordi(self, query: str = "", *, categoria: str | None = None, limit: int = 200):
+        """[{id, quando, categoria, breve, completo, fonte}] pertinenti (o tutti, recenti prima)."""
+        limit = min(max(int(limit), 1), 1000)
+        words = [w for w in re.findall(r"\w+", str(query or "").casefold()) if len(w) > 2][:8]
+        with self._db() as db:
+            sql = "SELECT id,time_utc,categoria,breve,completo,fonte FROM ricordi"
+            where, args = [], []
+            if categoria:
+                where.append("categoria=?")
+                args.append(categoria)
+            order = " ORDER BY id DESC"
+            if words and self._fts(db):
+                # Prefisso: «progett» trova progetto e progetti (l'italiano non ha radici in FTS5).
+                match = " OR ".join('"%s"*' % w.replace('"', "") for w in words)
+                where.append("id IN (SELECT rowid FROM ricordi_fts WHERE ricordi_fts MATCH ?)")
+                args.append(match)
+            elif words:
+                where.append("(" + " OR ".join(["lower(breve||' '||completo) LIKE ?"] * len(words)) + ")")
+                args += ["%" + w + "%" for w in words]
+            if where:
+                sql += " WHERE " + " AND ".join(where)
+            rows = db.execute(sql + order + " LIMIT ?", (*args, limit)).fetchall()
+        result = [{"id": r[0], "quando": r[1], "categoria": r[2], "breve": r[3],
+                   "completo": r[4], "fonte": r[5]} for r in rows]
+        if words:                         # i più pertinenti prima (parole in comune)
+            result.sort(key=lambda item: -len(set(words) & _tokens(
+                item["breve"] + " " + item["completo"])))
+        return result
 
     def stats(self) -> tuple[int, int]:
         with self._db() as db:

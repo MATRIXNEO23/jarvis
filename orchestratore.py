@@ -295,7 +295,8 @@ def rispondi(question: str, *, tools: Strumenti, history=(), pieces=(), call=Non
     notify = notify or (lambda text: None)
     folders = ", ".join(tools.folders) or "nessuna"
     messages = servizi_online.messaggi(question, history, pieces)
-    messages[0] = {"role": "system", "content": SISTEMA.format(cartelle=folders)}
+    messages[0] = {"role": "system", "content": SISTEMA.format(cartelle=folders) + "\n\n"
+                   + __import__("ricordi").ISTRUZIONE_ONLINE}
     # Quote (15/11 sera): quando il testo da mandare supera la soglia di token (anche a
     # metà lavoro, con i file letti) Lumi chiede una volta prima di continuare.
     limit = servizi_online.carica_impostazioni().get("conferma_token", 8000)

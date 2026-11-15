@@ -23,6 +23,7 @@ MAPPA = (
     ("La mia voce", ("Voce", "La mia voce")),
     ("Personalizzazione comandi", ("Voce", "Parole dei comandi e frasi")),
     ("Memoria generale", ("Memoria", "Second Brain")),
+    ("Ricordi", ("Memoria", "Ricordi")),
     ("Contesto del modello locale", ("Memoria", "Contesto e ricordi")),
     ("Progetti", ("Memoria", "Progetti")),
     ("Spazio su disco", ("Memoria", "Pulizia dati")),

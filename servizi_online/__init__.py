@@ -182,9 +182,20 @@ def _motivo(exc: Exception) -> str:
     return "risposta non valida"
 
 
+def _coppia(item):
+    """(domanda, risposta) anche dal formato della chat ((«user», q), («assistant», a))."""
+    user, answer = item
+    if isinstance(user, (tuple, list)) and len(user) == 2:
+        user = user[1]
+    if isinstance(answer, (tuple, list)) and len(answer) == 2:
+        answer = answer[1]
+    return user, answer
+
+
 def messaggi(question: str, history=(), pieces=()) -> list[dict]:
-    out = [{"role": "system", "content": SISTEMA}]
-    for user, answer in list(history)[-8:]:
+    # Ricordi (15/11 sera): l'online decide cosa salvare (riga [[RICORDO|…]] in fondo).
+    out = [{"role": "system", "content": SISTEMA + "\n\n" + __import__("ricordi").ISTRUZIONE_ONLINE}]
+    for user, answer in (_coppia(item) for item in list(history)[-8:]):
         out.append({"role": "user", "content": str(user)[:4000]})
         out.append({"role": "assistant", "content": str(answer)[:4000]})
     text = question
@@ -299,6 +310,8 @@ def rispondi(question: str, *, card: str = "", settings=None, keys=None, post=_p
     """Cronologia della chat scelta + allegati (+ scheda di Lumi) → servizi in ordine."""
     history = __import__("chat_elenco").contesto_recente(6)
     pieces = ([card] if card else []) + __import__("allegati").per_online(question)
+    memory = __import__("ricordi").per_online(__import__("ricordi").cervello(), question)
+    pieces += [memory] if memory else []
     return chiedi(messaggi(question, history, pieces), settings=settings, keys=keys, post=post)
 
 

@@ -46,6 +46,10 @@ def parse_preference_intent(text: str) -> PreferenceIntent | None:
     match=_SET.fullmatch(text)
     if match:
         result=_VALUES.get(" ".join(match.group(1).casefold().split()))
-        return (PreferenceIntent("set",*result) if result else
-                PreferenceIntent("unsupported"))
+        if result:
+            return PreferenceIntent("set",*result)
+        # «Ricordati che …» con una frase libera (15/11 sera): diventa un ricordo.
+        if text.casefold().startswith("ricorda"):
+            return PreferenceIntent("ricordo",value=" ".join(match.group(1).split())[:300])
+        return PreferenceIntent("unsupported")
     return None
