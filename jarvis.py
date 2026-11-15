@@ -2564,6 +2564,12 @@ def main() -> None:
         activebackground="#0b344b", activeforeground=WHITE,
         bd=0, relief="flat", cursor="hand2")
     tools_button.pack(side="left")
+    # Allegati (passo 5): 📎, Ctrl+V e trascinamento sulla finestra.
+    attachments_view = __import__("allegati").AllegatiView(
+        hud.command_host, input_row, input_row, input_box,
+        notify=lambda text: write_line(text), bg=PANEL,
+        ask_files=lambda: filedialog.askopenfilenames(
+            parent=root, title="Lumi: allega file"))
     help_button = tk.Button(
         input_row, text="?", width=2, font=("Segoe UI", 14),
         bg=PANEL, fg=CYAN, activebackground="#0b344b",
@@ -2637,6 +2643,7 @@ def main() -> None:
         """Chat aperta dall'elenco: la cronologia salvata al posto dei messaggi di prima."""
         from chat_ruoli import IDENTITY
         chat_bubbles.cronologia(title, pairs, IDENTITY)
+        __import__("allegati").ATTUALI.togli()      # gli allegati valgono per una chat
 
     output.tag_configure("sistema_titolo", foreground="#729bb3", justify="center")
     import chat_elenco
@@ -4526,6 +4533,9 @@ def main() -> None:
          "shutdown_pc": lumi_shutdown_pc, "cancel_shutdown": lumi_cancel_shutdown,
          "hide": lumi_hide, "wake": lumi_wake,
          "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
+         "attachments_clear": lambda: write_line("ALLEGATI > " + (
+             "Allegati tolti." if __import__("allegati").ATTUALI.togli()
+             else "Non ci sono allegati.")),
          "brain_local_on": lambda: lumi_brain_local(True),
          "brain_local_off": lambda: lumi_brain_local(False),
          "brain_online_on": lambda: lumi_brain_online(True),

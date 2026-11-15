@@ -39,6 +39,9 @@ _PATTERNS = (
     ("model_restart", re.compile(
         r"^(?:riavvia|ricarica)\s+(?:il\s+)?(?:modello(?:\s+locale)?|cervello\s+locale|motore)"
         + _END, re.I)),
+    ("attachments_clear", re.compile(
+        r"^(?:togli|rimuovi|elimina|cancella)\s+(?:gli\s+|l'\s*|tutti\s+gli\s+)?allegat[oi]"
+        + _END, re.I)),
     ("wake", re.compile(r"^(?:svegliati|sveglia|torna\s+qui|fatti\s+vedere|mostrati|"
                         r"mostra\s+(?:l'\s*)?avatar)" + _END, re.I)),
 )

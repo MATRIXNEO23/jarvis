@@ -375,6 +375,7 @@ def installa(d):
             reader = __import__("contesto_lumi").lettore_chat(
                 reader, forget=lambda: (d.gemma_session[0].forget_context(native_context)
                                         if d.gemma_session[0] is not None else None))
+            reader.attachment = __import__("allegati").per_modello_locale(spoken)
         # Make the session busy only after the selected chat and its reader
         # are valid: errors cannot strand the Gemma UI in a busy state.
         d.gemma_trial_busy[0] = True
