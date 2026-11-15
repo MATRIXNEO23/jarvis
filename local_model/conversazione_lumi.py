@@ -334,7 +334,12 @@ def installa(d):
                 d.write_line, d.speak_result, no_action="nlu_no")
             return True
         # Passo 8: servizi online (forzati con «ragiona online», sempre, o proposti).
+        asked_online = __import__("servizi_online").forza_online(spoken)[0]
         route, spoken = __import__("servizi_online").percorso(spoken, route)
+        if asked_online and route == "locale":
+            # Prova 15/11: «ragiona online» senza servizi pronti rispondeva Gemma in silenzio.
+            d.write_line("ONLINE > Nessun servizio online pronto (spunta e chiave in ONLINE ▾): "
+                         "rispondo col modello locale.")
         # Orchestratore (decisione 15/11): con il cervello online acceso e un servizio con la
         # chiave, Lumi chiede «uso l'online per questa richiesta?» (sì / no / sempre).
         if route == "locale" and orig_route is None and __import__("servizi_online").disponibili():
