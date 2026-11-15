@@ -259,6 +259,9 @@ def main() -> None:
                          "senza chiudere Lumi",
                     variable=engine_separate_var, command=save_engine_separate
                     ).pack(anchor="w", padx=8, pady=(0, 6))
+    # Sezione «Contesto» (passo 4): chat continua e ricordi del modello locale.
+    __import__("contesto_lumi").costruisci_sezione(
+        assistant_settings_frame, lambda text: write_line(text))
 
     # F5 experimental preview: deliberately NOT connected to the active model.
     # Modello locale, memoria, cervelli e diagnostica: spostato in lumi_parti/modello_memoria.py (divisione di jarvis.py).

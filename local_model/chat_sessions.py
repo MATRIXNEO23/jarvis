@@ -247,6 +247,15 @@ class ChatSessionStore:
                 (chat_id, limit)).fetchall()
         return tuple((row["user_text"], row["assistant_text"]) for row in reversed(rows))
 
+    def exchange_count(self, chat_id, *, project_id=None):
+        """Numero di scambi salvati nella chat (sola lettura)."""
+        scope, scope_id = _scope(project_id)
+        _id(chat_id)
+        with self._db() as db:
+            self._require(db, chat_id, scope, scope_id)
+            return int(db.execute("SELECT COUNT(*) FROM chat_exchanges WHERE chat_id=?",
+                                  (chat_id,)).fetchone()[0])
+
     def recent_pairs(self, chat_id, *, project_id=None, count=8):
         """Return last N complete exchanges, chronological, no LLM side effects.
 

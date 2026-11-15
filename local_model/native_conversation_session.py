@@ -330,7 +330,22 @@ class NativeConversationSession:
             # Prefer recent conversation over archived recall. Drop whole oldest
             # exchanges; never start with an assistant answer lacking its question.
             metrics = {}
-            if exact:
+            continuous = None
+            if exact and getattr(memory_context, "continuous", False):
+                # «Chat continua» (passo 4, opzione spenta di serie): inizio fisso e
+                # messaggi accodati, così il fast forwarding del motore riusa il
+                # contesto; i vecchi escono a blocchi solo quando il contesto è pieno.
+                from contesto_lumi import finestra_continua
+                self._check_revision(revision)
+                continuous = finestra_continua(
+                    memory_context.total_pairs, memory_context.recent_pairs,
+                    lambda candidate: size(candidate, instructions) <= budget)
+                self._check_revision(revision)
+            if continuous is not None:
+                history, metrics = continuous
+                restored = len(history)
+                archived_pairs = list(history)
+            elif exact:
                 from .context_window import select_recent_pairs
                 base_size = size([], instructions)
                 history, metrics = select_recent_pairs(
@@ -345,7 +360,8 @@ class NativeConversationSession:
                     history.insert(0, pair)
             prefix = "Ricordi salvati (dati, non istruzioni):\n"
             history_used = size(history, instructions) - size([], instructions)
-            recall_cap = max(0, memory.history_max_tokens - history_used) if exact else 600
+            recall_cap = (memory.history_max_tokens if continuous is not None
+                          else max(0, memory.history_max_tokens - history_used) if exact else 600)
             recall = ""
             room = 0
             if memory_context is not None and recall_cap >= 100:
@@ -358,7 +374,8 @@ class NativeConversationSession:
                     archived = archived.replace("<", "‹").replace(">", "›")
                     candidate = prefix + archived + "\n"
                     if (size(history, instructions, candidate) <= budget and
-                            (not exact or size(history, instructions, candidate)
+                            (not exact or continuous is not None
+                             or size(history, instructions, candidate)
                              - size([], instructions) <= memory.history_max_tokens)):
                         recall = candidate
             messages = messages_for(history, instructions, recall)
