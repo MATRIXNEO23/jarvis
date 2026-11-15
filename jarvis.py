@@ -2732,6 +2732,7 @@ def main() -> None:
     output.tag_configure("sistema_titolo", foreground="#729bb3", justify="center")
     import chat_elenco
     from local_model.chat_sessions import ChatSessionStore
+    chat_menu = None
     try:
         chat_archive = chat_elenco.ElencoChat(
             ChatSessionStore(default_path().with_name("jarvis_chat_sessions.sqlite3")),
@@ -4390,6 +4391,24 @@ def main() -> None:
     online_menu_button = hud.add_quick_button("online", "ONLINE ▾", lambda: None, after="gpt")
     models_menu = __import__("menu_modelli").MenuModelli(
         root, online_menu_button, open_settings=lambda: show_settings())
+    # Telegram (15/11 sera): icona ✈ con i colori dello stato, tendina dei contatti e una
+    # voce per contatto nel menu laterale.
+    telegram_button = hud.add_quick_button("telegram", "✈", lambda: None, after="memory")
+
+    def show_telegram_chat(title, items, action) -> None:
+        chat_bubbles.messaggi(title, items, action)
+        if chat_menu is not None:
+            chat_menu.title.set(title)
+
+    telegram_view = __import__("telegram_vista").Telegram(
+        root, telegram_button, workspace=lambda: workspace, settings=lambda: settings,
+        auto_var=telegram_auto, contacts=selected_telegram_contacts,
+        save_contacts=save_telegram_contact_selection, toggle_auto=toggle_telegram_automatic,
+        open_manager=open_telegram_contact_list, show_chat=show_telegram_chat,
+        send_voice=send_owner_telegram_voice,
+        ask_text=lambda title, prompt: simpledialog.askstring(title, prompt, parent=root))
+    if chat_menu is not None:
+        chat_menu.extra = telegram_view.voci_menu
 
 
 

@@ -85,6 +85,31 @@ class Bolle:
             text.see("end")
         text.configure(state="disabled")
 
+    def messaggi(self, title: str, items, action=None) -> None:
+        """Conversazione non del modello (es. Telegram): bolle senza copia/leggi/rigenera.
+        items: [(intestazione, «utente»|«jarvis», testo)]; action: (etichetta, funzione)."""
+        text = self.text
+        text.configure(state="normal")
+        text.delete("1.0", "end")
+        self.azzera()
+        text.insert("end", "— " + title + " —\n", ("sistema_titolo",))
+        if action is not None:
+            button = tk.Button(text, text=action[0], command=action[1], bg="#0b2f44",
+                               fg="#9fd8f0", relief="flat", bd=0, padx=8,
+                               font=("Segoe UI", 8), cursor="hand2")
+            text.window_create("end", window=button)
+            self.bars["__azione__"] = button
+        text.insert("end", "\n\n")
+        if not items:
+            text.insert("end", "Nessun messaggio ancora.\n", ("sistema_titolo",))
+        for header, role, body in items:
+            start = text.index("end-1c")
+            text.insert("end", header + "\n", (role, "message_head"))
+            text.insert("end", str(body) + "\n\n", role)
+            text.tag_add(BOLLA.get(role, "bolla_jarvis"), start, "end-1c")
+        text.see("end")
+        text.configure(state="disabled")
+
     def azzera(self) -> None:
         for widget in self.bars.values():
             widget.destroy()

@@ -177,7 +177,7 @@ class MenuView:
                        ).pack(fill="x", pady=(3, 0))
         self.before = before
         self.open = False
-        self.extra = []                         # voci in fondo, es. ✈ Telegram (punto 5)
+        self.extra = []      # voci in fondo (lista o funzione), es. un ✈ per contatto Telegram
 
     def toggle(self):
         if self.open:
@@ -215,7 +215,8 @@ class MenuView:
                 selected = iid
         iid = tree.insert("", "end", text="＋ Nuova chat")
         self.items[iid] = ("nuova", None, None)
-        for label, action in self.extra:
+        extra = self.extra() if callable(self.extra) else self.extra
+        for label, action in extra:
             sep = tree.insert("", "end", text="──────────")
             self.items[sep] = ("sep", None, None)
             iid = tree.insert("", "end", text=label)
