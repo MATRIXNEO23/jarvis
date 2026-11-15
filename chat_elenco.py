@@ -116,6 +116,31 @@ class ElencoChat:
             except (OSError, sqlite3.Error, ValueError):
                 return False
 
+    def importa(self, path, choose) -> bool:
+        """Importa UNA chat da un export JSON/ZIP di ChatGPT o Claude (passo 9)."""
+        import chat_import
+        try:
+            conversations = chat_import.carica(path)
+        except (OSError, chat_import.ImportError_) as exc:
+            self.notify("CHAT / ERRORE > Import non riuscito: " + str(exc)[:140])
+            return False
+        if not conversations:
+            self.notify("CHAT > Nel file non ci sono conversazioni.")
+            return False
+        conversation = choose(conversations)
+        if conversation is None:
+            return False
+        try:
+            with _LOCK:
+                _chat_id, count = chat_import.importa(conversation, self.store,
+                                                      project_id=self._scope())
+        except (OSError, sqlite3.Error, ValueError) as exc:
+            self.notify("CHAT / ERRORE > Import non riuscito: " + str(exc)[:140])
+            return False
+        self.notify("CHAT > Importata «%s» (%d scambi)." % (chat_import.titolo(conversation), count))
+        self.refresh(show=True)
+        return True
+
     def recent(self, count):
         chat_id = self.current()
         if chat_id is None:
@@ -145,9 +170,12 @@ class ElencoChat:
 class ElencoView:
     """Barra laterale apribile (☰) con le chat: nuova, rinomina, elimina."""
 
-    def __init__(self, header, body, before, elenco, *, ask_text, confirm):
+    def __init__(self, header, body, before, elenco, *, ask_text, confirm, ask_file=None,
+                 choose=None):
         import tkinter as tk
         from tkinter import ttk
+        self.ask_file = ask_file
+        self.choose = choose
         self.elenco = elenco
         self.ask_text = ask_text
         self.confirm = confirm
@@ -166,9 +194,17 @@ class ElencoView:
         row.pack(fill="x", pady=(3, 0))
         ttk.Button(row, text="Rinomina", command=self._rename).pack(side="left", expand=True, fill="x")
         ttk.Button(row, text="Elimina", command=self._delete).pack(side="left", expand=True, fill="x")
+        if ask_file is not None and choose is not None:
+            ttk.Button(self.side, text="Importa da ChatGPT/Claude…",
+                       command=self._import).pack(fill="x", pady=(3, 0))
         self.before = before
         self.open = False
         elenco.view = self
+
+    def _import(self):
+        path = self.ask_file()
+        if path:
+            self.elenco.importa(path, self.choose)
 
     def toggle(self):
         if self.open:

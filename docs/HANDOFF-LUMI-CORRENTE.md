@@ -70,7 +70,7 @@ Aggiornare questo file a ogni consegna o decisione importante.
 6. **Fatto (vedi CI)**: pulizia dati su disco (`pulizia_dati.py`, Cestino, doppia conferma per i file importanti).
 7. **Fatto (vedi CI)**: scheda di sé (`scheda_lumi.py`) e riquadro comandi per modalità con tutorial brevi (`aiuto_comandi.py`).
 8. **Fatto in parte (vedi CI)**: servizi online con caselle, chiavi DPAPI, ordine e ripiego locale (`servizi_online.py`); orchestratore con strumenti ancora da progettare.
-9. Add-on «Diagnostica per Claude» (MCP locale, comandi solo dentro Lumi), import JSON di una chat, add-on GitHub.
+9. **Fatto (vedi CI)**: Diagnostica per Claude (`diagnostica_claude/`, MCP locale), import di una chat da ChatGPT/Claude (`chat_import.py`), GitHub sola lettura (`github_lettura.py`).
 Dettagli e motivazioni: sezioni datate in fondo a `docs/ARCH-01-F5-CHECKPOINT.md`.
 10. Bug voce online Microsoft: corretto (attesa iniziale 10 s, niente alternanza nella stessa risposta), da provare sul Pavilion.
 11. Tutorial con correzione dei comandi, lettere perse (S), parole incerte in dettatura, classificatore opzionale, frasi variate (decisioni 15/11 10:50 nel checkpoint).

@@ -94,6 +94,9 @@ def handle_text(spoken: str, write_line, speak) -> bool:
             write_line("LUMI > " + reply)
             speak(reply)
             return True
+    github = actions.get("github")          # add-on GitHub in sola lettura (passo 9)
+    if github is not None and __import__("github_lettura").parse(spoken) and github(spoken):
+        return True
     stop_all = actions.get("stop_all")
     if stop_all is not None and __import__("stato_lumi").is_stop(spoken) and stop_all():
         return True

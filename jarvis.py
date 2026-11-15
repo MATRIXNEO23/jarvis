@@ -288,6 +288,41 @@ def main() -> None:
                                 write_line("AIUTO > I tutorial ripartono alla prossima "
                                            "modalità che usi."))
                ).pack(anchor="w", padx=8, pady=(2, 6))
+    # Add-on «Diagnostica per Claude» (passo 9): server MCP locale, comandi solo in Lumi.
+    def make_claude_bridge():
+        from diagnostica_claude.ponte import Ponte
+
+        def engine_log() -> str:
+            try:
+                from local_model.native_settings import default_native_settings_path
+                path = default_native_settings_path().with_name("motore.log")
+                return path.read_text(encoding="utf-8", errors="replace")[-20000:]
+            except (OSError, RuntimeError):
+                return ""
+
+        def try_command(text: str) -> None:
+            write_line("CLAUDE > Prova del comando: " + text)
+            request.set(text)
+            send_console_input()
+
+        return Ponte(
+            stato=lambda: {"stato": read_lumi_state(), "microfono": voice_mode.get(),
+                           "gpt_collegato": bool(active_gpt), "occupato": bool(busy_local),
+                           "progetto": active_context_label.get()},
+            in_chat=lambda text: write_line("CLAUDE > " + text),
+            prova=try_command, riavvia_modello=lambda: lumi_model_restart(),
+            run_ui=lambda fn: root.after(0, fn), log_motore=engine_log)
+
+    def copy_to_clipboard(text: str) -> None:
+        root.clipboard_clear()
+        root.clipboard_append(text)
+
+    __import__("diagnostica_claude.ui", fromlist=["costruisci_sezione"]).costruisci_sezione(
+        assistant_settings_frame, lambda text: write_line(text), make_claude_bridge,
+        clipboard=copy_to_clipboard)
+    # Add-on GitHub in sola lettura (passo 9, github_lettura.py).
+    __import__("github_lettura").costruisci_sezione(
+        assistant_settings_frame, lambda text: write_line(text))
     # Servizi online con caselle e chiavi API (passo 8, servizi_online.py).
     __import__("servizi_online").costruisci_sezione(
         assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
@@ -783,6 +818,8 @@ def main() -> None:
             return
         from chat_ruoli import classify as classify_message
         role, identity, body = classify_message(label, role)
+        # Diagnostica per Claude (passo 9): copia in memoria per il ponte, niente Tk.
+        __import__("diagnostica_claude.ponte", fromlist=["registra"]).registra(role, body)
         output.configure(state="normal")
         bubble_mark = chat_bubbles.inizio() if chat_bubbles else ""
         output.insert(
@@ -2703,7 +2740,11 @@ def main() -> None:
         chat_elenco.ElencoView(
             chat_header, chat_panel, chat_panel.winfo_children()[0], chat_archive,
             ask_text=lambda title, prompt: simpledialog.askstring(title, prompt, parent=root),
-            confirm=lambda title, prompt: messagebox.askyesno(title, prompt, parent=root))
+            confirm=lambda title, prompt: messagebox.askyesno(title, prompt, parent=root),
+            ask_file=lambda: filedialog.askopenfilename(
+                parent=root, title="Export di ChatGPT o Claude (conversations.json o .zip)",
+                filetypes=[("Export chat", "*.json *.zip"), ("Tutti i file", "*.*")]),
+            choose=lambda items: __import__("chat_import").scegli_dialogo(root, items))
         chat_archive.refresh(show=False)
     except (OSError, sqlite3.Error, ValueError) as exc:
         write_line("CHAT > Archivio chat non disponibile: " + type(exc).__name__)
@@ -4528,6 +4569,24 @@ def main() -> None:
         output_queue=output_queue, service=service, workspace=workspace,
         addon_manager=addon_manager)
 
+    def lumi_github(spoken: str) -> bool:
+        """Add-on GitHub (sola lettura): elenco in chat, a voce solo una frase breve."""
+        github = __import__("github_lettura")
+        config = github.Configurazione()
+        if not config.attivo:
+            return False
+        kind, repo = github.parse(spoken)
+        token = config.token()
+        write_line("GITHUB > Chiedo a GitHub…")
+
+        def work():
+            text = github.esegui(kind, repo, token)
+            root.after(0, lambda: (write_line("GITHUB > " + text),
+                                   speak_result(text if "\n" not in text else
+                                                "Fatto, l'elenco è in chat.")))
+        threading.Thread(target=work, daemon=True, name="lumi-github").start()
+        return True
+
     def resume_online_question(route: str) -> None:
         waiting = __import__("servizi_online").IN_ATTESA
         pending, waiting["domanda"] = waiting["domanda"], None
@@ -4588,6 +4647,7 @@ def main() -> None:
          "hide": lumi_hide, "wake": lumi_wake,
          "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
          "data_cleanup": lambda: open_data_cleanup(),
+         "github": lambda spoken: lumi_github(spoken),
          # Passo 8: risposta a «la passo all'online?» per una domanda lunga.
          "online_yes": lambda: resume_online_question("online"),
          "online_no": lambda: resume_online_question("locale"),
