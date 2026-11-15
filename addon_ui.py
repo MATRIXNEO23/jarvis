@@ -231,7 +231,7 @@ class SezioneAddon:
             ttk.Label(self.section,text="Comandi non disponibili: "+str(exc)[:80]).pack(anchor="w")
 
     def cambia(self, ident, enabled=None) -> bool:
-        """Accende o spegne; per accendere chiede conferma come prima. True se cambiato."""
+        """Accende o spegne subito, senza domande. True se cambiato."""
         if ident is None:
             return False
         item=self._item(ident)
@@ -242,13 +242,7 @@ class SezioneAddon:
             enabled=not item["enabled"]
         if enabled==item["enabled"]:
             return False
-        if enabled and not messagebox.askyesno(
-                "Autorizza add-on",
-                "Attivare "+item["name"]+"? Le azioni descritte saranno visibili "
-                "a Lumi GPT e richiamabili solo tramite il motore locale "
-                "con le normali verifiche.",
-                parent=self.window,default="no"):
-            return False
+        # Niente domanda (richiesta utente 15/11): si va lì apposta per cliccare.
         try:
             self.manager.set_enabled(ident,enabled)
         except (AddonError,OSError,ValueError) as exc:

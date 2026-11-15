@@ -81,19 +81,17 @@ class RigheTest(Base):
 
 
 class SezioneTest(Base):
-    def test_spegnere_senza_domanda_accendere_con_conferma(self):
+    def test_accendere_e_spegnere_senza_domande(self):
         manager, after = FakeManager(), []
         frame = ttk.Frame(self.root)
         section = addon_ui.SezioneAddon(frame, manager, window=self.root,
                                         after_change=lambda: after.append(1))
         section.mostra("nuovo")
         self.assertTrue(frame.winfo_children())
-        self.assertTrue(section.cambia("musica", False))
-        with mock.patch.object(addon_ui.messagebox, "askyesno", return_value=False) as ask:
-            self.assertFalse(section.cambia("nuovo", True))
-            ask.assert_called_once()
-        with mock.patch.object(addon_ui.messagebox, "askyesno", return_value=True):
+        with mock.patch.object(addon_ui.messagebox, "askyesno") as ask:
+            self.assertTrue(section.cambia("musica", False))
             self.assertTrue(section.cambia("nuovo", True))
+            ask.assert_not_called()
         self.assertEqual(manager.calls, [("musica", False), ("nuovo", True)])
         self.assertEqual(after, [1, 1])
         self.assertFalse(section.cambia("nuovo", True))   # già acceso: niente
