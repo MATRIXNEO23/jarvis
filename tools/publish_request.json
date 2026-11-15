@@ -1,10 +1,10 @@
 {
-  "run_id": 43392772539,
-  "artifact": "lumi-046-prova-candidate",
-  "file": "Lumi-046-PROVA.zip",
-  "bytes": 27708142,
-  "sha256": "bda30573c68168ff9a35af9371bfc8587241ee6e9becac4a1999f5a341569ad4",
-  "source_commit": "39dbc38",
-  "title": "Build 046 PROVA — correzione del motore separato (errore 'utf-8' … surrogates)",
-  "description": "Come la 045, con una correzione: con «Motore in un processo separato» acceso, ogni domanda al modello dava «'utf-8' codec can't encode character '\\udc8d' … surrogates not allowed» quando memoria o cronologia contenevano un carattere rotto. Ora il testo passa al motore separato in una forma che accetta qualsiasi carattere (e non dipende dalla codifica di Windows). Verificati in CI Windows: test (anche questo caso), diagnostica, Telegram, pacchetto e prova reale UIA/OCR. Motore separato ancora da confrontare sul Pavilion con la DLL e il modello veri."
+  "run_id": 43713943448,
+  "artifact": "lumi-047-prova-candidate",
+  "file": "Lumi-047-PROVA.zip",
+  "bytes": 27764632,
+  "sha256": "336e853c6535492c5e55df8b37d02c6f045b0733ff518f11b86e47cc395b3be9",
+  "source_commit": "51c6b3b",
+  "title": "Build 047 PROVA — chat unica, stop immediato, contesto, allegati, pulizia, aiuto comandi, servizi online, Diagnostica per Claude, GitHub, La mia voce",
+  "description": "Tutti i passi concordati il 15/11 in una sola build. Chat unica per modello locale e GPT con elenco chat per progetto (☰, +, rinomina, elimina, importa da ChatGPT/Claude) e bolle con copia/leggi/rigenera. Riga di stato a 5 colori con «■ Ferma» e «Lumi, fermati». Contesto: la cronologia della chat scelta, «Chat continua» (spenta di serie), ricordi mai/pertinenti/sempre. Allegati con 📎, trascinamento e Ctrl+V (testo e Word; al modello locale). Pulizia dati con Cestino. Riquadro comandi per finestra con tutorial e scheda di Lumi. Servizi online con caselle e chiavi cifrate (Gemini, Groq, Mistral, OpenRouter, NVIDIA; a consumo Grok, OpenAI, Claude) e ripiego sul modello locale. Add-on spenti di serie: Diagnostica per Claude (MCP locale) e GitHub in sola lettura. La mia voce: parlato dal vivo, correzioni a mano e togliibili, lettere perse; classificatore opzionale. Verificati in CI Windows: 1409 test, diagnostica, Telegram, tokenizer, pacchetto e avvio. Da provare sul Pavilion: velocità, voce, microfono, account e chiavi reali."
 }
