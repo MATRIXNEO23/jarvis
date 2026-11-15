@@ -2234,7 +2234,7 @@ def main() -> None:
         threading.Thread(target=worker, daemon=True, name="jarvis-gpt-worker").start()
         return True
 
-    def start_conversation_gpt(spoken: str, orchestrate: bool = True) -> None:
+    def start_conversation_gpt(spoken: str) -> None:
         """Use the owner's selected model; connection failure never selects Gemma."""
         if closing or voice_mode.get() not in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
             return
@@ -2259,10 +2259,11 @@ def main() -> None:
         if not gpt_enabled.get():
             submit_gemma_voice(spoken)
             return
-        if orchestrate and __import__("servizi_online").disponibili():
+        orchestrator = __import__("orchestratore")
+        if (not orchestrator.SALTA.pop("gpt", False)
+                and __import__("servizi_online").disponibili()):
             # Orchestratore (15/11): con un servizio online pronto Lumi chiede prima
             # «uso l'online per questa richiesta?»; no = GPT come prima.
-            orchestrator = __import__("orchestratore")
             if not orchestrator.consenso_necessario(True):
                 submit_gemma_voice(spoken, route="online")
                 return
@@ -4627,7 +4628,8 @@ def main() -> None:
         if pending is None:
             return
         if route == "locale" and pending[2:] == ("gpt",):
-            start_conversation_gpt(pending[0], orchestrate=False)   # no: GPT come prima
+            __import__("orchestratore").SALTA["gpt"] = True       # no: GPT come prima
+            start_conversation_gpt(pending[0])
         else:
             submit_gemma_voice(pending[0], typed=pending[1], route=route)
 

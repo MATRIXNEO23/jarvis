@@ -27,6 +27,7 @@ MAX_LETTURA = 12000
 MAX_SCRITTURA = 200_000
 ATTESA_RISPOSTA = 90          # secondi per il «sì» dell'utente
 SESSIONE = {"sempre": False}
+SALTA = {}                    # «no» alla domanda: la prossima richiesta va a GPT come prima
 IN_ATTESA = {"richiesta": None}
 
 SISTEMA = ("Sei Lumi, assistente vocale per Windows, e lavori sul PC dell'utente con gli "
