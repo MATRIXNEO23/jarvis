@@ -219,6 +219,23 @@ class DiagnosticaTest(unittest.TestCase):
         reply = server_mcp.chiedi_al_ponte("stato", {}, path=self.path, timeout=2)
         self.assertIn("non è aperta", reply["errore"])
 
+    def test_prova_comando_aspetta_la_risposta(self):
+        now = [0.0]
+
+        def sleep(seconds):
+            now[0] += seconds
+            if abs(now[0] - 0.5) < 0.01:
+                ponte.registra("utente", "chi sei")
+            if abs(now[0] - 1.0) < 0.01:
+                ponte.registra("jarvis", "Sono Lumi.")
+        start = ponte.CONTA[0]
+        ponte.registra("comando", "Prova del comando: chi sei")
+        lines = ponte.aspetta_risposta(start, 30, sleep=sleep, clock=lambda: now[0])
+        self.assertTrue(lines[-1].endswith("jarvis: Sono Lumi."))
+        self.assertLess(now[0], 5)                    # finisce dopo il silenzio, non a 30 s
+        self.assertEqual(ponte.aspetta_risposta(ponte.CONTA[0], 1, sleep=sleep,
+                                                clock=lambda: now[0]), [])
+
     def test_protocollo_mcp(self):
         init = server_mcp.gestisci({"jsonrpc": "2.0", "id": 1, "method": "initialize",
                                     "params": {"protocolVersion": "2025-06-18"}})

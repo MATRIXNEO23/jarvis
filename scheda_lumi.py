@@ -110,6 +110,18 @@ def scheda(info: dict) -> str:
     return "\n".join(lines)[:1500]
 
 
+def scheda_breve(info: dict) -> str:
+    """Versione corta per il modello locale (prova 15/11: la scheda intera non entrava nel
+    contesto di Gemma e lui si presentava come «un modello di Google»)."""
+    parts = ["Sei Lumi, assistente vocale per Windows creata da Alberto; esegui i comandi sul PC."]
+    parts.append("Modello locale: " + (info["modello"] or "scelto nelle impostazioni") + "."
+                 if info["locale"] else "Modello locale: spento.")
+    if info["addons"]:
+        parts.append("Add-on accesi: " + ", ".join(info["addons"][:6]) + ".")
+    parts.append("GPT: " + ("collegato." if info["online"] else "non collegato."))
+    return " ".join(parts)[:400]
+
+
 def risposta_pronta(info: dict, rng=random) -> str:
     """Con il modello spento: frase pronta, diversa di volta in volta."""
     addons = ", ".join(info["addons"][:5]) or "nessun add-on in più"

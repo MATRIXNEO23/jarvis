@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 
 RIGHE = collections.deque(maxlen=400)       # (ora, ruolo, testo) dalla console di Lumi
+CONTA = [0]                                 # righe scritte da quando Lumi è aperta
 MAX_RICHIESTA = 64 * 1024
 
 # Parole che toccano il PC fuori da Lumi: rifiutate per «prova_comando».
@@ -29,6 +30,32 @@ _VIETATI = re.compile(
 def registra(role: str, text: str) -> None:
     """Chiamata da write_line: costa un append, niente Tk."""
     RIGHE.append((time.strftime("%H:%M:%S"), role, str(text)[:2000]))
+    CONTA[0] += 1
+
+
+def righe_dopo(start: int) -> list:
+    """Righe scritte dopo il contatore start (quelle ancora nella memoria della console)."""
+    new = CONTA[0] - start
+    return list(RIGHE)[-new:] if new > 0 else []
+
+
+def aspetta_risposta(start: int, seconds: float, *, quiet: float = 2.0, sleep=time.sleep,
+                     clock=time.monotonic) -> list:
+    """Aspetta la risposta di Lumi: la prima riga che non è l'eco del comando, poi qualche
+    secondo di silenzio (risposte a più righe). Massimo `seconds`."""
+    end = clock() + max(0.0, min(float(seconds), 180.0))
+    seen, last_change, count = False, clock(), CONTA[0]
+    while clock() < end:
+        lines = righe_dopo(start)
+        if CONTA[0] != count:
+            count, last_change = CONTA[0], clock()
+        if any(not (r[2].startswith(("CLAUDE > Prova del comando", "Prova del comando"))
+                    or r[1] == "utente") for r in lines):
+            seen = True
+        if seen and clock() - last_change >= quiet:
+            break
+        sleep(0.25)
+    return ["%s %s: %s" % r for r in righe_dopo(start)]
 
 
 def percorso_porta() -> Path:
@@ -155,7 +182,16 @@ class Ponte:
             if not comando_permesso(text):
                 return {"ok": False, "errore": "comando non permesso: solo comandi dentro Lumi "
                                                "(niente Controllo PC, programmi, file)"}
+            start = CONTA[0]
             self.run_ui(lambda: self.prova(text))
+            wait = args.get("attendi", 0) if isinstance(args, dict) else 0
+            try:
+                wait = float(wait or 0)
+            except (TypeError, ValueError):
+                wait = 0
+            if wait > 0:
+                # 15/11 sera: aspetta la risposta e la restituisce (niente giri sulla console).
+                return {"ok": True, "righe": aspetta_risposta(start, wait)}
             return {"ok": True, "nota": "comando inviato; leggi la console per l'esito"}
         if op == "riavvia_modello":
             self.run_ui(self.riavvia_modello)

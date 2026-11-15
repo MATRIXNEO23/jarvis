@@ -439,7 +439,7 @@ def installa(d):
                                  + __import__("contesto_lumi").altre_chat())
             if __import__("scheda_lumi").domanda_su_lumi(spoken):
                 # Passo 7: domanda su Lumi → la scheda di sé con i dati veri, prima di tutto.
-                reader.attachment = [__import__("scheda_lumi").scheda(
+                reader.attachment = [__import__("scheda_lumi").scheda_breve(
                     __import__("scheda_lumi").fatti_da(d))] + reader.attachment
         # Make the session busy only after the selected chat and its reader
         # are valid: errors cannot strand the Gemma UI in a busy state.

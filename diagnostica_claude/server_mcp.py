@@ -27,8 +27,10 @@ STRUMENTI = [
      "op": "scrivi_in_chat", "props": {"testo": {"type": "string"}}, "required": ["testo"]},
     {"name": "lumi_prova_comando",
      "description": ("Prova un comando come se l'utente l'avesse scritto in Lumi. Solo comandi "
-                     "dentro Lumi: Controllo PC, programmi e file sono rifiutati."),
-     "op": "prova_comando", "props": {"testo": {"type": "string"}}, "required": ["testo"]},
+                     "dentro Lumi: Controllo PC, programmi e file sono rifiutati. Con «attendi» "
+                     "(secondi, max 180) aspetta e restituisce le righe della risposta."),
+     "op": "prova_comando", "props": {"testo": {"type": "string"},
+                                      "attendi": {"type": "number"}}, "required": ["testo"]},
     {"name": "lumi_riavvia_modello", "description": "Riavvia il modello locale di Lumi.",
      "op": "riavvia_modello", "props": {}},
     # 15/11 sera: strumenti per le novità (regola: diagnostica sempre aggiornata).
@@ -43,6 +45,16 @@ STRUMENTI = [
     {"name": "lumi_ricordi", "description": "Ricordi salvati da Lumi (sola lettura), con ricerca.",
      "op": "ricordi", "props": {"cerca": {"type": "string"},
                                 "categoria": {"type": "string"}}},
+    {"name": "lumi_prompt",
+     "description": ("Prompt del modello locale: con arma=true cattura il prossimo turno di "
+                     "Gemma; senza argomenti restituisce l'ultimo catturato (sezioni e token)."),
+     "op": "prompt", "props": {"arma": {"type": "boolean"}}},
+    {"name": "lumi_online",
+     "description": "Servizi online: spuntati, con chiave, quota di oggi e soglie.",
+     "op": "online", "props": {}},
+    {"name": "lumi_telegram",
+     "description": "Icona Telegram: colore, messaggi nuovi e stato delle risposte automatiche.",
+     "op": "telegram", "props": {}},
     {"name": "lumi_chat",
      "description": ("Chat del menu laterale con i simboli dei modelli (🤖 offline, 📡 online) e "
                      "gli ultimi scambi della chat aperta (sola lettura)."),
@@ -57,6 +69,11 @@ def percorso_porta() -> Path:
 
 
 def chiedi_al_ponte(op: str, args: dict, path: Path | None = None, timeout: float = 15) -> dict:
+    if op == "prova_comando" and isinstance(args, dict):
+        try:                                   # aspettare la risposta richiede più tempo
+            timeout = max(timeout, min(float(args.get("attendi") or 0), 180.0) + 10)
+        except (TypeError, ValueError):
+            pass
     try:
         info = json.loads((path or percorso_porta()).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -91,7 +108,7 @@ def gestisci(message: dict, ask=chiedi_al_ponte):
     if method == "initialize":
         version = (message.get("params") or {}).get("protocolVersion") or VERSIONE_PROTOCOLLO
         result = {"protocolVersion": version, "capabilities": {"tools": {}},
-                  "serverInfo": {"name": "lumi-diagnostica", "version": "1.0"}}
+                  "serverInfo": {"name": "lumi-diagnostica", "version": "1.1"}}
     elif method == "ping":
         result = {}
     elif method == "tools/list":

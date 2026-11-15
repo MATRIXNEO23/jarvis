@@ -80,6 +80,14 @@ class ChiSonoTest(unittest.TestCase):
         self.assertIn("servizi online", scheda_lumi.risposta_propria("che cosa sai fare"))
         self.assertEqual(scheda_lumi.risposta_propria("apri chrome"), "")
 
+    def test_scheda_breve_per_gemma(self):
+        info = scheda_lumi.fatti(addons=["Musica", "Controllo PC"], local_model="C:/m/gemma-2-2b.gguf",
+                                 local_on=True, online=False)
+        text = scheda_lumi.scheda_breve(info)
+        self.assertLessEqual(len(text), 400)
+        for part in ("Lumi", "Alberto", "gemma-2-2b.gguf", "Musica", "GPT: non collegato"):
+            self.assertIn(part, text)
+
     def test_comandi_resta_l_elenco(self):
         self.assertFalse(scheda_lumi.cosa_sai_fare("comandi"))
         self.assertFalse(scheda_lumi.cosa_sai_fare("aiuto"))

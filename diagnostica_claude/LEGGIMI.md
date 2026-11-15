@@ -13,6 +13,9 @@ in chat; provare un comando come se l'avessi scritto tu; riavviare il modello lo
 Dal 15/11 sera (`strumenti.py`): vedere e aprire le impostazioni in una categoria/voce
 (`lumi_impostazioni`), vedere e accendere/spegnere gli add-on (`lumi_addon`), leggere i
 ricordi (`lumi_ricordi`) e le chat con i simboli 🤖/📡 e gli ultimi scambi (`lumi_chat`).
+In più: `lumi_prova_comando` con «attendi» aspetta e restituisce la risposta; `lumi_prompt`
+cattura il prossimo prompt di Gemma (sezioni e token); `lumi_online` (servizi, chiavi, quote);
+`lumi_telegram` (icona, colore, risposte automatiche).
 Regola: ogni funzione nuova di Lumi porta con sé lo strumento per provarla da qui.
 Cosa NON può fare: Controllo PC (finestre, mouse, tasti), aprire o chiudere programmi,
 file, spegnere il PC. Questi comandi vengono rifiutati dal ponte.

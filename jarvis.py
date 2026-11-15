@@ -299,7 +299,8 @@ def main() -> None:
                 addon_manager=lambda: addon_manager,
                 cambia_addon=lambda addon_id, on: addon_chosen.cambia(addon_id, on),
                 cervello=lambda: durable_brain,
-                elenco_chat=lambda: __import__("chat_elenco")._CURRENT["elenco"]))
+                elenco_chat=lambda: __import__("chat_elenco")._CURRENT["elenco"],
+                sessione_gemma=lambda: gemma_session[0], telegram=lambda: telegram_view))
 
     def copy_to_clipboard(text: str) -> None:
         root.clipboard_clear()

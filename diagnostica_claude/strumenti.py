@@ -4,7 +4,8 @@ esegue sul thread di Tk. Tutti i getter sono funzioni: leggono lo stato di Lumi 
 from __future__ import annotations
 
 
-def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervello, elenco_chat):
+def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervello, elenco_chat,
+         sessione_gemma=lambda: None, telegram=lambda: None):
     def impostazioni(args):
         nav = navigazione()
         if nav is None:
@@ -54,4 +55,42 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
         recent = [{"utente": u[1], "lumi": a[1]} for u, a in elenco.recent(count)]
         return {"ok": True, "chat": chats, "ultimi_scambi": recent}
 
-    return {"impostazioni": impostazioni, "addon": addon, "ricordi": ricordi, "chat": chat}
+    def prompt(args):
+        session = sessione_gemma()
+        if session is None:
+            return {"ok": False, "errore": "modello locale non avviato (fai prima una domanda)"}
+        if args.get("arma"):
+            session.arm_prompt_diagnostic()
+            return {"ok": True, "nota": "catturo il prossimo turno di Gemma"}
+        report = session.prompt_diagnostic()
+        return {"ok": report is not None, "prompt": report,
+                **({} if report else {"errore": "nessun prompt catturato: usa arma=true"})}
+
+    def online(args):
+        import servizi_online
+        from servizi_online import quote
+        settings = servizi_online.carica_impostazioni()
+        keys = servizi_online.Chiavi()
+        services = []
+        for ident in settings["ordine"]:
+            service = servizi_online.PER_ID[ident]
+            state = quote.stato(ident, limite_utente=settings.get("limiti", {}).get(ident))
+            services.append({"id": ident, "nome": service.nome, "spuntato": ident in settings["attivi"],
+                             "chiave": bool(keys.leggi(ident)), "oggi": state.get("testo"),
+                             "colore": state.get("colore")})
+        return {"ok": True, "usa_sempre": settings["usa_sempre"],
+                "proponi_lunghe": settings["proponi_lunghe"],
+                "avviso_quota": settings.get("avviso_quota"),
+                "conferma_token": settings.get("conferma_token"), "servizi": services}
+
+    def telegram_(args):
+        view = telegram()
+        if view is None:
+            return {"ok": False, "errore": "vista Telegram non presente"}
+        view.aggiorna(repeat=False)
+        return {"ok": True, "icona": view.button.cget("text"), "colore": view.button.cget("fg"),
+                "stato": getattr(view, "status_text", ""),
+                "risposte_automatiche": bool(view.auto_var.get())}
+
+    return {"impostazioni": impostazioni, "addon": addon, "ricordi": ricordi, "chat": chat,
+            "prompt": prompt, "online": online, "telegram": telegram_}
