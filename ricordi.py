@@ -25,7 +25,7 @@ ISTRUZIONE_ONLINE = (
     "aperte; la frase breve basta a un modello piccolo. Niente password o dati segreti; "
     "non ripetere fatti già noti; se non c'è niente da ricordare non aggiungere nulla.")
 
-_MARCA = re.compile(r"\[\[RICORDO\|([^|\]]{1,40})\|([^|\]]{1,300})(?:\|([^\]]{1,1500}))?\]\]")
+_MARCA = re.compile(r"\[\[RICORDO\|([^|\]]{1,40})\|([^|\]]{1,300})(?:\|([^\]]{0,1500}))?\]\]")
 _CANCELLA = re.compile(r"^\W*(?:lumi\W+)?(?:cancellalo|cancellala|dimenticalo|dimenticala|"
                        r"cancella\s+(?:quel|il|l'ultimo)\s+ricordo|non\s+salvarlo)\W*$",
                        re.IGNORECASE)
