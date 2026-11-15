@@ -207,6 +207,16 @@ class ChatSessionStore:
                 "UPDATE chat_sessions SET title=?,updated_utc=? WHERE id=?",
                 (title, _timestamp(), chat_id))
 
+    def delete_chat(self, chat_id, *, project_id=None):
+        """Elimina una chat e i suoi scambi (richiesta esplicita dell'utente, 15/11)."""
+        chat_id = _id(chat_id)
+        scope, scope_id = _scope(project_id)
+        with self._db() as db:
+            self._require(db, chat_id, scope, scope_id)
+            db.execute("DELETE FROM chat_selection WHERE chat_id=?", (chat_id,))
+            db.execute("DELETE FROM chat_exchanges WHERE chat_id=?", (chat_id,))
+            db.execute("DELETE FROM chat_sessions WHERE id=?", (chat_id,))
+
     def append_exchange(self, chat_id, question, answer, *, project_id=None):
         """Persist one accepted user/assistant exchange atomically, never half."""
         scope, scope_id = _scope(project_id)

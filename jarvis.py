@@ -762,6 +762,9 @@ def main() -> None:
         if re.search(r"\b(password|passphrase|token|pin|codice otp)\b",
                      user + " " + reply, re.I):
             return False
+        if kind in ("chat", "clarify"):
+            # Chat unica (15/11): ogni scambio con un modello va nella chat selezionata.
+            __import__("chat_elenco").registra_scambio(user, reply)
         conversation_memory.remember(user, reply, kind)
         # Explicitly created project memory advances independently from
         # the general-chat Second Brain opt-in switch.
@@ -1028,6 +1031,8 @@ def main() -> None:
         pending_conversation.clear()
         pending_project_reference.reset()
         pending_preference=None
+        # Chat unica: l'elenco mostra le chat del progetto appena aperto.
+        __import__("chat_elenco").progetto_cambiato()
         write_line(
             "LUMI > "+("Progetto aperto: "+project["name"]+"."
                         if project_id else "Conversazione generale ripristinata."))
@@ -2566,6 +2571,12 @@ def main() -> None:
     chat_notebook.add(chat_local_tab, text="Chat locali")
     chat_notebook.add(chat_console_tab, text="Console")
     chat_notebook.select(chat_console_tab)
+    # Chat unica (scelta A, 15/11): niente più doppia scheda «Chat locali / Console»;
+    # la vecchia scheda resta nel codice ma non si vede (le linguette sono nascoste).
+    ttk.Style(root).layout("LumiNoTabs.TNotebook.Tab", [])
+    chat_notebook.configure(style="LumiNoTabs.TNotebook")
+    chat_header = ttk.Frame(chat_console_tab)
+    chat_header.pack(fill="x", pady=(0, 3))
     chat_panel = ttk.Frame(chat_console_tab)
     chat_panel.pack(fill="both", expand=True)
     output = tk.Text(
@@ -2589,6 +2600,35 @@ def main() -> None:
                          font=("Segoe UI", 10, "bold"),
                          spacing1=9)
     hud.attach_console(output)
+
+    def show_chat_history(title: str, pairs) -> None:
+        """Chat aperta dall'elenco: la cronologia salvata al posto dei messaggi di prima."""
+        from chat_ruoli import IDENTITY
+        output.configure(state="normal")
+        output.delete("1.0", "end")
+        output.insert("end", "— " + title + " —\n\n", ("sistema_titolo",))
+        for question, answer in pairs:
+            output.insert("end", IDENTITY["utente"] + "\n", ("utente", "message_head"))
+            output.insert("end", question + "\n\n", "utente")
+            output.insert("end", IDENTITY["jarvis"] + "\n", ("jarvis", "message_head"))
+            output.insert("end", answer + "\n\n", "jarvis")
+        output.see("end")
+        output.configure(state="disabled")
+
+    output.tag_configure("sistema_titolo", foreground="#729bb3", justify="center")
+    import chat_elenco
+    from local_model.chat_sessions import ChatSessionStore
+    try:
+        chat_archive = chat_elenco.ElencoChat(
+            ChatSessionStore(default_path().with_name("jarvis_chat_sessions.sqlite3")),
+            lambda: active_project_id, show_chat_history, notify=write_line)
+        chat_elenco.ElencoView(
+            chat_header, chat_panel, chat_panel.winfo_children()[0], chat_archive,
+            ask_text=lambda title, prompt: simpledialog.askstring(title, prompt, parent=root),
+            confirm=lambda title, prompt: messagebox.askyesno(title, prompt, parent=root))
+        chat_archive.refresh(show=False)
+    except (OSError, sqlite3.Error, ValueError) as exc:
+        write_line("CHAT > Archivio chat non disponibile: " + type(exc).__name__)
     from local_model.chat_ui import ChatSessionsPanel
     chat_sessions_panel = ChatSessionsPanel(
         chat_local_tab,
