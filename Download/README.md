@@ -1,3 +1,11 @@
+## Build 050 PROVA — correzioni dalle prove e dagli audit, ChatGPT tra i servizi online, diagnostica completa
+
+[Scarica Lumi-050-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-050-PROVA.zip)
+
+Dalla 049: «cosa puoi fare» con la frase di Lumi; i ricordi arrivano a Gemma; «cosa ti ho detto prima» conta anche i comandi; Gemma sa chi è (scheda corta); «ragiona online» avvisa se non ci sono servizi pronti; risposte online fino a 4000 token con avviso se tagliate; file mai sostituiti senza chiedere (con copia); script Python mostrato per intero; esiti veri dei comandi dell'orchestratore; ricordi separati per progetto; «ChatGPT (tuo account)» in ONLINE ▾ (consuma la quota del piano, come Codex) e «a cosa serve» per ogni servizio; Mistral segnato a pagamento. Diagnostica per Claude 1.1: risposte attese, prompt di Gemma, online, Telegram, impostazioni, add-on, ricordi, chat; prove sbloccate per tutto tranne spegnere/riavviare il PC. CI Windows verde: 1494 test. Da provare sul Pavilion.
+
+[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/43785822094). SHA-256: `4dd5d642af72bb8062dac430e6191d627c439fcb8882890c03ab473dc37bcd0a`.
+
 ## Build 049 PROVA — impostazioni a cascata, add-on con interruttore, ricordi, simboli delle chat, menu laterale, servizi online con quote, Telegram, finestra unica
 
 [Scarica Lumi-049-PROVA.zip](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/Lumi-049-PROVA.zip)
