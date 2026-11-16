@@ -77,6 +77,9 @@ Dettagli e motivazioni: sezioni datate in fondo a `docs/ARCH-01-F5-CHECKPOINT.md
 
 ## Build 047 (15/11) — pubblicata
 Lumi-047-PROVA.zip in Download su main: run 43713943448, 27.764.632 byte, SHA-256 336e853c…3be9, sorgente 51c6b3b. Contiene i passi 2–11. Da provare sul Pavilion.
+## Build 050 (16/11 notte) — pubblicata
+Run 43785822094, 28252117 byte, sha256 4dd5d642…bcd0a, verificata su main/Download. Prossimo: prove complete dal vivo con la diagnostica 1.1 (Claude desktop da riavviare con la configurazione della 050).
+
 ## Build 049 (15/11 sera) — pubblicata
 Run 43755471110, 28245326 byte, sha256 717854610d655082fbbff3f83a2c8ec9616f3867cb9f1e44cecdf0ae3373d333, sorgente bf7518b; file su main/Download verificato (hash uguale). Da provare sul Pavilion.
 Contiene tutto dal 048: lista voci, documenti, menu laterale, menu modelli, quote, Telegram, finestra unica, motore separato, Python, impostazioni a cascata, add-on con interruttore, simboli 🤖/📡, Esporta JSON, richiamo cronologia, frasi chi sei/cosa puoi fare, ricordi, strumenti diagnostica. Dopo: prove dal vivo con l'utente via diagnostica MCP (Claude desktop va riavviato per vedere gli strumenti nuovi).
