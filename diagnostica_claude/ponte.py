@@ -69,15 +69,8 @@ def percorso_porta() -> Path:
 def comando_permesso(text: str) -> bool:
     if not isinstance(text, str) or not text.strip() or len(text) > 300:
         return False
-    if _VIETATI.search(text):
-        return False
-    try:
-        from controllo_pc.commands import parse_command
-        if parse_command(text) is not None:
-            return False
-    except ImportError:
-        pass
-    return True
+    # 16/11: anche i comandi di Controllo PC (mouse, clic, tasti) si possono provare.
+    return not _VIETATI.search(text)
 
 
 class Ponte:
