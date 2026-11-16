@@ -329,6 +329,44 @@ class Build040Tests(unittest.TestCase):
         self.assertIn("Non chiudo forzatamente Lumi", self.run_text("chiudi forzatamente lumi"))
         self.assertNotIn(("kill", 9), self.backend.calls)
 
+    def _lumi_windows(self):
+        self.backend.items = [
+            {"hwnd": 70, "title": "Lumi — risultati file e cartelle", "process": "python.exe",
+             "pid": 9, "lumi": True, "ruolo": "secondaria"},
+            {"hwnd": 80, "title": "LUMI // Interfaccia", "process": "python.exe",
+             "pid": 9, "lumi": True, "ruolo": "principale"},
+            {"hwnd": 11, "title": "Documento.txt - Blocco note", "process": "notepad.exe", "pid": 1}]
+
+    def test_close_results_window_closes_only_it(self):
+        self._lumi_windows()
+        reply = self.service.handle("close", {"window": "risultati"})
+        self.assertIn(("close", 70), self.backend.calls)
+        self.assertNotIn(("close", 80), self.backend.calls)
+        self.assertIn("Chiudo la finestra", reply)
+
+    def test_close_secondary_window_reports_backend_failure(self):
+        self._lumi_windows()
+        self.backend.close = lambda hwnd: False
+        reply = self.service.handle("close", {"window": "risultati"})
+        self.assertIn("Non riesco a chiudere", reply)
+        self.assertNotIn("Chiudo la finestra", reply)
+
+    def test_close_lumi_targets_main_window_and_needs_confirmation(self):
+        self._lumi_windows()
+        reply = self.service.handle("close", {"window": "lumi"})
+        self.assertNotIn(("close", 70), self.backend.calls)
+        self.assertNotIn(("close", 80), self.backend.calls)
+        self.assertIn("sì", reply)
+        self.service.answer("sì")
+        self.assertIn(("close", 80), self.backend.calls)
+        self.assertNotIn(("close", 70), self.backend.calls)
+
+    def test_close_lumi_failure_is_reported(self):
+        self._lumi_windows()
+        self.backend.close = lambda hwnd: False
+        self.service.handle("close", {"window": "lumi"})
+        self.assertIn("Non riesco a chiudere Lumi", self.service.answer("sì"))
+
     def test_grid_narrows_and_clicks(self):
         shown = []
         self.service.show_grid = shown.append

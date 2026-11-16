@@ -136,6 +136,14 @@ def _cloaked(hwnd) -> bool:
     return bool(value.value)
 
 
+MAIN_TITLE = "LUMI // Interfaccia"
+
+
+def _ruolo_lumi(title: str) -> str:
+    """Finestra principale di Lumi o finestra secondaria (risultati, anteprime, impostazioni)."""
+    return "principale" if title.startswith(MAIN_TITLE) else "secondaria"
+
+
 def open_windows() -> list[dict]:
     """Finestre principali visibili, dalla più recente: {hwnd, title, process, pid, lumi}.
     Esclude finestre strumento e nascoste; quelle di Lumi hanno lumi=True."""
@@ -157,7 +165,8 @@ def open_windows() -> list[dict]:
             # Lumi compare nell'elenco (richiesta utente), segnata: le azioni su di
             # lei chiedono sempre conferma.
             result.append({"hwnd": int(hwnd), "title": title[:200], "pid": pid,
-                           "process": _process_name(pid), "lumi": pid == own})
+                           "process": _process_name(pid), "lumi": pid == own,
+                           "ruolo": _ruolo_lumi(title) if pid == own else ""})
         except Exception:
             pass
         return True
