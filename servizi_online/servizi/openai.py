@@ -2,6 +2,7 @@
 from servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
+    uso="GPT con chiave: bravo in tutto, anche nei lavori a più passi. A pagamento.",
     id="openai", nome="OpenAI GPT (API)", ordine=7, gratis=False,
     base_url="https://api.openai.com/v1", modello="gpt-4o-mini",
     chiavi="https://platform.openai.com/api-keys",

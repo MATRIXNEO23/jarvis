@@ -43,6 +43,37 @@ def _carica_servizi() -> tuple:
 SERVIZI = _carica_servizi()
 PER_ID = {s.id: s for s in SERVIZI}
 
+# ChatGPT col tuo account (16/11): jarvis.py collega qui il ponte GPT.
+# chiedi(testo, timeout) -> testo; pronto() -> True se il collegamento GPT è acceso e autorizzato.
+ACCOUNT = {"chiedi": None, "pronto": lambda: False}
+
+
+def _account_pronto() -> bool:
+    try:
+        return bool(ACCOUNT["chiedi"]) and bool(ACCOUNT["pronto"]())
+    except Exception:
+        return False
+
+
+def _testo_unico(messages) -> str:
+    """Il ponte GPT riceve un testo solo: istruzioni, cronologia e domanda in fila."""
+    names = {"system": "ISTRUZIONI", "user": "UTENTE", "assistant": "LUMI", "tool": "STRUMENTO"}
+    parts = []
+    for message in messages:
+        content = message.get("content")
+        if isinstance(content, str) and content.strip():
+            parts.append("%s:\n%s" % (names.get(message.get("role"), "ALTRO"), content.strip()))
+    return "\n\n".join(parts)[-30000:]
+
+
+def _chiedi_account(messages, timeout):
+    if not _account_pronto():
+        raise ServizioErrore("collegamento GPT spento o non autorizzato")
+    text = ACCOUNT["chiedi"](_testo_unico(messages), timeout)
+    if not isinstance(text, str) or not text.strip():
+        raise ServizioErrore("vuota")
+    return text.strip()
+
 SISTEMA = ("Ti chiami Lumi, assistente vocale per Windows. Rispondi in italiano, in modo "
            "chiaro e breve (poche frasi: la risposta viene anche letta a voce). Non hai "
            "accesso al PC da qui: se serve un'azione sul computer dillo, la farà Lumi. "
@@ -85,7 +116,11 @@ def carica_impostazioni(path: Path | None = None) -> dict:
     except (OSError, ValueError, RuntimeError):
         pass
     order = [i for i in data["ordine"] if i in PER_ID]
-    data["ordine"] = order + [s.id for s in SERVIZI if s.id not in order]
+    for new in sorted((s for s in SERVIZI if s.id not in order), key=lambda s: s.ordine):
+        # un servizio nuovo entra al suo posto, non in fondo (es. ChatGPT dopo OpenRouter)
+        after = [i for i, ident in enumerate(order) if PER_ID[ident].ordine <= new.ordine]
+        order.insert(after[-1] + 1 if after else 0, new.id)
+    data["ordine"] = order
     data["attivi"] = [i for i in data["attivi"] if i in PER_ID]
     data["modelli"] = {k: str(v)[:120] for k, v in data["modelli"].items() if k in PER_ID and str(v).strip()}
     data["limiti"] = {k: int(v) for k, v in data["limiti"].items()
@@ -217,6 +252,12 @@ def chiedi(messages: list[dict], *, settings: dict | None = None, keys: Chiavi |
         if service_id not in settings["attivi"]:
             continue
         service = PER_ID[service_id]
+        if service.tipo == "account":
+            try:
+                return service.nome, _chiedi_account(messages, timeout)
+            except Exception as exc:
+                reasons.append(service.nome + ": " + _motivo(exc))
+                continue
         key = keys.leggi(service_id)
         if not key:
             reasons.append(service.nome + ": manca la chiave")
@@ -260,6 +301,15 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
         if service_id not in settings["attivi"] or (only and service_id != only):
             continue
         service = PER_ID[service_id]
+        if service.tipo == "account":
+            # Niente strumenti: risponde col testo (va bene per le risposte, non per i passi).
+            try:
+                return service_id, service.nome, {"role": "assistant",
+                                                  "content": _chiedi_account(messages, timeout),
+                                                  "_avviso": ""}
+            except Exception as exc:
+                reasons.append(service.nome + ": " + _motivo(exc))
+                continue
         key = keys.leggi(service_id)
         if not key:
             reasons.append(service.nome + ": manca la chiave")
@@ -298,7 +348,8 @@ def _tagliata(data) -> str:
 def disponibili(settings: dict | None = None, keys: Chiavi | None = None) -> bool:
     settings = settings or carica_impostazioni()
     keys = keys or Chiavi()
-    return any(keys.presente(i) for i in settings["attivi"])
+    return any(keys.presente(i) or (PER_ID[i].tipo == "account" and _account_pronto())
+               for i in settings["attivi"] if i in PER_ID)
 
 
 # --- percorso della domanda ----------------------------------------------------------------
@@ -422,8 +473,12 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
             entry = ttk.Entry(line, textvariable=model, width=26)
             entry.pack(side="left", padx=2)
             entry.bind("<FocusOut>", save)
-            ttk.Button(line, text="Chiave ✓" if keys.presente(service_id) else "Chiave…", width=9,
-                       command=lambda s=service: set_key(s)).pack(side="left", padx=2)
+            if service.tipo == "account":
+                ttk.Label(line, text="GPT ✓" if _account_pronto() else "GPT spento", width=9
+                          ).pack(side="left", padx=2)
+            else:
+                ttk.Button(line, text="Chiave ✓" if keys.presente(service_id) else "Chiave…", width=9,
+                           command=lambda s=service: set_key(s)).pack(side="left", padx=2)
             ttk.Button(line, text="Prova", width=6, command=lambda s=service: test(s)).pack(side="left")
             ttk.Button(line, text="↑", width=2, command=lambda i=service_id: move(i, -1)).pack(side="left")
             ttk.Button(line, text="↓", width=2, command=lambda i=service_id: move(i, 1)).pack(side="left")
@@ -433,7 +488,8 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
             # servizi che non lo pubblicano), usato dalle barre della quota.
             info = ttk.Frame(rows)
             info.pack(fill="x", padx=(28, 0), pady=(0, 4))
-            ttk.Label(info, text=service.limite, foreground="#888", wraplength=380,
+            ttk.Label(info, text=(("A cosa serve: " + service.uso + "\n") if service.uso else "")
+                      + service.limite, foreground="#888", wraplength=380,
                       justify="left").pack(side="left")
             limit = state.setdefault("limits", {}).setdefault(service_id, tk.StringVar(
                 value=str(settings["limiti"].get(service_id, ""))))
@@ -472,6 +528,8 @@ def aiuto_chiavi() -> str:
         out.append(service.nome.upper() + ("" if service.gratis else " ($)"))
         out.append("Pagina della chiave: " + service.chiavi)
         out += ["%d. %s" % (n + 1, step) for n, step in enumerate(service.passi)]
+        if service.uso:
+            out.append("A cosa serve: " + service.uso)
         if service.limite:
             out.append("Cosa offre: " + service.limite)
         out.append("")

@@ -2,6 +2,7 @@
 from servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
+    uso="Tanti modelli diversi in un posto: buona riserva quando gli altri sono finiti.",
     id="openrouter", nome="OpenRouter", ordine=4, gratis=True,
     base_url="https://openrouter.ai/api/v1",
     modello="meta-llama/llama-3.3-70b-instruct:free",

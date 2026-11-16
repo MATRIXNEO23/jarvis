@@ -2,6 +2,7 @@
 from servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
+    uso="Modelli grandi (DeepSeek, Llama) per ragionamenti difficili; lavori a più passi.",
     id="nvidia", nome="NVIDIA (DeepSeek, Llama…)", ordine=5, gratis=True,
     base_url="https://integrate.api.nvidia.com/v1",
     modello="meta/llama-3.3-70b-instruct",

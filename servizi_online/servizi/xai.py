@@ -2,6 +2,7 @@
 from servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
+    uso="Grok: risposte e lavori a più passi. A pagamento.",
     id="xai", nome="xAI Grok", ordine=6, gratis=False,
     base_url="https://api.x.ai/v1", modello="grok-3-mini",
     chiavi="https://console.x.ai/",

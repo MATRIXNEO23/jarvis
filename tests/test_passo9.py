@@ -137,8 +137,9 @@ class DiagnosticaTest(unittest.TestCase):
                      "clicca su Invia", "mostra i numeri", "minimizza", "cancellalo",
                      "cerca file preventivo"):
             self.assertTrue(ponte.comando_permesso(text), text)
-        for text in ("elimina il file", "spegni il pc", "riavvia il computer", "sposta la cartella",
-                     "cancella il file prova", "manda un messaggio a Marco", "invia a Marco ciao", ""):
+        for text in ("elimina il file prova", "sposta la cartella", "manda un messaggio a Marco"):
+            self.assertTrue(ponte.comando_permesso(text), text)       # 16/11: «per tutto»
+        for text in ("spegni il pc", "riavvia il computer", "Lumi spegni il computer", ""):
             self.assertFalse(ponte.comando_permesso(text), text)
 
     def test_ponte_e_server_mcp_dal_vivo(self):

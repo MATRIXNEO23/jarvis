@@ -202,5 +202,47 @@ class RispostaTagliataTest(unittest.TestCase):
         self.assertEqual(servizi_online._tagliata({}), "")
 
 
+class ChatGPTAccountTest(unittest.TestCase):
+    def setUp(self):
+        import servizi_online
+        self.so = servizi_online
+        self.saved = dict(servizi_online.ACCOUNT)
+        self.sent = []
+
+    def tearDown(self):
+        self.so.ACCOUNT.update(self.saved)
+
+    def settings(self, active):
+        return {"ordine": ["chatgpt_account", "groq"], "attivi": active, "modelli": {}, "limiti": {},
+                "usa_sempre": False, "proponi_lunghe": True}
+
+    def test_tra_i_servizi_con_uso_e_al_suo_posto(self):
+        service = self.so.PER_ID["chatgpt_account"]
+        self.assertEqual(service.tipo, "account")
+        self.assertFalse(service.orchestratore)
+        self.assertIn("più passi", service.uso)
+        self.assertTrue(all(s.uso for s in self.so.SERVIZI))
+        self.assertFalse(self.so.PER_ID["mistral"].gratis)
+        order = self.so.carica_impostazioni(Path(tempfile.mkdtemp()) / "x.json")["ordine"]
+        self.assertEqual(order.index("chatgpt_account"), order.index("openrouter") + 1)
+
+    def test_risponde_col_ponte_e_si_salta_se_spento(self):
+        self.so.ACCOUNT.update(chiedi=lambda text, timeout: self.sent.append(text) or "Risposta GPT",
+                               pronto=lambda: True)
+        name, text = self.so.chiedi(self.so.messaggi("ciao"), settings=self.settings(["chatgpt_account"]),
+                                    keys=self.so.Chiavi(Path(tempfile.mkdtemp()) / "k.json"))
+        self.assertEqual((name, text), ("ChatGPT (tuo account)", "Risposta GPT"))
+        self.assertIn("UTENTE:\nciao", self.sent[0])
+        sid, name, message = self.so.chiama(self.so.messaggi("ciao"), tools=[{"type": "function"}],
+                                            settings=self.settings(["chatgpt_account"]),
+                                            keys=self.so.Chiavi(Path(tempfile.mkdtemp()) / "k.json"))
+        self.assertEqual(message["content"], "Risposta GPT")
+        self.so.ACCOUNT.update(pronto=lambda: False)
+        name, reasons = self.so.chiedi(self.so.messaggi("ciao"), settings=self.settings(["chatgpt_account"]),
+                                       keys=self.so.Chiavi(Path(tempfile.mkdtemp()) / "k.json"))
+        self.assertIsNone(name)
+        self.assertIn("collegamento GPT", "; ".join(reasons))
+
+
 if __name__ == "__main__":
     unittest.main()

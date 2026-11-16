@@ -745,6 +745,12 @@ def main() -> None:
     planner_abort_event = threading.Event()
     closing = False
     active_gpt = False
+    # ChatGPT (tuo account) tra i servizi online (16/11): stesso ponte del pulsante GPT,
+    # pronto solo quando il collegamento GPT è acceso e attivo.
+    __import__("servizi_online").ACCOUNT.update(
+        chiedi=lambda prompt, timeout: str(service.call(
+            "ask", prompt=prompt, timeout=max(float(timeout), 60.0)).get("text", "")),
+        pronto=lambda: bool(active_gpt) and bool(gpt_enabled.get()))
     conversation_epoch = 0
     document_busy = False
     documents = ManagedDocuments()

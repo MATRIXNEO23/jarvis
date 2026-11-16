@@ -26,9 +26,9 @@ STRUMENTI = [
     {"name": "lumi_scrivi_in_chat", "description": "Scrive un messaggio nella chat di Lumi.",
      "op": "scrivi_in_chat", "props": {"testo": {"type": "string"}}, "required": ["testo"]},
     {"name": "lumi_prova_comando",
-     "description": ("Prova un comando come se l'utente l'avesse scritto in Lumi, anche mouse, "
-                     "finestre e programmi. Rifiutati: spegnere/riavviare il PC, cancellare, "
-                     "spostare o rinominare file, mandare messaggi. Con «attendi» "
+     "description": ("Prova qualsiasi comando come se l'utente l'avesse scritto in Lumi (mouse, "
+                     "finestre, programmi, file, messaggi). Rifiutati solo spegnere/riavviare "
+                     "il PC. Con «attendi» "
                      "(secondi, max 180) aspetta e restituisce le righe della risposta."),
      "op": "prova_comando", "props": {"testo": {"type": "string"},
                                       "attendi": {"type": "number"}}, "required": ["testo"]},

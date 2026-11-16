@@ -22,3 +22,5 @@ class Servizio:
     token_mese: int | None = None     # limite noto di token al mese
     passi: tuple = field(default_factory=tuple)   # come creare la chiave, per l'aiuto
     orchestratore: bool = True        # sa usare gli strumenti (lavori a più passi)
+    uso: str = ""                     # a cosa è più portato, in parole semplici (16/11)
+    tipo: str = "chiave"              # «chiave» (API) o «account» (ChatGPT col tuo piano)

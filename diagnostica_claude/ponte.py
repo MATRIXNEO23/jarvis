@@ -19,15 +19,10 @@ RIGHE = collections.deque(maxlen=400)       # (ora, ruolo, testo) dalla console 
 CONTA = [0]                                 # righe scritte da quando Lumi è aperta
 MAX_RICHIESTA = 64 * 1024
 
-# 16/11: l'utente sblocca le prove da Claude anche per mouse, finestre e programmi.
-# Restano rifiutate solo le azioni che non si possono annullare: spegnere o riavviare il PC,
-# cancellare/spostare/rinominare file, mandare messaggi a persone vere.
+# 16/11: l'utente sblocca le prove da Claude per tutte le funzioni di Lumi («per tutto»),
+# tranne spegnere o riavviare il PC. Nelle prove Claude usa file creati apposta.
 _VIETATI = re.compile(
-    r"\b(?:spegni\s+il\s+(?:pc|computer)|riavvia\s+il\s+(?:pc|computer)|arresta\s+il\s+sistema|"
-    r"elimina|cancella\s+(?:il|i|la|le|lo|gli)?\s*(?:file|cartell\w*|document\w*)|sposta|rinomina|"
-    r"svuota\s+il\s+cestino|formatta|"
-    r"(?:invia|manda|scrivi)\s+(?:un\s+|il\s+|questo\s+)?messaggi\w*|(?:invia|manda|rispondi)\s+a)\b",
-    re.I)
+    r"\b(?:spegni|riavvia|arresta|iberna|sospendi)\s+(?:il\s+|lo\s+)?(?:pc|computer|sistema)\b", re.I)
 
 
 def registra(role: str, text: str) -> None:
@@ -176,9 +171,8 @@ class Ponte:
             return {"ok": True}
         if op == "prova_comando":
             if not comando_permesso(text):
-                return {"ok": False, "errore": "comando non permesso da qui: spegnere/riavviare il "
-                                               "PC, cancellare/spostare/rinominare file o mandare "
-                                               "messaggi li fa solo l'utente"}
+                return {"ok": False, "errore": "comando non permesso da qui: spegnere o riavviare "
+                                               "il PC lo fa solo l'utente"}
             start = CONTA[0]
             self.run_ui(lambda: self.prova(text))
             wait = args.get("attendi", 0) if isinstance(args, dict) else 0
