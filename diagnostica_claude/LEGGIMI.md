@@ -16,6 +16,9 @@ ricordi (`lumi_ricordi`) e le chat con i simboli 🤖/📡 e gli ultimi scambi (
 In più: `lumi_prova_comando` con «attendi» aspetta e restituisce la risposta; `lumi_prompt`
 cattura il prossimo prompt di Gemma (sezioni e token); `lumi_online` (servizi, chiavi, quote);
 `lumi_telegram` (icona, colore, risposte automatiche).
+Dal 17/11 (052): `lumi_ricerca` (servizi di ricerca: spunta, chiave presente, pronto; mai la chiave) e
+`lumi_modelli` (i .gguf che «cambia modello» elenca e quello in uso). «cerca online …», «chiudi i
+risultati», «cambia modello» e il numero scelto si provano con `lumi_prova_comando`.
 Regola: ogni funzione nuova di Lumi porta con sé lo strumento per provarla da qui.
 Cosa NON può fare: Controllo PC (finestre, mouse, tasti), aprire o chiudere programmi,
 file, spegnere il PC. Questi comandi vengono rifiutati dal ponte.

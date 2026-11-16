@@ -83,6 +83,27 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
                 "avviso_quota": settings.get("avviso_quota"),
                 "conferma_token": settings.get("conferma_token"), "servizi": services}
 
+    def ricerca(args):
+        """Servizi di ricerca (052): spuntati, con chiave, collegati. Mai la chiave."""
+        import servizi_ricerca
+        settings = servizi_ricerca.carica_impostazioni()
+        keys = servizi_ricerca.chiavi()
+        pronti = {s.id for s in servizi_ricerca.pronti(settings, keys)}
+        return {"ok": True, "servizi": [
+            {"id": i, "nome": servizi_ricerca.PER_ID[i].nome, "spuntato": i in settings["attivi"],
+             "chiave": keys.presente(i), "ricerca_collegata": servizi_ricerca.PER_ID[i].adattatore is not None,
+             "pronto": i in pronti, "link_chiave": servizi_ricerca.PER_ID[i].chiavi}
+            for i in settings["ordine"]]}
+
+    def modelli(args):
+        """Modelli locali (.gguf) che «cambia modello» elencherebbe, e quello in uso."""
+        from local_model import scelta_modello
+        models = scelta_modello.elenca_modelli()
+        return {"ok": True, "in_uso": scelta_modello.modello_in_uso(),
+                "cartelle": [str(f) for f in scelta_modello.cartelle_modelli()],
+                "modelli": [{"numero": n, "nome": scelta_modello.nome_breve(m), "percorso": str(m)}
+                            for n, m in enumerate(models, 1)]}
+
     def telegram_(args):
         view = telegram()
         if view is None:
@@ -93,4 +114,5 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
                 "risposte_automatiche": bool(view.auto_var.get())}
 
     return {"impostazioni": impostazioni, "addon": addon, "ricordi": ricordi, "chat": chat,
-            "prompt": prompt, "online": online, "telegram": telegram_}
+            "prompt": prompt, "online": online, "telegram": telegram_,
+            "ricerca": ricerca, "modelli": modelli}
