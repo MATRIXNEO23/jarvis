@@ -205,10 +205,10 @@ jobs:
       - name: Upload test candidate (CI artifact, not published)
         uses: actions/upload-artifact@v4
         with:
-          name: lumi-050-prova-candidate
+          name: lumi-051-prova-candidate
           path: |
-            dist/Lumi-050-PROVA.zip
-            dist/Lumi-050-PROVA.json
+            dist/Lumi-051-PROVA.zip
+            dist/Lumi-051-PROVA.json
           if-no-files-found: error
 
       - name: Archive only unverified research candidate
