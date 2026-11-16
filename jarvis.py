@@ -2282,6 +2282,10 @@ def main() -> None:
             submit_gemma_voice(spoken)
             return
         orchestrator = __import__("orchestratore")
+        if (__import__("servizi_online").richiesta_codice(spoken)
+                and __import__("servizi_online").disponibili()):
+            submit_gemma_voice(spoken, route="online")     # codice: sempre servizi online (17/11)
+            return
         if (not orchestrator.SALTA.pop("gpt", False)
                 and __import__("servizi_online").disponibili()):
             # Orchestratore (15/11): con un servizio online pronto Lumi chiede prima

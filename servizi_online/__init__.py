@@ -91,6 +91,21 @@ def forza_online(text: str):
     return False, text
 
 
+_CODICE = re.compile(
+    r"\b(?:scrivi|scrivimi|scriv(?:ere|ete)|crea|creami|fai|fammi|genera|generami|sviluppa|"
+    r"programma|realizza|realizzami|preparami|prepara|codifica)\b"
+    r"(?:\s+(?:per\s+me|mi|un|uno|una|il|lo|la|del|dello|della|alcuni|qualche))*\s+"
+    r"(?:(?:piccol[oa]|breve|semplice|nuov[oa])\s+)?"
+    r"(?:script|codice|programm[ai]|funzione|classe|macro|bot|automazione|batch|snippet)\b",
+    re.IGNORECASE)
+
+
+def richiesta_codice(text: str) -> bool:
+    """Decisione 17/11: scrivere uno script o del codice va sempre ai servizi online, mai a
+    Gemma (troppo piccola e lenta per il codice)."""
+    return bool(_CODICE.search(text or ""))
+
+
 def domanda_lunga(text: str, words: int = 25) -> bool:
     return len((text or "").split()) >= words
 

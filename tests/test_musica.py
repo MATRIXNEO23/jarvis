@@ -116,6 +116,45 @@ class ServiceTests(unittest.TestCase):
             saved = json.loads((Path(folder) / "data" / "config.json").read_text(encoding="utf-8"))
             self.assertEqual(saved["folder"], str(music))
 
+    def test_prepara_returns_at_once_while_scan_runs_in_background(self):
+        import threading
+        from unittest import mock
+        started, release = threading.Event(), threading.Event()
+
+        def slow_scan(folders):
+            started.set()
+            release.wait(5)
+            return ["brano"]
+        with tempfile.TemporaryDirectory() as folder:
+            service, _, _ = self.make(folder)
+            service.settings["folders"] = [folder]
+            with mock.patch.object(library, "scan_all", slow_scan):
+                begun = time.monotonic()
+                service.prepara()
+                self.assertLess(time.monotonic() - begun, 1.0)   # non attende la scansione
+                self.assertTrue(started.wait(2))
+                self.assertIsNone(service._tracks)               # scansione ancora in corso
+                release.set()
+                for thread in threading.enumerate():
+                    if thread.name == "lumi-musica-scan":
+                        thread.join(5)
+                self.assertEqual(service._tracks, ["brano"])
+
+    def test_prepara_survives_scan_oserror_and_skips_without_folders(self):
+        import threading
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as folder:
+            service, _, _ = self.make(folder)
+            with mock.patch.object(library, "scan_all", side_effect=AssertionError("non deve partire")):
+                service.settings["folders"], service.settings["folder"] = [], ""
+                service.prepara()                                # nessuna cartella: niente thread
+            service.settings["folders"] = [folder]
+            with mock.patch.object(library, "scan_all", side_effect=OSError("disco")):
+                service.prepara()                                # l'errore non arriva al chiamante
+                for thread in threading.enumerate():
+                    if thread.name == "lumi-musica-scan":
+                        thread.join(5)
+
     def test_missing_track_opens_youtube_and_controls_use_media_keys(self):
         with tempfile.TemporaryDirectory() as folder:
             service, opened, keys = self.make(folder)

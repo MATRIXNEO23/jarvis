@@ -332,6 +332,16 @@ def installa(d):
         # Passo 8: servizi online (forzati con «ragiona online», sempre, o proposti).
         asked_online = __import__("servizi_online").forza_online(spoken)[0]
         route, spoken = __import__("servizi_online").percorso(spoken, route)
+        if __import__("servizi_online").richiesta_codice(spoken):
+            # Decisione 17/11: script e codice vanno sempre ai servizi online, mai a Gemma.
+            if __import__("servizi_online").disponibili():
+                route = "online"
+            else:
+                text = ("Per scrivere codice serve un servizio online, e adesso nessuno è pronto. "
+                        "Attivalo in Impostazioni, Servizi online.")
+                d.write_line("ONLINE > " + text)
+                d.speak_result(text)
+                return True
         if asked_online and route == "locale":
             # Prova 15/11: «ragiona online» senza servizi pronti rispondeva Gemma in silenzio.
             d.write_line("ONLINE > Nessun servizio online pronto (spunta e chiave in ONLINE ▾): "
@@ -481,8 +491,11 @@ def installa(d):
                         d.gemma_trial_queue.put(("online_ok", (spoken, name, answer), voice_epoch))
                         return
                     note = "Servizi online non disponibili: " + "; ".join(answer)[:300]
-                    if not local_ok:
-                        d.gemma_trial_queue.put(("online_fail", note, voice_epoch))
+                    if not local_ok or __import__("servizi_online").richiesta_codice(spoken):
+                        # Codice: mai Gemma (decisione 17/11); messaggio breve e chiaro.
+                        d.gemma_trial_queue.put(("online_fail", note + (
+                            ". Per il codice serve l'online: riprova tra poco." if local_ok else ""),
+                            voice_epoch))
                         return
                     d.gemma_trial_queue.put(("online_note", note + ". Rispondo col modello locale.",
                                              voice_epoch))
