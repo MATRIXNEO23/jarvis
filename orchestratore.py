@@ -19,6 +19,10 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import subprocess
+import tempfile
+import time
 import threading
 from pathlib import Path
 
@@ -219,10 +223,27 @@ class Strumenti:
         safe = dentro(target, self.folders)
         if not safe and not self.ask("Posso scrivere il file %s fuori dalle cartelle sicure?" % path):
             return "Permesso negato."
-        if target.exists() and not safe and not self.ask("%s esiste già: lo sovrascrivo?" % target.name):
-            return "Permesso negato."
+        # FIX-049-B (16/11): una cartella sicura dà accesso, non il permesso di distruggere.
+        # File esistente: sempre una domanda, copia di riserva, scrittura atomica.
+        if target.is_symlink():
+            return "Permesso negato: il percorso è un collegamento, non un file vero."
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(text, encoding="utf-8")
+        if target.exists():
+            if not target.is_file():
+                return "Permesso negato: %s non è un file." % target
+            if not self.ask("%s esiste già: lo sostituisco? Ne tengo una copia di riserva." % target.name):
+                return "Permesso negato: il file esistente non è stato toccato."
+            backup = target.with_name("%s.lumi-copia-%s" % (target.name, time.strftime("%Y%m%d-%H%M%S")))
+            shutil.copy2(target, backup)
+            temp = target.with_name(".%s.lumi-tmp" % target.name)
+            temp.write_text(text, encoding="utf-8")
+            os.replace(temp, target)
+            return "Sostituito: %s (%d caratteri). Copia del vecchio: %s." % (target, len(text), backup.name)
+        try:
+            with open(target, "x", encoding="utf-8") as handle:     # mai sopra un file nato nel frattempo
+                handle.write(text)
+        except FileExistsError:
+            return "Il file %s è comparso adesso: riprova, ti chiederò se sostituirlo." % target.name
         return "Scritto: %s (%d caratteri)." % (target, len(text))
 
     def python(self, code: str) -> str:
@@ -237,24 +258,42 @@ class Strumenti:
         folder = Path(self.folders[0])
         if not folder.is_dir():
             return "La cartella sicura non esiste più: %s" % folder
-        self.notify("Script Python da eseguire in %s:\n%s" % (folder, code[:3000]))
-        if not self.ask("Eseguo lo script Python che vedi in chat (al massimo %d secondi)?" % self.timeout):
-            return "Permesso negato."
-        script = folder / "lumi_script.py"
-        script.write_text(code, encoding="utf-8")
-        import subprocess
+        # FIX-049-A (16/11): lo script si mostra TUTTO, con un'impronta; si esegue esattamente
+        # quello; file con nome nuovo (mai sopra un file dell'utente); al tempo massimo si chiude
+        # anche ciò che lo script ha avviato. Non è una gabbia del sistema: lo dice la chat.
+        import hashlib
         import sys
-        python = sys.executable
-        if python.lower().endswith("pythonw.exe"):
-            python = python[:-len("pythonw.exe")] + "python.exe"
+        fingerprint = hashlib.sha256(code.encode("utf-8")).hexdigest()[:12]
+        self.notify("Script Python da eseguire in %s (%d righe, impronta %s; non è isolato dal "
+                    "sistema, controllalo):\n%s" % (folder, code.count("\n") + 1, fingerprint, code))
+        if not self.ask("Eseguo lo script Python che vedi in chat (impronta %s, al massimo %d "
+                        "secondi)?" % (fingerprint, self.timeout)):
+            return "Permesso negato."
+        handle, name = tempfile.mkstemp(prefix="lumi_script_", suffix=".py", dir=str(folder))
+        script = Path(name)
         try:
-            done = subprocess.run([python, "-I", str(script)], cwd=str(folder), capture_output=True,
-                                  timeout=self.timeout, text=True, encoding="utf-8", errors="replace",
-                                  creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-        except subprocess.TimeoutExpired:
-            return "Fermato: superato il tempo massimo di %d secondi." % self.timeout
-        output = (done.stdout or "") + (("\n[errori]\n" + done.stderr) if done.stderr else "")
-        return ("Uscita %d.\n" % done.returncode + output)[:MAX_LETTURA]
+            with os.fdopen(handle, "w", encoding="utf-8") as stream:
+                stream.write(code)
+            python = sys.executable
+            if python.lower().endswith("pythonw.exe"):
+                python = python[:-len("pythonw.exe")] + "python.exe"
+            flags = (getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                     | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+            process = subprocess.Popen([python, "-I", str(script)], cwd=str(folder),
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                       encoding="utf-8", errors="replace", creationflags=flags)
+            try:
+                stdout, stderr = process.communicate(timeout=self.timeout)
+            except subprocess.TimeoutExpired:
+                chiudi_albero(process)
+                return "Fermato: superato il tempo massimo di %d secondi (chiusi anche i processi avviati)." % self.timeout
+        finally:
+            try:
+                script.unlink()
+            except OSError:
+                pass
+        output = (stdout or "") + (("\n[errori]\n" + stderr) if stderr else "")
+        return ("Uscita %d.\n" % process.returncode + output)[:MAX_LETTURA]
 
     def comando(self, text: str) -> str:
         text = " ".join(text.split())[:200]
@@ -262,8 +301,10 @@ class Strumenti:
             return "Comando vuoto."
         if not self.ask("Posso eseguire il comando «%s»?" % text):
             return "Permesso negato."
-        self.run_command(text)
-        return "Comando eseguito da Lumi; l'esito è nella chat dell'utente."
+        # FIX-049-G (16/11): mai «eseguito» senza prova. run_command restituisce le righe che
+        # Lumi ha scritto dopo il comando (o None): da quelle un esito onesto.
+        lines = self.run_command(text)
+        return esito_comando(lines)
 
 
 _PERICOLOSI = (
@@ -275,6 +316,49 @@ _PERICOLOSI = (
     (r"\bshutdown\b|\bformat\s+[a-z]:", "spegnimento o formattazione"),
     (r"\b__import__\s*\(|\bimportlib\b|\bexec\s*\(|\beval\s*\(|\bcompile\s*\(", "codice nascosto"),
 )
+
+
+def chiudi_albero(process) -> None:
+    """Chiude il processo e quelli che ha avviato (Windows: taskkill /T)."""
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/T", "/F", "/PID", str(process.pid)], capture_output=True,
+                           timeout=10, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        else:
+            process.kill()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    try:
+        process.kill()
+        process.wait(timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+
+def esegui_e_leggi(start, seconds: float = 12.0) -> list:
+    """Avvia il comando (sul thread di Tk) e aspetta le righe che Lumi scrive in risposta."""
+    ponte = __import__("diagnostica_claude.ponte", fromlist=["CONTA"])
+    begin = ponte.CONTA[0]
+    start()
+    return ponte.aspetta_risposta(begin, seconds, quiet=1.5)
+
+
+def esito_comando(lines) -> str:
+    """Esito per il modello: riuscito, fallito, in attesa o non verificabile."""
+    if not lines:
+        return ("Esito: NON VERIFICABILE. Il comando è stato passato a Lumi ma non è arrivata una "
+                "risposta: non dire all'utente che è fatto.")
+    text = "\n".join(str(line) for line in lines)[-1500:]
+    low = text.casefold()
+    if "[failed]" in low or "errore" in low or "non riuscit" in low or "non trovat" in low:
+        state = "FALLITO"
+    elif "?" in text.splitlines()[-1] or "[pending]" in low or "conferm" in low:
+        state = "IN ATTESA (Lumi chiede qualcosa all'utente)"
+    elif "[completed]" in low:
+        state = "RIUSCITO secondo Lumi"
+    else:
+        state = "INCERTO (leggi la risposta di Lumi)"
+    return "Esito: %s.\nRisposta di Lumi:\n%s" % (state, text)
 
 
 def codice_pericoloso(code: str) -> str:

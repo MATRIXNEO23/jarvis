@@ -59,6 +59,29 @@ class StrumentiTest(unittest.TestCase):
         self.assertEqual(self.commands, ["apri blocco note"])
         self.assertEqual(len(self.questions), 5)
 
+    def test_file_esistente_mai_sovrascritto_senza_chiedere(self):
+        target = self.safe / "preventivo.txt"
+        before = target.read_bytes()
+        self.answer = False
+        result = self.tools.esegui("scrivi_file", {"percorso": str(target), "testo": "nuovo"})
+        self.assertIn("non è stato toccato", result)
+        self.assertEqual(target.read_bytes(), before)            # anche dentro la cartella sicura
+        self.assertIn("esiste già", self.questions[-1])
+        self.answer = True
+        result = self.tools.esegui("scrivi_file", {"percorso": str(target), "testo": "nuovo"})
+        self.assertIn("Sostituito", result)
+        self.assertEqual(target.read_text(encoding="utf-8"), "nuovo")
+        copies = list(self.safe.glob("preventivo.txt.lumi-copia-*"))
+        self.assertEqual(len(copies), 1)
+        self.assertEqual(copies[0].read_bytes(), before)
+
+    def test_esito_dei_comandi_onesto(self):
+        self.assertIn("NON VERIFICABILE", orch.esito_comando(None))
+        self.assertIn("RIUSCITO", orch.esito_comando(["azione: [completed] Aperto Blocco note"]))
+        self.assertIn("FALLITO", orch.esito_comando(["comando: ERRORE > programma non trovato"]))
+        self.assertIn("IN ATTESA", orch.esito_comando(["jarvis: Chiudo Word?"]))
+        self.assertIn("INCERTO", orch.esito_comando(["comando: Ok."]))
+
     def test_niente_strumento_per_cancellare(self):
         names = {t["function"]["name"] for t in orch.STRUMENTI}
         self.assertFalse(any("cancell" in n or "elimin" in n for n in names))

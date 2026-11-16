@@ -19,12 +19,15 @@ RIGHE = collections.deque(maxlen=400)       # (ora, ruolo, testo) dalla console 
 CONTA = [0]                                 # righe scritte da quando Lumi è aperta
 MAX_RICHIESTA = 64 * 1024
 
-# Parole che toccano il PC fuori da Lumi: rifiutate per «prova_comando».
+# 16/11: l'utente sblocca le prove da Claude anche per mouse, finestre e programmi.
+# Restano rifiutate solo le azioni che non si possono annullare: spegnere o riavviare il PC,
+# cancellare/spostare/rinominare file, mandare messaggi a persone vere.
 _VIETATI = re.compile(
-    r"\b(?:apri|avvia|lancia|chiudi|termina|uccidi|spegni|riavvia\s+il\s+(?:pc|computer)|"
-    r"elimina|cancella|sposta|rinomina|copia|scrivi|digita|premi|clicca|clic|doppio\s+clic|"
-    r"mouse|finestr\w*|griglia|numeri|scorri|ingrandisci|minimizza|riduci|passa\s+a|"
-    r"invia|manda|telegram|file|cartell\w*|download|programm\w*)\b", re.I)
+    r"\b(?:spegni\s+il\s+(?:pc|computer)|riavvia\s+il\s+(?:pc|computer)|arresta\s+il\s+sistema|"
+    r"elimina|cancella\s+(?:il|i|la|le|lo|gli)?\s*(?:file|cartell\w*|document\w*)|sposta|rinomina|"
+    r"svuota\s+il\s+cestino|formatta|"
+    r"(?:invia|manda|scrivi)\s+(?:un\s+|il\s+|questo\s+)?messaggi\w*|(?:invia|manda|rispondi)\s+a)\b",
+    re.I)
 
 
 def registra(role: str, text: str) -> None:
@@ -180,8 +183,9 @@ class Ponte:
             return {"ok": True}
         if op == "prova_comando":
             if not comando_permesso(text):
-                return {"ok": False, "errore": "comando non permesso: solo comandi dentro Lumi "
-                                               "(niente Controllo PC, programmi, file)"}
+                return {"ok": False, "errore": "comando non permesso da qui: spegnere/riavviare il "
+                                               "PC, cancellare/spostare/rinominare file o mandare "
+                                               "messaggi li fa solo l'utente"}
             start = CONTA[0]
             self.run_ui(lambda: self.prova(text))
             wait = args.get("attendi", 0) if isinstance(args, dict) else 0

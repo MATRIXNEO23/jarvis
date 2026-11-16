@@ -37,6 +37,17 @@ class ArchivioTest(Base):
         self.assertEqual(self.brain.ricordi("pavilion"), [])
         self.assertFalse(self.brain.cancella_ricordo(a))
 
+    def test_ricordi_separati_per_progetto(self):
+        self.brain.salva_ricordo("Lumi: menu a cascata deciso", categoria="progetti", project_id=7)
+        self.brain.salva_ricordo("Casa: menu della cena deciso", categoria="progetti", project_id=9)
+        self.brain.salva_ricordo("Alberto preferisce il menu corto", categoria="su_di_te")
+        general = [r["breve"] for r in self.brain.ricordi("menu", progetto=None)]
+        self.assertEqual(general, ["Alberto preferisce il menu corto"])
+        lumi = [r["breve"] for r in self.brain.ricordi("menu", progetto=7)]
+        self.assertEqual(lumi[0], "Lumi: menu a cascata deciso")         # prima il progetto
+        self.assertNotIn("Casa: menu della cena deciso", lumi)
+        self.assertEqual(len(self.brain.ricordi("menu")), 3)               # pagina: tutti
+
     def test_gemma_riceve_solo_le_frasi_brevi(self):
         self.brain.salva_ricordo("Alberto usa il Pavilion", "x" * 900, categoria="su_di_te")
         raw = self.brain.prompt_context("che pc usa alberto con il pavilion", budget=530)

@@ -36,6 +36,15 @@ ULTIMO = {"id": None, "breve": "", "quando": 0.0}
 CERVELLO = {"get": lambda: None}
 
 
+def progetto():
+    """Progetto aperto adesso (quello della chat selezionata); None = generale."""
+    try:
+        elenco = __import__("chat_elenco")._CURRENT["elenco"]
+        return elenco._scope() if elenco is not None else None
+    except Exception:
+        return None
+
+
 def cervello():
     try:
         return CERVELLO["get"]()
@@ -67,6 +76,7 @@ def salva(brain, items, *, fonte: str, project_id=None, clock=time.monotonic) ->
     saved = []
     if brain is None:
         return saved
+    project_id = project_id if project_id is not None else progetto()
     for category, short, full in items:
         try:
             ident = brain.salva_ricordo(short, full, categoria=category, fonte=fonte,
@@ -120,7 +130,7 @@ def per_online(brain, question: str, limit: int = 6, budget: int = 2500) -> str:
     if brain is None or not str(question or "").strip():
         return ""
     try:
-        rows = brain.ricordi(question, limit=limit)
+        rows = brain.ricordi(question, limit=limit, progetto=progetto())
     except Exception:
         return ""
     lines, size = [], 0

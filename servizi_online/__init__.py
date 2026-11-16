@@ -224,12 +224,12 @@ def chiedi(messages: list[dict], *, settings: dict | None = None, keys: Chiavi |
         model = settings["modelli"].get(service_id, service.modello)
         try:
             data = post(service.base_url + "/chat/completions", key,
-                        {"model": model, "messages": messages, "max_tokens": 800}, timeout)
+                        {"model": model, "messages": messages, "max_tokens": MAX_RISPOSTA}, timeout)
             text = data["choices"][0]["message"]["content"]
             if not isinstance(text, str) or not text.strip():
                 raise ServizioErrore("vuota")
             _conta(service_id, data, settings)
-            return service.nome, text.strip()
+            return service.nome, text.strip() + _tagliata(data)
         except Exception as exc:     # ogni guasto: si passa al servizio successivo
             reasons.append(service.nome + ": " + _motivo(exc))
     return None, reasons
@@ -265,7 +265,7 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
             reasons.append(service.nome + ": manca la chiave")
             continue
         body = {"model": settings["modelli"].get(service_id, service.modello),
-                "messages": messages, "max_tokens": 900}
+                "messages": messages, "max_tokens": MAX_RISPOSTA}
         if tools:
             body["tools"] = tools
         try:
@@ -278,6 +278,21 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
         except Exception as exc:
             reasons.append(service.nome + ": " + _motivo(exc))
     return None, None, reasons
+
+
+# Prova utente 16/11: con 800-900 token le risposte lunghe arrivavano tagliate. Il limite
+# serve solo a non superare la quota: si paga quello che il modello scrive davvero.
+MAX_RISPOSTA = 4000
+
+
+def _tagliata(data) -> str:
+    """Avviso in fondo se il servizio ha fermato la risposta per lunghezza."""
+    try:
+        reason = data["choices"][0].get("finish_reason")
+    except (KeyError, IndexError, TypeError, AttributeError):
+        return ""
+    return ("\n\n(Risposta tagliata perché troppo lunga: di' «ragiona online: continua».)"
+            if reason == "length" else "")
 
 
 def disponibili(settings: dict | None = None, keys: Chiavi | None = None) -> bool:

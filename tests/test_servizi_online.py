@@ -193,5 +193,14 @@ class SezioneTest(BaseTest):
             root.destroy()
 
 
+class RispostaTagliataTest(unittest.TestCase):
+    def test_avviso_se_tagliata_e_limite_alto(self):
+        import servizi_online
+        self.assertGreaterEqual(servizi_online.MAX_RISPOSTA, 4000)
+        self.assertIn("tagliata", servizi_online._tagliata({"choices": [{"finish_reason": "length"}]}))
+        self.assertEqual(servizi_online._tagliata({"choices": [{"finish_reason": "stop"}]}), "")
+        self.assertEqual(servizi_online._tagliata({}), "")
+
+
 if __name__ == "__main__":
     unittest.main()

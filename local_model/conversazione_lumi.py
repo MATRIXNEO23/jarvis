@@ -469,8 +469,8 @@ def installa(d):
                             lambda fn: d.root.after(0, fn),
                             lambda question, reply: orch.chiedi_ui(
                                 question, reply, d.write_line, d.speak_result)),
-                        run_command=lambda text: d.root.after(
-                            0, lambda: d.submit_local(message_override=text)),
+                        run_command=lambda text: __import__("orchestratore").esegui_e_leggi(
+                            lambda: d.root.after(0, lambda: d.submit_local(message_override=text))),
                         notify=lambda text: d.gemma_trial_queue.put(("online_note", text, voice_epoch)))
                     name, answer = orch.rispondi(
                         spoken, tools=tools,

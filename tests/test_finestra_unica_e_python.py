@@ -54,6 +54,18 @@ class PythonTest(unittest.TestCase):
         self.assertIn("print(2 + 3)", self.notes[0])               # lo script si vede prima
         self.assertEqual(len(self.asked), 1)
 
+    def test_script_lungo_mostrato_tutto_e_file_dell_utente_intatto(self):
+        mine = self.safe / "lumi_script.py"
+        mine.write_text("# mio", encoding="utf-8")
+        code = "x = 1\n" + "\n".join("# riga %d" % n for n in range(600)) + "\nprint('fine')"
+        self.assertGreater(len(code), 3000)
+        result = self.tools.esegui("esegui_python", {"codice": code})
+        self.assertIn("fine", result)
+        self.assertIn("print('fine')", self.notes[0])              # anche la coda si vede
+        self.assertIn("impronta", self.notes[0])
+        self.assertEqual(mine.read_text(encoding="utf-8"), "# mio")
+        self.assertEqual(list(self.safe.glob("lumi_script_*.py")), [])   # file temporaneo tolto
+
     def test_no_e_codice_bloccato(self):
         self.answer = False
         self.assertEqual(self.tools.esegui("esegui_python", {"codice": "print(1)"}), "Permesso negato.")

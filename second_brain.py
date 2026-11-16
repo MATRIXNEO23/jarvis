@@ -297,7 +297,8 @@ class SecondBrain:
         candidate = {"related": [], "recent": []}
         # Ricordi brevi pertinenti (al massimo 3) per primi: a Gemma solo la versione corta.
         try:
-            facts = [r["breve"] for r in self.ricordi(query, limit=3)] if query.strip() else []
+            facts = ([r["breve"] for r in self.ricordi(
+                query, limit=3, progetto=__import__("ricordi").progetto())] if query.strip() else [])
         except (sqlite3.Error, ValueError):
             facts = []
         for fact in facts:
@@ -346,7 +347,7 @@ class SecondBrain:
             rowid = db.execute(
                 "INSERT INTO ricordi(time_utc,categoria,breve,completo,fonte,project_id)"
                 " VALUES(?,?,?,?,?,?)", (_now(), categoria, breve, completo, fonte,
-                                         project_id)).lastrowid
+                                         None if project_id is None else str(project_id))).lastrowid
             if self._fts(db):
                 db.execute("INSERT INTO ricordi_fts(rowid,breve,completo) VALUES(?,?,?)",
                            (rowid, breve, completo))
@@ -363,17 +364,30 @@ class SecondBrain:
             db.execute("DELETE FROM ricordi WHERE id=?", (int(ident),))
         return True
 
-    def ricordi(self, query: str = "", *, categoria: str | None = None, limit: int = 200):
-        """[{id, quando, categoria, breve, completo, fonte}] pertinenti (o tutti, recenti prima)."""
+    TUTTI = object()      # ricordi di tutti i progetti (pagina Ricordi, diagnostica)
+
+    def ricordi(self, query: str = "", *, categoria: str | None = None, limit: int = 200,
+                progetto=TUTTI):
+        """[{id, quando, categoria, breve, completo, fonte, progetto}] pertinenti.
+
+        progetto (FIX-049-D, 16/11): TUTTI = nessun filtro; None = solo i ricordi generali;
+        un id = i ricordi di quel progetto più quelli generali, quelli del progetto prima."""
         limit = min(max(int(limit), 1), 1000)
         words = [w for w in re.findall(r"\w+", str(query or "").casefold()) if len(w) > 2][:8]
         with self._db() as db:
-            sql = "SELECT id,time_utc,categoria,breve,completo,fonte FROM ricordi"
+            sql = "SELECT id,time_utc,categoria,breve,completo,fonte,project_id FROM ricordi"
             where, args = [], []
+            if progetto is None:
+                where.append("project_id IS NULL")
+            elif progetto is not SecondBrain.TUTTI:
+                where.append("(project_id IS NULL OR project_id=?)")
+                args.append(str(progetto))
             if categoria:
                 where.append("categoria=?")
                 args.append(categoria)
             order = " ORDER BY id DESC"
+            if progetto not in (None, SecondBrain.TUTTI):
+                order = " ORDER BY (project_id IS NOT NULL) DESC, id DESC"
             if words and self._fts(db):
                 # Prefisso: «progett» trova progetto e progetti (l'italiano non ha radici in FTS5).
                 match = " OR ".join('"%s"*' % w.replace('"', "") for w in words)
@@ -386,10 +400,12 @@ class SecondBrain:
                 sql += " WHERE " + " AND ".join(where)
             rows = db.execute(sql + order + " LIMIT ?", (*args, limit)).fetchall()
         result = [{"id": r[0], "quando": r[1], "categoria": r[2], "breve": r[3],
-                   "completo": r[4], "fonte": r[5]} for r in rows]
-        if words:                         # i più pertinenti prima (parole in comune)
-            result.sort(key=lambda item: -len(set(words) & _tokens(
-                item["breve"] + " " + item["completo"])))
+                   "completo": r[4], "fonte": r[5], "progetto": r[6]} for r in rows]
+        own = progetto not in (None, SecondBrain.TUTTI)
+        if words or own:                  # prima il progetto aperto, poi i più pertinenti
+            result.sort(key=lambda item: (
+                -(own and item["progetto"] == str(progetto)),
+                -len(set(words) & _tokens(item["breve"] + " " + item["completo"]))))
         return result
 
     def stats(self) -> tuple[int, int]:

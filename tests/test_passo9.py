@@ -132,10 +132,13 @@ class DiagnosticaTest(unittest.TestCase):
         self.folder.cleanup()
 
     def test_comandi_permessi(self):
-        for text in ("che ore sono", "imposta un timer di 5 minuti", "chi sei"):
+        # 16/11: mouse, finestre e programmi si possono provare; ciò che non si annulla no.
+        for text in ("che ore sono", "imposta un timer di 5 minuti", "chi sei", "apri chrome",
+                     "clicca su Invia", "mostra i numeri", "minimizza", "cancellalo",
+                     "cerca file preventivo"):
             self.assertTrue(ponte.comando_permesso(text), text)
-        for text in ("apri chrome", "clicca su Invia", "mostra i numeri", "elimina il file",
-                     "spegni il pc", "minimizza", ""):
+        for text in ("elimina il file", "spegni il pc", "riavvia il computer", "sposta la cartella",
+                     "cancella il file prova", "manda un messaggio a Marco", "invia a Marco ciao", ""):
             self.assertFalse(ponte.comando_permesso(text), text)
 
     def test_ponte_e_server_mcp_dal_vivo(self):
@@ -145,7 +148,7 @@ class DiagnosticaTest(unittest.TestCase):
         self.assertEqual(ask("stato", {})["stato"], {"stato": "attesa"})
         self.assertIn("qualcosa non va", ask("errori", {})["righe"][-1])
         self.assertEqual(ask("log_motore", {"righe": 2})["righe"], ["b", "c"])
-        self.assertFalse(ask("prova_comando", {"testo": "apri chrome"})["ok"])
+        self.assertFalse(ask("prova_comando", {"testo": "spegni il pc"})["ok"])
         self.assertTrue(ask("prova_comando", {"testo": "che ore sono"})["ok"])
         self.assertTrue(ask("scrivi_in_chat", {"testo": "ciao"})["ok"])
         self.assertEqual(self.ui, ["prova:che ore sono", "ciao"])
