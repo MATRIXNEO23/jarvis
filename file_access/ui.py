@@ -272,6 +272,22 @@ def finish_result_progress(parent,message):
         view.window.withdraw()
 
 
+def chiudi_risultati(parent):
+    """«Chiudi i risultati»: chiude solo questa finestra (mai Lumi). True se era visibile."""
+    view=getattr(parent,'_jarvis_file_results',None)
+    if view is None:
+        return False
+    parent._jarvis_file_results=None
+    try:
+        if not view.window.winfo_exists():
+            return False
+        visible=view.window.state()!='withdrawn'
+        view.window.destroy()
+        return visible
+    except tk.TclError:
+        return False
+
+
 def sync_result_selection(parent,service):
     view=getattr(parent,'_jarvis_file_results',None)
     if view is None or not view.window.winfo_exists():

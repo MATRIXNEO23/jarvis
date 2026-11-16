@@ -39,6 +39,16 @@ _PATTERNS = (
     ("model_restart", re.compile(
         r"^(?:riavvia|ricarica)\s+(?:il\s+)?(?:modello(?:\s+locale)?|cervello\s+locale|motore)"
         + _END, re.I)),
+    # 052 (decisione 17/11): «chiudi i risultati» è locale e immediato, mai a Gemma/GPT.
+    ("close_results", re.compile(
+        r"^(?:chiudi|togli|nascondi|rimuovi)\s+(?:(?:la\s+)?finestra\s+(?:dei\s+|di\s+)?|"
+        r"(?:l'\s*|il\s+)?elenco\s+(?:dei\s+)?|(?:i|gli)\s+)?risultati" + _END, re.I)),
+    ("close_results", re.compile(r"^(?:chiudi|togli|nascondi)\s+(?:l'\s*|il\s+)?elenco" + _END, re.I)),
+    # 052: «cambia modello» → elenco numerato dei .gguf, poi il numero (risposte.expect_choice).
+    ("model_choose", re.compile(
+        r"^(?:(?:cambia|cambiare|scegli|scegliere|seleziona|sostituisci)\s+(?:il\s+)?modello"
+        r"(?:\s+locale)?|(?:elenca|elencami|mostra|mostrami)\s+(?:i\s+)?modelli(?:\s+locali)?|"
+        r"quali\s+modelli\s+(?:ho|hai|ci\s+sono))" + _END, re.I)),
     ("tutorial_skip", re.compile(r"^(?:salta(?:\s+il)?\s+passo|passo\s+successivo)" + _END, re.I)),
     ("tutorial_stop", re.compile(r"^(?:esci\s+dal\s+tutorial|basta\s+tutorial|chiudi\s+il\s+tutorial)"
                                  + _END, re.I)),
@@ -81,6 +91,10 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     if actions is None:
         return False
     from frasi_lumi import say
+    import risposte
+    # Scelta numerata in corso («cambia modello»): «2», «il secondo», «no».
+    if risposte.answer_choice(spoken):
+        return True
     pending = _STATE["pending"]
     if pending is not None:
         _STATE["pending"] = None

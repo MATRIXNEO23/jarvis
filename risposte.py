@@ -108,8 +108,61 @@ def numbers_done() -> None:
     _STATE["numbers_until"] = 0.0
 
 
+# --- scelta numerata (es. «cambia modello»): «1», «uno», «il secondo» senza «Lumi» -----------
+CHOICE_CANCEL = {"no", "annulla", "lascia stare", "no grazie", "non farlo", "nessuno"}
+_STATE["choice"] = None          # (quanti, azione(n), azione se «no», scadenza)
+
+
+def expect_choice(count: int, on_choice, on_cancel=None, seconds: float = 60.0,
+                  speech_text: str = "") -> None:
+    """Lumi ha proposto un elenco numerato (1..count): per `seconds` dopo che ha finito di
+    parlare vale il numero detto o scritto, anche senza «Lumi»; «no»/«annulla» lascia stare."""
+    speaking = min(25.0, 0.075 * len(speech_text or "")) if speech_text else 0.0
+    _STATE["choice"] = (max(1, min(9, int(count))), on_choice, on_cancel,
+                        time.monotonic() + speaking + seconds)
+
+
+def choice_waiting() -> bool:
+    choice = _STATE["choice"]
+    return choice is not None and time.monotonic() < choice[3]
+
+
+def choice_number(text: str):
+    """Il numero scelto («il secondo», «2», «due») se c'è una scelta in attesa e rientra
+    nell'elenco; altrimenti None."""
+    if not choice_waiting():
+        return None
+    number = number_of(text)
+    return number if number is not None and number <= _STATE["choice"][0] else None
+
+
+def answer_choice(text: str) -> bool:
+    """True se `text` risponde alla scelta in attesa (numero o «no»): esegue e la chiude."""
+    if not choice_waiting():
+        _STATE["choice"] = None
+        return False
+    number = choice_number(text)
+    _count, on_choice, on_cancel, _until = _STATE["choice"]
+    # «stop», «niente»… restano comandi: per lasciar stare servono parole inequivocabili.
+    cancel = on_cancel is not None and _clean(text) in CHOICE_CANCEL
+    if number is None and not cancel:
+        return False
+    _STATE["choice"] = None
+    if number is not None:
+        on_choice(number)
+    elif on_cancel is not None:
+        on_cancel()
+    return True
+
+
+def choice_done() -> None:
+    _STATE["choice"] = None
+
+
 def grammar() -> list:
     """Parole ammesse dal riconoscitore nella finestra attiva (risposta o griglia)."""
+    if choice_waiting():
+        return GRAMMAR + sorted({w for ws in NUMBERS.values() for w in ws if not w.isdigit()}) + ["il"]
     if waiting():
         return GRAMMAR
     words = sorted({w for ws in NUMBERS.values() for w in ws if not w.isdigit()})

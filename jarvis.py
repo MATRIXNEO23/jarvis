@@ -1484,6 +1484,7 @@ def main() -> None:
             message=("Vuoi che "+("dimentichi" if intent.kind=="remove" else "ricordi")+
                      " la preferenza «"+__import__("preference_voice").descrivi(
                          intent.key,intent.value)+"»? Di' sì o no.")
+            __import__("risposte").expect_answer(speech_text=message)
         write_line("LUMI > "+message)
         speak_result(message)
         return True
@@ -3890,12 +3891,19 @@ def main() -> None:
                         result=replace(result,message=listing['summary'])
                         try:
                             from file_access.ui import show_results
+                            open_result=lambda number,token:submit_local(
+                                message_override='Apri risultato '+str(number),
+                                source_utterance='Risultato scelto nella finestra file',
+                                file_call=('select',{'target':str(number),'selection_id':token,'open':True}))
                             show_results(root,listing,
-                                on_open=lambda number,token:submit_local(
-                                    message_override='Apri risultato '+str(number),
-                                    source_utterance='Risultato scelto nella finestra file',
-                                    file_call=('select',{'target':str(number),'selection_id':token,'open':True})),
+                                on_open=open_result,
                                 on_select=lambda number,token,hwnd:addon_manager.file_service.mark_view_selection(number,token,hwnd))
+                            if 1<=len(listing['items'])<=9:
+                                # 052: «il 2», «due», «il secondo» valgono anche senza «Lumi».
+                                __import__("risposte").expect_choice(
+                                    len(listing['items']),
+                                    lambda number,token=listing['token']:open_result(number,token),
+                                    seconds=45.0)
                         except (ImportError,OSError,ValueError,tk.TclError) as exc:
                             write_line("ACCESSO FILE > Finestra risultati non disponibile: "+str(exc)[:140]+
                                        ". Reinstalla file_access/ui.py dal pacchetto completo.")
@@ -4816,6 +4824,71 @@ def main() -> None:
         write_line("LUMI > " + __import__("frasi_lumi").say("fermo"))
         return True
 
+    def lumi_close_results() -> None:
+        """«chiudi i risultati»: gestore locale, chiude solo la finestra dei risultati."""
+        def work():
+            from file_access.ui import chiudi_risultati
+            try:
+                closed = chiudi_risultati(root)
+            except tk.TclError:
+                closed = False
+            text = ("Finestra dei risultati chiusa." if closed
+                    else "Non c'è nessuna finestra dei risultati aperta.")
+            write_line("LUMI > " + text)
+            speak_result(text)
+        root.after(0, work)
+
+    def lumi_model_choose() -> None:
+        """«cambia modello»: elenca i .gguf (voce e finestra risultati); il numero scelto
+        (anche senza «Lumi») salva il modello e riavvia il motore."""
+        sm = __import__("local_model.scelta_modello", fromlist=["elenca_modelli"])
+        try:
+            models = sm.elenca_modelli()
+            in_use = sm.modello_in_uso()
+        except (OSError, ValueError, RuntimeError):
+            models, in_use = [], ""
+        text, spoken = sm.testo_elenco(models)
+        write_line("MODELLO LOCALE > " + text)
+        speak_result(spoken)
+        if not models:
+            return
+
+        def choose(number: int) -> None:
+            target = models[number - 1]
+            if str(target) == in_use:
+                note = "«" + sm.nome_breve(target) + "» è già il modello in uso."
+                write_line("MODELLO LOCALE > " + note)
+                speak_result(note)
+                return
+            try:
+                sm.salva_scelta(target)
+            except (OSError, ValueError, RuntimeError) as exc:
+                write_line("MODELLO LOCALE > Modello non cambiato: " + str(exc)[:120])
+                speak_result("Non sono riuscita a cambiare il modello.")
+                return
+            note = "Cambio modello: «" + sm.nome_breve(target) + "». Salvato per i prossimi avvii."
+            write_line("MODELLO LOCALE > " + note)
+            speak_result(note)
+            lumi_model_restart()        # chiude il motore; riparte col nuovo modello
+
+        items = [("Modello in uso" if str(m) == in_use else "Modello", sm.nome_breve(m), str(m))
+                 for m in models]
+        listing = {"token": "modelli-" + str(__import__("time").monotonic()), "items": items,
+                   "summary": "Modelli locali: di' il numero (o fai doppio clic) per sceglierne uno."}
+
+        def show():
+            try:
+                from file_access.ui import show_results
+                show_results(root, listing, on_open=lambda number, token: choose(number),
+                             on_select=lambda *args: True)
+            except (ImportError, OSError, ValueError, tk.TclError) as exc:
+                write_line("MODELLO LOCALE > Finestra risultati non disponibile: " + str(exc)[:100])
+        root.after(0, show)
+        __import__("risposte").expect_choice(
+            len(models), choose,
+            on_cancel=lambda: write_line("LUMI > Va bene, non cambio modello."),
+            speech_text=spoken)
+
     def lumi_model_restart() -> None:
         """«riavvia il modello»: con il motore separato lo chiude (memoria liberata) e lo
         ricarica alla prossima domanda, senza chiudere Lumi."""
@@ -4846,6 +4919,7 @@ def main() -> None:
          "shutdown_pc": lumi_shutdown_pc, "cancel_shutdown": lumi_cancel_shutdown,
          "hide": lumi_hide, "wake": lumi_wake,
          "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
+         "close_results": lumi_close_results, "model_choose": lumi_model_choose,
          "data_cleanup": lambda: open_data_cleanup(),
          # Tutorial guidato del Controllo PC (aiuto_comandi.PASSI).
          "tutorial_yes": lambda: help_box_say(lambda box: box.avvia_guida()),
