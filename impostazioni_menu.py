@@ -30,6 +30,7 @@ MAPPA = (
     ("Modello locale", ("Modelli", "Modello locale")),
     ("Connessione ChatGPT", ("Modelli", "GPT dal browser")),
     ("Servizi online", ("Modelli", "Servizi online")),
+    ("Servizi di ricerca", ("Modelli", "Servizi di ricerca")),
     ("Orchestratore online", ("Modelli", "Orchestratore")),
     ("Add-on", ("Add-on", "Gestisci add-on")),
     ("GitHub", ("Add-on", "🐙 GitHub")),

@@ -163,9 +163,10 @@ def _dpapi(value: bytes, encrypt: bool) -> bytes:
 class Chiavi:
     """Chiavi API cifrate DPAPI in %LOCALAPPDATA%\\Jarvis\\servizi_online.keys."""
 
-    def __init__(self, path: Path | None = None, protect=_dpapi):
+    def __init__(self, path: Path | None = None, protect=_dpapi, ids=None):
         self.path = path
         self.protect = protect
+        self.ids = ids            # servizi ammessi (default: i servizi online); ricerca: i suoi
 
     def _file(self) -> Path:
         return Path(self.path) if self.path is not None else _cartella() / "servizi_online.keys"
@@ -190,7 +191,7 @@ class Chiavi:
         return bool(self._all().get(service_id))
 
     def salva(self, service_id: str, key: str) -> None:
-        if service_id not in PER_ID:
+        if service_id not in (PER_ID if self.ids is None else self.ids):
             raise ValueError("Servizio sconosciuto.")
         data = self._all()
         key = (key or "").strip()

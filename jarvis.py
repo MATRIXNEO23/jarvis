@@ -315,6 +315,9 @@ def main() -> None:
     # Servizi online con caselle e chiavi API (passo 8, servizi_online.py).
     __import__("servizi_online").costruisci_sezione(
         assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
+    # Servizi di ricerca (052): Tavily, Exa, Firecrawl, Linkup, con chiave e link.
+    __import__("servizi_ricerca").costruisci_sezione(
+        assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
     # Orchestratore online: cartelle sicure (lavoro a più passi, orchestratore.py).
     __import__("orchestratore").costruisci_sezione(
         assistant_settings_frame, lambda text: write_line(text))
@@ -4766,6 +4769,47 @@ def main() -> None:
         threading.Thread(target=work, daemon=True, name="lumi-github").start()
         return True
 
+    def lumi_ricerca(spoken: str) -> bool:
+        """«cerca online …» / «approfondisci online …»: primo servizio di ricerca pronto
+        (poi i successivi); riassunto e link nella finestra risultati, browser chiuso."""
+        ricerca = __import__("servizi_ricerca")
+        parsed = ricerca.parse(spoken)
+        if parsed is None:
+            return False
+        kind, query = parsed
+        if not ricerca.pronti():
+            text = ("Per cercare online serve un servizio di ricerca con la sua chiave: "
+                    "lo aggiungi in Impostazioni, Servizi di ricerca.")
+            write_line("RICERCA > " + text)
+            speak_result(text)
+            return True
+        write_line("RICERCA > Cerco online: " + query)
+
+        def work():
+            name, result = ricerca.cerca(query, kind == "approfondisci")
+
+            def show():
+                if name is None:
+                    text = ("Nessun servizio di ricerca ha risposto (" + "; ".join(result)[:200] + ").")
+                    write_line("RICERCA > " + text)
+                    speak_result("Nessun servizio di ricerca ha risposto. I dettagli sono in chat.")
+                    return
+                write_line("RICERCA > " + ricerca.testo_chat(name, result))
+                try:
+                    from file_access.ui import show_results
+                    show_results(root, ricerca.elenco_finestra(name, result),
+                                 on_open=lambda number, token: (
+                                     root.clipboard_clear(),
+                                     root.clipboard_append(result.link[number - 1][1]),
+                                     write_line("RICERCA > Link copiato negli appunti.")),
+                                 on_select=lambda *args: True)
+                except (ImportError, OSError, ValueError, tk.TclError) as exc:
+                    write_line("RICERCA > Finestra risultati non disponibile: " + str(exc)[:100])
+                speak_result(ricerca.frase_breve(result) or "Fatto, i risultati sono in chat.")
+            root.after(0, show)
+        threading.Thread(target=work, daemon=True, name="lumi-ricerca-online").start()
+        return True
+
     def help_box_say(action) -> None:
         if pc_help_box is None:
             write_line("AIUTO > Il Controllo PC non è attivo.")
@@ -4920,6 +4964,7 @@ def main() -> None:
          "hide": lumi_hide, "wake": lumi_wake,
          "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
          "close_results": lumi_close_results, "model_choose": lumi_model_choose,
+         "ricerca": lambda spoken: lumi_ricerca(spoken),
          "data_cleanup": lambda: open_data_cleanup(),
          # Tutorial guidato del Controllo PC (aiuto_comandi.PASSI).
          "tutorial_yes": lambda: help_box_say(lambda box: box.avvia_guida()),
