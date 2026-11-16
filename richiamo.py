@@ -95,3 +95,15 @@ def coppie_chat_aperta(count: int = 32):
             continue
         pairs.append((question, answer))
     return pairs
+
+
+def risposta_di_lumi(text: str):
+    """Ciò che Lumi risolve da sola, prima di qualsiasi modello (Gemma, GPT o online):
+    «cancellalo», «chi sei», «cosa puoi fare», «cosa ti ho detto prima».
+    -> (scritto, detto) oppure None. Prova 16/11: col GPT acceso queste frasi finivano a GPT."""
+    memory = __import__("ricordi")
+    own = (memory.cancella_se_chiesto(memory.cervello(), text)
+           or __import__("scheda_lumi").risposta_propria(text))
+    if own:
+        return own, own
+    return rispondi(text, coppie_chat_aperta())

@@ -24,3 +24,7 @@ class Servizio:
     orchestratore: bool = True        # sa usare gli strumenti (lavori a più passi)
     uso: str = ""                     # a cosa è più portato, in parole semplici (16/11)
     tipo: str = "chiave"              # «chiave» (API) o «account» (ChatGPT col tuo piano)
+    # Modelli migliori in ordine (16/11): Lumi usa il primo che il servizio offre davvero e,
+    # se uno viene ritirato, passa al successivo. solo_free: solo modelli «:free» (OpenRouter).
+    preferiti: tuple = field(default_factory=tuple)
+    solo_free: bool = False

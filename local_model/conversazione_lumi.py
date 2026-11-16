@@ -314,14 +314,10 @@ def installa(d):
             return True              # capita dal motore interno (sinonimi) o domanda sì/no
         # 15/11 sera: «chi sei», «cosa puoi fare» e «cosa ti ho detto prima» li risolve Lumi,
         # dalle sue frasi e dalla cronologia della chat, senza modello (esatto e veloce).
-        own = (__import__("ricordi").cancella_se_chiesto(__import__("ricordi").cervello(), spoken)
-               or __import__("scheda_lumi").risposta_propria(spoken))
-        recall = None if own else __import__("richiamo").rispondi(
-            spoken, __import__("richiamo").coppie_chat_aperta())
-        if own or recall:
-            written, said = (own, own) if own else recall
-            d.write_line("LUMI > " + written)
-            d.speak_result(said)
+        reply = __import__("richiamo").risposta_di_lumi(spoken)
+        if reply:
+            d.write_line("LUMI > " + reply[0])
+            d.speak_result(reply[1])
             return True
         from model_gate import local_enabled as model_enabled, refused_local as model_refused
         # Passo 11: classificatore leggero (spento di serie), solo a voce e solo se nessuna

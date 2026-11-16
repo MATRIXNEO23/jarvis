@@ -2178,6 +2178,19 @@ def main() -> None:
                     confirm=lambda: confirm_gpt_inference(consent_detail))
             if (permission is None or permission.capability != capability
                     or not permission()):
+                fallback_text = params.get("utterance")
+                if capability == "chat.conversation" and fallback_text:
+                    # Prova 16/11: «no» a GPT fermava la richiesta. Ora passa ai servizi
+                    # online se pronti, altrimenti al modello locale.
+                    try:
+                        route = "online" if __import__("servizi_online").disponibili() else None
+                        write_line("GPT > Non mando a GPT: passo " + ("ai servizi online."
+                                   if route else "al modello locale."))
+                        root.after(0, lambda: submit_gemma_voice(
+                            fallback_text, typed=action == "typed_conversation", route=route))
+                        return False
+                    except NameError:
+                        pass
                 write_line("GPT > Invio non autorizzato. Controlla Autorizzazioni GPT per funzione.")
                 return False
             if capability == "chat.conversation":
@@ -2244,6 +2257,11 @@ def main() -> None:
             return
         from intent_normalizer import before_model
         if before_model(spoken):
+            return
+        own_reply = __import__("richiamo").risposta_di_lumi(spoken)
+        if own_reply:                      # prima di GPT: chi sei, cosa puoi fare, ricordi…
+            write_line("LUMI > " + own_reply[0])
+            speak_result(own_reply[1])
             return
         from model_gate import enabled as model_enabled, refused as model_refused
         if not model_enabled():
@@ -4366,6 +4384,18 @@ def main() -> None:
             return
         if maybe_queue_telegram_note(message):
             request.set("")
+            return
+        # Prova 16/11: con GPT acceso anche le risposte di Lumi finivano a GPT.
+        own_reply = __import__("richiamo").risposta_di_lumi(message)
+        if own_reply:
+            write_line("TU > " + message)
+            write_line("LUMI > " + own_reply[0])
+            speak_result(own_reply[1])
+            request.set("")
+            return
+        # «Ragiona online» va ai servizi online anche col GPT acceso (prova 16/11).
+        if gpt_enabled.get() and __import__("servizi_online").forza_online(message)[0]:
+            submit_gemma_trial()
             return
         # F2 chat instances are Gemma-only. Never transmit their private
         # message to GPT silently; other existing console routes stay intact.

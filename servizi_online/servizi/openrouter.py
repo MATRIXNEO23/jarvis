@@ -2,6 +2,8 @@
 from servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
+    preferiti=("openai/gpt-oss-120b:free", "qwen/qwen3-next-80b-a3b-instruct:free", "meta-llama/llama-3.3-70b-instruct:free"),
+    solo_free=True,
     uso="Tanti modelli diversi in un posto: buona riserva quando gli altri sono finiti.",
     id="openrouter", nome="OpenRouter", ordine=4, gratis=True,
     base_url="https://openrouter.ai/api/v1",

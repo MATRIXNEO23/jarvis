@@ -83,7 +83,7 @@ class ChiamataTest(BaseTest):
                                keys=self.keys, post=post)
         self.assertEqual((name, text), ("Groq", "Ciao!"))
         self.assertEqual([c[1] for c in calls], ["a", "b"])
-        self.assertEqual(calls[1][2], "llama-3.3-70b-versatile")
+        self.assertEqual(calls[1][2], "openai/gpt-oss-120b")
 
     def test_tutti_falliti_con_motivi(self):
         self.keys.salva("groq", "b")
@@ -242,6 +242,47 @@ class ChatGPTAccountTest(unittest.TestCase):
                                        keys=self.so.Chiavi(Path(tempfile.mkdtemp()) / "k.json"))
         self.assertIsNone(name)
         self.assertIn("collegamento GPT", "; ".join(reasons))
+
+
+class ModelloSceltoTest(unittest.TestCase):
+    def setUp(self):
+        import servizi_online
+        self.so = servizi_online
+        self.so.SCELTI.clear()
+
+    def tearDown(self):
+        self.so.SCELTI.clear()
+
+    def test_sceglie_il_preferito_disponibile_e_solo_free(self):
+        groq, router = self.so.PER_ID["groq"], self.so.PER_ID["openrouter"]
+        models = {"data": [{"id": "qwen/qwen3.6-27b"}, {"id": "altro"}]}
+        self.assertEqual(self.so.scegli_modello(groq, "k", get=lambda *a: models), "qwen/qwen3.6-27b")
+        free = {"data": [{"id": "x/paid"}, {"id": "nuovo/modello:free"}]}
+        self.assertEqual(self.so.scegli_modello(router, "k", get=lambda *a: free), "nuovo/modello:free")
+        self.assertIsNone(self.so.scegli_modello(router, "k", get=lambda *a: {"data": [{"id": "x/paid"}]}))
+
+    def test_modello_ritirato_passa_a_un_altro_e_se_lo_ricorda(self):
+        import urllib.error
+        service = self.so.PER_ID["groq"]
+        settings = {"ordine": ["groq"], "attivi": ["groq"], "modelli": {"groq": "vecchio"}, "limiti": {}}
+        tried = []
+
+        def post(url, key, body, timeout):
+            tried.append(body["model"])
+            if body["model"] == "vecchio":
+                raise urllib.error.HTTPError(url, 404, "not found", {}, None)
+            return {"choices": [{"message": {"content": "ok"}}]}
+        keys = type("K", (), {"leggi": lambda self, i: "k", "presente": lambda self, i: True})()
+        original = self.so._get
+        self.so._get = lambda *a: {"data": [{"id": "openai/gpt-oss-120b"}]}
+        try:
+            name, text = self.so.chiedi(self.so.messaggi("ciao"), settings=settings, keys=keys, post=post)
+        finally:
+            self.so._get = original
+        self.assertEqual((name, text), ("Groq", "ok"))
+        self.assertEqual(tried, ["vecchio", "openai/gpt-oss-120b"])
+        self.assertEqual(self.so.SCELTI["groq"], "openai/gpt-oss-120b")
+        self.assertNotIn("groq", settings["modelli"])
 
 
 if __name__ == "__main__":

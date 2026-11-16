@@ -2,6 +2,7 @@
 from servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
+    preferiti=("gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"),
     uso="Domande lunghe e documenti grandi; sa fare i lavori a più passi sul PC.",
     id="gemini", nome="Google Gemini", ordine=1, gratis=True,
     base_url="https://generativelanguage.googleapis.com/v1beta/openai",

@@ -21,7 +21,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-TIMEOUT = 60
+TIMEOUT = 30          # 16/11: un servizio lento non deve bloccare gli altri
 
 
 from .base import Servizio  # noqa: E402  (un file per servizio, 15/11 sera)
@@ -207,13 +207,67 @@ def _post(url: str, key: str, body: dict, timeout: float) -> dict:
         return data
 
 
+def _get(url: str, key: str, timeout: float) -> dict:
+    request = urllib.request.Request(url, headers={"Authorization": "Bearer " + key,
+                                                   "User-Agent": "Lumi"})
+    with urllib.request.urlopen(request, timeout=timeout) as response:   # noqa: S310 — https fisso
+        return json.loads(response.read().decode("utf-8"))
+
+
+SCELTI = {}      # modello scelto da Lumi per servizio, in questa sessione
+
+
+def scegli_modello(service, key: str, *, get=None, timeout: float = 15) -> str | None:
+    """Il modello migliore che il servizio offre adesso (16/11, decisione utente: «li sceglie
+    Lumi per ogni servizio»). Primo dei preferiti presente; per OpenRouter solo «:free»."""
+    get = get or _get
+    try:
+        data = get(service.base_url + "/models", key, timeout)
+        ids = [str(m.get("id", "")) for m in data.get("data", []) if isinstance(m, dict)]
+    except Exception:
+        return None
+    ids = [i.split("/", 1)[1] if i.startswith("models/") else i for i in ids]   # Gemini
+    if service.solo_free:
+        ids = [i for i in ids if i.endswith(":free")]
+    for wanted in service.preferiti + (service.modello,):
+        if wanted in ids:
+            return wanted
+    return ids[0] if (service.solo_free and ids) else None
+
+
+def _modello(service, settings) -> str:
+    """Scelta dell'utente se l'ha cambiata, altrimenti quella di Lumi, altrimenti di serie."""
+    mine = settings["modelli"].get(service.id)
+    if mine and mine != service.modello:
+        return mine
+    return SCELTI.get(service.id, service.modello)
+
+
+def _con_modello(service, settings, key, call, *, get=None):
+    """call(modello) col modello giusto; se il servizio dice «modello non trovato» Lumi ne
+    sceglie un altro disponibile e riprova una volta."""
+    model = _modello(service, settings)
+    try:
+        return call(model)
+    except urllib.error.HTTPError as exc:
+        if exc.code not in (400, 404):
+            raise
+        other = scegli_modello(service, key, get=get)
+        if not other or other == model:
+            raise
+        SCELTI[service.id] = other
+        if settings["modelli"].get(service.id) == model:
+            settings["modelli"].pop(service.id, None)      # il nome vecchio non serve più
+        return call(other)
+
+
 def _motivo(exc: Exception) -> str:
     if isinstance(exc, urllib.error.HTTPError):
         return {401: "chiave non valida", 403: "accesso negato", 402: "credito finito",
                 404: "modello non trovato", 429: "quota finita o troppe richieste"}.get(
             exc.code, "errore %d" % exc.code)
     if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError)):
-        return "nessuna risposta (rete?)"
+        return "nessuna risposta (rete?): " + type(getattr(exc, "reason", exc)).__name__
     if isinstance(exc, ServizioErrore) and str(exc) not in ("", "vuota"):
         return str(exc)
     return "risposta non valida"
@@ -264,10 +318,10 @@ def chiedi(messages: list[dict], *, settings: dict | None = None, keys: Chiavi |
         if not key:
             reasons.append(service.nome + ": manca la chiave")
             continue
-        model = settings["modelli"].get(service_id, service.modello)
         try:
-            data = post(service.base_url + "/chat/completions", key,
-                        {"model": model, "messages": messages, "max_tokens": MAX_RISPOSTA}, timeout)
+            data = _con_modello(service, settings, key, lambda model: post(
+                service.base_url + "/chat/completions", key,
+                {"model": model, "messages": messages, "max_tokens": MAX_RISPOSTA}, timeout))
             text = data["choices"][0]["message"]["content"]
             if not isinstance(text, str) or not text.strip():
                 raise ServizioErrore("vuota")
@@ -316,12 +370,12 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
         if not key:
             reasons.append(service.nome + ": manca la chiave")
             continue
-        body = {"model": settings["modelli"].get(service_id, service.modello),
-                "messages": messages, "max_tokens": MAX_RISPOSTA}
+        body = {"messages": messages, "max_tokens": MAX_RISPOSTA}
         if tools:
             body["tools"] = tools
         try:
-            data = post(service.base_url + "/chat/completions", key, body, timeout)
+            data = _con_modello(service, settings, key, lambda model: post(
+                service.base_url + "/chat/completions", key, dict(body, model=model), timeout))
             message = data["choices"][0]["message"]
             if not isinstance(message, dict) or not (message.get("content") or message.get("tool_calls")):
                 raise ServizioErrore("vuota")
