@@ -1,10 +1,10 @@
 {
-  "run_id": 43755471110,
-  "artifact": "lumi-049-prova-candidate",
-  "file": "Lumi-049-PROVA.zip",
-  "bytes": 28245326,
-  "sha256": "717854610d655082fbbff3f83a2c8ec9616f3867cb9f1e44cecdf0ae3373d333",
-  "source_commit": "bf7518b",
-  "title": "Build 049 PROVA — impostazioni a cascata, add-on con interruttore, ricordi, simboli delle chat, menu laterale, servizi online con quote, Telegram, finestra unica",
-  "description": "Tutto della 048 più: impostazioni con categorie a sinistra (Interfaccia, Voce, Memoria, Modelli, Add-on, Tutorial, Info) e voci di fianco, si chiudono cliccando su Lumi; add-on con icona azzurra/arancione e interruttore a scorrimento, menu dell'add-on con un clic sull'icona; menu laterale a cartelle (progetti e chat, sposta, rinomina, elimina, Esporta JSON) con 🤖 offline e 📡 online davanti al nome; pulsante ONLINE ▾ con servizi, barre delle quote e soglie; servizi online un file per servizio; icona ✈ Telegram con colori e chat nel menu laterale; una sola finestra (niente console nera); motore del modello sempre separato; script Python dall'orchestratore solo col tuo sì; sì/no senza «Lumi»; «cosa ti ho detto prima / N turni fa» dalla cronologia; «chi sei» e «cosa puoi fare» con frasi varie configurabili; ricordi: l'online decide cosa salvare (breve per Gemma, completo per l'online), «ricordati che…», «cancellalo», pagina Ricordi con ricerca e categorie; documenti negli allegati (PDF, ODT, DOCX, XLSX, PPTX, EPUB…); correzione lista voci. Diagnostica per Claude con strumenti nuovi (impostazioni, add-on, ricordi, chat). Verificati in CI Windows: 1482 test, diagnostica, Telegram, tokenizer, pacchetto e avvio. Da provare sul Pavilion."
+  "run_id": 43785822094,
+  "artifact": "lumi-050-prova-candidate",
+  "file": "Lumi-050-PROVA.zip",
+  "bytes": 28252117,
+  "sha256": "4dd5d642af72bb8062dac430e6191d627c439fcb8882890c03ab473dc37bcd0a",
+  "source_commit": "03e83f1",
+  "title": "Build 050 PROVA — correzioni dalle prove e dagli audit, ChatGPT tra i servizi online, diagnostica completa",
+  "description": "Dalla 049: «cosa puoi fare» con la frase di Lumi; i ricordi arrivano a Gemma; «cosa ti ho detto prima» conta anche i comandi; Gemma sa chi è (scheda corta); «ragiona online» avvisa se non ci sono servizi pronti; risposte online fino a 4000 token con avviso se tagliate; file mai sostituiti senza chiedere (con copia); script Python mostrato per intero; esiti veri dei comandi dell'orchestratore; ricordi separati per progetto; «ChatGPT (tuo account)» in ONLINE ▾ (consuma la quota del piano, come Codex) e «a cosa serve» per ogni servizio; Mistral segnato a pagamento. Diagnostica per Claude 1.1: risposte attese, prompt di Gemma, online, Telegram, impostazioni, add-on, ricordi, chat; prove sbloccate per tutto tranne spegnere/riavviare il PC. CI Windows verde: 1494 test. Da provare sul Pavilion."
 }
