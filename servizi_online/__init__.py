@@ -119,7 +119,7 @@ def carica_impostazioni(path: Path | None = None) -> dict:
     for new in sorted((s for s in SERVIZI if s.id not in order), key=lambda s: s.ordine):
         # un servizio nuovo entra al suo posto, non in fondo (es. ChatGPT dopo OpenRouter)
         after = [i for i, ident in enumerate(order) if PER_ID[ident].ordine <= new.ordine]
-        order.insert(after[-1] + 1 if after else 0, new.id)
+        order.insert(after[-1] + 1 if after else len(order), new.id)   # il primo resta tuo
     data["ordine"] = order
     data["attivi"] = [i for i in data["attivi"] if i in PER_ID]
     data["modelli"] = {k: str(v)[:120] for k, v in data["modelli"].items() if k in PER_ID and str(v).strip()}
@@ -214,6 +214,8 @@ def _motivo(exc: Exception) -> str:
             exc.code, "errore %d" % exc.code)
     if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError)):
         return "nessuna risposta (rete?)"
+    if isinstance(exc, ServizioErrore) and str(exc) not in ("", "vuota"):
+        return str(exc)
     return "risposta non valida"
 
 
