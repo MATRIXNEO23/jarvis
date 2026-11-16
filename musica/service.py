@@ -72,6 +72,18 @@ class MusicService:
             self._tracks_folder = folders
         return self._tracks
 
+    def prepara(self) -> None:
+        """Legge la libreria in sottofondo all'avvio (prova 16/11: la prima «metti musica»
+        bloccava Lumi ~25 secondi mentre scansionava le cartelle)."""
+        if self.folders():
+            threading.Thread(target=self._prepara, daemon=True, name="lumi-musica-scan").start()
+
+    def _prepara(self) -> None:
+        try:
+            self.tracks()
+        except OSError:
+            pass
+
     def set_volume(self, value: int) -> None:
         """Un solo volume per brani, video della cartella e YouTube nel riquadro."""
         self.settings["volume"] = max(0, min(100, int(value)))
@@ -89,7 +101,7 @@ class MusicService:
     # --- comandi ----------------------------------------------------------
     def handle(self, action: str, query: str = "") -> str:
         if not self.is_enabled():
-            return "L'add-on Musica è spento: attivalo in Impostazioni > Gestisci add-on."
+            return "L'add-on Musica è spento: accendilo in Impostazioni > Add-on (interruttore accanto a 🎵)."
         if action == "play":
             return self.play(query)
         if action == "queue":

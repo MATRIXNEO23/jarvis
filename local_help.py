@@ -23,9 +23,9 @@ def help_sections(engine):
     return {
         'Inizia qui':
             'Scrivi nella casella e premi Invio oppure il pulsante di invio.\n'
-            'Comandi con parole tue: Impostazioni > Personalizzazione comandi (comandi di base) '
+            'Comandi con parole tue: Impostazioni > Voce > Parole dei comandi e frasi (comandi di base) '
             'e Gestisci add-on > sezione dell’add-on (comandi dell’add-on).\n'
-            'Diagnostica servizi apre il rapporto locale, anche da voce con Lumi. Lo trovi anche in Impostazioni > Progetti e servizi. Aggiorna e Copia rapporto non inviano messaggi o richieste ai modelli.\n'
+            'Diagnostica servizi apre il rapporto locale, anche da voce con Lumi. Lo trovi anche in Impostazioni > Info > Diagnostica. Aggiorna e Copia rapporto non inviano messaggi o richieste ai modelli.\n'
             'Scrivi aiuto, help o comandi per riaprire questa guida. Funziona anche con Gemma o GPT attivi.\n\n'
             'F1 apre la guida. Ctrl+L porta il cursore nella casella. Ctrl+, apre le impostazioni.\n'
             'La guida non invia richieste ai modelli e non esegue i comandi mostrati.\n'
@@ -115,9 +115,9 @@ def help_sections(engine):
             'il microfono capisce «s» o «se»), per qualche secondo dopo la domanda.\n'
             'Mini avatar: trascinalo dove vuoi; tasto destro → «Nascondi avatar». Col mouse fermo '
             'per 30 secondi avatar e mini lettore diventano trasparenti e tornano muovendo il mouse '
-            '(Impostazioni > Integrazioni > Mini avatar).\n'
+            '(Impostazioni > Interfaccia > Mini avatar).\n'
             'Video della musica a schermo intero: solo il video; «esci» o Esc per tornare.\n'
-            'Frasi di Lumi (saluti, risposte, «Intendevi…?»): Impostazioni > Personalizzazione '
+            'Frasi di Lumi (saluti, risposte, «Intendevi…?»): Impostazioni > Voce > Parole dei comandi e frasi '
             'comandi > Frasi di Lumi.',
         'Musica':
             'metti Bohemian Rhapsody\nsuona la canzone Imagine\nfammi sentire Vasco Rossi\n\n'
@@ -147,7 +147,7 @@ def help_sections(engine):
             'Prima del modello Lumi prova a capire da sola: toglie le parole di cortesia e usa i sinonimi '
             '(attiva/avvia/metti = imposta, stoppa/spegni = ferma…). Se la frase diventa un comando lo esegue '
             '(in console «CAPITO COME > …»). Con MODELLO OFF, se la frase somiglia a un comando chiede '
-            '«Intendevi …?»: rispondi sì o no. Sinonimi tuoi: Impostazioni > Personalizzazione comandi > Sinonimi.\n\n'
+            '«Intendevi …?»: rispondi sì o no. Sinonimi tuoi: Impostazioni > Voce > Parole dei comandi e frasi > Sinonimi.\n\n'
             'GPT ON seleziona GPT per voce (anche Premi per parlare), chat e Telegram; GPT OFF seleziona Gemma. '
             'I comandi locali riconosciuti vengono intercettati nella console prima dei modelli; file e app seguono i rispettivi controlli.\n\n'
             'Al primo invio conversazionale a GPT confermi il consenso per la sessione, condiviso fra voce e chat. Un errore di connessione non seleziona Gemma. Torna a Gemma quando lo scegli tu. '

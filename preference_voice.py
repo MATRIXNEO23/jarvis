@@ -30,6 +30,19 @@ _VALUES={
     "preferisco risposte in inglese": ("language","en"),
     "preferisco risposte in spagnolo": ("language","es"),
 }
+# Parole semplici per le conferme (prova 16/11: Lumi diceva «response_length=brief»).
+NOMI={("response_length","brief"):"risposte brevi",("response_length","balanced"):"risposte equilibrate",
+      ("response_length","detailed"):"risposte dettagliate",("interaction","voice"):"rispondere a voce",
+      ("interaction","text"):"rispondere scrivendo",("interaction","both"):"voce e testo insieme",
+      ("language","it"):"risposte in italiano",("language","en"):"risposte in inglese",
+      ("language","es"):"risposte in spagnolo",("response_length",""):"lunghezza delle risposte",
+      ("language",""):"lingua",("interaction",""):"voce o testo"}
+
+
+def descrivi(key,value="")->str:
+    return NOMI.get((key,value or ""),NOMI.get((key,""),key))
+
+
 _FORGET_KEYS={"risposte":"response_length","lingua":"language",
               "interazione":"interaction"}
 

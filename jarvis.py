@@ -449,6 +449,7 @@ def main() -> None:
             video_panel=music_panel)
         if addon_manager is not None:
             addon_manager.music_service = music_service
+        music_service.prepara()
         from musica.runtime import register as register_music
         register_music(music_service, lambda text: (
             engine.program_apps.parse_command(text)
@@ -478,7 +479,9 @@ def main() -> None:
         pc_service.show_strip = lambda text: pc_overlay.strip(root, text)
         # Riquadro dei comandi per modalità e tutorial brevi (passo 7, aiuto_comandi.py).
         pc_help_box = __import__("aiuto_comandi").Aiuto(base_help=ControlService._HELP)
-        pc_service.on_handled = lambda action: pc_help_box.dopo_comando(
+        # Prova 16/11: niente «ti guido?» mentre il Controllo PC aspetta già un sì/no
+        # (due domande insieme: il «no» non sapeva a quale andare).
+        pc_service.on_handled = lambda action: None if pc_service.pending else pc_help_box.dopo_comando(
             pc_service.current_mode(), action=action,
             show=lambda text: pc_overlay.strip(root, text),
             speak=lambda text: (write_line("AIUTO > " + text), speak_result(text)),
@@ -1435,7 +1438,7 @@ def main() -> None:
             answer=normalized_utterance(spoken).casefold()
             intent=pending_preference
             pending_preference=None
-            if answer=="confermo":
+            if answer.strip(" .!") in ("confermo","sì","si","ok","va bene","certo"):
                 if preference_store is None:
                     message="Preferenze non disponibili; nessuna modifica."
                 else:
@@ -1478,10 +1481,9 @@ def main() -> None:
                 __import__("ricordi").cervello(),intent.value)
         else:
             pending_preference=intent
-            message=("Vuoi "+("rimuovere" if intent.kind=="remove" else "salvare")+
-                     " la preferenza "+intent.key+
-                     ("="+intent.value if intent.value else "")+
-                     "? Di' confermo oppure annulla.")
+            message=("Vuoi che "+("dimentichi" if intent.kind=="remove" else "ricordi")+
+                     " la preferenza «"+__import__("preference_voice").descrivi(
+                         intent.key,intent.value)+"»? Di' sì o no.")
         write_line("LUMI > "+message)
         speak_result(message)
         return True
@@ -4633,8 +4635,16 @@ def main() -> None:
     addon_rows_now = [None]
 
     def addon_rows_sync() -> None:
-        if addon_rows_now[0] is not None:
-            addon_rows_now[0].sincronizza()
+        # Prova 16/11: le righe vecchie (categoria richiusa) davano TclError.
+        rows = addon_rows_now[0]
+        if rows is not None:
+            try:
+                if rows.frame.winfo_exists():
+                    rows.sincronizza()
+                else:
+                    addon_rows_now[0] = None
+            except tk.TclError:
+                addon_rows_now[0] = None
         if addon_chosen.ident:
             addon_chosen.mostra(addon_chosen.ident)
 

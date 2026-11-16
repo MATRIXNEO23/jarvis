@@ -578,7 +578,7 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
 
 def aiuto_chiavi() -> str:
     """Sezione dell'aiuto «Come creare le chiavi»: dai file dei servizi (link cliccabili)."""
-    out = ["SERVIZI ONLINE (menu ONLINE ▾ in alto; chiavi in Impostazioni → Servizi online)",
+    out = ["SERVIZI ONLINE (menu ONLINE ▾ in alto; chiavi in Impostazioni → Modelli → Servizi online)",
            "Le chiavi restano cifrate solo su questo PC. Gratis = con limiti; ($) = a pagamento.", ""]
     for service in SERVIZI:
         out.append(service.nome.upper() + ("" if service.gratis else " ($)"))

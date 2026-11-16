@@ -1059,6 +1059,7 @@ function New-Object {
         root.update()
         self.assertFalse(view.in_progress)
         self.assertIn('interrotta',view.status.get())
+        self.assertFalse(view.window.winfo_viewable())      # 16/11: niente finestra vuota
         report=self.engine.execute('elenca cartella '+str(self.docs))
         again=show_results(root,report.file_listing,lambda *a:None,self.files.mark_view_selection)
         root.update()

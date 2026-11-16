@@ -365,6 +365,12 @@ class ControlService:
         if found is None:
             return None
         key = "close|" + found["process"].lower()
+        if found.get("lumi") and window and not re.search(r"\b(?:lumi|jarvis|te\s+stessa)\b",
+                                                          str(window), re.I):
+            # Prova 16/11: «chiudi i risultati» trovava la finestra dei risultati (di Lumi) e
+            # proponeva di chiudere Lumi stessa. Una finestra secondaria si chiude da sola.
+            self.backend.close(found["hwnd"])
+            return "Chiudo la finestra «" + found["title"][:60] + "»."
         if found.get("lumi"):
             return self._ask("", True, "Chiudo Lumi stessa",
                              lambda: (self.backend.close(found["hwnd"]), say("chiudo", finestra="Lumi"))[1])

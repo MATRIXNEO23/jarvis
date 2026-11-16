@@ -267,6 +267,9 @@ def finish_result_progress(parent,message):
         view.tree.delete(*view.tree.get_children())
         view.open_button.configure(state='disabled')
         view.status.set(message)
+        # Prova 16/11: senza risultati la finestra restava aperta e vuota. Il messaggio è
+        # già in chat; se poi arrivano risultati, show_results la riapre.
+        view.window.withdraw()
 
 
 def sync_result_selection(parent,service):
