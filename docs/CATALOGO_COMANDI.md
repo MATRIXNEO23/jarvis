@@ -43,3 +43,10 @@ Il modello riceve una rappresentazione compatta di queste azioni, comprensiva di
 I test automatici coprono: corrispondenza tra catalogo e codice, varianti di intenzioni canoniche, nuova apertura del disco C, rifiuto di path/eseguibili inventati, rifiuto di chiusura Blocco note senza documento gestito e controllo delle preferenze precedenti.
 
 **Il collaudo reale sul Pavilion resta necessario**, soprattutto perché GPT può scegliere di chiarire una frase ambigua. Conservare la vecchia cartella e provare solo la ZIP sperimentale estratta in una cartella nuova. Nessun merge automatico nella versione principale.
+
+## Novità build 052 (17/11)
+- «chiudi i risultati», «chiudi la finestra dei risultati», «togli i risultati»: chiude solo la finestra dei risultati (gestore locale).
+- «cambia modello», «scegli il modello», «elenca i modelli»: elenco numerato dei modelli locali; poi «1», «due», «il secondo» (senza «Lumi») o «no».
+- «cerca online …» e «approfondisci online …»: primo servizio di ricerca pronto (Impostazioni > Modelli > Servizi di ricerca); risultati nella finestra dei risultati.
+- «scrivimi uno script …» / «scrivi del codice …»: sempre servizi online.
+
