@@ -54,7 +54,7 @@ class QuotaAndSwitchTests(unittest.TestCase):
             self.assertTrue(sr.imposta_accesa(True, path))
         source = (ROOT / "jarvis.py").read_text(encoding="utf-8")
         self.assertIn("RICERCA OFF > ", source)
-        self.assertIn('hud.add_quick_button("ricerca", "RICERCA ▾", lambda: None, after="model")', source)
+        self.assertIn('hud.add_quick_button("ricerca", "RICERCA ▾", lambda: None, after="modello")', source)
 
 
 if __name__ == "__main__":

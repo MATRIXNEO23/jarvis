@@ -4563,18 +4563,40 @@ def main() -> None:
     hud_mic_button.configure(command=toggle_hud_microphone)
     hud.set_quick_toggle_handlers(
         microphone=hud_mic_button.invoke,
-        gpt=gpt_toggle.invoke,
         memory=memory_toggle.invoke,
         model=lambda: write_line(__import__("model_gate").toggle_message()))
+    def save_mode(mode: str) -> bool:
+        """056 B: slide Basso consumo / Veloce, salvata nelle impostazioni (annullata se fallisce)."""
+        previous = settings.get("modalita", "basso_consumo")
+        settings["modalita"] = mode
+        try:
+            save_settings(settings)
+        except (OSError, ValueError) as exc:
+            settings["modalita"] = previous
+            write_line("MODALITÀ > Non salvata: " + str(exc)[:120])
+            return False
+        write_line("MODALITÀ > " + ("Veloce: risponde subito il primo modello online, "
+                                    "il locale resta di riserva." if mode == "veloce" else
+                                    "Basso consumo: risponde il modello offline; online solo "
+                                    "se dici sì."))
+        return True
+
+    hud.set_mode_handler(save_mode)
+    hud.mode_slide.imposta(settings.get("modalita", "basso_consumo"))
     # Menu «ONLINE ▾» accanto a GPT (15/11 sera): servizi online, spunte e quote.
     # 055: al posto dell'interruttore RICERCA ON/OFF, tendina «RICERCA ▾» con i servizi di
     # ricerca, ciascuno con la sua spunta e la sua barra di quota (menu_ricerca.py).
-    ricerca_button = hud.add_quick_button("ricerca", "RICERCA ▾", lambda: None, after="model")
+    modello_button = hud.add_quick_button("modello", "MODELLO ▾", lambda: None, after="model")
+    modello_menu = __import__("menu_modello").MenuModello(      # 056 D: le 3 caselle al volo
+        root, modello_button, on_use=lambda target: lumi_model_use(target),
+        open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modello locale")),
+        notify=lambda text: write_line(text))
+    ricerca_button = hud.add_quick_button("ricerca", "RICERCA ▾", lambda: None, after="modello")
     ricerca_menu = __import__("menu_ricerca").MenuRicerca(
         root, ricerca_button,
         open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Servizi di ricerca")),
         notify=lambda text: write_line(text))
-    online_menu_button = hud.add_quick_button("online", "ONLINE ▾", lambda: None, after="gpt")
+    online_menu_button = hud.add_quick_button("online", "ONLINE ▾", lambda: None, after="mic")
     models_menu = __import__("menu_modelli").MenuModelli(
         root, online_menu_button, open_settings=lambda: show_settings(),
         notify=lambda text: write_line(text))
@@ -4809,6 +4831,7 @@ def main() -> None:
         "mic_selected": voice_mode.get() != STANDBY,
         "mic_push_to_talk": voice_mode.get() == PUSH_TO_TALK,
         "gpt_enabled": gpt_enabled.get(),
+        "modalita": settings.get("modalita", "basso_consumo"),
         "reasoning": (gemma_trial_busy[0] or
                       (gemma_session[0] is not None and gemma_session[0].is_busy) or
                       (busy_gpt and gpt_enabled.get() and

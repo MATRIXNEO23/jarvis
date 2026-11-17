@@ -15,6 +15,7 @@ import tkinter as tk
 
 from network_telemetry import NetworkTelemetry, friendly_rate
 from hud_orbits import OrbitMarkers
+from slide_modalita import SlideModalita
 from hud_reference import (
     AMBER, BG as REF_BG, CYAN as REF_CYAN, GREEN as REF_GREEN,
     LAND, ReactorArt, GlobeArt, projected_earth_point,
@@ -279,9 +280,12 @@ class JarvisHUD:
                                 highlightthickness=0,bd=0)
         self.wordmark.pack(side="left",padx=(5,12))
         draw_lumi_wordmark(self.wordmark,CYAN,BG)
-        tk.Label(header,text="//  INTERFACCIA NEURALE",
-                 bg=BG,fg="#4985a7",
-                 font=("Consolas",9)).pack(side="left")
+        # 056 B: al posto di «INTERFACCIA NEURALE», slide Basso consumo / Veloce.
+        self._mode_handler=None
+        self.mode_slide=SlideModalita(
+            header,bg=BG,on_change=lambda mode:(self._mode_handler(mode)
+                                                if self._mode_handler else True))
+        self.mode_slide.pack(side="left")
         self.exit_button=tk.Button(
             header,text="×",command=lambda:None,
             fg=MUTED,bg=BG,activeforeground=WHITE,
@@ -306,8 +310,9 @@ class JarvisHUD:
         self._quick_state_cache = None
         quick_controls = tk.Frame(header, bg=BG)
         quick_controls.pack(side="right", padx=(0, 12))
+        # 056 D: niente «GPT ON» (GPT sta nella tendina ONLINE).
         for index, (key, label) in enumerate((
-                ("mic", "MIC OFF"), ("gpt", "GPT OFF"), ("model", "MODELLO ON"),
+                ("mic", "MIC OFF"), ("model", "MODELLO ON"),
                 ("memory", "MEMORIA OFF"))):
             if index:
                 tk.Label(quick_controls, text="/", bg=BG, fg=MUTED,
@@ -534,9 +539,13 @@ class JarvisHUD:
     def set_state_provider(self,callback):
         self.state_provider=callback
 
-    def set_quick_toggle_handlers(self, *, microphone, gpt, memory, model=None):
+    def set_mode_handler(self, callback):
+        """056 B: callback(modalita) -> bool (True se salvata); la slide scorre solo se salva."""
+        self._mode_handler=callback
+
+    def set_quick_toggle_handlers(self, *, microphone, memory, model=None, gpt=None):
         """Bind trusted existing controls; this HUD owns no setting state."""
-        handlers = {"mic": microphone, "gpt": gpt, "memory": memory}
+        handlers = {"mic": microphone, "memory": memory}
         if model is not None:
             handlers["model"] = model
         if not all(callable(callback) for callback in handlers.values()):
@@ -671,12 +680,9 @@ class JarvisHUD:
         mic_label = ("MIC ATTIVO" if mic_enabled else
                      "MIC PTT" if state.get("mic_push_to_talk") else
                      "MIC NON ATTIVO" if mic_selected else "MIC OFF")
-        gpt_label = ("GPT ON" if connected and gpt_enabled else
-                     "GPT NON CONNESSO" if gpt_enabled else "GPT OFF")
         from model_gate import enabled as model_enabled
         model_on = bool(state.get("model_enabled", model_enabled()))
         controls = (("mic", mic_label, mic_enabled or mic_selected),
-                    ("gpt", gpt_label, gpt_enabled),
                     ("model", "MODELLO ON" if model_on else "MODELLO OFF", model_on),
                     ("memory", "MEMORIA ON" if memory else "MEMORIA OFF", memory))
         if controls != self._quick_state_cache:
@@ -684,6 +690,8 @@ class JarvisHUD:
                 getattr(self, key + "_toggle_button").configure(
                     text=label, fg=CYAN if enabled else MUTED)
             self._quick_state_cache = controls
+        if state.get("modalita") in ("basso_consumo","veloce"):
+            self.mode_slide.imposta(state["modalita"])
         if self.visual_status.get()!=status:
             self.visual_status.set(status)
         if self.chat_info.get()!=info:
