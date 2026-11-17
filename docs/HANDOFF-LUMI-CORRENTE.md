@@ -157,6 +157,17 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Audit: nessun ripristino applicato (regola utente 20:28), elenco in docs/ANALISI-056.md da far scegliere all'utente.
 - Resta: CI test e build f5n da verificare; «meteo domani» non esiste (proposta); tutorial vocale del meteo non fatto (aiuto_comandi riguarda solo Controllo PC).
 
+## Ripresa 17/11 notte — 056c implementata (approvata 17/11 21:21), solo py_compile su Linux
+- Etichetta build: resta `--number 056` nel workflow f5n (da chiedere se serve «056c»).
+- 1) `prompt_breve.adatta_storia(history, latest, ridotta)`: casella «Cronologia ridotta per domande brevi» (`MemoryPreferences.cronologia_ridotta`, accesa); per ogni domanda breve (<= 5 parole, senza «approfondisci/spiega…») resta solo l'ultimo scambio tagliato; spenta = comportamento 056b.
+- 2) Valori di partenza: `NativeModelConfig.context_size` 768, `MemoryPreferences.prompt_max_tokens` 500. `profili_famiglia._voce` scrive la memoria di partenza solo per i modelli NUOVI (slot 1 del modello in uso e profili già salvati non si toccano). Entrambi visibili e modificabili in Modelli.
+- 3) Un solo blocco «Contesto e memoria del prompt» (native_ui `_build_memory`); chat continua e ricordi stanno in `memory.native.json` (profilo: `MEMORIA_CAMPI`). `contesto_lumi.carica/salva` senza path leggono lì (fallback al vecchio contesto.json); tolta `costruisci_sezione` e la chiamata in jarvis.py.
+- 4) Meteo domani: `meteo/commands.py` («meteo domani [a città]», «che tempo farà domani»), `service.domani` (Open-Meteo daily), azione `addon.meteo.domani` (jaddon + addon_manager), aiuto in local_help, LEGGIMI, ui.
+- 5) Barra: ordine Mic, Modello ▾, Online ▾, Ricerca ▾, Memoria, simbolo Telegram; ⏻ e simbolo disegnati su Canvas (`barra_tasti.IconaCanvas`), nome del modello solo nella tendina, ingranaggio e _ □ X invariati.
+- 6) `meteo/icone.py` a contorno come l'anteprima; l'HUD mostra icona, città, temperatura e ora; ora e sveglia restano in basso.
+- Test: tests/test_056c_barra_meteo.py (anche larghezza a 1366), tests/test_056c_cronologia_e_profilo.py; adeguati 056_meteo, 056b_barra_meteo, hud_quick_toggles, 056b_prompt_e_testo, memory_preferences.
+- Domande aperte per l'utente: (a) «Mic» ora mostra solo ⏻ (azzurro/arancione): lo stato PTT/«non attivo» non è più scritto, va bene? (b) il conteggio dei messaggi Telegram non letti non è più nella barra (resta il colore): lo vuoi vicino al simbolo? (c) «domani» risponde con cielo, minima e massima: va bene la frase? (d) etichetta build 056 o 056c?
+
 ## Decisioni per la 056c (utente 17/11, 21:00-21:15, a voce)
 1. Cronologia ridotta per TUTTE le domande brevi, non solo per i saluti, con la casella «Cronologia ridotta per domande brevi» (accesa) visibile nelle impostazioni.
 2. Valori di partenza per ogni modello nuovo: contesto 768 e tetto del prompt 500, VISIBILI nella pagina Modelli. Ogni modello li cambia nel proprio profilo. Il resto dell'audit resta com'è (chat continua accesa, cronologia 200).

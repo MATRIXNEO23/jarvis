@@ -1336,3 +1336,10 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - 056b (17/11, pagina Modelli unica): la base è native.json; profili e memoria del prompt si AGGIUNGONO (profili.json `memoria`, memory.json resta il file letto). Un solo Salva. Lezione: per non avere due fonti si incorpora il modulo esistente (`embed=True`) invece di riscriverlo.
 - Lezione HUD: quello che deve restare sempre visibile si impacchetta per primo (side=bottom) e a cedere è il globo.
 - Lezione prompt: separare la conversazione precedente dall'ultimo messaggio e non dare ricordi ai saluti.
+
+## 056c (17/11 notte)
+- Decisione utente (21:21): cronologia ridotta per tutte le domande brevi (casella accesa), 768/500 per i modelli nuovi, blocco unico Contesto+Memoria, meteo domani, barra come l'anteprima, icone meteo a contorno con città, temperatura e ora.
+- Lezione: il glifo ⏻ non esiste nel font di Windows (esce come quadratino): i simboli di stato si disegnano sul Canvas.
+- Lezione: un nuovo valore predefinito si applica solo ai modelli nuovi; i profili salvati si leggono dal loro file e non vanno riscritti.
+- Lezione: un campo aggiunto a memory.json rompe le versioni vecchie (schema rigido): i campi nuovi vanno nel file accanto `memory.native.json`.
+

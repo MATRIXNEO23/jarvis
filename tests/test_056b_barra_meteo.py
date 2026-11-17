@@ -18,7 +18,7 @@ class BarraTests(unittest.TestCase):
         self.assertIn('"Online ▾"', JARVIS)
         self.assertIn('"Ricerca ▾", lambda: None, after="online"', JARVIS)
         self.assertNotIn("Tavily ▾", JARVIS)
-        self.assertIn('"✈ Telegram", lambda: None, after="memory", power=True', JARVIS)
+        self.assertIn('"Telegram", lambda: None, after="memory", simbolo="telegram"', JARVIS)
         self.assertIn("modello_button = hud.model_toggle_button", JARVIS)
         self.assertNotIn("MODELLO ON", HUD)
         self.assertIn("TastoBarra", HUD)
@@ -26,7 +26,7 @@ class BarraTests(unittest.TestCase):
 
     def test_menu_modello_mostra_il_nome(self):
         src = (ROOT / "menu_modello.py").read_text(encoding="utf-8")
-        self.assertIn('"Modello: "', src)
+        self.assertNotIn('"Modello: "', src)      # 056c: il nome solo nella tendina
 
 
 class TelegramStatoTests(unittest.TestCase):
@@ -35,7 +35,7 @@ class TelegramStatoTests(unittest.TestCase):
         self.assertIn("power_color=colour", src)
         self.assertIn("ROSSO", src)
         self.assertIn("power_color", (ROOT / "barra_tasti.py").read_text(encoding="utf-8"))
-        self.assertEqual(JARVIS.count('"✈ Telegram"'), 1)
+        self.assertEqual(JARVIS.count('"Telegram"'), 1)
 
 
 class MeteoTests(unittest.TestCase):

@@ -151,7 +151,7 @@ class HeaderQuickControlTests(unittest.TestCase):
         self.assertFalse(saved['memory_enabled'])
         self.assertEqual(SecondBrain(self.brain_path).stats(), before)
         self.assertEqual(len(env['conversation_memory']), 1)
-        self.assertIn('OFF', self.hud.mic_toggle_button.cget('text'))
+        self.assertFalse(self.hud.mic_toggle_button.cget('power_on'))
         self.assertFalse(self.hud.memory_toggle_button.cget('power_on'))
         for button in (self.hud.mic_toggle_button, env['gpt_toggle'],
                        self.hud.memory_toggle_button):
@@ -168,19 +168,19 @@ class HeaderQuickControlTests(unittest.TestCase):
         env['active_gpt'] = False
         env['voice_mode'].set(env['PUSH_TO_TALK'])
         self.refresh()
-        self.assertIn('PTT', self.hud.mic_toggle_button.cget('text'))
+        self.assertEqual(self.hud.mic_toggle_button.cget('text'), 'Mic')
         env['gpt_toggle'].invoke()
         env['memory_toggle'].invoke()
         self.refresh()
         self.assertFalse(self.hud.memory_toggle_button.cget('power_on'))
         env['voice_mode'].set(env['GPT_CONVERSATION'])
         self.refresh()
-        self.assertIn('NON ATTIVO', self.hud.mic_toggle_button.cget('text'))
+        self.assertEqual(self.hud.mic_toggle_button.cget('text'), 'Mic')
         self.stream = True
         env['active_gpt'] = True
         env['gpt_enabled'].set(True)
         self.refresh()
-        self.assertEqual(self.hud.mic_toggle_button.cget('text'), 'MIC ATTIVO')
+        self.assertTrue(self.hud.mic_toggle_button.cget('power_on'))
 
     def test_save_failure_restores_setting_and_header(self):
         env = self.wire()

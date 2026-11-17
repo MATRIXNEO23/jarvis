@@ -314,8 +314,8 @@ class JarvisHUD:
         # ha il ⏻ nello stesso tasto; Mic e Memoria sono tasti con ⏻. Online, Ricerca e
         # Telegram si aggiungono con add_quick_button (Online e Ricerca vicini).
         from barra_tasti import TastoBarra
-        for key, label, has_menu in (("model", "Modello ▾", True), ("mic", "MIC", False),
-                                     ("memory", "MEMORIA", False)):
+        for key, label, has_menu in (("mic", "Mic", False), ("model", "Modello ▾", True),
+                                     ("memory", "Memoria", False)):
             button = TastoBarra(
                 quick_controls, label, None, power=True,
                 power_command=lambda name=key: self._invoke_quick_toggle(name))
@@ -397,7 +397,7 @@ class JarvisHUD:
         footer.grid_rowconfigure(0,weight=1)
         self.footer=footer
         # 056 C2: meteo sotto il globo e sopra DISCO C / RETE, senza riquadro; compare solo con dati.
-        self.weather_canvas=tk.Canvas(self.visual,height=34,width=200,bg=BG,
+        self.weather_canvas=tk.Canvas(self.visual,height=34,width=260,bg=BG,
                                       highlightthickness=0,bd=0)
         self._weather=None
         self.cpu_tile=MetricTile(footer,"CPU",0)
@@ -560,15 +560,25 @@ class JarvisHUD:
         if data==self._weather:
             return
         self._weather=data
-        canvas=self.weather_canvas
+        if not data:
+            self.weather_canvas.delete("all")
+            self.weather_canvas.pack_forget()
+            return
+        self._draw_weather()
+        self._layout_bottom()
+
+    def _draw_weather(self):
+        """Icona + città + temperatura + ora (anteprima 056c); l'ora segue il tick del clock."""
+        data, canvas = self._weather, self.weather_canvas
         canvas.delete("all")
         if not data:
-            canvas.pack_forget()
             return
         from meteo.icone import disegna
-        disegna(canvas,18,17,data["categoria"],CYAN)
-        canvas.create_text(40,17,anchor="w",fill=CYAN,font=("Consolas",10),
-                           text="%s  %d°"%(str(data["citta"])[:16],round(data["temp"])))
+        disegna(canvas,22,17,data["categoria"],CYAN)
+        ora=datetime.now().strftime("%H:%M")
+        canvas.create_text(46,17,anchor="w",fill=CYAN,font=("Consolas",10,"bold"),
+                           text="%s %d°   %s"%(str(data["citta"])[:16],round(data["temp"]),ora))
+        self._weather_ora=ora
         self._layout_bottom()
 
     def set_mode_handler(self, callback):
@@ -586,14 +596,14 @@ class JarvisHUD:
         for key in handlers:
             getattr(self, key + "_toggle_button").configure(state="normal")
 
-    def add_quick_button(self, key, text, command, *, after=None, power=False):
+    def add_quick_button(self, key, text, command, *, after=None, power=False, simbolo=None):
         """Tasto in più nella fila in alto (Online ▾, Ricerca ▾, Telegram), dopo `after`."""
         from barra_tasti import TastoBarra
         anchor = None
         if after:
             anchor = (getattr(self, after + "_toggle_button", None)
                       or getattr(self, after + "_extra_button", None))
-        button = TastoBarra(self.quick_controls, text, command, power=power)
+        button = TastoBarra(self.quick_controls, text, command, power=power, simbolo=simbolo)
         if anchor is not None:
             button.pack(side="left", padx=(0, 5), after=anchor)
         else:
@@ -650,6 +660,8 @@ class JarvisHUD:
             self.disk_tile.update(None)
             self.disk_text.set("DISCO C --")
         self.clock_text.set(datetime.now().strftime("%H:%M"))
+        if self._weather and getattr(self,"_weather_ora","")!=self.clock_text.get():
+            self._draw_weather()
         # Slow, read-only network polling occurs off the UI thread.
         measured=self._network.result()
         self.network_tile.update(measured)
@@ -706,14 +718,12 @@ class JarvisHUD:
             self.state_text.set(title)
         mic_selected = bool(state.get("mic_selected", mic_enabled))
         gpt_enabled = bool(state.get("gpt_enabled", connected))
-        mic_label = ("MIC ATTIVO" if mic_enabled else
-                     "MIC PTT" if state.get("mic_push_to_talk") else
-                     "MIC NON ATTIVO" if mic_selected else "MIC OFF")
+        mic_label = "Mic"      # 056c: come l'anteprima; lo stato lo dà il ⏻ (azzurro/arancione)
         from model_gate import enabled as model_enabled
         model_on = bool(state.get("model_enabled", model_enabled()))
         controls = (("mic", mic_label, mic_enabled or mic_selected),
                     ("model", None, model_on),
-                    ("memory", "MEMORIA", memory))
+                    ("memory", "Memoria", memory))
         if controls != self._quick_state_cache:
             for key, label, enabled in controls:
                 button = getattr(self, key + "_toggle_button")

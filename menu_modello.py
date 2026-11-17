@@ -33,9 +33,7 @@ class MenuModello(MenuModelli):
     def refresh_button(self):
         try:
             from local_model import scelta_modello
-            in_uso = scelta_modello.modello_in_uso(self.config_path)
-            nome = scelta_modello.nome_breve(in_uso)[:22] if in_uso else ""
-            self.button.configure(text=("Modello: " + nome + " ▾") if nome else "Modello ▾")
+            self.button.configure(text="Modello ▾")   # 056c: il nome si vede solo nella tendina
         except (tk.TclError, OSError, ValueError, RuntimeError):
             pass
 
