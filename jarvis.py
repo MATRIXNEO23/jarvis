@@ -227,7 +227,8 @@ def main() -> None:
     def open_native_model_settings():
         try:
             from local_model.native_ui import NativeSettingsWindow
-            NativeSettingsWindow(settings_window, get_session=get_gemma_session)
+            NativeSettingsWindow(settings_window, get_session=get_gemma_session,
+                                 on_use=lambda target: lumi_model_use(target))
         except (OSError, ValueError, RuntimeError, ImportError) as exc:
             messagebox.showerror("Lumi / Gemma", str(exc), parent=settings_window)
 
@@ -4964,6 +4965,31 @@ def main() -> None:
             speak_result(text)
         root.after(0, work)
 
+    def lumi_model_use(target) -> None:
+        """Usa il modello scelto (a voce con «cambia modello» e con «Usa questo» nelle
+        impostazioni): riconosce la famiglia, carica il suo profilo, salva e riavvia il motore."""
+        sm = __import__("local_model.scelta_modello", fromlist=["elenca_modelli"])
+        try:
+            in_use = sm.modello_in_uso()
+        except (OSError, ValueError, RuntimeError):
+            in_use = ""
+        if str(target) == in_use:
+            note = "«" + sm.nome_breve(target) + "» è già il modello in uso."
+            write_line("MODELLO LOCALE > " + note)
+            speak_result(note)
+            return
+        try:
+            sm.salva_scelta(target)
+        except (OSError, ValueError, RuntimeError) as exc:
+            write_line("MODELLO LOCALE > Modello non cambiato: " + str(exc)[:120])
+            speak_result("Non sono riuscita a cambiare il modello.")
+            return
+        note = "Cambio modello: «" + sm.nome_breve(target) + "». Salvato per i prossimi avvii."
+        write_line("MODELLO LOCALE > " + note)
+        write_line("MODELLO LOCALE > " + sm.nota_famiglia(target))
+        speak_result(note)
+        lumi_model_restart()        # chiude il motore; riparte col nuovo modello
+
     def lumi_model_choose() -> None:
         """«cambia modello»: elenca i .gguf (voce e finestra risultati); il numero scelto
         (anche senza «Lumi») salva il modello e riavvia il motore."""
@@ -4980,22 +5006,7 @@ def main() -> None:
             return
 
         def choose(number: int) -> None:
-            target = models[number - 1]
-            if str(target) == in_use:
-                note = "«" + sm.nome_breve(target) + "» è già il modello in uso."
-                write_line("MODELLO LOCALE > " + note)
-                speak_result(note)
-                return
-            try:
-                sm.salva_scelta(target)
-            except (OSError, ValueError, RuntimeError) as exc:
-                write_line("MODELLO LOCALE > Modello non cambiato: " + str(exc)[:120])
-                speak_result("Non sono riuscita a cambiare il modello.")
-                return
-            note = "Cambio modello: «" + sm.nome_breve(target) + "». Salvato per i prossimi avvii."
-            write_line("MODELLO LOCALE > " + note)
-            speak_result(note)
-            lumi_model_restart()        # chiude il motore; riparte col nuovo modello
+            lumi_model_use(models[number - 1])
 
         items = [("Modello in uso" if str(m) == in_use else "Modello", sm.nome_breve(m), str(m))
                  for m in models]

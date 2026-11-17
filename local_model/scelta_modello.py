@@ -73,9 +73,10 @@ def salva_scelta(model_path, config_path=None):
     target = Path(model_path)
     if not target.is_file() or target.suffix.lower() != ".gguf":
         raise ValueError("Il modello scelto non esiste più.")
-    revised, _reload = update_native_settings(NativeModelConfig.load(path),
-                                              {"model": str(target)})
-    revised.save(path)
+    # 054: riconosce la famiglia e carica lo slot ricordato (stessa strada per «cambia
+    # modello» a voce e per «Usa questo» nelle impostazioni).
+    from .profili_famiglia import applica_modello
+    revised, _family, _known, _reload = applica_modello(target, path)
     return revised
 
 
@@ -86,3 +87,10 @@ def testo_elenco(models) -> tuple[str, str]:
     lines = ["%d. %s" % (n, nome_breve(m)) for n, m in enumerate(models, 1)]
     spoken = "Ho trovato %d modelli. " % len(models) + ". ".join(lines) + ". Quale scegli? Di' il numero."
     return "Modelli locali:\n" + "\n".join(lines) + "\nDi' il numero per sceglierne uno.", spoken
+
+
+def nota_famiglia(model_path, config_path=None) -> str:
+    """Frase per la chat dopo la scelta: famiglia riconosciuta e profilo caricato."""
+    from .profili_famiglia import messaggio_famiglia, riconosci_famiglia, slot_ricordato
+    family, known = riconosci_famiglia(model_path)
+    return messaggio_famiglia(family, known, slot_ricordato(family, config_path))

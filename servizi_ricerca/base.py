@@ -24,4 +24,5 @@ class Ricerca:
     ordine: int = 99
     limite: str = ""                  # cosa offre gratis, in parole semplici
     passi: tuple = field(default_factory=tuple)
+    limite_mese: int = 0              # ricerche gratuite al mese (per la stima della quota); 0 = ignoto
     adattatore: object = None         # callable(key, query, approfondisci, timeout, post) -> Risultato

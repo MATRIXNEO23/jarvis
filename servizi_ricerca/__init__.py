@@ -119,7 +119,7 @@ def _motivo(exc: Exception) -> str:
 
 
 def cerca(query: str, approfondisci: bool = False, *, settings=None, keys=None, post=_post,
-          timeout: float = 25):
+          timeout: float = 25, counter: bool = True):
     """(nome servizio, Risultato) dal primo servizio che risponde; (None, [motivi]) se nessuno."""
     keys = keys or chiavi()
     reasons = []
@@ -130,6 +130,12 @@ def cerca(query: str, approfondisci: bool = False, *, settings=None, keys=None, 
             reasons.append("%s: %s" % (service.nome, _motivo(exc)))
             continue
         if isinstance(result, Risultato) and (result.riassunto or result.link):
+            if counter:
+                try:
+                    from . import quota
+                    quota.registra(service.id)
+                except Exception:                      # il contatore non deve mai bloccare la ricerca
+                    pass
             return service.nome, result
         reasons.append("%s: nessun risultato" % service.nome)
     return None, reasons
@@ -251,6 +257,14 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
                        ).pack(side="left", padx=2)
             note = service.limite + ("" if service.adattatore is not None
                                      else " Ricerca non ancora collegata: per ora Lumi la salta.")
+            if keys.presente(service_id):
+                from . import quota
+                info = quota.stato(service_id, service.limite_mese)
+                bar = tk.Canvas(rows, width=110, height=8, bg="#10293a", highlightthickness=0)
+                bar.pack(anchor="w", padx=(28, 0))
+                left = 1.0 if info["usato"] is None else 1 - info["usato"]
+                bar.create_rectangle(0, 0, int(110 * left), 8, fill=info["colore"], width=0)
+                ttk.Label(rows, text=info["testo"], foreground="#888").pack(anchor="w", padx=(28, 0))
             ttk.Label(rows, text=note, foreground="#888", wraplength=480, justify="left"
                       ).pack(anchor="w", padx=(28, 0), pady=(0, 3))
 

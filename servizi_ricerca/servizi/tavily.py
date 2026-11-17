@@ -18,7 +18,7 @@ def cerca(key, query, approfondisci, timeout, post) -> Risultato:
 
 
 SERVIZIO = Ricerca(
-    id="tavily", nome="Tavily", ordine=1, adattatore=cerca,
+    id="tavily", nome="Tavily", ordine=1, limite_mese=1000, adattatore=cerca,
     chiavi="https://app.tavily.com",
     limite="Piano gratuito con crediti mensili.",
     passi=("Apri app.tavily.com e accedi.", "Copia la chiave API dalla pagina principale (tvly-…).",

@@ -126,6 +126,11 @@ class ProcessChatAdapter:
         from .native_settings import RELOAD_FIELDS, default_native_settings_path
         if config is None:
             config = NativeModelConfig.load(default_native_settings_path())
+            try:                      # 054: migra i valori attuali nello slot 1 della famiglia
+                from .profili_famiglia import assicura
+                assicura()
+            except (OSError, ValueError):
+                pass
         if not isinstance(config, NativeModelConfig):
             raise TypeError("Configurazione nativa richiesta.")
         config.validate()
