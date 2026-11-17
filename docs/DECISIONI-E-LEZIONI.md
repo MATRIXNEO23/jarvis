@@ -1287,3 +1287,11 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Decisione utente: sezioni separate chat / ricordi / progetti / tutto, ciascuna con conferma sì/no in parole semplici, anche a voce.
 - Scelta tecnica: nessun sistema parallelo; clear_all resta «chat», si aggiunge clear_ricordi (tabella e indice FTS nella stessa transazione) e la cancellazione progetti esistente (menu_laterale) è stata generalizzata. Le frasi a voce stanno nel catalogo comandi (sezione «Memoria»).
 - Prove: test su DB e cartelle temporanee; il collaudo vale solo sulla CI Windows. Lezione: il testo del pulsante deve dire esattamente che cosa cancella.
+
+## 17/11/2026 — Build 054: catena GPT/online, «cerca online» senza chiave, «approfondisci»
+- Causa 1 (prove 052): con GPT attivo ma non collegato (o rifiutato) la catena si fermava su GPT: `start_conversation_gpt` terminava con un messaggio, e il «no» all'orchestratore tornava a GPT; la richiesta non arrivava a online né a Gemma, e in alcuni rami `submit_gemma_voice` tornava False senza dire nulla.
+- Decisione utente: ordine servizi online gratuiti, poi GPT solo dopo «Uso GPT? sì/no» (risposta senza «Lumi», domanda in chat e a voce, nessuna finestra: stesso meccanismo `lumi_comandi.chiedi`), poi gli altri modelli. Se tutti falliscono, messaggio chiaro in chat e a voce. Il codice non va mai a Gemma.
+- Correzione: `start_conversation_gpt` -> online se pronto; `offer_gpt` (collegato: domanda; non collegato: avviso e passo oltre); `resume_gpt`; `local_after_gpt` (ultimo anello, con messaggio). Online fallito -> evento `online_gpt` -> `gpt_offer`. Errore di GPT dopo l'invio -> modello locale. Tolta la domanda «uso l'online?» per GPT attivo.
+- «cerca online»: la chiave deve esistere e decifrarsi; senza, messaggio con il link Tavily subito; errori del thread di ricerca o della finestra vanno in chat.
+- «approfondisci X» senza «online»: Gemma offline (`servizi_ricerca.approfondisci_locale`), anche con l'online pronto.
+- Lezione: ogni ramo che «gestisce» una richiesta deve dire qualcosa; un return False silenzioso è un difetto. Test: tests/test_054_catena_gpt.py.

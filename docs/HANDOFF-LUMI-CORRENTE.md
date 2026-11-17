@@ -130,6 +130,11 @@ Stato: codice e test scritti, **non eseguiti in locale** (regola: solo CI Window
 
 **Da provare dal vivo (build 052)**: «chiudi i risultati» dopo una ricerca file (deve chiudere solo la finestra, subito); «scrivimi uno script che …» con online acceso e spento; «cambia modello» → elenco a voce e in finestra, «2» senza «Lumi», riavvio e messaggio col nuovo modello; «Lumi, ricordati che preferisco risposte brevi» → «sì» senza «Lumi»; Impostazioni > Modelli > Servizi di ricerca (link e chiave Tavily, pulsante Prova); «cerca online …» e «approfondisci online …» con Tavily (poi con chiave sbagliata per vedere il passaggio al successivo); `lumi_ricerca` e `lumi_modelli` dalla diagnostica; musica all'avvio senza blocchi.
 
+## Ripresa 17/11 — build 054: catena GPT/online, ricerca senza chiave, «approfondisci»
+- Ordine deciso dall'utente: online gratuiti, poi GPT con «Uso GPT? sì/no» (senza «Lumi», nessuna finestra), poi modello locale; mai silenzio. Codice: jarvis.py (start_conversation_gpt, offer_gpt, resume_gpt, send_to_gpt, local_after_gpt, azioni gpt_yes/gpt_no/gpt_offer), local_model/conversazione_lumi.py (evento online_gpt).
+- «cerca online» senza chiave Tavily: messaggio col link; errori mostrati in chat. «approfondisci» senza «online»: Gemma.
+- Test: tests/test_054_catena_gpt.py (+ adattati due test di test_selected_conversation_model.py). Non eseguiti in locale; vale la CI Windows. Da provare dal vivo con GPT attivo non collegato e collegato.
+
 ## Ripresa 17/11 — build 053: cancellazione memoria a sezioni (da provare dal vivo)
 - Decisione utente: la cancellazione si sceglie per sezione. Impostazioni > Memoria generale ha 4 pulsanti (Cancella chat / ricordi / progetti / tutto) e a voce «cancella le chat», «cancella i ricordi», «cancella i progetti», «cancella tutto». Ogni volta sì/no con messaggio semplice.
 - Codice: cancella_memoria.py (sezioni, messaggi, frasi, esegui); SecondBrain.clear_ricordi() (tabella + FTS nella stessa transazione, opzionale per progetti); menu_laterale.cancella_tutti_i_progetti() (chat, cartelle nel Cestino, ricordi del progetto) riusata da cancella_vecchi_progetti; jarvis.py clear_saved_memory(section) e memory_wipe_command (voce, prima di preference_command); catalogo comandi: sezione «Memoria». Chiude il P1 di FIX-051-01 su clear_all.
