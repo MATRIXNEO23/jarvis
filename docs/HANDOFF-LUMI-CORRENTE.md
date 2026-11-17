@@ -151,6 +151,24 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - «Memoria locale - impostazioni»: la pagina si disegna sopra la precedente (lettere fantasma a sinistra) e il testo esce dal bordo.
 - Barra in alto da rifare (mockup approvato, tema azzurro): ogni voce è un tasto; Modello ▾ con ⏻ nello stesso tasto (via «MODELLO ON»); «Online» e «Ricerca» vicini; Telegram come tasto con on/off; icone meteo disegnate bene (sole, sole e nuvola, nuvola, pioggia, temporale, neve, nebbia, luna con le fasi).
 
+## 056b, aggiunte decise con l'utente (17/11, 19:10-20:09, a voce)
+1. Una sola pagina «Modelli», senza «Gemma» nei nomi e senza finestre annidate:
+   - in alto le caselle 1/2/3, l'elenco e «Aggiungi»;
+   - sotto i 3 profili del modello selezionato;
+   - sotto ancora TUTTE le impostazioni del modello, direttamente nella pagina: contesto, thread, risposta massima, ecc., più quelle della memoria che finiscono nel prompt (token di cronologia, messaggi recenti, sintesi). Oggi la memoria è in «Configura memoria locale»: esce da lì ed entra solo nel profilo.
+   - Un solo Salva, che scrive SOLO nel profilo caricato del modello in uso.
+   - Base: native.json (regola delle 19:04). Via «Anteprima multimodello». Nella pagina dell'add-on nessuna impostazione dei modelli.
+2. Il second brain resta unico per tutti i modelli; accensione e cancellazione restano in Memoria.
+3. Bug: dopo una domanda, al «ciao» successivo il modello ripete la risposta precedente. Da fare:
+   - controllare il prompt reale;
+   - segnare chiaramente la conversazione precedente;
+   - tagliare le risposte vecchie lunghe;
+   - meno cronologia per saluti e domande brevi;
+   - dal second brain solo fatti salvati e solo se pertinenti, nessun ricordo per i saluti.
+4. Regola fissa: ogni funzione nuova aggiorna anche l'aiuto dei comandi, i tutorial, le frasi a voce e il catalogo delle capacità. Per il meteo («che tempo fa a…», «meteo a…», «meteo domani») non era stato fatto.
+5. REGRESSIONE 056: in basso l'ora e la sveglia non si vedono più (spinte fuori dalle icone meteo). Vanno ripristinate; se manca spazio, l'ora va accanto al meteo. Regola: un'aggiunta non deve rompere quello che c'è, quindi audit delle regressioni prima della build.
+6. Contesto online proporzionato (sezione 19:01): incluso.
+
 ## 057, primo punto (utente 17/11 19:03)
 Le impostazioni sono duplicate tra «Modello locale Gemma» (Configura Gemma locale) e la sezione multimodello/«I miei modelli»/profili, oltre che nella pagina dell'add-on. L'utente: i modelli andavano messi DENTRO la sezione del modello locale, senza crearne un'altra. Nella 057: una sola pagina «Modelli offline» (caselle, elenco, profili e configurazione del modello selezionato), via i doppioni. Nella 056b: solo l'unica fonte del modello in uso (native.json e profili coerenti).
 
