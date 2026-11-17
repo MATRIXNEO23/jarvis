@@ -105,6 +105,15 @@ Regola: niente iniziative sull'organizzazione dei menu; ogni argomento al suo po
 10. Conferme: «sì»/«no» senza dire «Lumi» (verificare che sia sempre così).
 Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), documenti negli allegati (PDF con pypdf, Office, LibreOffice, RTF, HTML, EPUB).
 
+## Da fare per la 055 (decisioni utente 17/11, notte)
+- Ricerca: al posto dell'interruttore «RICERCA on/off» in alto, un menu a tendina come quello dei servizi online: elenco dei servizi di ricerca, ciascuno con la sua spunta e la sua barra di quota.
+- Modelli: «Aggiungi modello…» non copia più il file, lo usa da dove si trova. Se il file sparisce, Lumi lo segnala. L'elenco e «cambia modello» devono vedere i modelli aggiunti (bug 054: Qwen3 copiato in modelli/ non compariva).
+- Modelli: 3 posizioni fisse (1/2/3) con modelli preassegnati per passare velocemente dall'uno all'altro, con l'elenco completo sotto.
+- Profili: 3 profili per OGNI singolo modello, non per famiglia.
+- Impostazioni modelli: si trovano solo in «Modelli». La pagina dell'add-on tiene solo attiva/disattiva e il pulsante «Apri impostazioni modelli».
+- Pulsanti _ □ X in alto a destra, sopra l'ingranaggio (non fatto nella 054).
+- Prima delle correzioni: leggere il FIX di Codex in docs/audit/, proporre all'utente le modifiche punto per punto e partire solo con il suo ok.
+
 ## Ripresa 17/11 — build 052 preparata (decisioni dell'utente del 17/11 + audit Codex FIX-051-01)
 Stato: codice e test scritti, **non eseguiti in locale** (regola: solo CI Windows). Esito CI/build: vedi sotto, aggiornato dopo il push. Nuovi test: `tests/test_052_*.py`, più aggiunte a `test_controllo_pc.py` e `test_musica.py`.
 
