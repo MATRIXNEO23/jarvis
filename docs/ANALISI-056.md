@@ -57,12 +57,23 @@ Riferimento: docs/DECISIONI-056.md. Analisi in sola lettura, nessuna modifica.
 | `lumi_stato` | mostra `modalita` e `meteo` |
 Limite: due aggiornamenti dell'icona devono distare almeno 30 minuti (verificare dal log di rete o dal codice, non con attese reali).
 
-## Audit regressioni 056b (17/11, base = 3eb7e6e, genitore del primo multimodello F5.2 f035575)
-Confrontato 3eb7e6e..HEAD (449 commit): funzioni (def) di jarvis.py e dei moduli estratti, etichette dei pulsanti, `native_config`/`memory_preferences`, `native_conversation_session`/adapter/bridge (template, stop, budget), HUD.
-- Funzioni sparite: solo `open_memory_preferences` (tolta di proposito: la memoria è nel profilo). Etichette sparite: tutte spiegate da rinomina Jarvis→Lumi o dalla pagina unica.
-- Stop e template: `<end_of_turn>` ora per famiglia (`chat_templates.stop_sequence`), nessuna perdita.
-- Ripristinato: ora e sveglia in basso (`animated_hud._layout_bottom`: parti in basso impacchettate prima del globo; test `test_056b_hud_layout.py`).
-- Ripristinato/corretto: «ciao» che ripete la risposta precedente (`prompt_breve`); «Gemma» nei testi visibili.
-- Scelte di velocità volute, NON ripristinate: `context_size` 1024 (era 2048), tetto prompt 600, `history_max_tokens` 200 (era 250). Modificabili ora nella pagina Modelli e nel profilo; da riportare a 2048 solo se l'utente lo chiede.
-- Limite dell'audit: nessuna prova eseguita su Linux; il resto è lettura del diff.
-Prove dal vivo per Codex: (1) Impostazioni > Modelli: una sola pagina con caselle, elenco, profili, impostazioni e memoria; Salva poi cambiare profilo: valori e memoria cambiano. (2) Chat lunga, poi «ciao»: risposta breve, non la precedente; `lumi_prompt` mostra il separatore «[Sopra: conversazione precedente…]» e nessun ricordo. (3) HUD in basso: ora, sveglia (imposta sveglia tra 2 minuti: compare «Ferma»), meteo, DISCO C, RETE tutti visibili. (4) Online: «ciao» = log «ONLINE > contesto minimo … ~N token»; «approfondisci» = fino a 6 scambi; `lumi_online` mostra `ultimo_contesto_online`. (5) Aiuto (F1) ha la sezione Meteo e Modelli offline.
+## Audit regressioni 056b (17/11) - elenco per la scelta dell'utente, NESSUN ripristino applicato
+Confronti: (A) base 3eb7e6e = genitore del primo multimodello F5.2 (f035575, 09/11); (B) riferimento indicato dall'utente MATRIXNEO23/jarvis-copia-qwen (main = stub + cartella Download; l'ultima build è `Lumi-050-PROVA.zip`, 16/11, estratta in sola lettura). Rispetto alla 050 identici a HEAD: `chat_templates.py`, `persona.py`, `memory_preferences.py`, `native_settings.py` (template, stile e memoria non sono cambiati dopo la 050). Funzioni (def) e etichette dei pulsanti: sparita solo `open_memory_preferences` (voluto); le altre etichette sono rinomine Jarvis->Lumi.
+Unica eccezione già approvata e FATTA: ora e sveglia in basso (`animated_hud._layout_bottom`, test `test_056b_hud_layout.py`).
+
+| # | Differenza | Prima (A/050) | Ora | Proposta (da scegliere) |
+|---|---|---|---|---|
+| 1 | `context_size` predefinito | 2048 | 1024 | tenere 1024 (Pavilion) o tornare a 2048; ora modificabile nella pagina Modelli/profilo |
+| 2 | Tetto del prompt col contatore esatto | contesto - uscita - 128 (circa 1792) | min(600, ...) (056b approvata 18:55) | tenere 600 o alzare (es. 1200) |
+| 3 | «Chat continua» | spenta | accesa di serie (056b) | tenere o spegnere di serie |
+| 4 | Catalogo azioni | tetto 8192 | dentro il tetto, catalogo ridotto se non entra | tenere |
+| 5 | Cronologia e ricordi | 250 token | 200 token | tenere o tornare a 250 |
+| 6 | Stop del modello | solo `<end_of_turn>` (Gemma) | per famiglia (Gemma, Qwen) | tenere (serve a Qwen) |
+| 7 | `/nothink` | non gestito | tolto da domanda, risposta e flusso | tenere |
+| 8 | Test di generazione | ricarica il motore | non ricarica | tenere |
+| 9 | Barra in alto | «INTERFACCIA NEURALE», MIC OFF / GPT OFF / MODELLO ON / MEMORIA OFF, ingranaggio 21 | slide modalità, tasti con on/off, ingranaggio 17 con _ □ X sopra | tenere (mockup approvato) |
+| 10 | Modelli | un solo modello, finestra «Configura Gemma» | pagina unica con caselle, elenco, profili, impostazioni e memoria nel profilo | tenere (richiesta 19:04) |
+| 11 | Stile/persona, fast forwarding | assenti nella base A | presenti (026), identici alla 050 | tenere |
+Non confrontabile senza il PC: tempi di risposta e qualità reale (solo prove dal vivo).
+
+Prove dal vivo per Codex: (1) Impostazioni > Modelli: una sola pagina; Salva poi cambiare profilo: valori e memoria cambiano. (2) Chat lunga poi «ciao»: risposta breve, non la precedente; `lumi_prompt` mostra «[Conversazione precedente: ...]» e nessun ricordo. (3) HUD in basso: ora, sveglia (imposta tra 2 minuti: compare «Ferma»), meteo, DISCO C, RETE visibili. (4) Online: «ciao» = log «ONLINE > contesto minimo ... ~N token»; «approfondisci» fino a 6 scambi; `lumi_online` mostra `ultimo_contesto_online`. (5) Aiuto (F1): sezioni Meteo e Modelli offline.

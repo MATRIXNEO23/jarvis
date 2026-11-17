@@ -154,6 +154,7 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 ## Ripresa 17/11 sera — 056b allargata (solo py_compile su Linux)
 - Fatto: pagina «Modelli offline» unica (miei_modelli + NativeSettingsWindow(embed=True), memoria nel profilo), via anteprima F5 e pulsanti doppi; prompt «ciao» (prompt_breve); HUD in basso (_layout_bottom); aiuto Meteo/Modelli; contesto online proporzionato (contesto_online); inventario docs/INVENTARIO-DUPLICATI-056b.md; audit in docs/ANALISI-056.md.
 - Test nuovi: test_056b_nessun_duplicato_impostazioni, _memoria_nel_profilo, _ciao_non_ripete, _hud_layout, _aiuto_meteo, _contesto_online.
+- Audit: nessun ripristino applicato (regola utente 20:28), elenco in docs/ANALISI-056.md da far scegliere all'utente.
 - Resta: CI test e build f5n da verificare; «meteo domani» non esiste (proposta); tutorial vocale del meteo non fatto (aiuto_comandi riguarda solo Controllo PC).
 
 ## 056b, aggiunte decise con l'utente (17/11, 19:10-20:09, a voce)
