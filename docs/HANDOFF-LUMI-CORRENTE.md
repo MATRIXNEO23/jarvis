@@ -157,6 +157,13 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Audit: nessun ripristino applicato (regola utente 20:28), elenco in docs/ANALISI-056.md da far scegliere all'utente.
 - Resta: CI test e build f5n da verificare; «meteo domani» non esiste (proposta); tutorial vocale del meteo non fatto (aiuto_comandi riguarda solo Controllo PC).
 
+## Decisioni per la 056c (utente 17/11, 21:00-21:15, a voce)
+1. Cronologia ridotta per TUTTE le domande brevi, non solo per i saluti, con la casella «Cronologia ridotta per domande brevi» (accesa) visibile nelle impostazioni.
+2. Valori di partenza per ogni modello nuovo: contesto 768 e tetto del prompt 500, VISIBILI nella pagina Modelli. Ogni modello li cambia nel proprio profilo. Il resto dell'audit resta com'è (chat continua accesa, cronologia 200).
+3. «Contesto» e «Memoria del prompt» uniti in un solo blocco, salvati nello stesso posto.
+4. Aggiungere «meteo domani», con aiuto e frasi a voce.
+5. L'utente dice che i tasti della barra in alto NON sono come nel mockup approvato (dettagli da raccogliere con uno screenshot).
+
 ## 056b, aggiunte decise con l'utente (17/11, 19:10-20:09, a voce)
 1. Una sola pagina «Modelli», senza «Gemma» nei nomi e senza finestre annidate:
    - in alto le caselle 1/2/3, l'elenco e «Aggiungi»;
