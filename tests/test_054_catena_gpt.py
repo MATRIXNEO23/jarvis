@@ -11,7 +11,7 @@ import servizi_online
 import servizi_ricerca as sr
 
 ROOT = Path(__file__).resolve().parents[1]
-CATENA = ("start_conversation_gpt", "local_after_gpt", "offer_gpt", "resume_gpt", "send_to_gpt")
+CATENA = ("start_conversation_gpt", "conversation_chain", "local_after_gpt", "offer_gpt", "resume_gpt", "send_to_gpt")
 
 
 def _funzioni(*names):
@@ -51,7 +51,7 @@ class GptNonCollegatoTests(unittest.TestCase):
         env = _env(active_gpt=False)
         _avvia(env, "scrivimi uno script Python che somma due numeri", True)
         env["submit_gemma_voice"].assert_called_once_with(
-            "scrivimi uno script Python che somma due numeri", route="online")
+            "scrivimi uno script Python che somma due numeri", typed=False, route="online")
         env["run_gpt"].assert_not_called()
 
     def test_without_online_and_without_gpt_the_question_goes_to_the_local_model_with_a_notice(self):
@@ -79,7 +79,7 @@ class GptCollegatoTests(unittest.TestCase):
     def test_connected_gpt_still_tries_free_online_first(self):
         env = _env(active_gpt=True)
         _avvia(env, "spiegami la relatività", True)
-        env["submit_gemma_voice"].assert_called_once_with("spiegami la relatività", route="online")
+        env["submit_gemma_voice"].assert_called_once_with("spiegami la relatività", typed=False, route="online")
         env["run_gpt"].assert_not_called()
 
     def test_without_online_gpt_is_asked_with_the_pending_yes_no_and_no_dialog(self):
@@ -208,7 +208,7 @@ class ApprofondisciTests(unittest.TestCase):
         env = _env(active_gpt=True)
         _avvia(env, "approfondisci la fotosintesi", True)
         env["submit_gemma_voice"].assert_called_once_with("approfondisci la fotosintesi",
-                                                         route="locale")
+                                                         typed=False, route="locale")
         env["run_gpt"].assert_not_called()
 
     def test_submit_gemma_voice_keeps_approfondisci_local(self):

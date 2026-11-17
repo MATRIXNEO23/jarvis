@@ -175,6 +175,16 @@ def frase_breve(result: Risultato, limit: int = 280) -> str:
     return (cut[:end + 1] if end > 80 else cut.rsplit(" ", 1)[0] + "…")
 
 
+def dominio(url: str) -> str:
+    """Dominio reale della destinazione (FIX 7): si vede accanto al titolo prima del clic."""
+    from urllib.parse import urlparse
+    try:
+        host = (urlparse(url).hostname or "").lower()
+    except ValueError:
+        host = ""
+    return host[4:] if host.startswith("www.") else host
+
+
 def testo_chat(nome: str, result: Risultato) -> str:
     """Messaggio di Lumi in chat: riassunto, poi le fonti come link markdown («[titolo](url)»)
     con una breve anteprima sotto; chat_link li rende cliccabili."""
@@ -183,7 +193,7 @@ def testo_chat(nome: str, result: Risultato) -> str:
         lines += ["", "Fonti:"]
     for n, (title, url) in enumerate(result.link, 1):
         safe = title.replace("[", "(").replace("]", ")").replace("\n", " ")
-        lines.append("%d. [%s](%s)" % (n, safe, url))
+        lines.append("%d. [%s](%s)  (%s)" % (n, safe, url, dominio(url) or "dominio ignoto"))
         preview = result.anteprime[n - 1] if n <= len(result.anteprime) else ""
         if preview:
             lines.append("    " + preview)

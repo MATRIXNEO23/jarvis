@@ -746,6 +746,7 @@ def main() -> None:
     busy_local = False
     busy_gpt = False
     online_consent_pending = False
+    gpt_voice_consent_epoch = None      # 055: consenso a voce valido per questa epoca
     gpt_conversation_session_grant = None
     gpt_request_action = ""
     local_execution_lock = threading.Lock()
@@ -2167,20 +2168,25 @@ def main() -> None:
 
 
     def confirm_gpt_inference(detail: str) -> bool:
-        nonlocal online_consent_pending
-        if online_consent_pending or closing or busy_gpt or not gpt_enabled.get() or not active_gpt:
+        """055: niente finestra Sì/No. Il consenso si chiede a voce e in chat («sì»/«no» senza
+        «Lumi»); con il consenso già dato in questa conversazione risponde True subito."""
+        nonlocal gpt_voice_consent_epoch
+        if closing or busy_gpt or not gpt_enabled.get() or not active_gpt:
             return False
-        epoch = conversation_epoch
-        online_consent_pending = True
-        try:
-            approved = messagebox.askyesno(
-                "Conferma GPT online",
-                "Inviare a GPT online per questa richiesta?\n\n" + detail,
-                parent=root, default="no")
-        finally:
-            online_consent_pending = False
-        return (approved and epoch == conversation_epoch and not closing
-                and gpt_enabled.get() and active_gpt and not busy_gpt)
+        if gpt_voice_consent_epoch == conversation_epoch:
+            return True
+        __import__("lumi_comandi").chiedi(
+            "gpt_consent_yes", "Posso usare GPT online per questa richiesta? Di' sì o no, "
+            "poi ripeti la richiesta.", write_line, speak_result, no_action="gpt_consent_no")
+        return False
+
+    def grant_gpt_voice_consent(accepted: bool) -> None:
+        nonlocal gpt_voice_consent_epoch
+        if accepted:
+            gpt_voice_consent_epoch = conversation_epoch
+            write_line("GPT > Ok, uso GPT in questa conversazione: ripeti la richiesta.")
+        else:
+            write_line("GPT > Va bene, non uso GPT.")
 
     def run_gpt(action: str, *, consent_granted=False,
                 capability="chat.conversation", permission=None,
@@ -2318,13 +2324,19 @@ def main() -> None:
             return
         # Catena (decisione 17/11): prima i servizi online gratuiti, poi GPT solo dopo il
         # «Uso GPT? sì/no», poi gli altri modelli. Mai silenzio.
+        conversation_chain(spoken, False)
+
+    def conversation_chain(spoken: str, typed: bool) -> None:
+        """055: UNA catena per voce e testo: servizi online gratuiti, «Uso GPT?», modello locale."""
+        if __import__("servizi_ricerca").parse(spoken) and lumi_ricerca(spoken):
+            return                       # «cerca/approfondisci online …» anche scritto (055)
         if __import__("servizi_ricerca").approfondisci_locale(spoken):
-            submit_gemma_voice(spoken, route="locale")     # «approfondisci» senza «online»: Gemma
+            submit_gemma_voice(spoken, typed=typed, route="locale")   # «approfondisci»: Gemma
             return
         if __import__("servizi_online").disponibili():
-            submit_gemma_voice(spoken, route="online")
+            submit_gemma_voice(spoken, typed=typed, route="online")
             return
-        offer_gpt(spoken, False)
+        offer_gpt(spoken, typed)
 
     def local_after_gpt(spoken: str, typed: bool) -> None:
         """Ultimo anello: modello locale, oppure messaggio chiaro (il codice non va a Gemma)."""
@@ -3511,7 +3523,7 @@ def main() -> None:
         if try_self_diagnostic(message):
             request.set("")
             return
-        if not gpt_enabled.get() or not active_gpt or busy_gpt:
+        if not gpt_enabled.get() or busy_gpt:
             return
         reconcile_document_session(force=True)
         if project_voice_command(message):
@@ -3541,11 +3553,10 @@ def main() -> None:
                     telegram_send_ready=live["telegram_voice_send"],
                     runtime_info=capability_status_prompt(live),
                     addon_actions=active_addon_actions())
-                if run_gpt("typed_conversation",prompt=prompt,
-                           epoch=conversation_epoch,
-                           document_id=document_snapshot,utterance=message):
-                    request.set("")
-                    write_line("DOMANDA A GPT > " + message)
+                # 055: stessa catena della voce (online gratuiti, «Uso GPT?», locale).
+                request.set("")
+                write_line("TU > " + message)
+                conversation_chain(message, True)
                 return
             # Longer free-form questions are conversational only; never
             # interpret a 5000-character document as an executable action.
@@ -3555,6 +3566,11 @@ def main() -> None:
         except (ValueError,ConversationRejected) as exc:
             request.set(message)
             write_line("LUMI > " + str(exc))
+            return
+        if not active_gpt:
+            request.set("")
+            write_line("TU > " + message)
+            conversation_chain(message, True)
             return
         if run_gpt("ask", prompt=prompt, source=message):
             request.set("")
@@ -5097,6 +5113,8 @@ def main() -> None:
          # 17/11: «Uso GPT? sì/no» dopo i servizi online gratuiti.
          "gpt_yes": lambda: resume_gpt(True),
          "gpt_no": lambda: resume_gpt(False),
+         "gpt_consent_yes": lambda: grant_gpt_voice_consent(True),
+         "gpt_consent_no": lambda: grant_gpt_voice_consent(False),
          "gpt_offer": lambda: offer_gpt(*(__import__("orchestratore").IN_ATTESA.pop("gpt_offerta", None)
                                           or ("", False))),
          "orch_yes": lambda: __import__("orchestratore").rispondi_permesso(True),
