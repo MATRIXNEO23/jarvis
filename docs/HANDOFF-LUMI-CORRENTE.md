@@ -154,6 +154,8 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 ## 057, primo punto (utente 17/11 19:03)
 Le impostazioni sono duplicate tra «Modello locale Gemma» (Configura Gemma locale) e la sezione multimodello/«I miei modelli»/profili, oltre che nella pagina dell'add-on. L'utente: i modelli andavano messi DENTRO la sezione del modello locale, senza crearne un'altra. Nella 057: una sola pagina «Modelli offline» (caselle, elenco, profili e configurazione del modello selezionato), via i doppioni. Nella 056b: solo l'unica fonte del modello in uso (native.json e profili coerenti).
 
+Regola dell'utente (19:04): la BASE è quella funzionante a modello singolo (native.json + «Configura Gemma locale»). Più modelli e profili si AGGIUNGONO a quella base, non diventano una configurazione parallela.
+
 ## Richiesta utente 17/11 19:01: contesto online proporzionato
 Una domanda breve («ciao») non deve mandare migliaia di token online. Proposta (da approvare): il contesto cresce con la richiesta. Domanda breve = solo istruzioni minime e l'ultimo scambio; «approfondisci» e richieste lunghe = fino a 6 scambi; allegati e scheda di Lumi solo se servono. Nel log e nella diagnostica, i token mandati per ogni richiesta. Restano valide le soglie del 15/11: 80% della quota e conferma oltre ~8.000 token.
 

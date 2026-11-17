@@ -18,6 +18,7 @@ class NativeSettingsWindow:
         self.current = (NativeModelConfig.load(self.path)
                         if self.path.exists() else NativeModelConfig())
         self.window = tk.Toplevel(parent)
+        self.window.bind("<FocusIn>", lambda _e: self.sync_modello(), add="+")
         self.window.title("Lumi // Modello locale Gemma")
         # 028 fix: on a 768 px screen the 780 px window hid Salva/Prova at the
         # bottom (the 026 options made the form taller). Buttons now live in a
@@ -233,7 +234,25 @@ class NativeSettingsWindow:
         self.fast_forward.set(True)
         self.status.set("Valori predefiniti mostrati; premi Salva per confermare.")
 
+    def sync_modello(self):
+        """056b: UNA sola fonte (native.json). Se il modello in uso è cambiato altrove (elenco,
+        caselle, tendina, voce) il modulo mostra quello e il suo profilo, mai uno vecchio."""
+        try:
+            disk = NativeModelConfig.load(self.path) if self.path.exists() else None
+        except (OSError, ValueError):
+            return False
+        if disk is None or disk.model == self.current.model:
+            return False
+        self.current = disk
+        for key, variable in self.values.items():
+            variable.set(str(getattr(disk, key)))
+        self.fast_forward.set(bool(disk.fast_forward))
+        self.status.set("Modello cambiato: ora mostro le impostazioni di quello in uso.")
+        return True
+
     def save(self):
+        if self.sync_modello():
+            return False        # niente scrittura sopra la scelta fatta altrove
         try:
             changes = {"personality": self.personality.get("1.0", "end-1c").strip()}
             from .persona import CHARACTERS
