@@ -1,3 +1,6 @@
+## Chiedere con opzioni prima di scegliere — 2026-11-17
+Richiesta esplicita dell'utente: prima di fare scelte che lui non ha già deciso (riferimenti, posizioni nell'interfaccia, valori predefiniti, cosa includere in una build), chiedere conferma con poche opzioni concrete e una raccomandazione. Non inventare e non decidere al suo posto. I dettagli tecnici ordinari restano a chi sviluppa.
+
 ## Diagnostica per Claude sempre aggiornata — 2026-11-15
 Richiesta utente: il server MCP «lumi-diagnostica» (diagnostica_claude/) deve restare allineato a ogni funzione nuova: vedere lo stato e provare i comandi dentro Lumi. Ogni novità va provata anche da lì sul PC dell'utente dopo la build (oltre alla CI Windows). Se una funzione nuova non è raggiungibile dagli strumenti esistenti (es. pulsanti delle impostazioni), aggiungere lo strumento nello stesso lavoro. I blocchi attuali (Controllo PC, programmi, file rifiutati da lumi_prova_comando) restano finché l'utente non decide diversamente.
 
