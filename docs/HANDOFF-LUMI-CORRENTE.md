@@ -136,6 +136,17 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Proposta da preparare (non implementare): i comandi di ricerca e navigazione semplici per chiunque, confrontati con ChatGPT, Perplexity e gli assistenti vocali.
 - Più avanti: le risposte che si accavallano quando arrivano più comandi insieme (ID per ogni richiesta). L'utente ha detto «ci pensiamo dopo».
 
+## Da fare per la 056 (decisioni utente 17/11, 15:30, a voce)
+- La catena della 055 (prima online, poi locale) è SBAGLIATA: non l'aveva decisa l'utente. Ordine corretto, fisso:
+  1. motore dei comandi: se è un comando lo esegue, senza passare da nessun modello;
+  2. modello offline: risponde a tutto il resto;
+  3. online solo per approfondimenti e per richieste esplicitamente online (ricerche), sempre con conferma a voce prima di andare online.
+- Prima del codice serve un progetto breve, da approvare: chi fa cosa tra comandi, offline, servizi online, GPT e ricerche (Tavily e gli altri), quando si chiede conferma, cosa non si fa mai.
+- Barra in alto:
+  - togliere «GPT ON»: GPT sta solo nella tendina ONLINE;
+  - nuova tendina MODELLO (offline) come le altre, con le 3 caselle per sceglierli al volo e un tastino on/off accanto, senza passare dalle impostazioni.
+- Esiti delle prove fatte da Codex sulla 055: il file ESITI-055.md non c'è in Downloads; chiedere all'utente dove si trova.
+
 ## Da fare per la 055 (decisioni utente 17/11, notte)
 - Decisioni dell'utente del 17/11 alle 05:04:
   - GPT (dal browser) va nella stessa lista dei servizi online, con la sua spunta e il suo ordine, e non più in un passaggio separato. FATTO 17/11 (approvato alle 05:05): la domanda «Uso GPT?» è sparita.
