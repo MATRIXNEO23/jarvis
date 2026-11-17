@@ -5033,6 +5033,12 @@ def main() -> None:
         except (OSError, ValueError, RuntimeError):
             models, in_use = [], ""
         text, spoken = sm.testo_elenco(models)
+        try:        # 055: un modello aggiunto il cui file è sparito si segnala, non si nasconde
+            lost = __import__("local_model.registro_modelli", fromlist=["mancanti"]).mancanti()
+        except (OSError, ValueError, RuntimeError):
+            lost = []
+        if lost:
+            text += "\nNon trovo più: " + ", ".join(p.name for p in lost[:3]) + "."
         write_line("MODELLO LOCALE > " + text)
         speak_result(spoken)
         if not models:

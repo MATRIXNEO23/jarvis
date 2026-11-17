@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-MASSIMO = 9          # i numeri 1..9 si dicono e si riconoscono a voce (risposte.NUMBERS)
+MASSIMO = 9          # a voce si riconoscono i numeri 1..9 (risposte.NUMBERS); l'elenco non ha limite
 
 
 def _percorso_config() -> Path:
@@ -34,21 +34,32 @@ def cartelle_modelli(config_path=None) -> list[Path]:
 
 
 def elenca_modelli(config_path=None, folders=None) -> list[Path]:
-    """File .gguf presenti, in ordine di nome, senza doppioni; esclusi i file «mmproj»
-    (proiettori delle immagini, non modelli di testo)."""
+    """File .gguf presenti (cartelle dei modelli + modelli aggiunti da dove si trovano), senza
+    doppioni e senza limite; esclusi i file «mmproj» (proiettori delle immagini). Ordine:
+    prima le caselle 1/2/3, poi gli altri per nome."""
     found, seen = [], set()
+    candidates = []
     for folder in (folders if folders is not None else cartelle_modelli(config_path)):
         try:
-            names = sorted(Path(folder).glob("*.gguf"), key=lambda p: p.name.casefold())
+            candidates += sorted(Path(folder).glob("*.gguf"), key=lambda p: p.name.casefold())
         except OSError:
             continue
-        for item in names:
+    if folders is None:
+        from . import registro_modelli
+        candidates += sorted(registro_modelli.registrati(config_path), key=lambda p: p.name.casefold())
+    for item in candidates:
+        try:
             key = str(item.resolve()).casefold() if item.is_file() else None
-            if key is None or key in seen or "mmproj" in item.name.casefold():
-                continue
-            seen.add(key)
-            found.append(item)
-    return found[:MASSIMO]
+        except OSError:
+            key = None
+        if key is None or key in seen or "mmproj" in item.name.casefold():
+            continue
+        seen.add(key)
+        found.append(item)
+    if folders is None:
+        from . import registro_modelli
+        return registro_modelli.elenco_ordinato(found, modello_in_uso(config_path), config_path)
+    return found
 
 
 def nome_breve(path) -> str:
@@ -81,16 +92,20 @@ def salva_scelta(model_path, config_path=None):
 
 
 def testo_elenco(models) -> tuple[str, str]:
-    """(testo per la finestra/chat, frase da dire a voce) per l'elenco numerato."""
+    """(testo per la finestra/chat, frase da dire a voce). A voce solo il conteggio (FIX 6):
+    i nomi stanno in chat e nella finestra; i numeri 1/2/3 sono le caselle fisse."""
     if not models:
         return ("Non trovo modelli .gguf nella cartella dei modelli.",) * 2
     lines = ["%d. %s" % (n, nome_breve(m)) for n, m in enumerate(models, 1)]
-    spoken = "Ho trovato %d modelli. " % len(models) + ". ".join(lines) + ". Quale scegli? Di' il numero."
-    return "Modelli locali:\n" + "\n".join(lines) + "\nDi' il numero per sceglierne uno.", spoken
+    spoken = "Ne ho %d. Scegli il numero." % len(models)
+    if len(models) > MASSIMO:
+        spoken = "Ne ho %d. Scegli il numero, fino a %d: gli altri dalla finestra." % (len(models), MASSIMO)
+    return ("Modelli locali (1, 2 e 3 sono le caselle fisse):\n" + "\n".join(lines)
+            + "\nDi' il numero per sceglierne uno."), spoken
 
 
 def nota_famiglia(model_path, config_path=None) -> str:
     """Frase per la chat dopo la scelta: famiglia riconosciuta e profilo caricato."""
     from .profili_famiglia import messaggio_famiglia, riconosci_famiglia, slot_ricordato
     family, known = riconosci_famiglia(model_path)
-    return messaggio_famiglia(family, known, slot_ricordato(family, config_path))
+    return messaggio_famiglia(family, known, slot_ricordato(model_path, config_path))

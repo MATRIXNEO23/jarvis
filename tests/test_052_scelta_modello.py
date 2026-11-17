@@ -27,20 +27,21 @@ class ModelChoiceTests(unittest.TestCase):
         names = [m.name for m in sm.elenca_modelli(self.config)]
         self.assertEqual(names, ["gemma-2-2b-it-Q4.gguf", "Qwen_Qwen3-1.7B-Q4_K_M.gguf"])
 
-    def test_list_is_limited_to_nine_and_has_no_duplicates(self):
+    def test_list_has_no_limit_and_no_duplicates(self):
         for n in range(12):
             (self.models / ("extra%02d.gguf" % n)).write_bytes(b"GGUF")
         models = sm.elenca_modelli(folders=[self.models, self.models])
-        self.assertEqual(len(models), 9)
-        self.assertEqual(len({m.name for m in models}), 9)
+        self.assertGreater(len(models), 9)          # 055: nessun limite nell'elenco
+        self.assertEqual(len({m.name for m in models}), len(models))
 
     def test_numbered_text_for_window_and_voice(self):
         models = sm.elenca_modelli(self.config)
         window_text, spoken = sm.testo_elenco(models)
         self.assertIn("1. gemma 2 2b it Q4", window_text)
         self.assertIn("2. Qwen Qwen3 1.7B Q4 K M", window_text)
-        self.assertIn("Quale scegli", spoken)
-        self.assertIn("2 modelli", spoken)
+        self.assertIn("Scegli il numero", spoken)
+        self.assertIn("Ne ho 2", spoken)
+        self.assertNotIn("gemma", spoken)          # a voce solo il conteggio (FIX 6)
         self.assertIn("Non trovo", sm.testo_elenco([])[0])
 
     def test_choice_is_saved_and_other_settings_are_kept(self):
