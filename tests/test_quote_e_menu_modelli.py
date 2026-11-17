@@ -90,7 +90,7 @@ class MenuModelliTest(unittest.TestCase):
         self.patch.start()
         self.keys = so.Chiavi(self.dir / "k.keys", protect=fake_protect)
         self.keys.salva("groq", "gsk_x")
-        self.button = tk.Button(self.root, text="ONLINE ▾")
+        self.button = tk.Button(self.root, text="Online ▾")
         self.button.pack()
         self.opened = []
         self.menu = menu_modelli.MenuModelli(self.root, self.button,
@@ -104,7 +104,7 @@ class MenuModelliTest(unittest.TestCase):
         self.folder.cleanup()
 
     def test_spunte_in_uso_e_chiusura(self):
-        self.assertEqual(self.button.cget("text"), "ONLINE ▾")
+        self.assertEqual(self.button.cget("text"), "Online ▾")
         self.menu.toggle()
         self.assertIsNotNone(self.menu.popup)
         self.assertNotIn("xai", self.menu.vars)                          # a pagamento: non qui
@@ -112,7 +112,7 @@ class MenuModelliTest(unittest.TestCase):
         self.menu._toggle("groq")
         saved = json.loads((self.dir / "servizi_online.json").read_text(encoding="utf-8"))
         self.assertEqual(saved["attivi"], ["groq"])
-        self.assertEqual(self.button.cget("text"), "ONLINE Groq ▾")
+        self.assertEqual(self.button.cget("text"), "Online ▾")
         self.assertEqual(menu_modelli.servizio_in_uso(so.carica_impostazioni(), self.keys), "groq")
 
         class Event:

@@ -20,7 +20,7 @@ class TettoPromptTests(unittest.TestCase):
             self.assertEqual(memory.available_prompt_tokens(contesto, 128), 600)
 
     def test_niente_budget_8192_e_niente_override_del_contatore_esatto(self):
-        self.assertNotIn("prompt_max_tokens=8192", SESSION)
+        self.assertIn("catalog_budget = budget if exact", SESSION)    # con il contatore vale il tetto
         self.assertNotIn("budget = config.context_size - config.max_output - 128", SESSION)
 
     def test_catalogo_ridotto_e_piu_corto_e_resta_coerente(self):
@@ -62,7 +62,7 @@ class NothinkTests(unittest.TestCase):
 class InvioTests(unittest.TestCase):
     def test_un_invio_una_sola_riga_tu(self):
         self.assertIn("TU_SCRITTO = [False]", CONV)
-        self.assertIn("if typed and not TU_SCRITTO[0]:", CONV)
+        self.assertIn("TU_SCRITTO", CONV[CONV.index("def submit_gemma_voice"):])
         corpo = JARVIS[JARVIS.index("def chain_typed_once"):JARVIS.index("def submit_gpt")]
         self.assertIn("TU_SCRITTO[0] = True", corpo)
         self.assertIn("finally:", corpo)

@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def gguf(path, arch):
-    body = b"GGUF" + b"\0" * 12 + b"general.architecture" + struct.pack("<IQ", 8, len(arch)) + arch.encode()
+    body = b"GGUF" + struct.pack("<IQQ", 3, 0, 1) + struct.pack("<Q", 20) + b"general.architecture" + struct.pack("<IQ", 8, len(arch)) + arch.encode()
     path.write_bytes(body + b"x" * 100)
     return path
 

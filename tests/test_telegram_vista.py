@@ -93,14 +93,14 @@ class VistaTest(unittest.TestCase):
         self.root.destroy()
 
     def test_icona_chat_e_spunta_veloce(self):
-        self.assertEqual(self.button.cget("text"), "✈ 1")
+        self.assertEqual(self.button.cget("text"), "✈ Telegram 1")
         self.assertEqual(self.button.cget("fg"), tv.VERDE)
         self.assertEqual([label for label, _ in self.view.voci_menu()], ["✈ Mario"])
         self.view.apri_chat(A)
         self.assertEqual(self.shown, ["✈ Mario"])
         content = self.text.get("1.0", "end")
         self.assertLess(content.index("Ci sei?"), content.index("Sì, arrivo"))
-        self.assertEqual(self.button.cget("text"), "✈")             # letto: torna azzurro
+        self.assertEqual(self.button.cget("text"), "✈ Telegram")             # letto: torna azzurro
         self.assertEqual(self.button.cget("fg"), tv.AZZURRO)
         self.view.open()
         self.view.vars[22].set(True)

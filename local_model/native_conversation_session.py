@@ -315,12 +315,19 @@ class NativeConversationSession:
                 # completo non entra, si prova quello ridotto alle azioni pertinenti.
                 from conversation_router import reduce_intent_context
                 chosen = None
+                # Senza contatore esatto (solo prove/ripiego) il budget è in caratteri e il
+                # catalogo conserva il vecchio margine; con il contatore vale il tetto in token.
+                catalog_budget = budget if exact else replace(
+                    memory, prompt_max_tokens=8192).available_prompt_tokens(
+                    config.context_size, config.max_output)
                 for candidate in (intent_context, reduce_intent_context(intent_context, latest),
                                   reduce_intent_context(intent_context, latest, essential_only=True)):
-                    if size([], candidate[0]) <= budget:
+                    if size([], candidate[0]) <= catalog_budget:
                         chosen = candidate
                         break
                 if chosen is not None:
+                    if not exact:
+                        budget = min(catalog_budget, budget + len(chosen[0]))
                     instructions = chosen[0]
                     base_instruction_source = "conversation_router.build_native_intent_context: catalogo azioni"
                     allowed_actions = frozenset(chosen[1])
