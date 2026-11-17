@@ -142,6 +142,11 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Doppia risposta: «Smetto subito.» e «Risposta interrotta.». Ipotesi: la seconda richiesta annulla la prima.
 - Dopo «Riavvio il modello» arriva «GEMMA / ERRORE > Generazione locale oltre il tempo richiesto». Probabilmente dipende dalle due richieste in parallelo; da verificare anche le impostazioni del modello, che l'utente forse ha cambiato.
 - Le impostazioni dei modelli compaiono due volte, in Modelli e in Add-on: possibile conflitto (screenshot da ricevere).
+- Pagina Modelli (screenshot 18:37):
+  - è intitolata «Modello locale Gemma (sperimentale)» e mescola caselle 1/2/3, elenco, profili, «Anteprima multimodello», memoria e autorizzazioni GPT;
+  - è duplicata nella pagina dell'add-on.
+- «Configura Gemma locale»: il campo Modello GGUF punta ancora a gemma-2-2b-abliterated, mentre l'elenco dice «Qwen3 1.7B in uso». Due fonti di verità in conflitto: possibile causa del timeout. Valori: thread 2/2, contesto 2048, max output 128.
+- «Memoria locale - impostazioni»: la pagina si disegna sopra la precedente (lettere fantasma a sinistra) e il testo esce dal bordo.
 - Barra in alto da rifare (mockup approvato, tema azzurro): ogni voce è un tasto; Modello ▾ con ⏻ nello stesso tasto (via «MODELLO ON»); «Online» e «Ricerca» vicini; Telegram come tasto con on/off; icone meteo disegnate bene (sole, sole e nuvola, nuvola, pioggia, temporale, neve, nebbia, luna con le fasi).
 
 ## Dopo la 056: pulizia e riordino (richiesta utente 17/11, 16:42)
