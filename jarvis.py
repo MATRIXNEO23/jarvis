@@ -1006,6 +1006,15 @@ def main() -> None:
             return False
 
     def recent_memory_for_gpt(spoken: str) -> str:
+        """056b: contesto online proporzionato alla richiesta; token stimati nel log."""
+        import contesto_online
+        raw = contesto_online.proporziona(_recent_memory_for_gpt_full(spoken), spoken)
+        info = contesto_online.ULTIMO
+        write_line("ONLINE > contesto %s: %d scambi, ~%d token" % (
+            info.get("profilo"), info.get("scambi", 0), info.get("token_stimati", 0)))
+        return raw
+
+    def _recent_memory_for_gpt_full(spoken: str) -> str:
         """Bounded recall with the *real* active project and latest question."""
         short=conversation_memory.context(max_chars=860)
         question=conversation_memory.last_question()

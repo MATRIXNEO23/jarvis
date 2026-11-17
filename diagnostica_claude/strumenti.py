@@ -85,6 +85,7 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
                 "usa_sempre": settings["usa_sempre"],
                 "proponi_lunghe": settings["proponi_lunghe"],
                 "avviso_quota": settings.get("avviso_quota"),
+                "ultimo_contesto_online": dict(__import__("contesto_online").ULTIMO),
                 "conferma_token": settings.get("conferma_token"), "servizi": services}
 
     def ricerca(args):

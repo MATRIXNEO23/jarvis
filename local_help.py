@@ -168,7 +168,7 @@ def help_sections(engine):
             'Risposte non valide o annullate non eseguono azioni. '
             'Se il catalogo non entra nel contesto configurato, compare un avviso: '
             'restano disponibili chat e comandi diretti, senza cambiare automaticamente le impostazioni. '
-            'Passa a GPT / torna al modello offline / usa GPT / attiva il modello offline / avvia GPT cambiano lo stesso interruttore, anche a voce. In Hey Lumi anteponi Lumi. Telegram mantiene autorizzazione e consenso specifici. Prova Gemma locale resta una prova esplicita del modello.\n\n'
+            'Passa a GPT / torna a Gemma / usa GPT / attiva Gemma / avvia GPT cambiano lo stesso interruttore, anche a voce. In Hey Lumi anteponi Lumi. Telegram mantiene autorizzazione e consenso specifici. Prova Gemma locale resta una prova esplicita del modello.\n\n'
             'GPT richiede abilitazione, collegamento e permesso della funzione. '
             'Mai: nessun invio per quella funzione. Chiedi autorizzazione: domanda prima dell’invio. '
             'Autorizzato: evita quella richiesta ripetuta, ma non autorizza automaticamente le azioni.\n'
