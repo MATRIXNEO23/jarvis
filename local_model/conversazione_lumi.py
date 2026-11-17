@@ -352,8 +352,8 @@ def installa(d):
                          "rispondo col modello locale.")
         # Catena 17/11: con GPT attivo e un servizio online gratuito pronto, si prova prima
         # l'online (senza domande); GPT viene dopo, con «Uso GPT? sì/no».
-        if (route == "locale" and orig_route is None and d.gpt_enabled.get()
-                and __import__("servizi_online").disponibili()):
+        if (route == "locale" and orig_route is None
+                and __import__("servizi_online").disponibili() and d.gpt_enabled.get()):
             route = "online"
         if route == "proponi":
             __import__("servizi_online").IN_ATTESA["domanda"] = (spoken, typed)
@@ -486,7 +486,7 @@ def installa(d):
                         d.gemma_trial_queue.put(("online_ok", (spoken, name, answer), voice_epoch))
                         return
                     note = "Servizi online non disponibili: " + "; ".join(answer)[:300]
-                    if d.gpt_enabled.get() and not getattr(d, "gpt_gia_offerto", False):
+                    if d.gpt_enabled.get():
                         # Online gratuiti falliti: ora «Uso GPT?» (poi, con «no», gli altri modelli).
                         d.gemma_trial_queue.put(("online_gpt", (spoken, typed, note), voice_epoch))
                         return

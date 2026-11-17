@@ -4252,7 +4252,8 @@ def main() -> None:
                         speak_result("GPT non è disponibile: provo con il modello locale.")
                         remember_exchange(original_phrase, "GPT non disponibile, riprova.",
                                           "error")
-                        local_after_gpt(original_phrase, channel == "typed_conversation")
+                        if not failed_refinement:
+                            local_after_gpt(original_phrase, channel == "typed_conversation")
                 elif kind == "gpt_ok":
                     action, result, *rest = data
                     busy_gpt = False

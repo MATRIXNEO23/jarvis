@@ -73,7 +73,7 @@ class FileRefinementTests(unittest.TestCase):
             speaker=SimpleNamespace(is_audible=lambda:False),speech_lexicon=None,
             memory_enabled=Value(True),last_voice_sample=Value(''),wake_gate=WakeWordGate(),
             refresh_buttons=Mock(),write_line=Mock(),speak_result=Mock(),
-            remember_exchange=Mock(),remember_completed_action=Mock(),
+            remember_exchange=Mock(),local_after_gpt=Mock(),remember_completed_action=Mock(),
             observed_local_result=lambda r:False,runtime_events=Mock(),
             request=Value(''),try_timer_command=lambda _:False,
             begin_project_work=lambda *a:None,finish_project_work=Mock(),

@@ -107,7 +107,7 @@ class ActivityStatusTests(unittest.TestCase):
                    refresh_buttons=Mock(), gpt_status=Value("GPT: connesso"),
                    threading=SimpleNamespace(Thread=thread), service=Mock(),
                    output_queue=queue.Queue(), write_line=Mock(), speak_result=Mock(),
-                   remember_exchange=Mock(), runtime_events=Mock(),
+                   remember_exchange=Mock(), local_after_gpt=Mock(), runtime_events=Mock(),
                    conversation_epoch=7, voice_mode=Value(GPT_CONVERSATION),
                    GPT_CONVERSATION=GPT_CONVERSATION, CONTINUOUS="ascolto_continuo", STANDBY=STANDBY,
                    PUSH_TO_TALK=PUSH_TO_TALK)
