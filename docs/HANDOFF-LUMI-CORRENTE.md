@@ -180,6 +180,7 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
    - il nome del modello è troppo lungo;
    - Telegram NON doveva diventare la scritta «Telegram»: va tenuto il SIMBOLO originale con i suoi colori di stato;
    - l'icona meteo (San Venanzo 7°) non si capisce ancora.
+5c. Bug 056b dal vivo (21:52): le tendine della barra non si aprono, quindi non si possono spuntare i servizi. Nei servizi online risulta spuntato solo Mistral (senza chiave), mentre Gemini, Groq e OpenRouter hanno la chiave ma non sono spuntati: per questo «approfondisci» risponde «nessun servizio online pronto». Da capire se il bug delle spunte è ancora presente.
 5. L'utente dice che i tasti della barra in alto NON sono come nel mockup approvato (dettagli da raccogliere con uno screenshot).
 
 ## 056b, aggiunte decise con l'utente (17/11, 19:10-20:09, a voce)
