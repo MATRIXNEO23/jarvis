@@ -111,7 +111,7 @@ class Telegram:
                                      self._counts, self._activity)
         try:
             self.button.configure(text=("✈ Telegram %d" % unread) if unread else "✈ Telegram",
-                                  power_on=bool(self.auto_var.get()))
+                                  power_color=colour)   # azzurro/verde/arancione/rosso (15/11)
             self.status_text = text
         except tk.TclError:
             return

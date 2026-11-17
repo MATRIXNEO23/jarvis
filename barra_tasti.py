@@ -58,12 +58,18 @@ class TastoBarra(tk.Frame):
             self._command = kw.pop("command")
         if "power_command" in kw:
             self._power_command = kw.pop("power_command")
+        if "power_color" in kw:
+            # Telegram: colore di stato deciso il 15/11 (telegram_vista.stato), non il semplice on/off.
+            if self.power is not None:
+                self.power.configure(fg=kw["power_color"])
+            self._power_color = kw.pop("power_color")
         if "power_on" in kw and self.power is not None:
-            self.power.configure(fg=colore_power(bool(kw.pop("power_on"))))
+            if getattr(self, "_power_color", None) is None:
+                self.power.configure(fg=colore_power(bool(kw["power_on"])))
+            kw.pop("power_on")
         if "state" in kw:
             self._enabled = kw.pop("state") != "disabled"
         kw.pop("fg", None)
-        kw.pop("power_on", None)
         if kw:
             super().configure(**kw)
 
@@ -76,4 +82,6 @@ class TastoBarra(tk.Frame):
             return self.label.cget("fg")
         if key == "power_on":
             return self.power is not None and str(self.power.cget("fg")) == AZZURRO
+        if key == "power_color":
+            return str(self.power.cget("fg")) if self.power is not None else ""
         return super().cget(key)

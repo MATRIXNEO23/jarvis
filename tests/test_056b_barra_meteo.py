@@ -29,6 +29,15 @@ class BarraTests(unittest.TestCase):
         self.assertIn('"Modello: "', src)
 
 
+class TelegramStatoTests(unittest.TestCase):
+    def test_telegram_mantiene_i_colori_di_stato(self):
+        src = (ROOT / "telegram_vista.py").read_text(encoding="utf-8")
+        self.assertIn("power_color=colour", src)
+        self.assertIn("ROSSO", src)
+        self.assertIn("power_color", (ROOT / "barra_tasti.py").read_text(encoding="utf-8"))
+        self.assertEqual(JARVIS.count('"✈ Telegram"'), 1)
+
+
 class MeteoTests(unittest.TestCase):
     def test_categorie(self):
         from meteo.service import categoria

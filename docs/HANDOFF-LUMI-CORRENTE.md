@@ -168,7 +168,7 @@ Da fare prima di nuove funzioni (navigazione autonoma inclusa):
 - 3) Causa del doppio «TU >»: `submit_gpt` scriveva «TU >» e poi `conversation_chain` → `submit_gemma_voice(typed=True)` lo riscriveva. Ora `chain_typed_once` alza `conversazione_lumi.TU_SCRITTO` durante la catena. Resta noto: dopo il «sì» a «Vado online?» un testo scritto riscrive il «TU >» (da verificare dal vivo).
 - 4) «/nothink»: nel codice non veniva aggiunto da nessuna parte (lo produce il modello/template). Il prompt Qwen3 usa già il blocco `<think>` vuoto, quindi non si aggiunge nulla; `strip_nothink` lo toglie da domanda, risposta e stream.
 - 5) `memory_ui.py`: pulisce i figli prima di disegnare, testo a capo con la larghezza della finestra.
-- 6) Barra: `barra_tasti.TastoBarra` (stile unico, ⏻ azzurro/arancione). Ordine: Modello: nome ▾ ⏻ | Online ▾ | Ricerca ▾ | Mic ⏻ | Memoria ⏻ | Telegram ⏻. ⏻ Telegram = risposte automatiche. «MODELLO ON» e la `/` separatrice tolti.
+- 6) Barra: `barra_tasti.TastoBarra` (stile unico, ⏻ azzurro/arancione). Ordine: Modello: nome ▾ ⏻ | Online ▾ | Ricerca ▾ | Mic ⏻ | Memoria ⏻ | Telegram ⏻. ⏻ Telegram = risposte automatiche, con i colori di stato del 15/11 (azzurro attivo, verde risposto, arancione bloccato, rosso disattivato) via `power_color`, non il semplice on/off. «MODELLO ON» e la `/` separatrice tolti.
 - 7) `meteo/icone.py` ridisegnata (sole, sole+nuvola, nuvola, pioggia, temporale, neve, nebbia, luna con fase calcolata da `fase_lunare`); `meteo/service.py` legge `is_day`.
 - Test: tests/test_056b_prompt_e_testo.py, test_056b_barra_meteo.py; adeguati test_056_barra e test_054_profili_modelli. Prove dal vivo da fare dopo la build (misura i token del «ciao» con contesto 1024).
 
