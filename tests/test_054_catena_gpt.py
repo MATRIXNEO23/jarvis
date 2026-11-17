@@ -168,6 +168,8 @@ class RicercaSenzaChiaveTests(unittest.TestCase):
         risultato = sr.Risultato("Domani sole a Roma.", (("Meteo", "https://m.example/roma"),),
                                  ("Previsioni per domani",))
         with mock.patch.object(sr, "pronti", return_value=[object()]), \
+                mock.patch.object(sr, "carica_impostazioni",
+                                  return_value={"ordine": ["tavily"], "attivi": ["tavily"]}), \
                 mock.patch.object(sr, "cerca", return_value=("Tavily", risultato)), \
                 mock.patch("file_access.ui.show_results") as window:
             self.assertTrue(env["lumi_ricerca"]("cerca online meteo Roma domani"))

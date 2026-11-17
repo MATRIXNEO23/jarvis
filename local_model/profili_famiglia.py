@@ -147,7 +147,7 @@ def carica(config_path=None) -> dict:
 
 def _scrivi_temp(directory: Path, name: str, text: str) -> Path:
     with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=directory, prefix=name + ".", suffix=".tmp",
+            mode="w", encoding="utf-8", newline="\n", dir=directory, prefix=name + ".", suffix=".tmp",
             delete=False) as stream:
         temp = Path(stream.name)
         stream.write(text)

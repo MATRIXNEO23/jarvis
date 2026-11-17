@@ -753,7 +753,6 @@ def main() -> None:
     busy_local = False
     busy_gpt = False
     online_consent_pending = False
-    gpt_voice_consent_epoch = None      # 055: consenso a voce valido per questa epoca
     gpt_conversation_session_grant = None
     gpt_request_action = ""
     local_execution_lock = threading.Lock()
@@ -2177,10 +2176,10 @@ def main() -> None:
     def confirm_gpt_inference(detail: str) -> bool:
         """055: niente finestra Sì/No. Il consenso si chiede a voce e in chat («sì»/«no» senza
         «Lumi»); con il consenso già dato in questa conversazione risponde True subito."""
-        nonlocal gpt_voice_consent_epoch
         if closing or busy_gpt or not gpt_enabled.get() or not active_gpt:
             return False
-        if gpt_voice_consent_epoch == conversation_epoch:
+        # 055: epoca del consenso a voce, tenuta sulla funzione (nessuna variabile condivisa)
+        if getattr(confirm_gpt_inference, "consent_epoch", None) == conversation_epoch:
             return True
         __import__("lumi_comandi").chiedi(
             "gpt_consent_yes", "Posso usare GPT online per questa richiesta? Di' sì o no, "
@@ -2188,9 +2187,8 @@ def main() -> None:
         return False
 
     def grant_gpt_voice_consent(accepted: bool) -> None:
-        nonlocal gpt_voice_consent_epoch
         if accepted:
-            gpt_voice_consent_epoch = conversation_epoch
+            confirm_gpt_inference.consent_epoch = conversation_epoch
             write_line("GPT > Ok, uso GPT in questa conversazione: ripeti la richiesta.")
         else:
             write_line("GPT > Va bene, non uso GPT.")

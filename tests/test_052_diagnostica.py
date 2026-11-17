@@ -54,7 +54,7 @@ class DiagnosticaNuoveFunzioniTests(unittest.TestCase):
             NativeModelConfig(model=str(folder / "uno.gguf")).save(config)
             with mock.patch.object(scelta_modello, "_percorso_config", lambda: config):
                 answer = crea()["modelli"]({})
-        self.assertEqual([m["nome"] for m in answer["modelli"]], ["due", "uno"])
+        self.assertEqual([m["nome"] for m in answer["modelli"]], ["uno", "due"])  # 055: il modello in uso apre l'elenco
         self.assertTrue(answer["in_uso"].endswith("uno.gguf"))
 
 

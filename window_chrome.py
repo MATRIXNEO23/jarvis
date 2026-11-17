@@ -6,6 +6,11 @@ import tkinter as tk
 from tkinter import ttk
 
 
+# Classi reali fissate all'import: i callback Tk restano legati a finestre vere anche se un
+# test sostituisce tkinter.Tk con un finto (isinstance con un Mock dava TypeError).
+_FINESTRE = (tk.Tk, tk.Toplevel)
+_SUPERFICI = (tk.Tk, tk.Toplevel, tk.Frame, tk.Label, tk.Canvas, ttk.Frame, ttk.Label)
+
 GWL_STYLE = -16
 GWL_EXSTYLE = -20
 WS_EX_APPWINDOW = 0x00040000
@@ -153,8 +158,7 @@ def install_window_chrome(root):
             drag_origin = None
             if not anywhere:
                 on_edge = (0 <= event.y_root - window.winfo_rooty() < DRAG_EDGE_HEIGHT
-                           and isinstance(event.widget, (tk.Tk, tk.Toplevel, tk.Frame,
-                                                         tk.Label, tk.Canvas, ttk.Frame, ttk.Label)))
+                           and isinstance(event.widget, _SUPERFICI))
                 if event.widget is not header and not on_edge:
                     return
             handle = api.hwnd(window)
@@ -181,7 +185,7 @@ def install_window_chrome(root):
         window.bind("<Unmap>", end_drag, add="+")
 
     def on_map(event):
-        if isinstance(event.widget, (tk.Tk, tk.Toplevel)):
+        if isinstance(event.widget, _FINESTRE):
             root.after_idle(attach, event.widget)
 
     root.bind_all("<Map>", on_map, add="+")

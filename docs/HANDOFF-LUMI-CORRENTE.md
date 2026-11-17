@@ -193,6 +193,12 @@ Stato: codice e test scritti, **non eseguiti in locale** (regola: solo CI Window
 - «cerca online»/«approfondisci online»: risultati direttamente in chat (non più nella finestra risultati): riassunto, «Fonti:» con `[titolo](url)` e anteprima; `chat_link.py` rende i link cliccabili (sottolineati, cursore a mano, clic = browser) dentro `write_line`; vale per ogni messaggio con link. Test: tests/test_054_chat_link.py.
 - Test: tests/test_054_catena_gpt.py (+ adattati due test di test_selected_conversation_model.py). Non eseguiti in locale; vale la CI Windows. Da provare dal vivo con GPT attivo non collegato e collegato.
 
+## Ripresa 17/11 — correzione CI 055 (run 44009240767 rossa)
+- Cause e correzioni: (1) `gpt_voice_consent_epoch` era `nonlocal` e i test che estraggono le funzioni non lo avevano: ora l'epoca sta su `confirm_gpt_inference.consent_epoch` (~88 NameError); (2) `profili_famiglia._scrivi_temp` con newline="\n" (su Windows il testo raddoppiava \r); (3) `window_chrome` fissa all'import le classi Tk per `isinstance` (TypeError con tkinter.Tk simulato).
+- Test aggiornati perché il comportamento 055 è cambiato davvero: elenco modelli con quello in uso per primo; modello nuovo parte dai default (profili per modello, tornando al vecchio rivale 3 thread); Exa/Firecrawl/Linkup collegati; invio testo passa da `conversation_chain`; test ricerca con servizio spuntato; test voce/PTT estraggono anche `conversation_chain`. Nuovo: tests/test_055_correzioni_ci.py.
+- Il fix «dopo il sì a Uso GPT? la domanda va subito a GPT» NON è implementato: l'utente non l'ha ancora approvato (proposta da annotare).
+- Esito CI: vedi commit successivo/Run nel messaggio di consegna. Niente test su Linux, solo py_compile.
+
 ## Ripresa 17/11 — build 053: cancellazione memoria a sezioni (da provare dal vivo)
 - Decisione utente: la cancellazione si sceglie per sezione. Impostazioni > Memoria generale ha 4 pulsanti (Cancella chat / ricordi / progetti / tutto) e a voce «cancella le chat», «cancella i ricordi», «cancella i progetti», «cancella tutto». Ogni volta sì/no con messaggio semplice.
 - Codice: cancella_memoria.py (sezioni, messaggi, frasi, esegui); SecondBrain.clear_ricordi() (tabella + FTS nella stessa transazione, opzionale per progetti); menu_laterale.cancella_tutti_i_progetti() (chat, cartelle nel Cestino, ricordi del progetto) riusata da cancella_vecchi_progetti; jarvis.py clear_saved_memory(section) e memory_wipe_command (voce, prima di preference_command); catalogo comandi: sezione «Memoria». Chiude il P1 di FIX-051-01 su clear_all.

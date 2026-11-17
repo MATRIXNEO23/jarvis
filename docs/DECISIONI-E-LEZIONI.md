@@ -1308,3 +1308,7 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Versione 055 in lumi_stato e lumi_online (impostazioni_menu.versione da VERSIONE.json); workflow con --number 055.
 - Lezione: un canale (testo) che salta la catena del canale gemello (voce) è il difetto tipico: far passare ogni ingresso dalla stessa funzione. Test: tests/test_055_*.py (non eseguiti su Linux, vale la CI Windows).
 - NOT_TESTED (FIX 8): catena dal vivo con GPT sì/no e timeout, Exa/Firecrawl/Linkup con chiavi reali, lettura /usage Tavily dal vivo, aspetto di tendina RICERCA e caselle, posizione _ □ X, cambio modello con RAM del Pavilion, GGUF reali di grandi dimensioni, microfono.
+
+## 17/11 — Correzione CI 055 (run 44009240767)
+- Lezione: una variabile `nonlocal` aggiunta a una funzione annidata rompe i test che la estraggono con ast; per stato piccolo usare un attributo della funzione. File di testo scritti con `mode="w"` su Windows convertono \n: usare newline="\n" quando il contenuto si confronta o si ripristina. Un `isinstance` su classi Tk va fatto con classi fissate all'import (test con tkinter.Tk simulato).
+- Test cambiati solo dove il comportamento 055 è deciso (ordine elenco, profili per modello, servizi collegati, catena unica). Proposta non implementata: dopo il sì a «Uso GPT?» inviare subito la domanda in attesa a GPT (serve approvazione utente).

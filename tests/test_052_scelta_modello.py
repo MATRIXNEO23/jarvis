@@ -49,7 +49,11 @@ class ModelChoiceTests(unittest.TestCase):
         sm.salva_scelta(chosen, self.config)
         saved = json.loads(self.config.read_text(encoding="utf-8"))
         self.assertEqual(saved["model"], str(chosen))
-        self.assertEqual(saved["threads"], 3)
+        # 055: profili per modello: un modello nuovo parte dai default, i valori del precedente
+        # restano nel suo profilo e tornano scegliendolo di nuovo.
+        self.assertEqual(saved["threads"], NativeModelConfig().threads)
+        sm.salva_scelta(self.models / "gemma-2-2b-it-Q4.gguf", self.config)
+        self.assertEqual(json.loads(self.config.read_text(encoding="utf-8"))["threads"], 3)
         self.assertEqual(sm.modello_in_uso(self.config), str(chosen))
 
     def test_missing_or_wrong_file_is_refused_and_config_untouched(self):

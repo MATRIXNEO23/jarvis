@@ -40,7 +40,8 @@ class ParseTests(unittest.TestCase):
             "https://app.tavily.com", "https://dashboard.exa.ai",
             "https://www.firecrawl.dev/app/api-keys", "https://app.linkup.so"])
         self.assertIsNotNone(sr.PER_ID["tavily"].adattatore)
-        self.assertTrue(all(sr.PER_ID[i].adattatore is None for i in ("exa", "firecrawl", "linkup")))
+        # 055: Exa, Firecrawl e Linkup sono collegati (prima solo Tavily)
+        self.assertTrue(all(sr.PER_ID[i].adattatore is not None for i in ("exa", "firecrawl", "linkup")))
 
     def test_local_hook_takes_cerca_online_but_not_file_search_or_plain_approfondisci(self):
         saved = dict(lumi_comandi._STATE)
