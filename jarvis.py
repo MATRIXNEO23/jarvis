@@ -585,7 +585,7 @@ def main() -> None:
         text="Il microfono resta acceso fino a quando scegli Standby. "
              "La voce non viene salvata: Vosk trascrive in locale; "
              "solo le richieste precedute da Lumi vengono elaborate; "
-             "la conversazione usa Gemma locale, senza invio automatico a GPT.",
+             "la conversazione usa il modello offline, senza invio automatico a GPT.",
         wraplength=710).pack(anchor="w", pady=(0, 4))
     ptt_button = ttk.Button(audio_controls, text="Tieni premuto per parlare", state="disabled")
     ptt_button.pack(anchor="w", pady=(5, 0))
@@ -2847,7 +2847,7 @@ def main() -> None:
     local_button.pack(side="left", padx=(0, 4))
     ask_button = ttk.Button(buttons_row, text="Chiedi a GPT")
     ask_button.pack(side="left", padx=(0, 4))
-    gemma_button = ttk.Button(buttons_row, text="Prova Gemma locale")
+    gemma_button = ttk.Button(buttons_row, text="Prova modello offline")
     gemma_button.pack(side="left", padx=(0, 4))
     plan_button = ttk.Button(buttons_row, text="Pianifica attività")
     plan_button.pack(side="left", padx=(0, 4))
@@ -4562,7 +4562,7 @@ def main() -> None:
         # message to GPT silently; other existing console routes stay intact.
         if chat_is_visible and gpt_enabled.get():
             chat_sessions_panel.report_error(
-                "Chat isolate F2: disattiva GPT per usare Gemma locale.")
+                "Chat isolate F2: disattiva GPT per usare il modello offline.")
             write_line("CHAT > Chat isolate: disattiva GPT per parlare con Gemma.")
             return
         # Selection is distinct from connection and local model configuration.
@@ -4589,7 +4589,7 @@ def main() -> None:
                 return
         if chat_is_visible:
             chat_sessions_panel.report_error(
-                "Nessun GGUF locale pronto. Configura Gemma nelle impostazioni.")
+                "Nessun GGUF locale pronto. Scegli un modello in Impostazioni > Modelli.")
             write_line("CHAT > Nessun modello locale configurato.")
             return
         if gpt_enabled.get() and active_gpt:

@@ -393,7 +393,7 @@ def installa(d):
                 return False
         if d.gemma_source[0] is None or not Path(d.gemma_source[0]).is_file():
             source = filedialog.askopenfilename(
-                parent=d.root, title="Configura Gemma: seleziona koboldcpp.py",
+                parent=d.root, title="Modello offline: seleziona koboldcpp.py",
                 filetypes=[("Sorgente KoboldCpp", "koboldcpp.py"), ("Python", "*.py")])
             if not source:
                 d.write_line("LUMI > Configurazione locale mancante. Nessun invio online.")

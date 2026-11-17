@@ -10,7 +10,7 @@ launcher.write_text(s,encoding="utf-8")
 readme="""JARVIS GEMMA - PROVA ISOLATA
 1. Estrai in una cartella nuova, senza sovrascrivere Jarvis stabile.
 2. Avvia avvia_lumi.bat con Python 3.11/3.12 x64 e dipendenze installate.
-3. In Impostazioni > GPT e memoria > Configura Gemma locale seleziona il tuo GGUF.
+3. In Impostazioni > Modelli seleziona il tuo GGUF.
 4. Premi Salva, poi Prova generazione: verra mostrata la risposta o l'errore.
 5. DLL CPU no-AVX2 inclusa, non serve koboldcpp.exe.
 Il GGUF non e incluso. FunctionGemma 270M non e ancora verificato su Pavilion.

@@ -49,6 +49,12 @@ def help_sections(engine):
             'ferma la sveglia\nche ore sono\n\n'
             'La sveglia richiede la relativa add-on attiva. Se l’orario è passato, vale per domani. '
             'Per evitare ambiguità puoi usare il formato 24 ore. Gli elenchi di questa guida non vengono letti a voce.',
+        'Meteo':
+            'che tempo fa a Roma\nmeteo Milano\ncom\u2019è il tempo a Tokyo\nmeteo (senza città: la tua)\n\n'
+            'Serve l\u2019add-on Meteo acceso (Gestisci add-on). L\u2019icona con la temperatura compare in basso '
+            'nell\u2019HUD, sopra DISCO C e RETE. Per il tempo di adesso; «online» e «clima» restano ricerche. '
+            'Le previsioni di domani non ci sono ancora.\n\n'
+            'Gli elenchi di questa guida non vengono letti a voce.',
         'Controllo PC':
             'Add-on Controllo PC (spento finché non lo attivi in Gestisci add-on). Tutto offline, '
             'pensato per usare il PC solo con la voce.\n\n'
@@ -142,6 +148,12 @@ def help_sections(engine):
             'Il pulsante MIC mantiene il controllo manuale. Il riconoscimento offline richiede Vosk e il modello vocale. '
             'Per installazione e problemi usa docs/VOCE_OFFLINE.md distribuita con Lumi.',
         'Modelli e GPT':
+            'MODELLI OFFLINE (Impostazioni > Modelli): una sola pagina con le caselle 1/2/3, l\u2019elenco, '
+            '«Aggiungi modello…», i 3 profili del modello scelto e, sotto, tutte le sue impostazioni '
+            '(contesto, thread, risposta massima, memoria del prompt) con un solo Salva. '
+            'A voce: «cambia modello» elenca i modelli e scegli per numero. '
+            'La tendina MODELLO in alto cambia modello al volo. Il Second Brain \u00e8 unico per tutti i modelli: '
+            'accensione e cancellazione sono in Impostazioni > Memoria.\n\n'
             'MODELLO ON/OFF (in alto, accanto a GPT): con OFF nessuna richiesta va a Gemma o a GPT, '
             'funzionano solo i comandi interni; serve a provare il motore interno. A ogni avvio torna ON.\n'
             'Prima del modello Lumi prova a capire da sola: toglie le parole di cortesia e usa i sinonimi '
@@ -156,7 +168,7 @@ def help_sections(engine):
             'Risposte non valide o annullate non eseguono azioni. '
             'Se il catalogo non entra nel contesto configurato, compare un avviso: '
             'restano disponibili chat e comandi diretti, senza cambiare automaticamente le impostazioni. '
-            'Passa a GPT / torna a Gemma / usa GPT / attiva Gemma / avvia GPT cambiano lo stesso interruttore, anche a voce. In Hey Lumi anteponi Lumi. Telegram mantiene autorizzazione e consenso specifici. Prova Gemma locale resta una prova esplicita del modello.\n\n'
+            'Passa a GPT / torna al modello offline / usa GPT / attiva il modello offline / avvia GPT cambiano lo stesso interruttore, anche a voce. In Hey Lumi anteponi Lumi. Telegram mantiene autorizzazione e consenso specifici. Prova Gemma locale resta una prova esplicita del modello.\n\n'
             'GPT richiede abilitazione, collegamento e permesso della funzione. '
             'Mai: nessun invio per quella funzione. Chiedi autorizzazione: domanda prima dell’invio. '
             'Autorizzato: evita quella richiesta ripetuta, ma non autorizza automaticamente le azioni.\n'
@@ -216,6 +228,7 @@ FULL_TITLES = {
     'Inizia qui': 'Inizia qui',
     'Comandi locali': 'Comandi locali di base',
     'Timer e sveglia': 'Timer e sveglia',
+    'Meteo': 'Meteo',
     'Controllo PC': 'Controllo PC (finestre, mouse, tasti)',
     'Lumi': 'Lumi: finestra, avatar, chiusura',
     'Musica': 'Musica e video',

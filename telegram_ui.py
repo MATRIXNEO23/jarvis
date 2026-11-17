@@ -140,7 +140,7 @@ class TelegramContactsWindow:
 def edit_telegram_context(parent, name, current, limit):
     return simpledialog.askstring(
         "Contesto del contatto",
-        f"{name} — solo con Gemma locale (massimo {limit} caratteri).\n"
+        f"{name} — solo con il modello offline (massimo {limit} caratteri).\n"
         "Scrivi poche indicazioni. Lascia vuoto per rimuovere il contesto.",
         initialvalue=current, parent=parent)
 
