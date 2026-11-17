@@ -295,6 +295,7 @@ class JarvisHUD:
             activebackground=BG,font=("Segoe UI Symbol",21),
             bd=0,relief="flat",cursor="hand2")
         self.gear.pack(side="right",padx=(8,12))
+        parent._jarvis_window_anchor=self.gear     # 055: _ □ X nell'angolo, a destra dell'ingranaggio
         self.state_text=tk.StringVar(
             value="MIC  OFF    /    GPT  OFF    /    MEMORIA  OFF")
         self._quick_toggle_handlers = {}

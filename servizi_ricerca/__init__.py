@@ -157,6 +157,19 @@ def cerca(query: str, approfondisci: bool = False, *, settings=None, keys=None, 
     return None, reasons
 
 
+def quota_servizio(service_id: str, keys: Chiavi | None = None) -> dict:
+    """Barra e testo della quota: letta dall'API del servizio se esiste (Tavily), altrimenti
+    «ricerche rilevate» dai contatori locali (FIX 4)."""
+    service = PER_ID[service_id]
+    info = None
+    try:
+        key = (keys or chiavi()).leggi(service_id)
+        info = quota.reale(service_id, key)
+    except Exception:
+        info = None
+    return info or quota.stato(service_id, service.limite_mese)
+
+
 def avviso_senza_chiave(settings: dict | None = None) -> str:
     """Messaggio chiaro quando nessun servizio di ricerca è pronto, col link per la chiave."""
     link = next((s.chiavi for s in SERVIZI if s.adattatore is not None and s.chiavi), "")
@@ -294,7 +307,7 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
                                      else " Ricerca non ancora collegata: per ora Lumi la salta.")
             if keys.presente(service_id):
                 from . import quota
-                info = quota.stato(service_id, service.limite_mese)
+                info = quota_servizio(service_id, keys)
                 bar = tk.Canvas(rows, width=110, height=8, bg="#10293a", highlightthickness=0)
                 bar.pack(anchor="w", padx=(28, 0))
                 left = 1.0 if info["usato"] is None else 1 - info["usato"]

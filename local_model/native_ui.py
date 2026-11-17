@@ -49,10 +49,7 @@ class NativeSettingsWindow:
         ttk.Label(frame, text="Salvare non avvia il modello. I nuovi valori saranno usati "
                   "dalla prossima richiesta, con ricaricamento solo se necessario.",
                   wraplength=520).pack(anchor="w", pady=(5, 12))
-        if callable(on_use):          # 054: «I miei modelli» (stesse funzioni di «cambia modello»)
-            from .miei_modelli import costruisci_sezione
-            costruisci_sezione(frame, lambda text: self.status.set(text[:200]),
-                               on_use=on_use, config_path=self.path)
+        # 055: «Modelli» (caselle, elenco, profili) vive nella pagina Impostazioni > Modelli, non qui.
         self.values = {}
         labels = {
             "model": "Modello GGUF", "threads": "Thread CPU",

@@ -240,6 +240,12 @@ def main() -> None:
               wraplength=540).pack(anchor="w", padx=8, pady=5)
     ttk.Button(native_settings_box, text="Configura Gemma locale...",
                command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
+    # 055: caselle 1/2/3, elenco, «Aggiungi modello…» e profili per modello: SOLO qui, in «Modelli».
+    try:
+        __import__("local_model.miei_modelli", fromlist=["costruisci_sezione"]).costruisci_sezione(
+            native_settings_box, lambda text: write_line(text), on_use=lambda target: lumi_model_use(target))
+    except (OSError, ValueError, RuntimeError, ImportError, tk.TclError) as exc:
+        ttk.Label(native_settings_box, text="Modelli non disponibili: " + str(exc)[:80]).pack(anchor="w")
     # Il motore gira sempre in un processo a parte (decisione 15/11 sera): niente casella.
     # Pulizia dati su disco (passo 6): cartelle, spazio, ascolto, Cestino.
     def open_data_cleanup() -> None:
@@ -4572,25 +4578,12 @@ def main() -> None:
         memory=memory_toggle.invoke,
         model=lambda: write_line(__import__("model_gate").toggle_message()))
     # Menu «ONLINE ▾» accanto a GPT (15/11 sera): servizi online, spunte e quote.
-    # 054: interruttore RICERCA ON/OFF accanto a MODELLO (stesso stile, salvato nelle impostazioni).
-    def toggle_ricerca_online() -> None:
-        ricerca_mod = __import__("servizi_ricerca")
-        try:
-            now_on = ricerca_mod.imposta_accesa(not ricerca_mod.ricerca_accesa())
-        except (OSError, RuntimeError) as exc:
-            write_line("RICERCA / ERRORE > Interruttore non salvato: " + str(exc)[:120])
-            return
-        paint_ricerca_button()
-        write_line("RICERCA ON > «cerca online» e «approfondisci online» sono attivi." if now_on else
-                   "RICERCA OFF > «cerca online» e «approfondisci online» sono spenti.")
-
-    def paint_ricerca_button() -> None:
-        on = __import__("servizi_ricerca").ricerca_accesa()
-        ricerca_button.configure(text="RICERCA ON" if on else "RICERCA OFF",
-                                 fg="#46ccfa" if on else "#6f8da0")
-
-    ricerca_button = hud.add_quick_button("ricerca", "RICERCA ON", toggle_ricerca_online, after="model")
-    paint_ricerca_button()
+    # 055: al posto dell'interruttore RICERCA ON/OFF, tendina «RICERCA ▾» con i servizi di
+    # ricerca, ciascuno con la sua spunta e la sua barra di quota (menu_ricerca.py).
+    ricerca_button = hud.add_quick_button("ricerca", "RICERCA ▾", lambda: None, after="model")
+    ricerca_menu = __import__("menu_ricerca").MenuRicerca(
+        root, ricerca_button,
+        open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Servizi di ricerca")))
     online_menu_button = hud.add_quick_button("online", "ONLINE ▾", lambda: None, after="gpt")
     models_menu = __import__("menu_modelli").MenuModelli(
         root, online_menu_button, open_settings=lambda: show_settings())
@@ -4781,8 +4774,15 @@ def main() -> None:
 
     addon_chosen = __import__("addon_ui").SezioneAddon(
         addon_chosen_frame, addon_manager, window=settings_window, on_change=addon_changed,
-        engine=engine, section_builders={"telegram": build_telegram_section},
+        engine=engine, section_builders={"telegram": build_telegram_section,
+                                         "modello_locale": lambda box: build_model_addon_section(box)},
         after_change=addon_rows_sync)
+
+    def build_model_addon_section(container) -> None:
+        """055: la pagina dell'add-on tiene solo attiva/disattiva e questo pulsante."""
+        ttk.Button(container, text="Apri impostazioni modelli",
+                   command=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modello locale"))
+                   ).pack(anchor="w", pady=(0, 6))
 
     def open_addon_menu(addon_id: str) -> None:
         addon_chosen.mostra(addon_id)
@@ -4893,8 +4893,8 @@ def main() -> None:
         if parsed is None:
             return False
         kind, query = parsed
-        if not ricerca.ricerca_accesa():
-            text = "La ricerca online è spenta: riaccendila con RICERCA ON in alto."
+        if not ricerca.carica_impostazioni()["attivi"]:
+            text = "Nessun servizio di ricerca è spuntato: aprilo dal menu RICERCA in alto."
             write_line("RICERCA OFF > " + text)
             speak_result(text)
             return True

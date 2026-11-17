@@ -33,7 +33,7 @@ class QuotaAndSwitchTests(unittest.TestCase):
             info = sr.quota.stato("tavily", 1000, oggi="2026-11-18", path=path)
             self.assertEqual((info["oggi"], info["mese"]), (1, 4))
             self.assertAlmostEqual(info["usato"], 0.004)
-            self.assertIn("stima", info["testo"])
+            self.assertIn("rilevate", info["testo"])
             self.assertTrue(info["stima"])
             # nuovo mese: i contatori ripartono
             self.assertEqual(sr.quota.stato("tavily", 1000, oggi="2026-12-01", path=path)["mese"], 0)
@@ -54,8 +54,7 @@ class QuotaAndSwitchTests(unittest.TestCase):
             self.assertTrue(sr.imposta_accesa(True, path))
         source = (ROOT / "jarvis.py").read_text(encoding="utf-8")
         self.assertIn("RICERCA OFF > ", source)
-        self.assertIn('hud.add_quick_button("ricerca", "RICERCA ON", toggle_ricerca_online, after="model")',
-                      source)
+        self.assertIn('hud.add_quick_button("ricerca", "RICERCA ▾", lambda: None, after="model")', source)
 
 
 if __name__ == "__main__":

@@ -105,7 +105,11 @@ def install_window_chrome(root):
         buttons = tk.Frame(host, bg=background, name="jarvis_window_buttons")
         window._jarvis_window_buttons = buttons
         if header is not None:
-            buttons.pack(side="right")
+            anchor = getattr(window, "_jarvis_window_anchor", None)
+            try:
+                buttons.pack(side="right", before=anchor) if anchor is not None else buttons.pack(side="right")
+            except tk.TclError:
+                buttons.pack(side="right")
         else:
             buttons.pack(side="top", anchor="e", **({"before": children[0]} if children else {}))
 
