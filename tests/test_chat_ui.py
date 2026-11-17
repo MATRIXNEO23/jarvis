@@ -114,7 +114,7 @@ class NativeScopedHistoryTests(unittest.TestCase):
                 adapter,
                 config_loader=lambda: NativeModelConfig(context_size=4096, max_output=256),
                 memory_loader=lambda: MemoryPreferences(
-                    recent_messages=8, history_max_tokens=600))
+                    recent_messages=8, history_max_tokens=600, cronologia_ridotta=False))
             reader_a = make_chat_history_reader(store, alpha.id)
             reader_b = make_chat_history_reader(store, beta.id)
             for n in range(4):

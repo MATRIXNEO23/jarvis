@@ -17,6 +17,10 @@ FULMINE = "#ffd24a"
 NEVE = "#ffffff"
 LUNA = "#ece9c0"
 LUNA_OMBRA = "#1b3a55"
+try:
+    from hud_reference import BG as SFONDO       # sfondo dell'HUD: copre il sole dietro la nuvola
+except ImportError:                              # pragma: no cover
+    SFONDO = "#020d17"
 
 MESE_SINODICO = 29.530588853                     # giorni
 _LUNA_NUOVA = datetime(2000, 1, 6, 18, 14, tzinfo=timezone.utc)
@@ -75,7 +79,7 @@ def disegna(canvas, x: float, y: float, categoria: str, colore: str = "#46ccfa",
         _sole(c, x, y, 6)
     elif categoria == "sole_nuvola":
         _sole(c, x - 6, y - 6, 4)
-        c.create_oval(x - 4, y - 2, x + 12, y + 10, fill=c.cget("bg"), outline="")
+        c.create_oval(x - 4, y - 2, x + 12, y + 10, fill=SFONDO, outline="")
         _nuvola(c, x + 3, y + 3, NUVOLA, .75, 2)
     elif categoria == "luna":
         _luna(c, x, y, fase_lunare() if fase is None else fase)

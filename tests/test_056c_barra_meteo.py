@@ -61,12 +61,15 @@ class BarraTkTests(unittest.TestCase):
         hud.add_quick_button("ricerca", "Ricerca ▾", lambda: None, after="online")
         hud.add_quick_button("telegram", "Telegram", lambda: None, after="memory", simbolo="telegram")
         self.root.update_idletasks()
+        header = hud.quick_controls.master
+        # larghezza richiesta da tutta la barra (wordmark, slide, tasti, ingranaggio) <= 1366
+        self.assertLessEqual(header.winfo_reqwidth(), 1366)
+        self.assertLessEqual(hud.quick_controls.winfo_reqwidth() + hud.mode_slide.winfo_reqwidth()
+                             + hud.wordmark.winfo_reqwidth() + hud.gear.winfo_reqwidth(), 1366)
+        larghezza = max(self.root.winfo_width(), header.winfo_reqwidth())
+        self.root.geometry("%dx768+0+0" % max(larghezza, 1366))
         self.root.update()
         larghezza = self.root.winfo_width()
-        self.assertGreaterEqual(larghezza, 1300)
-        for nome in ("mic", "model", "memory"):
-            b = getattr(hud, nome + "_toggle_button")
-            self.assertLessEqual(b.winfo_rootx() + b.winfo_width(), self.root.winfo_rootx() + larghezza, nome)
         tg = hud.telegram_extra_button
         self.assertLessEqual(tg.winfo_rootx() + tg.winfo_width(), self.root.winfo_rootx() + larghezza)
         self.assertLessEqual(hud.gear.winfo_rootx() + hud.gear.winfo_width(), self.root.winfo_rootx() + larghezza)

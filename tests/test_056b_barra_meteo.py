@@ -35,7 +35,7 @@ class TelegramStatoTests(unittest.TestCase):
         self.assertIn("power_color=colour", src)
         self.assertIn("ROSSO", src)
         self.assertIn("power_color", (ROOT / "barra_tasti.py").read_text(encoding="utf-8"))
-        self.assertEqual(JARVIS.count('"Telegram"'), 1)
+        self.assertEqual(JARVIS.count('simbolo="telegram"'), 1)
 
 
 class MeteoTests(unittest.TestCase):

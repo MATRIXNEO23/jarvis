@@ -16,7 +16,7 @@ class TettoPromptTests(unittest.TestCase):
         self.assertEqual(NativeModelConfig().context_size, 896)
         memory = MemoryPreferences()
         self.assertEqual(memory.prompt_max_tokens, 550)
-        for contesto in (768, 1024, 2048):
+        for contesto in (896, 1024, 2048):
             self.assertEqual(memory.available_prompt_tokens(contesto, 128), 500)
 
     def test_niente_budget_8192_e_niente_override_del_contatore_esatto(self):
