@@ -19,6 +19,7 @@ from pathlib import Path
 
 from servizi_online import Chiavi, _post
 
+from . import quota
 from .base import Ricerca, Risultato
 
 
@@ -69,9 +70,11 @@ def _cartella() -> Path:
 
 def carica_impostazioni(path: Path | None = None) -> dict:
     data = {"ordine": [s.id for s in SERVIZI], "attivi": []}
+    acceso = True                                   # interruttore «RICERCA ON/OFF» in alto
     try:
         saved = json.loads((path or _cartella() / "servizi_ricerca.json").read_text(encoding="utf-8"))
         if isinstance(saved, dict):
+            acceso = saved.get("acceso", True) is not False
             for key in data:
                 if isinstance(saved.get(key), list):
                     data[key] = [str(i) for i in saved[key]]
@@ -81,7 +84,20 @@ def carica_impostazioni(path: Path | None = None) -> dict:
     order += [s.id for s in SERVIZI if s.id not in order]
     data["ordine"] = order
     data["attivi"] = [i for i in data["attivi"] if i in PER_ID]
+    data["acceso"] = acceso
     return data
+
+
+def ricerca_accesa(path: Path | None = None) -> bool:
+    return bool(carica_impostazioni(path).get("acceso", True))
+
+
+def imposta_accesa(value: bool, path: Path | None = None) -> bool:
+    """Salva l'interruttore nelle impostazioni dei servizi di ricerca; ritorna il nuovo valore."""
+    data = carica_impostazioni(path)
+    data["acceso"] = bool(value)
+    salva_impostazioni(data, path)
+    return data["acceso"]
 
 
 def salva_impostazioni(data: dict, path: Path | None = None) -> None:

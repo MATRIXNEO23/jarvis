@@ -4553,6 +4553,25 @@ def main() -> None:
         memory=memory_toggle.invoke,
         model=lambda: write_line(__import__("model_gate").toggle_message()))
     # Menu «ONLINE ▾» accanto a GPT (15/11 sera): servizi online, spunte e quote.
+    # 054: interruttore RICERCA ON/OFF accanto a MODELLO (stesso stile, salvato nelle impostazioni).
+    def toggle_ricerca_online() -> None:
+        ricerca_mod = __import__("servizi_ricerca")
+        try:
+            now_on = ricerca_mod.imposta_accesa(not ricerca_mod.ricerca_accesa())
+        except (OSError, RuntimeError) as exc:
+            write_line("RICERCA / ERRORE > Interruttore non salvato: " + str(exc)[:120])
+            return
+        paint_ricerca_button()
+        write_line("RICERCA ON > «cerca online» e «approfondisci online» sono attivi." if now_on else
+                   "RICERCA OFF > «cerca online» e «approfondisci online» sono spenti.")
+
+    def paint_ricerca_button() -> None:
+        on = __import__("servizi_ricerca").ricerca_accesa()
+        ricerca_button.configure(text="RICERCA ON" if on else "RICERCA OFF",
+                                 fg="#46ccfa" if on else "#6f8da0")
+
+    ricerca_button = hud.add_quick_button("ricerca", "RICERCA ON", toggle_ricerca_online, after="model")
+    paint_ricerca_button()
     online_menu_button = hud.add_quick_button("online", "ONLINE ▾", lambda: None, after="gpt")
     models_menu = __import__("menu_modelli").MenuModelli(
         root, online_menu_button, open_settings=lambda: show_settings())
@@ -4855,6 +4874,11 @@ def main() -> None:
         if parsed is None:
             return False
         kind, query = parsed
+        if not ricerca.ricerca_accesa():
+            text = "La ricerca online è spenta: riaccendila con RICERCA ON in alto."
+            write_line("RICERCA OFF > " + text)
+            speak_result(text)
+            return True
         if not ricerca.pronti():
             text = ricerca.avviso_senza_chiave()
             write_line("RICERCA > " + text)

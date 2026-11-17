@@ -1295,3 +1295,4 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - «cerca online»: la chiave deve esistere e decifrarsi; senza, messaggio con il link Tavily subito; errori del thread di ricerca o della finestra vanno in chat.
 - «approfondisci X» senza «online»: Gemma offline (`servizi_ricerca.approfondisci_locale`), anche con l'online pronto.
 - Lezione: ogni ramo che «gestisce» una richiesta deve dire qualcosa; un return False silenzioso è un difetto. Test: tests/test_054_catena_gpt.py.
+- Aggiunte 054: profili a 3 slot per famiglia (ordine di scelta: metadati GGUF, poi nome file; famiglia ignota = «generico», segnalato), «I miei modelli», quota stimata e interruttore RICERCA. Scelta: native.json resta la sola fonte letta dal motore e contiene sempre lo slot attivo; i profili sono copie salvate a richiesta. Scartato: leggere l'uso Tavily da API a memoria. Da fare: pagina add-on, spostamento _ □ X.
