@@ -24,7 +24,7 @@ La 055 fa il contrario (prima l'online, poi il locale): va corretta. Non era una
 
 ## D. Barra in alto
 - Togliere «GPT ON». GPT sta solo dentro la tendina ONLINE, insieme agli altri.
-- Nuova tendina **MODELLO** (offline), come le altre: le 3 caselle per cambiare modello al volo, con un tastino on/off accanto, senza passare dalle impostazioni.
+- Nuova tendina **MODELLO** (offline), come le altre: le 3 caselle per cambiare modello al volo, senza passare dalle impostazioni. Accanto alla tendina c'è UN solo tastino on/off, che accende o spegne il modello offline (scelta 1 dell'utente, 16:24). In memoria resta un solo modello alla volta.
 
 ## E. Bug da correggere (prove della 055)
 - Mistral risulta spuntato anche se l'utente aveva spento tutti i servizi online: controllare che la spunta si salvi.
