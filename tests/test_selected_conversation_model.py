@@ -20,7 +20,7 @@ class SelectedConversationModelTests(unittest.TestCase):
                    GPT_CONVERSATION='conversation', CONTINUOUS='continuous', PUSH_TO_TALK='premi_per_parlare',
                    gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=True,
                    busy_gpt=False, try_self_diagnostic=Mock(return_value=False),
-                   submit_gemma_voice=gemma, run_gpt=online,
+                   submit_gemma_voice=gemma, run_gpt=online, offer_gpt=online,
                    documents=SimpleNamespace(current=None), conversation_epoch=7,
                    current_capability_snapshot=lambda _: {'telegram_voice_send': False},
                    build_conversation_prompt=__import__('conversation_router').build_conversation_prompt,
@@ -28,9 +28,10 @@ class SelectedConversationModelTests(unittest.TestCase):
                    active_addon_actions=lambda: (), ConversationRejected=ValueError,
                    write_line=Mock(), speak_result=Mock())
         exec(compile(ast.Module(body=[callback], type_ignores=[]), 'real-voice-router', 'exec'), env)
-        env['start_conversation_gpt']('Parliamo della giornata')
+        with __import__('unittest').mock.patch('servizi_online.disponibili', return_value=False):
+            env['start_conversation_gpt']('Parliamo della giornata')
         gemma.assert_not_called()
-        online.assert_called_once()
+        online.assert_called_once()      # 17/11: GPT connesso passa da «Uso GPT?» (offer_gpt)
 
     def test_console_selected_gpt_wins_over_configured_gemma(self):
         import test_typed_timer_routing as fixture
@@ -169,10 +170,11 @@ class SelectedConversationModelTests(unittest.TestCase):
                    GPT_CONVERSATION='conversation', CONTINUOUS='continuous', PUSH_TO_TALK='premi_per_parlare',
                    gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=False,
                    try_self_diagnostic=Mock(return_value=False), submit_gemma_voice=Mock(),
-                   write_line=Mock(), speak_result=Mock())
+                   offer_gpt=Mock(), write_line=Mock(), speak_result=Mock())
         exec(compile(ast.Module(body=[callback], type_ignores=[]), 'actual-ptt', 'exec'), env)
-        env['start_conversation_gpt']('Parliamo')
-        env['write_line'].assert_called_once()
+        with __import__('unittest').mock.patch('servizi_online.disponibili', return_value=False):
+            env['start_conversation_gpt']('Parliamo')
+        env['offer_gpt'].assert_called_once_with('Parliamo', False)   # non collegato: offer_gpt passa oltre
         env['submit_gemma_voice'].assert_not_called()
 
     def test_ptt_free_speech_routes_without_overwriting_console_draft(self):

@@ -342,24 +342,19 @@ def installa(d):
                 d.write_line("ONLINE > " + text)
                 d.speak_result(text)
                 return True
+        if (orig_route is None and not asked_online
+                and __import__("servizi_ricerca").approfondisci_locale(spoken)):
+            route = "locale"             # «approfondisci …» senza «online»: Gemma offline (17/11)
+            orig_route = "locale"
         if asked_online and route == "locale":
             # Prova 15/11: «ragiona online» senza servizi pronti rispondeva Gemma in silenzio.
             d.write_line("ONLINE > Nessun servizio online pronto (spunta e chiave in ONLINE ▾): "
                          "rispondo col modello locale.")
-        # Orchestratore (decisione 15/11): con il cervello online acceso e un servizio con la
-        # chiave, Lumi chiede «uso l'online per questa richiesta?» (sì / no / sempre).
-        if route == "locale" and orig_route is None and __import__("servizi_online").disponibili():
-            if __import__("orchestratore").consenso_necessario(bool(d.gpt_enabled.get())):
-                if d.gpt_enabled.get():
-                    __import__("orchestratore").IN_ATTESA["richiesta"] = (spoken, typed)
-                    __import__("lumi_comandi").chiedi(
-                        "orch_once", "Uso l'online per questa richiesta? Di' sì, no, "
-                        "oppure «sempre» per tenerlo finché non lo spegni.",
-                        d.write_line, d.speak_result, no_action="orch_local",
-                        always_action="orch_always")
-                    return True
-            elif d.gpt_enabled.get():
-                route = "online"
+        # Catena 17/11: con GPT attivo e un servizio online gratuito pronto, si prova prima
+        # l'online (senza domande); GPT viene dopo, con «Uso GPT? sì/no».
+        if (route == "locale" and orig_route is None and d.gpt_enabled.get()
+                and __import__("servizi_online").disponibili()):
+            route = "online"
         if route == "proponi":
             __import__("servizi_online").IN_ATTESA["domanda"] = (spoken, typed)
             __import__("lumi_comandi").chiedi(
@@ -491,6 +486,10 @@ def installa(d):
                         d.gemma_trial_queue.put(("online_ok", (spoken, name, answer), voice_epoch))
                         return
                     note = "Servizi online non disponibili: " + "; ".join(answer)[:300]
+                    if d.gpt_enabled.get() and not getattr(d, "gpt_gia_offerto", False):
+                        # Online gratuiti falliti: ora «Uso GPT?» (poi, con «no», gli altri modelli).
+                        d.gemma_trial_queue.put(("online_gpt", (spoken, typed, note), voice_epoch))
+                        return
                     if not local_ok or __import__("servizi_online").richiesta_codice(spoken):
                         # Codice: mai Gemma (decisione 17/11); messaggio breve e chiaro.
                         d.gemma_trial_queue.put(("online_fail", note + (
@@ -672,8 +671,8 @@ def installa(d):
                         d.submit_local(message_override=spoken, source_utterance=spoken,
                                      addon_action_id="addon.programmi_app.avvia",
                                      program_call=("suggest_id", {"query": app_id}))
-                elif (kind in ("voice_ok", "voice_error", "ok", "error", "online_ok", "online_fail")
-                      and __import__("stato_lumi").consume_model_stop()):
+                elif (kind in ("voice_ok", "voice_error", "ok", "error", "online_ok", "online_fail",
+                              "online_gpt") and __import__("stato_lumi").consume_model_stop()):
                     # «Lumi, fermati» durante la risposta: niente errore né risposta tardiva.
                     d.write_line("LUMI > Risposta interrotta.")
                 elif kind == "online_ok":
@@ -691,6 +690,13 @@ def installa(d):
                     __import__("chat_elenco").segna_modello("online")
                     if d.remember_exchange(question, answer, "chat") is False:
                         d.write_line("MEMORIA > Scambio non archiviato.")
+                elif kind == "online_gpt":
+                    question, was_typed, note = value
+                    d.write_line("ONLINE > " + note)
+                    __import__("orchestratore").IN_ATTESA["gpt_offerta"] = (question, was_typed)
+                    if not __import__("lumi_comandi").run_action("gpt_offer"):
+                        d.write_line("LUMI > Non riesco a rispondere adesso: riprova tra poco.")
+                        d.speak_result("Non riesco a rispondere adesso.")
                 elif kind == "online_fail":
                     d.write_line("ONLINE / ERRORE > " + value)
                     d.speak_result("I servizi online non rispondono e il modello locale è spento.")

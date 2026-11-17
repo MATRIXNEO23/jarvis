@@ -2215,14 +2215,12 @@ def main() -> None:
                     or not permission()):
                 fallback_text = params.get("utterance")
                 if capability == "chat.conversation" and fallback_text:
-                    # Prova 16/11: «no» a GPT fermava la richiesta. Ora passa ai servizi
-                    # online se pronti, altrimenti al modello locale.
+                    # Catena (17/11): i servizi online gratuiti sono già stati provati;
+                    # se GPT non è autorizzato si passa agli altri modelli, mai al silenzio.
                     try:
-                        route = "online" if __import__("servizi_online").disponibili() else None
-                        write_line("GPT > Non mando a GPT: passo " + ("ai servizi online."
-                                   if route else "al modello locale."))
-                        root.after(0, lambda: submit_gemma_voice(
-                            fallback_text, typed=action == "typed_conversation", route=route))
+                        write_line("GPT > Non mando a GPT: passo al modello locale.")
+                        root.after(0, lambda: local_after_gpt(
+                            fallback_text, action == "typed_conversation"))
                         return False
                     except NameError:
                         pass
@@ -2314,27 +2312,56 @@ def main() -> None:
         if not gpt_enabled.get():
             submit_gemma_voice(spoken)
             return
-        orchestrator = __import__("orchestratore")
-        if (__import__("servizi_online").richiesta_codice(spoken)
-                and __import__("servizi_online").disponibili()):
-            submit_gemma_voice(spoken, route="online")     # codice: sempre servizi online (17/11)
+        # Catena (decisione 17/11): prima i servizi online gratuiti, poi GPT solo dopo il
+        # «Uso GPT? sì/no», poi gli altri modelli. Mai silenzio.
+        if __import__("servizi_ricerca").approfondisci_locale(spoken):
+            submit_gemma_voice(spoken, route="locale")     # «approfondisci» senza «online»: Gemma
             return
-        if (not orchestrator.SALTA.pop("gpt", False)
-                and __import__("servizi_online").disponibili()):
-            # Orchestratore (15/11): con un servizio online pronto Lumi chiede prima
-            # «uso l'online per questa richiesta?»; no = GPT come prima.
-            if not orchestrator.consenso_necessario(True):
-                submit_gemma_voice(spoken, route="online")
-                return
-            orchestrator.IN_ATTESA["richiesta"] = (spoken, False, "gpt")
-            __import__("lumi_comandi").chiedi(
-                "orch_once", "Uso l'online per questa richiesta? Di' sì, no, oppure «sempre» "
-                "per tenerlo finché non lo spegni.", write_line, speak_result,
-                no_action="orch_local", always_action="orch_always")
+        if __import__("servizi_online").disponibili():
+            submit_gemma_voice(spoken, route="online")
             return
+        offer_gpt(spoken, False)
+
+    def local_after_gpt(spoken: str, typed: bool) -> None:
+        """Ultimo anello: modello locale, oppure messaggio chiaro (il codice non va a Gemma)."""
+        if __import__("servizi_online").richiesta_codice(spoken):
+            text = ("Per lo script servono i servizi online o GPT, e adesso nessuno ha risposto. "
+                    "Controlla Servizi online o collega GPT.")
+            write_line("LUMI > " + text)
+            speak_result(text)
+            return
+        if submit_gemma_voice(spoken, typed=typed, route="locale") is False:
+            text = "Non riesco a rispondere adesso: riprova tra poco."
+            write_line("LUMI > " + text)
+            speak_result(text)
+
+    def offer_gpt(spoken: str, typed: bool) -> None:
+        """GPT collegato: chiede «Uso GPT?» (sì/no senza «Lumi»). Non collegato: avvisa e passa oltre."""
+        if not (gpt_enabled.get() and active_gpt) or busy_gpt:
+            write_line("GPT > GPT non collegato: passo al modello locale." if not active_gpt
+                       else "GPT > GPT occupato: passo al modello locale.")
+            local_after_gpt(spoken, typed)
+            return
+        __import__("orchestratore").IN_ATTESA["gpt"] = (spoken, typed)
+        __import__("lumi_comandi").chiedi(
+            "gpt_yes", "Uso GPT per questa richiesta? Di' sì o no.", write_line, speak_result,
+            no_action="gpt_no")
+
+    def resume_gpt(accepted: bool) -> None:
+        pending, __import__("orchestratore").IN_ATTESA["gpt"] = (
+            __import__("orchestratore").IN_ATTESA.get("gpt"), None)
+        if pending is None:
+            return
+        spoken, typed = pending
+        if accepted:
+            send_to_gpt(spoken, typed)
+        else:
+            local_after_gpt(spoken, typed)
+
+    def send_to_gpt(spoken: str, typed: bool = False) -> None:
         if not active_gpt:
-            write_line("GPT > GPT selezionato ma non connesso. Connetti ChatGPT nelle impostazioni.")
-            speak_result("GPT non è connesso. La scelta del modello resta GPT.")
+            write_line("GPT > GPT non collegato: passo al modello locale.")
+            local_after_gpt(spoken, typed)
             return
         if busy_gpt:
             write_line("GPT > Sto già elaborando. Attendi la risposta.")
@@ -2350,9 +2377,13 @@ def main() -> None:
                 addon_actions=active_addon_actions())
         except (ValueError, ConversationRejected) as exc:
             write_line("GPT > " + str(exc))
+            local_after_gpt(spoken, typed)
             return
-        run_gpt("conversation", prompt=prompt, epoch=conversation_epoch,
-                document_id=snapshot, utterance=spoken)
+        if not run_gpt("typed_conversation" if typed else "conversation", prompt=prompt,
+                       epoch=conversation_epoch, document_id=snapshot, utterance=spoken,
+                       consent_granted=True):
+            if not busy_gpt:
+                local_after_gpt(spoken, typed)
 
     def toggle_gpt() -> None:
         nonlocal active_gpt, conversation_epoch, gpt_conversation_session_grant
@@ -4218,9 +4249,10 @@ def main() -> None:
                             channel=="typed_conversation" or
                             voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK))):
                         write_line("Conversazione GPT: " + reason)
-                        speak_result("GPT non è disponibile. Puoi riprovare.")
+                        speak_result("GPT non è disponibile: provo con il modello locale.")
                         remember_exchange(original_phrase, "GPT non disponibile, riprova.",
                                           "error")
+                        local_after_gpt(original_phrase, channel == "typed_conversation")
                 elif kind == "gpt_ok":
                     action, result, *rest = data
                     busy_gpt = False
@@ -4822,17 +4854,26 @@ def main() -> None:
             return False
         kind, query = parsed
         if not ricerca.pronti():
-            text = ("Per cercare online serve un servizio di ricerca con la sua chiave: "
-                    "lo aggiungi in Impostazioni, Servizi di ricerca.")
+            text = ricerca.avviso_senza_chiave()
             write_line("RICERCA > " + text)
-            speak_result(text)
+            speak_result("Per cercare online manca la chiave Tavily. Il link per crearla è in chat.")
             return True
         write_line("RICERCA > Cerco online: " + query)
 
         def work():
-            name, result = ricerca.cerca(query, kind == "approfondisci")
+            try:
+                name, result = ricerca.cerca(query, kind == "approfondisci")
+            except Exception as exc:           # mai silenzio: l'errore va in chat
+                name, result = None, [type(exc).__name__]
 
             def show():
+                try:
+                    show_inner()
+                except Exception as exc:       # mai silenzio
+                    write_line("RICERCA > Errore nel mostrare i risultati: " + type(exc).__name__)
+                    speak_result("La ricerca ha dato un errore. I dettagli sono in chat.")
+
+            def show_inner():
                 if name is None:
                     text = ("Nessun servizio di ricerca ha risposto (" + "; ".join(result)[:200] + ").")
                     write_line("RICERCA > " + text)
@@ -4877,11 +4918,7 @@ def main() -> None:
         pending, waiting["richiesta"] = waiting["richiesta"], None
         if pending is None:
             return
-        if route == "locale" and pending[2:] == ("gpt",):
-            __import__("orchestratore").SALTA["gpt"] = True       # no: GPT come prima
-            start_conversation_gpt(pending[0])
-        else:
-            submit_gemma_voice(pending[0], typed=pending[1], route=route)
+        submit_gemma_voice(pending[0], typed=pending[1], route=route)
 
     def resume_online_question(route: str) -> None:
         waiting = __import__("servizi_online").IN_ATTESA
@@ -5028,6 +5065,11 @@ def main() -> None:
                                  write_line("ONLINE > Online attivo finché non spegni il cervello online."),
                                  resume_orchestrated("online")),
          "orch_local": lambda: resume_orchestrated("locale"),
+         # 17/11: «Uso GPT? sì/no» dopo i servizi online gratuiti.
+         "gpt_yes": lambda: resume_gpt(True),
+         "gpt_no": lambda: resume_gpt(False),
+         "gpt_offer": lambda: offer_gpt(*(__import__("orchestratore").IN_ATTESA.pop("gpt_offerta", None)
+                                          or ("", False))),
          "orch_yes": lambda: __import__("orchestratore").rispondi_permesso(True),
          "orch_no": lambda: __import__("orchestratore").rispondi_permesso(False),
          # Passo 11: risposta a «Intendevi …?» del classificatore leggero.

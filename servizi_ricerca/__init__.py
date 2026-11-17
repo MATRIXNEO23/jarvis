@@ -53,6 +53,14 @@ def parse(text: str):
     return match.group("verbo").casefold(), match.group("testo").strip()
 
 
+_APPROFONDISCI = re.compile(r"^approfondisci\b(?!\s+online\b)", re.I)
+
+
+def approfondisci_locale(text: str) -> bool:
+    """«approfondisci X» senza «online»: risponde Gemma offline (decisione 17/11)."""
+    return isinstance(text, str) and bool(_APPROFONDISCI.match(_WAKE.sub("", text).strip()))
+
+
 # --- impostazioni e chiavi (stesso schema dei servizi online) ---------------------------------
 def _cartella() -> Path:
     from settings import default_path
@@ -94,7 +102,8 @@ def pronti(settings: dict | None = None, keys: Chiavi | None = None) -> list:
     settings = settings or carica_impostazioni()
     keys = keys or chiavi()
     return [PER_ID[i] for i in settings["ordine"]
-            if i in settings["attivi"] and PER_ID[i].adattatore is not None and keys.presente(i)]
+            if i in settings["attivi"] and PER_ID[i].adattatore is not None and keys.presente(i)
+            and keys.leggi(i).strip()]
 
 
 # --- ricerca ------------------------------------------------------------------------------
@@ -124,6 +133,14 @@ def cerca(query: str, approfondisci: bool = False, *, settings=None, keys=None, 
             return service.nome, result
         reasons.append("%s: nessun risultato" % service.nome)
     return None, reasons
+
+
+def avviso_senza_chiave(settings: dict | None = None) -> str:
+    """Messaggio chiaro quando nessun servizio di ricerca è pronto, col link per la chiave."""
+    link = next((s.chiavi for s in SERVIZI if s.adattatore is not None and s.chiavi), "")
+    nome = next((s.nome for s in SERVIZI if s.adattatore is not None), "Tavily")
+    return ("Per cercare online manca la chiave di %s. Creala qui: %s e incollala in "
+            "Impostazioni, Servizi di ricerca." % (nome, link))
 
 
 def frase_breve(result: Risultato, limit: int = 280) -> str:
