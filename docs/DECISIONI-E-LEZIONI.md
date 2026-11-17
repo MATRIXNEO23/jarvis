@@ -1333,3 +1333,6 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Lezione: un tetto che esiste ma viene ricalcolato altrove (8192 col catalogo, contatore esatto) non è un tetto. Un solo punto calcola il budget e ogni parte (catalogo, cronologia, ricordi) deve starci dentro.
 - Lezione: se due livelli scrivono lo stesso messaggio (chiamante e funzione interna), il proprietario è uno solo; qui il chiamante alza un flag durante la catena.
 - Lezione: prima di cercare «chi aggiunge /nothink» grep su tutto il repo: non lo aggiungeva nessuno, andava solo filtrato.
+- 056b (17/11, pagina Modelli unica): la base è native.json; profili e memoria del prompt si AGGIUNGONO (profili.json `memoria`, memory.json resta il file letto). Un solo Salva. Lezione: per non avere due fonti si incorpora il modulo esistente (`embed=True`) invece di riscriverlo.
+- Lezione HUD: quello che deve restare sempre visibile si impacchetta per primo (side=bottom) e a cedere è il globo.
+- Lezione prompt: separare la conversazione precedente dall'ultimo messaggio e non dare ricordi ai saluti.

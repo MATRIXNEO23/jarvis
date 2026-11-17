@@ -151,6 +151,11 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - «Memoria locale - impostazioni»: la pagina si disegna sopra la precedente (lettere fantasma a sinistra) e il testo esce dal bordo.
 - Barra in alto da rifare (mockup approvato, tema azzurro): ogni voce è un tasto; Modello ▾ con ⏻ nello stesso tasto (via «MODELLO ON»); «Online» e «Ricerca» vicini; Telegram come tasto con on/off; icone meteo disegnate bene (sole, sole e nuvola, nuvola, pioggia, temporale, neve, nebbia, luna con le fasi).
 
+## Ripresa 17/11 sera — 056b allargata (solo py_compile su Linux)
+- Fatto: pagina «Modelli offline» unica (miei_modelli + NativeSettingsWindow(embed=True), memoria nel profilo), via anteprima F5 e pulsanti doppi; prompt «ciao» (prompt_breve); HUD in basso (_layout_bottom); aiuto Meteo/Modelli; contesto online proporzionato (contesto_online); inventario docs/INVENTARIO-DUPLICATI-056b.md; audit in docs/ANALISI-056.md.
+- Test nuovi: test_056b_nessun_duplicato_impostazioni, _memoria_nel_profilo, _ciao_non_ripete, _hud_layout, _aiuto_meteo, _contesto_online.
+- Resta: CI test e build f5n da verificare; «meteo domani» non esiste (proposta); tutorial vocale del meteo non fatto (aiuto_comandi riguarda solo Controllo PC).
+
 ## 056b, aggiunte decise con l'utente (17/11, 19:10-20:09, a voce)
 1. Una sola pagina «Modelli», senza «Gemma» nei nomi e senza finestre annidate:
    - in alto le caselle 1/2/3, l'elenco e «Aggiungi»;

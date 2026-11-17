@@ -56,3 +56,13 @@ Riferimento: docs/DECISIONI-056.md. Analisi in sola lettura, nessuna modifica.
 | dopo «cerca online …» dire «apri il 2» (anche «il secondo») | il risultato 2 si apre nel browser predefinito, senza conferma; «apri il 9» con 5 risultati: «Non c'è un risultato 9» |
 | `lumi_stato` | mostra `modalita` e `meteo` |
 Limite: due aggiornamenti dell'icona devono distare almeno 30 minuti (verificare dal log di rete o dal codice, non con attese reali).
+
+## Audit regressioni 056b (17/11, base = 3eb7e6e, genitore del primo multimodello F5.2 f035575)
+Confrontato 3eb7e6e..HEAD (449 commit): funzioni (def) di jarvis.py e dei moduli estratti, etichette dei pulsanti, `native_config`/`memory_preferences`, `native_conversation_session`/adapter/bridge (template, stop, budget), HUD.
+- Funzioni sparite: solo `open_memory_preferences` (tolta di proposito: la memoria è nel profilo). Etichette sparite: tutte spiegate da rinomina Jarvis→Lumi o dalla pagina unica.
+- Stop e template: `<end_of_turn>` ora per famiglia (`chat_templates.stop_sequence`), nessuna perdita.
+- Ripristinato: ora e sveglia in basso (`animated_hud._layout_bottom`: parti in basso impacchettate prima del globo; test `test_056b_hud_layout.py`).
+- Ripristinato/corretto: «ciao» che ripete la risposta precedente (`prompt_breve`); «Gemma» nei testi visibili.
+- Scelte di velocità volute, NON ripristinate: `context_size` 1024 (era 2048), tetto prompt 600, `history_max_tokens` 200 (era 250). Modificabili ora nella pagina Modelli e nel profilo; da riportare a 2048 solo se l'utente lo chiede.
+- Limite dell'audit: nessuna prova eseguita su Linux; il resto è lettura del diff.
+Prove dal vivo per Codex: (1) Impostazioni > Modelli: una sola pagina con caselle, elenco, profili, impostazioni e memoria; Salva poi cambiare profilo: valori e memoria cambiano. (2) Chat lunga, poi «ciao»: risposta breve, non la precedente; `lumi_prompt` mostra il separatore «[Sopra: conversazione precedente…]» e nessun ricordo. (3) HUD in basso: ora, sveglia (imposta sveglia tra 2 minuti: compare «Ferma»), meteo, DISCO C, RETE tutti visibili. (4) Online: «ciao» = log «ONLINE > contesto minimo … ~N token»; «approfondisci» = fino a 6 scambi; `lumi_online` mostra `ultimo_contesto_online`. (5) Aiuto (F1) ha la sezione Meteo e Modelli offline.
