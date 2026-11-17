@@ -26,3 +26,6 @@ file, spegnere il PC. Questi comandi vengono rifiutati dal ponte.
 Collegamento: Impostazioni → «Diagnostica per Claude» → «Copia configurazione per Claude
 desktop», poi incollala in `claude_desktop_config.json` (Claude → Impostazioni →
 Sviluppatore → Modifica configurazione) e riavvia Claude.
+Per Codex: «Copia configurazione per Codex» copia il blocco TOML `[mcp_servers.lumi-diagnostica]`
+(apici singoli, timeout 30 e 120 s) da incollare in `C:\Users\<utente>\.codex\config.toml`;
+poi riavvia Codex (vedi docs/audit/ISTRUZIONI-PROVE-CODEX.md).

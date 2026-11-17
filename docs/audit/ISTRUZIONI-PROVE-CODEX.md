@@ -3,19 +3,9 @@
 Divisione del lavoro (decisa dall'utente il 17/11/2026): Codex fa le prove dal vivo con il server MCP «lumi-diagnostica» e scrive solo gli esiti. Claude legge gli esiti e corregge il codice.
 
 ## 1. Collegare la diagnostica a Codex (una volta sola, sul PC)
-1. In Lumi apri Impostazioni → «Diagnostica per Claude» → «Copia configurazione per Claude desktop».
-2. Incolla il testo nel Blocco note. Ti servono due valori: `command`, cioè il percorso di python o dell'eseguibile, e `args`.
-3. Apri `C:\Users\matri\.codex\config.toml` e aggiungi:
-
-```toml
-[mcp_servers.lumi-diagnostica]
-command = 'INCOLLA QUI command'
-args = ['INCOLLA', 'QUI', 'args']
-startup_timeout_sec = 30
-tool_timeout_sec = 120
-```
-
-Usa gli apici singoli: così le barre `\` dei percorsi Windows restano come sono.
+1. In Lumi apri Impostazioni → «Diagnostica per Claude» → «Copia configurazione per Codex». Il pulsante copia negli appunti il blocco `[mcp_servers.lumi-diagnostica]` già pronto (command e args in apici singoli, `startup_timeout_sec = 30`, `tool_timeout_sec = 120`): non serve più copiarlo a mano.
+2. Incolla il blocco in fondo a `C:\Users\<utente>\.codex\config.toml` (il percorso esatto è scritto sotto il pulsante).
+3. Se il file ha già una sezione `[mcp_servers.lumi-diagnostica]`, sostituiscila.
 
 4. Riavvia Codex e controlla che compaiano gli strumenti `lumi_stato`, `lumi_prova_comando` e gli altri.
 

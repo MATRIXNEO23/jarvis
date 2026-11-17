@@ -135,3 +135,27 @@ class PulsantiFinestraTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ConfigurazioneCodexTests(unittest.TestCase):
+    def test_blocco_toml_con_stessi_command_e_args_in_apici_singoli(self):
+        from diagnostica_claude import ui
+        import json
+        py = r"C:\Python\python.exe"
+        toml = ui.configurazione_codex(py)
+        claude = json.loads(ui.configurazione_claude(py))["mcpServers"]["lumi-diagnostica"]
+        lines = toml.splitlines()
+        self.assertEqual(lines[0], "[mcp_servers.lumi-diagnostica]")
+        self.assertEqual(lines[1], "command = '%s'" % claude["command"])
+        self.assertEqual(lines[2], "args = ['%s']" % claude["args"][0])
+        self.assertIn("startup_timeout_sec = 30", lines)
+        self.assertIn("tool_timeout_sec = 120", lines)
+
+    def test_pulsante_riga_di_testo_e_percorso_del_profilo(self):
+        from diagnostica_claude import ui
+        source = (ROOT / "diagnostica_claude" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn("Copia configurazione per Codex", source)
+        self.assertIn("ISTRUZIONI-PROVE-CODEX.md", source)
+        self.assertEqual(ui.percorso_codex(), Path.home() / ".codex" / "config.toml")
+        doc = (ROOT / "docs" / "audit" / "ISTRUZIONI-PROVE-CODEX.md").read_text(encoding="utf-8")
+        self.assertIn("Copia configurazione per Codex", doc)

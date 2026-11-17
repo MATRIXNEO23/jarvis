@@ -1317,3 +1317,4 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Decisione utente (17/11 05:05): GPT dal browser è una voce della lista con spunta e ordine, come Gemini, Groq e OpenRouter; «Uso GPT?» sparisce, il locale è l'ultimo ripiego. Codice e script restano sempre online. Pulsanti _ □ X in alto a destra sopra l'ingranaggio.
 - Lezione: la voce GPT esisteva già (chatgpt_account, tipo account); bastava togliere il passaggio separato nella catena invece di crearne un'altra. Un GPT spuntato ma non collegato non blocca: `chiedi` annota il motivo e passa al successivo.
 - Pulsanti: l'header ha una colonna `_jarvis_window_corner`; window_chrome vi impila i pulsanti (compatti) sopra l'ingranaggio. Altre finestre senza colonna restano come prima.
+- 17/11 05:13: «Copia configurazione per Codex» sostituisce la copia a mano del blocco TOML; il percorso di config.toml è preso dal profilo reale (Path.home()), apici singoli per le barre di Windows.
