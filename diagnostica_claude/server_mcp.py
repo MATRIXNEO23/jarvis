@@ -15,7 +15,7 @@ from pathlib import Path
 VERSIONE_PROTOCOLLO = "2025-06-18"
 
 STRUMENTI = [
-    {"name": "lumi_stato", "description": "Stato di Lumi: versione, microfono, modello, GPT, occupato.",
+    {"name": "lumi_stato", "description": "Stato di Lumi: versione, modalità (Basso consumo/Veloce), meteo, microfono, modello, GPT, occupato.",
      "op": "stato", "props": {}},
     {"name": "lumi_console", "description": "Ultime righe della console/chat di Lumi.",
      "op": "console", "props": {"righe": {"type": "integer", "description": "quante (max 400)"}}},

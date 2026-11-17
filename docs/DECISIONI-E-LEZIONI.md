@@ -1318,3 +1318,12 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Lezione: la voce GPT esisteva già (chatgpt_account, tipo account); bastava togliere il passaggio separato nella catena invece di crearne un'altra. Un GPT spuntato ma non collegato non blocca: `chiedi` annota il motivo e passa al successivo.
 - Pulsanti: l'header ha una colonna `_jarvis_window_corner`; window_chrome vi impila i pulsanti (compatti) sopra l'ingranaggio. Altre finestre senza colonna restano come prima.
 - 17/11 05:13: «Copia configurazione per Codex» sostituisce la copia a mano del blocco TOML; il percorso di config.toml è preso dal profilo reale (Path.home()), apici singoli per le barre di Windows.
+
+## 17/11 — Build 056: Basso consumo / Veloce, meteo add-on, barra in alto (approvata 16:38)
+- Problema: la catena 055 provava l'online prima del locale, senza che l'utente l'avesse deciso; GPT ON e «INTERFACCIA NEURALE» occupavano la barra; Mistral risultava spuntato dopo averlo spento.
+- Decisione utente: Basso consumo = comandi, poi offline, online solo col «sì» (anche per script, «approfondisci» e «cerca online»); Veloce = primo modello online, offline di riserva; slide al posto della scritta; meteo come add-on Open-Meteo con icone senza riquadro; «apri il N»; tendina MODELLO con un solo on/off.
+- Motivazione tecnica: l'ordine è fissato in un solo punto (`conversation_chain`) con `route` esplicita, così il motore (`submit_gemma_voice`) non la sovrascrive; la conferma riusa `chiedi` e `IN_ATTESA` (nessun doppione); il meteo segue lo schema di musica/sveglia (add-on con core action locale, runtime e service separati).
+- Causa del bug Mistral (dimostrata dal codice, non dal vivo): il `save()` dei pannelli teneva una copia di `settings` e riscriveva `attivi` dalle spunte aperte prima; ora applica solo le differenze sopra il file riletto. Regola: un pannello che salva un file condiviso deve rileggerlo e scrivere solo ciò che ha cambiato.
+- Lezione: chi sostituisce un ordine di catena deve cercare anche i rami «automatici» nei moduli sottostanti (qui due blocchi in conversazione_lumi.py forzavano online/locale) e i test AST che citano le vecchie stringhe.
+- Lezione: un editing con indice di stringa trovato troppo presto ha duplicato un blocco di jarvis.py; riparato con confronto e py_compile. Usare ancoraggi univoci.
+- Stato prove: solo py_compile su Linux; test 056 e adeguamenti vanno verificati dalla CI Windows. NOT_TESTED dal vivo: slide, conferma sì/no a voce, meteo reale e icone, «apri il 2», tendina MODELLO.

@@ -1,7 +1,7 @@
 # Decisioni per la 056 (dall'utente, 17/11/2026, a voce e in chat)
 
 Questo documento contiene solo quello che l'utente ha detto o approvato. Il resto è nella sezione «Da decidere» e non va implementato.
-Stato: **in attesa di approvazione dell'utente.**
+Stato: **approvato dall'utente il 17/11 alle 16:38 (punti A, B, C, C2, C3, D, E); implementato nella build 056.**
 
 ## A. Catena, modalità «Basso consumo» (quella normale)
 1. **Motore dei comandi.** Se la frase è un comando, il motore lo esegue e non la passa a nessun modello.

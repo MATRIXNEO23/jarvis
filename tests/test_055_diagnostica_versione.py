@@ -14,9 +14,9 @@ class VersioneTests(unittest.TestCase):
         online = STRUMENTI[STRUMENTI.index("def online"):STRUMENTI.index("def ricerca")]
         self.assertIn('"versione"', online)
 
-    def test_build_number_is_055(self):
-        self.assertIn("--number 055", WORKFLOW)
-        self.assertNotIn("--number 054", WORKFLOW)
+    def test_build_number_is_056(self):          # 056: portato da 055
+        self.assertIn("--number 056", WORKFLOW)
+        self.assertNotIn("--number 055", WORKFLOW)
 
     def test_diagnostic_tools_cover_new_features(self):
         ricerca = STRUMENTI[STRUMENTI.index("def ricerca"):STRUMENTI.index("def modelli")]

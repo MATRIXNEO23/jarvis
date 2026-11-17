@@ -44,3 +44,15 @@ Riferimento: docs/DECISIONI-056.md. Analisi in sola lettura, nessuna modifica.
 | barra in alto | niente «GPT ON» |
 | scelta di un modello dalla tendina MODELLO | `lumi_stato` mostra il nuovo modello, uno solo in memoria |
 | Mistral spento dalla tendina, poi Impostazioni aperte e chiuse | `lumi_online` mostra Mistral ancora spento |
+
+## Prove dal vivo da eseguire (aggiunte per C2 e C3, 17/11)
+| strumento o frase | atteso |
+|---|---|
+| `lumi_addon` acceso «meteo», poi `lumi_stato` | `meteo.attivo` true; con città scelta compaiono città, temperatura e icona entro pochi secondi |
+| Impostazioni > Add-on > Meteo, città «Roma», Salva | messaggio «Città salvata»; nell'HUD, sotto il globo e sopra DISCO C/RETE, icona + «Roma 18°», nessun riquadro |
+| «che tempo fa a Tokyo» | risposta a voce e in chat «A Tokyo ci sono …», nel log nessun modello e nessuna conferma |
+| `lumi_addon` spento «meteo» | l'icona sparisce, «che tempo fa a Roma» non risponde dal comando (va al modello), nessuna connessione a Open-Meteo |
+| «com'è il clima a Tokyo in primavera» e «cerca online meteo Roma» | non risponde il comando meteo; la ricerca chiede «Vado online?» |
+| dopo «cerca online …» dire «apri il 2» (anche «il secondo») | il risultato 2 si apre nel browser predefinito, senza conferma; «apri il 9» con 5 risultati: «Non c'è un risultato 9» |
+| `lumi_stato` | mostra `modalita` e `meteo` |
+Limite: due aggiornamenti dell'icona devono distare almeno 30 minuti (verificare dal log di rete o dal codice, non con attese reali).

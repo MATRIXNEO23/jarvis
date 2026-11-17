@@ -297,7 +297,9 @@ def main() -> None:
             stato=lambda: {"stato": read_lumi_state(), "microfono": voice_mode.get(),
                            "gpt_collegato": bool(active_gpt), "occupato": bool(busy_local),
                            "progetto": active_context_label.get(),
-                           "versione": __import__("impostazioni_menu").versione()},
+                           "versione": __import__("impostazioni_menu").versione(),
+                           "modalita": settings.get("modalita", "basso_consumo"),
+                           "meteo": meteo_status()},
             in_chat=lambda text: write_line("CLAUDE > " + text),
             prova=try_command, riavvia_modello=lambda: lumi_model_restart(),
             run_ui=lambda fn: root.after(0, fn), log_motore=engine_log,
@@ -489,6 +491,15 @@ def main() -> None:
     except (ImportError, OSError, ValueError, AttributeError) as exc:
         addon_setup_error = (addon_setup_error or "") + " Meteo: " + str(exc)[:80]
         meteo_service = None
+
+    def meteo_status() -> dict:
+        """Per lumi_stato (056): add-on acceso, città dell'HUD, temperatura e icona mostrate."""
+        if meteo_service is None:
+            return {"attivo": False, "motivo": "add-on non caricato"}
+        shown = meteo_service.ultimo or {}
+        return {"attivo": meteo_service.is_enabled(), "citta": shown.get("citta", ""),
+                "temperatura": shown.get("temp"),
+                "icona": meteo_categoria(shown["code"]) if "code" in shown else ""}
 
     def meteo_refresh(force: bool = False) -> None:
         """Icona nell'HUD: all'avvio e poi ogni 30 minuti (un solo timer, niente polling);

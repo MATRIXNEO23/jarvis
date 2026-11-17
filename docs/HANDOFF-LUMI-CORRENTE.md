@@ -143,6 +143,19 @@ Da fare prima di nuove funzioni (navigazione autonoma inclusa):
 - Togliere i file inutili dal pacchetto (vedi le regole «Pacchetto per l'utente» in AGENTS.md).
 - Metodo: prima un inventario (menu, impostazioni, comandi, file del pacchetto), poi una proposta da far approvare all'utente punto per punto, poi la modifica. Niente cancellazioni senza verifica degli import e senza ok.
 
+## Ripresa 17/11 sera — build 056 implementata (decisioni 17/11 16:38, solo punti A, B, C, C2, C3, D, E)
+- Commit: 6345018 (A+E+C3), cffa904 (B+D), f0337c4 (C/C2 meteo), poi diagnostica/docs. Solo py_compile su Linux: valgono i test della CI Windows e la build f5n.
+- A: `conversation_chain` (jarvis.py): comandi già passati; Basso consumo = tutto al modello offline (`route="locale"`, niente classificatore); l'online solo dopo «Vado online?» (`ask_online`, riusa `online_yes/online_no` e `servizi_online.IN_ATTESA`, ora con terzo campo «approfondisci»). Codice/script: stessa conferma. «approfondisci» e pulsante «Approfondisci» (chat_bolle.py): `deepen_last`, ultima domanda in `last_question`; conferma in Basso consumo, diretto in Veloce. «cerca/approfondisci online»: conferma `ricerca_yes/no` prima di consumare quota. Il testo scritto lungo passa dalla stessa catena (tolto run_gpt("ask") da submit_gpt).
+- B: `settings["modalita"]` (basso_consumo|veloce, validata in settings.py), slide `slide_modalita.py` (riusa `addon_righe.Interruttore`) al posto di «INTERFACCIA NEURALE»; `save_mode` salva e annulla se il salvataggio fallisce. Veloce = ramo online della 055, offline di riserva.
+- C/C2: add-on `meteo/` (Meteo.jaddon, LEGGIMI, service.py Open-Meteo via urllib, commands.py, config.py città predefinita, runtime.py, icone.py, ui.py pagina add-on). Core action `weather.local` in addon_manager. Comando prima dei comandi PC, escluse «online», «clima», «domani». HUD: `JarvisHUD.set_weather` sotto il globo e sopra DISCO C/RETE, senza riquadro; `meteo_refresh` all'avvio (4 s) e un solo timer da 30 minuti; add-on spento = niente icona né rete. Nasce SPENTO.
+- C3: dopo «cerca online» si apre `risposte.expect_choice` (120 s): «apri il 2» / «il secondo» apre l'URL (solo http/https) nel browser, senza conferma (`open_search_result`; `number_of` accetta «apri»).
+- D: tolto «GPT ON» (animated_hud.py); ONLINE ▾ ora dopo MIC; nuova tendina MODELLO ▾ (`menu_modello.py`, riusa MenuModelli e `lumi_model_use`: un solo modello in memoria); un solo on/off, il pulsante MODELLO ON/OFF esistente.
+- E: causa dimostrata nel codice: il `save()` dei pannelli Impostazioni riscriveva `attivi` dalle spunte vecchie. Ora `servizi_online.unisci_attivi` applica solo le spunte cambiate nel pannello sopra il file riletto (online e ricerca); `MenuModelli._save` segnala gli errori in chat. «Promessi sposi» a offline: coperto dal test di catena, NOT_TESTED dal vivo.
+- Diagnostica: `lumi_stato` ha `modalita` e `meteo` (attivo, città, temperatura, icona); workflow f5n con `--number 056`.
+- Test: tests/test_056_catena.py, test_056_barra.py, test_056_meteo.py, test_056_diagnostica.py; adeguati 054 catena, hud_quick_toggles, self_review, selected_conversation_model, 055 diagnostica/versione.
+- NON fatto (sezione «Da decidere»): navigazione autonoma, «leggi il N», download, Extract, ricerche online (Tavily/Exa/…) e relative frasi. Proposta annotata: le spunte `usa_sempre`/`proponi_lunghe` dei pannelli hanno lo stesso rischio di valori vecchi.
+- Prove dal vivo da fare (Codex): vedi docs/ANALISI-056.md, sezione «Prove dal vivo».
+
 ## Da fare per la 056 (decisioni utente 17/11, 15:30, a voce)
 - La catena della 055 (prima online, poi locale) è SBAGLIATA: non l'aveva decisa l'utente. Ordine corretto, fisso:
   1. motore dei comandi: se è un comando lo esegue, senza passare da nessun modello;
