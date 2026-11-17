@@ -49,7 +49,7 @@ class GptNellaListaTests(unittest.TestCase):
 
     def test_gpt_in_fondo_risponde_solo_dopo_gli_altri(self):
         name, _ = self.chiedi(["gemini", "groq", GPT], [GPT, "gemini", "groq"])
-        self.assertEqual(name, "Gemini")
+        self.assertEqual(name, so.PER_ID["gemini"].nome)
         self.assertEqual(self.gpt, [])
         # se gli altri falliscono, tocca a GPT
         def rotto(url, key, body, timeout):
@@ -61,7 +61,7 @@ class GptNellaListaTests(unittest.TestCase):
 
     def test_gpt_senza_spunta_non_viene_mai_usato(self):
         name, _ = self.chiedi([GPT, "gemini", "groq"], ["gemini", "groq"])
-        self.assertEqual(name, "Gemini")
+        self.assertEqual(name, so.PER_ID["gemini"].nome)
         self.assertEqual(self.gpt, [])
         name, reasons = self.chiedi([GPT], [])
         self.assertIsNone(name)
@@ -70,7 +70,7 @@ class GptNellaListaTests(unittest.TestCase):
     def test_gpt_non_collegato_passa_al_successivo(self):
         self.collegato(False)
         name, _ = self.chiedi([GPT, "gemini", "groq"], [GPT, "gemini", "groq"])
-        self.assertEqual(name, "Gemini")
+        self.assertEqual(name, so.PER_ID["gemini"].nome)
         self.assertEqual(self.gpt, [])
 
     def test_gpt_non_collegato_e_nessun_altro_da_il_motivo(self):
