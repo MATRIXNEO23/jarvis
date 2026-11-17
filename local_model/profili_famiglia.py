@@ -142,7 +142,7 @@ def applica_modello(model_path, config_path=None):
     if config.model:
         old_family, _ = riconosci_famiglia(config.model)
         _voce(data, old_family, valori(config))
-    item = _voce(data, family, valori(config) if not config.model else None)
+    item = _voce(data, family, valori(config))
     slot = str(item["ultimo"])
     revised, reload_needed = update_native_settings(
         config, {"model": str(model_path), **item["slot"][slot]})
