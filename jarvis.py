@@ -412,7 +412,8 @@ def main() -> None:
                 ("musica", "musica", "Musica.jaddon"),
                 ("controllo_pc", "controllo_pc", "ControlloPC.jaddon"),
                 ("telegram", "telegram_addon", "Telegram.jaddon"),
-                ("modello_locale", "local_model", "ModelloLocale.jaddon")):
+                ("modello_locale", "local_model", "ModelloLocale.jaddon"),
+                ("meteo", "meteo", "Meteo.jaddon")):
             if any(item["id"] == addon_id for item in addon_manager.list_installed()):
                 continue
             bundled = Path(__file__).parent / folder / file_name
@@ -473,6 +474,48 @@ def main() -> None:
         addon_setup_error = (addon_setup_error or "") + " Musica: " + str(exc)[:80]
         music_service = None
         music_bar = None
+    # Add-on Meteo (056 C2): comando a voce per qualsiasi città + icona nell'HUD, solo se attivo.
+    meteo_service = None
+    meteo_timer = [None]
+    try:
+        from meteo.service import ServizioMeteo, categoria as meteo_categoria
+        from meteo import config as meteo_config
+        from meteo.runtime import register as register_meteo
+        meteo_service = ServizioMeteo(
+            lambda: bool(addon_manager and any(
+                item["id"] == "meteo" and item["enabled"] for item in addon_manager.list_installed())),
+            citta=lambda: meteo_config.load()["citta"])
+        register_meteo(meteo_service, lambda fn: root.after(0, fn))
+    except (ImportError, OSError, ValueError, AttributeError) as exc:
+        addon_setup_error = (addon_setup_error or "") + " Meteo: " + str(exc)[:80]
+        meteo_service = None
+
+    def meteo_refresh(force: bool = False) -> None:
+        """Icona nell'HUD: all'avvio e poi ogni 30 minuti (un solo timer, niente polling);
+        add-on spento o senza città = niente icona e nessuna connessione."""
+        if meteo_timer[0] is not None:
+            try:
+                root.after_cancel(meteo_timer[0])
+            except tk.TclError:
+                pass
+            meteo_timer[0] = None
+        if meteo_service is None or closing:
+            return
+        meteo_timer[0] = root.after(30 * 60 * 1000, meteo_refresh)
+        if not meteo_service.is_enabled():
+            hud.set_weather(None)
+            return
+
+        def work():
+            data = meteo_service.aggiorna(force)
+            shown = None if not data else {"citta": data["citta"], "temp": data["temp"],
+                                           "categoria": meteo_categoria(data["code"])}
+            try:
+                root.after(0, lambda: hud.set_weather(shown))
+            except (tk.TclError, RuntimeError):
+                pass
+        threading.Thread(target=work, daemon=True, name="lumi-meteo-hud").start()
+
     # Add-on Controllo PC (finestre, clic, tasti; offline), solo se attivo.
     pc_help_box = None
     try:
@@ -3267,6 +3310,9 @@ def main() -> None:
             # Stesso punto d'ingresso dei comandi locali: la musica viene
             # provata solo dopo timer e sveglia, e solo con l'add-on attivo.
             from musica.runtime import handle_text as music_handle_text
+            from meteo.runtime import handle_text as meteo_handle_text
+            if meteo_handle_text(spoken, write_line, speak_result):
+                return True              # 056 C: «che tempo fa a Roma», senza modello né quota
             from controllo_pc.runtime import (claims_first as pc_claims_first,
                                               handle_text as pc_handle_text)
             # Parole corte del Controllo PC in uso («indietro», «giù», «il 3»): prima
@@ -4781,12 +4827,15 @@ def main() -> None:
                     addon_rows_now[0] = None
             except tk.TclError:
                 addon_rows_now[0] = None
+        meteo_refresh(True)          # 056: add-on Meteo acceso/spento = icona subito
         if addon_chosen.ident:
             addon_chosen.mostra(addon_chosen.ident)
 
     addon_chosen = __import__("addon_ui").SezioneAddon(
         addon_chosen_frame, addon_manager, window=settings_window, on_change=addon_changed,
         engine=engine, section_builders={"telegram": build_telegram_section,
+                                         "meteo": lambda box: __import__("meteo.ui", fromlist=["x"]).costruisci_sezione(
+                                             box, notify=write_line, on_change=lambda: meteo_refresh(True)),
                                          "modello_locale": lambda box: build_model_addon_section(box)},
         after_change=addon_rows_sync)
 
@@ -5195,6 +5244,7 @@ def main() -> None:
     bind_help_shortcuts(root, settings_window, show_help, focus_command_box)
     refresh_buttons()
     input_box.focus_set()
+    root.after(4000, meteo_refresh)      # 056: icona meteo all'avvio, poi ogni 30 minuti
     root.after(120, poll)
     root.after(800, diagnostic_heartbeat)
     root.after(400, refresh_voices)

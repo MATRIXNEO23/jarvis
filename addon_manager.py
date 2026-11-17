@@ -32,7 +32,8 @@ _FILE_TARGETS = {"files.list": "elenca", "files.search": "cerca", "files.read": 
                  "files.open": "apri", "files.locate": "localizza"}
 _APP_TARGETS = {"apps.launch": "avvia"}
 # Handled by Lumi's local command parser, never offered to the model.
-_LOCAL_ONLY = frozenset(("alarm.local", "music.local", "pc.local", "telegram.local", "model.local"))
+_LOCAL_ONLY = frozenset(("alarm.local", "music.local", "pc.local", "telegram.local", "model.local",
+                         "weather.local"))
 MAX_ADDONS = 20
 MAX_ACTIONS = 5
 MAX_FILE_BYTES = 12_000
@@ -86,6 +87,8 @@ def validate_manifest(value: object) -> dict:
             raise AddonError("Identità del componente Programmi e app non valida.")
         if item["core_action"] == "alarm.local" and (addon_id, name) != ("sveglia", "addon.sveglia.imposta"):
             raise AddonError("Identità del componente Sveglia non valida.")
+        if item["core_action"] == "weather.local" and (addon_id, name) != ("meteo", "addon.meteo.consulta"):
+            raise AddonError("Identità del componente Meteo non valida.")
         if item["core_action"] == "music.local" and (addon_id, name) != ("musica", "addon.musica.riproduci"):
             raise AddonError("Identità del componente Musica non valida.")
         if item["core_action"] == "pc.local" and (addon_id, name) != ("controllo_pc", "addon.controllo_pc.comando"):

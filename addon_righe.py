@@ -13,7 +13,7 @@ AZZURRO, ARANCIONE = "#46ccfa", "#ff9f43"
 PANEL, SEL, TEXT, BINARIO = "#06192a", "#0b2f44", "#bfeeff", "#29404f"
 
 ICONE = {"accesso_file": "📁", "programmi_app": "🚀", "sveglia": "⏰", "musica": "🎵",
-         "controllo_pc": "🖥", "telegram": "✈", "modello_locale": "🧠",
+         "controllo_pc": "🖥", "telegram": "✈", "modello_locale": "🧠", "meteo": "⛅",
          "diagnostica_sistema": "🩺"}
 ICONA_GENERICA = "🧩"
 

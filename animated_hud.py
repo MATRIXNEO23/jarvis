@@ -399,6 +399,11 @@ class JarvisHUD:
         for column in range(4):
             footer.grid_columnconfigure(column,weight=1,uniform="telemetry")
         footer.grid_rowconfigure(0,weight=1)
+        self.footer=footer
+        # 056 C2: meteo sotto il globo e sopra DISCO C / RETE, senza riquadro; compare solo con dati.
+        self.weather_canvas=tk.Canvas(self.visual,height=30,width=200,bg=BG,
+                                      highlightthickness=0,bd=0)
+        self._weather=None
         self.cpu_tile=MetricTile(footer,"CPU",0)
         self.ram_tile=MetricTile(footer,"RAM",1)
         self.disk_tile=MetricTile(footer,"DISCO C",2)
@@ -538,6 +543,22 @@ class JarvisHUD:
 
     def set_state_provider(self,callback):
         self.state_provider=callback
+
+    def set_weather(self, data):
+        """data = {"citta", "temp", "categoria"} oppure None (add-on spento: sparisce)."""
+        if data==self._weather:
+            return
+        self._weather=data
+        canvas=self.weather_canvas
+        canvas.delete("all")
+        if not data:
+            canvas.pack_forget()
+            return
+        from meteo.icone import disegna
+        disegna(canvas,18,15,data["categoria"],CYAN)
+        canvas.create_text(38,15,anchor="w",fill=CYAN,font=("Consolas",10),
+                           text="%s  %d°"%(str(data["citta"])[:16],round(data["temp"])))
+        canvas.pack(before=self.footer,anchor="e",padx=14)
 
     def set_mode_handler(self, callback):
         """056 B: callback(modalita) -> bool (True se salvata); la slide scorre solo se salva."""

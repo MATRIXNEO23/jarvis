@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "meteo",
+  "name": "Meteo",
+  "version": "1.0.0",
+  "description": "Meteo a voce per qualsiasi città e icona nell'HUD (Open-Meteo, gratis).",
+  "actions": [
+    {
+      "id": "addon.meteo.consulta",
+      "description": "Dice il meteo di una città.",
+      "example": "che tempo fa a Roma",
+      "core_action": "weather.local"
+    }
+  ]
+}
