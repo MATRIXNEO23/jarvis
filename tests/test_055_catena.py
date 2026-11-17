@@ -23,7 +23,8 @@ class Catena(unittest.TestCase):
     def test_voice_and_typed_share_chain(self):
         self.assertIn("conversation_chain(spoken, False)", _text("start_conversation_gpt"))
         gpt = _text("submit_gpt")
-        self.assertIn("conversation_chain(message, True)", gpt)
+        self.assertIn("chain_typed_once(message)", gpt)
+        self.assertIn("conversation_chain(message, True)", _text("chain_typed_once"))
         self.assertNotIn('run_gpt("typed_conversation"', gpt)
         chain = _text("conversation_chain")
         self.assertLess(chain.index("disponibili()"), chain.index("local_after_gpt("))

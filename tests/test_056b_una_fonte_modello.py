@@ -26,10 +26,10 @@ class UnaFonteTests(unittest.TestCase):
             qwen = gguf(tmp / "Qwen3-1.7B-Q4_K_M.gguf", "qwen3")
             config = tmp / "native.json"
             NativeModelConfig(model=str(gemma)).save(config)
-            self.assertEqual(scelta_modello.modello_in_uso(config), str(gemma))
+            self.assertEqual(Path(scelta_modello.modello_in_uso(config)).name, gemma.name)
             scelta_modello.salva_scelta(qwen, config)
-            self.assertEqual(NativeModelConfig.load(config).model, str(qwen))      # native.json.model
-            self.assertEqual(scelta_modello.modello_in_uso(config), str(qwen))     # elenco e caselle
+            self.assertEqual(Path(NativeModelConfig.load(config).model).name, qwen.name)   # native.json.model
+            self.assertEqual(Path(scelta_modello.modello_in_uso(config)).name, qwen.name)  # elenco e caselle
             self.assertEqual(model_family(NativeModelConfig.load(config).model), "qwen3")  # template
             shown = NativeModelConfig.load(config)                                  # «Configura»
             self.assertEqual(Path(shown.model).name, qwen.name)

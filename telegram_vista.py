@@ -81,7 +81,10 @@ class Telegram:
         self.ask_text = ask_text
         self.period_ms = period_ms
         self.popup = None
-        button.configure(command=self.toggle, power_command=self._power)
+        try:
+            button.configure(command=self.toggle, power_command=self._power)
+        except tk.TclError:                # tasto semplice (prove): solo il clic sul tasto
+            button.configure(command=self.toggle)
         root.bind_all("<Button-1>", self._click_anywhere, add="+")
         self.aggiorna()
 
@@ -110,8 +113,11 @@ class Telegram:
         colour, unread, text = stato(bool(self.auto_var.get()), self.contacts(),
                                      self._counts, self._activity)
         try:
-            self.button.configure(text=("✈ Telegram %d" % unread) if unread else "✈ Telegram",
-                                  power_color=colour)   # azzurro/verde/arancione/rosso (15/11)
+            text = ("✈ Telegram %d" % unread) if unread else "✈ Telegram"
+            try:
+                self.button.configure(text=text, power_color=colour)   # azzurro/verde/arancione/rosso
+            except tk.TclError:
+                self.button.configure(text=text, fg=colour)
             self.status_text = text
         except tk.TclError:
             return

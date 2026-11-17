@@ -75,7 +75,7 @@ class SelfReviewTests(unittest.TestCase):
         ask=source.split("    def submit_gpt() -> None:",1)[1]
         ask=ask.split("    def poll() -> None:",1)[0]
         self.assertLess(ask.index("try_self_diagnostic(message)"),
-                        ask.index("conversation_chain(message, True)"))   # 056: sempre la catena
+                        ask.index("chain_typed_once(message)"))   # 056: sempre la catena
         self.assertLess(ask.index("try_self_diagnostic(message)"),
                         ask.index("not gpt_enabled.get()"))
         self.assertIn('text="Autodiagnosi Lumi"',source)

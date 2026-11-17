@@ -216,7 +216,7 @@ class AddonLifecycleTests(unittest.TestCase):
         start=source.index("    def submit_gpt() -> None:")
         stop=source.index("    def diagnostic_heartbeat() -> None:",start)
         typed=source[start:stop]
-        self.assertIn("conversation_chain(message, True)",typed)  # 055: catena unica
+        self.assertIn("chain_typed_once(message)",typed)  # 055: catena unica (056b: helper)
         self.assertIn("addon_actions=active_addon_actions()",typed)
         self.assertIn("build_conversation_prompt(",typed)
         self.assertIn("build_chat_prompt(",typed)  # long text remains chat only

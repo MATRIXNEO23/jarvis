@@ -64,7 +64,7 @@ class HeaderQuickControlTests(unittest.TestCase):
     def wire(self):
         self.assertFalse(hasattr(self.hud, 'gpt_toggle_button'))   # 056 D: niente «GPT ON» in alto
         for name in ('mic_toggle_button', 'memory_toggle_button'):
-            self.assertIsInstance(getattr(self.hud, name, None), self.tk.Button,
+            self.assertIsInstance(getattr(self.hud, name, None), (self.tk.Button, __import__('barra_tasti').TastoBarra),
                                   'The header must provide a usable ' + name)
         from tkinter import ttk
         from settings import load_settings, save_settings
@@ -152,7 +152,7 @@ class HeaderQuickControlTests(unittest.TestCase):
         self.assertEqual(SecondBrain(self.brain_path).stats(), before)
         self.assertEqual(len(env['conversation_memory']), 1)
         self.assertIn('OFF', self.hud.mic_toggle_button.cget('text'))
-        self.assertIn('OFF', self.hud.memory_toggle_button.cget('text'))
+        self.assertFalse(self.hud.memory_toggle_button.cget('power_on'))
         for button in (self.hud.mic_toggle_button, env['gpt_toggle'],
                        self.hud.memory_toggle_button):
             button.invoke()
@@ -172,7 +172,7 @@ class HeaderQuickControlTests(unittest.TestCase):
         env['gpt_toggle'].invoke()
         env['memory_toggle'].invoke()
         self.refresh()
-        self.assertIn('OFF', self.hud.memory_toggle_button.cget('text'))
+        self.assertFalse(self.hud.memory_toggle_button.cget('power_on'))
         env['voice_mode'].set(env['GPT_CONVERSATION'])
         self.refresh()
         self.assertIn('NON ATTIVO', self.hud.mic_toggle_button.cget('text'))
@@ -195,7 +195,7 @@ class HeaderQuickControlTests(unittest.TestCase):
         self.assertTrue(env['settings']['gpt_enabled'])
         self.assertTrue(env['settings']['memory_enabled'])
         self.assertTrue(env['active_gpt'])
-        self.assertEqual(self.hud.memory_toggle_button.cget('text'), 'MEMORIA ON')
+        self.assertTrue(self.hud.memory_toggle_button.cget('power_on'))
         self.assertFalse(self.stops)
         self.assertFalse(self.requests)
         self.assertTrue(self.errors)

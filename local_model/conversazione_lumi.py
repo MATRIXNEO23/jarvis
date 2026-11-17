@@ -446,7 +446,7 @@ def installa(d):
         # Il messaggio dell'utente compare una volta sola: a voce lo ha già scritto
         # la parte che riceve il microfono («TU > …»); qui solo quello digitato.
         # 056b: se il chiamante (submit_gpt) ha già scritto il «TU >», non si ripete.
-        if typed and not TU_SCRITTO[0]:
+        if typed and not __import__("local_model.conversazione_lumi", fromlist=["TU_SCRITTO"]).TU_SCRITTO[0]:
             d.write_line("TU > " + spoken)
         voice_epoch = d.conversation_epoch
         from chat_stream import STREAM

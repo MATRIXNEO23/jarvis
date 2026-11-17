@@ -28,7 +28,7 @@ class BarraSorgenteTests(unittest.TestCase):
     def test_tendina_modello_accanto_al_pulsante_on_off_esistente(self):
         self.assertIn("modello_button = hud.model_toggle_button", JARVIS)
         self.assertIn('on_use=lambda target: lumi_model_use(target)', JARVIS[JARVIS.index("menu_modello"):])
-        self.assertIn('after="mic"', JARVIS)        # ONLINE ▾ non dipende più dal pulsante GPT
+        self.assertIn('"Online ▾", lambda: None, after="model"', JARVIS)
 
 
 class SlideTests(unittest.TestCase):

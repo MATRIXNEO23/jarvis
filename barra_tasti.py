@@ -75,11 +75,16 @@ class TastoBarra(tk.Frame):
 
     config = configure
 
+    def invoke(self):
+        """Come tk.Button.invoke: per i tasti con ⏻ è l'accensione/spegnimento."""
+        self._click(self._power_command or self._command)
+
     def cget(self, key):
         if key == "text":
             return self.label.cget("text")
         if key == "fg":
-            return self.label.cget("fg")
+            col = getattr(self, "_power_color", None)
+            return col or self.label.cget("fg")
         if key == "power_on":
             return self.power is not None and str(self.power.cget("fg")) == AZZURRO
         if key == "power_color":

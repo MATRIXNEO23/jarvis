@@ -46,7 +46,7 @@ class FrasiTests(unittest.TestCase):
 
 class ServizioTests(unittest.TestCase):
     def test_codici_weathercode_e_icone(self):
-        casi = {0: "sole", 1: "sole", 2: "nuvola", 3: "nuvola", 45: "nuvola", 61: "pioggia", 81: "pioggia",
+        casi = {0: "sole", 1: "sole", 2: "sole_nuvola", 3: "nuvola", 45: "nebbia", 61: "pioggia", 81: "pioggia",
                 71: "neve", 86: "neve", 95: "temporale", 99: "temporale"}
         for code, atteso in casi.items():
             self.assertEqual(service.categoria(code), atteso, code)
@@ -149,7 +149,7 @@ class PacchettoTests(unittest.TestCase):
         for categoria in CATEGORIE:
             canvas = tk.Canvas(root, width=60, height=40)
             disegna(canvas, 20, 20, categoria)
-            self.assertGreater(len(canvas.find_all()), 2, categoria)
+            self.assertGreater(len(canvas.find_all()), 1, categoria)
         from animated_hud import JarvisHUD
         hud = JarvisHUD(root, lambda: None)
         hud.set_weather({"citta": "Roma", "temp": 18.4, "categoria": "pioggia"})

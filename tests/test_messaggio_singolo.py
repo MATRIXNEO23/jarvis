@@ -14,7 +14,8 @@ class SingleMessageTests(unittest.TestCase):
                   and n.name == "submit_gemma_voice")
         body = ast.get_source_segment(source, fn)
         self.assertNotIn("UTENTE / VOCE", body)        # a voce lo scrive già il microfono
-        self.assertIn('if typed:\n            d.write_line("TU > " + spoken)', body)
+        self.assertIn('d.write_line("TU > " + spoken)', body)
+        self.assertIn("TU_SCRITTO", body)       # 056b: se il chiamante l'ha già scritto, non si ripete
         jarvis = (ROOT / "jarvis.py").read_text(encoding="utf-8")
         before = jarvis.index('write_line("TU > " + spoken)')
         self.assertLess(before, jarvis.index("start_conversation_gpt(spoken)", before))
