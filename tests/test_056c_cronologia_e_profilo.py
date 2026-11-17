@@ -158,3 +158,52 @@ class MeteoDomaniTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProfiliPaginaModelliTests(unittest.TestCase):
+    """056c (21:28): profili come tasti, selezionato acceso, «Modifiche non salvate»,
+    «Salva nel profilo N», «Annulla modifiche», casella del modello in uso colorata."""
+
+    def test_sorgente_senza_radio_e_con_pulsanti(self):
+        src = (ROOT / "local_model" / "miei_modelli.py").read_text(encoding="utf-8")
+        self.assertNotIn("Radiobutton", src)
+        self.assertIn("profile_buttons[number] = tk.Button", src)
+        ui = (ROOT / "local_model" / "native_ui.py").read_text(encoding="utf-8")
+        for testo in ("Modifiche non salvate", "Salva nel profilo %d", "Annulla modifiche"):
+            self.assertIn(testo, ui)
+
+    def test_pagina_tk(self):
+        import tkinter as tk
+        try:
+            root = tk.Tk()
+        except tk.TclError:
+            self.skipTest("Tk non disponibile")
+        self.addCleanup(root.destroy)
+        from local_model import miei_modelli
+        from local_model.native_config import NativeModelConfig
+        from local_model.native_ui import NativeSettingsWindow
+        with tempfile.TemporaryDirectory() as tmp:
+            a = Path(tmp) / "a.gguf"
+            a.write_bytes(b"x")
+            cfg = Path(tmp) / "native.json"
+            NativeModelConfig(model=str(a)).save(cfg)
+            box = miei_modelli.costruisci_sezione(
+                root, lambda t: None, on_use=lambda t: None, config_path=cfg,
+                impostazioni=lambda f: NativeSettingsWindow(f, path=cfg, embed=True))
+            panel = box.panel["p"]
+            self.assertEqual(panel.save_button.cget("text"), "Salva nel profilo 1")
+            self.assertEqual(box.profile_buttons[1].cget("bg"), miei_modelli.ACCESO_BG)
+            self.assertEqual(box.profile_buttons[2].cget("bg"), miei_modelli.SPENTO_BG)
+            self.assertEqual(panel.dirty_text.get(), "")
+            panel.values["max_output"].set("200")
+            self.assertEqual(panel.dirty_text.get(), "Modifiche non salvate")
+            panel.annulla()
+            self.assertEqual(panel.dirty_text.get(), "")
+            self.assertEqual(panel.values["max_output"].get(), "256")
+            box.profile_buttons[2].invoke()
+            self.assertEqual(box.profile_buttons[2].cget("bg"), miei_modelli.ACCESO_BG)
+            self.assertEqual(box.profile_buttons[1].cget("bg"), miei_modelli.SPENTO_BG)
+            self.assertEqual(panel.save_button.cget("text"), "Salva nel profilo 2")
+            self.assertEqual(panel.dirty_text.get(), "")
+            usate = [n for n, b in box.slot_buttons.items() if b.cget("bg") == miei_modelli.ACCESO_BG]
+            self.assertLessEqual(len(usate), 1)

@@ -134,7 +134,21 @@ class NativeSettingsWindow:
             anchor="w", pady=(0, 6))
         buttons = ttk.Frame(bottom)
         buttons.pack(fill="x")
-        ttk.Button(buttons, text="Salva", command=self.save).pack(side="left")
+        self.profilo = None
+        self.on_change = None
+        self.save_button = ttk.Button(buttons, text="Salva", command=self.save)
+        self.save_button.pack(side="left")
+        self.cancel_button = ttk.Button(buttons, text="Annulla modifiche", command=self.annulla)
+        self.cancel_button.pack(side="left", padx=6)
+        self.dirty_text = tk.StringVar(value="")
+        ttk.Label(buttons, textvariable=self.dirty_text, foreground="#ff9a1f").pack(side="left", padx=6)
+        self._base = self._snapshot()
+        for variable in list(self.values.values()) + list(self.mem_values.values()) + [
+                self.fast_forward, self.character_main, self.character_extra, self.reply_length,
+                self.explain_sentences, self.user_notes] + (
+                [self.ricordi_var] if hasattr(self, "ricordi_var") else []):
+            variable.trace_add("write", lambda *_a: self._aggiorna_modifiche())
+        self.personality.bind("<KeyRelease>", lambda _e: self._aggiorna_modifiche(), add="+")
         self.test_button = ttk.Button(buttons, text="Prova generazione", command=self.test_model)
         self.test_button.pack(side="left", padx=6)
         ttk.Button(buttons, text="Ripristina campi", command=self.reset).pack(
@@ -197,6 +211,35 @@ class NativeSettingsWindow:
         ttk.Button(frame, text="Dettagli ultimo contesto",
                    command=self.show_context_metrics).pack(anchor="w", pady=(4, 2), padx=4)
 
+    # 056c: «Modifiche non salvate», «Salva nel profilo N», «Annulla modifiche». Niente salvataggio automatico.
+    def _snapshot(self):
+        keys = (list(self.values) + list(self.mem_values))
+        data = {k: str((self.values.get(k) or self.mem_values.get(k)).get()) for k in keys}
+        for name in ("fast_forward", "character_main", "character_extra", "reply_length",
+                     "explain_sentences", "user_notes", "ricordi_var"):
+            if hasattr(self, name):
+                data[name] = str(getattr(self, name).get())
+        data["personality"] = self.personality.get("1.0", "end-1c")
+        return data
+
+    def modificato(self):
+        return self._snapshot() != self._base
+
+    def _aggiorna_modifiche(self):
+        if hasattr(self, "dirty_text"):
+            self.dirty_text.set("Modifiche non salvate" if self.modificato() else "")
+        if callable(self.on_change):
+            self.on_change(self.modificato())
+
+    def imposta_profilo(self, numero):
+        """Il profilo in uso per questo modello: dà il nome al pulsante di salvataggio."""
+        self.profilo = numero
+        self.save_button.configure(text="Salva nel profilo %d" % numero if numero else "Salva")
+
+    def annulla(self):
+        self.ricarica()
+        self.status.set("Modifiche annullate: valori del profilo in uso.")
+
     def show_context_metrics(self):
         try:
             session = self.get_session() if callable(self.get_session) else None
@@ -205,6 +248,17 @@ class NativeSettingsWindow:
             metrics = {"errore": str(exc)[:120]}
         text = "\n".join("%s: %s" % (k, v) for k, v in metrics.items()) or "Nessun contesto ancora costruito."
         messagebox.showinfo("Ultimo contesto", text, parent=self.window)
+
+    def _riallinea(self):
+        self.personality.delete("1.0", "end")
+        self.personality.insert("1.0", self.current.personality)
+        self.character_main.set(self.current.character_main or self._character_choices[0])
+        self.character_extra.set(self.current.character_extra or self._character_choices[0])
+        self.reply_length.set(self._length_labels.get(self.current.reply_length, self._character_choices[0]))
+        self.explain_sentences.set(str(self.current.explain_sentences))
+        self.user_notes.set(self.current.user_notes)
+        self._base = self._snapshot()
+        self._aggiorna_modifiche()
 
     def ricarica(self):
         """Rilegge dal disco modello in uso, profilo caricato e memoria (dopo un cambio)."""
@@ -229,6 +283,7 @@ class NativeSettingsWindow:
                              else str(getattr(prefs, key)))
             from contesto_lumi import RICORDI_ETICHETTE
             self.ricordi_var.set(RICORDI_ETICHETTE[prefs.ricordi_locale])
+        self._riallinea()
 
     def _save_memory(self):
         from dataclasses import replace
@@ -365,6 +420,7 @@ class NativeSettingsWindow:
         for key, variable in self.values.items():
             variable.set(str(getattr(disk, key)))
         self.fast_forward.set(bool(disk.fast_forward))
+        self._riallinea()
         self.status.set("Modello cambiato: ora mostro le impostazioni di quello in uso.")
         return True
 
@@ -415,6 +471,8 @@ class NativeSettingsWindow:
                         self.path)
                 except (OSError, ValueError, RuntimeError):
                     pass
+            self._base = self._snapshot()
+            self._aggiorna_modifiche()
             if callable(self.on_save):
                 self.on_save(revised, reload_needed)
             self.status.set("Impostazioni salvate. " + (

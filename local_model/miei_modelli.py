@@ -51,6 +51,10 @@ def righe(config_path=None) -> list[tuple[Path, bool]]:
             for m in scelta_modello.elenca_modelli(config_path)]
 
 
+ACCESO_BG, ACCESO_FG = "#46ccfa", "#04202f"       # tema Lumi: selezionato = azzurro acceso
+SPENTO_BG, SPENTO_FG = "#0b2f44", "#8fb8cc"
+
+
 def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=None, confirm=None,
                        run_async=None, al_cestino=None, impostazioni=None):
     """Sezione «Modelli» (Tk): 3 caselle fisse 1/2/3 con un modello ciascuna, sotto l'elenco
@@ -76,8 +80,11 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
         cell = ttk.Frame(slots_bar)
         cell.pack(side="left", padx=(0, 8))
         slot_labels[number] = tk.StringVar(value="")
-        slot_buttons[number] = ttk.Button(cell, textvariable=slot_labels[number], width=22,
-                                          command=lambda n=number: use_slot(n))
+        slot_buttons[number] = tk.Button(cell, textvariable=slot_labels[number], width=22,
+                                         command=lambda n=number: use_slot(n), relief="flat", bd=1,
+                                         bg=SPENTO_BG, fg=SPENTO_FG, activebackground=ACCESO_BG,
+                                         activeforeground=ACCESO_FG, disabledforeground="#4a6a7e",
+                                         cursor="hand2")
         slot_buttons[number].pack()
     ttk.Label(box, text="Un solo modello alla volta resta in memoria: le caselle servono per "
               "passare in fretta dall'uno all'altro.", wraplength=520).pack(anchor="w", padx=8)
@@ -102,7 +109,10 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
             model = state["slots"].get(number)
             slot_labels[number].set("%d  %s" % (number, scelta_modello.nome_breve(model)[:20]
                                                  if model else "(vuota)"))
-            slot_buttons[number].configure(state="normal" if model else "disabled")
+            usato = bool(model and in_use and registro_modelli.chiave(model) == registro_modelli.chiave(in_use))
+            slot_buttons[number].configure(state="normal" if model else "disabled",
+                                           bg=ACCESO_BG if usato else SPENTO_BG,
+                                           fg=ACCESO_FG if usato else SPENTO_FG)
         lost = mancanti(config_path)
         if lost:
             status.set("Attenzione: non trovo più %d modello/i aggiunto/i: %s." % (
@@ -216,6 +226,17 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
         if panel.get("p") is not None:
             panel["p"].ricarica()
 
+    profile_buttons = {}
+
+    def colora_profili():
+        """056c: il profilo in uso è azzurro acceso, gli altri spenti; il pulsante di salvataggio
+        porta il suo numero («Salva nel profilo N»)."""
+        for n, button in profile_buttons.items():
+            acceso = n == slot_var.get()
+            button.configure(bg=ACCESO_BG if acceso else SPENTO_BG, fg=ACCESO_FG if acceso else SPENTO_FG)
+        if panel.get("p") is not None and hasattr(panel["p"], "imposta_profilo"):
+            panel["p"].imposta_profilo(slot_var.get())
+
     def profile_refresh():
         """Aggiorna etichetta e slot dal file; da chiamare SOLO quando serve rileggere."""
         info = profili_famiglia.assicura(config_path)
@@ -225,6 +246,7 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
             info["famiglia"] if info["riconosciuta"] else "incerta"))
         slot_var.set(info["slot"])
         reload_panel()
+        colora_profili()
 
     def model_path():
         return info_state.get("modello") or scelta_modello.modello_in_uso(config_path)
@@ -234,6 +256,7 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
         try:
             result = profili_famiglia.scegli_slot(model_path(), number, config_path)
             reload_panel()
+            colora_profili()
             status.set("Profilo %d caricato." % number + (
                 " Per applicare %s serve riavviare il motore." % ", ".join(result["campi_riavvio"])
                 if result["serve_riavvio"] else " Nessun riavvio necessario."))
@@ -244,6 +267,7 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
         number = slot_var.get()
         try:
             profili_famiglia.salva_in_slot(model_path(), number, config_path)
+            colora_profili()
             status.set("Valori salvati nel profilo %d." % number)
         except (OSError, ValueError) as exc:
             status.set(str(exc)[:140])
@@ -260,8 +284,11 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
 
     ttk.Label(prof, textvariable=family_var).pack(side="left")
     for number in profili_famiglia.SLOT:
-        ttk.Radiobutton(prof, text="Profilo %d" % number, value=number, variable=slot_var,
-                        command=choose_slot).pack(side="left", padx=4)
+        profile_buttons[number] = tk.Button(
+            prof, text="Profilo %d" % number, relief="flat", bd=1, padx=8, cursor="hand2",
+            bg=SPENTO_BG, fg=SPENTO_FG, activebackground=ACCESO_BG, activeforeground=ACCESO_FG,
+            command=lambda n=number: (slot_var.set(n), choose_slot()))
+        profile_buttons[number].pack(side="left", padx=4)
     ttk.Button(prof, text="Ripristina default", command=reset_slot).pack(side="left")
     # 056b: sotto i profili, nella stessa pagina, tutte le impostazioni del modello selezionato
     # (base native.json) con UN solo Salva che scrive anche nel profilo caricato.
@@ -274,6 +301,8 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
     box.listbox, box.choose_slot, box.save_slot, box.reset_slot = listbox, choose_slot, save_slot, reset_slot
     box.use_slot, box.assign, box.profile_refresh = use_slot, assign, profile_refresh
     box.slot_var, box.state = slot_var, state
+    box.slot_buttons, box.profile_buttons, box.colora_profili = slot_buttons, profile_buttons, colora_profili
+    colora_profili()
     try:
         profile_refresh()
     except (OSError, ValueError):
