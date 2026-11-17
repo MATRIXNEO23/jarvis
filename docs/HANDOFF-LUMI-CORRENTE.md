@@ -136,6 +136,7 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Modelli: 3 posizioni fisse (1/2/3) con modelli preassegnati per passare velocemente dall'uno all'altro, con l'elenco completo sotto.
 - Profili: 3 profili per OGNI singolo modello, non per famiglia.
 - Impostazioni modelli: si trovano solo in «Modelli». La pagina dell'add-on tiene solo attiva/disattiva e il pulsante «Apri impostazioni modelli».
+- Bug 054 (prova 17/11 03:41): «approfondisci la fotosintesi» apre ancora la finestra Windows «Conferma GPT online» (Sì/No). Va tolta: la scelta sì/no si fa a voce, senza «Lumi». Controllare anche perché «approfondisci» chiede GPT invece di andare a Gemma.
 - Pulsanti _ □ X in alto a destra, sopra l'ingranaggio (non fatto nella 054).
 - Prima delle correzioni: leggere il FIX di Codex in docs/audit/, proporre all'utente le modifiche punto per punto e partire solo con il suo ok.
 
