@@ -1466,8 +1466,6 @@ def main() -> None:
     def preference_command(spoken: str) -> bool:
         """Only an explicitly confirmed request can change preference records."""
         nonlocal pending_preference
-        if memory_wipe_command(spoken):
-            return True
         if pending_preference is not None:
             answer=normalized_utterance(spoken).casefold()
             intent=pending_preference
@@ -3484,7 +3482,7 @@ def main() -> None:
         if project_voice_command(message):
             request.set("")
             return
-        if preference_command(message):
+        if memory_wipe_command(message) or preference_command(message):
             request.set("")
             return
         if handle_project_reference(message):
@@ -3828,7 +3826,7 @@ def main() -> None:
                                     continue
                             if project_voice_command(spoken):
                                 continue
-                            if preference_command(spoken):
+                            if memory_wipe_command(spoken) or preference_command(spoken):
                                 continue
                             if handle_project_reference(spoken):
                                 continue
@@ -3880,7 +3878,7 @@ def main() -> None:
                             receive_save_only_destination(spoken)
                         elif project_voice_command(spoken):
                             pass
-                        elif preference_command(spoken):
+                        elif memory_wipe_command(spoken) or preference_command(spoken):
                             pass
                         elif handle_project_reference(spoken):
                             pass
@@ -4433,7 +4431,7 @@ def main() -> None:
         if project_voice_command(message):
             request.set("")
             return
-        if preference_command(message):
+        if memory_wipe_command(message) or preference_command(message):
             request.set("")
             return
         if handle_project_reference(message):
