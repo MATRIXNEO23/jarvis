@@ -18,7 +18,7 @@ class MemoryPreferences:
     recent_messages: int = 8
     summarize_every: int = 8
     summary_max_tokens: int = 150
-    prompt_max_tokens: int = 550        # 056c (21:26): valore di partenza dei modelli nuovi
+    prompt_max_tokens: int = 550        # 057 (21:26): valore di partenza dei modelli nuovi
     max_background_jobs: int = 1
     conversation_priority: bool = True
     pause_on_heavy_load: bool = True
@@ -26,7 +26,7 @@ class MemoryPreferences:
     # 021: 250 -> 200 to shorten the prompt a little on the Pavilion; the
     # newest exchange is always protected, so the dialogue stays coherent.
     history_max_tokens: int = 200
-    # 056c: «Cronologia ridotta per domande brevi» (accesa) e il vecchio blocco «Contesto»
+    # 057: «Cronologia ridotta per domande brevi» (accesa) e il vecchio blocco «Contesto»
     # (chat continua, ricordi): ora nello stesso posto della memoria del prompt, cioè nel profilo.
     cronologia_ridotta: bool = True
     chat_continua: bool = True

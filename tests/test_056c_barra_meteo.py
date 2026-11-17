@@ -1,4 +1,4 @@
-"""056c: barra come l'anteprima approvata (ordine, ⏻ disegnato, Telegram simbolo, larghezza 1366),
+"""057: barra come l'anteprima approvata (ordine, ⏻ disegnato, Telegram simbolo, larghezza 1366),
 icone meteo con città, temperatura e ora."""
 import tkinter as tk
 import unittest

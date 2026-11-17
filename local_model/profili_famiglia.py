@@ -249,7 +249,7 @@ def _voce(data: dict, model_path, corrente: dict | None, usa_corrente: bool = Fa
             last = 1
         item = {"nome": Path(str(model_path)).name, "ultimo": last, "slot": slots}
         if not (isinstance(legacy, dict) and isinstance(legacy.get("slot"), dict)):
-            # 056c: un modello NUOVO parte con la memoria di partenza (tetto prompt 500, ecc.);
+            # 057: un modello NUOVO parte con la memoria di partenza (tetto prompt 500, ecc.);
             # lo slot 1 del modello in uso resta com'è (profili già salvati: non si toccano).
             from dataclasses import asdict as _asdict
             from .memory_preferences import MemoryPreferences

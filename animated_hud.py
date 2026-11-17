@@ -568,7 +568,7 @@ class JarvisHUD:
         self._layout_bottom()
 
     def _draw_weather(self):
-        """Icona + città + temperatura + ora (anteprima 056c); l'ora segue il tick del clock."""
+        """Icona + città + temperatura + ora (anteprima 057); l'ora segue il tick del clock."""
         data, canvas = self._weather, self.weather_canvas
         canvas.delete("all")
         if not data:
@@ -718,7 +718,7 @@ class JarvisHUD:
             self.state_text.set(title)
         mic_selected = bool(state.get("mic_selected", mic_enabled))
         gpt_enabled = bool(state.get("gpt_enabled", connected))
-        mic_label = "Mic"      # 056c: come l'anteprima; lo stato lo dà il ⏻ (azzurro/arancione)
+        mic_label = "Mic"      # 057: come l'anteprima; lo stato lo dà il ⏻ (azzurro/arancione)
         from model_gate import enabled as model_enabled
         model_on = bool(state.get("model_enabled", model_enabled()))
         controls = (("mic", mic_label, mic_enabled or mic_selected),

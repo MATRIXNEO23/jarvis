@@ -1,4 +1,4 @@
-"""056c: cronologia ridotta per tutte le domande brevi, valori di partenza 768/500 nei modelli nuovi
+"""057: cronologia ridotta per tutte le domande brevi, valori di partenza 768/500 nei modelli nuovi
 (profili già salvati intatti), blocco unico Contesto+Memoria nello stesso posto, meteo domani."""
 import json
 import tempfile
@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
 
 class ProfiliPaginaModelliTests(unittest.TestCase):
-    """056c (21:28): profili come tasti, selezionato acceso, «Modifiche non salvate»,
+    """057 (21:28): profili come tasti, selezionato acceso, «Modifiche non salvate»,
     «Salva nel profilo N», «Annulla modifiche», casella del modello in uso colorata."""
 
     def test_sorgente_senza_radio_e_con_pulsanti(self):

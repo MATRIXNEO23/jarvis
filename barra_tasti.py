@@ -22,7 +22,7 @@ def colore_power(acceso: bool) -> str:
 
 
 class IconaCanvas(tk.Canvas):
-    """Simbolo disegnato sul Canvas (056c): il glifo ⏻ del font esce come un quadratino.
+    """Simbolo disegnato sul Canvas (057): il glifo ⏻ del font esce come un quadratino.
     forma = "power" (arco aperto in alto + stanghetta) o "telegram" (aeroplano di carta)."""
 
     def __init__(self, parent, forma, colore, *, lato=22, bg=FONDO):

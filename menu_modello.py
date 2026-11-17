@@ -33,7 +33,7 @@ class MenuModello(MenuModelli):
     def refresh_button(self):
         try:
             from local_model import scelta_modello
-            self.button.configure(text="Modello ▾")   # 056c: il nome si vede solo nella tendina
+            self.button.configure(text="Modello ▾")   # 057: il nome si vede solo nella tendina
         except (tk.TclError, OSError, ValueError, RuntimeError):
             pass
 

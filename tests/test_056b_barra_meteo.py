@@ -26,7 +26,7 @@ class BarraTests(unittest.TestCase):
 
     def test_menu_modello_mostra_il_nome(self):
         src = (ROOT / "menu_modello.py").read_text(encoding="utf-8")
-        self.assertNotIn('"Modello: "', src)      # 056c: il nome solo nella tendina
+        self.assertNotIn('"Modello: "', src)      # 057: il nome solo nella tendina
 
 
 class TelegramStatoTests(unittest.TestCase):

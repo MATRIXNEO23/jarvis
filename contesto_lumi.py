@@ -57,7 +57,7 @@ def _memoria_percorso() -> Path:
 
 def carica(path: Path | None = None) -> Contesto:
     """Valori iniziali se il file manca o è danneggiato (non viene riscritto).
-    056c: senza `path` si legge dalla memoria del profilo (memory.native.json, stesso posto della
+    057: senza `path` si legge dalla memoria del profilo (memory.native.json, stesso posto della
     memoria del prompt); se lì non c'è ancora, vale il vecchio contesto.json."""
     if path is None:
         try:
@@ -82,7 +82,7 @@ def carica(path: Path | None = None) -> Contesto:
 
 def salva(value: Contesto, path: Path | None = None) -> None:
     value.validate()
-    if path is None:                       # 056c: stesso posto della memoria del prompt
+    if path is None:                       # 057: stesso posto della memoria del prompt
         from dataclasses import replace
         from local_model.memory_preferences import MemoryPreferences
         memoria = _memoria_percorso()

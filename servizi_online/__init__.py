@@ -159,7 +159,7 @@ def unisci_attivi(salvati, ordine, voluti: dict, base) -> list:
 
 
 def allinea_spunte(vars_: dict, attivi) -> None:
-    """056c: dopo l'unione le spunte del pannello mostrano ciò che è nel file. Senza questo una
+    """057: dopo l'unione le spunte del pannello mostrano ciò che è nel file. Senza questo una
     spunta vecchia (es. Mistral, già spento dalla tendina) restava diversa da `base` e il Salva
     successivo la riaccendeva: causa del bug E ancora presente nella 056b."""
     for ident, var in vars_.items():

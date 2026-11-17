@@ -59,7 +59,7 @@ class BassoConsumoTests(unittest.TestCase):
                 mock.patch("lumi_comandi.chiedi") as chiedi:
             env["conversation_chain"]("approfondisci", False)
         self.assertEqual(chiedi.call_args.args[0], "online_yes")
-        prompt = so.IN_ATTESA["domanda"][0]            # 056c: domanda + risposta offline + istruzione
+        prompt = so.IN_ATTESA["domanda"][0]            # 057: domanda + risposta offline + istruzione
         self.assertIn("la fotosintesi", prompt)
         self.assertIn("risposta precedente", prompt)
         self.assertIn("più a fondo", prompt)

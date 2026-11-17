@@ -48,7 +48,7 @@ def punti_luce(fase: float, r: float, x: float, y: float, passi: int = 24):
 
 
 def _nuvola(c, x, y, colore, s=1.0, tratto=2):
-    """Nuvola a contorno (come l'anteprima 056c): un unico profilo, interno vuoto."""
+    """Nuvola a contorno (come l'anteprima 057): un unico profilo, interno vuoto."""
     pts = [(-11, 8), (-12, 3), (-8, -1), (-6, -6), (0, -8), (5, -5), (7, -2), (11, 0), (12, 5), (9, 8)]
     flat = [v for px, py in pts for v in (x + px * s, y + py * s)]
     c.create_line(*flat, fill=colore, width=tratto, smooth=True, capstyle="round", joinstyle="round")

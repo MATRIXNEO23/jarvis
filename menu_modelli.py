@@ -79,7 +79,7 @@ class MenuModelli:
             return
         widget = event.widget
         try:
-            # 056c: il clic arriva dal Label DENTRO il tasto (TastoBarra), non dal tasto: prima la
+            # 057: il clic arriva dal Label DENTRO il tasto (TastoBarra), non dal tasto: prima la
             # tendina si apriva e il bind_all la richiudeva subito. Il ⏻ del tasto non è «dentro».
             on_button = (widget is self.button or str(widget).startswith(str(self.button) + ".")) \
                 and widget is not getattr(self.button, "power", None)

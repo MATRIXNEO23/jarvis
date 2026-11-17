@@ -1,5 +1,5 @@
 """Frasi del meteo: «che tempo fa a Roma», «meteo Milano», «com'è il tempo a Tokyo»,
-e (056c) «meteo domani», «meteo domani a Roma», «che tempo farà domani».
+e (057) «meteo domani», «meteo domani a Roma», «che tempo farà domani».
 
 Escluse le frasi con «online» (restano ricerche) e quelle sul «clima» (es. «com'è il clima a
 Tokyo in primavera»): le seconde sono domande più complesse, non il tempo di adesso."""
@@ -27,7 +27,7 @@ def parse_command(text: str):
     if _ESCLUSE.search(value):
         return None
     kind = "meteo"
-    if _DOMANI.search(value):           # 056c: «meteo domani», «che tempo farà domani a Roma»
+    if _DOMANI.search(value):           # 057: «meteo domani», «che tempo farà domani a Roma»
         kind = "domani"
         value = " ".join(_FARA.sub("fa", _DOMANI.sub(" ", value)).split())
     match = _PATTERN.match(value)

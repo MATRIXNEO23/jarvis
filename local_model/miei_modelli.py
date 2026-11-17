@@ -229,7 +229,7 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
     profile_buttons = {}
 
     def colora_profili():
-        """056c: il profilo in uso è azzurro acceso, gli altri spenti; il pulsante di salvataggio
+        """057: il profilo in uso è azzurro acceso, gli altri spenti; il pulsante di salvataggio
         porta il suo numero («Salva nel profilo N»)."""
         for n, button in profile_buttons.items():
             acceso = n == slot_var.get()

@@ -37,7 +37,7 @@ def taglia(text: str, limite: int = LIMITE_RISPOSTA_VECCHIA) -> str:
 def adatta_storia(history, latest: str, ridotta: bool = True):
     """history: lista di coppie ((ruolo, testo), (ruolo, testo)). Ritorna la storia ridotta.
 
-    056c: con «Cronologia ridotta per domande brevi» (accesa di serie) vale per TUTTE le domande
+    057: con «Cronologia ridotta per domande brevi» (accesa di serie) vale per TUTTE le domande
     brevi, non solo per i saluti: resta solo l'ultimo scambio, tagliato. Se la casella è spenta
     si comporta come nella 056b (riduzione per i soli saluti, risposte vecchie tagliate)."""
     if not history or not breve(latest):

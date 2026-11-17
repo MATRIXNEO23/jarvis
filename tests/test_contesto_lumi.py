@@ -110,7 +110,7 @@ class PromptContinuoTest(unittest.TestCase):
         adapter = CountingAdapter()
         session = NativeConversationSession(
             adapter, config_loader=lambda: NativeModelConfig(context_size=2048, max_output=128),
-            memory_loader=lambda: MemoryPreferences(cronologia_ridotta=False))   # 056c
+            memory_loader=lambda: MemoryPreferences(cronologia_ridotta=False))   # 057
         chat = [pair(n) for n in range(12)]
 
         def reader(budget):

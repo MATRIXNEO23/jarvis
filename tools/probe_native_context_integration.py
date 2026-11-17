@@ -61,8 +61,8 @@ try:
         def read(budget):
             return ''
         read.recent_pairs = brain.dialogue_pairs
-        # 056c: con «Cronologia ridotta per domande brevi» la risposta lunga viene tagliata; qui si prova
-        # il ripristino dell'archivio con la casella spenta (domanda all'utente: vedi handoff 056c).
+        # 057: con «Cronologia ridotta per domande brevi» la risposta lunga viene tagliata; qui si prova
+        # il ripristino dell'archivio con la casella spenta (domanda all'utente: vedi handoff 057).
         restored = NativeConversationSession(adapter, config_loader=lambda: config,
                                             memory_loader=lambda: MemoryPreferences(cronologia_ridotta=False))
         turn = restored.prepare_turn('Perché hai detto clown?', memory_context=read)

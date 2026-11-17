@@ -35,7 +35,7 @@ class Bolle:
         self.bars: dict[str, tk.Widget] = {}  # segno del messaggio -> barra
         self.counter = 0
         self.last_user = ""
-        self.ultimo_scambio = None    # 056c: (domanda, risposta) dell'ultima risposta del modello
+        self.ultimo_scambio = None    # 057: (domanda, risposta) dell'ultima risposta del modello
         text.tag_configure("bolla_utente", lmargin1=90, lmargin2=90, rmargin=14,
                            background="#0a2233")
         text.tag_configure("bolla_jarvis", lmargin1=6, lmargin2=6, rmargin=90,

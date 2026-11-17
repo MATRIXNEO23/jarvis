@@ -183,7 +183,7 @@ class NativeSettingsWindow:
             prefs = MemoryPreferences.load(self._memory_path())
         except (OSError, ValueError):
             prefs = MemoryPreferences()
-        # 056c: un solo blocco «Contesto e memoria» (prima erano due), salvato nel profilo.
+        # 057: un solo blocco «Contesto e memoria» (prima erano due), salvato nel profilo.
         frame = ttk.LabelFrame(frame, text="Contesto e memoria del prompt (parte del profilo)")
         frame.pack(fill="x", pady=(10, 2))
         ttk.Label(frame, wraplength=520, text=(
@@ -211,7 +211,7 @@ class NativeSettingsWindow:
         ttk.Button(frame, text="Dettagli ultimo contesto",
                    command=self.show_context_metrics).pack(anchor="w", pady=(4, 2), padx=4)
 
-    # 056c: «Modifiche non salvate», «Salva nel profilo N», «Annulla modifiche». Niente salvataggio automatico.
+    # 057: «Modifiche non salvate», «Salva nel profilo N», «Annulla modifiche». Niente salvataggio automatico.
     def _snapshot(self):
         keys = (list(self.values) + list(self.mem_values))
         data = {k: str((self.values.get(k) or self.mem_values.get(k)).get()) for k in keys}

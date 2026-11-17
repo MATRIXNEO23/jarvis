@@ -1,4 +1,4 @@
-"""056c: il clic su ogni tasto ▾ apre la sua tendina (prima il bind_all la richiudeva subito perché il
+"""057: il clic su ogni tasto ▾ apre la sua tendina (prima il bind_all la richiudeva subito perché il
 clic arriva dal Label dentro il tasto), il clic su ⏻ non la apre; spunte del pannello non riaccendono
 servizi spenti altrove (bug E)."""
 import tempfile
