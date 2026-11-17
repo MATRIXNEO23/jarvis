@@ -163,16 +163,19 @@ class RicercaSenzaChiaveTests(unittest.TestCase):
             (Path(tmp) / "k").write_text('{"tavily": ""}', encoding="utf-8")
             self.assertEqual(sr.pronti({"ordine": ["tavily"], "attivi": ["tavily"]}, keys), [])
 
-    def test_with_key_summary_and_links_go_to_the_results_window(self):
+    def test_with_key_summary_and_clickable_sources_go_straight_to_the_chat(self):
         env = self._lumi_ricerca(sr)
-        risultato = sr.Risultato("Domani sole a Roma.", (("Meteo", "https://m.example/roma"),))
-        shown = mock.Mock()
+        risultato = sr.Risultato("Domani sole a Roma.", (("Meteo", "https://m.example/roma"),),
+                                 ("Previsioni per domani",))
         with mock.patch.object(sr, "pronti", return_value=[object()]), \
                 mock.patch.object(sr, "cerca", return_value=("Tavily", risultato)), \
-                mock.patch("file_access.ui.show_results", shown):
+                mock.patch("file_access.ui.show_results") as window:
             self.assertTrue(env["lumi_ricerca"]("cerca online meteo Roma domani"))
-        shown.assert_called_once()
-        self.assertIn("Domani sole", shown.call_args.args[1]["summary"])
+        window.assert_not_called()                      # niente finestra risultati separata
+        chat = env["write_line"].call_args.args[0]
+        self.assertIn("Domani sole a Roma.", chat.split("Fonti:")[0])
+        self.assertIn("1. [Meteo](https://m.example/roma)", chat)
+        self.assertIn("    Previsioni per domani", chat)
         env["speak_result"].assert_called_once()
 
     def test_unexpected_error_is_reported_in_chat_never_silence(self):

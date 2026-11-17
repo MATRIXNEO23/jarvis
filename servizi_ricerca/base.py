@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 class Risultato:
     riassunto: str
     link: tuple = ()                  # ((titolo, indirizzo), ...)
+    anteprime: tuple = ()             # frase breve per ogni link, nello stesso ordine (può mancare)
 
 
 @dataclass(frozen=True)

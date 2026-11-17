@@ -137,7 +137,7 @@ class SearchTests(unittest.TestCase):
         result = tavily.cerca("tvly-k", "meteo Roma", True, 10, post)
         self.assertEqual(seen["url"], "https://api.tavily.com/search")
         self.assertEqual(seen["body"]["search_depth"], "advanced")
-        self.assertEqual(result, Risultato("Fa bel tempo.", (("Meteo", "https://m.it"),)))
+        self.assertEqual(result, Risultato("Fa bel tempo.", (("Meteo", "https://m.it"),), ("sole",)))
         basic = tavily.cerca("k", "meteo", False, 10, lambda *a: {
             "answer": None, "results": [{"title": "T", "url": "https://u", "content": "contenuto"}]})
         self.assertEqual(basic.riassunto, "contenuto")
@@ -146,7 +146,7 @@ class SearchTests(unittest.TestCase):
     def test_text_for_chat_window_and_voice_have_summary_and_links_only(self):
         result = Risultato("Prima frase. " * 40, (("A", "https://a"), ("B", "https://b")))
         chat = sr.testo_chat("Tavily", result)
-        self.assertIn("1. A — https://a", chat)
+        self.assertIn("1. [A](https://a)", chat)
         listing = sr.elenco_finestra("Tavily", result)
         self.assertEqual(listing["items"], [("Link", "A", "https://a"), ("Link", "B", "https://b")])
         self.assertLessEqual(len(sr.frase_breve(result)), 290)

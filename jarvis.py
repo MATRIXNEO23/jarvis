@@ -835,7 +835,10 @@ def main() -> None:
             "end", identity + "         " +
             datetime.now().strftime("%H:%M:%S") + "\n",
             (role, "message_head"))
-        output.insert("end", body + "\n\n", role)
+        if __import__("chat_link").ha_link(body):
+            __import__("chat_link").inserisci(output, body + "\n\n", role, webbrowser.open)
+        else:
+            output.insert("end", body + "\n\n", role)
         if chat_bubbles and bubble_mark:
             chat_bubbles.fine(role, body, bubble_mark)
         # Keep the UI responsive even during long voice conversations.
@@ -4905,17 +4908,7 @@ def main() -> None:
                     write_line("RICERCA > " + text)
                     speak_result("Nessun servizio di ricerca ha risposto. I dettagli sono in chat.")
                     return
-                write_line("RICERCA > " + ricerca.testo_chat(name, result))
-                try:
-                    from file_access.ui import show_results
-                    show_results(root, ricerca.elenco_finestra(name, result),
-                                 on_open=lambda number, token: (
-                                     root.clipboard_clear(),
-                                     root.clipboard_append(result.link[number - 1][1]),
-                                     write_line("RICERCA > Link copiato negli appunti.")),
-                                 on_select=lambda *args: True)
-                except (ImportError, OSError, ValueError, tk.TclError) as exc:
-                    write_line("RICERCA > Finestra risultati non disponibile: " + str(exc)[:100])
+                write_line("RICERCA > " + ricerca.testo_chat(name, result))   # in chat, link cliccabili
                 speak_result(ricerca.frase_breve(result) or "Fatto, i risultati sono in chat.")
             root.after(0, show)
         threading.Thread(target=work, daemon=True, name="lumi-ricerca-online").start()

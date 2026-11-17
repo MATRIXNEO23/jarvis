@@ -176,8 +176,17 @@ def frase_breve(result: Risultato, limit: int = 280) -> str:
 
 
 def testo_chat(nome: str, result: Risultato) -> str:
+    """Messaggio di Lumi in chat: riassunto, poi le fonti come link markdown («[titolo](url)»)
+    con una breve anteprima sotto; chat_link li rende cliccabili."""
     lines = ["Ricerca online (%s): %s" % (nome, " ".join(result.riassunto.split()) or "nessun riassunto.")]
-    lines += ["%d. %s — %s" % (n, title, url) for n, (title, url) in enumerate(result.link, 1)]
+    if result.link:
+        lines += ["", "Fonti:"]
+    for n, (title, url) in enumerate(result.link, 1):
+        safe = title.replace("[", "(").replace("]", ")").replace("\n", " ")
+        lines.append("%d. [%s](%s)" % (n, safe, url))
+        preview = result.anteprime[n - 1] if n <= len(result.anteprime) else ""
+        if preview:
+            lines.append("    " + preview)
     return "\n".join(lines)
 
 

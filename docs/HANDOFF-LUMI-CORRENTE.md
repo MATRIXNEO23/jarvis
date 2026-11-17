@@ -137,6 +137,7 @@ Stato: codice e test scritti, **non eseguiti in locale** (regola: solo CI Window
 - «I miei modelli»: elenco con il modello in uso evidenziato, Aggiungi (copia a blocchi con barra, file .copia temporaneo), Usa questo, Rimuovi (Cestino con conferma, mai il modello in uso). Non è nella pagina dell'add-on (`ModelloLocale.jaddon`): solo nella finestra di configurazione. DA FARE: pagina add-on.
 - Servizi di ricerca: barra quota con lo stesso stile di ONLINE, ma solo stima dai contatori locali (limite Tavily 1000/mese, scritto «stima»); lettura dell'uso da API di Tavily NON collegata (non verificabile da qui). Interruttore RICERCA ON/OFF in alto accanto a MODELLO, salvato in servizi_ricerca.json.
 - DA FARE: spostare _ □ X nell'angolo in alto a destra sopra l'ingranaggio (window_chrome li impagina già come – □ × ma nel riquadro del titolo; serve verifica a schermo).
+- «cerca online»/«approfondisci online»: risultati direttamente in chat (non più nella finestra risultati): riassunto, «Fonti:» con `[titolo](url)` e anteprima; `chat_link.py` rende i link cliccabili (sottolineati, cursore a mano, clic = browser) dentro `write_line`; vale per ogni messaggio con link. Test: tests/test_054_chat_link.py.
 - Test: tests/test_054_catena_gpt.py (+ adattati due test di test_selected_conversation_model.py). Non eseguiti in locale; vale la CI Windows. Da provare dal vivo con GPT attivo non collegato e collegato.
 
 ## Ripresa 17/11 — build 053: cancellazione memoria a sezioni (da provare dal vivo)

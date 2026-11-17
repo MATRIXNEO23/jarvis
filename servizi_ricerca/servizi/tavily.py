@@ -14,7 +14,8 @@ def cerca(key, query, approfondisci, timeout, post) -> Risultato:
     if not answer:
         answer = " ".join(str(r.get("content") or "").strip()[:240] for r in results[:3]).strip()
     return Risultato(answer, tuple((str(r.get("title") or r["url"])[:120], str(r["url"]))
-                                   for r in results))
+                                   for r in results),
+                     tuple(" ".join(str(r.get("content") or "").split())[:160] for r in results))
 
 
 SERVIZIO = Ricerca(
