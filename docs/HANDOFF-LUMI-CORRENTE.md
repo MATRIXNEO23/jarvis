@@ -105,6 +105,31 @@ Regola: niente iniziative sull'organizzazione dei menu; ogni argomento al suo po
 10. Conferme: «sì»/«no» senza dire «Lumi» (verificare che sia sempre così).
 Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), documenti negli allegati (PDF con pypdf, Office, LibreOffice, RTF, HTML, EPUB).
 
+## Ripresa nuova sessione — 17/11 03:30 (leggere per prima)
+**Dove lavorare**
+- Repo: GitHub MATRIXNEO23/jarvis, ramo `feature/jarvis-kobold-f5-profiles-20261109`. Sul PC non c'è una copia: in sessione cloud si aggiunge con add_repo (accesso push), si clona e si fa checkout del ramo.
+- CI e build: GitHub Actions con `gh`. Il push sulla PR avvia test e build (workflow f5n, che va numerato a ogni build). Non lanciare workflow run.
+- Subagenti (`.claude/agents/`, Sonnet): `lumi-sviluppo` (codice e test), `lumi-ci-build` (CI e build), `lumi-prove-diagnostica` (prove dal vivo, un comando alla volta, aspettando ogni risposta).
+- Audit di Codex: `docs/audit/` (istruzioni in ISTRUZIONI-CODEX.md). Leggi solo il file FIX-* più recente, proponi le modifiche all'utente punto per punto e parti solo con il suo ok.
+
+**Cartelle sul PC dell'utente (Windows, utente `matri`)**, da chiedere con device_request_folder_access:
+- `C:\Users\matri\AppData\Local\Jarvis`: c'è `diagnostica_claude.json` (stato del ponte diagnostica). Non contiene log.
+- `C:\Users\matri\AppData\Local\Jarvis-AccessoFile-Trial`: profilo dati di prova (JARVIS_TRIAL_HOME di avvia_lumi.bat). `addon-data\modello_locale\native.json` è fermo all'8/11.
+- ATTENZIONE: la 054 sembra salvare impostazioni e profili (profili.json accanto a native.json) in una cartella diversa, non ancora individuata. Chiedere all'utente dove ha estratto la 054 e cercare lì.
+- Modelli .gguf: `C:\Users\matri\Downloads` (9 modelli; Qwen3 1.7B Q4_K_M è stato aggiunto dall'utente). La copia fatta da «Aggiungi modello…» va eliminata.
+- Log: su disco non ci sono `console.log` né `motore.log`. Si leggono con `lumi_console` e `lumi_log_motore` della diagnostica, filtrando.
+
+**Stato build**
+- 052: provata dal vivo. «chiudi i risultati», «cambia modello» e sì/no senza «Lumi» sono ok.
+- 053: cancellazione divisa in chat, ricordi, progetti e tutto. Saltata come prova, perché è inclusa nella 054.
+- 054 (run 43995895542, verde): nuova catena (prima i servizi online gratuiti, poi «Uso GPT?» a voce, poi Gemma), messaggio per la chiave Tavily mancante, «approfondisci» a Gemma, link cliccabili in chat, profili per famiglia a 3 slot, «I miei modelli», barra della quota per la ricerca. Prove dal vivo da fare.
+
+**Correzioni da fare (055)**: vedi la sezione «Da fare per la 055» qui sotto, più:
+- Bug 054: un modello aggiunto con «Aggiungi modello…» non compare nell'elenco né in «cambia modello». Lumi guarda solo la cartella del modello in uso.
+- Ricerca: collegare davvero Exa, Firecrawl e Linkup (oggi c'è solo Tavily) e leggere la quota reale di Tavily via API.
+- Proposta da preparare (non implementare): i comandi di ricerca e navigazione semplici per chiunque, confrontati con ChatGPT, Perplexity e gli assistenti vocali.
+- Più avanti: le risposte che si accavallano quando arrivano più comandi insieme (ID per ogni richiesta). L'utente ha detto «ci pensiamo dopo».
+
 ## Da fare per la 055 (decisioni utente 17/11, notte)
 - Ricerca: al posto dell'interruttore «RICERCA on/off» in alto, un menu a tendina come quello dei servizi online: elenco dei servizi di ricerca, ciascuno con la sua spunta e la sua barra di quota.
 - Modelli: «Aggiungi modello…» non copia più il file, lo usa da dove si trova. Se il file sparisce, Lumi lo segnala. L'elenco e «cambia modello» devono vedere i modelli aggiunti (bug 054: Qwen3 copiato in modelli/ non compariva).
