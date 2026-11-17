@@ -23,7 +23,7 @@ class BarraSorgenteTests(unittest.TestCase):
         self.assertIn("save_settings(settings)", corpo)
         self.assertIn('settings["modalita"] = previous', corpo)
         self.assertIn("return False", corpo)
-        self.assertIn('"modalita": settings.get("modalita", "basso_consumo")', JARVIS)
+        self.assertIn('hud.mode_slide.imposta(settings.get("modalita", "basso_consumo"))', JARVIS)
 
     def test_tendina_modello_accanto_al_pulsante_on_off_esistente(self):
         self.assertIn('hud.add_quick_button("modello", "MODELLO ▾", lambda: None, after="model")', JARVIS)

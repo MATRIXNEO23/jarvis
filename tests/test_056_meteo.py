@@ -154,7 +154,7 @@ class PacchettoTests(unittest.TestCase):
         hud = JarvisHUD(root, lambda: None)
         hud.set_weather({"citta": "Roma", "temp": 18.4, "categoria": "pioggia"})
         self.assertTrue(hud.weather_canvas.winfo_manager())
-        self.assertEqual(hud.weather_canvas.cget("highlightthickness"), 0)
+        self.assertEqual(int(hud.weather_canvas.cget("highlightthickness")), 0)
         hud.set_weather(None)
         self.assertFalse(hud.weather_canvas.winfo_manager())
 

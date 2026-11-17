@@ -4891,7 +4891,6 @@ def main() -> None:
         "mic_selected": voice_mode.get() != STANDBY,
         "mic_push_to_talk": voice_mode.get() == PUSH_TO_TALK,
         "gpt_enabled": gpt_enabled.get(),
-        "modalita": settings.get("modalita", "basso_consumo"),
         "reasoning": (gemma_trial_busy[0] or
                       (gemma_session[0] is not None and gemma_session[0].is_busy) or
                       (busy_gpt and gpt_enabled.get() and

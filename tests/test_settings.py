@@ -23,7 +23,7 @@ class SettingsTests(unittest.TestCase):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
             self.assertEqual(load_settings(path), {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "", "tts_effect": 25, "tts_rate": 0, "tts_pitch": 0, "tts_volume": 100,
-                                                         "memory_enabled": False,
+                                                         "memory_enabled": False, "modalita": "basso_consumo",
                                                          "auto_listen": True, "keep_awake_fullscreen": False, "telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": [], "timer_sound": "digital", "timer_volume": 80, "timer_repeat": True, "timer_audio_mode": "auto"})
 
     def test_voice_style_persists_and_is_validated(self):
@@ -71,7 +71,7 @@ class SettingsTests(unittest.TestCase):
                            "tts_voice": "Voce italiana"}, path)
             self.assertEqual(load_settings(path),
                              {"gpt_enabled": False, "tts_enabled": True,
-                              "tts_voice": "Voce italiana", "tts_effect": 25, "tts_rate": 0, "tts_pitch": 0, "tts_volume": 100, "memory_enabled": False,
+                              "tts_voice": "Voce italiana", "tts_effect": 25, "tts_rate": 0, "tts_pitch": 0, "tts_volume": 100, "memory_enabled": False, "modalita": "basso_consumo",
                               "auto_listen": True, "keep_awake_fullscreen": False, "telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": [], "timer_sound": "digital", "timer_volume": 80, "timer_repeat": True, "timer_audio_mode": "auto"})
 
     def test_memory_opt_in_is_persistent_and_independent(self):
