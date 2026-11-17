@@ -296,7 +296,8 @@ def main() -> None:
         return Ponte(
             stato=lambda: {"stato": read_lumi_state(), "microfono": voice_mode.get(),
                            "gpt_collegato": bool(active_gpt), "occupato": bool(busy_local),
-                           "progetto": active_context_label.get()},
+                           "progetto": active_context_label.get(),
+                           "versione": __import__("impostazioni_menu").versione()},
             in_chat=lambda text: write_line("CLAUDE > " + text),
             prova=try_command, riavvia_modello=lambda: lumi_model_restart(),
             run_ui=lambda fn: root.after(0, fn), log_motore=engine_log,

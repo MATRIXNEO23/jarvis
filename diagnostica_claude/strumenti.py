@@ -78,7 +78,8 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
             services.append({"id": ident, "nome": service.nome, "spuntato": ident in settings["attivi"],
                              "chiave": bool(keys.leggi(ident)), "oggi": state.get("testo"),
                              "colore": state.get("colore")})
-        return {"ok": True, "usa_sempre": settings["usa_sempre"],
+        return {"ok": True, "versione": __import__("impostazioni_menu").versione(),
+                "usa_sempre": settings["usa_sempre"],
                 "proponi_lunghe": settings["proponi_lunghe"],
                 "avviso_quota": settings.get("avviso_quota"),
                 "conferma_token": settings.get("conferma_token"), "servizi": services}
@@ -89,8 +90,14 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
         settings = servizi_ricerca.carica_impostazioni()
         keys = servizi_ricerca.chiavi()
         pronti = {s.id for s in servizi_ricerca.pronti(settings, keys)}
-        return {"ok": True, "servizi": [
-            {"id": i, "nome": servizi_ricerca.PER_ID[i].nome, "spuntato": i in settings["attivi"],
+        def barra(i):
+            try:
+                info = servizi_ricerca.quota_servizio(i, keys) if keys.presente(i) else None
+            except Exception:
+                info = None
+            return None if info is None else {"testo": info["testo"], "reale": not info.get("stima", True)}
+        return {"ok": True, "versione": __import__("impostazioni_menu").versione(), "servizi": [
+            {"id": i, "quota": barra(i), "nome": servizi_ricerca.PER_ID[i].nome, "spuntato": i in settings["attivi"],
              "chiave": keys.presente(i), "ricerca_collegata": servizi_ricerca.PER_ID[i].adattatore is not None,
              "pronto": i in pronti, "link_chiave": servizi_ricerca.PER_ID[i].chiavi}
             for i in settings["ordine"]]}
@@ -98,8 +105,18 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
     def modelli(args):
         """Modelli locali (.gguf) che «cambia modello» elencherebbe, e quello in uso."""
         from local_model import scelta_modello
+        from local_model import profili_famiglia, registro_modelli
         models = scelta_modello.elenca_modelli()
-        return {"ok": True, "in_uso": scelta_modello.modello_in_uso(),
+        in_uso = scelta_modello.modello_in_uso()
+        slots = registro_modelli.caselle(models, in_uso)
+        try:
+            profilo = profili_famiglia.slot_ricordato(in_uso) if in_uso else None
+        except (OSError, ValueError):
+            profilo = None
+        return {"ok": True, "in_uso": in_uso, "profilo_in_uso": profilo,
+                "caselle": {str(n): (str(m) if m else None) for n, m in slots.items()},
+                "mancanti": [str(p) for p in registro_modelli.mancanti()],
+                "versione": __import__("impostazioni_menu").versione(),
                 "cartelle": [str(f) for f in scelta_modello.cartelle_modelli()],
                 "modelli": [{"numero": n, "nome": scelta_modello.nome_breve(m), "percorso": str(m)}
                             for n, m in enumerate(models, 1)]}
