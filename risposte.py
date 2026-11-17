@@ -57,6 +57,7 @@ def waiting() -> bool:
 
 def done() -> None:
     _STATE["until"] = 0.0
+    _STATE["choice"] = None      # chiude anche una scelta numerata ancora aperta
 
 
 # --- numeri della griglia: valgono senza «Lumi» mentre la griglia è aperta -----------------
