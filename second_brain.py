@@ -416,8 +416,31 @@ class SecondBrain:
             ).fetchone()[0]
         return turns, actions
 
+    def clear_ricordi(self, project_ids=None) -> int:
+        """Cancella i ricordi e l'indice FTS nella stessa transazione.
+        project_ids=None: tutti; altrimenti solo quelli dei progetti indicati."""
+        with self._db() as db:
+            if project_ids is None:
+                rows = db.execute("SELECT id,breve,completo FROM ricordi").fetchall()
+            else:
+                ids = [str(i) for i in project_ids]
+                if not ids:
+                    return 0
+                rows = db.execute(
+                    "SELECT id,breve,completo FROM ricordi WHERE project_id IN (%s)"
+                    % ",".join("?" * len(ids)), ids).fetchall()
+            if self._fts(db):
+                for ident, breve, completo in rows:
+                    db.execute("INSERT INTO ricordi_fts(ricordi_fts,rowid,breve,completo) "
+                               "VALUES('delete',?,?,?)", (ident, breve, completo))
+            for ident, _b, _c in rows:
+                db.execute("DELETE FROM ricordi WHERE id=?", (ident,))
+        return len(rows)
+
     def clear_all(self) -> None:
-        """Explicit user operation, never triggered by the LLM."""
+        """Explicit user operation, never triggered by the LLM.
+        Cancella chat (conversazioni, ricevute, correzioni vocali); i ricordi hanno
+        clear_ricordi()."""
         with self._db() as db:
             db.execute("DELETE FROM conversations")
             db.execute("DELETE FROM action_receipts")

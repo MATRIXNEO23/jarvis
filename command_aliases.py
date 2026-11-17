@@ -135,6 +135,7 @@ _FIXED = {
     "Progetti e Telegram": (
         "crea progetto {testo}", "apri progetto {testo}", "elenca progetti",
         "torna alla conversazione generale"),
+    "Memoria": ("cancella le chat", "cancella i ricordi", "cancella i progetti", "cancella tutto"),
     "Sveglia": ("imposta sveglia alle {testo}", "ferma la sveglia"),
     "Musica": (
         "metti {testo}", "aggiungi in coda {testo}", "metti la playlist {testo}",
@@ -182,6 +183,10 @@ DESCRIPTIONS = {
     "apri progetto {testo}": "Apre un progetto (anche «progetto Casa»; serve la parola progetto).",
     "elenca progetti": "Mostra i progetti.",
     "torna alla conversazione generale": "Esce dal progetto.",
+    "cancella le chat": "Cancella conversazioni, ricevute e correzioni vocali (chiede sì/no).",
+    "cancella i ricordi": "Cancella tutti i ricordi di Lia (chiede sì/no).",
+    "cancella i progetti": "Cancella i progetti con chat, ricordi e cartelle (chiede sì/no).",
+    "cancella tutto": "Cancella chat, ricordi e progetti (chiede sì/no).",
     "imposta sveglia alle {testo}": "Imposta la sveglia (es. «alle 7:30»).",
     "ferma la sveglia": "Spegne la sveglia che suona.",
     "metti {testo}": "Suona un brano o un video (cartelle o YouTube).",
@@ -264,7 +269,7 @@ def describe(command: str) -> str:
 
 
 # Comandi di base (Impostazioni > Personalizzazione comandi).
-BASE_SECTIONS = ("Comandi locali", "Timer", "Modelli e GPT", "Progetti e Telegram")
+BASE_SECTIONS = ("Comandi locali", "Timer", "Modelli e GPT", "Progetti e Telegram", "Memoria")
 # Comandi di un add-on (Gestisci add-on > sezione dell'add-on).
 ADDON_SECTIONS = {"sveglia": "Sveglia", "musica": "Musica", "programmi_app": "Programmi e app",
                   "accesso_file": "Accesso file", "controllo_pc": "Controllo PC"}

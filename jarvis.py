@@ -777,6 +777,7 @@ def main() -> None:
     save_only_waiting = False
     conversation_memory = ConversationMemory()
     pending_preference = None
+    pending_memory_wipe = None
     local_operation_id = None
     document_operation_id = None
     last_notepad_probe = 0.0
@@ -1434,9 +1435,39 @@ def main() -> None:
         remember_exchange(spoken,message,"clarify")
         return True
 
+    def memory_wipe_command(spoken: str) -> bool:
+        """«Cancella i ricordi / le chat / i progetti / tutto»: chiede sì/no a voce."""
+        nonlocal pending_memory_wipe
+        cancella = __import__("cancella_memoria")
+        if pending_memory_wipe is not None:
+            section = pending_memory_wipe
+            pending_memory_wipe = None
+            answer = normalized_utterance(spoken).casefold().strip(" .!")
+            if answer in ("confermo", "sì", "si", "ok", "va bene", "certo"):
+                clear_saved_memory(section, confirmed=True)
+                message = memory_status.get()
+            elif answer in ("annulla", "no", "lascia stare"):
+                message = "Non cancello niente."
+            else:
+                return False                    # altro argomento: la richiesta decade
+            write_line("LUMI > " + message)
+            speak_result(message)
+            return True
+        section = cancella.parse(spoken)
+        if section is None:
+            return False
+        pending_memory_wipe = section
+        message = cancella.domanda(section)
+        __import__("risposte").expect_answer(speech_text=message)
+        write_line("LUMI > " + message)
+        speak_result(message)
+        return True
+
     def preference_command(spoken: str) -> bool:
         """Only an explicitly confirmed request can change preference records."""
         nonlocal pending_preference
+        if memory_wipe_command(spoken):
+            return True
         if pending_preference is not None:
             answer=normalized_utterance(spoken).casefold()
             intent=pending_preference
@@ -2434,30 +2465,40 @@ def main() -> None:
             "La memoria già salvata resta sul PC fino a cancellazione esplicita."
             if not desired else "Memoria attiva anche dopo il prossimo riavvio.")
 
-    def clear_saved_memory() -> None:
+    def clear_saved_memory(section: str = "chat", confirmed: bool = False) -> bool:
+        """Cancellazione a sezioni (chat, ricordi, progetti, tutto), solo su richiesta
+        esplicita dell'utente e dopo conferma sì/no (pulsante o voce)."""
         nonlocal gemma_memory_revision
-        if not messagebox.askyesno(
-            "Cancella il Second Brain",
-            "Eliminare scambi, operazioni e correzioni vocali archiviate da Lia? "
-            "Questa operazione non può essere annullata. "
-            "La cronologia delle attività del motore locale resta separata.",
-            parent=root,
+        cancella = __import__("cancella_memoria")
+        if not confirmed and not messagebox.askyesno(
+            cancella.ETICHETTE[section], cancella.domanda(section), parent=root,
         ):
-            return
+            return False
         try:
             # A post-commit cleanup (e.g. VACUUM) can fail after DELETE. Revoke
             # pending turns/RAM on confirmation, before any fallible disk I/O.
-            gemma_memory_revision += 1
-            conversation_memory.clear()
-            if gemma_session[0] is not None:
-                gemma_session[0].forget_context(None)
+            if section in ("chat", "tutto"):
+                gemma_memory_revision += 1
+                conversation_memory.clear()
+                if gemma_session[0] is not None:
+                    gemma_session[0].forget_context(None)
+            if section in ("progetti", "tutto") and active_project_id is not None:
+                switch_context(None)
             target = durable_brain if durable_brain is not None else SecondBrain()
-            target.clear_all()
-            if speech_lexicon is not None:
+            progetti = section in ("progetti", "tutto")
+            message = cancella.esegui(
+                section, target, workspace if progetti else None,
+                chat_archive.store if progetti else None,
+                trash_folders=lambda folders: __import__("pulizia_dati").al_cestino(folders))
+            if section in ("chat", "tutto") and speech_lexicon is not None:
                 speech_lexicon.reload()
-            memory_status_refresh("Memoria e correzioni vocali eliminate su richiesta.")
+            if section in ("progetti", "tutto"):
+                chat_archive.refresh(show=True)
+            memory_status_refresh(message)
+            return True
         except (OSError, sqlite3.Error, ValueError) as exc:
-            memory_status.set("Cancellazione memoria non riuscita: " + str(exc)[:100])
+            memory_status.set("Cancellazione non riuscita: " + str(exc)[:100])
+            return False
 
     def show_voice_corrections() -> None:
         """User must explicitly review both sentences before saving a rule."""
@@ -2561,9 +2602,14 @@ def main() -> None:
         brain_controls, text="Second Brain locale (ricorda conversazioni e attività)",
         variable=memory_enabled, command=toggle_memory)
     memory_toggle.pack(side="left", padx=(0, 10))
-    memory_clear_button = ttk.Button(
-        brain_controls, text="Cancella memoria generale (non progetti)", command=clear_saved_memory)
-    memory_clear_button.pack(side="right")
+    memory_clear_buttons = []
+    for _sezione in ("tutto", "progetti", "ricordi", "chat"):
+        _bottone = ttk.Button(
+            brain_controls, text=__import__("cancella_memoria").ETICHETTE[_sezione],
+            command=lambda s=_sezione: clear_saved_memory(s))
+        _bottone.pack(side="right", padx=(4, 0))
+        memory_clear_buttons.append(_bottone)
+    memory_clear_button = memory_clear_buttons[-1]
     ttk.Label(assistant_settings_frame, textvariable=memory_status, wraplength=630).pack(
         anchor="w", pady=(0, 2))
     ttk.Label(

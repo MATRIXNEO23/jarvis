@@ -354,12 +354,12 @@ def vecchi_progetti_da_chiedere(flag_path) -> bool:
     return not Path(flag_path).exists()
 
 
-def cancella_vecchi_progetti(workspace, store, flag_path, *, trash_folders=None) -> int:
-    """Elimina i progetti esistenti (cartelle nel Cestino) e le loro chat; poi segna fatto."""
-    import json
+def cancella_tutti_i_progetti(workspace, store, *, trash_folders=None, brain=None) -> int:
+    """Elimina i progetti esistenti: chat, cartelle (nel Cestino) e ricordi collegati."""
     from pathlib import Path
     removed = 0
     folders = []
+    ids = []
     for project in workspace.projects(limit=200):
         ident = project["id"]
         try:
@@ -374,10 +374,19 @@ def cancella_vecchi_progetti(workspace, store, flag_path, *, trash_folders=None)
         try:
             workspace.trash_project(ident)
             removed += 1
+            ids.append(ident)
         except Exception:
             pass
+    if brain is not None and ids:
+        brain.clear_ricordi(project_ids=ids)
     if trash_folders is not None:
         trash_folders([f for f in folders if Path(f).exists()])
+    return removed
+
+
+def cancella_vecchi_progetti(workspace, store, flag_path, *, trash_folders=None) -> int:
+    """Elimina i progetti esistenti (cartelle nel Cestino) e le loro chat; poi segna fatto."""
+    removed = cancella_tutti_i_progetti(workspace, store, trash_folders=trash_folders)
     segna_fatto(flag_path)
     return removed
 
