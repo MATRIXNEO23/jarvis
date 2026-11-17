@@ -29,7 +29,7 @@ class NativeSettingsPropagationTests(unittest.TestCase):
         self.harness.setUp()
         self.session, self.abi = self.harness.session, self.harness.abi
         self.abi.release.set()
-        MemoryPreferences(recent_messages=16, prompt_max_tokens=1600).save(
+        MemoryPreferences(recent_messages=16, prompt_max_tokens=1600, cronologia_ridotta=False).save(
             default_memory_preferences_path())
         self.initialized = []
         def initialize(module, config, source):

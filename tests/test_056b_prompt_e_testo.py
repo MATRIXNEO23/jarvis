@@ -17,7 +17,7 @@ class TettoPromptTests(unittest.TestCase):
         memory = MemoryPreferences()
         self.assertEqual(memory.prompt_max_tokens, 550)
         for contesto in (896, 1024, 2048):
-            self.assertEqual(memory.available_prompt_tokens(contesto, 128), 500)
+            self.assertEqual(memory.available_prompt_tokens(contesto, 128), 550)
 
     def test_niente_budget_8192_e_niente_override_del_contatore_esatto(self):
         self.assertIn("catalog_budget = budget if exact", SESSION)    # con il contatore vale il tetto
