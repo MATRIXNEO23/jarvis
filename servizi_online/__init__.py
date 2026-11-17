@@ -158,6 +158,14 @@ def unisci_attivi(salvati, ordine, voluti: dict, base) -> list:
     return [i for i in ordine if i in attivi]
 
 
+def allinea_spunte(vars_: dict, attivi) -> None:
+    """056c: dopo l'unione le spunte del pannello mostrano ciò che è nel file. Senza questo una
+    spunta vecchia (es. Mistral, già spento dalla tendina) restava diversa da `base` e il Salva
+    successivo la riaccendeva: causa del bug E ancora presente nella 056b."""
+    for ident, var in vars_.items():
+        var.set(ident in set(attivi))
+
+
 def salva_impostazioni(data: dict, path: Path | None = None) -> None:
     path = path or _cartella() / "servizi_online.json"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -497,6 +505,7 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
             fresh["attivi"], settings["ordine"], {i: v.get() for i, v in state["vars"].items()},
             state["base"])
         state["base"] = set(settings["attivi"])
+        allinea_spunte(state["vars"], settings["attivi"])
         limits = {}
         for service_id, var in state.get("limits", {}).items():
             value = var.get().strip().replace(".", "")

@@ -253,6 +253,7 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
             fresh["attivi"], settings["ordine"], {i: v.get() for i, v in state["vars"].items()},
             state["base"])
         state["base"] = set(settings["attivi"])
+        __import__("servizi_online").allinea_spunte(state["vars"], settings["attivi"])
         try:
             salva_impostazioni(settings)
         except (OSError, RuntimeError) as exc:
