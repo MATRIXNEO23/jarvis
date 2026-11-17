@@ -382,12 +382,13 @@ class JarvisHUD:
             self.core_canvas,lambda ident:self._orbit_click(ident))
 
         self.visual_status=tk.StringVar(value="LUMI  //  STANDBY")
-        tk.Label(self.visual,textvariable=self.visual_status,
+        self.status_label=tk.Label(self.visual,textvariable=self.visual_status,
                  bg=BG,fg="#60abc5",
-                 font=("Consolas",9),pady=3).pack(fill="x")
+                 font=("Consolas",9),pady=3)
+        self.status_label.pack(fill="x")
 
         footer=tk.Frame(self.visual,bg=BG,height=102)
-        footer.pack(fill="x",pady=(8,4))
+        footer.pack(fill="x",pady=(8,4))     # posizione definitiva: _layout_bottom()
         # Tk pack gave each Canvas a different requested natural width:
         # at narrower sizes DISCO C became visibly smaller than CPU/RAM.
         # A uniform weighted grid guarantees equal panel proportions.
@@ -410,16 +411,31 @@ class JarvisHUD:
         self.disk_text=tk.StringVar(value="DISCO C --")
         self.clock_text=tk.StringVar(value="--:--")
         clock_row = tk.Frame(self.visual, bg=BG)
-        clock_row.pack(anchor="e", padx=10)
+        clock_row.pack(anchor="e", padx=10)   # posizione definitiva: _layout_bottom()
+        self.clock_row=clock_row
         self.alarm_stop_button = tk.Button(clock_row, text="⏰ Ferma", bg=BG, fg=CYAN,
                                            activebackground=PANEL, activeforeground=WHITE,
                                            bd=0, highlightthickness=0)
         tk.Label(clock_row, textvariable=self.clock_text, bg=BG, fg=CYAN,
                  font=("Consolas", 11)).pack(side="right")
+        self._layout_bottom()
         self._update_metrics()
         self.last_metrics=time.monotonic()
         self.select_tab("CONSOLE")
         self.parent.after(TICK_MS,self._tick)
+
+    def _layout_bottom(self):
+        """056b: ora, sveglia, meteo, DISCO C e RETE hanno ciascuno il proprio posto in basso.
+        Le parti in basso si impacchettano PRIMA del globo (side=bottom): se manca spazio si
+        stringe il globo, mai l'ora o la sveglia (regressione 056: sparivano sotto il meteo)."""
+        for widget in (self.clock_row,self.footer,self.weather_canvas,self.status_label,self.main_visuals):
+            widget.pack_forget()
+        self.clock_row.pack(side="bottom",anchor="e",padx=10)
+        self.footer.pack(side="bottom",fill="x",pady=(8,4))
+        if self._weather:
+            self.weather_canvas.pack(side="bottom",anchor="e",padx=14)
+        self.status_label.pack(side="bottom",fill="x")
+        self.main_visuals.pack(side="top",fill="both",expand=True)
 
     def open_diagnostics(self):
         """Finestra separata con tutti i messaggi (Tutto / Attività / Sistema).
@@ -553,7 +569,7 @@ class JarvisHUD:
         disegna(canvas,18,17,data["categoria"],CYAN)
         canvas.create_text(40,17,anchor="w",fill=CYAN,font=("Consolas",10),
                            text="%s  %d°"%(str(data["citta"])[:16],round(data["temp"])))
-        canvas.pack(before=self.footer,anchor="e",padx=14)
+        self._layout_bottom()
 
     def set_mode_handler(self, callback):
         """056 B: callback(modalita) -> bool (True se salvata); la slide scorre solo se salva."""

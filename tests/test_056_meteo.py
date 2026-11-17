@@ -135,7 +135,7 @@ class PacchettoTests(unittest.TestCase):
         self.assertIn("meteo_handle_text(spoken, write_line, speak_result)", JARVIS)
         self.assertIn("root.after(30 * 60 * 1000, meteo_refresh)", JARVIS)
         hud = (ROOT / "animated_hud.py").read_text(encoding="utf-8")
-        self.assertIn("canvas.pack(before=self.footer", hud)
+        self.assertIn("self.weather_canvas.pack(side=\"bottom\"", hud)
         self.assertIn("meteo/LEGGIMI.md", (ROOT / "tools" / "build_jarvis_f5_candidate.py").read_text(encoding="utf-8"))
 
     def test_icone_e_hud_senza_riquadro(self):
