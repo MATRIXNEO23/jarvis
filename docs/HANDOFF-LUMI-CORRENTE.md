@@ -174,6 +174,8 @@ Le impostazioni sono duplicate tra «Modello locale Gemma» (Configura Gemma loc
 
 Regola dell'utente (19:04): la BASE è quella funzionante a modello singolo (native.json + «Configura Gemma locale»). Più modelli e profili si AGGIUNGONO a quella base, non diventano una configurazione parallela.
 
+057, file del programma (utente 20:11): la cartella del programma ha più di 100 file sparsi nella radice. Bisogna verificare quali servono davvero (import anche dinamici, launcher, pacchetto) e riordinarli in cartelle per responsabilità, senza rompere niente: prima l'inventario e una proposta da approvare, poi lo spostamento con test e prova del pacchetto estratto. Via dal pacchetto i file non usati, come da regola «Pacchetto per l'utente» in AGENTS.md.
+
 ## Richiesta utente 17/11 19:01: contesto online proporzionato
 Una domanda breve («ciao») non deve mandare migliaia di token online. Proposta (da approvare): il contesto cresce con la richiesta. Domanda breve = solo istruzioni minime e l'ultimo scambio; «approfondisci» e richieste lunghe = fino a 6 scambi; allegati e scheda di Lumi solo se servono. Nel log e nella diagnostica, i token mandati per ogni richiesta. Restano valide le soglie del 15/11: 80% della quota e conferma oltre ~8.000 token.
 
