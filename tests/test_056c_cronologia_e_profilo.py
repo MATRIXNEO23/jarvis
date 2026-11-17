@@ -43,9 +43,9 @@ class ProfiloTests(unittest.TestCase):
     def test_valori_di_partenza(self):
         from local_model.memory_preferences import MemoryPreferences
         from local_model.native_config import NativeModelConfig
-        self.assertEqual(NativeModelConfig().context_size, 768)
+        self.assertEqual(NativeModelConfig().context_size, 896)
         m = MemoryPreferences()
-        self.assertEqual((m.prompt_max_tokens, m.cronologia_ridotta, m.chat_continua), (500, True, True))
+        self.assertEqual((m.prompt_max_tokens, m.cronologia_ridotta, m.chat_continua), (550, True, True))
 
     def test_memoria_salva_e_riletta_con_i_campi_del_contesto(self):
         from local_model.memory_preferences import MemoryPreferences
@@ -87,8 +87,15 @@ class ProfiloTests(unittest.TestCase):
             self.assertNotIn("1", vecchio.get("memoria", {}))
             fresco = pf._voce(dati, nuovo, attuale)
             for n in "123":
-                self.assertEqual(fresco["slot"][n]["context_size"], 768)
-                self.assertEqual(fresco["memoria"][n]["prompt_max_tokens"], 500)
+                self.assertEqual(fresco["slot"][n]["context_size"], 896)
+                self.assertEqual(fresco["memoria"][n]["prompt_max_tokens"], 550)
+                self.assertEqual(fresco["slot"][n]["max_output"], 256)
+
+    def test_salvataggio_rifiutato_se_prompt_piu_risposta_superano_il_contesto(self):
+        ui = (ROOT / "local_model" / "native_ui.py").read_text(encoding="utf-8")
+        self.assertIn("prompt + risposta > contesto" if False else "if prompt + risposta > contesto:", ui)
+        self.assertIn("superano il contesto", ui)
+        self.assertLess(ui.index("superano il contesto"), ui.index("update_native_settings(self.current, changes)"))
 
     def test_blocco_unico_nella_pagina_modelli(self):
         ui = (ROOT / "local_model" / "native_ui.py").read_text(encoding="utf-8")

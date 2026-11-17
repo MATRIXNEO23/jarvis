@@ -1342,4 +1342,4 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Lezione: il glifo ⏻ non esiste nel font di Windows (esce come quadratino): i simboli di stato si disegnano sul Canvas.
 - Lezione: un nuovo valore predefinito si applica solo ai modelli nuovi; i profili salvati si leggono dal loro file e non vanno riscritti.
 - Lezione: un campo aggiunto a memory.json rompe le versioni vecchie (schema rigido): i campi nuovi vanno nel file accanto `memory.native.json`.
-
+- Decisione utente (17/11 21:26): valori di partenza dei modelli nuovi 896 / 550 / 256 (contesto, tetto prompt, risposta); salvataggio bloccato se prompt + risposta > contesto.

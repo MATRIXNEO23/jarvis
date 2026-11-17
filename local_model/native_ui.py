@@ -174,7 +174,7 @@ class NativeSettingsWindow:
         frame.pack(fill="x", pady=(10, 2))
         ttk.Label(frame, wraplength=520, text=(
             "La cronologia è quella della chat scelta nell'elenco. Contesto e tetto del prompt "
-            "valgono per questo modello: ogni modello nuovo parte da 768 e 500.")).pack(anchor="w", padx=6, pady=3)
+            "valgono per questo modello: ogni modello nuovo parte da contesto 896, tetto del prompt 550 e risposta massima 256. Prompt + risposta non possono superare il contesto.")).pack(anchor="w", padx=6, pady=3)
         for key, title in self._MEM_LABELS:
             line = ttk.Frame(frame)
             line.pack(fill="x", pady=2)
@@ -392,6 +392,14 @@ class NativeSettingsWindow:
                     changes[key] = float(value)
                 else:
                     changes[key] = value
+            if self.mem_values:
+                prompt = int(self.mem_values["prompt_max_tokens"].get().strip())
+                contesto = changes.get("context_size", self.current.context_size)
+                risposta = changes.get("max_output", self.current.max_output)
+                if prompt + risposta > contesto:
+                    raise ValueError(
+                        "tetto del prompt (%d) + risposta massima (%d) = %d superano il contesto (%d). "
+                        "Aumenta il contesto o abbassa uno dei due." % (prompt, risposta, prompt + risposta, contesto))
             revised, reload_needed = update_native_settings(self.current, changes)
             revised.save(self.path)
             self.current = revised

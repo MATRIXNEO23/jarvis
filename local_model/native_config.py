@@ -16,8 +16,8 @@ class NativeModelConfig:
     model: str = ""
     threads: int = 2
     batch_threads: int = 2
-    context_size: int = 768             # 056c: valore di partenza dei modelli nuovi
-    max_output: int = 128
+    context_size: int = 896             # 056c (21:26): valore di partenza dei modelli nuovi
+    max_output: int = 256               # 056c (21:26): valore di partenza dei modelli nuovi
     temperature: float = 0.7
     top_k: int = 100
     top_p: float = 0.9

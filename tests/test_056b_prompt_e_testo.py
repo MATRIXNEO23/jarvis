@@ -13,9 +13,9 @@ class TettoPromptTests(unittest.TestCase):
     def test_contesto_predefinito_1024_e_tetto_600_con_1024_e_2048(self):
         from local_model.memory_preferences import MemoryPreferences
         from local_model.native_config import NativeModelConfig
-        self.assertEqual(NativeModelConfig().context_size, 768)
+        self.assertEqual(NativeModelConfig().context_size, 896)
         memory = MemoryPreferences()
-        self.assertEqual(memory.prompt_max_tokens, 500)
+        self.assertEqual(memory.prompt_max_tokens, 550)
         for contesto in (768, 1024, 2048):
             self.assertEqual(memory.available_prompt_tokens(contesto, 128), 500)
 

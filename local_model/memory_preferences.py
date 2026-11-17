@@ -18,7 +18,7 @@ class MemoryPreferences:
     recent_messages: int = 8
     summarize_every: int = 8
     summary_max_tokens: int = 150
-    prompt_max_tokens: int = 500        # 056c: valore di partenza dei modelli nuovi
+    prompt_max_tokens: int = 550        # 056c (21:26): valore di partenza dei modelli nuovi
     max_background_jobs: int = 1
     conversation_priority: bool = True
     pause_on_heavy_load: bool = True
