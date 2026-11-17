@@ -105,6 +105,12 @@ Regola: niente iniziative sull'organizzazione dei menu; ogni argomento al suo po
 10. Conferme: «sì»/«no» senza dire «Lumi» (verificare che sia sempre così).
 Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), documenti negli allegati (PDF con pypdf, Office, LibreOffice, RTF, HTML, EPUB).
 
+## Ripresa 17/11 — build 055 pronta in codice (leggere per prima)
+- Fatto (A-H della 055, un commit per blocco): catena unica testo/voce, consenso GPT a voce senza finestra, risultati ricerca in chat con dominio, «approfondisci online» scritto, modelli aggiunti senza copia + caselle 1/2/3 + profili per modello + GGUF corretto + salvataggio atomico, tendina RICERCA con quota (Tavily da API), Exa/Firecrawl/Linkup collegati, impostazioni modelli solo in «Modelli», versione 055 in diagnostica. Dettagli e scelte: docs/DECISIONI-E-LEZIONI.md, sezione «Build 055».
+- Test nuovi: tests/test_055_catena.py, test_055_modelli.py, test_055_ricerca_ui.py, test_055_diagnostica_versione.py (non eseguiti su Linux). Test 052/054 adattati (elenco senza limite, quota «rilevate», catena con typed).
+- NOT_TESTED: vedi elenco in DECISIONI-E-LEZIONI (prove dal vivo da fare con lumi-prove-diagnostica dopo la build; l'ultimo commit senza [skip ci] avvia la CI).
+- Da fare dopo la prova: proposta (non implementata) dei comandi di ricerca semplici; risposte che si accavallano (ID per richiesta); _ □ X letteralmente sopra l'ingranaggio, se l'utente lo vuole; verifica del consumo reale di Exa/Firecrawl/Linkup (nessun endpoint verificato, restano «ricerche rilevate»).
+
 ## Ripresa nuova sessione — 17/11 03:30 (leggere per prima)
 **Dove lavorare**
 - Repo: GitHub MATRIXNEO23/jarvis, ramo `feature/jarvis-kobold-f5-profiles-20261109`. Sul PC non c'è una copia: in sessione cloud si aggiunge con add_repo (accesso push), si clona e si fa checkout del ramo.
