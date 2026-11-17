@@ -113,7 +113,7 @@ class Telegram:
         colour, unread, text = stato(bool(self.auto_var.get()), self.contacts(),
                                      self._counts, self._activity)
         try:
-            text = ("Telegram %d" % unread) if unread else "Telegram"   # il tasto mostra solo il simbolo
+            text = ("✈ Telegram %d" % unread) if unread else "✈ Telegram"   # il tasto mostra solo il simbolo
             try:
                 self.button.configure(text=text, power_color=colour)   # azzurro/verde/arancione/rosso
             except tk.TclError:
