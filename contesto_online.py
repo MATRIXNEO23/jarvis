@@ -1,6 +1,6 @@
 """056b: il contesto mandato online cresce con la richiesta (richiesta utente 17/11 19:01).
 
-Domanda breve («ciao», «che ore sono») = solo l'ultimo scambio. «Approfondisci» e richieste lunghe
+Saluto («ciao», «grazie») = solo l'ultimo scambio (le domande brevi restano «normali»: da confermare). «Approfondisci» e richieste lunghe
 = fino a 6 scambi. Allegati e schede (focus file e programmi) solo se non è una domanda breve senza riferimenti.
 I token stimati (caratteri / 4) restano in ULTIMO per il log e la diagnostica."""
 from __future__ import annotations
@@ -18,13 +18,11 @@ LOG = None          # jarvis.py ci mette write_line: una riga di log per richies
 
 
 def profilo(spoken: str) -> str:
-    from local_model.prompt_breve import breve
+    from local_model.prompt_breve import saluto
     text = (spoken or "").strip()
     if _AMPIO.search(text) or len(text.split()) >= 25:
         return "ampio"
-    if _RIFERIMENTI.search(text):
-        return "normale"          # si riferisce a file, risultati o a qualcosa di prima
-    return "minimo" if breve(text) else "normale"
+    return "minimo" if saluto(text) else "normale"     # solo i saluti: ultimo scambio e basta
 
 
 def _scambi(parsed) -> list:

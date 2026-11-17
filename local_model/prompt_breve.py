@@ -1,7 +1,7 @@
 """056b: saluti e domande brevi non ripetono la risposta precedente.
 
 Per un saluto: meno cronologia (un solo scambio, con la vecchia risposta tagliata), nessun
-ricordo del second brain. Per una domanda breve: al massimo due scambi con risposte tagliate.
+ricordo del second brain. Per una domanda breve: restano gli scambi ma le risposte più vecchie sono tagliate.
 L'ultimo messaggio è segnato chiaramente come l'unico a cui rispondere."""
 from __future__ import annotations
 
@@ -41,11 +41,11 @@ def adatta_storia(history, latest: str):
     if saluto(latest):
         (ru, tu), (ra, ta) = history[-1]
         return [((ru, taglia(tu, 160)), (ra, taglia(ta, 120)))]
-    # Domanda breve: al massimo due scambi; il più vecchio ha la risposta tagliata, l'ultimo
-    # resta intero (può servire per capire a cosa si riferisce la domanda).
+    # Domanda breve: gli scambi restano tutti, ma le risposte più vecchie degli ultimi due
+    # scambi vengono tagliate (l'ultimo resta intero: serve a capire a cosa si riferisce).
     out = []
-    for n, pair in enumerate(list(history)[-2:]):
+    for n, pair in enumerate(history):
         (ru, tu), (ra, ta) = pair
-        last = n == len(list(history)[-2:]) - 1
-        out.append(pair if last else ((ru, taglia(tu, 160)), (ra, taglia(ta))))
+        old = n < len(history) - 2
+        out.append(((ru, tu), (ra, taglia(ta))) if old and len(ta) > LIMITE_RISPOSTA_VECCHIA else pair)
     return out
