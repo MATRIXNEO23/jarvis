@@ -50,10 +50,11 @@ def help_sections(engine):
             'La sveglia richiede la relativa add-on attiva. Se l’orario è passato, vale per domani. '
             'Per evitare ambiguità puoi usare il formato 24 ore. Gli elenchi di questa guida non vengono letti a voce.',
         'Meteo':
-            'che tempo fa a Roma\nmeteo Milano\ncom\u2019è il tempo a Tokyo\nmeteo (senza città: la tua)\n\n'
+            'che tempo fa a Roma\nmeteo Milano\ncom\u2019è il tempo a Tokyo\nmeteo (senza città: la tua)\n'
+            'meteo domani\nmeteo domani a Roma\nche tempo farà domani\n\n'
             'Serve l\u2019add-on Meteo acceso (Gestisci add-on). L\u2019icona con la temperatura compare in basso '
-            'nell\u2019HUD, sopra DISCO C e RETE. Per il tempo di adesso; «online» e «clima» restano ricerche. '
-            'Le previsioni di domani non ci sono ancora.\n\n'
+            'nell\u2019HUD, sopra DISCO C e RETE. «Domani» dà minima, massima e cielo del giorno dopo. «Online» e «clima» restano ricerche. '
+            'Dopodomani e la settimana non ci sono ancora.\n\n'
             'Gli elenchi di questa guida non vengono letti a voce.',
         'Controllo PC':
             'Add-on Controllo PC (spento finché non lo attivi in Gestisci add-on). Tutto offline, '

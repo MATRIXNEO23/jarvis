@@ -13,6 +13,9 @@ from urllib.request import Request, urlopen
 GEOCODING = "https://geocoding-api.open-meteo.com/v1/search?name={nome}&count=1&language=it&format=json"
 PREVISIONE = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
               "&current_weather=true&timezone=auto")
+PREVISIONE_DOMANI = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
+                     "&daily=weathercode,temperature_2m_max,temperature_2m_min"
+                     "&forecast_days=2&timezone=auto")
 INTERVALLO = 30 * 60          # secondi: massimo un aggiornamento ogni 30 minuti
 
 
@@ -79,6 +82,21 @@ def attuale(lat: float, lon: float, get=_get) -> dict:
         raise ErroreMeteo("Non riesco a leggere le previsioni adesso.") from exc
 
 
+def domani(lat: float, lon: float, get=_get) -> dict:
+    """Previsione di domani (Open-Meteo daily): {"max", "min", "code"}."""
+    try:
+        daily = get(PREVISIONE_DOMANI.format(lat=lat, lon=lon))["daily"]
+        return {"max": float(daily["temperature_2m_max"][1]), "min": float(daily["temperature_2m_min"][1]),
+                "code": int(daily["weathercode"][1])}
+    except (OSError, ValueError, KeyError, TypeError, IndexError) as exc:
+        raise ErroreMeteo("Non riesco a leggere le previsioni di domani.") from exc
+
+
+def frase_domani(citta: str, massima: float, minima: float, code) -> str:
+    return "Domani a %s: %s, minima %d e massima %d gradi." % (
+        citta, _TESTO[categoria(code, True)], round(minima), round(massima))
+
+
 class ServizioMeteo:
     def __init__(self, abilitato, *, citta=lambda: None, get=_get, orologio=time.monotonic):
         self._abilitato, self._citta, self._get, self._ora = abilitato, citta, get, orologio
@@ -95,6 +113,13 @@ class ServizioMeteo:
             raise ErroreMeteo("Scegli la città predefinita nella pagina dell'add-on Meteo.")
         now = attuale(city["lat"], city["lon"], self._get)
         return frase(city["nome"], now["temp"], now["code"], now.get("giorno", True))
+
+    def risposta_domani(self, nome=None) -> str:
+        city = cerca_citta(nome, self._get) if nome else self._citta()
+        if not city:
+            raise ErroreMeteo("Scegli la città predefinita nella pagina dell'add-on Meteo.")
+        d = domani(city["lat"], city["lon"], self._get)
+        return frase_domani(city["nome"], d["max"], d["min"], d["code"])
 
     def aggiorna(self, forza: bool = False):
         """Dati per l'HUD (città predefinita). None se spento, senza città o errore di rete;

@@ -87,7 +87,8 @@ def validate_manifest(value: object) -> dict:
             raise AddonError("Identità del componente Programmi e app non valida.")
         if item["core_action"] == "alarm.local" and (addon_id, name) != ("sveglia", "addon.sveglia.imposta"):
             raise AddonError("Identità del componente Sveglia non valida.")
-        if item["core_action"] == "weather.local" and (addon_id, name) != ("meteo", "addon.meteo.consulta"):
+        if item["core_action"] == "weather.local" and (addon_id, name) not in (
+                ("meteo", "addon.meteo.consulta"), ("meteo", "addon.meteo.domani")):
             raise AddonError("Identità del componente Meteo non valida.")
         if item["core_action"] == "music.local" and (addon_id, name) != ("musica", "addon.musica.riproduci"):
             raise AddonError("Identità del componente Musica non valida.")

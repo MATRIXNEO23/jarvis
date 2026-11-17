@@ -15,7 +15,7 @@ NUVOLA_SCURA = "#8fb8cc"
 PIOGGIA = "#46ccfa"
 FULMINE = "#ffd24a"
 NEVE = "#ffffff"
-LUNA = "#e8f1ff"
+LUNA = "#ece9c0"
 LUNA_OMBRA = "#1b3a55"
 
 MESE_SINODICO = 29.530588853                     # giorni
@@ -43,24 +43,26 @@ def punti_luce(fase: float, r: float, x: float, y: float, passi: int = 24):
     return [(x + px, y + py) for px, py in arco + termine]
 
 
-def _nuvola(c, x, y, colore, s=1.0):
-    for x0, y0, x1, y1 in ((-11, -1, -1, 9), (-6, -8, 6, 4), (0, -4, 11, 9)):
-        c.create_oval(x + x0 * s, y + y0 * s, x + x1 * s, y + y1 * s, fill=colore, outline="")
-    c.create_rectangle(x - 6 * s, y + 1 * s, x + 6 * s, y + 9 * s, fill=colore, outline="")
+def _nuvola(c, x, y, colore, s=1.0, tratto=2):
+    """Nuvola a contorno (come l'anteprima 056c): un unico profilo, interno vuoto."""
+    pts = [(-11, 8), (-12, 3), (-8, -1), (-6, -6), (0, -8), (5, -5), (7, -2), (11, 0), (12, 5), (9, 8)]
+    flat = [v for px, py in pts for v in (x + px * s, y + py * s)]
+    c.create_line(*flat, fill=colore, width=tratto, smooth=True, capstyle="round", joinstyle="round")
+    c.create_line(x - 11 * s, y + 8 * s, x + 9 * s, y + 8 * s, fill=colore, width=tratto, capstyle="round")
 
 
 def _sole(c, x, y, r=6, raggi=True):
-    c.create_oval(x - r, y - r, x + r, y + r, fill=SOLE, outline="")
+    c.create_oval(x - r, y - r, x + r, y + r, fill="", outline=SOLE, width=2)
     if raggi:
         for i in range(8):
             a = math.pi / 4 * i
-            c.create_line(x + math.cos(a) * (r + 2), y + math.sin(a) * (r + 2),
-                          x + math.cos(a) * (r + 5), y + math.sin(a) * (r + 5),
+            c.create_line(x + math.cos(a) * (r + 3), y + math.sin(a) * (r + 3),
+                          x + math.cos(a) * (r + 6), y + math.sin(a) * (r + 6),
                           fill=SOLE, width=2, capstyle="round")
 
 
 def _luna(c, x, y, fase, r=9):
-    c.create_oval(x - r, y - r, x + r, y + r, fill=LUNA_OMBRA, outline="#3d6a8c")
+    """Luna piena di colore chiaro; la parte in ombra non si disegna (come l'anteprima)."""
     pts = punti_luce(fase, r, x, y)
     if len(pts) >= 6 and max(abs(p[0] - x) for p in pts) > 0.5:
         c.create_polygon(*[v for p in pts for v in p], fill=LUNA, outline="")
@@ -72,26 +74,23 @@ def disegna(canvas, x: float, y: float, categoria: str, colore: str = "#46ccfa",
     if categoria == "sole":
         _sole(c, x, y, 6)
     elif categoria == "sole_nuvola":
-        _sole(c, x - 5, y - 5, 5)
-        _nuvola(c, x + 3, y + 3, NUVOLA, .8)
+        _sole(c, x - 6, y - 6, 4)
+        c.create_oval(x - 4, y - 2, x + 12, y + 10, fill=c.cget("bg"), outline="")
+        _nuvola(c, x + 3, y + 3, NUVOLA, .75, 2)
     elif categoria == "luna":
         _luna(c, x, y, fase_lunare() if fase is None else fase)
     elif categoria == "nebbia":
-        _nuvola(c, x, y - 7, NUVOLA_SCURA, .8)
-        for dy, a, b in ((5, -11, 9), (10, -8, 12), (15, -11, 7)):
-            c.create_line(x + a, y + dy, x + b, y + dy, fill=NUVOLA_SCURA, width=2, capstyle="round")
+        for dy in (-8, -3, 2, 7):
+            c.create_line(x - 11, y + dy, x + 11, y + dy, fill=NUVOLA_SCURA, width=2, capstyle="round")
     elif categoria in ("pioggia", "temporale", "neve"):
-        _nuvola(c, x, y - 6, NUVOLA_SCURA if categoria == "temporale" else NUVOLA, .9)
+        _nuvola(c, x, y - 6, NUVOLA, .9)
         if categoria == "pioggia":
             for dx in (-6, 0, 6):
                 c.create_line(x + dx + 1, y + 5, x + dx - 2, y + 12, fill=PIOGGIA, width=2,
                               capstyle="round")
         elif categoria == "neve":
             for dx in (-6, 0, 6):
-                for a in (0, math.pi / 3, 2 * math.pi / 3):
-                    c.create_line(x + dx - math.cos(a) * 2.6, y + 9 - math.sin(a) * 2.6,
-                                  x + dx + math.cos(a) * 2.6, y + 9 + math.sin(a) * 2.6,
-                                  fill=NEVE, width=1)
+                c.create_text(x + dx, y + 10, text="*", fill=NEVE, font=("Consolas", 9, "bold"))
         else:
             c.create_polygon(x + 2, y + 1, x - 4, y + 9, x - 1, y + 9, x - 3, y + 15,
                              x + 5, y + 6, x + 1, y + 6, x + 4, y + 1, fill=FULMINE, outline="")

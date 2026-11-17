@@ -17,7 +17,7 @@ def costruisci_sezione(parent, *, notify, on_change, search=cerca_citta, run_asy
     current = config.load()["citta"]
     ttk.Label(box, wraplength=560, text=(
         "Il meteo nell'HUD (icona, città e temperatura) usa questa città. Quelle che chiedi a voce, "
-        "«che tempo fa a Roma», funzionano per qualsiasi città. Dati: Open-Meteo, gratuiti e senza chiave."
+        "«che tempo fa a Roma» o «meteo domani», funzionano per qualsiasi città. Dati: Open-Meteo, gratuiti e senza chiave."
     )).pack(anchor="w", padx=8, pady=5)
     line = ttk.Frame(box)
     line.pack(fill="x", padx=8, pady=(0, 4))

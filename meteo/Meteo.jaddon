@@ -10,6 +10,12 @@
       "description": "Dice il meteo di una città.",
       "example": "che tempo fa a Roma",
       "core_action": "weather.local"
+    },
+    {
+      "id": "addon.meteo.domani",
+      "description": "Dice il meteo di domani per una città.",
+      "example": "meteo domani a Roma",
+      "core_action": "weather.local"
     }
   ]
 }

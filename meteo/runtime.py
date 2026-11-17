@@ -30,7 +30,7 @@ def handle_text(spoken: str, write_line, speak) -> bool:
 
     def work():
         try:
-            text = current.risposta(request[1])
+            text = (current.risposta_domani if request[0] == "domani" else current.risposta)(request[1])
         except ErroreMeteo as exc:
             text = str(exc)
         except Exception as exc:                       # mai silenzio
