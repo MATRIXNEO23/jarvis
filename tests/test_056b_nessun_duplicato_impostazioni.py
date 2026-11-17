@@ -29,8 +29,9 @@ class NessunDuplicatoTests(unittest.TestCase):
                 cmd = _kw(call, "command")
                 if isinstance(cmd, ast.Name) and cmd.id.startswith("open_"):
                     comandi[cmd.id] += 1
-        for nome in ("open_memory_preferences", "open_online_permissions", "open_native_model_settings"):
-            self.assertEqual(comandi[nome], 1, nome)
+        self.assertEqual(comandi["open_online_permissions"], 1)
+        self.assertEqual(comandi["open_memory_preferences"], 0)   # la memoria sta nel profilo del modello
+        self.assertEqual(comandi["open_native_model_settings"], 0)  # niente finestra annidata
 
     def test_riquadri_con_titolo_unico(self):
         titoli = Counter()

@@ -84,7 +84,7 @@ class WiringTests(unittest.TestCase):
     def test_model_settings_live_only_in_modelli_and_addon_page_has_the_button(self):
         self.assertIn('text="Apri impostazioni modelli"', JARVIS)
         self.assertIn('"modello_locale": lambda box: build_model_addon_section(box)', JARVIS)
-        self.assertIn("costruisci_sezione(\n            native_settings_box", JARVIS)
+        self.assertIn("costruisci_sezione(\n            assistant_settings_frame", JARVIS)
         native_ui = (ROOT / "local_model" / "native_ui.py").read_text(encoding="utf-8")
         self.assertNotIn("costruisci_sezione", native_ui)
 

@@ -223,29 +223,22 @@ def main() -> None:
                    "finché la finestra principale di Lumi è massimizzata e in primo piano."
               ).pack(anchor="w", pady=(6, 0))
 
-    # Optional native settings editor. No model initialization or provider switch.
+    # 056b: UNA pagina «Modelli offline» (caselle, elenco, profili e impostazioni del modello scelto,
+    # base native.json, un solo Salva). Niente finestre annidate.
     def open_native_model_settings():
-        try:
-            from local_model.native_ui import NativeSettingsWindow
-            NativeSettingsWindow(settings_window, get_session=get_gemma_session,
-                                 on_use=lambda target: lumi_model_use(target))
-        except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Lumi / Gemma", str(exc), parent=settings_window)
+        show_settings()
+        settings_navigation.mostra("Modelli", "Modelli offline")
 
-    native_settings_box = ttk.LabelFrame(assistant_settings_frame,
-                                         text="Modelli offline")
-    native_settings_box.pack(fill="x", padx=8, pady=8)
-    ttk.Label(native_settings_box,
-              text="Unica pagina dei modelli offline: caselle 1/2/3, elenco, profili e configurazione del modello scelto.",
-              wraplength=540).pack(anchor="w", padx=8, pady=5)
-    ttk.Button(native_settings_box, text="Configura modello offline...",
-               command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
-    # 055: caselle 1/2/3, elenco, «Aggiungi modello…» e profili per modello: SOLO qui, in «Modelli».
+    def build_native_panel(frame):
+        from local_model.native_ui import NativeSettingsWindow
+        return NativeSettingsWindow(frame, get_session=get_gemma_session, embed=True)
+
     try:
         __import__("local_model.miei_modelli", fromlist=["costruisci_sezione"]).costruisci_sezione(
-            native_settings_box, lambda text: write_line(text), on_use=lambda target: lumi_model_use(target))
+            assistant_settings_frame, lambda text: write_line(text),
+            on_use=lambda target: lumi_model_use(target), impostazioni=build_native_panel)
     except (OSError, ValueError, RuntimeError, ImportError, tk.TclError) as exc:
-        ttk.Label(native_settings_box, text="Modelli non disponibili: " + str(exc)[:80]).pack(anchor="w")
+        ttk.Label(assistant_settings_frame, text="Modelli non disponibili: " + str(exc)[:80]).pack(anchor="w")
     # Il motore gira sempre in un processo a parte (decisione 15/11 sera): niente casella.
     # Pulizia dati su disco (passo 6): cartelle, spazio, ascolto, Cestino.
     def open_data_cleanup() -> None:
@@ -351,7 +344,7 @@ def main() -> None:
         speak_result=lambda: speak_result,
         voice=lambda: voice,
         write_line=lambda: write_line))
-    (open_memory_preferences, draw_diagnostic_meter, current_capability_snapshot, lumi_brain_local, lumi_brain_online,) = (
+    (draw_diagnostic_meter, current_capability_snapshot, lumi_brain_local, lumi_brain_online,) = (
         _lumi_parti_modello_memoria[n] for n in _lumi_parti_modello_memoria_installa.__globals__['NOMI'])
 
     # 056b: memoria e autorizzazioni GPT stanno UNA sola volta (Memoria generale e Connessione ChatGPT).
@@ -2701,8 +2694,6 @@ def main() -> None:
         _bottone.pack(side="right", padx=(4, 0))
         memory_clear_buttons.append(_bottone)
     memory_clear_button = memory_clear_buttons[-1]
-    ttk.Button(brain_controls, text="Configura memoria e inattivita...",
-               command=open_memory_preferences).pack(anchor="w", pady=(6, 0))
     ttk.Label(assistant_settings_frame, textvariable=memory_status, wraplength=630).pack(
         anchor="w", pady=(0, 2))
     ttk.Label(

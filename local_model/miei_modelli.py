@@ -52,7 +52,7 @@ def righe(config_path=None) -> list[tuple[Path, bool]]:
 
 
 def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=None, confirm=None,
-                       run_async=None, al_cestino=None):
+                       run_async=None, al_cestino=None, impostazioni=None):
     """Sezione «Modelli» (Tk): 3 caselle fisse 1/2/3 con un modello ciascuna, sotto l'elenco
     completo (modello in uso evidenziato), «Aggiungi modello…» (senza copiare), «Usa questo»,
     «Metti nella casella…», «Rimuovi», e i profili 1/2/3 del modello in uso."""
@@ -63,7 +63,7 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
     confirm = confirm or (lambda text: messagebox.askyesno("Rimuovi modello", text, parent=parent))
     run_async = run_async or (lambda fn: threading.Thread(
         target=fn, daemon=True, name="lumi-aggiungi-modello").start())
-    box = ttk.LabelFrame(parent, text="Modelli")
+    box = ttk.LabelFrame(parent, text="Modelli offline")
     box.pack(fill="x", padx=8, pady=8)
     state = {"rows": [], "busy": False, "slots": {}}
     status = tk.StringVar(value="")
@@ -210,6 +210,12 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
     family_var = tk.StringVar(value="")
     info_state = {}
 
+    panel = {}
+
+    def reload_panel():
+        if panel.get("p") is not None:
+            panel["p"].ricarica()
+
     def profile_refresh():
         """Aggiorna etichetta e slot dal file; da chiamare SOLO quando serve rileggere."""
         info = profili_famiglia.assicura(config_path)
@@ -218,6 +224,7 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
             Path(info["modello"]).name if info.get("modello") else "nessun modello",
             info["famiglia"] if info["riconosciuta"] else "incerta"))
         slot_var.set(info["slot"])
+        reload_panel()
 
     def model_path():
         return info_state.get("modello") or scelta_modello.modello_in_uso(config_path)
@@ -226,6 +233,7 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
         number = slot_var.get()            # FIX 1: il numero cliccato si legge PRIMA di ogni refresh
         try:
             result = profili_famiglia.scegli_slot(model_path(), number, config_path)
+            reload_panel()
             status.set("Profilo %d caricato." % number + (
                 " Per applicare %s serve riavviare il motore." % ", ".join(result["campi_riavvio"])
                 if result["serve_riavvio"] else " Nessun riavvio necessario."))
@@ -244,6 +252,7 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
         number = slot_var.get()
         try:
             result = profili_famiglia.ripristina_default(model_path(), number, config_path)
+            reload_panel()
             status.set("Profilo %d riportato ai valori di fabbrica." % number + (
                 " Serve riavviare il motore." if result["serve_riavvio"] else ""))
         except (OSError, ValueError) as exc:
@@ -253,8 +262,14 @@ def costruisci_sezione(parent, notify, *, on_use, config_path=None, ask_file=Non
     for number in profili_famiglia.SLOT:
         ttk.Radiobutton(prof, text="Profilo %d" % number, value=number, variable=slot_var,
                         command=choose_slot).pack(side="left", padx=4)
-    ttk.Button(prof, text="Salva in questo profilo", command=save_slot).pack(side="left", padx=4)
     ttk.Button(prof, text="Ripristina default", command=reset_slot).pack(side="left")
+    # 056b: sotto i profili, nella stessa pagina, tutte le impostazioni del modello selezionato
+    # (base native.json) con UN solo Salva che scrive anche nel profilo caricato.
+    if impostazioni is not None:
+        settings_frame = ttk.Frame(box)
+        settings_frame.pack(fill="x", padx=8, pady=(4, 8))
+        panel["p"] = impostazioni(settings_frame)
+    box.panel = panel
     box.add, box.use, box.remove, box.refresh = add, use, remove, refresh
     box.listbox, box.choose_slot, box.save_slot, box.reset_slot = listbox, choose_slot, save_slot, reset_slot
     box.use_slot, box.assign, box.profile_refresh = use_slot, assign, profile_refresh

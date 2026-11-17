@@ -84,17 +84,11 @@ from sveglia.service import Alarm, parse_command as parse_alarm_clock_command
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
-NOMI = ('open_memory_preferences', 'draw_diagnostic_meter', 'current_capability_snapshot', 'lumi_brain_local', 'lumi_brain_online')
+NOMI = ('draw_diagnostic_meter', 'current_capability_snapshot', 'lumi_brain_local', 'lumi_brain_online')
 
 
 def installa(d):
     """Crea le funzioni per questa esecuzione di Lumi; restituisce {nome: funzione}."""
-    def open_memory_preferences():
-        try:
-            from local_model.memory_ui import MemoryPreferencesWindow
-            MemoryPreferencesWindow(d.settings_window, get_session=d.get_gemma_session)
-        except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Lumi / Memoria", str(exc), parent=d.settings_window)
     def draw_diagnostic_meter(_event=None):
         d.diagnostic_meter.delete("progress")
         w=max(1,d.diagnostic_meter.winfo_width())

@@ -126,6 +126,42 @@ def valori(config: NativeModelConfig) -> dict:
     return {key: data[key] for key in CAMPI}
 
 
+# 056b: le impostazioni della memoria che finiscono nel prompt stanno nel profilo del modello
+# (profili.json -> modelli[..]["memoria"][slot]); il file letto dalla sessione resta memory.json.
+MEMORIA_CAMPI = ("history_max_tokens", "recent_messages", "summarize_every", "summary_max_tokens",
+                 "idle_seconds", "prompt_max_tokens", "conversation_priority",
+                 "pause_on_heavy_load", "background_summaries")
+
+
+def _memoria_file(config_path=None) -> Path:
+    return _percorso(config_path).parent / "memory.json"
+
+
+def memoria_valori(config_path=None) -> dict | None:
+    from .memory_preferences import MemoryPreferences
+    try:
+        prefs = MemoryPreferences.load(_memoria_file(config_path))
+    except (OSError, ValueError):
+        return None
+    return {key: getattr(prefs, key) for key in MEMORIA_CAMPI}
+
+
+def applica_memoria(item: dict, numero: int, config_path=None) -> bool:
+    """Scrive in memory.json la memoria salvata nel profilo (se c'è). True se ha scritto."""
+    saved = (item.get("memoria") or {}).get(str(numero))
+    if not isinstance(saved, dict):
+        return False
+    from dataclasses import replace
+    from .memory_preferences import MemoryPreferences
+    try:
+        current = MemoryPreferences.load(_memoria_file(config_path))
+        replace(current, **{k: v for k, v in saved.items() if k in MEMORIA_CAMPI}).save(
+            _memoria_file(config_path))
+    except (OSError, ValueError, TypeError):
+        return False
+    return True
+
+
 def default_valori() -> dict:
     return valori(NativeModelConfig())
 
@@ -248,6 +284,7 @@ def applica_modello(model_path, config_path=None):
     revised, reload_needed = update_native_settings(
         config, {"model": str(model_path), **item["slot"][slot]})
     _salva(data, path, revised)
+    applica_memoria(item, int(slot), path)
     return revised, family, known, reload_needed
 
 
@@ -263,6 +300,7 @@ def scegli_slot(model_path, numero: int, config_path=None) -> dict:
     revised, reload_needed = update_native_settings(config, item["slot"][str(numero)])
     item["ultimo"] = numero
     _salva(data, path, revised)
+    applica_memoria(item, numero, path)
     changed = [f for f in CAMPI_RIAVVIO if getattr(config, f) != getattr(revised, f)]
     return {"config": revised, "serve_riavvio": reload_needed, "campi_riavvio": changed}
 
@@ -276,6 +314,9 @@ def salva_in_slot(model_path, numero: int, config_path=None) -> None:
     data = carica(path)
     item = _voce(data, model_path, valori(config), usa_corrente=True)
     item["slot"][str(numero)] = valori(config)
+    memoria = memoria_valori(path)
+    if memoria is not None:
+        item.setdefault("memoria", {})[str(numero)] = memoria
     item["ultimo"] = numero
     _salva(data, path)
 

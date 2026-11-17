@@ -11,42 +11,51 @@ from .native_settings import (
 
 
 class NativeSettingsWindow:
-    def __init__(self, parent, *, path=None, on_save=None, get_session=None, on_use=None):
+    def __init__(self, parent, *, path=None, on_save=None, get_session=None, on_use=None, embed=False):
         self.path = path or default_native_settings_path()
         self.on_save = on_save
         self.get_session = get_session
         self.current = (NativeModelConfig.load(self.path)
                         if self.path.exists() else NativeModelConfig())
-        self.window = tk.Toplevel(parent)
-        self.window.bind("<FocusIn>", lambda _e: self.sync_modello(), add="+")
-        self.window.title("Lumi // Modello locale Gemma")
-        # 028 fix: on a 768 px screen the 780 px window hid Salva/Prova at the
-        # bottom (the 026 options made the form taller). Buttons now live in a
-        # fixed bar at the bottom and the form scrolls.
-        screen_h = self.window.winfo_screenheight()
-        height = max(420, min(780, screen_h - 90))
-        self.window.geometry(f"640x{height}")
-        self.window.minsize(480, 380)
-        bottom = ttk.Frame(self.window, padding=(14, 4, 14, 10))
-        bottom.pack(side="bottom", fill="x")
-        holder = ttk.Frame(self.window)
-        holder.pack(side="top", fill="both", expand=True)
-        canvas = tk.Canvas(holder, highlightthickness=0, borderwidth=0)
-        scrollbar = ttk.Scrollbar(holder, orient="vertical", command=canvas.yview)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        scrollbar.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
-        frame = ttk.Frame(canvas, padding=14)
-        inner = canvas.create_window((0, 0), window=frame, anchor="nw")
-        frame.bind("<Configure>", lambda _e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.bind("<Configure>", lambda e: canvas.itemconfigure(inner, width=e.width))
+        self.embed = bool(embed)
+        if self.embed:
+            # 056b: le impostazioni del modello stanno DENTRO la pagina Modelli (nessuna finestra).
+            self.window = parent
+            frame = ttk.Frame(parent, padding=(8, 4))
+            frame.pack(fill="x")
+            bottom = ttk.Frame(parent, padding=(8, 4))
+            bottom.pack(fill="x")
+        else:
+            self.window = tk.Toplevel(parent)
+            self.window.bind("<FocusIn>", lambda _e: self.sync_modello(), add="+")
+            self.window.title("Lumi // Modello offline")
+            # 028 fix: on a 768 px screen the 780 px window hid Salva/Prova at the
+            # bottom (the 026 options made the form taller). Buttons now live in a
+            # fixed bar at the bottom and the form scrolls.
+            screen_h = self.window.winfo_screenheight()
+            height = max(420, min(780, screen_h - 90))
+            self.window.geometry(f"640x{height}")
+            self.window.minsize(480, 380)
+            bottom = ttk.Frame(self.window, padding=(14, 4, 14, 10))
+            bottom.pack(side="bottom", fill="x")
+            holder = ttk.Frame(self.window)
+            holder.pack(side="top", fill="both", expand=True)
+            canvas = tk.Canvas(holder, highlightthickness=0, borderwidth=0)
+            scrollbar = ttk.Scrollbar(holder, orient="vertical", command=canvas.yview)
+            canvas.configure(yscrollcommand=scrollbar.set)
+            scrollbar.pack(side="right", fill="y")
+            canvas.pack(side="left", fill="both", expand=True)
+            frame = ttk.Frame(canvas, padding=14)
+            inner = canvas.create_window((0, 0), window=frame, anchor="nw")
+            frame.bind("<Configure>", lambda _e: canvas.configure(scrollregion=canvas.bbox("all")))
+            canvas.bind("<Configure>", lambda e: canvas.itemconfigure(inner, width=e.width))
 
-        def wheel(event):
-            if getattr(event, "delta", 0):
-                canvas.yview_scroll(int(-event.delta / 120), "units")
-        self.window.bind("<MouseWheel>", wheel)
-        ttk.Label(frame, text="Gemma locale - configurazione",
-                  font=("Segoe UI", 13, "bold")).pack(anchor="w")
+            def wheel(event):
+                if getattr(event, "delta", 0):
+                    canvas.yview_scroll(int(-event.delta / 120), "units")
+            self.window.bind("<MouseWheel>", wheel)
+        ttk.Label(frame, text="Impostazioni del modello selezionato",
+                  font=("Segoe UI", 11 if self.embed else 13, "bold")).pack(anchor="w")
         ttk.Label(frame, text="Salvare non avvia il modello. I nuovi valori saranno usati "
                   "dalla prossima richiesta, con ricaricamento solo se necessario.",
                   wraplength=520).pack(anchor="w", pady=(5, 12))
@@ -60,6 +69,11 @@ class NativeSettingsWindow:
         }
         for key in EDITABLE_FIELDS:
             if key not in labels:
+                continue
+            if self.embed and key == "model":      # il modello si sceglie dall'elenco, non qui
+                self.model_label = tk.StringVar(value="Modello: " + (Path(self.current.model).name
+                                                                     if self.current.model else "nessuno"))
+                ttk.Label(frame, textvariable=self.model_label).pack(anchor="w", pady=3)
                 continue
             line = ttk.Frame(frame)
             line.pack(fill="x", pady=3)
@@ -112,6 +126,9 @@ class NativeSettingsWindow:
         ttk.Checkbutton(frame, variable=self.fast_forward, text=(
             "Fast forwarding: riusa l'inizio del prompt già elaborato (più veloce). "
             "Cambiarlo richiede di riavviare Lumi.")).pack(anchor="w", pady=(8, 0))
+        self.mem_values = {}
+        if self.embed:
+            self._build_memory(frame)
         self.status = tk.StringVar(value="Salva il GGUF, poi premi Prova generazione. Nessun invio online.")
         ttk.Label(bottom, textvariable=self.status, wraplength=600).pack(
             anchor="w", pady=(0, 6))
@@ -122,9 +139,91 @@ class NativeSettingsWindow:
         self.test_button.pack(side="left", padx=6)
         ttk.Button(buttons, text="Ripristina campi", command=self.reset).pack(
             side="left", padx=6)
-        ttk.Button(buttons, text="Chiudi", command=self.window.destroy).pack(side="right")
+        if not self.embed:
+            ttk.Button(buttons, text="Chiudi", command=self.window.destroy).pack(side="right")
         ttk.Button(buttons, text="Diagnostica prompt...", command=self.open_prompt_diagnostics).pack(
             side="right", padx=5)
+
+    _MEM_LABELS = (
+        ("history_max_tokens", "Token cronologia e ricordi (128-600)"),
+        ("recent_messages", "Messaggi recenti nel prompt"),
+        ("summarize_every", "Sintesi ogni N messaggi"),
+        ("summary_max_tokens", "Limite riassunto (token)"),
+        ("idle_seconds", "Inattività prima della sintesi (secondi)"),
+        ("prompt_max_tokens", "Budget prompt (token)"))
+    _MEM_FLAGS = (
+        ("conversation_priority", "Priorità assoluta alla conversazione"),
+        ("pause_on_heavy_load", "Sospendi con carico elevato"),
+        ("background_summaries", "Abilita sintesi in inattività"))
+
+    def _memory_path(self):
+        return Path(self.path).parent / "memory.json"
+
+    def _build_memory(self, frame):
+        """056b: le impostazioni della memoria del prompt sono qui, nel profilo del modello.
+        Il Second Brain (accensione, cancellazione) resta in Memoria ed è unico per tutti."""
+        from .memory_preferences import MemoryPreferences
+        try:
+            prefs = MemoryPreferences.load(self._memory_path())
+        except (OSError, ValueError):
+            prefs = MemoryPreferences()
+        ttk.Label(frame, text="Memoria del prompt (parte del profilo)",
+                  font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(10, 2))
+        for key, title in self._MEM_LABELS:
+            line = ttk.Frame(frame)
+            line.pack(fill="x", pady=2)
+            ttk.Label(line, text=title, width=38).pack(side="left")
+            variable = tk.StringVar(value=str(getattr(prefs, key)))
+            self.mem_values[key] = variable
+            ttk.Entry(line, textvariable=variable, width=10).pack(side="left")
+        for key, title in self._MEM_FLAGS:
+            variable = tk.BooleanVar(value=bool(getattr(prefs, key)))
+            self.mem_values[key] = variable
+            ttk.Checkbutton(frame, text=title, variable=variable).pack(anchor="w", pady=1)
+        ttk.Button(frame, text="Dettagli ultimo contesto",
+                   command=self.show_context_metrics).pack(anchor="w", pady=(4, 0))
+
+    def show_context_metrics(self):
+        try:
+            session = self.get_session() if callable(self.get_session) else None
+            metrics = getattr(session, "last_context_metrics", {}) or {}
+        except Exception as exc:
+            metrics = {"errore": str(exc)[:120]}
+        text = "\n".join("%s: %s" % (k, v) for k, v in metrics.items()) or "Nessun contesto ancora costruito."
+        messagebox.showinfo("Ultimo contesto", text, parent=self.window)
+
+    def ricarica(self):
+        """Rilegge dal disco modello in uso, profilo caricato e memoria (dopo un cambio)."""
+        try:
+            disk = NativeModelConfig.load(self.path) if self.path.exists() else NativeModelConfig()
+        except (OSError, ValueError):
+            return
+        self.current = disk
+        for key, variable in self.values.items():
+            variable.set(str(getattr(disk, key)))
+        self.fast_forward.set(bool(disk.fast_forward))
+        if hasattr(self, "model_label"):
+            self.model_label.set("Modello: " + (Path(disk.model).name if disk.model else "nessuno"))
+        if self.mem_values:
+            from .memory_preferences import MemoryPreferences
+            try:
+                prefs = MemoryPreferences.load(self._memory_path())
+            except (OSError, ValueError):
+                prefs = MemoryPreferences()
+            for key, variable in self.mem_values.items():
+                variable.set(getattr(prefs, key) if isinstance(variable, tk.BooleanVar)
+                             else str(getattr(prefs, key)))
+
+    def _save_memory(self):
+        from dataclasses import replace
+        from .memory_preferences import MemoryPreferences
+        try:
+            current = MemoryPreferences.load(self._memory_path())
+        except (OSError, ValueError):
+            current = MemoryPreferences()
+        changes = {k: (bool(v.get()) if isinstance(v, tk.BooleanVar) else int(v.get().strip()))
+                   for k, v in self.mem_values.items()}
+        replace(current, **changes).save(self._memory_path())
 
     def open_prompt_diagnostics(self):
         """Manual one-turn RAM capture; opening this UI never loads a GGUF."""
@@ -277,6 +376,8 @@ class NativeSettingsWindow:
             revised, reload_needed = update_native_settings(self.current, changes)
             revised.save(self.path)
             self.current = revised
+            if self.mem_values:
+                self._save_memory()      # prima del profilo: salva_in_slot copia anche la memoria
             if revised.model:
                 # 056b: native.json è la base; le modifiche vanno anche nel profilo (slot in uso)
                 # del modello selezionato, così caselle e profili non restano indietro.
@@ -294,7 +395,7 @@ class NativeSettingsWindow:
                 else "Valori usati dalla prossima generazione."))
             return True
         except (OSError, ValueError, TypeError) as exc:
-            messagebox.showerror("Lumi / Gemma",
+            messagebox.showerror("Lumi / Modelli",
                                  "Impostazioni non valide: " + str(exc),
                                  parent=self.window)
             return False
