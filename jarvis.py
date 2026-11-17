@@ -2324,31 +2324,68 @@ def main() -> None:
                 "GPT online non è collegato alle chat isolate F2. Disattiva GPT.")
             write_line("CHAT > Non ho inviato il messaggio a GPT: istanza locale isolata.")
             return
-        if not gpt_enabled.get():
-            submit_gemma_voice(spoken)
-            return
-        # Catena (decisione 17/11 05:05): servizi online nell'ordine della lista (GPT incluso,
-        # con la sua spunta), poi il modello locale. Nessuna domanda sì/no. Mai silenzio.
+        # 056: una sola catena (Basso consumo: offline subito; Veloce: online in ordine).
         conversation_chain(spoken, False)
 
+    last_question = [""]          # 056: l'ultima domanda a un modello, per «approfondisci»
+
+    def fast_mode() -> bool:
+        return settings.get("modalita") == "veloce"
+
+    def ask_online(question: str, typed: bool, deepen: bool = False) -> None:
+        """056 A.3: online solo con il «sì». Domanda a voce e in chat, risposta «sì»/«no» senza
+        «Lumi»; riusa online_yes/online_no e servizi_online.IN_ATTESA (nessuna finestra)."""
+        so = __import__("servizi_online")
+        if not so.disponibili():
+            text = ("Non c'è nessun servizio online pronto: spuntalo e metti la chiave in "
+                    "ONLINE ▾, oppure collega ChatGPT.")
+            write_line("ONLINE > " + text)
+            speak_result(text)
+            return
+        so.IN_ATTESA["domanda"] = (question, typed, deepen)
+        __import__("lumi_comandi").chiedi(
+            "online_yes", "Vado online? Di' sì o no.", write_line, speak_result,
+            no_action="online_no")
+
+    def deepen_last(typed: bool = False) -> None:
+        """«approfondisci» e pulsante «Approfondisci»: la stessa domanda al primo servizio online
+        (con conferma in Basso consumo, diretto in Veloce)."""
+        question = last_question[0]
+        if not question:
+            text = "Non ho una domanda da approfondire."
+            write_line("LUMI > " + text)
+            speak_result(text)
+            return
+        if fast_mode():
+            submit_gemma_voice(question, typed=typed, route="online")
+        else:
+            ask_online(question, typed, True)
+
     def conversation_chain(spoken: str, typed: bool) -> None:
-        """055: UNA catena per voce e testo: i servizi online nell'ordine della lista (GPT è uno
-        di questi, con la sua spunta), poi il modello locale come ultimo ripiego. Nessun sì/no."""
+        """056: voce e testo con UNA catena. Il motore dei comandi è già passato. Basso consumo:
+        tutto va subito al modello offline; l'online solo con il «sì». Veloce: il primo servizio
+        online, con il locale di riserva. Niente classificatore."""
         if __import__("servizi_ricerca").parse(spoken) and lumi_ricerca(spoken):
-            return                       # «cerca/approfondisci online …» anche scritto (055)
+            return                       # «cerca/approfondisci online …» anche scritto
         if __import__("servizi_ricerca").approfondisci_locale(spoken):
-            submit_gemma_voice(spoken, typed=typed, route="locale")   # «approfondisci»: Gemma
+            deepen_last(typed)
             return
-        if __import__("servizi_online").disponibili():
-            submit_gemma_voice(spoken, typed=typed, route="online")
+        so = __import__("servizi_online")
+        if fast_mode():
+            last_question[0] = spoken
+            if so.disponibili():
+                submit_gemma_voice(spoken, typed=typed, route="online")
+            else:
+                local_after_gpt(spoken, typed)
             return
-        try:
-            gpt_listed = "chatgpt_account" in __import__("servizi_online").carica_impostazioni()["attivi"]
-        except Exception:
-            gpt_listed = False
-        if gpt_listed and not active_gpt:
-            write_line("GPT > GPT non collegato: passo al modello locale.")
-        local_after_gpt(spoken, typed)
+        last_question[0] = spoken
+        if so.richiesta_codice(spoken):
+            ask_online(spoken, typed)    # codice e script: sempre online, ma prima il «sì»
+            return
+        if submit_gemma_voice(spoken, typed=typed, route="locale") is False:
+            text = "Non riesco a rispondere adesso: riprova tra poco."
+            write_line("LUMI > " + text)
+            speak_result(text)
 
     def local_after_gpt(spoken: str, typed: bool) -> None:
         """Ultimo anello: modello locale, oppure messaggio chiaro (il codice non va a Gemma)."""
@@ -3529,14 +3566,9 @@ def main() -> None:
             request.set(message)
             write_line("LUMI > " + str(exc))
             return
-        if not active_gpt:
-            request.set("")
-            write_line("TU > " + message)
-            conversation_chain(message, True)
-            return
-        if run_gpt("ask", prompt=prompt, source=message):
-            request.set("")
-            write_line("DOMANDA A GPT > " + message)
+        request.set("")
+        write_line("TU > " + message)
+        conversation_chain(message, True)      # 056: sempre la catena, anche i testi lunghi
 
     def diagnostic_heartbeat() -> None:
         """Independent watchdog: runs even if another event handler fails."""
@@ -4539,10 +4571,12 @@ def main() -> None:
     ricerca_button = hud.add_quick_button("ricerca", "RICERCA ▾", lambda: None, after="model")
     ricerca_menu = __import__("menu_ricerca").MenuRicerca(
         root, ricerca_button,
-        open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Servizi di ricerca")))
+        open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Servizi di ricerca")),
+        notify=lambda text: write_line(text))
     online_menu_button = hud.add_quick_button("online", "ONLINE ▾", lambda: None, after="gpt")
     models_menu = __import__("menu_modelli").MenuModelli(
-        root, online_menu_button, open_settings=lambda: show_settings())
+        root, online_menu_button, open_settings=lambda: show_settings(),
+        notify=lambda text: write_line(text))
     # Telegram (15/11 sera): icona ✈ con i colori dello stato, tendina dei contatti e una
     # voce per contatto nel menu laterale.
     telegram_button = hud.add_quick_button("telegram", "✈", lambda: None, after="memory")
@@ -4568,8 +4602,7 @@ def main() -> None:
 
     register_understanding(
         run_understood_command, understood_catalog, understanding_output,
-        to_model=lambda text: (start_conversation_gpt(text) if gpt_enabled.get()
-                               else submit_gemma_voice(text, typed=True)))
+        to_model=lambda text: conversation_chain(text, True))
     tools_button.configure(command=toggle_console_tools)
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
@@ -4914,8 +4947,12 @@ def main() -> None:
     def resume_online_question(route: str) -> None:
         waiting = __import__("servizi_online").IN_ATTESA
         pending, waiting["domanda"] = waiting["domanda"], None
-        if pending is not None:
-            submit_gemma_voice(pending[0], typed=pending[1], route=route)
+        if pending is None:
+            return
+        if route == "locale" and len(pending) > 2 and pending[2]:
+            write_line("LUMI > Va bene, resto offline.")      # «approfondisci» rifiutato
+            return
+        submit_gemma_voice(pending[0], typed=pending[1], route=route)
 
     def lumi_stop_all() -> bool:
         """«Lumi, fermati» e pulsante «■ Ferma»: voce, risposta del modello, GPT in attesa.

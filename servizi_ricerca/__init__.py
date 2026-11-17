@@ -245,10 +245,14 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
     )).pack(anchor="w", padx=8, pady=5)
     rows = ttk.Frame(box)
     rows.pack(fill="x", padx=8, pady=(0, 6))
-    state = {"vars": {}}
+    state = {"vars": {}, "base": set(settings["attivi"])}
 
     def save(*_):
-        settings["attivi"] = [i for i in settings["ordine"] if state["vars"][i].get()]
+        fresh = carica_impostazioni()          # 056 E: mai riscrivere spunte vecchie
+        settings["attivi"] = __import__("servizi_online").unisci_attivi(
+            fresh["attivi"], settings["ordine"], {i: v.get() for i, v in state["vars"].items()},
+            state["base"])
+        state["base"] = set(settings["attivi"])
         try:
             salva_impostazioni(settings)
         except (OSError, RuntimeError) as exc:

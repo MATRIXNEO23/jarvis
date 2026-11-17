@@ -136,6 +136,13 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Proposta da preparare (non implementare): i comandi di ricerca e navigazione semplici per chiunque, confrontati con ChatGPT, Perplexity e gli assistenti vocali.
 - Più avanti: le risposte che si accavallano quando arrivano più comandi insieme (ID per ogni richiesta). L'utente ha detto «ci pensiamo dopo».
 
+## Dopo la 056: pulizia e riordino (richiesta utente 17/11, 16:42)
+Da fare prima di nuove funzioni (navigazione autonoma inclusa):
+- Riordinare menu e impostazioni per sezioni, in modo intuitivo, veloce e completo, senza duplicati né incoerenze.
+- Trovare e risolvere i doppioni: due cose che fanno la stessa cosa o comandi in conflitto.
+- Togliere i file inutili dal pacchetto (vedi le regole «Pacchetto per l'utente» in AGENTS.md).
+- Metodo: prima un inventario (menu, impostazioni, comandi, file del pacchetto), poi una proposta da far approvare all'utente punto per punto, poi la modifica. Niente cancellazioni senza verifica degli import e senza ok.
+
 ## Da fare per la 056 (decisioni utente 17/11, 15:30, a voce)
 - La catena della 055 (prima online, poi locale) è SBAGLIATA: non l'aveva decisa l'utente. Ordine corretto, fisso:
   1. motore dei comandi: se è un comando lo esegue, senza passare da nessun modello;

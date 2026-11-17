@@ -8,6 +8,7 @@ from pathlib import Path
 DEFAULTS = {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "", "tts_effect": 25,
             "tts_rate": 0, "tts_pitch": 0, "tts_volume": 100,
             "memory_enabled": False, "auto_listen": True,
+            "modalita": "basso_consumo",      # 056 B: «basso_consumo» (offline) o «veloce» (online)
             "keep_awake_fullscreen": False,
             "telegram_enabled": False, "telegram_peer_id": 0,
             "telegram_contact_name": "", "telegram_contacts": [],
@@ -15,6 +16,7 @@ DEFAULTS = {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "", "tts_eff
             "timer_repeat": True, "timer_audio_mode": "auto"}
 
 
+MODALITA = ("basso_consumo", "veloce")
 _VOICE_STYLE_LIMITS = (("tts_rate", -50, 50), ("tts_pitch", -50, 50), ("tts_volume", 10, 100))
 
 
@@ -82,6 +84,8 @@ def load_settings(path: Path | None = None, *, warnings: list[str] | None = None
         data = _read_settings_object(target)
         if type(data.get("gpt_enabled")) is bool:
             result["gpt_enabled"] = data["gpt_enabled"]
+        if data.get("modalita") in MODALITA:
+            result["modalita"] = data["modalita"]
         if type(data.get("tts_enabled")) is bool:
             result["tts_enabled"] = data["tts_enabled"]
         if type(data.get("memory_enabled")) is bool:
@@ -198,7 +202,11 @@ def save_settings(settings: dict, path: Path | None = None) -> None:
             "una copia valida; file non sovrascritto.") from exc
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_suffix(".tmp")
+    modalita = settings.get("modalita", DEFAULTS["modalita"])
+    if modalita not in MODALITA:
+        raise ValueError("modalita must be basso_consumo or veloce")
     tmp.write_text(json.dumps({"gpt_enabled": settings["gpt_enabled"],
+                               "modalita": modalita,
                                "tts_enabled": enabled, "tts_voice": voice,
                                **voice_style,
                                "memory_enabled": memory_enabled,

@@ -147,6 +147,17 @@ def carica_impostazioni(path: Path | None = None) -> dict:
     return data
 
 
+def unisci_attivi(salvati, ordine, voluti: dict, base) -> list:
+    """056 E: il pannello Impostazioni applica SOLO le spunte che l'utente ha cambiato lì
+    (voluti diverso da base) sopra gli «attivi» appena riletti dal file, così non annulla
+    le modifiche fatte intanto dalla tendina ONLINE."""
+    attivi = set(salvati)
+    for ident, valore in voluti.items():
+        if valore != (ident in base):
+            (attivi.add if valore else attivi.discard)(ident)
+    return [i for i in ordine if i in attivi]
+
+
 def salva_impostazioni(data: dict, path: Path | None = None) -> None:
     path = path or _cartella() / "servizi_online.json"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -478,10 +489,14 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
     proponi = tk.BooleanVar(value=settings["proponi_lunghe"])
     rows = ttk.Frame(box)
     rows.pack(fill="x", padx=8)
-    state = {"vars": {}, "models": {}}
+    state = {"vars": {}, "models": {}, "base": set(settings["attivi"])}
 
     def save(*_):
-        settings["attivi"] = [i for i in settings["ordine"] if state["vars"][i].get()]
+        fresh = carica_impostazioni()          # 056 E: mai riscrivere spunte vecchie
+        settings["attivi"] = unisci_attivi(
+            fresh["attivi"], settings["ordine"], {i: v.get() for i, v in state["vars"].items()},
+            state["base"])
+        state["base"] = set(settings["attivi"])
         limits = {}
         for service_id, var in state.get("limits", {}).items():
             value = var.get().strip().replace(".", "")

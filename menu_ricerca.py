@@ -22,10 +22,10 @@ def servizio_attivo(settings, keys, sr):
 
 
 class MenuRicerca(MenuModelli):
-    def __init__(self, root, button, *, open_settings, open_url=None, keys=None, settings_path=None):
+    def __init__(self, root, button, *, open_settings, open_url=None, keys=None, settings_path=None, notify=None):
         self.sr = __import__("servizi_ricerca")
         super().__init__(root, button, open_settings=open_settings, open_url=open_url,
-                         keys=keys or self.sr.chiavi(), settings_path=settings_path)
+                         keys=keys or self.sr.chiavi(), settings_path=settings_path, notify=notify)
 
     def _settings(self):
         return self.sr.carica_impostazioni(self.settings_path)
@@ -33,8 +33,8 @@ class MenuRicerca(MenuModelli):
     def _save(self, settings):
         try:
             self.sr.salva_impostazioni(settings, self.settings_path)
-        except (OSError, RuntimeError):
-            pass
+        except (OSError, RuntimeError) as exc:
+            self.notify("RICERCA / ERRORE > Scelta non salvata: " + str(exc)[:120])
         self.refresh_button()
 
     def refresh_button(self):

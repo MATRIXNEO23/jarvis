@@ -24,7 +24,7 @@ def servizio_in_uso(settings, keys):
 
 class MenuModelli:
     def __init__(self, root, button, *, open_settings, open_url=None, keys=None,
-                 settings_path=None):
+                 settings_path=None, notify=None):
         import servizi_online
         self.so = servizi_online
         self.root = root
@@ -33,6 +33,7 @@ class MenuModelli:
         self.open_url = open_url or __import__("webbrowser").open
         self.keys = keys or servizi_online.Chiavi()
         self.settings_path = settings_path
+        self.notify = notify or (lambda text: None)     # 056 E: gli errori di salvataggio si dicono
         self.popup = None
         button.configure(command=self.toggle)
         root.bind_all("<Button-1>", self._click_anywhere, add="+")
@@ -44,8 +45,8 @@ class MenuModelli:
     def _save(self, settings):
         try:
             self.so.salva_impostazioni(settings, self.settings_path)
-        except (OSError, RuntimeError):
-            pass
+        except (OSError, RuntimeError) as exc:
+            self.notify("ONLINE / ERRORE > Scelta non salvata: " + str(exc)[:120])
         self.refresh_button()
 
     def refresh_button(self):
