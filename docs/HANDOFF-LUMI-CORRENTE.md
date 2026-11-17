@@ -158,6 +158,17 @@ Da fare prima di nuove funzioni (navigazione autonoma inclusa):
 - Togliere i file inutili dal pacchetto (vedi le regole «Pacchetto per l'utente» in AGENTS.md).
 - Metodo: prima un inventario (menu, impostazioni, comandi, file del pacchetto), poi una proposta da far approvare all'utente punto per punto, poi la modifica. Niente cancellazioni senza verifica degli import e senza ok.
 
+## Ripresa 17/11 notte — 056b implementata (approvata 17/11 18:55), solo py_compile su Linux
+- Etichetta build: resta `--number 056` nel workflow f5n (stessa build, nessun cambio al workflow).
+- 1) `native_conversation_session.py`: tolto il budget 8192 e l'override del contatore esatto; vale `prompt_max_tokens` (600) anche col catalogo. Se il catalogo pieno non entra si prova `conversation_router.reduce_intent_context` (azioni pertinenti, poi sole 6 essenziali); se nemmeno così, resta il solo chat. `context_size` predefinito 1024 (native_config.py).
+- 2) «Chat continua» accesa di serie (`contesto_lumi.Contesto`). Vale solo per la sessione offline; l'online resta a 6 scambi.
+- 3) Causa del doppio «TU >»: `submit_gpt` scriveva «TU >» e poi `conversation_chain` → `submit_gemma_voice(typed=True)` lo riscriveva. Ora `chain_typed_once` alza `conversazione_lumi.TU_SCRITTO` durante la catena. Resta noto: dopo il «sì» a «Vado online?» un testo scritto riscrive il «TU >» (da verificare dal vivo).
+- 4) «/nothink»: nel codice non veniva aggiunto da nessuna parte (lo produce il modello/template). Il prompt Qwen3 usa già il blocco `<think>` vuoto, quindi non si aggiunge nulla; `strip_nothink` lo toglie da domanda, risposta e stream.
+- 5) `memory_ui.py`: pulisce i figli prima di disegnare, testo a capo con la larghezza della finestra.
+- 6) Barra: `barra_tasti.TastoBarra` (stile unico, ⏻ azzurro/arancione). Ordine: Modello: nome ▾ ⏻ | Online ▾ | Ricerca ▾ | Mic ⏻ | Memoria ⏻ | Telegram ⏻. ⏻ Telegram = risposte automatiche. «MODELLO ON» e la `/` separatrice tolti.
+- 7) `meteo/icone.py` ridisegnata (sole, sole+nuvola, nuvola, pioggia, temporale, neve, nebbia, luna con fase calcolata da `fase_lunare`); `meteo/service.py` legge `is_day`.
+- Test: tests/test_056b_prompt_e_testo.py, test_056b_barra_meteo.py; adeguati test_056_barra e test_054_profili_modelli. Prove dal vivo da fare dopo la build (misura i token del «ciao» con contesto 1024).
+
 ## Ripresa 17/11 sera — build 056 implementata (decisioni 17/11 16:38, solo punti A, B, C, C2, C3, D, E)
 - Commit: 6345018 (A+E+C3), cffa904 (B+D), f0337c4 (C/C2 meteo), 7254cae (diagnostica, docs); l'ultimo avvia la CI. Solo py_compile su Linux: valgono i test della CI Windows e la build f5n.
 - A: `conversation_chain` (jarvis.py): comandi già passati; Basso consumo = tutto al modello offline (`route="locale"`, niente classificatore); l'online solo dopo «Vado online?» (`ask_online`, riusa `online_yes/online_no` e `servizi_online.IN_ATTESA`, ora con terzo campo «approfondisci»). Codice/script: stessa conferma. «approfondisci» e pulsante «Approfondisci» (chat_bolle.py): `deepen_last`, ultima domanda in `last_question`; conferma in Basso consumo, diretto in Veloce. «cerca/approfondisci online»: conferma `ricerca_yes/no` prima di consumare quota. Il testo scritto lungo passa dalla stessa catena (tolto run_gpt("ask") da submit_gpt).

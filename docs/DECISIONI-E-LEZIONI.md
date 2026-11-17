@@ -1327,3 +1327,9 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Lezione: chi sostituisce un ordine di catena deve cercare anche i rami «automatici» nei moduli sottostanti (qui due blocchi in conversazione_lumi.py forzavano online/locale) e i test AST che citano le vecchie stringhe.
 - Lezione: un editing con indice di stringa trovato troppo presto ha duplicato un blocco di jarvis.py; riparato con confronto e py_compile. Usare ancoraggi univoci.
 - Stato prove: solo py_compile su Linux; test 056 e adeguamenti vanno verificati dalla CI Windows. NOT_TESTED dal vivo: slide, conferma sì/no a voce, meteo reale e icone, «apri il 2», tendina MODELLO.
+
+## 056b (17/11 notte)
+- Decisione utente (18:55): il tetto del prompt offline è 600 token sempre, anche col catalogo; il contesto predefinito è 1024; la chat continua è accesa di serie solo per l'offline.
+- Lezione: un tetto che esiste ma viene ricalcolato altrove (8192 col catalogo, contatore esatto) non è un tetto. Un solo punto calcola il budget e ogni parte (catalogo, cronologia, ricordi) deve starci dentro.
+- Lezione: se due livelli scrivono lo stesso messaggio (chiamante e funzione interna), il proprietario è uno solo; qui il chiamante alza un flag durante la catena.
+- Lezione: prima di cercare «chi aggiunge /nothink» grep su tutto il repo: non lo aggiungeva nessuno, andava solo filtrato.
