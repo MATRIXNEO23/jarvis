@@ -13,7 +13,7 @@ import settings as settings_module
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = (ROOT / "jarvis.py").read_text(encoding="utf-8")
-CATENA = ("conversation_chain", "local_after_gpt", "fast_mode", "ask_online", "deepen_last")
+CATENA = ("conversation_chain", "local_after_gpt", "fast_mode", "ask_online", "deepen_prompt", "deepen_last")
 
 
 def _funzioni(*names):
@@ -23,6 +23,7 @@ def _funzioni(*names):
 
 def _env(modalita, last="", **extra):
     env = dict(settings={"modalita": modalita}, last_question=[last],
+               chat_bubbles=SimpleNamespace(ultimo_scambio=(last, "risposta precedente") if last else None),
                submit_gemma_voice=mock.Mock(return_value=True),
                write_line=mock.Mock(), speak_result=mock.Mock(),
                lumi_ricerca=mock.Mock(return_value=False))
@@ -58,12 +59,17 @@ class BassoConsumoTests(unittest.TestCase):
                 mock.patch("lumi_comandi.chiedi") as chiedi:
             env["conversation_chain"]("approfondisci", False)
         self.assertEqual(chiedi.call_args.args[0], "online_yes")
-        self.assertEqual(so.IN_ATTESA["domanda"], ("la fotosintesi", False, True))
+        prompt = so.IN_ATTESA["domanda"][0]            # 056c: domanda + risposta offline + istruzione
+        self.assertIn("la fotosintesi", prompt)
+        self.assertIn("risposta precedente", prompt)
+        self.assertIn("più a fondo", prompt)
+        self.assertEqual(so.IN_ATTESA["domanda"][1:], (True, True))
         env["submit_gemma_voice"].assert_not_called()
 
     def test_approfondisci_senza_domanda_lo_dice(self):
         env = _env("basso_consumo", last="")
         env["conversation_chain"]("approfondisci", False)
+        self.assertIn("Cosa vuoi approfondire?", env["write_line"].call_args.args[0])
         env["speak_result"].assert_called_once()
         env["submit_gemma_voice"].assert_not_called()
 
@@ -93,7 +99,10 @@ class VeloceTests(unittest.TestCase):
         env = _env("veloce", last="la luna")
         with mock.patch("lumi_comandi.chiedi") as chiedi:
             env["conversation_chain"]("approfondisci", False)
-        env["submit_gemma_voice"].assert_called_once_with("la luna", typed=False, route="online")
+        chiamata = env["submit_gemma_voice"].call_args
+        self.assertEqual(chiamata.kwargs, {"typed": True, "route": "online"})
+        self.assertIn("la luna", chiamata.args[0])
+        self.assertIn("risposta precedente", chiamata.args[0])
         chiedi.assert_not_called()
 
 
@@ -117,7 +126,15 @@ class RispostaNoTests(unittest.TestCase):
     def test_pulsante_approfondisci_sotto_la_risposta(self):
         bolle = (ROOT / "chat_bolle.py").read_text(encoding="utf-8")
         self.assertIn('text="Approfondisci"', bolle)
-        self.assertIn("deepen=lambda: deepen_last()", SRC)
+        self.assertIn("deepen_last(True, question, answer)", SRC)
+        self.assertIn("lambda q=question, a=answer: self.deepen(q, a)", bolle)
+
+    def test_pulsante_usa_domanda_e_risposta_della_bolla(self):
+        env = _env("veloce", last="")
+        env["deepen_last"](True, "perché il cielo è blu?", "Per la diffusione della luce.")
+        arg = env["submit_gemma_voice"].call_args.args[0]
+        self.assertIn("perché il cielo è blu?", arg)
+        self.assertIn("Per la diffusione della luce.", arg)
 
 
 class ApriIlNumeroTests(unittest.TestCase):

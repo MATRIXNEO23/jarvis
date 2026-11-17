@@ -15,6 +15,13 @@ LIMITE = 100
 BOLLA = {"utente": "bolla_utente", "jarvis": "bolla_jarvis"}
 
 
+def _e_approfondisci(text: str) -> bool:
+    try:
+        return bool(__import__("servizi_ricerca").approfondisci_locale(text))
+    except Exception:
+        return False
+
+
 class Bolle:
     def __init__(self, text: tk.Text, *, copy, read, regenerate,
                  limit: int = LIMITE, deepen=None) -> None:
@@ -28,6 +35,7 @@ class Bolle:
         self.bars: dict[str, tk.Widget] = {}  # segno del messaggio -> barra
         self.counter = 0
         self.last_user = ""
+        self.ultimo_scambio = None    # 056c: (domanda, risposta) dell'ultima risposta del modello
         text.tag_configure("bolla_utente", lmargin1=90, lmargin2=90, rmargin=14,
                            background="#0a2233")
         text.tag_configure("bolla_jarvis", lmargin1=6, lmargin2=6, rmargin=90,
@@ -50,6 +58,8 @@ class Bolle:
         if role == "utente":
             self.last_user = body
         elif role == "jarvis":
+            if self.last_user and not _e_approfondisci(self.last_user):
+                self.ultimo_scambio = (self.last_user, body)
             self._barra(body, self.last_user)
         self._taglia()
 
@@ -134,7 +144,7 @@ class Bolle:
                       command=lambda: self.regenerate(question),
                       **style).pack(side="left", padx=(0, 4))
             if self.deepen is not None:
-                tk.Button(bar, text="Approfondisci", command=self.deepen,
+                tk.Button(bar, text="Approfondisci", command=lambda q=question, a=answer: self.deepen(q, a),
                           **style).pack(side="left")
         # Subito sotto il testo della risposta, prima della riga vuota finale.
         self.text.window_create("end-2c", window=bar, padx=6)

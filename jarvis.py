@@ -2387,19 +2387,28 @@ def main() -> None:
             "online_yes", "Vado online? Di' sì o no.", write_line, speak_result,
             no_action="online_no")
 
-    def deepen_last(typed: bool = False) -> None:
-        """«approfondisci» e pulsante «Approfondisci»: la stessa domanda al primo servizio online
-        (con conferma in Basso consumo, diretto in Veloce)."""
-        question = last_question[0]
-        if not question:
-            text = "Non ho una domanda da approfondire."
+    def deepen_prompt(question: str, answer: str) -> str:
+        """056c: «approfondisci» manda online l'ultima domanda INSIEME all'ultima risposta offline."""
+        return ("Domanda dell'utente: " + question.strip() + "\n"
+                "Risposta data dal modello offline: " + answer.strip() + "\n"
+                "Spiega meglio e più a fondo questa risposta, in italiano.")
+
+    def deepen_last(typed: bool = False, question: str | None = None, answer: str | None = None) -> None:
+        """«approfondisci» e pulsante «Approfondisci» (con la domanda e la risposta di quella bolla):
+        online con conferma in Basso consumo, diretto in Veloce. Senza risposta precedente chiede
+        «Cosa vuoi approfondire?»."""
+        if not (question and answer):
+            question, answer = (chat_bubbles.ultimo_scambio or ("", ""))
+        if not (question and answer):
+            text = "Cosa vuoi approfondire?"
             write_line("LUMI > " + text)
             speak_result(text)
             return
+        prompt = deepen_prompt(question, answer)
         if fast_mode():
-            submit_gemma_voice(question, typed=typed, route="online")
+            submit_gemma_voice(prompt, typed=True, route="online")
         else:
-            ask_online(question, typed, True)
+            ask_online(prompt, True, True)
 
     def conversation_chain(spoken: str, typed: bool) -> None:
         """056: voce e testo con UNA catena. Il motore dei comandi è già passato. Basso consumo:
@@ -2906,7 +2915,7 @@ def main() -> None:
         output, copy=copy_chat_text,
         read=lambda value: speaker.speak(value, selected_voice()),
         regenerate=lambda question: submit_local(message_override=question),
-        deepen=lambda: deepen_last())
+        deepen=lambda question=None, answer=None: deepen_last(True, question, answer))
 
     def show_chat_history(title: str, pairs) -> None:
         """Chat aperta dall'elenco: la cronologia salvata al posto dei messaggi di prima."""

@@ -12,7 +12,7 @@ import servizi_ricerca as sr
 
 ROOT = Path(__file__).resolve().parents[1]
 CATENA = ("start_conversation_gpt", "conversation_chain", "local_after_gpt",
-          "fast_mode", "ask_online", "deepen_last")   # 056: Basso consumo / Veloce, conferma online
+          "fast_mode", "ask_online", "deepen_prompt", "deepen_last")   # 056: Basso consumo / Veloce, conferma online
 
 
 def _funzioni(*names):
@@ -33,7 +33,8 @@ def _env(**extra):
                recent_memory_for_gpt=lambda _: "", capability_status_prompt=lambda _: "",
                active_addon_actions=lambda: (), ConversationRejected=ValueError,
                write_line=mock.Mock(), speak_result=mock.Mock(),
-               settings={"modalita": "veloce"}, last_question=[""],      # 056: questi test sono «Veloce»
+               settings={"modalita": "veloce"}, last_question=[""],
+               chat_bubbles=SimpleNamespace(ultimo_scambio=("la fotosintesi", "risposta")),      # 056: questi test sono «Veloce»
                lumi_ricerca=mock.Mock(return_value=False))
     env.update(extra)
     module = ast.Module(body=_funzioni(*CATENA), type_ignores=[])
