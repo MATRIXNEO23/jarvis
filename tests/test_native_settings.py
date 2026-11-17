@@ -16,10 +16,10 @@ class NativeSettingsTests(unittest.TestCase):
     def test_generation_settings_do_not_require_reload(self):
         original = NativeModelConfig()
         updated, reload_required = update_native_settings(
-            original, {"max_output": 256, "temperature": 0.5, "top_k": 40})
+            original, {"max_output": 200, "temperature": 0.5, "top_k": 40})
         self.assertFalse(reload_required)
-        self.assertEqual(original.max_output, 128)
-        self.assertEqual(updated.max_output, 256)
+        self.assertEqual(original.max_output, 256)
+        self.assertEqual(updated.max_output, 200)
 
     def test_context_and_threads_require_reload(self):
         for field, value in (("context_size", 4096), ("threads", 3),
