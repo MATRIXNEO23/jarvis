@@ -136,6 +136,14 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Proposta da preparare (non implementare): i comandi di ricerca e navigazione semplici per chiunque, confrontati con ChatGPT, Perplexity e gli assistenti vocali.
 - Più avanti: le risposte che si accavallano quando arrivano più comandi insieme (ID per ogni richiesta). L'utente ha detto «ci pensiamo dopo».
 
+## Bug 056 visti dall'utente (17/11, 18:30)
+- Messaggio scritto doppio: «ciao» compare due volte come TU, alla stessa ora. Ipotesi: l'invio parte due volte (doppio binding di Invio/pulsante, oppure handle_text e conversation_chain insieme).
+- In chat si vede «/nothink»: il suffisso del template Qwen3 finisce nel testo mostrato e salvato.
+- Doppia risposta: «Smetto subito.» e «Risposta interrotta.». Ipotesi: la seconda richiesta annulla la prima.
+- Dopo «Riavvio il modello» arriva «GEMMA / ERRORE > Generazione locale oltre il tempo richiesto». Probabilmente dipende dalle due richieste in parallelo; da verificare anche le impostazioni del modello, che l'utente forse ha cambiato.
+- Le impostazioni dei modelli compaiono due volte, in Modelli e in Add-on: possibile conflitto (screenshot da ricevere).
+- Barra in alto da rifare (mockup approvato, tema azzurro): ogni voce è un tasto; Modello ▾ con ⏻ nello stesso tasto (via «MODELLO ON»); «Online» e «Ricerca» vicini; Telegram come tasto con on/off; icone meteo disegnate bene (sole, sole e nuvola, nuvola, pioggia, temporale, neve, nebbia, luna con le fasi).
+
 ## Dopo la 056: pulizia e riordino (richiesta utente 17/11, 16:42)
 Da fare prima di nuove funzioni (navigazione autonoma inclusa):
 - Riordinare menu e impostazioni per sezioni, in modo intuitivo, veloce e completo, senza duplicati né incoerenze.
