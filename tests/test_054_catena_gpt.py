@@ -1,4 +1,4 @@
-"""054: catena online gratuiti, poi «Uso GPT?» (sì/no senza finestre), poi gli altri modelli;
+"""054/055: catena servizi online in ordine (GPT compreso, nessun sì/no), poi il modello locale;
 «cerca online» senza chiave Tavily; «approfondisci» senza «online» resta a Gemma."""
 import ast
 import tempfile
@@ -11,7 +11,7 @@ import servizi_online
 import servizi_ricerca as sr
 
 ROOT = Path(__file__).resolve().parents[1]
-CATENA = ("start_conversation_gpt", "conversation_chain", "local_after_gpt", "offer_gpt", "resume_gpt", "send_to_gpt")
+CATENA = ("start_conversation_gpt", "conversation_chain", "local_after_gpt")
 
 
 def _funzioni(*names):
@@ -56,7 +56,8 @@ class GptNonCollegatoTests(unittest.TestCase):
 
     def test_without_online_and_without_gpt_the_question_goes_to_the_local_model_with_a_notice(self):
         env = _env(active_gpt=False)
-        _avvia(env, "che cos'è la fotosintesi", False)
+        with mock.patch("servizi_online.carica_impostazioni", return_value={"attivi": ["chatgpt_account"]}):
+            _avvia(env, "che cos'è la fotosintesi", False)
         env["submit_gemma_voice"].assert_called_once_with(
             "che cos'è la fotosintesi", typed=False, route="locale")
         self.assertIn("non collegato", env["write_line"].call_args_list[0].args[0])
@@ -82,28 +83,11 @@ class GptCollegatoTests(unittest.TestCase):
         env["submit_gemma_voice"].assert_called_once_with("spiegami la relatività", typed=False, route="online")
         env["run_gpt"].assert_not_called()
 
-    def test_without_online_gpt_is_asked_with_the_pending_yes_no_and_no_dialog(self):
+    def test_without_online_gpt_is_not_asked_and_the_local_model_answers(self):
         env = _env(active_gpt=True)
         with mock.patch("lumi_comandi.chiedi") as chiedi:
             _avvia(env, "spiegami la relatività", False)
-        chiedi.assert_called_once()
-        self.assertEqual(chiedi.call_args.args[0], "gpt_yes")
-        self.assertIn("Uso GPT", chiedi.call_args.args[1])
-        self.assertEqual(chiedi.call_args.kwargs["no_action"], "gpt_no")
-        env["run_gpt"].assert_not_called()
-
-    def test_yes_sends_to_gpt_and_no_goes_to_the_local_model(self):
-        env = _env(active_gpt=True)
-        with mock.patch("lumi_comandi.chiedi"):
-            _avvia(env, "spiegami la relatività", False)
-        env["resume_gpt"](True)
-        env["run_gpt"].assert_called_once()
-        self.assertTrue(env["run_gpt"].call_args.kwargs["consent_granted"])
-        env["submit_gemma_voice"].assert_not_called()
-        env = _env(active_gpt=True)
-        with mock.patch("lumi_comandi.chiedi"):
-            _avvia(env, "spiegami la relatività", False)
-        env["resume_gpt"](False)
+        chiedi.assert_not_called()
         env["run_gpt"].assert_not_called()
         env["submit_gemma_voice"].assert_called_once_with(
             "spiegami la relatività", typed=False, route="locale")
@@ -116,12 +100,10 @@ class GptCollegatoTests(unittest.TestCase):
                               "confirm_gpt_inference"):
                 self.assertNotIn(forbidden, names, function.name)
 
-    def test_online_failure_moves_on_to_the_gpt_question_then_the_other_models(self):
+    def test_online_failure_moves_on_to_the_other_models_without_questions(self):
         source = (ROOT / "local_model" / "conversazione_lumi.py").read_text(encoding="utf-8")
-        self.assertIn('("online_gpt", (spoken, typed, note), voice_epoch)', source)
-        self.assertIn('run_action("gpt_offer")', source)
-        self.assertIn('"gpt_yes": lambda: resume_gpt(True)',
-                      (ROOT / "jarvis.py").read_text(encoding="utf-8"))
+        self.assertNotIn("online_gpt", source)
+        self.assertNotIn('"gpt_yes"', (ROOT / "jarvis.py").read_text(encoding="utf-8"))
 
     def test_gpt_failure_after_sending_falls_to_the_local_model(self):
         source = (ROOT / "jarvis.py").read_text(encoding="utf-8")

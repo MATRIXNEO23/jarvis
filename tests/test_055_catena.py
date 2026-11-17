@@ -26,7 +26,7 @@ class Catena(unittest.TestCase):
         self.assertIn("conversation_chain(message, True)", gpt)
         self.assertNotIn('run_gpt("typed_conversation"', gpt)
         chain = _text("conversation_chain")
-        self.assertLess(chain.index("disponibili()"), chain.index("offer_gpt("))
+        self.assertLess(chain.index("disponibili()"), chain.index("local_after_gpt("))
 
     def test_chain_handles_ricerca_online_typed(self):
         self.assertIn("lumi_ricerca(spoken)", _text("conversation_chain"))

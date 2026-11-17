@@ -2327,12 +2327,13 @@ def main() -> None:
         if not gpt_enabled.get():
             submit_gemma_voice(spoken)
             return
-        # Catena (decisione 17/11): prima i servizi online gratuiti, poi GPT solo dopo il
-        # «Uso GPT? sì/no», poi gli altri modelli. Mai silenzio.
+        # Catena (decisione 17/11 05:05): servizi online nell'ordine della lista (GPT incluso,
+        # con la sua spunta), poi il modello locale. Nessuna domanda sì/no. Mai silenzio.
         conversation_chain(spoken, False)
 
     def conversation_chain(spoken: str, typed: bool) -> None:
-        """055: UNA catena per voce e testo: servizi online gratuiti, «Uso GPT?», modello locale."""
+        """055: UNA catena per voce e testo: i servizi online nell'ordine della lista (GPT è uno
+        di questi, con la sua spunta), poi il modello locale come ultimo ripiego. Nessun sì/no."""
         if __import__("servizi_ricerca").parse(spoken) and lumi_ricerca(spoken):
             return                       # «cerca/approfondisci online …» anche scritto (055)
         if __import__("servizi_ricerca").approfondisci_locale(spoken):
@@ -2341,7 +2342,13 @@ def main() -> None:
         if __import__("servizi_online").disponibili():
             submit_gemma_voice(spoken, typed=typed, route="online")
             return
-        offer_gpt(spoken, typed)
+        try:
+            gpt_listed = "chatgpt_account" in __import__("servizi_online").carica_impostazioni()["attivi"]
+        except Exception:
+            gpt_listed = False
+        if gpt_listed and not active_gpt:
+            write_line("GPT > GPT non collegato: passo al modello locale.")
+        local_after_gpt(spoken, typed)
 
     def local_after_gpt(spoken: str, typed: bool) -> None:
         """Ultimo anello: modello locale, oppure messaggio chiaro (il codice non va a Gemma)."""
@@ -2355,56 +2362,6 @@ def main() -> None:
             text = "Non riesco a rispondere adesso: riprova tra poco."
             write_line("LUMI > " + text)
             speak_result(text)
-
-    def offer_gpt(spoken: str, typed: bool) -> None:
-        """GPT collegato: chiede «Uso GPT?» (sì/no senza «Lumi»). Non collegato: avvisa e passa oltre."""
-        if not (gpt_enabled.get() and active_gpt) or busy_gpt:
-            write_line("GPT > GPT non collegato: passo al modello locale." if not active_gpt
-                       else "GPT > GPT occupato: passo al modello locale.")
-            local_after_gpt(spoken, typed)
-            return
-        __import__("orchestratore").IN_ATTESA["gpt"] = (spoken, typed)
-        __import__("lumi_comandi").chiedi(
-            "gpt_yes", "Uso GPT per questa richiesta? Di' sì o no.", write_line, speak_result,
-            no_action="gpt_no")
-
-    def resume_gpt(accepted: bool) -> None:
-        pending, __import__("orchestratore").IN_ATTESA["gpt"] = (
-            __import__("orchestratore").IN_ATTESA.get("gpt"), None)
-        if pending is None:
-            return
-        spoken, typed = pending
-        if accepted:
-            send_to_gpt(spoken, typed)
-        else:
-            local_after_gpt(spoken, typed)
-
-    def send_to_gpt(spoken: str, typed: bool = False) -> None:
-        if not active_gpt:
-            write_line("GPT > GPT non collegato: passo al modello locale.")
-            local_after_gpt(spoken, typed)
-            return
-        if busy_gpt:
-            write_line("GPT > Sto già elaborando. Attendi la risposta.")
-            return
-        snapshot = documents.current.ident if documents.current else None
-        try:
-            live = current_capability_snapshot(snapshot is not None)
-            prompt = build_conversation_prompt(
-                spoken, has_document=snapshot is not None,
-                memory_context=recent_memory_for_gpt(spoken),
-                telegram_send_ready=live["telegram_voice_send"],
-                runtime_info=capability_status_prompt(live),
-                addon_actions=active_addon_actions())
-        except (ValueError, ConversationRejected) as exc:
-            write_line("GPT > " + str(exc))
-            local_after_gpt(spoken, typed)
-            return
-        if not run_gpt("typed_conversation" if typed else "conversation", prompt=prompt,
-                       epoch=conversation_epoch, document_id=snapshot, utterance=spoken,
-                       consent_granted=True):
-            if not busy_gpt:
-                local_after_gpt(spoken, typed)
 
     def toggle_gpt() -> None:
         nonlocal active_gpt, conversation_epoch, gpt_conversation_session_grant
@@ -3558,7 +3515,7 @@ def main() -> None:
                     telegram_send_ready=live["telegram_voice_send"],
                     runtime_info=capability_status_prompt(live),
                     addon_actions=active_addon_actions())
-                # 055: stessa catena della voce (online gratuiti, «Uso GPT?», locale).
+                # 055: stessa catena della voce (servizi online in ordine, GPT compreso, poi locale).
                 request.set("")
                 write_line("TU > " + message)
                 conversation_chain(message, True)
@@ -5115,13 +5072,8 @@ def main() -> None:
                                  write_line("ONLINE > Online attivo finché non spegni il cervello online."),
                                  resume_orchestrated("online")),
          "orch_local": lambda: resume_orchestrated("locale"),
-         # 17/11: «Uso GPT? sì/no» dopo i servizi online gratuiti.
-         "gpt_yes": lambda: resume_gpt(True),
-         "gpt_no": lambda: resume_gpt(False),
          "gpt_consent_yes": lambda: grant_gpt_voice_consent(True),
          "gpt_consent_no": lambda: grant_gpt_voice_consent(False),
-         "gpt_offer": lambda: offer_gpt(*(__import__("orchestratore").IN_ATTESA.pop("gpt_offerta", None)
-                                          or ("", False))),
          "orch_yes": lambda: __import__("orchestratore").rispondi_permesso(True),
          "orch_no": lambda: __import__("orchestratore").rispondi_permesso(False),
          # Passo 11: risposta a «Intendevi …?» del classificatore leggero.

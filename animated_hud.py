@@ -289,13 +289,17 @@ class JarvisHUD:
             bd=0,relief="flat",cursor="hand2")
         if self.frame.tk.call("tk", "windowingsystem") != "win32":
             self.exit_button.pack(side="right",padx=(5,4))
+        # 055: colonna a destra = pulsanti _ □ X (aggiunti da window_chrome) sopra l'ingranaggio.
+        corner=tk.Frame(header,bg=BG)
+        corner.pack(side="right")
+        parent._jarvis_window_corner=corner
         self.gear=tk.Button(
-            header,text="⚙",command=on_settings,
+            corner,text="⚙",command=on_settings,
             fg=CYAN,bg=BG,activeforeground=WHITE,
-            activebackground=BG,font=("Segoe UI Symbol",21),
+            activebackground=BG,font=("Segoe UI Symbol",17),
             bd=0,relief="flat",cursor="hand2")
-        self.gear.pack(side="right",padx=(8,12))
-        parent._jarvis_window_anchor=self.gear     # 055: _ □ X nell'angolo, a destra dell'ingranaggio
+        self.gear.pack(side="top",anchor="e",padx=(8,12))
+        parent._jarvis_window_anchor=self.gear     # 055: _ □ X sopra l'ingranaggio
         self.state_text=tk.StringVar(
             value="MIC  OFF    /    GPT  OFF    /    MEMORIA  OFF")
         self._quick_toggle_handlers = {}

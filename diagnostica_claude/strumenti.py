@@ -75,9 +75,12 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
         for ident in settings["ordine"]:
             service = servizi_online.PER_ID[ident]
             state = quote.stato(ident, limite_utente=settings.get("limiti", {}).get(ident))
-            services.append({"id": ident, "nome": service.nome, "spuntato": ident in settings["attivi"],
-                             "chiave": bool(keys.leggi(ident)), "oggi": state.get("testo"),
-                             "colore": state.get("colore")})
+            account = service.tipo == "account"      # GPT dal browser: nella lista come gli altri
+            services.append({"id": ident, "nome": service.nome, "posizione": len(services) + 1,
+                             "spuntato": ident in settings["attivi"], "tipo": service.tipo,
+                             "chiave": None if account else bool(keys.leggi(ident)),
+                             "gpt_collegato": servizi_online._account_pronto() if account else None,
+                             "oggi": state.get("testo"), "colore": state.get("colore")})
         return {"ok": True, "versione": __import__("impostazioni_menu").versione(),
                 "usa_sempre": settings["usa_sempre"],
                 "proponi_lunghe": settings["proponi_lunghe"],

@@ -138,8 +138,8 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 
 ## Da fare per la 055 (decisioni utente 17/11, notte)
 - Decisioni dell'utente del 17/11 alle 05:04:
-  - GPT (dal browser) va nella stessa lista dei servizi online, con la sua spunta e il suo ordine, e non più in un passaggio separato. Da confermare se la domanda «Uso GPT?» sparisce.
-  - Pulsanti _ □ X: a destra, sopra l'ingranaggio. Nella 055 sono accanto, vanno spostati.
+  - GPT (dal browser) va nella stessa lista dei servizi online, con la sua spunta e il suo ordine, e non più in un passaggio separato. FATTO 17/11 (approvato alle 05:05): la domanda «Uso GPT?» è sparita.
+  - Pulsanti _ □ X: a destra, sopra l'ingranaggio. FATTO 17/11: colonna `_jarvis_window_corner` in animated_hud.py, window_chrome.py vi mette i pulsanti sopra l'ingranaggio (da vedere dal vivo).
 - Ricerca: al posto dell'interruttore «RICERCA on/off» in alto, un menu a tendina come quello dei servizi online: elenco dei servizi di ricerca, ciascuno con la sua spunta e la sua barra di quota.
 - Modelli: «Aggiungi modello…» non copia più il file, lo usa da dove si trova. Se il file sparisce, Lumi lo segnala. L'elenco e «cambia modello» devono vedere i modelli aggiunti (bug 054: Qwen3 copiato in modelli/ non compariva).
 - Modelli: 3 posizioni fisse (1/2/3) con modelli preassegnati per passare velocemente dall'uno all'altro, con l'elenco completo sotto.
@@ -202,6 +202,10 @@ Stato: codice e test scritti, **non eseguiti in locale** (regola: solo CI Window
 - Il fix «dopo il sì a Uso GPT? la domanda va subito a GPT» NON è implementato: l'utente non l'ha ancora approvato (proposta da annotare).
 - Secondo giro (run 44011730454): i test del trasporto GPT simulavano il consenso con messagebox.askyesno, rimosso dalla 055 per scelta; nuovo tests/consenso_finestra.py (stessa logica 054) usato dalle fixture test_activity_status e test_file_refinement. La conferma a voce vera resta provata in test_055_*.
 - Esito CI: vedi commit successivo/Run nel messaggio di consegna. Niente test su Linux, solo py_compile.
+
+## Ripresa 17/11 mattina — GPT nella lista, pulsanti sopra l'ingranaggio (055)
+- GPT dal browser è la voce «ChatGPT (tuo account)» (id chatgpt_account) della lista servizi online, con spunta e posizione. `conversation_chain` prova i servizi in ordine e poi il locale; tolti offer_gpt, resume_gpt, send_to_gpt, le azioni gpt_yes/gpt_no/gpt_offer e il passaggio «online_gpt». Codice/script restano sempre online. Nessuna finestra Sì/No nella catena; il consenso a voce resta solo per Telegram e ricerca file.
+- lumi_online mostra posizione, tipo e gpt_collegato per ogni servizio. Test: tests/test_055_gpt_in_lista.py (cima, fondo, senza spunta, non collegato) e test aggiornati 054/selected/055_catena. Solo py_compile su Linux.
 
 ## Ripresa 17/11 — build 053: cancellazione memoria a sezioni (da provare dal vivo)
 - Decisione utente: la cancellazione si sceglie per sezione. Impostazioni > Memoria generale ha 4 pulsanti (Cancella chat / ricordi / progetti / tutto) e a voce «cancella le chat», «cancella i ricordi», «cancella i progetti», «cancella tutto». Ogni volta sì/no con messaggio semplice.

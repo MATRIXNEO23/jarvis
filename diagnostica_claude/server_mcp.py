@@ -51,7 +51,7 @@ STRUMENTI = [
                      "Gemma; senza argomenti restituisce l'ultimo catturato (sezioni e token)."),
      "op": "prompt", "props": {"arma": {"type": "boolean"}}},
     {"name": "lumi_online",
-     "description": "Servizi online: spuntati, con chiave, quota di oggi e soglie.",
+     "description": "Servizi online in ordine (GPT dal browser compreso): posizione, spunta, chiave o collegamento GPT, quota di oggi e soglie.",
      "op": "online", "props": {}},
     {"name": "lumi_ricerca",
      "description": "Servizi di ricerca online (Tavily, Exa, Firecrawl, Linkup): spunta, chiave presente, pronto.",

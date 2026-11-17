@@ -1312,3 +1312,8 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 ## 17/11 — Correzione CI 055 (run 44009240767)
 - Lezione: una variabile `nonlocal` aggiunta a una funzione annidata rompe i test che la estraggono con ast; per stato piccolo usare un attributo della funzione. File di testo scritti con `mode="w"` su Windows convertono \n: usare newline="\n" quando il contenuto si confronta o si ripristina. Un `isinstance` su classi Tk va fatto con classi fissate all'import (test con tkinter.Tk simulato).
 - Test cambiati solo dove il comportamento 055 è deciso (ordine elenco, profili per modello, servizi collegati, catena unica). Proposta non implementata: dopo il sì a «Uso GPT?» inviare subito la domanda in attesa a GPT (serve approvazione utente).
+
+## 055: GPT nella lista dei servizi online, pulsanti sopra l'ingranaggio — 2026-11-17
+- Decisione utente (17/11 05:05): GPT dal browser è una voce della lista con spunta e ordine, come Gemini, Groq e OpenRouter; «Uso GPT?» sparisce, il locale è l'ultimo ripiego. Codice e script restano sempre online. Pulsanti _ □ X in alto a destra sopra l'ingranaggio.
+- Lezione: la voce GPT esisteva già (chatgpt_account, tipo account); bastava togliere il passaggio separato nella catena invece di crearne un'altra. Un GPT spuntato ma non collegato non blocca: `chiedi` annota il motivo e passa al successivo.
+- Pulsanti: l'header ha una colonna `_jarvis_window_corner`; window_chrome vi impila i pulsanti (compatti) sopra l'ingranaggio. Altre finestre senza colonna restano come prima.

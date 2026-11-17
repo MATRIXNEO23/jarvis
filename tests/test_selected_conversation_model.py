@@ -28,11 +28,11 @@ class SelectedConversationModelTests(unittest.TestCase):
                    active_addon_actions=lambda: (), ConversationRejected=ValueError,
                    write_line=Mock(), speak_result=Mock())
         chain = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'conversation_chain')
-        exec(compile(ast.Module(body=[callback, chain], type_ignores=[]), 'real-voice-router', 'exec'), env)
+        after = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'local_after_gpt')
+        exec(compile(ast.Module(body=[callback, chain, after], type_ignores=[]), 'real-voice-router', 'exec'), env)
         with __import__('unittest').mock.patch('servizi_online.disponibili', return_value=False):
             env['start_conversation_gpt']('Parliamo della giornata')
-        gemma.assert_not_called()
-        online.assert_called_once()      # 17/11: GPT connesso passa da «Uso GPT?» (offer_gpt)
+        gemma.assert_called_once_with('Parliamo della giornata', typed=False, route='locale')   # 055: nessun «Uso GPT?»
 
     def test_console_selected_gpt_wins_over_configured_gemma(self):
         import test_typed_timer_routing as fixture
@@ -173,11 +173,11 @@ class SelectedConversationModelTests(unittest.TestCase):
                    try_self_diagnostic=Mock(return_value=False), submit_gemma_voice=Mock(),
                    offer_gpt=Mock(), write_line=Mock(), speak_result=Mock())
         chain = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'conversation_chain')
-        exec(compile(ast.Module(body=[callback, chain], type_ignores=[]), 'actual-ptt', 'exec'), env)
+        after = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'local_after_gpt')
+        exec(compile(ast.Module(body=[callback, chain, after], type_ignores=[]), 'actual-ptt', 'exec'), env)
         with __import__('unittest').mock.patch('servizi_online.disponibili', return_value=False):
             env['start_conversation_gpt']('Parliamo')
-        env['offer_gpt'].assert_called_once_with('Parliamo', False)   # non collegato: offer_gpt passa oltre
-        env['submit_gemma_voice'].assert_not_called()
+        env['submit_gemma_voice'].assert_called_once_with('Parliamo', typed=False, route='locale')   # 055: GPT non collegato, si passa oltre
 
     def test_ptt_free_speech_routes_without_overwriting_console_draft(self):
         import test_voice_corrections_review as fixture

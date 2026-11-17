@@ -107,9 +107,19 @@ def install_window_chrome(root):
                 background = content.cget("background")
             window.configure(background=background)
 
-        buttons = tk.Frame(host, bg=background, name="jarvis_window_buttons")
+        # 055 (decisione 17/11 05:05): _ □ X in alto a destra, SOPRA l'ingranaggio. L'header
+        # offre una colonna (_jarvis_window_corner) che contiene pulsanti e ingranaggio.
+        corner = getattr(window, "_jarvis_window_corner", None) if header is not None else None
+        buttons = tk.Frame(corner if corner is not None else host, bg=background,
+                           name="jarvis_window_buttons")
         window._jarvis_window_buttons = buttons
-        if header is not None:
+        if corner is not None:
+            anchor = getattr(window, "_jarvis_window_anchor", None)
+            try:
+                buttons.pack(side="top", anchor="e", before=anchor) if anchor is not None else buttons.pack(side="top", anchor="e")
+            except tk.TclError:
+                buttons.pack(side="top", anchor="e")
+        elif header is not None:
             anchor = getattr(window, "_jarvis_window_anchor", None)
             try:
                 buttons.pack(side="right", before=anchor) if anchor is not None else buttons.pack(side="right")
@@ -145,11 +155,12 @@ def install_window_chrome(root):
         for label, name, action in (("×", "close", close),
                                     ("□", "maximize", toggle_maximize),
                                     ("–", "minimize", minimize)):
-            button = tk.Button(buttons, text=label, name=name, command=action, width=4,
+            compact = {"font": ("Segoe UI", 8), "width": 3} if corner is not None else {"width": 4}
+            button = tk.Button(buttons, text=label, name=name, command=action, **compact,
                                bg=background, fg="#000000" if sum(window.winfo_rgb(background)) > 98000
                                else "#d9f3ff", activebackground="#16415a",
                                activeforeground="#ffffff", bd=0, highlightthickness=0)
-            button.pack(side="right", ipady=3)
+            button.pack(side="right", ipady=0 if corner is not None else 3)
 
         drag_origin = None
 
