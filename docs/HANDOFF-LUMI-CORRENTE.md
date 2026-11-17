@@ -137,6 +137,12 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Profili: 3 profili per OGNI singolo modello, non per famiglia.
 - Impostazioni modelli: si trovano solo in «Modelli». La pagina dell'add-on tiene solo attiva/disattiva e il pulsante «Apri impostazioni modelli».
 - Bug 054 (prova 17/11 03:41): «approfondisci la fotosintesi» apre ancora la finestra Windows «Conferma GPT online» (Sì/No). Va tolta: la scelta sì/no si fa a voce, senza «Lumi». Controllare anche perché «approfondisci» chiede GPT invece di andare a Gemma.
+- Prove dal vivo 054 (17/11 03:45, diagnostica):
+  - ok: «cerca online meteo Roma» con Tavily, 5 fonti in 3 s;
+  - ok: «approfondisci la fotosintesi» passa al modello locale;
+  - ko: la versione 054 non compare in lumi_stato né in lumi_online;
+  - ko: «cambia modello» non elenca Qwen3 1.7B (bug noto);
+  - ko: una domanda generica non passa dai servizi gratuiti né da «Uso GPT?». Va subito al locale e poi risponde «Non riesco a rispondere adesso», con timeout di 80 s.
 - Pulsanti _ □ X in alto a destra, sopra l'ingranaggio (non fatto nella 054).
 - Prima delle correzioni: leggere il FIX di Codex in docs/audit/, proporre all'utente le modifiche punto per punto e partire solo con il suo ok.
 
