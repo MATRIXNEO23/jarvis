@@ -162,6 +162,12 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 2. Valori di partenza per ogni modello nuovo: contesto 768 e tetto del prompt 500, VISIBILI nella pagina Modelli. Ogni modello li cambia nel proprio profilo. Il resto dell'audit resta com'è (chat continua accesa, cronologia 200).
 3. «Contesto» e «Memoria del prompt» uniti in un solo blocco, salvati nello stesso posto.
 4. Aggiungere «meteo domani», con aiuto e frasi a voce.
+5b. Barra della 056b vista dall'utente (foto delle 21:16):
+   - è tagliata a destra (Telegram troncato) e non corrisponde al mockup;
+   - ⏻ compare come un quadratino (il font non ha il simbolo);
+   - il nome del modello è troppo lungo;
+   - Telegram NON doveva diventare la scritta «Telegram»: va tenuto il SIMBOLO originale con i suoi colori di stato;
+   - l'icona meteo (San Venanzo 7°) non si capisce ancora.
 5. L'utente dice che i tasti della barra in alto NON sono come nel mockup approvato (dettagli da raccogliere con uno screenshot).
 
 ## 056b, aggiunte decise con l'utente (17/11, 19:10-20:09, a voce)
