@@ -137,6 +137,9 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Più avanti: le risposte che si accavallano quando arrivano più comandi insieme (ID per ogni richiesta). L'utente ha detto «ci pensiamo dopo».
 
 ## Da fare per la 055 (decisioni utente 17/11, notte)
+- Decisioni dell'utente del 17/11 alle 05:04:
+  - GPT (dal browser) va nella stessa lista dei servizi online, con la sua spunta e il suo ordine, e non più in un passaggio separato. Da confermare se la domanda «Uso GPT?» sparisce.
+  - Pulsanti _ □ X: a destra, sopra l'ingranaggio. Nella 055 sono accanto, vanno spostati.
 - Ricerca: al posto dell'interruttore «RICERCA on/off» in alto, un menu a tendina come quello dei servizi online: elenco dei servizi di ricerca, ciascuno con la sua spunta e la sua barra di quota.
 - Modelli: «Aggiungi modello…» non copia più il file, lo usa da dove si trova. Se il file sparisce, Lumi lo segnala. L'elenco e «cambia modello» devono vedere i modelli aggiunti (bug 054: Qwen3 copiato in modelli/ non compariva).
 - Modelli: 3 posizioni fisse (1/2/3) con modelli preassegnati per passare velocemente dall'uno all'altro, con l'elenco completo sotto.
