@@ -1,7 +1,7 @@
 """056b: il contesto mandato online cresce con la richiesta (richiesta utente 17/11 19:01).
 
 Domanda breve («ciao», «che ore sono») = solo l'ultimo scambio. «Approfondisci» e richieste lunghe
-= fino a 6 scambi. Allegati/schede di Lumi (focus file e programmi) solo se la frase li nomina.
+= fino a 6 scambi. Allegati e schede (focus file e programmi) solo se non è una domanda breve senza riferimenti.
 I token stimati (caratteri / 4) restano in ULTIMO per il log e la diagnostica."""
 from __future__ import annotations
 
@@ -48,12 +48,6 @@ def proporziona(raw: str, spoken: str) -> str:
                 scambi = scambi[-MAX_SCAMBI_AMPIO:]
             if "breve" in parsed:
                 parsed["breve"] = scambi
-            focus = parsed.get("focus")
-            if isinstance(focus, dict) and not _RIFERIMENTI.search(spoken or ""):
-                for key in ("file_results", "program_request"):
-                    focus.pop(key, None)       # allegati e schede solo se servono
-                if not focus:
-                    parsed.pop("focus", None)
         out = json.dumps(parsed, ensure_ascii=False)
     ULTIMO.clear()
     ULTIMO.update({"profilo": kind, "caratteri": len(out), "token_stimati": (len(out) + 3) // 4,

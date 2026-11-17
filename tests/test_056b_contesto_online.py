@@ -12,14 +12,13 @@ RAW = json.dumps({"breve": SCAMBI, "progress": [1], "permanente": {"related": [1
 class ContestoOnlineTests(unittest.TestCase):
     def test_saluto_solo_ultimo_scambio(self):
         out = json.loads(co.proporziona(RAW, "ciao"))
-        self.assertEqual(out, {"breve": [SCAMBI[-1]]})
+        self.assertEqual(out, {"breve": [SCAMBI[-1]]})      # niente focus/allegati/schede
         self.assertEqual(co.ULTIMO["profilo"], "minimo")
         self.assertGreater(co.ULTIMO["token_stimati"], 0)
 
     def test_approfondisci_fino_a_sei_scambi(self):
         out = json.loads(co.proporziona(RAW, "approfondisci il tema della Roma antica"))
         self.assertEqual(len(out["breve"]), 6)
-        self.assertNotIn("file_results", out["focus"])      # allegati solo se servono
         self.assertEqual(co.ULTIMO["profilo"], "ampio")
 
     def test_file_nominato_tiene_la_scheda(self):

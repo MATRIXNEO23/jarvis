@@ -15,7 +15,7 @@ class NativeSettingsEntryTests(unittest.TestCase):
         callback = next(n for n in main.body if isinstance(n, ast.FunctionDef)
                         and n.name == "open_native_model_settings")
         body = ast.unparse(callback)
-        self.assertIn('settings_navigation.mostra("Modelli", "Modelli offline")', body)
+        self.assertIn("settings_navigation.mostra('Modelli', 'Modelli offline')", body)
         self.assertNotIn("Toplevel", body)
         self.assertIn("embed=True", text)
         self.assertNotIn("create_native_provider(", text)

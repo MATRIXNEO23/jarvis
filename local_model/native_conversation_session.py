@@ -297,14 +297,14 @@ class NativeConversationSession:
             rule = length_rule(config, latest)
             tail = ("\n(" + rule + ")") if rule else ""
 
-            def messages_for(history, prefix, recall=""):
+            def messages_for(history, prefix, recall="", marker=False):
                 messages = [{"role": role, "content": text}
                             for pair in history for role, text in pair]
                 messages.append({"role": "user", "content": recall + latest + tail})
                 # 056b: la conversazione precedente è segnata in cima (testo fisso, stabile per il
                 # fast forwarding) e l'ultimo messaggio resta intatto.
                 from .prompt_breve import SEPARATORE
-                head = (prefix or "") + (SEPARATORE if history else "")
+                head = (prefix or "") + (SEPARATORE if history and marker else "")
                 if head:
                     messages[0] = dict(messages[0], content=head + messages[0]["content"])
                 return messages
@@ -420,6 +420,10 @@ class NativeConversationSession:
                 if getattr(memory_context, "attachment", ()):
                     attachment_note = "L'allegato non entra nel contesto del modello locale."
             messages = messages_for(history, instructions, recall)
+            if history:   # il segno «conversazione precedente» solo se entra nel budget
+                marked = messages_for(history, instructions, recall, marker=True)
+                if measure(_format_family(marked, model_family(config.model))) <= budget:
+                    messages = marked
             final_size = measure(_format_family(messages, model_family(config.model)))
             if final_size > budget:
                 raise ValueError("Prompt oltre il contesto configurato.")
