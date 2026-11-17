@@ -142,6 +142,7 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - Doppia risposta: «Smetto subito.» e «Risposta interrotta.». Ipotesi: la seconda richiesta annulla la prima.
 - Dopo «Riavvio il modello» arriva «GEMMA / ERRORE > Generazione locale oltre il tempo richiesto». Probabilmente dipende dalle due richieste in parallelo; da verificare anche le impostazioni del modello, che l'utente forse ha cambiato.
 - Le impostazioni dei modelli compaiono due volte, in Modelli e in Add-on: possibile conflitto (screenshot da ricevere).
+- CAUSA DIMOSTRATA del blocco (motore.log, 18:45): con context_size 2048 il prompt arriva a 1500-1700 token. Sul Pavilion si elaborano circa 8 token/s, quindi ci vogliono 200 s e scatta il timeout con 0 token generati. Quando funzionava il contesto era 1024 (prompt di 400-600 token). Correzione temporanea fatta da Claude: context_size portato a 1024 in native.json e profili.json (Jarvis-Gemma-Trial), con riavvio. Ora «ciao» risponde (658/1024, 90 s, 20 token). Per la 056b: predefinito 1024 e prompt più piccolo per le domande brevi (638 token per un «ciao» sono troppi).
 - Pagina Modelli (screenshot 18:37):
   - è intitolata «Modello locale Gemma (sperimentale)» e mescola caselle 1/2/3, elenco, profili, «Anteprima multimodello», memoria e autorizzazioni GPT;
   - è duplicata nella pagina dell'add-on.
