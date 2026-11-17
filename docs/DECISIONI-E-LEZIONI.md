@@ -1281,3 +1281,9 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 **Alternative scartate**: aggiungere in `lumi_comandi` un'azione con argomenti (si è usato lo schema già presente dell'hook `github`/`ricerca`); un nuovo contenitore per i risultati della ricerca (si riusa la finestra risultati file, `show_results`, con `on_select` sempre valido); adattatori Exa/Firecrawl/Linkup scritti a memoria.
 **Lezioni**: (a) i test di funzioni annidate in `jarvis.py` si fanno estraendo la funzione con AST e dandole un ambiente minimo (per le variabili `nonlocal` basta una funzione contenitore); (b) prima di creare un meccanismo cercare quello esistente: «sì senza Lumi» c'era già, mancava solo in un punto (preferenze); (c) un comando locale va in `lumi_comandi.handle_text`, che è il primo gestore, altrimenti la frase arriva a Gemma; (d) nessun test eseguito in locale: la verifica è la CI Windows e la prova dal vivo.
 
+
+## 17/11/2026 — Cancellazione della memoria a sezioni
+- Problema: clear_all() cancellava solo chat e ricevute (non i ricordi), ma il pulsante prometteva «memoria generale» (FIX-051-01, P1).
+- Decisione utente: sezioni separate chat / ricordi / progetti / tutto, ciascuna con conferma sì/no in parole semplici, anche a voce.
+- Scelta tecnica: nessun sistema parallelo; clear_all resta «chat», si aggiunge clear_ricordi (tabella e indice FTS nella stessa transazione) e la cancellazione progetti esistente (menu_laterale) è stata generalizzata. Le frasi a voce stanno nel catalogo comandi (sezione «Memoria»).
+- Prove: test su DB e cartelle temporanee; il collaudo vale solo sulla CI Windows. Lezione: il testo del pulsante deve dire esattamente che cosa cancella.

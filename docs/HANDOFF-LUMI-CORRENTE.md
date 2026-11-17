@@ -130,6 +130,11 @@ Stato: codice e test scritti, **non eseguiti in locale** (regola: solo CI Window
 
 **Da provare dal vivo (build 052)**: «chiudi i risultati» dopo una ricerca file (deve chiudere solo la finestra, subito); «scrivimi uno script che …» con online acceso e spento; «cambia modello» → elenco a voce e in finestra, «2» senza «Lumi», riavvio e messaggio col nuovo modello; «Lumi, ricordati che preferisco risposte brevi» → «sì» senza «Lumi»; Impostazioni > Modelli > Servizi di ricerca (link e chiave Tavily, pulsante Prova); «cerca online …» e «approfondisci online …» con Tavily (poi con chiave sbagliata per vedere il passaggio al successivo); `lumi_ricerca` e `lumi_modelli` dalla diagnostica; musica all'avvio senza blocchi.
 
+## Ripresa 17/11 — build 053: cancellazione memoria a sezioni (da provare dal vivo)
+- Decisione utente: la cancellazione si sceglie per sezione. Impostazioni > Memoria generale ha 4 pulsanti (Cancella chat / ricordi / progetti / tutto) e a voce «cancella le chat», «cancella i ricordi», «cancella i progetti», «cancella tutto». Ogni volta sì/no con messaggio semplice.
+- Codice: cancella_memoria.py (sezioni, messaggi, frasi, esegui); SecondBrain.clear_ricordi() (tabella + FTS nella stessa transazione, opzionale per progetti); menu_laterale.cancella_tutti_i_progetti() (chat, cartelle nel Cestino, ricordi del progetto) riusata da cancella_vecchi_progetti; jarvis.py clear_saved_memory(section) e memory_wipe_command (voce, prima di preference_command); catalogo comandi: sezione «Memoria». Chiude il P1 di FIX-051-01 su clear_all.
+- Test: tests/test_cancella_memoria.py (solo DB/cartelle temporanee). Workflow f5n alzato a 053. Da fare: prova dal vivo (pulsanti e frasi a voce).
+
 ## Ripresa 16/11 23:58 — build 051 pronta, prove dal vivo da fare
 - CI Windows verde sul pacchetto 35d63f2 (run su 185fbc8). Build 051 riuscita: artefatto lumi-051-prova-candidate, run 43811765732. Corretto il workflow: anche il nome dell'artefatto va aggiornato a ogni build (era rimasto 050).
 - Il push sulla PR avvia già la build: non lanciarne un'altra con workflow run (doppioni annullati).
