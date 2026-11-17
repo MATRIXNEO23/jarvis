@@ -151,6 +151,9 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
 - «Memoria locale - impostazioni»: la pagina si disegna sopra la precedente (lettere fantasma a sinistra) e il testo esce dal bordo.
 - Barra in alto da rifare (mockup approvato, tema azzurro): ogni voce è un tasto; Modello ▾ con ⏻ nello stesso tasto (via «MODELLO ON»); «Online» e «Ricerca» vicini; Telegram come tasto con on/off; icone meteo disegnate bene (sole, sole e nuvola, nuvola, pioggia, temporale, neve, nebbia, luna con le fasi).
 
+## 057, primo punto (utente 17/11 19:03)
+Le impostazioni sono duplicate tra «Modello locale Gemma» (Configura Gemma locale) e la sezione multimodello/«I miei modelli»/profili, oltre che nella pagina dell'add-on. L'utente: i modelli andavano messi DENTRO la sezione del modello locale, senza crearne un'altra. Nella 057: una sola pagina «Modelli offline» (caselle, elenco, profili e configurazione del modello selezionato), via i doppioni. Nella 056b: solo l'unica fonte del modello in uso (native.json e profili coerenti).
+
 ## Richiesta utente 17/11 19:01: contesto online proporzionato
 Una domanda breve («ciao») non deve mandare migliaia di token online. Proposta (da approvare): il contesto cresce con la richiesta. Domanda breve = solo istruzioni minime e l'ultimo scambio; «approfondisci» e richieste lunghe = fino a 6 scambi; allegati e scheda di Lumi solo se servono. Nel log e nella diagnostica, i token mandati per ogni richiesta. Restano valide le soglie del 15/11: 80% della quota e conferma oltre ~8.000 token.
 
