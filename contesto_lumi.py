@@ -50,8 +50,25 @@ def percorso() -> Path:
     return Path(local) / "Jarvis" / "contesto.json"
 
 
+def _memoria_percorso() -> Path:
+    from local_model.memory_preferences import default_memory_preferences_path
+    return default_memory_preferences_path()
+
+
 def carica(path: Path | None = None) -> Contesto:
-    """Valori iniziali se il file manca o è danneggiato (non viene riscritto)."""
+    """Valori iniziali se il file manca o è danneggiato (non viene riscritto).
+    056c: senza `path` si legge dalla memoria del profilo (memory.native.json, stesso posto della
+    memoria del prompt); se lì non c'è ancora, vale il vecchio contesto.json."""
+    if path is None:
+        try:
+            memoria = _memoria_percorso()
+            side = memoria.with_suffix(".native.json")
+            if side.exists() and "chat_continua" in json.loads(side.read_text(encoding="utf-8")):
+                from local_model.memory_preferences import MemoryPreferences
+                prefs = MemoryPreferences.load(memoria)
+                return Contesto(prefs.chat_continua, prefs.ricordi_locale).validate()
+        except (OSError, RuntimeError, ValueError, TypeError, UnicodeError):
+            pass
     try:
         path = path or percorso()
         data = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -65,6 +82,17 @@ def carica(path: Path | None = None) -> Contesto:
 
 def salva(value: Contesto, path: Path | None = None) -> None:
     value.validate()
+    if path is None:                       # 056c: stesso posto della memoria del prompt
+        from dataclasses import replace
+        from local_model.memory_preferences import MemoryPreferences
+        memoria = _memoria_percorso()
+        try:
+            prefs = MemoryPreferences.load(memoria)
+        except ValueError:
+            prefs = MemoryPreferences()
+        replace(prefs, chat_continua=value.chat_continua,
+                ricordi_locale=value.ricordi_locale).save(memoria)
+        return
     path = Path(path or percorso())
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temp = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
@@ -161,42 +189,6 @@ def lettore_chat(reader, *, forget=None, settings: Contesto | None = None):
     elif reader is not None and hasattr(reader, "recent_pairs"):
         read.recent_pairs = reader.recent_pairs
     return read
-
-
-def costruisci_sezione(parent, notify):
-    """Riquadro «Contesto» nelle Impostazioni; salva subito a ogni modifica."""
-    import tkinter as tk
-    from tkinter import ttk
-    current = carica()
-    box = ttk.LabelFrame(parent, text="Contesto del modello locale")
-    box.pack(fill="x", padx=8, pady=8)
-    ttk.Label(box, wraplength=540, text=(
-        "La cronologia è quella della chat scelta nell'elenco (☰). «Chat continua»: come "
-        "KoboldCpp, l'inizio resta fisso e i messaggi si accodano, i più vecchi escono a "
-        "blocchi solo a contesto pieno; risposte più veloci nelle chat lunghe, più memoria "
-        "usata.")).pack(anchor="w", padx=8, pady=5)
-    continua = tk.BooleanVar(value=current.chat_continua)
-    labels = [RICORDI_ETICHETTE[k] for k in RICORDI]
-    ricordi = tk.StringVar(value=RICORDI_ETICHETTE[current.ricordi_locale])
-
-    def save(*_):
-        mode = RICORDI[labels.index(ricordi.get())] if ricordi.get() in labels else "pertinenti"
-        try:
-            salva(Contesto(chat_continua=continua.get(), ricordi_locale=mode))
-        except (OSError, RuntimeError, ValueError) as exc:
-            notify("CONTESTO / ERRORE > Scelta non salvata: " + str(exc)[:120])
-            return
-        notify("CONTESTO > Salvato: vale dalla prossima domanda.")
-
-    ttk.Checkbutton(box, text="Chat continua (come KoboldCpp)", variable=continua,
-                    command=save).pack(anchor="w", padx=8, pady=(0, 4))
-    row = ttk.Frame(box)
-    row.pack(fill="x", padx=8, pady=(0, 8))
-    ttk.Label(row, text="Ricordi di Second Brain e del progetto:").pack(side="left")
-    combo = ttk.Combobox(row, textvariable=ricordi, values=labels, state="readonly", width=28)
-    combo.pack(side="left", padx=6)
-    combo.bind("<<ComboboxSelected>>", save)
-    return box
 
 
 def altre_chat(max_chats: int = 3, pairs: int = 2, limit: int = 600) -> list[str]:

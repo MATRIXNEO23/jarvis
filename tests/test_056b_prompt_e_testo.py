@@ -13,11 +13,11 @@ class TettoPromptTests(unittest.TestCase):
     def test_contesto_predefinito_1024_e_tetto_600_con_1024_e_2048(self):
         from local_model.memory_preferences import MemoryPreferences
         from local_model.native_config import NativeModelConfig
-        self.assertEqual(NativeModelConfig().context_size, 1024)
+        self.assertEqual(NativeModelConfig().context_size, 768)
         memory = MemoryPreferences()
-        self.assertEqual(memory.prompt_max_tokens, 600)
-        for contesto in (1024, 2048):
-            self.assertEqual(memory.available_prompt_tokens(contesto, 128), 600)
+        self.assertEqual(memory.prompt_max_tokens, 500)
+        for contesto in (768, 1024, 2048):
+            self.assertEqual(memory.available_prompt_tokens(contesto, 128), 500)
 
     def test_niente_budget_8192_e_niente_override_del_contatore_esatto(self):
         self.assertIn("catalog_budget = budget if exact", SESSION)    # con il contatore vale il tetto

@@ -130,7 +130,8 @@ def valori(config: NativeModelConfig) -> dict:
 # (profili.json -> modelli[..]["memoria"][slot]); il file letto dalla sessione resta memory.json.
 MEMORIA_CAMPI = ("history_max_tokens", "recent_messages", "summarize_every", "summary_max_tokens",
                  "idle_seconds", "prompt_max_tokens", "conversation_priority",
-                 "pause_on_heavy_load", "background_summaries")
+                 "pause_on_heavy_load", "background_summaries",
+                 "cronologia_ridotta", "chat_continua", "ricordi_locale")
 
 
 def _memoria_file(config_path=None) -> Path:
@@ -247,6 +248,14 @@ def _voce(data: dict, model_path, corrente: dict | None, usa_corrente: bool = Fa
                      "2": default_valori(), "3": default_valori()}
             last = 1
         item = {"nome": Path(str(model_path)).name, "ultimo": last, "slot": slots}
+        if not (isinstance(legacy, dict) and isinstance(legacy.get("slot"), dict)):
+            # 056c: un modello NUOVO parte con la memoria di partenza (tetto prompt 500, ecc.);
+            # lo slot 1 del modello in uso resta com'è (profili già salvati: non si toccano).
+            from dataclasses import asdict as _asdict
+            from .memory_preferences import MemoryPreferences
+            base = {k: v for k, v in _asdict(MemoryPreferences()).items() if k in MEMORIA_CAMPI}
+            item["memoria"] = {n: dict(base) for n in ("1", "2", "3")
+                               if not (n == "1" and usa_corrente and corrente is not None)}
         data["modelli"][key] = item
     return item
 

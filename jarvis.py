@@ -324,9 +324,7 @@ def main() -> None:
     # Orchestratore online: cartelle sicure (lavoro a più passi, orchestratore.py).
     __import__("orchestratore").costruisci_sezione(
         assistant_settings_frame, lambda text: write_line(text))
-    # Sezione «Contesto» (passo 4): chat continua e ricordi del modello locale.
-    __import__("contesto_lumi").costruisci_sezione(
-        assistant_settings_frame, lambda text: write_line(text))
+    # 056c: «Contesto» e «Memoria del prompt» sono un solo blocco nella pagina Modelli (native_ui).
 
     # F5 experimental preview: deliberately NOT connected to the active model.
     # Modello locale, memoria, cervelli e diagnostica: spostato in lumi_parti/modello_memoria.py (divisione di jarvis.py).
@@ -4660,7 +4658,7 @@ def main() -> None:
         notify=lambda text: write_line(text))
     # Telegram (15/11 sera): icona ✈ con i colori dello stato, tendina dei contatti e una
     # voce per contatto nel menu laterale.
-    telegram_button = hud.add_quick_button("telegram", "✈ Telegram", lambda: None, after="memory", power=True)
+    telegram_button = hud.add_quick_button("telegram", "Telegram", lambda: None, after="memory", simbolo="telegram")
 
     def show_telegram_chat(title, items, action) -> None:
         chat_bubbles.messaggi(title, items, action)

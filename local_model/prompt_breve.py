@@ -34,15 +34,17 @@ def taglia(text: str, limite: int = LIMITE_RISPOSTA_VECCHIA) -> str:
     return (cut[:stop + 1] if stop > limite // 2 else cut.rstrip()) + " […]"
 
 
-def adatta_storia(history, latest: str):
-    """history: lista di coppie ((ruolo, testo), (ruolo, testo)). Ritorna la storia ridotta."""
+def adatta_storia(history, latest: str, ridotta: bool = True):
+    """history: lista di coppie ((ruolo, testo), (ruolo, testo)). Ritorna la storia ridotta.
+
+    056c: con «Cronologia ridotta per domande brevi» (accesa di serie) vale per TUTTE le domande
+    brevi, non solo per i saluti: resta solo l'ultimo scambio, tagliato. Se la casella è spenta
+    si comporta come nella 056b (riduzione per i soli saluti, risposte vecchie tagliate)."""
     if not history or not breve(latest):
         return list(history or [])
-    if saluto(latest):
+    if saluto(latest) or ridotta:
         (ru, tu), (ra, ta) = history[-1]
         return [((ru, taglia(tu, 160)), (ra, taglia(ta, 120)))]
-    # Domanda breve: gli scambi restano tutti, ma le risposte più vecchie degli ultimi due
-    # scambi vengono tagliate (l'ultimo resta intero: serve a capire a cosa si riferisce).
     out = []
     for n, pair in enumerate(history):
         (ru, tu), (ra, ta) = pair

@@ -150,11 +150,13 @@ class NativeSettingsWindow:
         ("summarize_every", "Sintesi ogni N messaggi"),
         ("summary_max_tokens", "Limite riassunto (token)"),
         ("idle_seconds", "Inattività prima della sintesi (secondi)"),
-        ("prompt_max_tokens", "Budget prompt (token)"))
+        ("prompt_max_tokens", "Tetto del prompt (token)"))
     _MEM_FLAGS = (
         ("conversation_priority", "Priorità assoluta alla conversazione"),
         ("pause_on_heavy_load", "Sospendi con carico elevato"),
-        ("background_summaries", "Abilita sintesi in inattività"))
+        ("background_summaries", "Abilita sintesi in inattività"),
+        ("cronologia_ridotta", "Cronologia ridotta per domande brevi"),
+        ("chat_continua", "Chat continua (come KoboldCpp): inizio fisso, messaggi accodati"))
 
     def _memory_path(self):
         return Path(self.path).parent / "memory.json"
@@ -167,8 +169,12 @@ class NativeSettingsWindow:
             prefs = MemoryPreferences.load(self._memory_path())
         except (OSError, ValueError):
             prefs = MemoryPreferences()
-        ttk.Label(frame, text="Memoria del prompt (parte del profilo)",
-                  font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(10, 2))
+        # 056c: un solo blocco «Contesto e memoria» (prima erano due), salvato nel profilo.
+        frame = ttk.LabelFrame(frame, text="Contesto e memoria del prompt (parte del profilo)")
+        frame.pack(fill="x", pady=(10, 2))
+        ttk.Label(frame, wraplength=520, text=(
+            "La cronologia è quella della chat scelta nell'elenco. Contesto e tetto del prompt "
+            "valgono per questo modello: ogni modello nuovo parte da 768 e 500.")).pack(anchor="w", padx=6, pady=3)
         for key, title in self._MEM_LABELS:
             line = ttk.Frame(frame)
             line.pack(fill="x", pady=2)
@@ -180,8 +186,16 @@ class NativeSettingsWindow:
             variable = tk.BooleanVar(value=bool(getattr(prefs, key)))
             self.mem_values[key] = variable
             ttk.Checkbutton(frame, text=title, variable=variable).pack(anchor="w", pady=1)
+        from contesto_lumi import RICORDI, RICORDI_ETICHETTE
+        riga = ttk.Frame(frame)
+        riga.pack(fill="x", pady=2)
+        ttk.Label(riga, text="Ricordi di Second Brain e del progetto", width=38).pack(side="left")
+        self._ricordi_codici = list(RICORDI)
+        self.ricordi_var = tk.StringVar(value=RICORDI_ETICHETTE[prefs.ricordi_locale])
+        ttk.Combobox(riga, textvariable=self.ricordi_var, state="readonly", width=26,
+                     values=[RICORDI_ETICHETTE[k] for k in RICORDI]).pack(side="left")
         ttk.Button(frame, text="Dettagli ultimo contesto",
-                   command=self.show_context_metrics).pack(anchor="w", pady=(4, 0))
+                   command=self.show_context_metrics).pack(anchor="w", pady=(4, 2), padx=4)
 
     def show_context_metrics(self):
         try:
@@ -213,6 +227,8 @@ class NativeSettingsWindow:
             for key, variable in self.mem_values.items():
                 variable.set(getattr(prefs, key) if isinstance(variable, tk.BooleanVar)
                              else str(getattr(prefs, key)))
+            from contesto_lumi import RICORDI_ETICHETTE
+            self.ricordi_var.set(RICORDI_ETICHETTE[prefs.ricordi_locale])
 
     def _save_memory(self):
         from dataclasses import replace
@@ -223,6 +239,9 @@ class NativeSettingsWindow:
             current = MemoryPreferences()
         valori = {k: (bool(v.get()) if isinstance(v, tk.BooleanVar) else int(v.get().strip()))
                   for k, v in self.mem_values.items()}
+        from contesto_lumi import RICORDI, RICORDI_ETICHETTE
+        etichette = {RICORDI_ETICHETTE[k]: k for k in RICORDI}
+        valori["ricordi_locale"] = etichette.get(self.ricordi_var.get(), current.ricordi_locale)
         replace(current, **valori).save(self._memory_path())
 
     def open_prompt_diagnostics(self):
