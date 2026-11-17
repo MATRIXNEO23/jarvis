@@ -29,7 +29,8 @@ class CiaoTests(unittest.TestCase):
         prompt = self.prompt_dopo("ciao")
         self.assertNotIn("FINE-RISPOSTA-LUNGA", prompt)
         self.assertIn(pb.SEPARATORE, prompt)
-        self.assertTrue(prompt.rstrip().split(pb.SEPARATORE)[-1].strip().startswith("ciao"))
+        self.assertLess(prompt.index(pb.SEPARATORE), prompt.index("Parlami di Roma"))
+        self.assertIn("ciao", prompt.split("<start_of_turn>user")[-1])
 
     def test_nessun_ricordo_per_il_saluto(self):
         chiamate = []

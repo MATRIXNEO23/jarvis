@@ -53,13 +53,14 @@ class NessunDuplicatoTests(unittest.TestCase):
         self.assertNotIn("Anteprima multimodello", JARVIS)
         self.assertNotIn("Gemma (sperimentale)", JARVIS)
         self.assertNotIn("open_multimodel_f5_preview", JARVIS)
-        self.assertIn('text="Modelli offline"', JARVIS)
+        self.assertIn('text="Modelli offline"',
+                      (ROOT / "local_model" / "miei_modelli.py").read_text(encoding="utf-8"))
 
     def test_pagina_addon_modello_solo_pulsante(self):
         corpo = next(n for n in ast.walk(ast.parse(JARVIS))
                      if isinstance(n, ast.FunctionDef) and n.name == "build_model_addon_section")
-        bottoni = [c for c in ast.walk(corpo) if getattr(c.func, "attr", "") == "Button"
-                   for c in [c] if isinstance(c, ast.Call)]
+        bottoni = [c for c in ast.walk(corpo) if isinstance(c, ast.Call)
+                   and getattr(c.func, "attr", "") == "Button"]
         self.assertEqual(len(bottoni), 1)
         self.assertEqual(_kw(bottoni[0], "text").value, "Apri impostazioni modelli")
 

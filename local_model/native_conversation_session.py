@@ -300,11 +300,13 @@ class NativeConversationSession:
             def messages_for(history, prefix, recall=""):
                 messages = [{"role": role, "content": text}
                             for pair in history for role, text in pair]
+                messages.append({"role": "user", "content": recall + latest + tail})
+                # 056b: la conversazione precedente è segnata in cima (testo fisso, stabile per il
+                # fast forwarding) e l'ultimo messaggio resta intatto.
                 from .prompt_breve import SEPARATORE
-                messages.append({"role": "user", "content": recall + (SEPARATORE if history else "")
-                                 + latest + tail})
-                if prefix:
-                    messages[0] = dict(messages[0], content=prefix + messages[0]["content"])
+                head = (prefix or "") + (SEPARATORE if history else "")
+                if head:
+                    messages[0] = dict(messages[0], content=head + messages[0]["content"])
                 return messages
 
             def size(history, prefix, recall=""):

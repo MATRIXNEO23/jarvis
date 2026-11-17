@@ -10,9 +10,11 @@ import re
 
 MAX_SCAMBI_AMPIO = 6
 _AMPIO = re.compile(r"approfond|spiega|dettagli|in dettaglio|descriv|riassum|continua|di piu|di più", re.I)
-_RIFERIMENTI = re.compile(r"\b(file|cartella|allegat|document|programma|app|risultat|elenco|il primo|il secondo|"
-                          r"il terzo|quello|quella)\b", re.I)
+_RIFERIMENTI = re.compile(r"\b(file|cartell\w*|allegat\w*|document\w*|programm\w*|app|risultat\w*|elenc\w*|"
+                          r"contenut\w*|trovat\w*|apri\w*|cerca\w*|il primo|il secondo|il terzo|quell\w+|prima)\b",
+                          re.I)
 ULTIMO: dict = {}
+LOG = None          # jarvis.py ci mette write_line: una riga di log per richiesta
 
 
 def profilo(spoken: str) -> str:
@@ -20,10 +22,12 @@ def profilo(spoken: str) -> str:
     text = (spoken or "").strip()
     if _AMPIO.search(text) or len(text.split()) >= 25:
         return "ampio"
+    if _RIFERIMENTI.search(text):
+        return "normale"          # si riferisce a file, risultati o a qualcosa di prima
     return "minimo" if breve(text) else "normale"
 
 
-def _scambi(parsed: dict) -> list:
+def _scambi(parsed) -> list:
     return list(parsed.get("breve") or []) if isinstance(parsed, dict) else []
 
 
@@ -42,7 +46,8 @@ def proporziona(raw: str, spoken: str) -> str:
         else:
             if kind == "ampio":
                 scambi = scambi[-MAX_SCAMBI_AMPIO:]
-            parsed["breve"] = scambi
+            if "breve" in parsed:
+                parsed["breve"] = scambi
             focus = parsed.get("focus")
             if isinstance(focus, dict) and not _RIFERIMENTI.search(spoken or ""):
                 for key in ("file_results", "program_request"):
@@ -52,5 +57,11 @@ def proporziona(raw: str, spoken: str) -> str:
         out = json.dumps(parsed, ensure_ascii=False)
     ULTIMO.clear()
     ULTIMO.update({"profilo": kind, "caratteri": len(out), "token_stimati": (len(out) + 3) // 4,
-                   "scambi": len(_scambi(parsed)) if isinstance(parsed, dict) else 0})
+                   "scambi": len(_scambi(parsed))})
+    if callable(LOG):
+        try:
+            LOG("ONLINE > contesto %s: %d scambi, ~%d token" % (
+                kind, ULTIMO["scambi"], ULTIMO["token_stimati"]))
+        except Exception:
+            pass
     return out

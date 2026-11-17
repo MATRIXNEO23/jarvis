@@ -231,7 +231,7 @@ def main() -> None:
 
     def build_native_panel(frame):
         from local_model.native_ui import NativeSettingsWindow
-        return NativeSettingsWindow(frame, get_session=get_gemma_session, embed=True)
+        return NativeSettingsWindow(frame, get_session=lambda: get_gemma_session(), embed=True)
 
     try:
         __import__("local_model.miei_modelli", fromlist=["costruisci_sezione"]).costruisci_sezione(
@@ -1006,89 +1006,84 @@ def main() -> None:
             return False
 
     def recent_memory_for_gpt(spoken: str) -> str:
-        """056b: contesto online proporzionato alla richiesta; token stimati nel log."""
-        import contesto_online
-        raw = contesto_online.proporziona(_recent_memory_for_gpt_full(spoken), spoken)
-        info = contesto_online.ULTIMO
-        write_line("ONLINE > contesto %s: %d scambi, ~%d token" % (
-            info.get("profilo"), info.get("scambi", 0), info.get("token_stimati", 0)))
-        return raw
+        """056b: contesto online proporzionato alla richiesta (contesto_online)."""
+        def pieno() -> str:
+            """Bounded recall with the *real* active project and latest question."""
+            short=conversation_memory.context(max_chars=860)
+            question=conversation_memory.last_question()
 
-    def _recent_memory_for_gpt_full(spoken: str) -> str:
-        """Bounded recall with the *real* active project and latest question."""
-        short=conversation_memory.context(max_chars=860)
-        question=conversation_memory.last_question()
-
-        def attach(raw,*,project_name=""):
-            hint=focus_hint(spoken,active_project_name=project_name,
-                            last_question=question)
-            try:
-                parsed=json.loads(raw)
-            except (ValueError,TypeError):
-                return raw
-            if isinstance(parsed,list):
-                parsed={"breve":parsed}
-            if not isinstance(parsed,dict):
-                return raw
-            if (addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None
-                    and addon_manager.programs_enabled()):
-                program_hint=addon_manager.program_service.context_hint()
-                if program_hint:
-                    hint['program_request']=program_hint
-            if (addon_manager is not None and addon_manager._file_service is not None
-                    and addon_manager.files_enabled()):
-                file_hint=addon_manager.file_service.context_hint()
-                if file_hint:
-                    hint["file_results"]=file_hint
-            if hint:
-                parsed["focus"]=hint
-            if preference_store is not None:
+            def attach(raw,*,project_name=""):
+                hint=focus_hint(spoken,active_project_name=project_name,
+                                last_question=question)
                 try:
-                    parsed["preferences"]=list(preference_store.context())
-                except (OSError,sqlite3.Error,MemoryBoundaryError):
-                    pass
-            return json.dumps(parsed,ensure_ascii=False)
+                    parsed=json.loads(raw)
+                except (ValueError,TypeError):
+                    return raw
+                if isinstance(parsed,list):
+                    parsed={"breve":parsed}
+                if not isinstance(parsed,dict):
+                    return raw
+                if (addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None
+                        and addon_manager.programs_enabled()):
+                    program_hint=addon_manager.program_service.context_hint()
+                    if program_hint:
+                        hint['program_request']=program_hint
+                if (addon_manager is not None and addon_manager._file_service is not None
+                        and addon_manager.files_enabled()):
+                    file_hint=addon_manager.file_service.context_hint()
+                    if file_hint:
+                        hint["file_results"]=file_hint
+                if hint:
+                    parsed["focus"]=hint
+                if preference_store is not None:
+                    try:
+                        parsed["preferences"]=list(preference_store.context())
+                    except (OSError,sqlite3.Error,MemoryBoundaryError):
+                        pass
+                return json.dumps(parsed,ensure_ascii=False)
 
-        if active_project_id is not None:
-            if workspace is None:
+            if active_project_id is not None:
+                if workspace is None:
+                    return attach(short)
+                try:
+                    project=workspace.project(active_project_id)
+                    saved=json.loads(workspace.prompt_context(
+                        "project",active_project_id,spoken,budget=620))
+                    evidence=saved.get("evidence",[])
+                    if project and project["summary"]:
+                        evidence.insert(0,{"source":"conversation",
+                            "when":project["updated_utc"],
+                            "fact":"Stato progetto fornito dall'utente: "
+                                    +project["summary"][:260]})
+                    history=workspace.recent("project",active_project_id,3)
+                    earlier=[{"utente":item["utente"],"lia":item["jarvis"],
+                              "tipo":item["tipo"]} for item in history]
+                    progress=[{"title":step["title"][:95],
+                               "status":step["status"],
+                               "detail":step["detail"][:110],
+                               "verified":bool(step["verified"])}
+                              for step in workspace.project_steps(active_project_id,limit=4)]
+                    return attach(json.dumps({
+                        "breve":earlier+json.loads(short),
+                        "progress":progress,
+                        "permanente":{"related":evidence},
+                    },ensure_ascii=False),
+                    project_name=project["name"] if project else "")
+                except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                    workspace_status.set("Ricerca progetto: "+str(exc)[:90])
+                    return attach(short)
+            if not memory_enabled.get() or durable_brain is None:
                 return attach(short)
             try:
-                project=workspace.project(active_project_id)
-                saved=json.loads(workspace.prompt_context(
-                    "project",active_project_id,spoken,budget=620))
-                evidence=saved.get("evidence",[])
-                if project and project["summary"]:
-                    evidence.insert(0,{"source":"conversation",
-                        "when":project["updated_utc"],
-                        "fact":"Stato progetto fornito dall'utente: "
-                                +project["summary"][:260]})
-                history=workspace.recent("project",active_project_id,3)
-                earlier=[{"utente":item["utente"],"lia":item["jarvis"],
-                          "tipo":item["tipo"]} for item in history]
-                progress=[{"title":step["title"][:95],
-                           "status":step["status"],
-                           "detail":step["detail"][:110],
-                           "verified":bool(step["verified"])}
-                          for step in workspace.project_steps(active_project_id,limit=4)]
-                return attach(json.dumps({
-                    "breve":earlier+json.loads(short),
-                    "progress":progress,
-                    "permanente":{"related":evidence},
-                },ensure_ascii=False),
-                project_name=project["name"] if project else "")
-            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
-                workspace_status.set("Ricerca progetto: "+str(exc)[:90])
+                long=durable_brain.prompt_context(spoken,budget=530)
+            except (OSError,sqlite3.Error,BrainError) as exc:
+                memory_status.set("Ricerca memoria: "+str(exc)[:90])
                 return attach(short)
-        if not memory_enabled.get() or durable_brain is None:
-            return attach(short)
-        try:
-            long=durable_brain.prompt_context(spoken,budget=530)
-        except (OSError,sqlite3.Error,BrainError) as exc:
-            memory_status.set("Ricerca memoria: "+str(exc)[:90])
-            return attach(short)
-        return attach(json.dumps({
-            "breve":json.loads(short),
-            "permanente":json.loads(long)},ensure_ascii=False))
+            return attach(json.dumps({
+                "breve":json.loads(short),
+                "permanente":json.loads(long)},ensure_ascii=False))
+
+        return __import__("contesto_online").proporziona(pieno(), spoken)
 
     project_dialog=None
 
@@ -3551,6 +3546,8 @@ def main() -> None:
             conversation_chain(message, True)
         finally:
             _cl.TU_SCRITTO[0] = False
+
+    __import__("contesto_online").LOG = lambda text: write_line(text)
 
     def submit_gpt() -> None:
         if closing:

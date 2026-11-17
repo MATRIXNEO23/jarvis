@@ -221,9 +221,9 @@ class NativeSettingsWindow:
             current = MemoryPreferences.load(self._memory_path())
         except (OSError, ValueError):
             current = MemoryPreferences()
-        changes = {k: (bool(v.get()) if isinstance(v, tk.BooleanVar) else int(v.get().strip()))
-                   for k, v in self.mem_values.items()}
-        replace(current, **changes).save(self._memory_path())
+        valori = {k: (bool(v.get()) if isinstance(v, tk.BooleanVar) else int(v.get().strip()))
+                  for k, v in self.mem_values.items()}
+        replace(current, **valori).save(self._memory_path())
 
     def open_prompt_diagnostics(self):
         """Manual one-turn RAM capture; opening this UI never loads a GGUF."""

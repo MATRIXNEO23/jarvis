@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import re
 
-SEPARATORE = ("[Sopra: conversazione precedente, solo contesto; non ripeterla.]\n"
-              "Messaggio da cui partire per rispondere (rispondi solo a questo):\n")
+SEPARATORE = ("[Conversazione precedente: solo contesto, non ripeterla. "
+              "Rispondi solo all'ultimo messaggio dell'utente.]\n")
 _SALUTI = re.compile(r"^(ciao|salve|buongiorno|buonasera|buonanotte|hey|ehi|ei|hola|hello|hi|"
                      r"grazie|ok|va bene|perfetto|a dopo|arrivederci|come stai|come va)\b[\s!?.,]*"
                      r"(lumi|jarvis)?[\s!?.,]*$", re.I)

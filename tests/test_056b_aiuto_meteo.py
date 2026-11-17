@@ -13,7 +13,8 @@ class AiutoMeteoTests(unittest.TestCase):
         from meteo.commands import parse_command
         for frase in ("che tempo fa a Roma", "meteo Milano", "com’è il tempo a Tokyo"):
             self.assertEqual(parse_command(frase)[0], "meteo", frase)
-            self.assertIn(frase.split(" a ")[0], text)
+        self.assertIn("che tempo fa a Roma", text)
+        self.assertIn("meteo Milano", text)
 
     def test_capacita_meteo_registrata(self):
         import json

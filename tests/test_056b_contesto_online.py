@@ -17,7 +17,7 @@ class ContestoOnlineTests(unittest.TestCase):
         self.assertGreater(co.ULTIMO["token_stimati"], 0)
 
     def test_approfondisci_fino_a_sei_scambi(self):
-        out = json.loads(co.proporziona(RAW, "approfondisci quello che hai detto"))
+        out = json.loads(co.proporziona(RAW, "approfondisci il tema della Roma antica"))
         self.assertEqual(len(out["breve"]), 6)
         self.assertNotIn("file_results", out["focus"])      # allegati solo se servono
         self.assertEqual(co.ULTIMO["profilo"], "ampio")
@@ -29,7 +29,8 @@ class ContestoOnlineTests(unittest.TestCase):
     def test_il_codice_scrive_i_token_nel_log_e_nella_diagnostica(self):
         from pathlib import Path
         root = Path(__file__).resolve().parents[1]
-        self.assertIn("ONLINE > contesto", (root / "jarvis.py").read_text(encoding="utf-8"))
+        self.assertIn("ONLINE > contesto", (root / "contesto_online.py").read_text(encoding="utf-8"))
+        self.assertIn("contesto_online", (root / "jarvis.py").read_text(encoding="utf-8"))
         self.assertIn("ultimo_contesto_online", (root / "diagnostica_claude" / "strumenti.py").read_text(encoding="utf-8"))
 
 
