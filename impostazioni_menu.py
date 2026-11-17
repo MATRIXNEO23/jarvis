@@ -27,7 +27,7 @@ MAPPA = (
     ("Contesto del modello locale", ("Memoria", "Contesto e ricordi")),
     ("Progetti", ("Memoria", "Progetti")),
     ("Spazio su disco", ("Memoria", "Pulizia dati")),
-    ("Modello locale", ("Modelli", "Modello locale")),
+    ("Modelli offline", ("Modelli", "Modelli offline")),
     ("Connessione ChatGPT", ("Modelli", "GPT dal browser")),
     ("Servizi online", ("Modelli", "Servizi online")),
     ("Servizi di ricerca", ("Modelli", "Servizi di ricerca")),

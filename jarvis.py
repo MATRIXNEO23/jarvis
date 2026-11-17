@@ -233,12 +233,12 @@ def main() -> None:
             messagebox.showerror("Lumi / Gemma", str(exc), parent=settings_window)
 
     native_settings_box = ttk.LabelFrame(assistant_settings_frame,
-                                         text="Modello locale Gemma (sperimentale)")
+                                         text="Modelli offline")
     native_settings_box.pack(fill="x", padx=8, pady=8)
     ttk.Label(native_settings_box,
-              text="Configurazione separata; non attiva il modello e non cambia GPT.",
+              text="Unica pagina dei modelli offline: caselle 1/2/3, elenco, profili e configurazione del modello scelto.",
               wraplength=540).pack(anchor="w", padx=8, pady=5)
-    ttk.Button(native_settings_box, text="Configura Gemma locale...",
+    ttk.Button(native_settings_box, text="Configura modello offline...",
                command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
     # 055: caselle 1/2/3, elenco, «Aggiungi modello…» e profili per modello: SOLO qui, in «Modelli».
     try:
@@ -351,19 +351,10 @@ def main() -> None:
         speak_result=lambda: speak_result,
         voice=lambda: voice,
         write_line=lambda: write_line))
-    (open_multimodel_f5_preview, open_memory_preferences, draw_diagnostic_meter, current_capability_snapshot, lumi_brain_local, lumi_brain_online,) = (
+    (open_memory_preferences, draw_diagnostic_meter, current_capability_snapshot, lumi_brain_local, lumi_brain_online,) = (
         _lumi_parti_modello_memoria[n] for n in _lumi_parti_modello_memoria_installa.__globals__['NOMI'])
 
-    ttk.Button(native_settings_box, text="Anteprima multimodello Gemma / Qwen...",
-               command=open_multimodel_f5_preview).pack(anchor="w", padx=8, pady=6)
-
-
-    ttk.Button(native_settings_box, text="Configura memoria e inattivita...",
-               command=open_memory_preferences).pack(anchor="w", padx=8, pady=6)
-
-
-    ttk.Button(native_settings_box, text="Autorizzazioni GPT per funzione...",
-               command=open_online_permissions).pack(anchor="w", padx=8, pady=6)
+    # 056b: memoria e autorizzazioni GPT stanno UNA sola volta (Memoria generale e Connessione ChatGPT).
 
 
 
@@ -2693,6 +2684,8 @@ def main() -> None:
     disconnect = ttk.Button(gpt_buttons, text="Scollega account", command=lambda: run_gpt("disconnect"))
     disconnect.pack(side="left")
     ttk.Label(gpt_panel, text="Il login usa il browser ufficiale; nessuna chiave API e nessuna fatturazione a consumo.", wraplength=630).pack(anchor="w")
+    ttk.Button(gpt_panel, text="Autorizzazioni GPT per funzione...",
+               command=open_online_permissions).pack(anchor="w", pady=(6, 0))
 
     brain_controls = ttk.LabelFrame(assistant_settings_frame, text="Memoria generale", padding=12)
     brain_controls.pack(fill="x", pady=(5, 3))
@@ -2708,6 +2701,8 @@ def main() -> None:
         _bottone.pack(side="right", padx=(4, 0))
         memory_clear_buttons.append(_bottone)
     memory_clear_button = memory_clear_buttons[-1]
+    ttk.Button(brain_controls, text="Configura memoria e inattivita...",
+               command=open_memory_preferences).pack(anchor="w", pady=(6, 0))
     ttk.Label(assistant_settings_frame, textvariable=memory_status, wraplength=630).pack(
         anchor="w", pady=(0, 2))
     ttk.Label(
@@ -4655,7 +4650,7 @@ def main() -> None:
     modello_button = hud.model_toggle_button      # 056b: nome ▾ e ⏻ nello stesso tasto
     modello_menu = __import__("menu_modello").MenuModello(      # 056 D: le 3 caselle al volo
         root, modello_button, on_use=lambda target: lumi_model_use(target),
-        open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modello locale")),
+        open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modelli offline")),
         notify=lambda text: write_line(text))
     online_menu_button = hud.add_quick_button("online", "Online ▾", lambda: None, after="model")
     ricerca_button = hud.add_quick_button("ricerca", "Ricerca ▾", lambda: None, after="online")
@@ -4862,7 +4857,7 @@ def main() -> None:
     def build_model_addon_section(container) -> None:
         """055: la pagina dell'add-on tiene solo attiva/disattiva e questo pulsante."""
         ttk.Button(container, text="Apri impostazioni modelli",
-                   command=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modello locale"))
+                   command=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modelli offline"))
                    ).pack(anchor="w", pady=(0, 6))
 
     def open_addon_menu(addon_id: str) -> None:

@@ -11,7 +11,7 @@ class NativeSettingsEntryTests(unittest.TestCase):
         source = Path(__file__).resolve().parents[1] / "jarvis.py"
         text = source.read_text(encoding="utf-8")
         tree = ast.parse(text)
-        self.assertIn("Configura Gemma locale...", text)
+        self.assertIn("Configura modello offline...", text)
         self.assertIn("def open_native_model_settings():", text)
         main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "main")
         callback = next(n for n in main.body if isinstance(n, ast.FunctionDef)

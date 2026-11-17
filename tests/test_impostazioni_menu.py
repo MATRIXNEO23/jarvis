@@ -33,7 +33,7 @@ class NavigazioneTest(unittest.TestCase):
                 self.boxes[text] = box
 
         page("Voce", ["Risposte vocali offline — voci di Windows"], ["Voce e ascolto"])
-        page("GPT e memoria", ["Modello locale Gemma (sperimentale)", "Connessione ChatGPT",
+        page("GPT e memoria", ["Modelli offline", "Connessione ChatGPT",
                                "Memoria generale", "Servizi online (API ufficiali)",
                                "Riquadro sconosciuto"])
         page("Progetti e servizi", ["La mia voce", "Add-on — installazione locale e permessi",
@@ -49,7 +49,7 @@ class NavigazioneTest(unittest.TestCase):
         voci = self.nav.voci()
         self.assertEqual(list(voci), ["Interfaccia", "Voce", "Memoria", "Modelli", "Add-on"])
         self.assertEqual(voci["Voce"], ["Microfono e ascolto", "Voci", "La mia voce"])
-        self.assertEqual(voci["Modelli"], ["Modello locale", "GPT dal browser", "Servizi online", "Altro"])
+        self.assertEqual(voci["Modelli"], ["Modelli offline", "GPT dal browser", "Servizi online", "Altro"])
         self.assertIn("⏰ Timer e sveglia", voci["Add-on"])
         self.assertIn("🐙 GitHub", voci["Add-on"])
         self.assertEqual(voci["Memoria"], ["Second Brain"])

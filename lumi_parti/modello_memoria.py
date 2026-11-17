@@ -84,18 +84,11 @@ from sveglia.service import Alarm, parse_command as parse_alarm_clock_command
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
-NOMI = ('open_multimodel_f5_preview', 'open_memory_preferences', 'draw_diagnostic_meter', 'current_capability_snapshot', 'lumi_brain_local', 'lumi_brain_online')
+NOMI = ('open_memory_preferences', 'draw_diagnostic_meter', 'current_capability_snapshot', 'lumi_brain_local', 'lumi_brain_online')
 
 
 def installa(d):
     """Crea le funzioni per questa esecuzione di Lumi; restituisce {nome: funzione}."""
-    def open_multimodel_f5_preview():
-        try:
-            from local_model.multimodel_ui_f5 import MultiModelSettingsF5Window
-            MultiModelSettingsF5Window(d.settings_window)
-        except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Lumi / Multimodello F5", str(exc),
-                                 parent=d.settings_window)
     def open_memory_preferences():
         try:
             from local_model.memory_ui import MemoryPreferencesWindow
