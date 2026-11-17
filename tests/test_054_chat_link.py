@@ -39,8 +39,8 @@ class TkTagTests(unittest.TestCase):
         self.assertEqual(sorted(found.values()), ["https://due.it", "https://uno.it"])
         for tag in found:
             self.assertEqual(str(text.tag_cget(tag, "underline")), "1")
-            self.assertTrue(text.tag_bind(tag, "<Button-1>"))
-            self.assertTrue(text.tag_bind(tag, "<Enter>"))
+            self.assertTrue(text.tk.call(text._w, "tag", "bind", tag, "<Button-1>"))
+            self.assertTrue(text.tk.call(text._w, "tag", "bind", tag, "<Enter>"))
         root.update()
         tag_due = next(t for t, u in found.items() if u == "https://due.it")
         start = text.tag_ranges(tag_due)[0]
