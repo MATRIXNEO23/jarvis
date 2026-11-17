@@ -93,6 +93,7 @@ class FileRefinementTests(unittest.TestCase):
         env['chat_transport'] = ChatTransport(env['service'], native=None)
         for name in ('confirm_gpt_inference','run_gpt','start_file_refinement','accept_file_refinement','submit_local','try_file_command','dispatch_model_capability','submit_gpt'):
             self.callback(name,env)
+        __import__('consenso_finestra').installa(env)   # 055: consenso con finestra simulata
         return env,workers
 
     def empty(self,operation='search',**args):

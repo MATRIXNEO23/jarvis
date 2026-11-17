@@ -117,6 +117,7 @@ class ActivityStatusTests(unittest.TestCase):
                    telegram_gpt_session_token=None, telegram_gpt_session_choice=Value(False),
                    messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
         self.callback("confirm_gpt_inference", env)
+        __import__("consenso_finestra").installa(env)   # 055: consenso con finestra simulata
         self.callback("set_telegram_gpt_session", env)
         return env, workers, eval(self.provider_code, env)
 

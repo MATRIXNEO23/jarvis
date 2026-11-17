@@ -197,6 +197,7 @@ Stato: codice e test scritti, **non eseguiti in locale** (regola: solo CI Window
 - Cause e correzioni: (1) `gpt_voice_consent_epoch` era `nonlocal` e i test che estraggono le funzioni non lo avevano: ora l'epoca sta su `confirm_gpt_inference.consent_epoch` (~88 NameError); (2) `profili_famiglia._scrivi_temp` con newline="\n" (su Windows il testo raddoppiava \r); (3) `window_chrome` fissa all'import le classi Tk per `isinstance` (TypeError con tkinter.Tk simulato).
 - Test aggiornati perché il comportamento 055 è cambiato davvero: elenco modelli con quello in uso per primo; modello nuovo parte dai default (profili per modello, tornando al vecchio rivale 3 thread); Exa/Firecrawl/Linkup collegati; invio testo passa da `conversation_chain`; test ricerca con servizio spuntato; test voce/PTT estraggono anche `conversation_chain`. Nuovo: tests/test_055_correzioni_ci.py.
 - Il fix «dopo il sì a Uso GPT? la domanda va subito a GPT» NON è implementato: l'utente non l'ha ancora approvato (proposta da annotare).
+- Secondo giro (run 44011730454): i test del trasporto GPT simulavano il consenso con messagebox.askyesno, rimosso dalla 055 per scelta; nuovo tests/consenso_finestra.py (stessa logica 054) usato dalle fixture test_activity_status e test_file_refinement. La conferma a voce vera resta provata in test_055_*.
 - Esito CI: vedi commit successivo/Run nel messaggio di consegna. Niente test su Linux, solo py_compile.
 
 ## Ripresa 17/11 — build 053: cancellazione memoria a sezioni (da provare dal vivo)
