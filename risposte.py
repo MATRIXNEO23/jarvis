@@ -84,6 +84,8 @@ _STATE["numbers_until"] = 0.0
 def number_of(text: str):
     """«cinque», «il 5», «six» → 5; altrimenti None."""
     words = _clean(text).split()
+    if words and words[0] == "apri":          # 056 C3: «apri il 2»
+        words = words[1:]
     if words and words[0] in ("il", "la", "numero", "casella"):
         words = words[1:]
     if words and words[0] == "numero":

@@ -29,7 +29,9 @@ class SelectedConversationModelTests(unittest.TestCase):
                    write_line=Mock(), speak_result=Mock())
         chain = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'conversation_chain')
         after = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'local_after_gpt')
-        exec(compile(ast.Module(body=[callback, chain, after], type_ignores=[]), 'real-voice-router', 'exec'), env)
+        fast = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'fast_mode')
+        env.update(settings={}, last_question=[''])        # 056: Basso consumo di serie
+        exec(compile(ast.Module(body=[callback, chain, after, fast], type_ignores=[]), 'real-voice-router', 'exec'), env)
         with __import__('unittest').mock.patch('servizi_online.disponibili', return_value=False):
             env['start_conversation_gpt']('Parliamo della giornata')
         gemma.assert_called_once_with('Parliamo della giornata', typed=False, route='locale')   # 055: nessun «Uso GPT?»
@@ -174,7 +176,9 @@ class SelectedConversationModelTests(unittest.TestCase):
                    offer_gpt=Mock(), write_line=Mock(), speak_result=Mock())
         chain = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'conversation_chain')
         after = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'local_after_gpt')
-        exec(compile(ast.Module(body=[callback, chain, after], type_ignores=[]), 'actual-ptt', 'exec'), env)
+        fast = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'fast_mode')
+        env.update(settings={}, last_question=[''])        # 056: Basso consumo di serie
+        exec(compile(ast.Module(body=[callback, chain, after, fast], type_ignores=[]), 'actual-ptt', 'exec'), env)
         with __import__('unittest').mock.patch('servizi_online.disponibili', return_value=False):
             env['start_conversation_gpt']('Parliamo')
         env['submit_gemma_voice'].assert_called_once_with('Parliamo', typed=False, route='locale')   # 055: GPT non collegato, si passa oltre

@@ -70,12 +70,12 @@ class SelfReviewTests(unittest.TestCase):
         start=source.split("    def start_conversation_gpt(spoken: str) -> None:",1)[1]
         start=start.split("    def toggle_gpt(",1)[0]
         self.assertLess(start.index("try_self_diagnostic(spoken)"),
-                        start.index("submit_gemma_voice(spoken)"))
+                        start.index("submit_gemma_voice(spoken, typed=typed, route="))
         self.assertLess(start.index("try_self_diagnostic(spoken)"), start.index("conversation_chain(spoken, False)"))   # 055
         ask=source.split("    def submit_gpt() -> None:",1)[1]
         ask=ask.split("    def poll() -> None:",1)[0]
         self.assertLess(ask.index("try_self_diagnostic(message)"),
-                        ask.index('run_gpt("ask"'))
+                        ask.index("conversation_chain(message, True)"))   # 056: sempre la catena
         self.assertLess(ask.index("try_self_diagnostic(message)"),
                         ask.index("not gpt_enabled.get()"))
         self.assertIn('text="Autodiagnosi Lumi"',source)

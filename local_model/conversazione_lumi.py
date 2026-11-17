@@ -332,8 +332,8 @@ def installa(d):
         # Passo 8: servizi online (forzati con «ragiona online», sempre, o proposti).
         asked_online = __import__("servizi_online").forza_online(spoken)[0]
         route, spoken = __import__("servizi_online").percorso(spoken, route)
-        if __import__("servizi_online").richiesta_codice(spoken):
-            # Decisione 17/11: script e codice vanno sempre ai servizi online, mai a Gemma.
+        if orig_route is None and __import__("servizi_online").richiesta_codice(spoken):
+            # Script e codice: online. Con route esplicita decide la catena (056: prima il «sì»).
             if __import__("servizi_online").disponibili():
                 route = "online"
             else:
@@ -342,19 +342,10 @@ def installa(d):
                 d.write_line("ONLINE > " + text)
                 d.speak_result(text)
                 return True
-        if (orig_route is None and not asked_online
-                and __import__("servizi_ricerca").approfondisci_locale(spoken)):
-            route = "locale"             # «approfondisci …» senza «online»: Gemma offline (17/11)
-            orig_route = "locale"
         if asked_online and route == "locale":
             # Prova 15/11: «ragiona online» senza servizi pronti rispondeva Gemma in silenzio.
             d.write_line("ONLINE > Nessun servizio online pronto (spunta e chiave in ONLINE ▾): "
                          "rispondo col modello locale.")
-        # Catena 17/11: con GPT attivo e un servizio online gratuito pronto, si prova prima
-        # l'online (senza domande); GPT è una voce della lista e si prova nel suo ordine.
-        if (route == "locale" and orig_route is None
-                and __import__("servizi_online").disponibili() and d.gpt_enabled.get()):
-            route = "online"
         if route == "proponi":
             __import__("servizi_online").IN_ATTESA["domanda"] = (spoken, typed)
             __import__("lumi_comandi").chiedi(

@@ -17,11 +17,12 @@ BOLLA = {"utente": "bolla_utente", "jarvis": "bolla_jarvis"}
 
 class Bolle:
     def __init__(self, text: tk.Text, *, copy, read, regenerate,
-                 limit: int = LIMITE) -> None:
+                 limit: int = LIMITE, deepen=None) -> None:
         self.text = text
         self.copy = copy
         self.read = read
         self.regenerate = regenerate
+        self.deepen = deepen          # 056: pulsante «Approfondisci» (conferma, poi online)
         self.limit = limit
         self.marks: list[str] = []
         self.bars: dict[str, tk.Widget] = {}  # segno del messaggio -> barra
@@ -131,7 +132,10 @@ class Bolle:
         if question:
             tk.Button(bar, text="rigenera",
                       command=lambda: self.regenerate(question),
-                      **style).pack(side="left")
+                      **style).pack(side="left", padx=(0, 4))
+            if self.deepen is not None:
+                tk.Button(bar, text="Approfondisci", command=self.deepen,
+                          **style).pack(side="left")
         # Subito sotto il testo della risposta, prima della riga vuota finale.
         self.text.window_create("end-2c", window=bar, padx=6)
         if self.marks:

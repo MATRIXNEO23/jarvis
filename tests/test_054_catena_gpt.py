@@ -11,7 +11,8 @@ import servizi_online
 import servizi_ricerca as sr
 
 ROOT = Path(__file__).resolve().parents[1]
-CATENA = ("start_conversation_gpt", "conversation_chain", "local_after_gpt")
+CATENA = ("start_conversation_gpt", "conversation_chain", "local_after_gpt",
+          "fast_mode", "ask_online", "deepen_last")   # 056: Basso consumo / Veloce, conferma online
 
 
 def _funzioni(*names):
@@ -31,7 +32,9 @@ def _env(**extra):
                build_conversation_prompt=lambda *a, **k: "prompt",
                recent_memory_for_gpt=lambda _: "", capability_status_prompt=lambda _: "",
                active_addon_actions=lambda: (), ConversationRejected=ValueError,
-               write_line=mock.Mock(), speak_result=mock.Mock())
+               write_line=mock.Mock(), speak_result=mock.Mock(),
+               settings={"modalita": "veloce"}, last_question=[""],      # 056: questi test sono «Veloce»
+               lumi_ricerca=mock.Mock(return_value=False))
     env.update(extra)
     module = ast.Module(body=_funzioni(*CATENA), type_ignores=[])
     exec(compile(module, "catena", "exec"), env)
@@ -60,15 +63,14 @@ class GptNonCollegatoTests(unittest.TestCase):
             _avvia(env, "che cos'è la fotosintesi", False)
         env["submit_gemma_voice"].assert_called_once_with(
             "che cos'è la fotosintesi", typed=False, route="locale")
-        self.assertIn("non collegato", env["write_line"].call_args_list[0].args[0])
         env["run_gpt"].assert_not_called()
 
     def test_a_script_with_nothing_available_gets_a_clear_message_never_silence(self):
-        env = _env(active_gpt=False)
+        env = _env(active_gpt=False, settings={"modalita": "basso_consumo"})
         _avvia(env, "scrivimi uno script Python", False)
         env["submit_gemma_voice"].assert_not_called()
         env["speak_result"].assert_called_once()
-        self.assertTrue(any("script" in c.args[0] for c in env["write_line"].call_args_list))
+        self.assertTrue(any("online" in c.args[0] for c in env["write_line"].call_args_list))
 
     def test_local_model_busy_gives_a_message(self):
         env = _env(active_gpt=False, submit_gemma_voice=mock.Mock(return_value=False))
@@ -84,7 +86,7 @@ class GptCollegatoTests(unittest.TestCase):
         env["run_gpt"].assert_not_called()
 
     def test_without_online_gpt_is_not_asked_and_the_local_model_answers(self):
-        env = _env(active_gpt=True)
+        env = _env(active_gpt=True, settings={"modalita": "basso_consumo"})
         with mock.patch("lumi_comandi.chiedi") as chiedi:
             _avvia(env, "spiegami la relatività", False)
         chiedi.assert_not_called()
@@ -121,7 +123,8 @@ class RicercaSenzaChiaveTests(unittest.TestCase):
         env = dict(write_line=mock.Mock(), speak_result=mock.Mock(),
                    root=SimpleNamespace(after=lambda ms, fn: fn(), clipboard_clear=mock.Mock(),
                                         clipboard_append=mock.Mock()),
-                   threading=SimpleNamespace(Thread=Sync), tk=SimpleNamespace(TclError=OSError))
+                   threading=SimpleNamespace(Thread=Sync), tk=SimpleNamespace(TclError=OSError),
+                   ricerca_attesa=[None], ricerca_risultati=[[]], open_search_result=mock.Mock())
         module = ast.Module(body=_funzioni("lumi_ricerca"), type_ignores=[])
         exec(compile(module, "ricerca", "exec"), env)
         return env
@@ -154,7 +157,7 @@ class RicercaSenzaChiaveTests(unittest.TestCase):
                                   return_value={"ordine": ["tavily"], "attivi": ["tavily"]}), \
                 mock.patch.object(sr, "cerca", return_value=("Tavily", risultato)), \
                 mock.patch("file_access.ui.show_results") as window:
-            self.assertTrue(env["lumi_ricerca"]("cerca online meteo Roma domani"))
+            self.assertTrue(env["lumi_ricerca"]("cerca online meteo Roma domani", True))
         window.assert_not_called()                      # niente finestra risultati separata
         chat = env["write_line"].call_args.args[0]
         self.assertIn("Domani sole a Roma.", chat.split("Fonti:")[0])
@@ -166,7 +169,7 @@ class RicercaSenzaChiaveTests(unittest.TestCase):
         env = self._lumi_ricerca(sr)
         with mock.patch.object(sr, "pronti", return_value=[object()]), \
                 mock.patch.object(sr, "cerca", side_effect=RuntimeError("x")):
-            env["lumi_ricerca"]("cerca online meteo Roma domani")
+            env["lumi_ricerca"]("cerca online meteo Roma domani", True)
         self.assertTrue(any("Nessun servizio" in c.args[0] for c in env["write_line"].call_args_list))
         env["speak_result"].assert_called_once()
 
@@ -188,16 +191,18 @@ class ApprofondisciTests(unittest.TestCase):
         self.assertEqual(sr.parse("approfondisci online la fotosintesi"),
                          ("approfondisci", "la fotosintesi"))
 
-    def test_approfondisci_without_online_answers_gemma_even_with_online_ready(self):
-        env = _env(active_gpt=True)
-        _avvia(env, "approfondisci la fotosintesi", True)
-        env["submit_gemma_voice"].assert_called_once_with("approfondisci la fotosintesi",
-                                                         typed=False, route="locale")
+    def test_approfondisci_asks_before_going_online_in_low_consumption_mode(self):
+        env = _env(active_gpt=True, settings={"modalita": "basso_consumo"}, last_question=["la fotosintesi"])
+        with mock.patch("lumi_comandi.chiedi") as chiedi:
+            _avvia(env, "approfondisci", True)
+        chiedi.assert_called_once()
+        self.assertEqual(chiedi.call_args.args[0], "online_yes")
+        env["submit_gemma_voice"].assert_not_called()
         env["run_gpt"].assert_not_called()
 
-    def test_submit_gemma_voice_keeps_approfondisci_local(self):
+    def test_submit_gemma_voice_no_longer_overrides_the_explicit_route(self):
         source = (ROOT / "local_model" / "conversazione_lumi.py").read_text(encoding="utf-8")
-        self.assertIn('approfondisci_locale(spoken)', source)
+        self.assertNotIn('approfondisci_locale(spoken)', source)
 
 
 if __name__ == "__main__":

@@ -2863,7 +2863,8 @@ def main() -> None:
     chat_bubbles = __import__("chat_bolle").Bolle(
         output, copy=copy_chat_text,
         read=lambda value: speaker.speak(value, selected_voice()),
-        regenerate=lambda question: submit_local(message_override=question))
+        regenerate=lambda question: submit_local(message_override=question),
+        deepen=lambda: deepen_last())
 
     def show_chat_history(title: str, pairs) -> None:
         """Chat aperta dall'elenco: la cronologia salvata al posto dei messaggi di prima."""
@@ -4874,9 +4875,25 @@ def main() -> None:
         threading.Thread(target=work, daemon=True, name="lumi-github").start()
         return True
 
-    def lumi_ricerca(spoken: str) -> bool:
+    ricerca_risultati = [[]]      # 056 C3: indirizzi dell'ultima ricerca, per «apri il N»
+
+    def open_search_result(number: int) -> None:
+        """«apri il 2»: apre quel risultato nel browser predefinito, senza conferma (nessuna
+        quota). Solo http/https, e solo risultati dell'ultima ricerca."""
+        urls = ricerca_risultati[0]
+        if not 1 <= number <= len(urls) or not urls[number - 1].lower().startswith(("http://", "https://")):
+            write_line("RICERCA > Non c'è un risultato " + str(number) + ".")
+            return
+        __import__("webbrowser").open(urls[number - 1])
+        write_line("RICERCA > Apro il risultato " + str(number) + " nel browser.")
+        speak_result("Apro il risultato " + str(number) + ".")
+
+    ricerca_attesa = [None]       # 056 A.5: frase di ricerca in attesa del «sì»
+
+    def lumi_ricerca(spoken: str, confirmed: bool = False) -> bool:
         """«cerca online …» / «approfondisci online …»: primo servizio di ricerca pronto
-        (poi i successivi); riassunto e link nella finestra risultati, browser chiuso."""
+        (poi i successivi); riassunto e link nella finestra risultati, browser chiuso.
+        056: prima si chiede «Vado online?» (sì/no senza «Lumi»): niente quota senza il sì."""
         ricerca = __import__("servizi_ricerca")
         parsed = ricerca.parse(spoken)
         if parsed is None:
@@ -4891,6 +4908,12 @@ def main() -> None:
             text = ricerca.avviso_senza_chiave()
             write_line("RICERCA > " + text)
             speak_result("Per cercare online manca la chiave Tavily. Il link per crearla è in chat.")
+            return True
+        if not confirmed:
+            ricerca_attesa[0] = spoken
+            __import__("lumi_comandi").chiedi(
+                "ricerca_yes", "Vado online? Di' sì o no.", write_line, speak_result,
+                no_action="ricerca_no")
             return True
         write_line("RICERCA > Cerco online: " + query)
 
@@ -4908,6 +4931,10 @@ def main() -> None:
                     speak_result("La ricerca ha dato un errore. I dettagli sono in chat.")
 
             def show_inner():
+                if name is not None and result.link:
+                    ricerca_risultati[0] = [url for _title, url in result.link]
+                    __import__("risposte").expect_choice(     # 056 C3: «apri il 2»
+                        len(result.link), open_search_result, seconds=120.0)
                 if name is None:
                     text = ("Nessun servizio di ricerca ha risposto (" + "; ".join(result)[:200] + ").")
                     write_line("RICERCA > " + text)
@@ -4918,6 +4945,15 @@ def main() -> None:
             root.after(0, show)
         threading.Thread(target=work, daemon=True, name="lumi-ricerca-online").start()
         return True
+
+    def resume_ricerca(accepted: bool) -> None:
+        pending, ricerca_attesa[0] = ricerca_attesa[0], None
+        if pending is None:
+            return
+        if accepted:
+            lumi_ricerca(pending, True)
+        else:
+            write_line("LUMI > Va bene, non cerco online.")
 
     def help_box_say(action) -> None:
         if pc_help_box is None:
@@ -5109,6 +5145,8 @@ def main() -> None:
                                  write_line("ONLINE > Online attivo finché non spegni il cervello online."),
                                  resume_orchestrated("online")),
          "orch_local": lambda: resume_orchestrated("locale"),
+         "ricerca_yes": lambda: resume_ricerca(True),
+         "ricerca_no": lambda: resume_ricerca(False),
          "gpt_consent_yes": lambda: grant_gpt_voice_consent(True),
          "gpt_consent_no": lambda: grant_gpt_voice_consent(False),
          "orch_yes": lambda: __import__("orchestratore").rispondi_permesso(True),
