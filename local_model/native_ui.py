@@ -277,6 +277,16 @@ class NativeSettingsWindow:
             revised, reload_needed = update_native_settings(self.current, changes)
             revised.save(self.path)
             self.current = revised
+            if revised.model:
+                # 056b: native.json è la base; le modifiche vanno anche nel profilo (slot in uso)
+                # del modello selezionato, così caselle e profili non restano indietro.
+                try:
+                    from . import profili_famiglia
+                    profili_famiglia.salva_in_slot(
+                        revised.model, profili_famiglia.slot_ricordato(revised.model, self.path),
+                        self.path)
+                except (OSError, ValueError, RuntimeError):
+                    pass
             if callable(self.on_save):
                 self.on_save(revised, reload_needed)
             self.status.set("Impostazioni salvate. " + (
