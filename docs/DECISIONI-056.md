@@ -19,14 +19,14 @@ La 055 fa il contrario (prima l'online, poi il locale): va corretta. Non era una
 
 ## C. Meteo, comando del motore
 - Il meteo è un comando del motore, come il timer: niente IA, niente quota, niente conferma.
-- I dati vengono da **Open-Meteo** (gratuito, senza chiave), per qualsiasi città.
+- I dati vengono da **Open-Meteo** (gratuito, senza chiave), per qualsiasi città. È l'add-on Meteo (vedi C2).
 - Le domande più complesse sul clima, tipo «com'è il clima a Tokyo in primavera», restano ricerche online.
 
-## C2. Riquadro meteo nell'HUD (17/11, 16:35)
-- In basso, sotto il globo e sopra i riquadri Disco C e Rete.
-- Mostra un'iconcina che cambia col tempo (sole, nuvola, pioggia, ecc.), il nome della città e la temperatura.
-- Città: quella dell'ultima richiesta meteo. Questa è una scelta tecnica predefinita, da confermare con l'utente: lui non ha risposto alla domanda. Finché non viene chiesta una città, il riquadro mostra solo «Meteo».
-- Aggiornamento leggero: alla richiesta e poi al massimo ogni 30 minuti, senza polling continuo.
+## C2. Meteo come add-on, con icone nell'HUD (17/11, 16:40)
+- Il meteo è un **add-on** (.jaddon, cartella propria, in Impostazioni > Add-on): attivo/disattivo e configurazione. La prima volta si sceglie la **città predefinita**.
+- Nell'HUD **niente riquadro**: solo iconcine che cambiano (sole, nuvola, pioggia, ecc.) con la scritta della città e la temperatura, nello spazio vuoto sotto il globo e sopra Disco C e Rete.
+- L'HUD mostra la città predefinita. Il meteo delle altre città che chiedi te lo dice a voce.
+- Aggiornamento leggero: all'avvio e poi al massimo ogni 30 minuti, senza polling continuo. Con l'add-on disattivato non compare niente.
 
 ## C3. Risultati di ricerca
 - «apri il 2» (o un altro numero) apre quel risultato nel browser predefinito, senza conferma perché non consuma quota.
