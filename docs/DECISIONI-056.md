@@ -22,6 +22,16 @@ La 055 fa il contrario (prima l'online, poi il locale): va corretta. Non era una
 - I dati vengono da **Open-Meteo** (gratuito, senza chiave), per qualsiasi città.
 - Le domande più complesse sul clima, tipo «com'è il clima a Tokyo in primavera», restano ricerche online.
 
+## C2. Riquadro meteo nell'HUD (17/11, 16:35)
+- In basso, sotto il globo e sopra i riquadri Disco C e Rete.
+- Mostra un'iconcina che cambia col tempo (sole, nuvola, pioggia, ecc.), il nome della città e la temperatura.
+- Città: quella dell'ultima richiesta meteo. Questa è una scelta tecnica predefinita, da confermare con l'utente: lui non ha risposto alla domanda. Finché non viene chiesta una città, il riquadro mostra solo «Meteo».
+- Aggiornamento leggero: alla richiesta e poi al massimo ogni 30 minuti, senza polling continuo.
+
+## C3. Risultati di ricerca
+- «apri il 2» (o un altro numero) apre quel risultato nel browser predefinito, senza conferma perché non consuma quota.
+- Cerca: resta Tavily Search, con conferma prima di andare online.
+
 ## D. Barra in alto
 - Togliere «GPT ON». GPT sta solo dentro la tendina ONLINE, insieme agli altri.
 - Nuova tendina **MODELLO** (offline), come le altre: le 3 caselle per cambiare modello al volo, senza passare dalle impostazioni. Accanto alla tendina c'è UN solo tastino on/off, che accende o spegne il modello offline (scelta 1 dell'utente, 16:24). In memoria resta un solo modello alla volta.
@@ -31,6 +41,7 @@ La 055 fa il contrario (prima l'online, poi il locale): va corretta. Non era una
 - Con tutto spento, «chi ha scritto i Promessi sposi?» deve avere la risposta dall'offline. Nelle prove di Codex risulta NON PROVATO.
 
 ## Da decidere (NON implementare)
+- **Navigazione autonoma** (prossime build). Obiettivo dell'utente: usare il PC senza mouse e tastiera, con Lumi che naviga, legge le pagine e scarica i file da sola. Da valutare: estensione di Chrome per Lumi oppure Playwright (gratuito, ma pesa sulla RAM; va avviato solo quando serve). Restano da definire anche «leggi il N» (il riassunto di una pagina intera è troppo pesante per l'offline sul Pavilion), i download e Tavily Extract.
 - **Ricerche online** (Tavily, Exa, Firecrawl, Linkup): quando si usano le ricerche e quando i modelli online, quali frasi le attivano («cercami…», «ultime novità», «informazioni su…») e come si collegano all'«approfondisci» su un risultato. L'utente vuole definirle a parte, dopo.
 - Fino ad allora la ricerca resta com'è, ma con conferma prima di andare online (regola A.5).
 
