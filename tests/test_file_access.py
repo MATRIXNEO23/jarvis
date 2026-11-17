@@ -271,7 +271,7 @@ class FileAccessTests(unittest.TestCase):
              'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,
              'try_telegram_voice_send':lambda x:False,'save_only_waiting':False,
              'doc_dialog':types.SimpleNamespace(phase='idle'),'parse_simple_save':lambda x:None,
-             'project_voice_command':lambda x:False,'preference_command':lambda x:False,
+             'project_voice_command':lambda x:False,'preference_command':lambda x:False,'memory_wipe_command':lambda x:False,
              'handle_project_reference':lambda x:False,
              'handle_unanchored_short_reply':lambda x:self.fail('file choice reached generic guard'),
              'try_file_command':lambda text:calls.append(self.files.parse_command(text)) or True}
@@ -834,7 +834,7 @@ function New-Object {
              'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,
              'save_only_waiting':False,'doc_dialog':SimpleNamespace(phase='idle'),
              'parse_simple_save':lambda s:None,'project_voice_command':lambda s:projects.append(s) or True,
-             'preference_command':lambda s:False,'handle_project_reference':lambda s:False,
+             'preference_command':lambda s:False,'memory_wipe_command':lambda s:False,'handle_project_reference':lambda s:False,
              'handle_unanchored_short_reply':lambda s:False,'try_self_diagnostic':lambda s:False,
              'maybe_queue_telegram_note':lambda s:False,'gpt_enabled':SimpleNamespace(get=lambda:False)}
         exec(compile(ast.Module(body=callbacks,type_ignores=[]),'real-explorer-console-gate','exec'),env)

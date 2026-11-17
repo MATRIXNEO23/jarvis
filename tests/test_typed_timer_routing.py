@@ -29,7 +29,7 @@ class TypedTimerTests(unittest.TestCase):
             request=request,reconcile_document_session=Mock(),try_telegram_voice_send=lambda _:False,
             save_only_waiting=False,doc_dialog=SimpleNamespace(phase='idle'),parse_simple_save=lambda _:None,
             pending_project_name=False,pending_project_rename_id=None,pending_project_trash_id=None,
-            try_file_command=lambda _:False,project_voice_command=lambda _:False,preference_command=lambda _:False,
+            try_file_command=lambda _:False,project_voice_command=lambda _:False,preference_command=lambda _:False,memory_wipe_command=lambda _:False,
             handle_project_reference=lambda _:False,handle_unanchored_short_reply=lambda _:False,
             try_self_diagnostic=lambda _:False,maybe_queue_telegram_note=lambda _:False,
             parse_alarm_clock_command=parse_command,parse_timer_command=parse_timer_command,

@@ -277,7 +277,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             try_telegram_voice_send=Mock(return_value=False), save_only_waiting=False,
             doc_dialog=SimpleNamespace(phase="idle"), document_busy=False,
             parse_simple_save=lambda _: None, classify_document_choice=lambda *a, **k: None,
-            project_voice_command=lambda _: False, preference_command=lambda _: False,
+            project_voice_command=lambda _: False, preference_command=lambda _: False, memory_wipe_command=lambda _: False,
             handle_project_reference=lambda _: False,
             handle_unanchored_short_reply=lambda _: False,
             maybe_queue_telegram_note=lambda _: False,
