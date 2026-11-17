@@ -143,6 +143,12 @@ Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), d
   - ko: la versione 054 non compare in lumi_stato né in lumi_online;
   - ko: «cambia modello» non elenca Qwen3 1.7B (bug noto);
   - ko: una domanda generica non passa dai servizi gratuiti né da «Uso GPT?». Va subito al locale e poi risponde «Non riesco a rispondere adesso», con timeout di 80 s.
+- Prove 054, secondo giro (04:05):
+  - Causa del ko sulla catena: il testo scritto passa da jarvis.py:3544 → run_gpt("typed_conversation"), senza servizi_online né offer_gpt. La catena c'è solo nel percorso vocale (~2320). Va unificata.
+  - La finestra Sì/No nasce da confirm_gpt_inference (jarvis.py:2169, messagebox.askyesno), chiamata alle righe 2064, 2209, 2217 e 3304. Va sostituita con offer_gpt + chiedi a voce.
+  - I link Tavily compaiono solo in console, non in chat.
+  - «approfondisci online buchi neri»: nessuna risposta dopo 60 s.
+  - Profili a 3 slot e barra quota: il codice c'è, ma non è collegato alla UI (solo «I miei modelli» in native_ui.py:53).
 - Pulsanti _ □ X in alto a destra, sopra l'ingranaggio (non fatto nella 054).
 - Prima delle correzioni: leggere il FIX di Codex in docs/audit/, proporre all'utente le modifiche punto per punto e partire solo con il suo ok.
 
