@@ -38,7 +38,7 @@ class TettoPromptTests(unittest.TestCase):
     def test_la_sessione_prova_pieno_poi_ridotto_poi_minimo(self):
         corpo = SESSION[SESSION.index("reduce_intent_context"):SESSION.index("base_instructions = instructions")]
         self.assertIn("essential_only=True", corpo)
-        self.assertIn("<= budget", corpo)
+        self.assertIn("<= catalog_budget", corpo)
 
     def test_chat_continua_accesa_di_serie(self):
         from contesto_lumi import Contesto
