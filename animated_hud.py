@@ -310,22 +310,17 @@ class JarvisHUD:
         self._quick_state_cache = None
         quick_controls = tk.Frame(header, bg=BG)
         quick_controls.pack(side="right", padx=(0, 12))
-        # 056 D: niente «GPT ON» (GPT sta nella tendina ONLINE).
-        for index, (key, label) in enumerate((
-                ("mic", "MIC OFF"), ("model", "MODELLO ON"),
-                ("memory", "MEMORIA OFF"))):
-            if index:
-                tk.Label(quick_controls, text="/", bg=BG, fg=MUTED,
-                         font=("Consolas", 9)).pack(side="left", padx=3)
-            button = tk.Button(quick_controls, text=label,
-                command=lambda name=key: self._invoke_quick_toggle(name),
-                state="disabled", bg=BG, fg=MUTED,
-                activebackground="#092238", activeforeground=CYAN,
-                disabledforeground=MUTED, font=("Consolas", 9),
-                bd=0, relief="flat", highlightthickness=1,
-                highlightbackground="#164257", highlightcolor=CYAN,
-                padx=5, pady=4, cursor="hand2", takefocus=True)
-            button.pack(side="left")
+        # 056b: ogni voce è un tasto con lo stesso stile (barra_tasti.TastoBarra). «Modello ▾»
+        # ha il ⏻ nello stesso tasto; Mic e Memoria sono tasti con ⏻. Online, Ricerca e
+        # Telegram si aggiungono con add_quick_button (Online e Ricerca vicini).
+        from barra_tasti import TastoBarra
+        for key, label, has_menu in (("model", "Modello ▾", True), ("mic", "MIC", False),
+                                     ("memory", "MEMORIA", False)):
+            button = TastoBarra(
+                quick_controls, label, None, power=True,
+                power_command=lambda name=key: self._invoke_quick_toggle(name))
+            button.configure(state="disabled")
+            button.pack(side="left", padx=(0, 5))
             setattr(self, key + "_toggle_button", button)
         self.quick_controls = quick_controls
 
@@ -401,7 +396,7 @@ class JarvisHUD:
         footer.grid_rowconfigure(0,weight=1)
         self.footer=footer
         # 056 C2: meteo sotto il globo e sopra DISCO C / RETE, senza riquadro; compare solo con dati.
-        self.weather_canvas=tk.Canvas(self.visual,height=30,width=200,bg=BG,
+        self.weather_canvas=tk.Canvas(self.visual,height=34,width=200,bg=BG,
                                       highlightthickness=0,bd=0)
         self._weather=None
         self.cpu_tile=MetricTile(footer,"CPU",0)
@@ -555,8 +550,8 @@ class JarvisHUD:
             canvas.pack_forget()
             return
         from meteo.icone import disegna
-        disegna(canvas,18,15,data["categoria"],CYAN)
-        canvas.create_text(38,15,anchor="w",fill=CYAN,font=("Consolas",10),
+        disegna(canvas,18,17,data["categoria"],CYAN)
+        canvas.create_text(40,17,anchor="w",fill=CYAN,font=("Consolas",10),
                            text="%s  %d°"%(str(data["citta"])[:16],round(data["temp"])))
         canvas.pack(before=self.footer,anchor="e",padx=14)
 
@@ -575,21 +570,18 @@ class JarvisHUD:
         for key in handlers:
             getattr(self, key + "_toggle_button").configure(state="normal")
 
-    def add_quick_button(self, key, text, command, *, after=None):
-        """Pulsante in più nella fila in alto (menu ONLINE ▾, ✈ Telegram), dopo `after`."""
-        anchor = getattr(self, after + "_toggle_button", None) if after else None
-        separator = tk.Label(self.quick_controls, text="/", bg=BG, fg=MUTED, font=("Consolas", 9))
-        button = tk.Button(self.quick_controls, text=text, command=command, bg=BG, fg=MUTED,
-                           activebackground="#092238", activeforeground=CYAN,
-                           font=("Consolas", 9), bd=0, relief="flat", highlightthickness=1,
-                           highlightbackground="#164257", highlightcolor=CYAN,
-                           padx=5, pady=4, cursor="hand2", takefocus=True)
+    def add_quick_button(self, key, text, command, *, after=None, power=False):
+        """Tasto in più nella fila in alto (Online ▾, Ricerca ▾, Telegram), dopo `after`."""
+        from barra_tasti import TastoBarra
+        anchor = None
+        if after:
+            anchor = (getattr(self, after + "_toggle_button", None)
+                      or getattr(self, after + "_extra_button", None))
+        button = TastoBarra(self.quick_controls, text, command, power=power)
         if anchor is not None:
-            separator.pack(side="left", padx=3, after=anchor)
-            button.pack(side="left", after=separator)
+            button.pack(side="left", padx=(0, 5), after=anchor)
         else:
-            separator.pack(side="left", padx=3)
-            button.pack(side="left")
+            button.pack(side="left", padx=(0, 5))
         setattr(self, key + "_extra_button", button)
         return button
 
@@ -704,12 +696,15 @@ class JarvisHUD:
         from model_gate import enabled as model_enabled
         model_on = bool(state.get("model_enabled", model_enabled()))
         controls = (("mic", mic_label, mic_enabled or mic_selected),
-                    ("model", "MODELLO ON" if model_on else "MODELLO OFF", model_on),
-                    ("memory", "MEMORIA ON" if memory else "MEMORIA OFF", memory))
+                    ("model", None, model_on),
+                    ("memory", "MEMORIA", memory))
         if controls != self._quick_state_cache:
             for key, label, enabled in controls:
-                getattr(self, key + "_toggle_button").configure(
-                    text=label, fg=CYAN if enabled else MUTED)
+                button = getattr(self, key + "_toggle_button")
+                if label is None:
+                    button.configure(power_on=enabled)
+                else:
+                    button.configure(text=label, power_on=enabled)
             self._quick_state_cache = controls
         if state.get("modalita") in ("basso_consumo","veloce"):
             self.mode_slide.imposta(state["modalita"])

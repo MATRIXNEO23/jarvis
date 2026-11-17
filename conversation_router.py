@@ -66,6 +66,30 @@ def build_native_intent_context(*, has_document=False, addon_actions=()):
     return instructions, tuple(ids)
 
 
+_ESSENTIAL_IDS = 6
+
+
+def reduce_intent_context(context, question, *, essential_only=False):
+    """056b: catalogo ridotto alle azioni pertinenti alla domanda (o alle prime
+    essenziali), per restare nel tetto di token. Stesso formato (testo, ids)."""
+    text, ids = context
+    marker = 'ID consentiti: '
+    start = text.find(marker)
+    end = text.find('. ', start) if start >= 0 else -1
+    if start < 0 or end < 0:
+        return context
+    words = {w for w in re.findall(r'[a-zà-ù]{4,}', question.lower())}
+    keep = list(ids[:_ESSENTIAL_IDS])
+    if not essential_only:
+        for aid in ids[_ESSENTIAL_IDS:]:
+            parts = set(re.split(r'[._]', aid))
+            if any(w[:5] in p or p[:5] in w for w in words for p in parts if len(p) >= 4):
+                keep.append(aid)
+    if len(keep) >= len(ids):
+        return context
+    return text[:start + len(marker)] + ','.join(keep) + text[end:], tuple(keep)
+
+
 # Only unambiguously conversational requests skip the expensive native action
 # catalog.  Everything else continues through the original validated router.
 # This is not a permission classifier: it only removes executable proposals.

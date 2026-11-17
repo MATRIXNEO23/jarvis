@@ -81,9 +81,15 @@ class Telegram:
         self.ask_text = ask_text
         self.period_ms = period_ms
         self.popup = None
-        button.configure(command=self.toggle)
+        button.configure(command=self.toggle, power_command=self._power)
         root.bind_all("<Button-1>", self._click_anywhere, add="+")
         self.aggiorna()
+
+    def _power(self):
+        """056b: ⏻ del tasto Telegram = risposte automatiche accese/spente."""
+        self.auto_var.set(not self.auto_var.get())   # la funzione legge la variabile già girata
+        self.toggle_auto()
+        self.aggiorna(repeat=False)
 
     # --- icona -------------------------------------------------------------------------------
     def _counts(self, peer):
@@ -104,7 +110,8 @@ class Telegram:
         colour, unread, text = stato(bool(self.auto_var.get()), self.contacts(),
                                      self._counts, self._activity)
         try:
-            self.button.configure(text="✈ %d" % unread if unread else "✈", fg=colour)
+            self.button.configure(text=("✈ Telegram %d" % unread) if unread else "✈ Telegram",
+                                  power_on=bool(self.auto_var.get()))
             self.status_text = text
         except tk.TclError:
             return

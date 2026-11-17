@@ -32,8 +32,11 @@ class MenuModello(MenuModelli):
 
     def refresh_button(self):
         try:
-            self.button.configure(text="MODELLO ▾", fg=MUTED)
-        except tk.TclError:
+            from local_model import scelta_modello
+            in_uso = scelta_modello.modello_in_uso(self.config_path)
+            nome = scelta_modello.nome_breve(in_uso)[:22] if in_uso else ""
+            self.button.configure(text=("Modello: " + nome + " ▾") if nome else "Modello ▾")
+        except (tk.TclError, OSError, ValueError, RuntimeError):
             pass
 
     def _fill(self, popup, settings):
@@ -63,3 +66,4 @@ class MenuModello(MenuModelli):
         self.close()
         if modello is not None:
             self.on_use(modello)
+            self.refresh_button()

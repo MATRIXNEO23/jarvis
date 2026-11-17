@@ -26,14 +26,19 @@ def _get(url: str, timeout: float = 8.0) -> dict:
         return json.loads(response.read(200_000).decode("utf-8"))
 
 
-def categoria(code) -> str:
-    """Codice WMO (weathercode) → sole | nuvola | pioggia | neve | temporale."""
+def categoria(code, giorno: bool = True) -> str:
+    """Codice WMO (weathercode) → sole | sole_nuvola | nuvola | pioggia | neve | temporale |
+    nebbia; di notte (giorno=False) il cielo sereno o poco nuvoloso diventa «luna»."""
     try:
         code = int(code)
     except (TypeError, ValueError):
         return "nuvola"
-    if code in (0, 1):
-        return "sole"
+    if code in (0, 1, 2):
+        if not giorno:
+            return "luna"
+        return "sole" if code < 2 else "sole_nuvola"
+    if code in (45, 48):
+        return "nebbia"
     if code >= 95:
         return "temporale"
     if code in (71, 73, 75, 77, 85, 86):
@@ -43,12 +48,13 @@ def categoria(code) -> str:
     return "nuvola"
 
 
-_TESTO = {"sole": "sereno", "nuvola": "nuvoloso", "pioggia": "pioggia", "neve": "neve",
+_TESTO = {"sole": "sereno", "luna": "sereno", "sole_nuvola": "poco nuvoloso", "nebbia": "nebbia",
+          "nuvola": "nuvoloso", "pioggia": "pioggia", "neve": "neve",
           "temporale": "temporale"}
 
 
-def frase(citta: str, temp: float, code) -> str:
-    return "A %s ci sono %d gradi, %s." % (citta, round(temp), _TESTO[categoria(code)])
+def frase(citta: str, temp: float, code, giorno: bool = True) -> str:
+    return "A %s ci sono %d gradi, %s." % (citta, round(temp), _TESTO[categoria(code, giorno)])
 
 
 def cerca_citta(nome: str, get=_get) -> dict:
@@ -67,7 +73,8 @@ def attuale(lat: float, lon: float, get=_get) -> dict:
     try:
         data = get(PREVISIONE.format(lat=lat, lon=lon))
         now = data["current_weather"]
-        return {"temp": float(now["temperature"]), "code": int(now["weathercode"])}
+        return {"temp": float(now["temperature"]), "code": int(now["weathercode"]),
+                "giorno": int(now.get("is_day", 1)) != 0}
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ErroreMeteo("Non riesco a leggere le previsioni adesso.") from exc
 
@@ -87,7 +94,7 @@ class ServizioMeteo:
         if not city:
             raise ErroreMeteo("Scegli la città predefinita nella pagina dell'add-on Meteo.")
         now = attuale(city["lat"], city["lon"], self._get)
-        return frase(city["nome"], now["temp"], now["code"])
+        return frase(city["nome"], now["temp"], now["code"], now.get("giorno", True))
 
     def aggiorna(self, forza: bool = False):
         """Dati per l'HUD (città predefinita). None se spento, senza città o errore di rete;
@@ -103,6 +110,7 @@ class ServizioMeteo:
             now = attuale(city["lat"], city["lon"], self._get)
         except ErroreMeteo:
             return self.ultimo
-        self.ultimo = {"citta": city["nome"], "temp": now["temp"], "code": now["code"]}
+        self.ultimo = {"citta": city["nome"], "temp": now["temp"], "code": now["code"],
+                       "giorno": now.get("giorno", True)}
         self._quando = self._ora()
         return self.ultimo

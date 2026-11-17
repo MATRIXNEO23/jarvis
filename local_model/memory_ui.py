@@ -15,15 +15,23 @@ class MemoryPreferencesWindow:
         self.window.title("Lumi // Memoria e inattivita")
         self.window.geometry("590x650")
         self.window.minsize(480, 550)
+        # 056b: prima di disegnare si pulisce il contenuto (niente lettere fantasma
+        # della pagina precedente) e il testo va a capo con la larghezza della finestra.
+        for old in self.window.winfo_children():
+            old.destroy()
         frame = ttk.Frame(self.window, padding=14)
         frame.pack(fill="both", expand=True)
+        self._wrapped = []
+        frame.bind("<Configure>", self._rewrap)
         ttk.Label(frame, text="Memoria locale - impostazioni",
                   font=("Segoe UI", 13, "bold")).pack(anchor="w")
-        ttk.Label(frame, text="Chat Gemma: budget di cronologia e ricordi regolabile da 128 a 600 token, inizialmente 250. "
+        intro = ttk.Label(frame, text="Chat Gemma: budget di cronologia e ricordi regolabile da 128 a 600 token, inizialmente 250. "
                   "Un valore maggiore conserva più dialogo e può rallentare la risposta. L’ultimo scambio viene conservato o estratto entro il limite. "
                   "Il limite legacy resta in caratteri. "
                   "Recupero: massimo 16 scambi recenti per chat/progetto, 16384 caratteri per testo. La sintesi automatica non è ancora collegata.",
-                  wraplength=530).pack(anchor="w", pady=8)
+                  wraplength=530, justify="left")
+        self._wrapped.append(intro)
+        intro.pack(anchor="w", pady=8)
         fields = (
             ("history_max_tokens", "Token cronologia e ricordi (Gemma)"),
             ("idle_seconds", "Inattivita prima sintesi (secondi)"),
@@ -50,8 +58,9 @@ class MemoryPreferencesWindow:
             self.values[key] = var
             ttk.Checkbutton(frame, text=title, variable=var).pack(anchor="w", pady=3)
         self.status = tk.StringVar(value="Le modifiche non avviano alcuna sintesi.")
-        ttk.Label(frame, textvariable=self.status, wraplength=520).pack(
-            anchor="w", pady=8)
+        status = ttk.Label(frame, textvariable=self.status, wraplength=520, justify="left")
+        self._wrapped.append(status)
+        status.pack(anchor="w", pady=8)
         ttk.Button(frame, text="Dettagli ultimo contesto Gemma",
                    command=self.show_context_metrics).pack(anchor="w", pady=3)
         buttons = ttk.Frame(frame)
@@ -61,6 +70,11 @@ class MemoryPreferencesWindow:
                    command=self.reset).pack(side="left", padx=6)
         ttk.Button(buttons, text="Chiudi",
                    command=self.window.destroy).pack(side="right")
+
+    def _rewrap(self, event):
+        width = max(200, event.width - 30)
+        for label in self._wrapped:
+            label.configure(wraplength=width)
 
     def show_context_metrics(self):
         try:

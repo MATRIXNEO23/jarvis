@@ -8,11 +8,20 @@ from dataclasses import replace
 import json
 import re
 
+_NOTHINK = re.compile(r"(?i)\s*/no[_ ]?think\b")
+
+
+def strip_nothink(text):
+    """056b: «/nothink» è solo del template Qwen3 (lo dà già il blocco <think> vuoto
+    del prompt): non deve mai comparire nel testo mostrato o salvato."""
+    return _NOTHINK.sub("", text) if isinstance(text, str) else text
+
+
 def clean_native_answer(text):
     """Remove known internal-note sections before storing or speaking."""
     if not isinstance(text, str):
         raise RuntimeError("Risposta Gemma non valida.")
-    value = re.sub(r"(?is)<think>.*?</think>", "", text)
+    value = re.sub(r"(?is)<think>.*?</think>", "", strip_nothink(text))
     value = re.sub(r"(?is)<think>.*", "", value)
     headers = ("what's going right", "conversation flow", "internal reasoning",
                "analysis:", "thinking:", "reasoning:")
@@ -217,7 +226,7 @@ class NativeConversationSession:
             budget = memory.available_prompt_tokens(
                 config.context_size, config.max_output)
             # Conservative character budget: never claim this is a tokenizer.
-            latest = question.strip()
+            latest = strip_nothink(question).strip() or question.strip()
             if len(latest) > 65536:
                 raise ValueError("Domanda troppo lunga per il contesto configurato.")
             # Validate owner-supplied metadata before any native load/count.
@@ -233,8 +242,8 @@ class NativeConversationSession:
                 self._prepare(config, revision)
                 counter = getter()
             exact = callable(counter)
-            if exact:
-                budget = config.context_size - config.max_output - 128
+            # 056b: il tetto prompt_max_tokens vale anche con il contatore esatto
+            # (budget = min(tetto, contesto - uscita - margine)).
             # A bounded request-local cache, discarded before returning.
             counts = {}
             def measure(prompt):
@@ -302,14 +311,19 @@ class NativeConversationSession:
             if size([], "") > budget:
                 raise ValueError("Domanda troppo lunga per il contesto configurato.")
             if intent_context is not None:
-                model_budget = replace(memory, prompt_max_tokens=8192).available_prompt_tokens(
-                    config.context_size, config.max_output)
-                routed_budget = budget if exact else min(model_budget, budget + len(intent_context[0]))
-                if size([], intent_context[0]) <= routed_budget:
-                    instructions = intent_context[0]
+                # 056b: mai oltre il tetto prompt_max_tokens: se il catalogo
+                # completo non entra, si prova quello ridotto alle azioni pertinenti.
+                from conversation_router import reduce_intent_context
+                chosen = None
+                for candidate in (intent_context, reduce_intent_context(intent_context, latest),
+                                  reduce_intent_context(intent_context, latest, essential_only=True)):
+                    if size([], candidate[0]) <= budget:
+                        chosen = candidate
+                        break
+                if chosen is not None:
+                    instructions = chosen[0]
                     base_instruction_source = "conversation_router.build_native_intent_context: catalogo azioni"
-                    budget = routed_budget
-                    allowed_actions = frozenset(intent_context[1])
+                    allowed_actions = frozenset(chosen[1])
                 else:
                     intent_warning = ('Contesto insufficiente per interpretare azioni: '
                                       'chat e comandi diretti restano disponibili.')
@@ -332,7 +346,7 @@ class NativeConversationSession:
             metrics = {}
             continuous = None
             if exact and getattr(memory_context, "continuous", False):
-                # «Chat continua» (passo 4, opzione spenta di serie): inizio fisso e
+                # «Chat continua» (passo 4, accesa di serie dalla 056b): inizio fisso e
                 # messaggi accodati, così il fast forwarding del motore riusa il
                 # contesto; i vecchi escono a blocchi solo quando il contesto è pieno.
                 from contesto_lumi import finestra_continua
@@ -407,13 +421,18 @@ class NativeConversationSession:
                 # only the "reply" of a chat/clarify answer is streamed.
                 from .token_stream import streaming, visible_reply
                 stream_cb = getattr(self, "on_stream", None)
+                if stream_cb is not None and allowed_actions is None:
+                    plain_sink = stream_cb
+
+                    def stream_cb(raw, plain_sink=plain_sink):
+                        plain_sink(strip_nothink(raw))
                 if stream_cb is not None and allowed_actions is not None:
                     # Action-capable prompt: stream only the chat "reply" text,
                     # never a capability proposal (validated after generation).
                     sink = stream_cb
 
                     def stream_cb(raw, sink=sink):
-                        shown = visible_reply(raw)
+                        shown = strip_nothink(visible_reply(raw))
                         if shown.strip():
                             sink(shown)
                 with streaming(stream_cb):

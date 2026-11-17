@@ -499,7 +499,7 @@ def main() -> None:
         shown = meteo_service.ultimo or {}
         return {"attivo": meteo_service.is_enabled(), "citta": shown.get("citta", ""),
                 "temperatura": shown.get("temp"),
-                "icona": meteo_categoria(shown["code"]) if "code" in shown else ""}
+                "icona": meteo_categoria(shown["code"], shown.get("giorno", True)) if "code" in shown else ""}
 
     def meteo_refresh(force: bool = False) -> None:
         """Icona nell'HUD: all'avvio e poi ogni 30 minuti (un solo timer, niente polling);
@@ -520,7 +520,7 @@ def main() -> None:
         def work():
             data = meteo_service.aggiorna(force)
             shown = None if not data else {"citta": data["citta"], "temp": data["temp"],
-                                           "categoria": meteo_categoria(data["code"])}
+                                           "categoria": meteo_categoria(data["code"], data.get("giorno", True))}
             try:
                 root.after(0, lambda: hud.set_weather(shown))
             except (tk.TclError, RuntimeError):
@@ -3548,6 +3548,15 @@ def main() -> None:
         threading.Thread(target=worker, daemon=True).start()
 
 
+    def chain_typed_once(message: str) -> None:
+        """056b: il «TU >» è già in chat; la catena non lo riscrive (un invio = una richiesta)."""
+        from local_model import conversazione_lumi as _cl
+        _cl.TU_SCRITTO[0] = True
+        try:
+            conversation_chain(message, True)
+        finally:
+            _cl.TU_SCRITTO[0] = False
+
     def submit_gpt() -> None:
         if closing:
             return
@@ -3613,7 +3622,7 @@ def main() -> None:
                 # 055: stessa catena della voce (servizi online in ordine, GPT compreso, poi locale).
                 request.set("")
                 write_line("TU > " + message)
-                conversation_chain(message, True)
+                chain_typed_once(message)
                 return
             # Longer free-form questions are conversational only; never
             # interpret a 5000-character document as an executable action.
@@ -3626,7 +3635,7 @@ def main() -> None:
             return
         request.set("")
         write_line("TU > " + message)
-        conversation_chain(message, True)      # 056: sempre la catena, anche i testi lunghi
+        chain_typed_once(message)      # 056: sempre la catena, anche i testi lunghi
 
     def diagnostic_heartbeat() -> None:
         """Independent watchdog: runs even if another event handler fails."""
@@ -4643,23 +4652,23 @@ def main() -> None:
     # Menu «ONLINE ▾» accanto a GPT (15/11 sera): servizi online, spunte e quote.
     # 055: al posto dell'interruttore RICERCA ON/OFF, tendina «RICERCA ▾» con i servizi di
     # ricerca, ciascuno con la sua spunta e la sua barra di quota (menu_ricerca.py).
-    modello_button = hud.add_quick_button("modello", "MODELLO ▾", lambda: None, after="model")
+    modello_button = hud.model_toggle_button      # 056b: nome ▾ e ⏻ nello stesso tasto
     modello_menu = __import__("menu_modello").MenuModello(      # 056 D: le 3 caselle al volo
         root, modello_button, on_use=lambda target: lumi_model_use(target),
         open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modello locale")),
         notify=lambda text: write_line(text))
-    ricerca_button = hud.add_quick_button("ricerca", "RICERCA ▾", lambda: None, after="modello")
+    online_menu_button = hud.add_quick_button("online", "Online ▾", lambda: None, after="model")
+    ricerca_button = hud.add_quick_button("ricerca", "Ricerca ▾", lambda: None, after="online")
     ricerca_menu = __import__("menu_ricerca").MenuRicerca(
         root, ricerca_button,
         open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Servizi di ricerca")),
         notify=lambda text: write_line(text))
-    online_menu_button = hud.add_quick_button("online", "ONLINE ▾", lambda: None, after="mic")
     models_menu = __import__("menu_modelli").MenuModelli(
         root, online_menu_button, open_settings=lambda: show_settings(),
         notify=lambda text: write_line(text))
     # Telegram (15/11 sera): icona ✈ con i colori dello stato, tendina dei contatti e una
     # voce per contatto nel menu laterale.
-    telegram_button = hud.add_quick_button("telegram", "✈", lambda: None, after="memory")
+    telegram_button = hud.add_quick_button("telegram", "✈ Telegram", lambda: None, after="memory", power=True)
 
     def show_telegram_chat(title, items, action) -> None:
         chat_bubbles.messaggi(title, items, action)

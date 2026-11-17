@@ -42,8 +42,7 @@ class MenuRicerca(MenuModelli):
         active = servizio_attivo(settings, self.keys, self.sr)
         name = self.sr.PER_ID[active].nome if active else ""
         try:
-            self.button.configure(text=("RICERCA " + name + " ▾") if active else "RICERCA ▾",
-                                  fg=CYAN if active else MUTED)
+            self.button.configure(text="Ricerca ▾")
         except tk.TclError:
             pass
 

@@ -16,7 +16,7 @@ class NativeModelConfig:
     model: str = ""
     threads: int = 2
     batch_threads: int = 2
-    context_size: int = 2048
+    context_size: int = 1024
     max_output: int = 128
     temperature: float = 0.7
     top_k: int = 100

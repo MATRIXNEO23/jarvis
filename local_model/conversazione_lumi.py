@@ -87,6 +87,11 @@ from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK,
 NOMI = ('try_model_switch', 'dispatch_model_capability', 'get_gemma_session', 'try_gemma_app_followup', 'native_memory_request', 'submit_gemma_voice', 'submit_gemma_trial', 'poll_gemma_trial')
 
 
+# 056b: il chiamante che ha già mostrato il messaggio scritto alza il flag mentre
+# la catena è in corso; submit_gemma_voice non lo riscrive (un invio = un «TU >»).
+TU_SCRITTO = [False]
+
+
 def installa(d):
     """Crea le funzioni per questa esecuzione di Lumi; restituisce {nome: funzione}."""
     # «Cosa puoi fare?»: dati veri (add-on accesi, servizi online) letti al momento.
@@ -440,7 +445,8 @@ def installa(d):
         d.gemma_button.configure(state="disabled")
         # Il messaggio dell'utente compare una volta sola: a voce lo ha già scritto
         # la parte che riceve il microfono («TU > …»); qui solo quello digitato.
-        if typed:
+        # 056b: se il chiamante (submit_gpt) ha già scritto il «TU >», non si ripete.
+        if typed and not TU_SCRITTO[0]:
             d.write_line("TU > " + spoken)
         voice_epoch = d.conversation_epoch
         from chat_stream import STREAM

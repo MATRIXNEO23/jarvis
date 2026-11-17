@@ -1,7 +1,7 @@
 """Sezione «Contesto» (passo 4, 15/11): cosa riceve il modello locale oltre alla domanda.
 
 - Cronologia: sempre quella della chat selezionata nell'elenco (chat unica).
-- «Chat continua» (spenta di serie): come KoboldCpp, l'inizio del prompt resta fisso e i
+- «Chat continua» (accesa di serie, 056b): come KoboldCpp, l'inizio del prompt resta fisso e i
   messaggi si accodano; quando il contesto è pieno i più vecchi escono a blocchi di
   BLOCCO scambi, così per molti turni l'inizio non cambia e il fast forwarding del
   motore riusa il lavoro già fatto (sul Pavilion conta). Usa il contesto del modello,
@@ -31,7 +31,7 @@ RICORDI_ETICHETTE = {"mai": "Mai", "pertinenti": "Se pertinenti alla domanda",
 
 @dataclass(frozen=True)
 class Contesto:
-    chat_continua: bool = False
+    chat_continua: bool = True
     ricordi_locale: str = "pertinenti"
 
     def validate(self) -> "Contesto":

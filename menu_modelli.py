@@ -54,8 +54,7 @@ class MenuModelli:
         active = servizio_in_uso(settings, self.keys)
         name = self.so.PER_ID[active].nome.split()[0] if active else ""
         try:
-            self.button.configure(text=("ONLINE " + name + " ▾").replace("  ", " ") if active else "ONLINE ▾",
-                                  fg=CYAN if active else MUTED)
+            self.button.configure(text="Online ▾")
         except tk.TclError:
             pass
 
