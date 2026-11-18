@@ -248,7 +248,7 @@ class LayoutTests(unittest.TestCase):
 
     def test_cablaggio_in_jarvis(self):
         src = (ROOT / "jarvis.py").read_text(encoding="utf-8")
-        self.assertIn('selettore_tasti = __import__("selettore_chat").crea_tasti(input_row)', src)
+        self.assertIn('selettore_tasti = __import__("selettore_chat").crea_tasti(selettore_riga, espandi=True)', src)   # 059
         self.assertIn('__import__("selettore_chat").collega(', src)
 
 

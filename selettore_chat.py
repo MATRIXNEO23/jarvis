@@ -113,13 +113,13 @@ class TendinaPotenza(_Tendina):
                  ).pack(fill="x", padx=10, pady=(4, 8))
 
 
-def crea_tasti(riga, *, prima_di=None):
+def crea_tasti(riga, *, prima_di=None, espandi=False):
     """Crea i due tasti nella riga della casella, alla stessa altezza (fill y). (modello, potenza)."""
     from barra_tasti import TastoBarra
     tasti = []
     for testo in ("Modello ▾", "Potenza ▾"):
         tasto = TastoBarra(riga, testo, None)
-        opzioni = dict(side="left", fill="y", padx=(0, 4))
+        opzioni = dict(side="left", fill="both" if espandi else "y", padx=(0, 4), expand=espandi)
         if prima_di is not None:
             opzioni["before"] = prima_di
         tasto.pack(**opzioni)

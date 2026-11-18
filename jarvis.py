@@ -2860,7 +2860,12 @@ def main() -> None:
     input_box.pack(side="left", fill="x", expand=True, padx=(0, 5),
                    ipady=6)
     # 058: «Modello ▾» e «Potenza ▾» accanto alla casella, alla sua stessa altezza.
-    selettore_tasti = __import__("selettore_chat").crea_tasti(input_row)
+    # 059: la colonna della chat è larga 360 px: accanto alla casella i due tasti venivano tagliati
+    # («Poten») e la casella restava stretta. Stanno su una riga propria, appena sopra la casella,
+    # a metà larghezza ciascuno.
+    selettore_riga = tk.Frame(hud.command_host, bg=PANEL)
+    selettore_riga.pack(fill="x", pady=(0, 4), before=input_row)
+    selettore_tasti = __import__("selettore_chat").crea_tasti(selettore_riga, espandi=True)
     hud_send_button = tk.Button(
         input_row, text="➤", width=2,
         font=("Segoe UI Symbol", 15),
