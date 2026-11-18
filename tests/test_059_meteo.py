@@ -119,7 +119,7 @@ class RispostaTest(unittest.TestCase):
             self.assertTrue(ca.describe(comando), comando)
         data = json.loads((root / "meteo" / "Meteo.jaddon").read_text(encoding="utf-8"))
         self.assertEqual(data["version"], "1.2.0")
-        self.assertIn("tra 3 giorni", json.dumps(data, ensure_ascii=False))
+        self.assertIn("16 giorni", json.dumps(data, ensure_ascii=False))
 
 
 if __name__ == "__main__":
