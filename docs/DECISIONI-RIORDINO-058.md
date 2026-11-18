@@ -15,3 +15,17 @@ C1: lasciare «Mic» com'è, da definire nel restyling
 C2: numeretto dei non letti accanto al simbolo Telegram (si azzera aprendo la chat) — con lo spostamento di Telegram. BUG da correggere SUBITO (prossima build): clic sul simbolo Telegram nella barra non apre più la chat Telegram (regressione 057)
 C3: approvato — aggiungere probabilità di pioggia alla frase. In più (utente 06:10): meteo di QUALSIASI giorno e QUALSIASI luogo, anche combinati: «meteo giovedì a Roma», «meteo sabato», «meteo il 25», «meteo tra 3 giorni», «meteo dopodomani a Milano». Open-Meteo arriva a 16 giorni: oltre, dirlo chiaramente. Verificare cosa la 058 fa già e coprire i mancanti, con test.
 C4: limite 120 caratteri per i comandi meteo: lasciare così
+
+## Struttura finale approvata (utente 18/11 23:36, dopo la mappa Floorplan)
+Le cartelle seguono il percorso di una richiesta. L'utente ha lasciato a Claude la scelta della struttura più funzionale e più facile da manutenere:
+- ascolto/: microfono, dettatura, ingresso del testo
+- comprensione/: motore dei comandi, catena, dialogo, orchestratore
+- addon/<nome>/: sveglia, meteo, musica, controllo_pc (+ controllo_comune), program_apps, file_access, telegram (ultimo)
+- modello/: oggi local_model/
+- online/: GPT dal browser, servizi_online, servizi_ricerca
+- uscita/: voce che parla (piper, edge, offline_tts, audio), chat, finestre e menu; l'HUD SOLO con il restyling
+- memoria/: ricordi, second brain, documenti (con la riprogettazione della memoria)
+- diagnostica/
+- jarvis.py e avvia_lumi.bat restano nella radice.
+Sostituisce: A6 (documenti/ → memoria/) e A11 (voce/ → divisa tra ascolto/ e uscita/). Le unioni A7, A8, A10 e A13 restano valide e si fanno dentro le nuove cartelle.
+Ordine: file tolti dal pacchetto e unioni → online/ → comprensione/ → ascolto/ e uscita/ (senza HUD) → diagnostica/ → addon a gruppi → modello/ → memoria/ con la sua riprogettazione → HUD con il restyling. Un passo per build, ciascuno con l'elenco dei richiami, i test, la build e la prova dal vivo.
