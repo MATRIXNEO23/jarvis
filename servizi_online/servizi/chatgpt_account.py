@@ -9,10 +9,10 @@ from servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     uso="Domande difficili, spiegazioni e testi lunghi col tuo account ChatGPT; niente lavori a più passi sul PC.",
-    id="chatgpt_account", nome="ChatGPT (tuo account)", ordine=5, gratis=True, tipo="account",
+    id="chatgpt_account", nome="ChatGPT dal browser", ordine=5, gratis=True, tipo="account",
     orchestratore=False, base_url="", modello="(scelto nel collegamento GPT)",
     chiavi="",
     limite="Usa il tuo account ChatGPT collegato dal browser (GPT dal browser): niente chiave da incollare.",
     passi=("Premi «Collega» e accedi con il tuo account ChatGPT nel browser.",
-           "Quando lo stato dice «collegato», spunta «ChatGPT (tuo account)» e mettilo nella posizione che vuoi.",
+           "Quando lo stato dice «collegato», spunta «ChatGPT dal browser» e mettilo nella posizione che vuoi.",
            "Non serve nessuna chiave."))

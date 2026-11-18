@@ -37,7 +37,7 @@ class DescrizioneTests(unittest.TestCase):
 
     def test_l_aiuto_chiavi_non_manda_a_cercare_una_chiave_per_gpt(self):
         testo = so.aiuto_chiavi()
-        blocco = testo.split("CHATGPT (TUO ACCOUNT)")[1].split("\n\n")[0]
+        blocco = testo.split("CHATGPT DAL BROWSER")[1].split("\n\n")[0]
         self.assertNotIn("Pagina della chiave", blocco)
 
     def test_in_uso_conta_anche_il_gpt_collegato(self):
@@ -73,6 +73,18 @@ class NienteDoppioniTests(unittest.TestCase):
         self.assertIn("Autorizzazioni GPT per funzione", src)
         self.assertEqual(src.count('text="Connetti ChatGPT"'), 1)
         self.assertEqual(src.count('text="Scollega account"'), 1)
+
+    def test_due_voci_gpt_distinte_browser_e_chiave(self):
+        browser, chiave = so.PER_ID[GPT], so.PER_ID["openai"]
+        self.assertEqual(browser.tipo, "account")
+        self.assertNotEqual(chiave.tipo, "account")
+        self.assertNotEqual(browser.nome, chiave.nome)
+        self.assertIn("browser", browser.nome.lower())
+        self.assertIn("chiave", chiave.nome.lower())
+        self.assertTrue(chiave.chiavi.startswith("https://"))       # la chiave resta com'è oggi
+        ordine = [s.id for s in so.SERVIZI]
+        self.assertIn(GPT, ordine)
+        self.assertIn("openai", ordine)
 
     def test_i_servizi_hanno_nomi_e_id_unici(self):
         self.assertEqual(len({s.id for s in so.SERVIZI}), len(so.SERVIZI))
@@ -110,7 +122,7 @@ class TendinaTests(unittest.TestCase):
     def _riga_gpt(self):
         self.menu.toggle()
         testi = _testi(self.menu.popup)
-        self.assertIn("ChatGPT (tuo account)", " ".join(testi))
+        self.assertIn("ChatGPT dal browser", " ".join(testi))
         return testi
 
     def test_non_collegato_mostra_collega_e_non_la_chiave(self):
@@ -125,7 +137,7 @@ class TendinaTests(unittest.TestCase):
     def test_la_voce_gpt_compare_una_volta_sola(self):
         so.ACCOUNT.update(pronto=lambda: True)
         testi = self._riga_gpt()
-        self.assertEqual(sum(1 for t in testi if t.startswith("ChatGPT (tuo account)")), 1)
+        self.assertEqual(sum(1 for t in testi if t.startswith("ChatGPT dal browser")), 1)
         self.assertEqual(len([t for t in testi if t.startswith("ChatGPT")]), 1)
 
     def test_collegato_non_mostra_il_pulsante(self):

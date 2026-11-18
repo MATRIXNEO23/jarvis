@@ -221,7 +221,7 @@ Ordine: dal più semplice al più legato. Dopo ogni add-on: correggere i punti, 
 
 ## Riepilogo
 
-Proposte in totale: **22** (a: 15, b: 2, c: 4, d: 1, più i 9 blocchi informativi per add-on).
+Proposte in totale: **21** (a: 15, b: 2, c: 4, più i 9 blocchi informativi per add-on).
 
 ## Aggiunte dopo la richiesta del 17/11 05:04 (GPT nella tendina)
 
@@ -229,8 +229,4 @@ Verifica fatta: `chatgpt_account` NON è un servizio diverso (OAuth/Codex): è g
 
 **D1 (non più proposta: deciso dall'utente alle 04:06 e implementato nella fase A).** La pagina separata «Connessione ChatGPT / GPT dal browser» è sparita: stato, Collega/Scollega e «Autorizzazioni GPT per funzione» stanno dentro «Servizi online», sotto l'elenco, nella voce ChatGPT.
 
-**D2. Nome visibile della voce**
-- Cosa: oggi si chiama «ChatGPT (tuo account)». Proposta: «GPT dal browser», come la pagina e il pulsante in alto.
-- Perché: un solo nome per una sola cosa.
-- Rischio: basso, ma `chatgpt_account` e il nome compaiono in impostazioni salvate e in 8 test: il nome interno resta, cambia solo il testo.
-- Alternativa: lasciare «ChatGPT (tuo account)».
+**D2 (non più proposta: precisazione dell'utente 04:06, implementata).** Nella lista ci sono due voci separate: «ChatGPT dal browser» (`chatgpt_account`, collegamento senza chiave) e «GPT con chiave (OpenAI API)» (`openai`, a pagamento, con la sua chiave), ciascuna con spunta e posizione proprie.

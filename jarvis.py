@@ -800,7 +800,7 @@ def main() -> None:
     planner_abort_event = threading.Event()
     closing = False
     active_gpt = False
-    # ChatGPT (tuo account) tra i servizi online (16/11): stesso ponte del pulsante GPT,
+    # ChatGPT dal browser tra i servizi online (16/11): stesso ponte del pulsante GPT,
     # pronto solo quando il collegamento GPT è acceso e attivo.
     __import__("servizi_online").ACCOUNT.update(
         chiedi=lambda prompt, timeout: str(service.call(
@@ -2698,7 +2698,7 @@ def main() -> None:
     # GPT dal browser (stato, collega/scollega, autorizzazioni) sta DENTRO «Servizi online»,
     # sotto l'elenco, non in una pagina a parte.
     gpt_panel = ttk.LabelFrame(servizi_online_box,
-                                text="ChatGPT (tuo account): collegamento dal browser", padding=8)
+                                text="ChatGPT dal browser: collegamento", padding=8)
     gpt_panel.pack(fill="x", padx=8, pady=(4, 6), after=servizi_online_box.rows)
     gpt_toggle = ttk.Checkbutton(
         gpt_panel, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",

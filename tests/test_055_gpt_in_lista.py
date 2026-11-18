@@ -44,7 +44,7 @@ class GptNellaListaTests(unittest.TestCase):
 
     def test_gpt_in_cima_risponde_per_primo(self):
         name, text = self.chiedi([GPT, "gemini", "groq"], [GPT, "gemini", "groq"])
-        self.assertEqual((name, text), ("ChatGPT (tuo account)", "risposta GPT"))
+        self.assertEqual((name, text), ("ChatGPT dal browser", "risposta GPT"))
         self.assertEqual(self.http, [])
 
     def test_gpt_in_fondo_risponde_solo_dopo_gli_altri(self):
@@ -57,7 +57,7 @@ class GptNellaListaTests(unittest.TestCase):
         settings = {"ordine": ["gemini", "groq", GPT], "attivi": [GPT, "gemini", "groq"],
                     "modelli": {}, "limiti": {}, "usa_sempre": False, "proponi_lunghe": True}
         name, text = so.chiedi(so.messaggi("ciao"), settings=settings, keys=self.keys, post=rotto)
-        self.assertEqual((name, text), ("ChatGPT (tuo account)", "risposta GPT"))
+        self.assertEqual((name, text), ("ChatGPT dal browser", "risposta GPT"))
 
     def test_gpt_senza_spunta_non_viene_mai_usato(self):
         name, _ = self.chiedi([GPT, "gemini", "groq"], ["gemini", "groq"])

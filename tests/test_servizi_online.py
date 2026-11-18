@@ -231,7 +231,7 @@ class ChatGPTAccountTest(unittest.TestCase):
                                pronto=lambda: True)
         name, text = self.so.chiedi(self.so.messaggi("ciao"), settings=self.settings(["chatgpt_account"]),
                                     keys=self.so.Chiavi(Path(tempfile.mkdtemp()) / "k.json"))
-        self.assertEqual((name, text), ("ChatGPT (tuo account)", "Risposta GPT"))
+        self.assertEqual((name, text), ("ChatGPT dal browser", "Risposta GPT"))
         self.assertIn("UTENTE:\nciao", self.sent[0])
         sid, name, message = self.so.chiama(self.so.messaggi("ciao"), tools=[{"type": "function"}],
                                             settings=self.settings(["chatgpt_account"]),

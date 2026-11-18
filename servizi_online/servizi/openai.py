@@ -2,8 +2,8 @@
 from servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
-    uso="GPT con chiave: bravo in tutto, anche nei lavori a più passi. A pagamento.",
-    id="openai", nome="OpenAI GPT (API)", ordine=7, gratis=False,
+    uso="GPT con la TUA CHIAVE OpenAI (diverso da «ChatGPT dal browser», che usa il tuo account senza chiave): bravo in tutto, anche nei lavori a più passi. A pagamento.",
+    id="openai", nome="GPT con chiave (OpenAI API)", ordine=7, gratis=False,
     base_url="https://api.openai.com/v1", modello="gpt-4o-mini",
     chiavi="https://platform.openai.com/api-keys",
     limite="A pagamento, a parte: l'abbonamento ChatGPT (anche Plus) non copre le API.",
