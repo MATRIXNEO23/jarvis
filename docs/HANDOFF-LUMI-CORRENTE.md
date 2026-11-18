@@ -233,6 +233,12 @@ Decisione utente (05:30), per la build dopo le prove della 058: se una frase bre
 
 Richiesta utente (05:33), dalla prossima build: un solo zip da estrarre. Oggi l'artifact di GitHub (già zippato da GitHub) contiene un altro zip, Lumi-0NN-PROVA.zip, più una cartella vuota e un .json. Nel workflow f5n l'artifact deve caricare direttamente la CARTELLA del programma (Lumi-0NN-PROVA/), così il download contiene subito quella cartella. Il .json con gli hash va dentro la cartella. Lo zip resta solo per Download/ se serve, non nell'artifact.
 
+Bug e richieste dalla foto della 058 (05:40):
+- La finestra dei risultati (per esempio «meteo settimana») resta aperta a tutto schermo dentro la chat. Deve essere un POP-UP come le altre finestre. Alla fine della lettura a voce Lumi chiede «Chiudo la finestra?» (sì/no senza «Lumi»), e c'è sempre il comando «chiudi i risultati». Vale per TUTTE le finestre che Lumi apre da sola.
+- Per il meteo le colonne sono generiche (Tipo/Nome/Percorso): servono colonne proprie (Giorno, Cielo, Min, Max…).
+- I selettori accanto alla chat sono tagliati: «Potenza» si legge «Poten» e la casella di testo è stretta. La formattazione non è riuscita.
+- Prove 058: nessun servizio online risulta spuntato (da capire se le spunte sono andate perse) e «chi ha scritto Harry Potter?» non ha avuto risposta, nemmeno offline (da indagare).
+
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
 - 058, riordino:
