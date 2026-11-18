@@ -8,3 +8,7 @@ model: sonnet
 - Per dati e log usa i file in %LOCALAPPDATA%\Jarvis copiati nel workspace e filtrali con la shell, invece di leggerli interi.
 - Ordine di priorità: indicato nella sezione «Ripresa» più recente di docs/HANDOFF-LUMI-CORRENTE.md.
 Restituisci solo una tabella: frase provata | esito (ok/ko) | nota breve. Niente log incollati.
+
+
+## Regole di lavoro obbligatorie
+Segui le regole Karpathy in CLAUDE.md (pensare prima, semplicità, modifiche chirurgiche, obiettivi verificabili) e AGENTS.md.

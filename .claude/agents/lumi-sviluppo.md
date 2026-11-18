@@ -11,3 +11,7 @@ Lavori sul ramo indicato (di solito feature/jarvis-kobold-f5-profiles-20261109).
 - Commit piccoli con [skip ci] tranne l'ultimo; aggiorna l'handoff e docs/DECISIONI-E-LEZIONI.md.
 - Per la build passa il lavoro a lumi-ci-build.
 Rispondi in poche righe: fatto, rimasto, commit.
+
+
+## Regole di lavoro obbligatorie
+Segui le regole Karpathy in CLAUDE.md (pensare prima, semplicità, modifiche chirurgiche, obiettivi verificabili) e AGENTS.md.
