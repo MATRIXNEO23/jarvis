@@ -17,6 +17,7 @@ import base64
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -247,6 +248,62 @@ def _post(url: str, key: str, body: dict, timeout: float) -> dict:
         if isinstance(data, dict):
             data["_headers"] = dict(response.headers.items())   # quote rimaste (Groq)
         return data
+
+
+def _con_limite(fn, secondi: float):
+    """Esegue fn() in un thread: eccezione propria, oppure TimeoutError se supera `secondi`."""
+    import threading
+    esito = {}
+
+    def lavoro():
+        try:
+            esito["v"] = fn()
+        except Exception as exc:          # noqa: BLE001 — riportata al chiamante
+            esito["e"] = exc
+    thread = threading.Thread(target=lavoro, daemon=True)
+    thread.start()
+    thread.join(secondi)
+    if thread.is_alive():
+        raise TimeoutError("nessuna risposta in %d s" % secondi)
+    if "e" in esito:
+        raise esito["e"]
+    return esito.get("v")
+
+
+def prova_rete(service, *, dns=None, connetti=None, attesa: float = 8.0) -> tuple[bool, str]:
+    """059: DOVE si blocca un servizio: DNS, connessione + TLS. (True, «DNS ok …; TLS ok …») oppure
+    (False, «si ferma al DNS: …» / «si ferma alla connessione o al TLS: …»). La risposta del
+    servizio (terza fase) la prova `chiedi`."""
+    import socket
+    import ssl
+    import time
+    from urllib.parse import urlparse
+    host = urlparse(service.base_url).hostname or ""
+    dns = dns or (lambda h: socket.getaddrinfo(h, 443))
+
+    def collega(h):
+        with socket.create_connection((h, 443), timeout=attesa) as sock:
+            with ssl.create_default_context().wrap_socket(sock, server_hostname=h):
+                return True
+    connetti = connetti or collega
+    start = time.monotonic()
+    try:
+        _con_limite(lambda: dns(host), attesa)
+    except Exception as exc:
+        return False, "si ferma al DNS (%s non si trova): %s" % (host, _breve(exc))
+    t_dns = time.monotonic() - start
+    if urllib.request.getproxies().get("https"):
+        return True, "DNS ok (%.1f s); connessione tramite il proxy del PC, non provata a parte" % t_dns
+    start = time.monotonic()
+    try:
+        _con_limite(lambda: connetti(host), attesa + 2)
+    except Exception as exc:
+        return False, "DNS ok, ma si ferma alla connessione o al TLS: %s" % _breve(exc)
+    return True, "DNS ok (%.1f s); connessione e TLS ok (%.1f s)" % (t_dns, time.monotonic() - start)
+
+
+def _breve(exc: Exception) -> str:
+    return (type(exc).__name__ + ": " + str(getattr(exc, "reason", exc)))[:100]
 
 
 def _get(url: str, key: str, timeout: float) -> dict:
@@ -511,7 +568,7 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
 
 # Prova utente 16/11: con 800-900 token le risposte lunghe arrivavano tagliate. Il limite
 # serve solo a non superare la quota: si paga quello che il modello scrive davvero.
-MAX_RISPOSTA = 4000
+MAX_RISPOSTA = 8000   # 059: Groq si fermava a metà frase; il costo è solo ciò che il modello scrive
 
 
 def _tagliata(data) -> str:
@@ -629,9 +686,19 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
     def test(service):
         def work():
             one = dict(settings, attivi=[service.id], ordine=[service.id])
+            rete = ""
+            if service.tipo != "account":       # 059: dire DOVE si blocca (DNS, TLS, risposta)
+                bene, rete = prova_rete(service)
+                if not bene:
+                    notify("ONLINE > Prova " + service.nome + ": " + rete)
+                    return
+                rete += "; "
+            inizio = time.monotonic()
             name, answer = chiedi(messaggi("Rispondi solo: ok"), settings=one, keys=keys,
                                   post=post, timeout=30)
-            notify("ONLINE > Prova " + service.nome + ": " + ("funziona." if name else "; ".join(answer)))
+            notify("ONLINE > Prova " + service.nome + ": " + rete + (
+                "risposta ok in %.1f s." % (time.monotonic() - inizio) if name else
+                "il servizio risponde male: " + "; ".join(answer)))
         save()
         run_async(work)
 

@@ -375,7 +375,12 @@ def codice_pericoloso(code: str) -> str:
 def rispondi(question: str, *, tools: Strumenti, history=(), pieces=(), call=None, notify=None):
     """(nome servizio, risposta) oppure (None, motivi). notify(testo) per i passi in chat."""
     import servizi_online
-    call = call or servizi_online.chiama
+    lavoro = [False]      # 059: l'attesa lunga (90 s) solo dopo il primo passo con strumenti
+
+    def chiama_con_attesa(messages, tools=None, only=None):
+        return servizi_online.chiama(messages, tools=tools, only=only, timeout=(
+            servizi_online.TIMEOUT_LAVORO if lavoro[0] else servizi_online.TIMEOUT))
+    call = call or chiama_con_attesa
     notify = notify or (lambda text: None)
     folders = ", ".join(tools.folders) or "nessuna"
     messages = servizi_online.messaggi(question, history, pieces)
@@ -403,6 +408,7 @@ def rispondi(question: str, *, tools: Strumenti, history=(), pieces=(), call=Non
         calls = message.get("tool_calls") or []
         if not calls:
             return name, str(message.get("content") or "").strip() or "Fatto."
+        lavoro[0] = True
         messages.append({"role": "assistant", "content": message.get("content") or "",
                          "tool_calls": calls})
         for item in calls:
