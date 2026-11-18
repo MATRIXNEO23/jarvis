@@ -8,6 +8,7 @@ SERVIZIO = Servizio(
     id="openrouter", nome="OpenRouter", ordine=4, gratis=True,
     base_url="https://openrouter.ai/api/v1",
     modello="meta-llama/llama-3.3-70b-instruct:free",
+    ragionamento="openrouter",
     chiavi="https://openrouter.ai/keys",
     # Modelli «:free»: 20 al minuto, 50 al giorno (1.000 dopo aver comprato almeno 10
     # crediti una volta). Verificato sul web il 15/11/2026.

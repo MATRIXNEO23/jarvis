@@ -7,6 +7,7 @@ SERVIZIO = Servizio(
     id="gemini", nome="Google Gemini", ordine=1, gratis=True,
     base_url="https://generativelanguage.googleapis.com/v1beta/openai",
     modello="gemini-flash-latest",
+    ragionamento="effort",
     chiavi="https://aistudio.google.com/apikey",
     # Google non pubblica più numeri fissi: dipendono dal progetto (pagina «Rate limit»
     # di AI Studio). Verificato sul web il 15/11/2026.

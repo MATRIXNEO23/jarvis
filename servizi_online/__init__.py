@@ -122,7 +122,9 @@ def carica_impostazioni(path: Path | None = None) -> dict:
             "usa_sempre": False, "proponi_lunghe": True,
             # Quote (15/11 sera): avviso all'80% del giorno, conferma sopra ~8.000 token,
             # limiti al giorno scritti dall'utente per i servizi che non li pubblicano.
-            "avviso_quota": 80, "conferma_token": 8000, "limiti": {}}
+            "avviso_quota": 80, "conferma_token": 8000, "limiti": {},
+            # 058: selettori accanto alla chat (salvati tra un avvio e l'altro)
+            "modello_chat": "auto", "potenza": "auto"}
     try:
         saved = json.loads((path or _cartella() / "servizi_online.json").read_text(encoding="utf-8"))
         if isinstance(saved, dict):
@@ -141,6 +143,10 @@ def carica_impostazioni(path: Path | None = None) -> dict:
     data["modelli"] = {k: str(v)[:120] for k, v in data["modelli"].items() if k in PER_ID and str(v).strip()}
     data["limiti"] = {k: int(v) for k, v in data["limiti"].items()
                       if k in PER_ID and isinstance(v, int) and 0 < v < 10_000_000}
+    if data["potenza"] not in POTENZE:
+        data["potenza"] = "auto"
+    if data["modello_chat"] != "auto" and data["modello_chat"] not in PER_ID:
+        data["modello_chat"] = "auto"
     if not 10 <= data["avviso_quota"] <= 100:
         data["avviso_quota"] = 80
     if not 500 <= data["conferma_token"] <= 1_000_000:
@@ -279,6 +285,55 @@ def _modello(service, settings) -> str:
     return SCELTI.get(service.id, service.modello)
 
 
+POTENZE = ("auto", "bassa", "media", "alta")             # 058: tendina «Potenza ▾»
+NOMI_POTENZA = {"auto": "Auto", "bassa": "Bassa", "media": "Media", "alta": "Alta"}
+_EFFORT = {"bassa": "low", "media": "medium", "alta": "high"}
+
+
+def supporta_potenza(service, model: str = "") -> bool:
+    """Solo i servizi (e i modelli) che accettano davvero il parametro: gli altri non lo ricevono."""
+    if not service.ragionamento:
+        return False
+    return not service.ragionamento_modelli or str(model).startswith(service.ragionamento_modelli)
+
+
+def parametro_potenza(service, model: str, scelta: str, contesto: str) -> dict:
+    """Campo da aggiungere alla richiesta, o {}. Auto = bassa in chat (risposte veloci), normale
+    (predefinito del servizio, nessun campo) nei lavori dell'orchestratore."""
+    if not supporta_potenza(service, model):
+        return {}
+    scelta = scelta if scelta in POTENZE else "auto"
+    effort = ("low" if contesto == "chat" else None) if scelta == "auto" else _EFFORT[scelta]
+    if effort is None:
+        return {}
+    return ({"reasoning": {"effort": effort}} if service.ragionamento == "openrouter"
+            else {"reasoning_effort": effort})
+
+
+def _invia(post, service, settings, contesto, key, body, model, timeout):
+    """Richiesta con la potenza scelta; se il servizio rifiuta il parametro (400/422) la ripete
+    UNA volta senza, così funziona comunque."""
+    extra = parametro_potenza(service, model, settings.get("potenza", "auto"), contesto)
+    url = service.base_url + "/chat/completions"
+    try:
+        return post(url, key, dict(body, model=model, **extra), timeout)
+    except urllib.error.HTTPError as exc:
+        if extra and exc.code in (400, 422):
+            return post(url, key, dict(body, model=model), timeout)
+        raise
+
+
+def ordine_di_prova(settings: dict) -> list:
+    """058: l'ordine della tendina Online; un servizio scelto in «Modello ▾» (se è spuntato) va per
+    primo, gli altri restano di ripiego nello stesso ordine. La catena non cambia."""
+    ordine = list(settings["ordine"])
+    scelto = settings.get("modello_chat", "auto")
+    if scelto in ordine and scelto in settings["attivi"]:
+        ordine.remove(scelto)
+        ordine.insert(0, scelto)
+    return ordine
+
+
 def _con_modello(service, settings, key, call, *, get=None):
     """call(modello) col modello giusto; se il servizio dice «modello non trovato» Lumi ne
     sceglie un altro disponibile e riprova una volta."""
@@ -367,7 +422,7 @@ def chiedi(messages: list[dict], *, settings: dict | None = None, keys: Chiavi |
     settings = settings or carica_impostazioni()
     keys = keys or Chiavi()
     reasons = []
-    for service_id in settings["ordine"]:
+    for service_id in ordine_di_prova(settings):
         if service_id not in settings["attivi"]:
             continue
         service = PER_ID[service_id]
@@ -384,9 +439,9 @@ def chiedi(messages: list[dict], *, settings: dict | None = None, keys: Chiavi |
             _salta(reasons, service, "manca la chiave")
             continue
         try:
-            data = _con_modello(service, settings, key, lambda model: post(
-                service.base_url + "/chat/completions", key,
-                {"model": model, "messages": messages, "max_tokens": MAX_RISPOSTA}, timeout))
+            data = _con_modello(service, settings, key, lambda model: _invia(
+                post, service, settings, "chat", key,
+                {"messages": messages, "max_tokens": MAX_RISPOSTA}, model, timeout))
             text = data["choices"][0]["message"]["content"]
             if not isinstance(text, str) or not text.strip():
                 raise ServizioErrore("vuota")
@@ -419,7 +474,7 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
     settings = settings or carica_impostazioni()
     keys = keys or Chiavi()
     reasons = []
-    for service_id in settings["ordine"]:
+    for service_id in ordine_di_prova(settings):
         if service_id not in settings["attivi"] or (only and service_id != only):
             continue
         service = PER_ID[service_id]
@@ -441,8 +496,8 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
         if tools:
             body["tools"] = tools
         try:
-            data = _con_modello(service, settings, key, lambda model: post(
-                service.base_url + "/chat/completions", key, dict(body, model=model), timeout))
+            data = _con_modello(service, settings, key, lambda model: _invia(
+                post, service, settings, "lavoro", key, body, model, timeout))
             message = data["choices"][0]["message"]
             if not isinstance(message, dict) or not (message.get("content") or message.get("tool_calls")):
                 raise ServizioErrore("vuota")
@@ -545,6 +600,7 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
             if value.isdigit() and 0 < int(value) < 10_000_000:
                 limits[service_id] = int(value)
         settings["limiti"] = limits
+        settings["modello_chat"], settings["potenza"] = fresh["modello_chat"], fresh["potenza"]   # li cambiano i selettori
         for key, var in state.get("thresholds", {}).items():
             value = var.get().strip().replace(".", "")
             if value.isdigit():

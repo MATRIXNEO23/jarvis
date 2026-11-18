@@ -7,6 +7,7 @@ SERVIZIO = Servizio(
     id="groq", nome="Groq", ordine=2, gratis=True,
     base_url="https://api.groq.com/openai/v1",
     modello="openai/gpt-oss-120b",
+    ragionamento="effort", ragionamento_modelli=("openai/gpt-oss",),
     chiavi="https://console.groq.com/keys",
     # llama-3.3-70b-versatile ritirato il 16/08/2026 (console.groq.com/docs/deprecations):
     # sostituto consigliato openai/gpt-oss-120b. Groq manda le richieste rimaste in ogni

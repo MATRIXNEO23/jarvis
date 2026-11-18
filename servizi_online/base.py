@@ -28,3 +28,8 @@ class Servizio:
     # se uno viene ritirato, passa al successivo. solo_free: solo modelli «:free» (OpenRouter).
     preferiti: tuple = field(default_factory=tuple)
     solo_free: bool = False
+    # 058: come si chiede la «potenza» (ragionamento), dalla documentazione ufficiale. «effort» =
+    # campo reasoning_effort (Gemini sull'endpoint OpenAI, Groq gpt-oss, OpenAI o-series/gpt-5);
+    # «openrouter» = campo reasoning {effort}. Vuoto = non supportata: il parametro non si manda.
+    ragionamento: str = ""
+    ragionamento_modelli: tuple = field(default_factory=tuple)   # prefissi dei modelli che lo accettano (vuoto = tutti)

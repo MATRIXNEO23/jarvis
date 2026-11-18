@@ -2856,6 +2856,8 @@ def main() -> None:
         input_row, textvariable=request, font=("Segoe UI", 10))
     input_box.pack(side="left", fill="x", expand=True, padx=(0, 5),
                    ipady=6)
+    # 058: «Modello ▾» e «Potenza ▾» accanto alla casella, alla sua stessa altezza.
+    selettore_tasti = __import__("selettore_chat").crea_tasti(input_row)
     hud_send_button = tk.Button(
         input_row, text="➤", width=2,
         font=("Segoe UI Symbol", 15),
@@ -4693,6 +4695,8 @@ def main() -> None:
     models_menu = __import__("menu_modelli").MenuModelli(
         root, online_menu_button, open_settings=lambda: show_settings(),
         notify=lambda text: write_line(text), on_connect=lambda: collega_gpt())
+    selettore_tendine = __import__("selettore_chat").collega(
+        root, selettore_tasti, notify=lambda text: write_line(text), finestra=root)
     # Telegram (15/11 sera): icona ✈ con i colori dello stato, tendina dei contatti e una
     # voce per contatto nel menu laterale.
     telegram_button = hud.add_quick_button("telegram", "Telegram", lambda: None, after="memory", simbolo="telegram")
