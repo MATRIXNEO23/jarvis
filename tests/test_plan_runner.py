@@ -4,7 +4,7 @@ from threading import Event, Lock
 from types import SimpleNamespace
 
 from action_planner import parse_plan
-from plan_runner import run_approved_plan
+from action_planner import run_approved_plan
 
 PLAN = '{"intent":"controllo","steps":[' + ','.join(
     '{"tool_id":"system_status","arguments":{}}' for _ in range(3)

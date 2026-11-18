@@ -27,7 +27,6 @@
     "lumi_parti",
     "lumi_contesto.py",
     "window_chrome.py",
-    "finestra_adatta.py",
     "console_interna.py"
    ]
   },
@@ -116,7 +115,6 @@
     "orchestratore.py",
     "contesto_online.py",
     "action_planner.py",
-    "plan_runner.py",
     "planner_ui.py",
     "capability_registry.py",
     "live_capabilities.py",

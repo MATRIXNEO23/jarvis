@@ -200,7 +200,7 @@ def dominio(url: str) -> str:
 
 def testo_chat(nome: str, result: Risultato) -> str:
     """Messaggio di Lumi in chat: riassunto, poi le fonti come link markdown («[titolo](url)»)
-    con una breve anteprima sotto; chat_link li rende cliccabili."""
+    con una breve anteprima sotto; chat_testo li rende cliccabili."""
     lines = ["Ricerca online (%s): %s" % (nome, " ".join(result.riassunto.split()) or "nessun riassunto.")]
     if result.link:
         lines += ["", "Fonti:"]

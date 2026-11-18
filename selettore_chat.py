@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import tkinter as tk
 
-from menu_modelli import BG, CYAN, MUTED, PANEL, TEXT, MenuModelli
+from menu_tendine import BG, CYAN, MUTED, PANEL, TEXT, MenuModelli
 
 DESCRIZIONI_POTENZA = {"auto": "Auto (bassa in chat, normale per i lavori)", "bassa": "Bassa: veloce",
                        "media": "Media", "alta": "Alta: ragiona di più, più lenta"}

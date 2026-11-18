@@ -109,7 +109,7 @@ class TiGuidoTests(unittest.TestCase):
 class PreferenceConfirmationTests(unittest.TestCase):
     def setUp(self):
         import sqlite3
-        from dialogue_focus import normalized_utterance
+        from dialogue import normalized_utterance
         from memory_boundaries import MemoryBoundaryError, PreferenceStore
         from preference_voice import parse_preference_intent
         risposte.done()

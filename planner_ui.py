@@ -13,7 +13,7 @@ from typing import Callable
 from threading import Lock
 
 from action_planner import ApprovedPlan, PlanRejected, build_planning_prompt, parse_plan
-from plan_runner import run_approved_plan
+from action_planner import run_approved_plan
 
 
 def open_planner(parent: tk.Tk, service, engine, is_available: Callable[[], bool],

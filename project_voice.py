@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 import unicodedata
-from dialogue_focus import is_unusable_project_name
+from dialogue import is_unusable_project_name
 
 
 @dataclass(frozen=True)

@@ -19,7 +19,6 @@ def build(source: Path, destination: Path) -> Path:
     # All root Python modules are operational source, including the trial preparer.
     files = sorted({*source.glob('*.py'), *source.glob('*.bat'), *source.glob('*.ps1'),
                     source/'gpt_bridge.mjs', source/'jarvis_commands.json',
-                    source/'LEGGIMI-ACCESSO-FILE.txt',
                     *[p for p in (source/'file_access').iterdir()
                       if p.is_file() and p.suffix in ('.py','.ps1','.jaddon','.md')],
                     *[p for p in (source/'program_apps').iterdir()

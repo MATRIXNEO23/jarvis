@@ -58,7 +58,7 @@ jobs:
               "prepara_test_telegram50.py", "animated_hud.py", "jarvis_timer.py",
               "hud_reference.py", "hud_raster.py",
               "docs/TIMER_E_IMPOSTAZIONI_20261031.md",
-              "avvia_jarvis.bat", "LEGGIMI_PROVA_TELEGRAM_50.txt",
+              "avvia_jarvis.bat", "docs/LEGGIMI_PROVA_TELEGRAM_50.txt",
           }
           found={p.as_posix() for p in files}
           assert required.issubset(found), "Missing critical Jarvis components"

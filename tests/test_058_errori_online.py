@@ -91,12 +91,12 @@ class ErroriOnlineTests(unittest.TestCase):
     def test_cablaggio_chat_tendina_e_diagnostica(self):
         jarvis = (ROOT / "jarvis.py").read_text(encoding="utf-8")
         self.assertIn('AVVISO["scrivi"] = lambda text: root.after(0, lambda: write_line(text))', jarvis)
-        menu = (ROOT / "menu_modelli.py").read_text(encoding="utf-8")
+        menu = (ROOT / "menu_tendine.py").read_text(encoding="utf-8")
         self.assertIn("ULTIMO_ERRORE.get(service_id)", menu)
         self.assertIn('"#f2a33a"', menu)
         diag = (ROOT / "diagnostica_claude" / "strumenti.py").read_text(encoding="utf-8")
         self.assertIn('"ultimo_errore": servizi_online.ULTIMO_ERRORE.get(ident)', diag)
-        from chat_ruoli import classify
+        from chat_testo import classify
         self.assertEqual(classify("ONLINE / ERRORE > Google Gemini non ha risposto", None)[0], "errore")
 
 

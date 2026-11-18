@@ -23,7 +23,7 @@ from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
 from project_voice import (parse_project_voice, safe_project_name,
                            find_existing_project, project_delete_response)
-from dialogue_focus import (focus_hint, PendingProjectReference,
+from dialogue import (focus_hint, PendingProjectReference,
                             normalized_utterance,is_ambiguous_short_reply)
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
@@ -874,11 +874,11 @@ def main() -> None:
     def write_line(text: str, role: str | None = None) -> None:
         # The reference design uses a conversational timeline, not raw logs.
         # All actions and errors remain visible, with timestamp and source.
-        # Chi ha scritto il messaggio: deciso in chat_ruoli (esplicito o per prefisso).
+        # Chi ha scritto il messaggio: deciso in chat_testo (esplicito o per prefisso).
         label = str(text).strip()
         if not label:
             return
-        from chat_ruoli import classify as classify_message
+        from chat_testo import classify as classify_message
         role, identity, body = classify_message(label, role)
         # Diagnostica per Claude (passo 9): copia in memoria per il ponte, niente Tk.
         __import__("diagnostica_claude.ponte", fromlist=["registra"]).registra(role, body)
@@ -889,8 +889,8 @@ def main() -> None:
             "end", identity + "         " +
             datetime.now().strftime("%H:%M:%S") + "\n",
             (role, "message_head"))
-        if __import__("chat_link").ha_link(body):
-            __import__("chat_link").inserisci(output, body + "\n\n", role, webbrowser.open)
+        if __import__("chat_testo").ha_link(body):
+            __import__("chat_testo").inserisci(output, body + "\n\n", role, webbrowser.open)
         else:
             output.insert("end", body + "\n\n", role)
         if chat_bubbles and bubble_mark:
@@ -2957,7 +2957,7 @@ def main() -> None:
 
     def show_chat_history(title: str, pairs) -> None:
         """Chat aperta dall'elenco: la cronologia salvata al posto dei messaggi di prima."""
-        from chat_ruoli import IDENTITY
+        from chat_testo import IDENTITY
         chat_bubbles.cronologia(title, pairs, IDENTITY)
         __import__("allegati").ATTUALI.togli()      # gli allegati valgono per una chat
 
@@ -4688,19 +4688,19 @@ def main() -> None:
     hud.mode_slide.imposta(settings.get("modalita", "basso_consumo"))
     # Menu «ONLINE ▾» accanto a GPT (15/11 sera): servizi online, spunte e quote.
     # 055: al posto dell'interruttore RICERCA ON/OFF, tendina «RICERCA ▾» con i servizi di
-    # ricerca, ciascuno con la sua spunta e la sua barra di quota (menu_ricerca.py).
+    # ricerca, ciascuno con la sua spunta e la sua barra di quota (menu_tendine.py).
     modello_button = hud.model_toggle_button      # 056b: nome ▾ e ⏻ nello stesso tasto
-    modello_menu = __import__("menu_modello").MenuModello(      # 056 D: le 3 caselle al volo
+    modello_menu = __import__("menu_tendine").MenuModello(      # 056 D: le 3 caselle al volo
         root, modello_button, on_use=lambda target: lumi_model_use(target),
         open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modelli offline")),
         notify=lambda text: write_line(text))
     online_menu_button = hud.add_quick_button("online", "Online ▾", lambda: None, after="model")
     ricerca_button = hud.add_quick_button("ricerca", "Ricerca ▾", lambda: None, after="online")
-    ricerca_menu = __import__("menu_ricerca").MenuRicerca(
+    ricerca_menu = __import__("menu_tendine").MenuRicerca(
         root, ricerca_button,
         open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Servizi di ricerca")),
         notify=lambda text: write_line(text))
-    models_menu = __import__("menu_modelli").MenuModelli(
+    models_menu = __import__("menu_tendine").MenuModelli(
         root, online_menu_button, open_settings=lambda: show_settings(),
         notify=lambda text: write_line(text), on_connect=lambda: collega_gpt())
     selettore_tendine = __import__("selettore_chat").collega(
@@ -4737,8 +4737,8 @@ def main() -> None:
     # Manual, isolated native test. No automatic online fallback or PC actions.
     gemma_trial_queue = queue.Queue()
     # Streaming: partial chat text while the local model is still generating,
-    # and voice that starts from the first complete sentence (chat_stream.py).
-    from chat_stream import STREAM as _chat_stream
+    # and voice that starts from the first complete sentence (chat_testo.py).
+    from chat_testo import STREAM as _chat_stream
     _chat_stream.configure(
         output=output,
         speak=lambda text: speaker.speak(text, selected_voice()),
@@ -5191,7 +5191,7 @@ def main() -> None:
         completo sta nella pagina Modelli."""
         sm = __import__("local_model.scelta_modello", fromlist=["elenca_modelli"])
         try:
-            righe = __import__("menu_modello").voci()
+            righe = __import__("menu_tendine").voci()
         except (OSError, ValueError, RuntimeError):
             righe = []
         text, spoken, per_numero = sm.proposta_caselle(righe)

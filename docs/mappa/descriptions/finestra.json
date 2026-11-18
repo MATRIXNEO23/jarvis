@@ -4,10 +4,6 @@
    "name": "Console interna",
    "description": "Mostra i messaggi tecnici dentro la finestra, senza finestra nera."
   },
-  "finestra_adatta.py": {
-   "name": "Finestre adattabili",
-   "description": "Fa vedere sempre tasti e campi, anche su schermi piccoli."
-  },
   "jarvis.py": {
    "name": "Programma principale",
    "description": "Avvia Lumi: apre la finestra e collega voce, chat, comandi e modelli."
@@ -38,7 +34,7 @@
   },
   "window_chrome.py": {
    "name": "Controlli della finestra",
-   "description": "Dà alle finestre di Lumi i tasti per ridurre, ingrandire e chiudere."
+   "description": "Dà alle finestre di Lumi i tasti per ridurre, ingrandire e chiudere. Include la regola che fa vedere sempre tasti e campi, anche su schermi piccoli."
   }
  }
 }

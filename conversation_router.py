@@ -11,8 +11,8 @@ import json
 import re
 
 from action_planner import ApprovedPlan, PlanRejected, parse_plan
-from dialogue_focus import single_question, normalized_utterance
-from dialogue_style import style_instruction
+from dialogue import single_question, normalized_utterance
+from dialogue import style_instruction
 from jarvis_persona import PERSONA, BRIEF_CONTEXT_RULE, compact_memory, prompt_units
 from capability_registry import (
     CapabilityRejected, ResolvedCapability, capability_prompt,

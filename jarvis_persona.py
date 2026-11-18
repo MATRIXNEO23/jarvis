@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 
-from dialogue_style import style_instruction
+from dialogue import style_instruction
 
 MAX_GPT_PROMPT = 5000
 

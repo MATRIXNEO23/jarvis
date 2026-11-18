@@ -1,7 +1,7 @@
 """Chi ha scritto ogni messaggio (1A, 15/11): un solo posto, ruolo esplicito o per prefisso."""
 import unittest
 
-from chat_ruoli import classify
+from chat_testo import classify
 
 
 class RoleTests(unittest.TestCase):

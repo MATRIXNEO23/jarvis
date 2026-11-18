@@ -16,18 +16,6 @@
    "name": "Importa conversazione",
    "description": "Porta in Lumi una conversazione esportata da ChatGPT o Claude."
   },
-  "chat_link.py": {
-   "name": "Link nella chat",
-   "description": "Rende cliccabili i link e gli indirizzi scritti nei messaggi."
-  },
-  "chat_ruoli.py": {
-   "name": "Chi ha scritto",
-   "description": "Distingue i messaggi scritti dall'utente da quelli di Lumi."
-  },
-  "chat_stream.py": {
-   "name": "Testo in diretta",
-   "description": "Mostra il testo del modello mentre viene scritto e avvia la voce dalla prima frase."
-  },
   "richiamo.py": {
    "name": "Cosa ti ho detto prima",
    "description": "Risponde alle domande sulla conversazione precedente usando la cronologia."
@@ -39,6 +27,10 @@
   "stato_lumi.py": {
    "name": "Stato e stop",
    "description": "Mostra la riga di stato sotto la chat e il tasto per fermare subito Lumi."
+  },
+  "chat_testo.py": {
+   "name": "Testo della chat",
+   "description": "Distingue chi ha scritto ogni messaggio, rende cliccabili i link e mostra il testo del modello mentre viene scritto, con la voce dalla prima frase."
   }
  }
 }

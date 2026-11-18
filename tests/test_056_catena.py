@@ -175,7 +175,7 @@ class SpuntaNonSiPerdeTests(unittest.TestCase):
     def test_errore_di_salvataggio_della_tendina_non_e_nascosto(self):
         with tempfile.TemporaryDirectory() as tmp:
             avvisi = []
-            import menu_modelli
+            import menu_tendine as menu_modelli
             menu = object.__new__(menu_modelli.MenuModelli)
             menu.so = so
             menu.settings_path = Path(tmp)               # una cartella: scrivere fallisce

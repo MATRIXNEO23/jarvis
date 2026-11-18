@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import test_native_project_history as fixture
 from local_engine import LocalEngine
-from dialogue_focus import PendingProjectReference
+from dialogue import PendingProjectReference
 
 
 @unittest.skipUnless(os.name == 'nt', 'Windows-only project')

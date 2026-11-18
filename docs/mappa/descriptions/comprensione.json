@@ -2,7 +2,7 @@
  "files": {
   "action_planner.py": {
    "name": "Pianificatore",
-   "description": "Trasforma le risposte di GPT in piccoli compiti locali prudenti."
+   "description": "Trasforma le risposte di GPT in piccoli compiti locali prudenti. Esegue anche il piano approvato, con permesso revocabile."
   },
   "capability_registry.py": {
    "name": "Elenco delle capacità",
@@ -27,14 +27,6 @@
   "conversation_router.py": {
    "name": "Smistamento conversazione",
    "description": "Traduce in intenzioni le richieste parlate, con limiti precisi."
-  },
-  "dialogue_focus.py": {
-   "name": "Argomento del dialogo",
-   "description": "Capisce di cosa si sta parlando."
-  },
-  "dialogue_style.py": {
-   "name": "Tono delle risposte",
-   "description": "Sceglie il tono delle risposte scritte."
   },
   "foreground_power.py": {
    "name": "Schermo acceso",
@@ -72,13 +64,13 @@
    "name": "Orchestratore online",
    "description": "Sceglie a quale servizio online mandare la richiesta."
   },
-  "plan_runner.py": {
-   "name": "Esecuzione del piano",
-   "description": "Esegue un piano approvato, con permesso revocabile."
-  },
   "planner_ui.py": {
    "name": "Finestra dei piani",
    "description": "Finestra dove approvare i piani proposti da GPT."
+  },
+  "dialogue.py": {
+   "name": "Dialogo",
+   "description": "Capisce di cosa si sta parlando e sceglie il tono delle risposte scritte."
   }
  }
 }

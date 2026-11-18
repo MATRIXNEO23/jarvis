@@ -112,7 +112,7 @@ class InternalCommandRoutingTests(unittest.TestCase):
         self.assertEqual(self.actions(engine), [])
 
     def test_saved_project_answer_named_like_command_keeps_clarification_owner(self):
-        from dialogue_focus import PendingProjectReference, normalized_utterance
+        from dialogue import PendingProjectReference, normalized_utterance
         from project_voice import parse_project_voice, find_existing_project
         from workspace_memory import WorkspaceMemory, WorkspaceError
         for name in ('Cronologia', 'Stato sistema'):

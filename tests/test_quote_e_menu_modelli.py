@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import menu_modelli
+import menu_tendine as menu_modelli
 import orchestratore
 import servizi_online as so
 from servizi_online import quote

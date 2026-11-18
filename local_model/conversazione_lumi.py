@@ -21,7 +21,7 @@ from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
 from project_voice import (parse_project_voice, safe_project_name,
                            find_existing_project, project_delete_response)
-from dialogue_focus import (focus_hint, PendingProjectReference,
+from dialogue import (focus_hint, PendingProjectReference,
                             normalized_utterance,is_ambiguous_short_reply)
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
@@ -449,7 +449,7 @@ def installa(d):
         if typed and not __import__("local_model.conversazione_lumi", fromlist=["TU_SCRITTO"]).TU_SCRITTO[0]:
             d.write_line("TU > " + spoken)
         voice_epoch = d.conversation_epoch
-        from chat_stream import STREAM
+        from chat_testo import STREAM
         STREAM.start_request()
 
         online_card = (__import__("scheda_lumi").scheda(__import__("scheda_lumi").fatti_da(d))
@@ -505,7 +505,7 @@ def installa(d):
                     intent_context = native_intent_context_for_request(
                         spoken, has_document=native_document is not None,
                         addon_actions=native_actions)
-                    from chat_stream import STREAM
+                    from chat_testo import STREAM
                     session.on_stream = STREAM.sink(voice_epoch)
                     try:
                         turn = d.chat_transport.ask_local_first(
@@ -539,7 +539,7 @@ def installa(d):
                 or submit_gemma_voice(question, typed=True)):
             d.request.set("")
     def poll_gemma_trial():
-        from chat_stream import STREAM
+        from chat_testo import STREAM
         STREAM.drain(d.conversation_epoch, d.gemma_trial_busy[0] and not d.closing)
         try:
             while True:
@@ -571,7 +571,7 @@ def installa(d):
                             continue
                         if value.allowed_actions is not None:
                             from conversation_router import parse_native_conversation_intent, ConversationRejected
-                            from dialogue_focus import is_ambiguous_short_reply
+                            from dialogue import is_ambiguous_short_reply
                             try:
                                 intent = parse_native_conversation_intent(
                                     value.text, utterance=value.question,

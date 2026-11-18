@@ -25,7 +25,7 @@ class BarraTests(unittest.TestCase):
         self.assertIn("SlideModalita(", HUD)
 
     def test_menu_modello_mostra_il_nome(self):
-        src = (ROOT / "menu_modello.py").read_text(encoding="utf-8")
+        src = (ROOT / "menu_tendine.py").read_text(encoding="utf-8")
         self.assertNotIn('"Modello: "', src)      # 057: il nome solo nella tendina
 
 

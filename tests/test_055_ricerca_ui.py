@@ -75,8 +75,8 @@ class AdattatoriTests(unittest.TestCase):
 class WiringTests(unittest.TestCase):
     def test_top_toggle_replaced_by_dropdown_with_checks_and_quota_bars(self):
         self.assertNotIn("toggle_ricerca_online", JARVIS)
-        self.assertIn('"menu_ricerca").MenuRicerca(', JARVIS)
-        menu = (ROOT / "menu_ricerca.py").read_text(encoding="utf-8")
+        self.assertIn('"menu_tendine").MenuRicerca(', JARVIS)
+        menu = (ROOT / "menu_tendine.py").read_text(encoding="utf-8")
         self.assertIn("Checkbutton", menu)
         self.assertIn("quota_servizio", menu)
         self.assertIn("create_rectangle", menu)

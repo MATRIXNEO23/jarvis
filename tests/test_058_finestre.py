@@ -82,7 +82,7 @@ class FinestreSenzaSchermoIntero(unittest.TestCase):
         self.root.destroy()
 
     def test_adatta_non_supera_l_area_utile_e_fissa_il_minimo(self):
-        from finestra_adatta import MARGINE_X, MARGINE_Y, adatta
+        from window_chrome import MARGINE_X, MARGINE_Y, adatta
         win = tk.Toplevel(self.root)
         tk.Button(win, text="Salva").pack(side="bottom")
         win.geometry("1600x1000+700+500")
@@ -118,7 +118,7 @@ class FinestreSenzaSchermoIntero(unittest.TestCase):
         win.destroy()
 
     def test_ogni_finestra_costruibile_resta_dentro_a_1366x768(self):
-        from finestra_adatta import adatta
+        from window_chrome import adatta
         aperte, saltate, problemi = 0, [], []
         with tempfile.TemporaryDirectory() as cartella:
             for nome, crea in _costruttori(self.root, cartella).items():

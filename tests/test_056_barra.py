@@ -27,7 +27,7 @@ class BarraSorgenteTests(unittest.TestCase):
 
     def test_tendina_modello_accanto_al_pulsante_on_off_esistente(self):
         self.assertIn("modello_button = hud.model_toggle_button", JARVIS)
-        self.assertIn('on_use=lambda target: lumi_model_use(target)', JARVIS[JARVIS.index("menu_modello"):])
+        self.assertIn('on_use=lambda target: lumi_model_use(target)', JARVIS[JARVIS.index("MenuModello("):])
         self.assertIn('"Online ▾", lambda: None, after="model"', JARVIS)
 
 
@@ -61,7 +61,7 @@ class SlideTests(unittest.TestCase):
 
 class MenuModelloTests(unittest.TestCase):
     def test_voci_sono_le_tre_caselle_con_il_modello_in_uso(self):
-        import menu_modello
+        import menu_tendine as menu_modello
         from local_model import registro_modelli, scelta_modello
         with tempfile.TemporaryDirectory() as tmp:
             a, b = Path(tmp) / "a.gguf", Path(tmp) / "b.gguf"
@@ -75,7 +75,7 @@ class MenuModelloTests(unittest.TestCase):
 
     def test_scegliere_una_casella_chiama_il_cambio_modello_esistente(self):
         import tkinter as tk
-        import menu_modello
+        import menu_tendine as menu_modello
         try:
             root = tk.Tk()
         except tk.TclError:

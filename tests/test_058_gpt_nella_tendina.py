@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-import menu_modelli
+import menu_tendine as menu_modelli
 import servizi_online as so
 
 ROOT = Path(__file__).resolve().parents[1]

@@ -29,8 +29,8 @@ class TendineTests(unittest.TestCase):
 
     def test_clic_su_online_e_ricerca_apre_il_menu_e_power_no(self):
         from barra_tasti import TastoBarra
-        from menu_modelli import MenuModelli
-        from menu_ricerca import MenuRicerca
+        from menu_tendine import MenuModelli
+        from menu_tendine import MenuRicerca
         frame = tk.Frame(self.root)
         frame.pack()
         casi = []
@@ -49,11 +49,11 @@ class TendineTests(unittest.TestCase):
             self.assertIsNone(menu.popup, "un secondo clic la chiude")
 
     def test_tendina_modello_usa_lo_stesso_controllo(self):
-        src = (Path(__file__).resolve().parents[1] / "menu_modelli.py").read_text(encoding="utf-8")
+        src = (Path(__file__).resolve().parents[1] / "menu_tendine.py").read_text(encoding="utf-8")
         self.assertIn('str(self.button) + "."', src)      # MenuModello e MenuRicerca ereditano da qui
-        from menu_modello import MenuModello
-        from menu_ricerca import MenuRicerca
-        from menu_modelli import MenuModelli
+        from menu_tendine import MenuModello
+        from menu_tendine import MenuRicerca
+        from menu_tendine import MenuModelli
         self.assertTrue(issubclass(MenuModello, MenuModelli) and issubclass(MenuRicerca, MenuModelli))
 
 

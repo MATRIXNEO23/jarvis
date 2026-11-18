@@ -34,7 +34,7 @@ class ProposteTests(unittest.TestCase):
     def test_jarvis_usa_le_caselle_e_non_l_elenco_completo(self):
         src = (ROOT / "jarvis.py").read_text(encoding="utf-8")
         corpo = src[src.index("    def lumi_model_choose() -> None:"):src.index("    def lumi_model_restart() -> None:")]
-        self.assertIn('__import__("menu_modello").voci()', corpo)
+        self.assertIn('__import__("menu_tendine").voci()', corpo)
         self.assertIn("sm.proposta_caselle(righe)", corpo)
         self.assertNotIn("elenca_modelli()", corpo)
         self.assertNotIn("show_results", corpo)                 # niente finestra con l'elenco completo

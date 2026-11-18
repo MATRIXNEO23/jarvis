@@ -85,7 +85,7 @@ class SpeechTextTests(unittest.TestCase):
 
 class ChatStreamTests(unittest.TestCase):
     def test_very_long_sentence_starts_at_a_comma(self):
-        from chat_stream import ChatStream
+        from chat_testo import ChatStream
         spoken = []
         stream = ChatStream()
         stream.speak = lambda text: spoken.append(text) or True
@@ -95,7 +95,7 @@ class ChatStreamTests(unittest.TestCase):
         self.assertTrue(spoken and spoken[0].endswith(","))
 
     def test_speaks_completed_sentences_then_only_the_rest(self):
-        from chat_stream import ChatStream
+        from chat_testo import ChatStream
         spoken, final = [], []
         stream = ChatStream()
         stream.speak = lambda text: spoken.append(text) or True
@@ -107,7 +107,7 @@ class ChatStreamTests(unittest.TestCase):
         self.assertEqual(final, ["Come stai?"])
 
     def test_unconfigured_stream_is_a_no_op_and_final_speaks_everything(self):
-        from chat_stream import ChatStream
+        from chat_testo import ChatStream
         stream, final = ChatStream(), []
         self.assertIsNone(stream.sink(1))
         stream.drain(1, True)

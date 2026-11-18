@@ -22,7 +22,7 @@ class BarraSorgenteTests(unittest.TestCase):
         self.assertIn("_jarvis_window_anchor=self.gear", HUD)
 
     def test_nome_modello_non_nella_barra(self):
-        src = (ROOT / "menu_modello.py").read_text(encoding="utf-8")
+        src = (ROOT / "menu_tendine.py").read_text(encoding="utf-8")
         self.assertIn('text="Modello ▾"', src)
         self.assertNotIn('"Modello: "', src)
 

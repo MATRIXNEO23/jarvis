@@ -2,7 +2,7 @@
 import unittest
 from unittest import mock
 
-import chat_link
+import chat_testo as chat_link
 import servizi_ricerca as sr
 
 
@@ -59,7 +59,7 @@ class TkTagTests(unittest.TestCase):
 class ChatWiringTests(unittest.TestCase):
     def test_write_line_uses_chat_link_and_no_separate_window(self):
         source = open("jarvis.py", encoding="utf-8").read()
-        self.assertIn('__import__("chat_link").inserisci(output, body + "\\n\\n", role, webbrowser.open)', source)
+        self.assertIn('__import__("chat_testo").inserisci(output, body + "\\n\\n", role, webbrowser.open)', source)
         part = source[source.index("def lumi_ricerca"):source.index("def help_box_say")]
         self.assertNotIn("show_results", part)
 

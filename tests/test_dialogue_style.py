@@ -3,7 +3,7 @@ import json
 import threading
 import unittest
 
-from dialogue_style import choose_dialogue_style, style_instruction
+from dialogue import choose_dialogue_style, style_instruction
 from jarvis_persona import PERSONA, build_chat_prompt
 from conversation_router import (
     MAX_REPLY, ConversationRejected, build_conversation_prompt,

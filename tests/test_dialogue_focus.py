@@ -4,7 +4,7 @@ import unittest
 
 from conversation_memory import ConversationMemory
 from conversation_router import build_conversation_prompt, parse_conversation_intent
-from dialogue_focus import (
+from dialogue import (
     PendingProjectReference,focus_hint,is_short_followup,
     is_ambiguous_short_reply,is_unusable_project_name,mentions_current_project,
     needs_project_clarification,single_question,
