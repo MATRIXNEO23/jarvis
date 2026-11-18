@@ -74,8 +74,8 @@ class ProvaReteTest(unittest.TestCase):
 class PacchettoTest(unittest.TestCase):
     def test_l_artifact_carica_la_cartella(self):
         wf = (ROOT / ".github" / "workflows" / "f5n-koboldcpp-native-dll-windows.yml").read_text(encoding="utf-8")
-        self.assertIn("--number 059", wf)
-        self.assertIn("name: lumi-059-prova-candidate", wf)
+        self.assertIn("--number 060", wf)
+        self.assertIn("name: lumi-060-prova-candidate", wf)
         self.assertIn("path: dist/artifact", wf)
         builder = (ROOT / "tools" / "build_jarvis_f5_candidate.py").read_text(encoding="utf-8")
         self.assertIn('"artifact" / f"Lumi-{label}-PROVA"', builder)
