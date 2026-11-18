@@ -219,6 +219,8 @@ Una domanda breve («ciao») non deve mandare migliaia di token online. Proposta
 
 Decisione utente 03:45: «approfondisci» manda online SOLO l'ultima risposta del modello offline, con l'istruzione di spiegarla meglio e più a fondo, senza la domanda dell'utente. In chat non compare il testo mandato online, ma solo la nuova risposta.
 
+Decisione utente 03:54, per la 058: il processo del motore (KoboldCpp) gira con priorità ALTA mentre elabora e torna normale a riposo. Lumi passa anche il contesto del profilo al caricamento del modello, così la memoria riservata coincide con il contesto (niente impostazioni nuove nella pagina). Esito della prova 057 corretto: il contesto in uso era 800 (impostato dall'utente); il 1024 del log era solo la KV cache riservata al caricamento.
+
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
 - 058, riordino:
