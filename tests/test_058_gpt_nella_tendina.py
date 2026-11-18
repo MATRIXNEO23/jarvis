@@ -135,13 +135,13 @@ class TendinaTests(unittest.TestCase):
         self.assertFalse([t for t in testi if "Codex" in t])
 
     def test_la_voce_gpt_compare_una_volta_sola(self):
-        so.ACCOUNT.update(pronto=lambda: True)
+        so.ACCOUNT.update(chiedi=lambda t, o: "x", pronto=lambda: True)
         testi = self._riga_gpt()
         self.assertEqual(sum(1 for t in testi if t.startswith("ChatGPT dal browser")), 1)
         self.assertEqual(len([t for t in testi if t.startswith("ChatGPT")]), 1)
 
     def test_collegato_non_mostra_il_pulsante(self):
-        so.ACCOUNT.update(pronto=lambda: True)
+        so.ACCOUNT.update(chiedi=lambda t, o: "x", pronto=lambda: True)
         testi = self._riga_gpt()
         self.assertIn("collegato", testi)
         self.assertNotIn("Collega", testi)

@@ -99,8 +99,7 @@ class FinestreSenzaSchermoIntero(unittest.TestCase):
     def test_il_rilevatore_trova_un_tasto_tagliato_e_accetta_la_tela_scorrevole(self):
         win = tk.Toplevel(self.root)
         win.geometry("300x200+0+0")
-        tk.Frame(win, width=280, height=400).pack()
-        tk.Button(win, text="Salva").pack()
+        tk.Button(win, text="Salva").place(x=10, y=500)        # fuori dai 200 px della finestra
         win.update()
         self.assertTrue(fuori_area(win))
         win.destroy()

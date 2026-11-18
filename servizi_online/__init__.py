@@ -21,6 +21,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+TIMEOUT_LAVORO = 90   # 058: i lavori dell'orchestratore possono aspettare di più della chat (30 s)
 TIMEOUT = 30          # 16/11: un servizio lento non deve bloccare gli altri
 
 
@@ -411,7 +412,7 @@ def _conta(service_id: str, data: dict, settings: dict) -> str:
 
 def chiama(messages: list[dict], *, tools=None, only: str | None = None,
            settings: dict | None = None, keys: Chiavi | None = None, post=_post,
-           timeout: float = TIMEOUT):
+           timeout: float = TIMEOUT_LAVORO):
     """Come chiedi, ma con gli strumenti (function calling) e il messaggio intero:
     (id servizio, nome, messaggio) oppure (None, None, motivi). `only`: resta sullo stesso
     servizio durante un lavoro a più passi."""
