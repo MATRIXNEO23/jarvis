@@ -110,7 +110,7 @@
     "lumi_comandi.py",
     "local_engine.py",
     "conversation_*.py",
-    "dialogue_*.py",
+    "dialogue.py",
     "jarvis_persona.py",
     "orchestratore.py",
     "contesto_online.py",

@@ -105,6 +105,12 @@ Regola: niente iniziative sull'organizzazione dei menu; ogni argomento al suo po
 10. Conferme: «sì»/«no» senza dire «Lumi» (verificare che sia sempre così).
 Già pronti, non ancora in build: correzione elenco voci (timeout PowerShell), documenti negli allegati (PDF con pypdf, Office, LibreOffice, RTF, HTML, EPUB).
 
+## Ripresa 18/11 — build 060: riordino passo 1 (solo spostamenti, comportamento identico)
+- Unioni: chat_link+chat_ruoli+chat_stream -> chat_testo.py; menu_modello+menu_ricerca+menu_modelli -> menu_tendine.py; dialogue_focus+dialogue_style -> dialogue.py; plan_runner -> action_planner.py; finestra_adatta -> window_chrome.py. Nessun file ponte. LEGGIMI_PROVA_TELEGRAM_50.txt e LEGGIMI-ACCESSO-FILE.txt in docs/.
+- prepara_test_telegram50.py resta in radice (lo lancia avvia_lumi.bat): domanda aperta in docs/DECISIONI-RIORDINO-058.md.
+- Test: tests/test_060_riordino.py (nomi pubblici, STREAM unico, nessun vecchio richiamo). Mappa rigenerata (docs/mappa).
+- Prossimo passo del riordino: online/ (poi comprensione/, ascolto/, uscita/...).
+
 ## Ripresa 17/11 — build 055 pronta in codice (leggere per prima)
 - Fatto (A-H della 055, un commit per blocco): catena unica testo/voce, consenso GPT a voce senza finestra, risultati ricerca in chat con dominio, «approfondisci online» scritto, modelli aggiunti senza copia + caselle 1/2/3 + profili per modello + GGUF corretto + salvataggio atomico, tendina RICERCA con quota (Tavily da API), Exa/Firecrawl/Linkup collegati, impostazioni modelli solo in «Modelli», versione 055 in diagnostica. Dettagli e scelte: docs/DECISIONI-E-LEZIONI.md, sezione «Build 055».
 - Test nuovi: tests/test_055_catena.py, test_055_modelli.py, test_055_ricerca_ui.py, test_055_diagnostica_versione.py (non eseguiti su Linux). Test 052/054 adattati (elenco senza limite, quota «rilevate», catena con typed).

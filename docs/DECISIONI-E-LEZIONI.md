@@ -1359,3 +1359,8 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Selettori: la larghezza della colonna chat (360 px) è un dato dimostrato dal codice; tasti e casella sulla stessa riga non ci stanno. Scelta minima: riga propria sopra la casella (da confermare).
 - Meteo: 16 giorni è il massimo di Open-Meteo (`forecast_days=16`); oltre, messaggio esplicito, nessuna previsione inventata. Probabilità di pioggia omessa solo se il dato manca.
 - Pacchetto: l'artifact è già uno zip; per estrarre una volta sola si carica la cartella (`dist/artifact`, radice = `Lumi-059-PROVA/`).
+
+## 18/11 — Riordino 060 (passo 1)
+- Prima di spostare un file «da sviluppatore» cercare anche i .bat: prepara_test_telegram50.py sembrava usato solo da 3 test, ma lo lancia avvia_lumi.bat e tools/ non va nel pacchetto. Lasciato in radice, domanda all'utente.
+- Unire moduli: elencare richiami (import, __import__("nome"), stringhe e letture del file nei test, workflow), unire senza file ponte, e un test che importa ogni nome pubblico spostato (tests/test_060_riordino.py).
+- Il glob della mappa «dialogue_*.py» non prendeva dialogue.py: dopo ogni unione controllare «0 unassigned» in build.mjs.
