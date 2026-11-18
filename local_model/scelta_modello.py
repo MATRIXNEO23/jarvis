@@ -104,6 +104,21 @@ def testo_elenco(models) -> tuple[str, str]:
             + "\nDi' il numero per sceglierne uno."), spoken
 
 
+def proposta_caselle(righe) -> tuple[str, str, dict]:
+    """058 (04:50): «cambia modello» propone SOLO le caselle fisse 1/2/3 (le stesse della tendina
+    MODELLO in alto). `righe` = [(numero, percorso o None, in_uso)]. Una casella vuota non si propone.
+    Ritorna (testo per la chat, frase a voce, {numero: percorso}). L'elenco completo resta nella pagina Modelli."""
+    piene = [(n, m) for n, m, _uso in righe if m]
+    if not piene:
+        frase = "Non ho modelli nelle caselle 1, 2 e 3: scegline uno dalla pagina Modelli."
+        return frase, frase, {}
+    parti = ["%d %s" % (n, nome_breve(m)) for n, m in piene]
+    frase = ", ".join(parti) + ": quale carico?"
+    righe_chat = ["%d. %s%s" % (n, nome_breve(m), "   (in uso)" if uso else "")
+                  for n, m, uso in righe if m]
+    return ("Modelli nelle caselle fisse:\n" + "\n".join(righe_chat) + "\nDi' il numero per caricarlo."), frase, dict(piene)
+
+
 def nota_famiglia(model_path, config_path=None) -> str:
     """Frase per la chat dopo la scelta: famiglia riconosciuta e profilo caricato."""
     from .profili_famiglia import messaggio_famiglia, riconosci_famiglia, slot_ricordato

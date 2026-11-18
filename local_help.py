@@ -160,7 +160,7 @@ def help_sections(engine):
             'MODELLI OFFLINE (Impostazioni > Modelli): una sola pagina con le caselle 1/2/3, l\u2019elenco, '
             '«Aggiungi modello…», i 3 profili del modello scelto e, sotto, tutte le sue impostazioni '
             '(contesto, thread, risposta massima, memoria del prompt) con un solo Salva. '
-            'A voce: «cambia modello» elenca i modelli e scegli per numero. '
+            'A voce: «cambia modello» propone i modelli delle caselle 1, 2 e 3 («1 …, 2 …, 3 …: quale carico?») e rispondi 1, 2 o 3, senza dire «Lumi»; una casella vuota non viene proposta. L\u2019elenco completo \u00e8 nella pagina Modelli. '
             'La tendina MODELLO in alto cambia modello al volo. Il Second Brain \u00e8 unico per tutti i modelli: '
             'accensione e cancellazione sono in Impostazioni > Memoria.\n\n'
             'MODELLO ON/OFF (in alto, accanto a GPT): con OFF nessuna richiesta va a Gemma o a GPT, '

@@ -5178,15 +5178,15 @@ def main() -> None:
         lumi_model_restart()        # chiude il motore; riparte col nuovo modello
 
     def lumi_model_choose() -> None:
-        """«cambia modello»: elenca i .gguf (voce e finestra risultati); il numero scelto
-        (anche senza «Lumi») salva il modello e riavvia il motore."""
+        """«cambia modello»: propone SOLO i modelli delle caselle fisse 1/2/3 (come la tendina MODELLO);
+        il numero scelto (anche senza «Lumi») salva il modello e riavvia il motore. L'elenco
+        completo sta nella pagina Modelli."""
         sm = __import__("local_model.scelta_modello", fromlist=["elenca_modelli"])
         try:
-            models = sm.elenca_modelli()
-            in_use = sm.modello_in_uso()
+            righe = __import__("menu_modello").voci()
         except (OSError, ValueError, RuntimeError):
-            models, in_use = [], ""
-        text, spoken = sm.testo_elenco(models)
+            righe = []
+        text, spoken, per_numero = sm.proposta_caselle(righe)
         try:        # 055: un modello aggiunto il cui file è sparito si segnala, non si nasconde
             lost = __import__("local_model.registro_modelli", fromlist=["mancanti"]).mancanti()
         except (OSError, ValueError, RuntimeError):
@@ -5195,27 +5195,18 @@ def main() -> None:
             text += "\nNon trovo più: " + ", ".join(p.name for p in lost[:3]) + "."
         write_line("MODELLO LOCALE > " + text)
         speak_result(spoken)
-        if not models:
+        if not per_numero:
             return
 
         def choose(number: int) -> None:
-            lumi_model_use(models[number - 1])
+            if number in per_numero:
+                lumi_model_use(per_numero[number])
+            else:
+                write_line("MODELLO LOCALE > La casella %d è vuota." % number)
+                speak_result("La casella %d è vuota." % number)
 
-        items = [("Modello in uso" if str(m) == in_use else "Modello", sm.nome_breve(m), str(m))
-                 for m in models]
-        listing = {"token": "modelli-" + str(__import__("time").monotonic()), "items": items,
-                   "summary": "Modelli locali: di' il numero (o fai doppio clic) per sceglierne uno."}
-
-        def show():
-            try:
-                from file_access.ui import show_results
-                show_results(root, listing, on_open=lambda number, token: choose(number),
-                             on_select=lambda *args: True)
-            except (ImportError, OSError, ValueError, tk.TclError) as exc:
-                write_line("MODELLO LOCALE > Finestra risultati non disponibile: " + str(exc)[:100])
-        root.after(0, show)
         __import__("risposte").expect_choice(
-            len(models), choose,
+            max(per_numero), choose,
             on_cancel=lambda: write_line("LUMI > Va bene, non cambio modello."),
             speech_text=spoken)
 
