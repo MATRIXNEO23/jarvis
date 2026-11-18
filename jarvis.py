@@ -316,7 +316,7 @@ def main() -> None:
     __import__("github_lettura").costruisci_sezione(
         assistant_settings_frame, lambda text: write_line(text))
     # Servizi online con caselle e chiavi API (passo 8, servizi_online.py).
-    __import__("servizi_online").costruisci_sezione(
+    servizi_online_box = __import__("servizi_online").costruisci_sezione(
         assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
     # Servizi di ricerca (052): Tavily, Exa, Firecrawl, Linkup, con chiave e link.
     __import__("servizi_ricerca").costruisci_sezione(
@@ -473,6 +473,11 @@ def main() -> None:
     except (ImportError, OSError, ValueError, AttributeError) as exc:
         addon_setup_error = (addon_setup_error or "") + " Meteo: " + str(exc)[:80]
         meteo_service = None
+
+    def meteo_show_week(listing: dict) -> None:
+        """058: «meteo settimana» — i 7 giorni nella finestra dei risultati."""
+        from file_access.ui import show_results
+        show_results(root, listing, on_open=lambda number, token: None, on_select=lambda *args: True)
 
     def meteo_status() -> dict:
         """Per lumi_stato (056): add-on acceso, città dell'HUD, temperatura e icona mostrate."""
@@ -800,7 +805,8 @@ def main() -> None:
     __import__("servizi_online").ACCOUNT.update(
         chiedi=lambda prompt, timeout: str(service.call(
             "ask", prompt=prompt, timeout=max(float(timeout), 60.0)).get("text", "")),
-        pronto=lambda: bool(active_gpt) and bool(gpt_enabled.get()))
+        pronto=lambda: bool(active_gpt) and bool(gpt_enabled.get()),
+        collega=lambda: collega_gpt())
     conversation_epoch = 0
     document_busy = False
     documents = ManagedDocuments()
@@ -2387,26 +2393,37 @@ def main() -> None:
             "online_yes", "Vado online? Di' sì o no.", write_line, speak_result,
             no_action="online_no")
 
-    def deepen_prompt(question: str, answer: str) -> str:
-        """057: «approfondisci» manda online l'ultima domanda INSIEME all'ultima risposta offline."""
-        return ("Domanda dell'utente: " + question.strip() + "\n"
-                "Risposta data dal modello offline: " + answer.strip() + "\n"
-                "Spiega meglio e più a fondo questa risposta, in italiano.")
+    def deepen_prompt(answer: str) -> str:
+        """058: «approfondisci» manda online SOLO l'ultima risposta del modello offline."""
+        return ("Questa è la risposta di un modello offline:\n" + answer.strip() + "\n"
+                "Spiegala meglio e più a fondo, in italiano.")
+
+    def submit_deepen(prompt: str) -> None:
+        """058: in chat resta «approfondisci»: il testo mandato online non compare come messaggio TU."""
+        from local_model import conversazione_lumi as _cl
+        _cl.TU_SCRITTO[0] = True
+        try:
+            submit_gemma_voice(prompt, typed=True, route="online")
+        finally:
+            _cl.TU_SCRITTO[0] = False
 
     def deepen_last(typed: bool = False, question: str | None = None, answer: str | None = None) -> None:
-        """«approfondisci» e pulsante «Approfondisci» (con la domanda e la risposta di quella bolla):
-        online con conferma in Basso consumo, diretto in Veloce. Senza risposta precedente chiede
+        """«approfondisci» e pulsante «Approfondisci» (con la risposta di quella bolla): online con
+        conferma in Basso consumo, diretto in Veloce. Senza risposta offline chiede
         «Cosa vuoi approfondire?»."""
-        if not (question and answer):
+        from_button = bool(answer)
+        if not answer:
             question, answer = (chat_bubbles.ultimo_scambio or ("", ""))
-        if not (question and answer):
+        if not answer:
             text = "Cosa vuoi approfondire?"
             write_line("LUMI > " + text)
             speak_result(text)
             return
-        prompt = deepen_prompt(question, answer)
+        if from_button:
+            write_line("TU > approfondisci")      # il pulsante non passa dalla casella di testo
+        prompt = deepen_prompt(answer)
         if fast_mode():
-            submit_gemma_voice(prompt, typed=True, route="online")
+            submit_deepen(prompt)
         else:
             ask_online(prompt, True, True)
 
@@ -2476,6 +2493,12 @@ def main() -> None:
             gpt_status.set("GPT: disattivato manualmente")
             threading.Thread(target=service.stop, daemon=True).start()
             refresh_buttons()
+
+    def collega_gpt() -> None:
+        """058: «Collega» della tendina Online: accende il GPT dal browser (stesso ponte di prima)."""
+        gpt_enabled.set(True)
+        write_line("GPT > Collego il tuo account ChatGPT dal browser…")
+        toggle_gpt()
 
     # Conversazione con il modello locale (Gemma/KoboldCpp): spostato in local_model/conversazione_lumi.py (divisione di jarvis.py).
     from local_model.conversazione_lumi import installa as _local_model_conversazione_lumi_installa
@@ -2671,9 +2694,12 @@ def main() -> None:
             side="right")
         entry.focus_set()
 
-    gpt_panel = ttk.LabelFrame(assistant_settings_frame,
-                                text="Connessione ChatGPT", padding=12)
-    gpt_panel.pack(fill="x", pady=(0, 10))
+    # 058 (decisione utente 04:06): tutti i servizi online stanno in UN posto. Il collegamento del
+    # GPT dal browser (stato, collega/scollega, autorizzazioni) sta DENTRO «Servizi online»,
+    # sotto l'elenco, non in una pagina a parte.
+    gpt_panel = ttk.LabelFrame(servizi_online_box,
+                                text="ChatGPT (tuo account): collegamento dal browser", padding=8)
+    gpt_panel.pack(fill="x", padx=8, pady=(4, 6), after=servizi_online_box.rows)
     gpt_toggle = ttk.Checkbutton(
         gpt_panel, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
         variable=gpt_enabled, command=toggle_gpt
@@ -3319,7 +3345,7 @@ def main() -> None:
             # provata solo dopo timer e sveglia, e solo con l'add-on attivo.
             from musica.runtime import handle_text as music_handle_text
             from meteo.runtime import handle_text as meteo_handle_text
-            if meteo_handle_text(spoken, write_line, speak_result):
+            if meteo_handle_text(spoken, write_line, speak_result, meteo_show_week):
                 return True              # 056 C: «che tempo fa a Roma», senza modello né quota
             from controllo_pc.runtime import (claims_first as pc_claims_first,
                                               handle_text as pc_handle_text)
@@ -4664,7 +4690,7 @@ def main() -> None:
         notify=lambda text: write_line(text))
     models_menu = __import__("menu_modelli").MenuModelli(
         root, online_menu_button, open_settings=lambda: show_settings(),
-        notify=lambda text: write_line(text))
+        notify=lambda text: write_line(text), on_connect=lambda: collega_gpt())
     # Telegram (15/11 sera): icona ✈ con i colori dello stato, tendina dei contatti e una
     # voce per contatto nel menu laterale.
     telegram_button = hud.add_quick_button("telegram", "Telegram", lambda: None, after="memory", simbolo="telegram")
@@ -5077,6 +5103,9 @@ def main() -> None:
             return
         if route == "locale" and len(pending) > 2 and pending[2]:
             write_line("LUMI > Va bene, resto offline.")      # «approfondisci» rifiutato
+            return
+        if len(pending) > 2 and pending[2]:
+            submit_deepen(pending[0])        # 058: «approfondisci» confermato, senza TU lungo
             return
         submit_gemma_voice(pending[0], typed=pending[1], route=route)
 

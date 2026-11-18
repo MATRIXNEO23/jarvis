@@ -59,6 +59,29 @@ class EngineStopped(RuntimeError):
     pass
 
 
+HIGH_PRIORITY_CLASS = 0x00000080
+NORMAL_PRIORITY_CLASS = 0x00000020
+
+
+def imposta_priorita(proc, alta: bool, *, api=None) -> bool:
+    """058: il motore (processo figlio) gira a priorità ALTA mentre elabora e NORMALE a riposo.
+    Solo Windows (ctypes, nessuna dipendenza); altrove o in caso di errore non fa nulla."""
+    if proc is None:
+        return False
+    if api is None:
+        if sys.platform != "win32":
+            return False
+        import ctypes
+        api = ctypes.WinDLL("kernel32", use_last_error=True).SetPriorityClass
+    handle = getattr(proc, "_handle", None)
+    if handle is None:
+        return False
+    try:
+        return bool(api(int(handle), HIGH_PRIORITY_CLASS if alta else NORMAL_PRIORITY_CLASS))
+    except (OSError, ValueError, TypeError, AttributeError):
+        return False
+
+
 class ProcessChatAdapter:
     """Stessa interfaccia di NativeChatAdapter, ma il motore vive in un processo figlio."""
 
@@ -163,9 +186,14 @@ class ProcessChatAdapter:
         from .token_stream import current
         callback = current()
         with self._lock:
-            return self._send({"op": "ask", "timeout": timeout, "prompt_budget": prompt_budget,
-                               "arguments": arguments, "stream": callback is not None},
-                              on_stream=callback, timeout=timeout)
+            proc = self._proc
+            imposta_priorita(proc, True)          # 058: alta mentre elabora
+            try:
+                return self._send({"op": "ask", "timeout": timeout, "prompt_budget": prompt_budget,
+                                   "arguments": arguments, "stream": callback is not None},
+                                  on_stream=callback, timeout=timeout)
+            finally:
+                imposta_priorita(proc, False)     # e normale a riposo
 
     def stop(self):
         # Come NativeChatAdapter.stop: la prossima richiesta ricarica il modello. Qui il

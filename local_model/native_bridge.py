@@ -63,12 +63,22 @@ class NativeGemmaBridge:
             self._check_cancelled()
             if not hasattr(self.upstream, "load_model"):
                 raise RuntimeError("Adattatore nativo non compatibile.")
+            self._apply_context()
             # Reserve before the native call: a failed load also leaves state.
             _PROCESS_NATIVE_LOADS.add(dll_key)
             if not self.upstream.load_model(str(Path(self.config.model).resolve())):
                 raise RuntimeError("Caricamento modello nativo fallito.")
             self._check_cancelled()
             self._loaded = True
+
+    def _apply_context(self):
+        """058: al caricamento il contesto del profilo (quello in uso) arriva al motore, così la
+        KV cache riservata coincide con il contesto; nessuna impostazione nuova."""
+        size = self.config.context_size
+        self.upstream.maxctx = size
+        args = getattr(self.upstream, "args", None)
+        if args is not None:
+            args.contextsize = size
 
     @property
     def loaded(self):

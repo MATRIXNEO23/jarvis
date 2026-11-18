@@ -13,7 +13,7 @@ import settings as settings_module
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = (ROOT / "jarvis.py").read_text(encoding="utf-8")
-CATENA = ("conversation_chain", "local_after_gpt", "fast_mode", "ask_online", "deepen_prompt", "deepen_last")
+CATENA = ("conversation_chain", "local_after_gpt", "fast_mode", "ask_online", "deepen_prompt", "submit_deepen", "deepen_last")
 
 
 def _funzioni(*names):
@@ -60,7 +60,7 @@ class BassoConsumoTests(unittest.TestCase):
             env["conversation_chain"]("approfondisci", False)
         self.assertEqual(chiedi.call_args.args[0], "online_yes")
         prompt = so.IN_ATTESA["domanda"][0]            # 057: domanda + risposta offline + istruzione
-        self.assertIn("la fotosintesi", prompt)
+        self.assertNotIn("la fotosintesi", prompt)      # 058: solo la risposta, mai la domanda
         self.assertIn("risposta precedente", prompt)
         self.assertIn("più a fondo", prompt)
         self.assertEqual(so.IN_ATTESA["domanda"][1:], (True, True))
@@ -101,7 +101,7 @@ class VeloceTests(unittest.TestCase):
             env["conversation_chain"]("approfondisci", False)
         chiamata = env["submit_gemma_voice"].call_args
         self.assertEqual(chiamata.kwargs, {"typed": True, "route": "online"})
-        self.assertIn("la luna", chiamata.args[0])
+        self.assertNotIn("la luna", chiamata.args[0])
         self.assertIn("risposta precedente", chiamata.args[0])
         chiedi.assert_not_called()
 
@@ -133,7 +133,7 @@ class RispostaNoTests(unittest.TestCase):
         env = _env("veloce", last="")
         env["deepen_last"](True, "perché il cielo è blu?", "Per la diffusione della luce.")
         arg = env["submit_gemma_voice"].call_args.args[0]
-        self.assertIn("perché il cielo è blu?", arg)
+        self.assertNotIn("perché il cielo è blu?", arg)
         self.assertIn("Per la diffusione della luce.", arg)
 
 

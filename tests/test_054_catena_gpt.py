@@ -12,7 +12,7 @@ import servizi_ricerca as sr
 
 ROOT = Path(__file__).resolve().parents[1]
 CATENA = ("start_conversation_gpt", "conversation_chain", "local_after_gpt",
-          "fast_mode", "ask_online", "deepen_prompt", "deepen_last")   # 056: Basso consumo / Veloce, conferma online
+          "fast_mode", "ask_online", "deepen_prompt", "submit_deepen", "deepen_last")   # 056: Basso consumo / Veloce, conferma online
 
 
 def _funzioni(*names):

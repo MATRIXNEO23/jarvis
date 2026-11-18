@@ -198,5 +198,8 @@ def install_window_chrome(root):
     def on_map(event):
         if isinstance(event.widget, _FINESTRE):
             root.after_idle(attach, event.widget)
+            if isinstance(event.widget, tk.Toplevel):       # 058: sempre dentro lo schermo
+                from finestra_adatta import adatta
+                root.after(60, adatta, event.widget)
 
     root.bind_all("<Map>", on_map, add="+")
