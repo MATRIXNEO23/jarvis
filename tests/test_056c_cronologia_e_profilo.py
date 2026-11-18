@@ -130,7 +130,7 @@ class MeteoDomaniTests(unittest.TestCase):
         self.assertEqual(parse_command("che tempo farà domani a Milano"), ("domani", "Milano"))
         self.assertEqual(parse_command("Lumi, che tempo fa domani"), ("domani", None))
         self.assertEqual(parse_command("meteo Roma"), ("meteo", "Roma"))
-        self.assertIsNone(parse_command("meteo dopodomani"))
+        self.assertEqual(parse_command("meteo dopodomani"), ("data:+2", None))   # 059
         self.assertIsNone(parse_command("cerca online meteo domani"))
 
     def test_servizio_open_meteo_daily(self):

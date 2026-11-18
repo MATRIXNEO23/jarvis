@@ -33,7 +33,7 @@ class FrasiTests(unittest.TestCase):
 
     def test_online_e_clima_restano_ricerche(self):
         for frase in ("cerca online meteo Roma", "com'è il clima a Tokyo in primavera",
-                      "che tempo fa dopodomani a Roma", "che ora è", "apri il meteo di roma"):
+                      "che ora è", "apri il meteo di roma"):
             self.assertIsNone(commands.parse_command(frase), frase)
 
     def test_cerca_online_meteo_arriva_prima_alla_ricerca(self):

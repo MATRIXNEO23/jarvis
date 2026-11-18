@@ -149,7 +149,8 @@ def handle_text(spoken: str, write_line, speak) -> bool:
 
 
 def chiedi(action: str, question: str, write_line, speak, seconds: float = 60,
-           no_action: str | None = None, always_action: str | None = None) -> None:
+           no_action: str | None = None, always_action: str | None = None,
+           lettura: str = "") -> None:
     """Domanda sì/no per un'azione registrata (es. «help_off»): sì la esegue; no esegue
     `no_action` se c'è, altrimenti «annullato»; «sempre» esegue `always_action` se c'è."""
     _STATE["pending"] = (action, time.monotonic() + seconds, no_action, always_action)
@@ -158,7 +159,9 @@ def chiedi(action: str, question: str, write_line, speak, seconds: float = 60,
     import risposte
     # «sì»/«no» senza dire «Lumi» (punto 10): finestra di 20 s dopo la domanda, non di più,
     # perché intanto il riconoscimento ascolta solo le parole di risposta.
-    risposte.expect_answer(seconds=20, speech_text=question)
+    # 059: `lettura` = testo già messo in coda a voce prima della domanda (la finestra di
+    # risposta parte quando Lumi ha finito di leggerlo).
+    risposte.expect_answer(seconds=20, speech_text=lettura + " " + question if lettura else question)
 
 
 def run_action(action: str) -> bool:

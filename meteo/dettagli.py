@@ -19,6 +19,32 @@ ACCENTI = {"lunedi": "lunedì", "martedi": "martedì", "mercoledi": "mercoledì"
            "giovedi": "giovedì", "venerdi": "venerdì"}
 
 
+class OltreLimite(ValueError):
+    """059: giorno oltre i 16 giorni di previsione (messaggio già pronto per l'utente)."""
+
+
+def _oltre(dati: dict) -> OltreLimite:
+    ultimo = dati["daily"]["time"][-1]
+    return OltreLimite("Le previsioni arrivano a 16 giorni, fino a %s: questo giorno è oltre." %
+                       nome_con_data(ultimo))
+
+
+def per_data(citta: str, dati: dict, spec: str) -> str:
+    """«+2» (dopodomani, «tra 2 giorni») oppure «#25» / «#25/12» (giorno del mese, e mese)."""
+    tempi = dati["daily"]["time"]
+    if spec.startswith("+"):
+        i = int(spec[1:])
+        if i >= len(tempi):
+            raise _oltre(dati)
+        return frase_giorno(citta, dati, i)
+    giorno_mese, _, mese = spec[1:].partition("/")
+    for i, t in enumerate(tempi):
+        d = date.fromisoformat(t[:10])
+        if d.day == int(giorno_mese) and (not mese or d.month == int(mese)):
+            return frase_giorno(citta, dati, i)
+    raise _oltre(dati)
+
+
 def _ora_corrente(dati: dict) -> int:
     try:
         adesso = dati["current_weather"]["time"][:13]
@@ -53,7 +79,7 @@ def frase_giorno(citta: str, dati: dict, i: int) -> str:
 
 
 def giorno(citta: str, dati: dict, nome: str) -> str:
-    """«sabato», «giovedì» o «weekend» (sabato e domenica dei prossimi 7 giorni)."""
+    """«sabato», «giovedì» o «weekend» (sabato e domenica entro i 16 giorni di previsione)."""
     nome = ACCENTI.get(nome.casefold(), nome.casefold())
     cercati = ("sabato", "domenica") if nome in ("weekend", "fine settimana") else (nome,)
     frasi = []
@@ -63,7 +89,7 @@ def giorno(citta: str, dati: dict, nome: str) -> str:
                 frasi.append(frase_giorno(citta, dati, i))
                 break
     if not frasi:
-        raise ValueError("giorno fuori dai 7 giorni")
+        raise _oltre(dati)
     return " ".join(frasi)
 
 
@@ -160,11 +186,12 @@ def completo(citta: str, dati: dict):
             "Vento a %d chilometri orari, umidità al %d per cento%s." % (
                 nome_con_data(g["data"]), citta, cielo, temp, round(g["min"]), round(g["max"]),
                 vento, umidita, (", probabilità di pioggia " + prob) if prob else ""))
-    righe = [("Dato", "Giorno", nome_con_data(g["data"])), ("Dato", "Cielo", cielo),
-             ("Dato", "Temperatura adesso", "%d gradi" % temp),
-             ("Dato", "Minima e massima", "%d e %d gradi" % (round(g["min"]), round(g["max"]))),
-             ("Dato", "Vento", "%d km/h" % vento), ("Dato", "Umidità", "%d%%" % umidita),
-             ("Dato", "Probabilità di pioggia", prob or "non disponibile"),
-             ("Dato", "Alba", alba), ("Dato", "Tramonto", tramonto)]
+    righe = [("Giorno", nome_con_data(g["data"])), ("Cielo", cielo),
+             ("Temperatura adesso", "%d gradi" % temp),
+             ("Minima e massima", "%d e %d gradi" % (round(g["min"]), round(g["max"]))),
+             ("Vento", "%d km/h" % vento), ("Umidità", "%d%%" % umidita),
+             ("Probabilità di pioggia", prob or "non disponibile"),
+             ("Alba", alba), ("Tramonto", tramonto)]
     return voce, {"token": "meteo-completo-" + str(time.monotonic()), "items": righe,
+                  "colonne": [("Dato", 220), ("Valore", 300)], "titolo": "Lumi — meteo di oggi",
                   "summary": "Meteo completo di oggi a %s." % citta}

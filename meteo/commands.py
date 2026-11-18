@@ -43,7 +43,19 @@ _RIEPILOGO = re.compile(
     r"come\s+sarà\s+la\s+giornata(?:\s+(?:oggi|di\s+oggi))?)[\s.!?,]*$", re.I)
 _BUONGIORNO = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?(?:lumi[\s,]+buongiorno|buongiorno[\s,]+lumi)[\s.!?]*$", re.I)
 _FARA = re.compile(r"\bfarà\b|\bfara\b", re.I)
-_ESCLUSE = re.compile(r"\bonline\b|\bclima\w*|\bdopodomani\b|\bprimavera\b|"
+_MESI = ("gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto",
+         "settembre", "ottobre", "novembre", "dicembre")
+_MESE_RX = "|".join(_MESI)
+_NUMERI = {"un": 1, "uno": 1, "una": 1, "due": 2, "tre": 3, "quattro": 4, "cinque": 5, "sei": 6,
+           "sette": 7, "otto": 8, "nove": 9, "dieci": 10}
+# 059: «dopodomani», «tra 3 giorni», «tra una settimana», «il 25», «25 dicembre»
+_DOPODOMANI = re.compile(r"\s*\bdopodomani\b\s*", re.I)
+_TRA = re.compile(r"\s*\b(?:tra|fra)\s+(?:(?P<n>\d{1,3}|un|uno|due|tre|quattro|cinque|sei|sette|otto|"
+                  r"nove|dieci)\s+giorn[oi]|(?P<s>una|1|due|2)\s+settiman[ae])\b\s*", re.I)
+_DATA_MESE = re.compile(r"\s*\b(?:(?:per|di|del|nel)\s+)?(?:(?:il|l['’])\s*)?(?P<n>\d{1,2})(?:º|°)?\s+"
+                        r"(?:di\s+)?(?P<m>" + _MESE_RX + r")\b\s*", re.I)
+_DATA_IL = re.compile(r"\s*\b(?:(?:per|di|del|nel)\s+)?(?:il|l['’])\s*(?P<n>\d{1,2})(?:º|°)?\b\s*", re.I)
+_ESCLUSE = re.compile(r"\bonline\b|\bclima\w*|\bprimavera\b|"
                       r"\bestate\b|\bautunno\b|\binverno\b", re.I)
 
 
@@ -86,7 +98,14 @@ def parse_command(text: str):
     kind = "meteo"
     parte = _PARTE.search(value)
     giorno = None if parte else _GIORNO.search(value)
-    if parte:                           # «meteo stasera», «meteo domattina»
+    if re.match(r"^(?:dimmi\s+)?(?:il\s+|le\s+)?(?:meteo|previsioni(?:\s+del\s+tempo)?|"
+                r"(?:che|quale)\s+tempo\s+far?[àa]?|com['’]è\s+il\s+tempo)\b", value, re.I):
+        data = _data(value)
+        if data is not None:
+            kind, value = data
+    if kind != "meteo":
+        pass
+    elif parte:                           # «meteo stasera», «meteo domattina»
         name = " ".join(parte.group("p").casefold().split())
         kind = "parte:" + _PARTI.get(name, name)
         value = " ".join(_FARA.sub("fa", _PARTE.sub(" ", value)).split())
@@ -105,3 +124,29 @@ def parse_command(text: str):
         return None
     city = (match.group("citta") or "").strip(" .!?")
     return kind, (city or None)
+
+
+def _data(value: str):
+    """059: (tipo, testo senza la data) per dopodomani / tra N giorni / il 25; None se non c'è."""
+    trovato = _DOPODOMANI.search(value)
+    if trovato:
+        return "data:+2", " ".join(_FARA.sub("fa", _DOPODOMANI.sub(" ", value)).split())
+    trovato = _TRA.search(value)
+    if trovato:
+        if trovato.group("n"):
+            n = trovato.group("n").casefold()
+            giorni = int(n) if n.isdigit() else _NUMERI[n]
+        else:
+            s = trovato.group("s").casefold()
+            giorni = 7 * (_NUMERI.get(s) or int(s))
+        return "data:+%d" % giorni, " ".join(_FARA.sub("fa", _TRA.sub(" ", value)).split())
+    for rx in (_DATA_MESE, _DATA_IL):
+        trovato = rx.search(value)
+        if trovato:
+            n = int(trovato.group("n"))
+            if not 1 <= n <= 31:
+                return None
+            mese = trovato.groupdict().get("m")
+            spec = "data:#%d" % n + (("/%d" % (_MESI.index(mese.casefold()) + 1)) if mese else "")
+            return spec, " ".join(_FARA.sub("fa", rx.sub(" ", value)).split())
+    return None

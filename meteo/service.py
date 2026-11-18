@@ -12,12 +12,12 @@ from urllib.request import Request, urlopen
 
 GEOCODING = "https://geocoding-api.open-meteo.com/v1/search?name={nome}&count=1&language=it&format=json"
 PREVISIONE = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
-              "&current_weather=true&timezone=auto")
+              "&current_weather=true&daily=precipitation_probability_max&forecast_days=1&timezone=auto")
 PREVISIONE_DOMANI = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
-                     "&daily=weathercode,temperature_2m_max,temperature_2m_min"
+                     "&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
                      "&forecast_days=2&timezone=auto")
 PREVISIONE_SETTIMANA = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
-                        "&daily=weathercode,temperature_2m_max,temperature_2m_min"
+                        "&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
                         "&forecast_days=7&timezone=auto")
 PREVISIONE_COMPLETA = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
                        "&current_weather=true"
@@ -25,7 +25,8 @@ PREVISIONE_COMPLETA = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&lo
                        "weathercode,windspeed_10m"
                        "&daily=weathercode,temperature_2m_max,temperature_2m_min,"
                        "precipitation_probability_max,sunrise,sunset"
-                       "&forecast_days=7&timezone=auto")
+                       "&forecast_days=16&timezone=auto")      # 059: Open-Meteo arriva a 16 giorni
+COLONNE_METEO = [("Giorno", 140), ("Cielo", 160), ("Minima", 90), ("Massima", 90), ("Pioggia %", 100)]
 GIORNI = ("lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica")
 INTERVALLO = 30 * 60          # secondi: massimo un aggiornamento ogni 30 minuti
 
@@ -67,8 +68,22 @@ _TESTO = {"sole": "sereno", "luna": "sereno", "sole_nuvola": "poco nuvoloso", "n
           "temporale": "temporale"}
 
 
-def frase(citta: str, temp: float, code, giorno: bool = True) -> str:
-    return "A %s ci sono %d gradi, %s." % (citta, round(temp), _TESTO[categoria(code, giorno)])
+def pioggia(prob) -> str:
+    """059: «, probabilità di pioggia 40 per cento» (vuoto se il dato manca)."""
+    return "" if prob is None else ", probabilità di pioggia %d per cento" % round(prob)
+
+
+def frase(citta: str, temp: float, code, giorno: bool = True, prob=None) -> str:
+    return "A %s ci sono %d gradi, %s%s." % (citta, round(temp), _TESTO[categoria(code, giorno)],
+                                           pioggia(prob))
+
+
+def _prob(daily, i=0):
+    try:
+        valore = (daily.get("precipitation_probability_max") or [])[i]
+        return None if valore is None else float(valore)
+    except (AttributeError, IndexError, TypeError, ValueError):
+        return None
 
 
 def cerca_citta(nome: str, get=_get) -> dict:
@@ -88,7 +103,7 @@ def attuale(lat: float, lon: float, get=_get) -> dict:
         data = get(PREVISIONE.format(lat=lat, lon=lon))
         now = data["current_weather"]
         return {"temp": float(now["temperature"]), "code": int(now["weathercode"]),
-                "giorno": int(now.get("is_day", 1)) != 0}
+                "giorno": int(now.get("is_day", 1)) != 0, "prob": _prob(data.get("daily") or {})}
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ErroreMeteo("Non riesco a leggere le previsioni adesso.") from exc
 
@@ -98,23 +113,25 @@ def domani(lat: float, lon: float, get=_get) -> dict:
     try:
         daily = get(PREVISIONE_DOMANI.format(lat=lat, lon=lon))["daily"]
         return {"max": float(daily["temperature_2m_max"][1]), "min": float(daily["temperature_2m_min"][1]),
-                "code": int(daily["weathercode"][1])}
+                "code": int(daily["weathercode"][1]), "prob": _prob(daily, 1)}
     except (OSError, ValueError, KeyError, TypeError, IndexError) as exc:
         raise ErroreMeteo("Non riesco a leggere le previsioni di domani.") from exc
 
 
-def frase_domani(citta: str, massima: float, minima: float, code) -> str:
-    return "Domani a %s: %s, minima %d e massima %d gradi." % (
-        citta, _TESTO[categoria(code, True)], round(minima), round(massima))
+def frase_domani(citta: str, massima: float, minima: float, code, prob=None) -> str:
+    return "Domani a %s: %s, minima %d e massima %d gradi%s." % (
+        citta, _TESTO[categoria(code, True)], round(minima), round(massima), pioggia(prob))
 
 
 def settimana(lat: float, lon: float, get=_get) -> list:
     """058: i 7 giorni (Open-Meteo daily): [{"data", "max", "min", "code"}]."""
     try:
         daily = get(PREVISIONE_SETTIMANA.format(lat=lat, lon=lon))["daily"]
-        giorni = [{"data": str(d), "max": float(a), "min": float(b), "code": int(c)}
-                  for d, a, b, c in zip(daily["time"], daily["temperature_2m_max"],
-                                        daily["temperature_2m_min"], daily["weathercode"])]
+        giorni = [{"data": str(d), "max": float(a), "min": float(b), "code": int(c),
+                   "prob": _prob(daily, i)}
+                  for i, (d, a, b, c) in enumerate(zip(daily["time"], daily["temperature_2m_max"],
+                                                       daily["temperature_2m_min"],
+                                                       daily["weathercode"]))]
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ErroreMeteo("Non riesco a leggere le previsioni della settimana.") from exc
     if not giorni:
@@ -143,15 +160,19 @@ def frase_settimana(citta: str, giorni: list) -> str:
         _TESTO[prevalente])
     if brutti:
         testo += "; pioggia o maltempo " + ", ".join(brutti[:4])
+    probabilita = [g["prob"] for g in giorni if g.get("prob") is not None]
+    if probabilita:
+        testo += ", probabilità di pioggia fino al %d per cento" % round(max(probabilita))
     return testo + ". I sette giorni sono nella finestra dei risultati."
 
 
 def elenco_settimana(citta: str, giorni: list) -> dict:
-    """Voci per la finestra dei risultati (Tipo, Nome, Percorso): un giorno per riga."""
+    """Finestra dei risultati con colonne proprie (059): Giorno, Cielo, Minima, Massima, Pioggia %."""
     return {"token": "meteo-" + str(time.monotonic()),
-            "items": [("Giorno", nome_giorno(g["data"]),
-                       "%s, minima %d, massima %d" % (_TESTO[categoria(g["code"], True)],
-                                                       round(g["min"]), round(g["max"])))
+            "colonne": COLONNE_METEO, "titolo": "Lumi — meteo dei prossimi 7 giorni",
+            "items": [(nome_giorno(g["data"]), _TESTO[categoria(g["code"], True)],
+                       "%d °C" % round(g["min"]), "%d °C" % round(g["max"]),
+                       "n.d." if g.get("prob") is None else "%d %%" % round(g["prob"]))
                       for g in giorni],
             "summary": "Meteo dei prossimi 7 giorni a %s." % citta}
 
@@ -171,14 +192,14 @@ class ServizioMeteo:
         if not city:
             raise ErroreMeteo("Scegli la città predefinita nella pagina dell'add-on Meteo.")
         now = attuale(city["lat"], city["lon"], self._get)
-        return frase(city["nome"], now["temp"], now["code"], now.get("giorno", True))
+        return frase(city["nome"], now["temp"], now["code"], now.get("giorno", True), now.get("prob"))
 
     def risposta_domani(self, nome=None) -> str:
         city = cerca_citta(nome, self._get) if nome else self._citta()
         if not city:
             raise ErroreMeteo("Scegli la città predefinita nella pagina dell'add-on Meteo.")
         d = domani(city["lat"], city["lon"], self._get)
-        return frase_domani(city["nome"], d["max"], d["min"], d["code"])
+        return frase_domani(city["nome"], d["max"], d["min"], d["code"], d.get("prob"))
 
     def risposta_settimana(self, nome=None):
         """(frase a voce, elenco per la finestra dei risultati) dei prossimi 7 giorni."""
@@ -203,6 +224,8 @@ class ServizioMeteo:
         try:
             if tipo == "giorno":
                 return dettagli.giorno(city["nome"], dati, valore), None
+            if tipo == "data":              # 059: «dopodomani», «il 25», «tra 3 giorni»
+                return dettagli.per_data(city["nome"], dati, valore), None
             if tipo == "parte":
                 return dettagli.parte_del_giorno(city["nome"], dati, valore), None
             if tipo == "dettaglio":
@@ -212,6 +235,8 @@ class ServizioMeteo:
             if tipo == "completo":
                 return dettagli.completo(city["nome"], dati)
             return dettagli.riepilogo(city["nome"], dati), None
+        except dettagli.OltreLimite as exc:
+            raise ErroreMeteo(str(exc)) from exc
         except (KeyError, IndexError, ValueError, TypeError) as exc:
             raise ErroreMeteo("Il servizio meteo non ha questo dato adesso.") from exc
 

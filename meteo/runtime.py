@@ -6,12 +6,13 @@ from __future__ import annotations
 
 import threading
 
-_STATE = {"service": None, "post": None, "show": None}
+_STATE = {"service": None, "post": None, "show": None, "ask_close": None}
 
 
-def register(service, post, show=None) -> None:
-    """`show(elenco)`: apre la finestra dei risultati (058, «meteo settimana» e «meteo completo»)."""
-    _STATE.update(service=service, post=post, show=show)
+def register(service, post, show=None, ask_close=None) -> None:
+    """`show(elenco)`: apre la finestra dei risultati (058, «meteo settimana» e «meteo completo»).
+    `ask_close(testo_letto)`: 059, a fine lettura Lumi chiede «Chiudo la finestra?»."""
+    _STATE.update(service=service, post=post, show=show, ask_close=ask_close)
 
 
 def service():
@@ -51,6 +52,12 @@ def handle_text(spoken: str, write_line, speak, show_listing=None) -> bool:
                 except Exception:                  # la finestra non deve fermare la voce
                     write_line("METEO > Finestra dei risultati non disponibile.")
             speak(text)
+            chiedi = _STATE["ask_close"]
+            if listing is not None and mostra is not None and chiedi is not None:
+                try:
+                    chiedi(text)               # dopo la lettura: «Chiudo la finestra?»
+                except Exception:
+                    pass
         post(done)
 
     threading.Thread(target=work, daemon=True, name="lumi-meteo").start()

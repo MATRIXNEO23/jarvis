@@ -469,7 +469,10 @@ def main() -> None:
             lambda: bool(addon_manager and any(
                 item["id"] == "meteo" and item["enabled"] for item in addon_manager.list_installed())),
             citta=lambda: meteo_config.load()["citta"])
-        register_meteo(meteo_service, lambda fn: root.after(0, fn), lambda listing: meteo_show_week(listing))
+        register_meteo(meteo_service, lambda fn: root.after(0, fn), lambda listing: meteo_show_week(listing),
+                       lambda letto: __import__("lumi_comandi").chiedi(
+                           "close_results", "Chiudo la finestra?", write_line, speak_result,
+                           seconds=90, lettura=letto))
     except (ImportError, OSError, ValueError, AttributeError) as exc:
         addon_setup_error = (addon_setup_error or "") + " Meteo: " + str(exc)[:80]
         meteo_service = None
