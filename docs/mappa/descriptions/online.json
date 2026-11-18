@@ -1,0 +1,24 @@
+{
+ "files": {
+  "github_lettura.py": {
+   "name": "GitHub in lettura",
+   "description": "Legge da GitHub senza poter modificare nulla."
+  },
+  "gpt_bridge.mjs": {
+   "name": "Ponte ChatGPT",
+   "description": "Programma di collegamento che gestisce l'accesso a ChatGPT."
+  },
+  "gpt_client.py": {
+   "name": "Collegamento a ChatGPT",
+   "description": "Parla con il programma ChatGPT su Windows."
+  },
+  "installa_gpt.ps1": {
+   "name": "Installa ChatGPT",
+   "description": "Installa ciò che serve per usare ChatGPT."
+  },
+  "model_gate.py": {
+   "name": "Interruttore Modello",
+   "description": "Accende o spegne il modello sul PC."
+  }
+ }
+}

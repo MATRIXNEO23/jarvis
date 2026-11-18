@@ -1,0 +1,36 @@
+{
+ "files": {
+  "animated_hud.py": {
+   "name": "Schermata animata",
+   "description": "Disegna la schermata animata di Lumi."
+  },
+  "hud_backdrop.py": {
+   "name": "Sfondo",
+   "description": "Disegna lo sfondo fisso dietro la schermata animata."
+  },
+  "hud_orbits.py": {
+   "name": "Orbite cliccabili",
+   "description": "Disegna i segni che girano attorno e portano ai progetti e a Telegram."
+  },
+  "hud_raster.py": {
+   "name": "Immagini luminose",
+   "description": "Crea le immagini di luci e Terra usate dalla schermata."
+  },
+  "hud_reference.py": {
+   "name": "Grafica di riferimento",
+   "description": "Disegna le forme della schermata secondo l'immagine approvata."
+  },
+  "lumi_avatar.py": {
+   "name": "Volto di Lumi",
+   "description": "Disegna gli occhi che si muovono e la bocca che segue la voce."
+  },
+  "network_telemetry.py": {
+   "name": "Rete in diretta",
+   "description": "Mostra l'uso reale della rete di Windows, se attivato."
+  },
+  "speech_activity.py": {
+   "name": "Indicatore voce",
+   "description": "Mostra quando c'è voce, in base al volume del suono."
+  }
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "files": {
+  "adaptive_voice.py": {
+   "name": "Correzioni della voce",
+   "description": "Impara le correzioni che l'utente approva per capire meglio."
+  },
+  "audio_player.py": {
+   "name": "Riproduzione audio",
+   "description": "Riproduce suoni e sa a che punto è arrivata."
+  },
+  "desktop_dictation.py": {
+   "name": "Dettatura",
+   "description": "Scrive quello che dici nella casella di testo scelta."
+  },
+  "edge_voice.py": {
+   "name": "Voci Edge",
+   "description": "Fa parlare Lumi con le voci gratuite di Microsoft Edge, online."
+  },
+  "frasi_lumi.py": {
+   "name": "Frasi di Lumi",
+   "description": "Tante varianti di frase per ogni azione, scelte a caso."
+  },
+  "installa_modello_voce.py": {
+   "name": "Installa modello voce",
+   "description": "Scarica una volta il modello italiano per capire la voce."
+  },
+  "la_mia_voce.py": {
+   "name": "La mia voce",
+   "description": "Lumi impara come capisce la voce dell'utente."
+  },
+  "offline_tts.py": {
+   "name": "Voci di Windows",
+   "description": "Fa parlare Lumi con le voci già presenti in Windows."
+  },
+  "piper_voice.py": {
+   "name": "Voci naturali",
+   "description": "Fa parlare Lumi con voci italiane naturali, con effetto digitale facoltativo."
+  },
+  "preference_voice.py": {
+   "name": "Preferenze a voce",
+   "description": "Capisce comandi chiari per cambiare le preferenze."
+  },
+  "risposte.py": {
+   "name": "Risposte sì e no",
+   "description": "Capisce i sì e i no alle domande di Lumi, anche se il microfono sbaglia."
+  },
+  "startup_greeting.py": {
+   "name": "Saluto all'avvio",
+   "description": "Saluta all'avvio, anche senza internet."
+  },
+  "voice_control.py": {
+   "name": "Ascolto della voce",
+   "description": "Capisce l'italiano parlato anche senza internet, usando il microfono scelto."
+  },
+  "voice_style.py": {
+   "name": "Stile della voce",
+   "description": "Regola velocità, tono e volume di tutte le voci."
+  }
+ }
+}

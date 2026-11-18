@@ -1,0 +1,36 @@
+{
+ "files": {
+  "servizi_ricerca/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "servizi_ricerca/base.py": {
+   "name": "Scheda ricerca",
+   "description": "Descrive un servizio di ricerca; ognuno ha il suo file."
+  },
+  "servizi_ricerca/quota.py": {
+   "name": "Consumo ricerche",
+   "description": "Conta le ricerche al giorno e al mese."
+  },
+  "servizi_ricerca/servizi/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "servizi_ricerca/servizi/exa.py": {
+   "name": "Exa",
+   "description": "Ricerca sul web per significato."
+  },
+  "servizi_ricerca/servizi/firecrawl.py": {
+   "name": "Firecrawl",
+   "description": "Ricerca sul web."
+  },
+  "servizi_ricerca/servizi/linkup.py": {
+   "name": "Linkup",
+   "description": "Ricerca sul web con risposta e fonti."
+  },
+  "servizi_ricerca/servizi/tavily.py": {
+   "name": "Tavily",
+   "description": "Ricerca sul web per assistenti, con risposta breve e fonti."
+  }
+ }
+}

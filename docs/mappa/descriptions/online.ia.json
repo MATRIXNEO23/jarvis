@@ -1,0 +1,56 @@
+{
+ "files": {
+  "servizi_online/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "servizi_online/base.py": {
+   "name": "Scheda del servizio",
+   "description": "Descrive un servizio online; ognuno ha il suo file."
+  },
+  "servizi_online/quote.py": {
+   "name": "Consumo servizi",
+   "description": "Mostra quanto hai usato oggi e quanto resta."
+  },
+  "servizi_online/servizi/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "servizi_online/servizi/anthropic.py": {
+   "name": "Claude",
+   "description": "Collegamento a Claude, a consumo."
+  },
+  "servizi_online/servizi/chatgpt_account.py": {
+   "name": "ChatGPT dal browser",
+   "description": "Usa l'account ChatGPT tramite il browser."
+  },
+  "servizi_online/servizi/gemini.py": {
+   "name": "Gemini",
+   "description": "Collegamento a Google Gemini."
+  },
+  "servizi_online/servizi/groq.py": {
+   "name": "Groq",
+   "description": "Collegamento a Groq, modelli aperti molto veloci."
+  },
+  "servizi_online/servizi/mistral.py": {
+   "name": "Mistral",
+   "description": "Collegamento a Mistral, con piano gratuito."
+  },
+  "servizi_online/servizi/nvidia.py": {
+   "name": "NVIDIA",
+   "description": "Collegamento a NVIDIA con modelli aperti."
+  },
+  "servizi_online/servizi/openai.py": {
+   "name": "OpenAI",
+   "description": "Collegamento a OpenAI, a consumo e separato dall'abbonamento."
+  },
+  "servizi_online/servizi/openrouter.py": {
+   "name": "OpenRouter",
+   "description": "Collegamento a tanti modelli, alcuni gratuiti."
+  },
+  "servizi_online/servizi/xai.py": {
+   "name": "Grok",
+   "description": "Collegamento a Grok di xAI, a consumo."
+  }
+ }
+}

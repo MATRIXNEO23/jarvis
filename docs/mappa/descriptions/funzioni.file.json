@@ -1,0 +1,32 @@
+{
+ "files": {
+  "file_access/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "file_access/policy.py": {
+   "name": "Regole sui file",
+   "description": "Ricorda le cartelle permesse e le eccezioni, senza cambiare i permessi di Windows."
+  },
+  "file_access/service.py": {
+   "name": "Servizio file",
+   "description": "Cerca e legge file in sola lettura per interfaccia, comandi e voce."
+  },
+  "file_access/ui.py": {
+   "name": "Scelta cartelle",
+   "description": "Caselle per scegliere le cartelle e un visore in sola lettura."
+  },
+  "file_access/windows_search.ps1": {
+   "name": "Ricerca file",
+   "description": "Piccolo script che cerca i file."
+  },
+  "file_access/windows_shell.ps1": {
+   "name": "Apertura file",
+   "description": "Piccolo script che apre file e cartelle."
+  },
+  "file_access/windows.py": {
+   "name": "File di Windows",
+   "description": "Usa le funzioni di Windows per cercare file."
+  }
+ }
+}

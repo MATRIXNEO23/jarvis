@@ -1,0 +1,52 @@
+{
+ "files": {
+  "addon_righe.py": {
+   "name": "Righe degli add-on",
+   "description": "Mostra gli add-on nelle Impostazioni."
+  },
+  "aiuto_comandi.py": {
+   "name": "Aiuto sui comandi",
+   "description": "Mostra i comandi disponibili per ogni modalità e brevi guide."
+  },
+  "barra_tasti.py": {
+   "name": "Tasti della barra",
+   "description": "Dà lo stesso stile a tutti i tasti della barra in alto."
+  },
+  "command_words_ui.py": {
+   "name": "Le mie parole",
+   "description": "Accanto a ogni comando, la casella per le parole scelte dall'utente."
+  },
+  "impostazioni_menu.py": {
+   "name": "Impostazioni riordinate",
+   "description": "Organizza le Impostazioni in sezioni chiare."
+  },
+  "menu_laterale.py": {
+   "name": "Menu laterale",
+   "description": "Il menu a lato con le chat e le sezioni, come in ChatGPT."
+  },
+  "menu_modelli.py": {
+   "name": "Menu Online",
+   "description": "Menu in alto per scegliere i servizi online."
+  },
+  "menu_modello.py": {
+   "name": "Menu Modello",
+   "description": "Tendina in alto per scegliere i modelli sul PC."
+  },
+  "menu_ricerca.py": {
+   "name": "Menu Ricerca",
+   "description": "Tendina in alto per scegliere il servizio di ricerca sul web."
+  },
+  "ricordi_ui.py": {
+   "name": "Pagina Ricordi",
+   "description": "Pagina delle Impostazioni dove vedere e modificare i ricordi."
+  },
+  "scheda_lumi.py": {
+   "name": "Scheda di Lumi",
+   "description": "Racconta cos'è Lumi e cosa sa fare."
+  },
+  "slide_modalita.py": {
+   "name": "Basso consumo o Veloce",
+   "description": "Interruttore in alto a sinistra per scegliere come lavora Lumi."
+  }
+ }
+}

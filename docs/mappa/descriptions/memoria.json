@@ -1,0 +1,76 @@
+{
+  "files": {
+    "cancella_memoria.py": {
+      "name": "Cancella memoria",
+      "description": "Cancella la memoria a sezioni, solo su richiesta dell'utente."
+    },
+    "document_dialog.py": {
+      "name": "Dialogo documenti",
+      "description": "Guida a voce la chiusura di un documento, senza effetti collaterali."
+    },
+    "document_execution.py": {
+      "name": "Esecuzione documenti",
+      "description": "Limita le operazioni sul Blocco note creato da Lumi."
+    },
+    "document_language.py": {
+      "name": "Scelte sui documenti",
+      "description": "Capisce a voce le scelte per chiudere un documento."
+    },
+    "document_recovery.py": {
+      "name": "Recupero documenti",
+      "description": "Riallinea Lumi se il Blocco note è stato chiuso a mano."
+    },
+    "document_store.py": {
+      "name": "Salvataggio documenti",
+      "description": "Sceglie dove salvare i nuovi file senza sovrascrivere."
+    },
+    "managed_documents.py": {
+      "name": "Documenti gestiti",
+      "description": "Gestisce in sicurezza un documento alla volta nel Blocco note."
+    },
+    "memory_boundaries.py": {
+      "name": "Limiti della memoria",
+      "description": "Salva a parte preferenze e prove delle operazioni fatte."
+    },
+    "notepad_controller.py": {
+      "name": "Blocco note",
+      "description": "Controlla solo il Blocco note aperto da Lumi."
+    },
+    "project_documents.py": {
+      "name": "Nomi dei documenti",
+      "description": "Propone nomi di file di testo senza sovrascrivere."
+    },
+    "project_voice.py": {
+      "name": "Progetti a voce",
+      "description": "Capisce richieste in italiano per gestire i progetti."
+    },
+    "pulizia_dati.py": {
+      "name": "Pulizia dei dati",
+      "description": "Pulisce i dati salvati sul disco."
+    },
+    "ricordi.py": {
+      "name": "Ricordi",
+      "description": "Unica memoria di Lumi per le cose da ricordare."
+    },
+    "second_brain.py": {
+      "name": "Secondo cervello",
+      "description": "Memoria locale e duratura che tiene le prove di ciò che ricorda."
+    },
+    "settings.py": {
+      "name": "Impostazioni salvate",
+      "description": "Salva le impostazioni di Lumi, mai le password."
+    },
+    "workspace_gui.py": {
+      "name": "Gestione progetti",
+      "description": "Finestra semplice per gestire i progetti di lavoro."
+    },
+    "workspace_memory.py": {
+      "name": "Memoria dei progetti",
+      "description": "Memoria separata per ogni progetto, ricercabile."
+    },
+    "contesto_lumi.py": {
+      "name": "Contesto di Lumi",
+      "description": "Raccoglie cosa riceve il modello locale oltre alla domanda."
+    }
+  }
+}

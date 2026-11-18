@@ -1,0 +1,407 @@
+{
+ "$schema": "floorplan/architecture@1",
+ "audience": "everyone",
+ "project": {
+  "name": "Lumi",
+  "summary": "Lumi è un assistente per Windows che si comanda a voce o in chat: apre programmi e file, mette musica, dice il meteo, ricorda le cose e risponde usando ChatGPT oppure un modello che gira sul tuo PC.",
+  "entrypoints": [
+   "jarvis.py"
+  ]
+ },
+ "ignore": [
+  "tests/**",
+  "tools/**",
+  "docs/**",
+  "native_engine/koboldcpp.py",
+  "terze_parti/**",
+  "assets/**"
+ ],
+ "nodes": [
+  {
+   "id": "finestra",
+   "label": "Finestra di Lumi",
+   "kind": "ui",
+   "summary": "Tutto quello che vedi: finestra principale, chat, menu, impostazioni e schermata animata.",
+   "paths": [
+    "jarvis.py",
+    "lumi_parti",
+    "lumi_contesto.py",
+    "window_chrome.py",
+    "finestra_adatta.py",
+    "console_interna.py"
+   ]
+  },
+  {
+   "id": "finestra.chat",
+   "parent": "finestra",
+   "label": "Chat",
+   "kind": "feature",
+   "summary": "Le conversazioni scritte: messaggi, elenco chat, allegati e importazione.",
+   "paths": [
+    "chat_*.py",
+    "allegati.py",
+    "richiamo.py",
+    "stato_lumi.py",
+    "selettore_chat.py"
+   ]
+  },
+  {
+   "id": "finestra.menu",
+   "parent": "finestra",
+   "label": "Menu e impostazioni",
+   "kind": "feature",
+   "summary": "Barra in alto, menu laterale, impostazioni e aiuti sui comandi.",
+   "paths": [
+    "menu_*.py",
+    "impostazioni_menu.py",
+    "barra_tasti.py",
+    "slide_modalita.py",
+    "aiuto_comandi.py",
+    "scheda_lumi.py",
+    "command_words_ui.py",
+    "ricordi_ui.py",
+    "addon_righe.py"
+   ]
+  },
+  {
+   "id": "finestra.aspetto",
+   "parent": "finestra",
+   "label": "Aspetto animato",
+   "kind": "feature",
+   "summary": "Il volto di Lumi e lo sfondo animato con pianeti, orbite e indicatori.",
+   "paths": [
+    "animated_hud.py",
+    "hud_*.py",
+    "lumi_avatar.py",
+    "network_telemetry.py",
+    "speech_activity.py"
+   ]
+  },
+  {
+   "id": "voce",
+   "label": "Voce e microfono",
+   "kind": "service",
+   "summary": "Ascolta quello che dici e fa parlare Lumi con voci diverse, anche senza internet.",
+   "paths": [
+    "voice_control.py",
+    "adaptive_voice.py",
+    "la_mia_voce.py",
+    "desktop_dictation.py",
+    "edge_voice.py",
+    "piper_voice.py",
+    "offline_tts.py",
+    "voice_style.py",
+    "installa_modello_voce.py",
+    "audio_player.py",
+    "preference_voice.py",
+    "startup_greeting.py",
+    "frasi_lumi.py",
+    "risposte.py"
+   ]
+  },
+  {
+   "id": "comprensione",
+   "label": "Capire i comandi",
+   "kind": "service",
+   "summary": "Capisce cosa hai chiesto, sceglie l'azione giusta e la esegue solo se è permessa.",
+   "paths": [
+    "intent_normalizer.py",
+    "classificatore.py",
+    "command_aliases.py",
+    "lumi_comandi.py",
+    "local_engine.py",
+    "conversation_*.py",
+    "dialogue_*.py",
+    "jarvis_persona.py",
+    "orchestratore.py",
+    "contesto_online.py",
+    "action_planner.py",
+    "plan_runner.py",
+    "planner_ui.py",
+    "capability_registry.py",
+    "live_capabilities.py",
+    "local_help.py",
+    "jarvis_timer.py",
+    "foreground_power.py"
+   ]
+  },
+  {
+   "id": "memoria",
+   "label": "Memoria e documenti",
+   "kind": "data",
+   "summary": "Ricordi, progetti, impostazioni salvate e documenti di testo creati da Lumi.",
+   "paths": [
+    "ricordi.py",
+    "second_brain.py",
+    "workspace_*.py",
+    "cancella_memoria.py",
+    "memory_boundaries.py",
+    "pulizia_dati.py",
+    "settings.py",
+    "document_*.py",
+    "managed_documents.py",
+    "notepad_controller.py",
+    "project_*.py",
+    "contesto_lumi.py"
+   ]
+  },
+  {
+   "id": "modello",
+   "label": "Modello sul PC",
+   "kind": "service",
+   "summary": "Il cervello che funziona sul tuo computer, senza internet: scelta del modello, avvio e conversazione.",
+   "paths": [
+    "local_model"
+   ]
+  },
+  {
+   "id": "online",
+   "label": "Servizi online",
+   "kind": "service",
+   "summary": "Collegamenti a ChatGPT, ai servizi di intelligenza artificiale e di ricerca sul web.",
+   "paths": [
+    "gpt_client.py",
+    "gpt_bridge.mjs",
+    "installa_gpt.ps1",
+    "github_lettura.py",
+    "model_gate.py"
+   ]
+  },
+  {
+   "id": "online.ia",
+   "parent": "online",
+   "label": "Servizi di intelligenza artificiale",
+   "kind": "feature",
+   "summary": "Collegamenti ai vari servizi che rispondono alle domande.",
+   "paths": [
+    "servizi_online"
+   ]
+  },
+  {
+   "id": "online.ricerca",
+   "parent": "online",
+   "label": "Ricerca sul web",
+   "kind": "feature",
+   "summary": "Collegamenti ai servizi che cercano informazioni su internet.",
+   "paths": [
+    "servizi_ricerca"
+   ]
+  },
+  {
+   "id": "telegram",
+   "label": "Telegram",
+   "kind": "service",
+   "summary": "Permette a Lumi di ricevere e mandare messaggi e note vocali a contatti scelti.",
+   "paths": [
+    "telegram_*.py",
+    "configura_telegram.py",
+    "prepara_test_telegram50.py",
+    "telegram_addon"
+   ]
+  },
+  {
+   "id": "funzioni",
+   "label": "Cose che Lumi sa fare",
+   "kind": "feature",
+   "summary": "Musica, meteo, sveglia, programmi, file e controllo del PC, più gli add-on.",
+   "paths": [
+    "addon_manager.py",
+    "addon_ui.py",
+    "componenti",
+    "sveglia"
+   ]
+  },
+  {
+   "id": "funzioni.musica",
+   "parent": "funzioni",
+   "label": "Musica e video",
+   "kind": "feature",
+   "summary": "Riproduce la tua musica e video, anche da YouTube.",
+   "paths": [
+    "musica"
+   ]
+  },
+  {
+   "id": "funzioni.meteo",
+   "parent": "funzioni",
+   "label": "Meteo",
+   "kind": "feature",
+   "summary": "Dice che tempo fa e mostra le previsioni.",
+   "paths": [
+    "meteo"
+   ]
+  },
+  {
+   "id": "funzioni.pc",
+   "parent": "funzioni",
+   "label": "Controllo del PC",
+   "kind": "feature",
+   "summary": "Apre e controlla finestre e programmi sul computer.",
+   "paths": [
+    "controllo_pc",
+    "controllo_comune",
+    "program_apps"
+   ]
+  },
+  {
+   "id": "funzioni.file",
+   "parent": "funzioni",
+   "label": "File del computer",
+   "kind": "feature",
+   "summary": "Cerca e apre file e cartelle, solo dove l'utente ha dato il permesso.",
+   "paths": [
+    "file_access"
+   ]
+  },
+  {
+   "id": "diagnostica",
+   "label": "Controlli e diagnosi",
+   "kind": "service",
+   "summary": "Verifica che Lumi funzioni e raccoglie informazioni per trovare i problemi, senza modificare nulla.",
+   "paths": [
+    "diagnostic_*.py",
+    "runtime_diagnostics*.py",
+    "self_diagnostics.py",
+    "source_review.py",
+    "diagnostica_claude"
+   ]
+  },
+  {
+   "id": "x_telegram",
+   "label": "Telegram (servizio esterno)",
+   "kind": "external",
+   "summary": "Il servizio di messaggi Telegram.",
+   "packages": [
+    "pypi:telethon"
+   ],
+   "hosts": [
+    "my.telegram.org"
+   ]
+  },
+  {
+   "id": "x_vosk",
+   "label": "Riconoscimento vocale Vosk",
+   "kind": "external",
+   "summary": "Programma gratuito che trascrive la voce senza internet.",
+   "packages": [
+    "pypi:vosk"
+   ],
+   "hosts": [
+    "alphacephei.com"
+   ]
+  },
+  {
+   "id": "x_meteo",
+   "label": "Open-Meteo",
+   "kind": "external",
+   "summary": "Servizio gratuito di previsioni del tempo.",
+   "hosts": [
+    "api.open-meteo.com"
+   ]
+  },
+  {
+   "id": "x_ricerca",
+   "label": "Ricerca sul web",
+   "kind": "external",
+   "summary": "Servizi di ricerca online (Tavily, Linkup e simili).",
+   "hosts": [
+    "api.tavily.com",
+    "app.tavily.com",
+    "app.linkup.so"
+   ]
+  },
+  {
+   "id": "x_chatgpt",
+   "label": "Account ChatGPT",
+   "kind": "external",
+   "summary": "Accesso all'account ChatGPT dell'utente.",
+   "hosts": [
+    "auth.openai.com"
+   ]
+  }
+ ],
+ "edges": [],
+ "flows": [
+  {
+   "id": "comando",
+   "title": "Un comando a voce",
+   "steps": [
+    {
+     "node": "voce",
+     "note": "Lumi ascolta e trascrive quello che dici."
+    },
+    {
+     "node": "comprensione",
+     "note": "Capisce cosa vuoi e sceglie l'azione."
+    },
+    {
+     "node": "funzioni",
+     "note": "Esegue l'azione, per esempio musica o meteo."
+    },
+    {
+     "node": "finestra",
+     "note": "Mostra la risposta in chat."
+    }
+   ]
+  },
+  {
+   "id": "domanda",
+   "title": "Una domanda libera",
+   "steps": [
+    {
+     "node": "finestra.chat",
+     "note": "Scrivi la domanda."
+    },
+    {
+     "node": "comprensione",
+     "note": "Decide se rispondere in locale o online."
+    },
+    {
+     "node": "modello",
+     "note": "Risponde il modello sul PC, oppure..."
+    },
+    {
+     "node": "online",
+     "note": "...risponde ChatGPT."
+    }
+   ]
+  }
+ ],
+ "tour": [
+  {
+   "node": "finestra",
+   "title": "La finestra",
+   "note": "Qui parli e scrivi con Lumi."
+  },
+  {
+   "node": "voce",
+   "title": "Voce",
+   "note": "Lumi ti ascolta e ti risponde a voce."
+  },
+  {
+   "node": "comprensione",
+   "title": "Il cervello dei comandi",
+   "note": "Qui si decide cosa fare."
+  },
+  {
+   "node": "funzioni",
+   "title": "Le abilità",
+   "note": "Musica, meteo, file e controllo del PC."
+  },
+  {
+   "node": "modello",
+   "title": "Il modello sul PC",
+   "note": "Risponde senza internet."
+  },
+  {
+   "node": "online",
+   "title": "Servizi online",
+   "note": "ChatGPT e ricerca sul web."
+  },
+  {
+   "node": "jarvis.py",
+   "title": "Il punto di partenza",
+   "note": "Il file che avvia tutto."
+  }
+ ]
+}

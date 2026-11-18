@@ -1,0 +1,44 @@
+{
+ "files": {
+  "console_interna.py": {
+   "name": "Console interna",
+   "description": "Mostra i messaggi tecnici dentro la finestra, senza finestra nera."
+  },
+  "finestra_adatta.py": {
+   "name": "Finestre adattabili",
+   "description": "Fa vedere sempre tasti e campi, anche su schermi piccoli."
+  },
+  "jarvis.py": {
+   "name": "Programma principale",
+   "description": "Avvia Lumi: apre la finestra e collega voce, chat, comandi e modelli."
+  },
+  "lumi_contesto.py": {
+   "name": "Contesto comune",
+   "description": "Raccoglie le cose condivise dai pezzi in cui è stato diviso il programma principale."
+  },
+  "lumi_parti/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "lumi_parti/documenti_progetti.py": {
+   "name": "Parte documenti e progetti",
+   "description": "Gestisce nella finestra documenti, progetti e piani."
+  },
+  "lumi_parti/interfaccia.py": {
+   "name": "Parte interfaccia",
+   "description": "Gestisce impostazioni, chat e comandi rivolti a Lumi stessa."
+  },
+  "lumi_parti/modello_memoria.py": {
+   "name": "Parte modello e memoria",
+   "description": "Gestisce modello locale, memoria e diagnostica nella finestra."
+  },
+  "lumi_parti/voce.py": {
+   "name": "Parte voce",
+   "description": "Gestisce voci, dettatura e ascolto nella finestra."
+  },
+  "window_chrome.py": {
+   "name": "Controlli della finestra",
+   "description": "Dà alle finestre di Lumi i tasti per ridurre, ingrandire e chiudere."
+  }
+ }
+}

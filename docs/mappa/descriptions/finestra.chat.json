@@ -1,0 +1,44 @@
+{
+ "files": {
+  "allegati.py": {
+   "name": "Allegati della chat",
+   "description": "Permette di allegare file alla chat con il pulsante o trascinandoli."
+  },
+  "chat_bolle.py": {
+   "name": "Bolle della chat",
+   "description": "Disegna i messaggi come bolle nella chat."
+  },
+  "chat_elenco.py": {
+   "name": "Elenco delle chat",
+   "description": "Mostra e gestisce l'elenco delle chat del progetto."
+  },
+  "chat_import.py": {
+   "name": "Importa conversazione",
+   "description": "Porta in Lumi una conversazione esportata da ChatGPT o Claude."
+  },
+  "chat_link.py": {
+   "name": "Link nella chat",
+   "description": "Rende cliccabili i link e gli indirizzi scritti nei messaggi."
+  },
+  "chat_ruoli.py": {
+   "name": "Chi ha scritto",
+   "description": "Distingue i messaggi scritti dall'utente da quelli di Lumi."
+  },
+  "chat_stream.py": {
+   "name": "Testo in diretta",
+   "description": "Mostra il testo del modello mentre viene scritto e avvia la voce dalla prima frase."
+  },
+  "richiamo.py": {
+   "name": "Cosa ti ho detto prima",
+   "description": "Risponde alle domande sulla conversazione precedente usando la cronologia."
+  },
+  "selettore_chat.py": {
+   "name": "Scelta della chat",
+   "description": "Due tendine accanto alla casella di scrittura per scegliere chat e modo."
+  },
+  "stato_lumi.py": {
+   "name": "Stato e stop",
+   "description": "Mostra la riga di stato sotto la chat e il tasto per fermare subito Lumi."
+  }
+ }
+}

@@ -1,0 +1,68 @@
+{
+ "files": {
+  "controllo_comune/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "controllo_comune/gate.py": {
+   "name": "Interruttore controllo",
+   "description": "Accende o spegne mouse, tastiera e chiusura finestre."
+  },
+  "controllo_comune/uia_host/Program.cs": {
+   "name": "Programma lettore finestre",
+   "description": "Piccolo programma Windows che legge gli elementi delle finestre."
+  },
+  "controllo_comune/uia.py": {
+   "name": "Lettura finestre",
+   "description": "Legge gli elementi delle finestre con un programma di aiuto."
+  },
+  "controllo_comune/windows.py": {
+   "name": "Finestre e mouse",
+   "description": "Controlla finestre, mouse e tastiera di Windows."
+  },
+  "controllo_pc/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "controllo_pc/commands.py": {
+   "name": "Frasi del controllo PC",
+   "description": "Trasforma le frasi in azioni, con regole fisse."
+  },
+  "controllo_pc/overlay.py": {
+   "name": "Numeri sulle finestre",
+   "description": "Mostra i numeri sopra gli elementi della finestra."
+  },
+  "controllo_pc/runtime.py": {
+   "name": "Ingresso controllo PC",
+   "description": "Punto unico con cui Lumi usa il controllo del PC."
+  },
+  "controllo_pc/service.py": {
+   "name": "Controllo PC",
+   "description": "Gestisce finestre, clic, scrittura e scorciatoie senza internet."
+  },
+  "controllo_pc/ui.py": {
+   "name": "Impostazioni controllo PC",
+   "description": "Nomi per le finestre, conferme e mouse."
+  },
+  "program_apps/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "program_apps/native.py": {
+   "name": "Programmi di Windows",
+   "description": "Trova e avvia i programmi dell'utente."
+  },
+  "program_apps/service.py": {
+   "name": "Permessi programmi",
+   "description": "Ricorda i programmi permessi e avvia solo su richiesta."
+  },
+  "program_apps/ui.py": {
+   "name": "Impostazioni programmi",
+   "description": "Configura i programmi; la ricerca parte solo se richiesta."
+  },
+  "program_apps/windows_apps.ps1": {
+   "name": "Elenco programmi",
+   "description": "Piccolo script che elenca le app installate."
+  }
+ }
+}

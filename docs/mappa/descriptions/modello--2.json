@@ -1,0 +1,16 @@
+{
+ "files": {
+  "local_model/scelta_modello.py": {
+   "name": "Cambia modello",
+   "description": "Elenca i modelli sul PC e salva la scelta."
+  },
+  "local_model/service.py": {
+   "name": "Servizio modelli",
+   "description": "Smista le richieste ai modelli, senza interfaccia."
+  },
+  "local_model/token_stream.py": {
+   "name": "Testo in diretta",
+   "description": "Mostra il testo del modello mentre viene generato."
+  }
+ }
+}

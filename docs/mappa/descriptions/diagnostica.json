@@ -1,0 +1,48 @@
+{
+ "files": {
+  "diagnostic_handoff.py": {
+   "name": "Rapporto per GPT",
+   "description": "Prepara un breve rapporto, solo se richiesto, per GPT collegato a parte."
+  },
+  "diagnostic_session.py": {
+   "name": "Sessione di controllo",
+   "description": "Gestisce un controllo del codice visibile e limitato."
+  },
+  "diagnostica_claude/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "diagnostica_claude/ponte.py": {
+   "name": "Ponte per Claude",
+   "description": "Collega Lumi al server usato dalla diagnostica per Claude."
+  },
+  "diagnostica_claude/server_mcp.py": {
+   "name": "Server diagnostica",
+   "description": "Server che Claude desktop avvia per leggere lo stato di Lumi."
+  },
+  "diagnostica_claude/strumenti.py": {
+   "name": "Strumenti diagnostica",
+   "description": "Strumenti per vedere impostazioni, add-on e altro."
+  },
+  "diagnostica_claude/ui.py": {
+   "name": "Pagina diagnostica",
+   "description": "Riquadro nelle Impostazioni, spento di serie."
+  },
+  "runtime_diagnostics_ui.py": {
+   "name": "Finestra dello stato",
+   "description": "Mostra lo stato quando serve, senza avviare nulla."
+  },
+  "runtime_diagnostics.py": {
+   "name": "Stato di funzionamento",
+   "description": "Osserva in sola lettura come sta girando Lumi."
+  },
+  "self_diagnostics.py": {
+   "name": "Autocontrollo",
+   "description": "Elenca il codice e fa controlli statici, offline e in sola lettura."
+  },
+  "source_review.py": {
+   "name": "Suggerimenti sul codice",
+   "description": "Dà suggerimenti sul codice, in sola lettura."
+  }
+ }
+}
