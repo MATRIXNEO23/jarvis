@@ -80,7 +80,8 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
                              "spuntato": ident in settings["attivi"], "tipo": service.tipo,
                              "chiave": None if account else bool(keys.leggi(ident)),
                              "gpt_collegato": servizi_online._account_pronto() if account else None,
-                             "oggi": state.get("testo"), "colore": state.get("colore")})
+                             "oggi": state.get("testo"), "colore": state.get("colore"),
+                             "ultimo_errore": servizi_online.ULTIMO_ERRORE.get(ident)})
         return {"ok": True, "versione": __import__("impostazioni_menu").versione(),
                 "usa_sempre": settings["usa_sempre"],
                 "proponi_lunghe": settings["proponi_lunghe"],

@@ -163,6 +163,10 @@ class MenuModelli:
                                 font=("Segoe UI", 8, "underline"), cursor="hand2")
                 link.pack(side="left", padx=8)
                 link.bind("<Button-1>", lambda _e, u=service.chiavi: self.open_url(u))
+            errore = self.so.ULTIMO_ERRORE.get(service_id)
+            if errore:                       # 058: l'ultimo errore, finché il servizio non risponde di nuovo
+                tk.Label(row, text="ultimo errore: " + str(errore)[:60], bg=row["bg"], fg="#f2a33a",
+                         font=("Segoe UI", 8), anchor="w").pack(fill="x", padx=26)
             tk.Label(row, text=service.limite, bg=row["bg"], fg=MUTED, font=("Segoe UI", 8),
                      wraplength=330, justify="left", anchor="w").pack(fill="x", padx=26, pady=(0, 4))
         tk.Frame(popup, bg="#164257", height=1).pack(fill="x", padx=8, pady=4)

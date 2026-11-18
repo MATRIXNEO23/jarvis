@@ -807,6 +807,8 @@ def main() -> None:
             "ask", prompt=prompt, timeout=max(float(timeout), 60.0)).get("text", "")),
         pronto=lambda: bool(active_gpt) and bool(gpt_enabled.get()),
         collega=lambda: collega_gpt())
+    # 058: un servizio online saltato non è più silenzioso: la riga arriva in chat, console e lumi_errori.
+    __import__("servizi_online").AVVISO["scrivi"] = lambda text: root.after(0, lambda: write_line(text))
     conversation_epoch = 0
     document_busy = False
     documents = ManagedDocuments()

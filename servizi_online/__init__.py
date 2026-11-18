@@ -308,6 +308,33 @@ def _motivo(exc: Exception) -> str:
     return "risposta non valida"
 
 
+ULTIMO_ERRORE: dict[str, str] = {}      # 058: id servizio -> ultimo motivo breve (finché non risponde)
+AVVISO = {"scrivi": None}                # 058: callback (testo) -> chat/console, messa da jarvis.py
+
+
+def _salta(reasons: list, service, motivo: str) -> None:
+    """Un servizio è stato saltato: il motivo resta per chi lo mostra (chat, tendina, diagnostica)."""
+    reasons.append(service.nome + ": " + motivo)
+    ULTIMO_ERRORE[service.id] = motivo
+
+
+def _riuscito(service, reasons: list) -> None:
+    """Il servizio ha risposto: toglie il suo errore e dice in chat chi è stato saltato e chi ha risposto."""
+    ULTIMO_ERRORE.pop(service.id, None)
+    if not reasons:
+        return
+    parti = []
+    for item in reasons:
+        nome, _, motivo = item.partition(": ")
+        parti.append("%s non ha risposto (%s)" % (nome, motivo))
+    text = "ONLINE / ERRORE > " + "; ".join(parti) + ": ho usato " + service.nome + "."
+    try:
+        if AVVISO["scrivi"] is not None:
+            AVVISO["scrivi"](text)
+    except Exception:                      # l'avviso non deve mai fermare la risposta
+        pass
+
+
 def _coppia(item):
     """(domanda, risposta) anche dal formato della chat ((«user», q), («assistant», a))."""
     user, answer = item
@@ -345,13 +372,15 @@ def chiedi(messages: list[dict], *, settings: dict | None = None, keys: Chiavi |
         service = PER_ID[service_id]
         if service.tipo == "account":
             try:
-                return service.nome, _chiedi_account(messages, timeout)
+                answer = _chiedi_account(messages, timeout)
+                _riuscito(service, reasons)
+                return service.nome, answer
             except Exception as exc:
-                reasons.append(service.nome + ": " + _motivo(exc))
+                _salta(reasons, service, _motivo(exc))
                 continue
         key = keys.leggi(service_id)
         if not key:
-            reasons.append(service.nome + ": manca la chiave")
+            _salta(reasons, service, "manca la chiave")
             continue
         try:
             data = _con_modello(service, settings, key, lambda model: post(
@@ -361,9 +390,10 @@ def chiedi(messages: list[dict], *, settings: dict | None = None, keys: Chiavi |
             if not isinstance(text, str) or not text.strip():
                 raise ServizioErrore("vuota")
             _conta(service_id, data, settings)
+            _riuscito(service, reasons)
             return service.nome, text.strip() + _tagliata(data)
         except Exception as exc:     # ogni guasto: si passa al servizio successivo
-            reasons.append(service.nome + ": " + _motivo(exc))
+            _salta(reasons, service, _motivo(exc))
     return None, reasons
 
 
@@ -395,15 +425,16 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
         if service.tipo == "account":
             # Niente strumenti: risponde col testo (va bene per le risposte, non per i passi).
             try:
-                return service_id, service.nome, {"role": "assistant",
-                                                  "content": _chiedi_account(messages, timeout),
+                answer = _chiedi_account(messages, timeout)
+                _riuscito(service, reasons)
+                return service_id, service.nome, {"role": "assistant", "content": answer,
                                                   "_avviso": ""}
             except Exception as exc:
-                reasons.append(service.nome + ": " + _motivo(exc))
+                _salta(reasons, service, _motivo(exc))
                 continue
         key = keys.leggi(service_id)
         if not key:
-            reasons.append(service.nome + ": manca la chiave")
+            _salta(reasons, service, "manca la chiave")
             continue
         body = {"messages": messages, "max_tokens": MAX_RISPOSTA}
         if tools:
@@ -415,9 +446,10 @@ def chiama(messages: list[dict], *, tools=None, only: str | None = None,
             if not isinstance(message, dict) or not (message.get("content") or message.get("tool_calls")):
                 raise ServizioErrore("vuota")
             message = dict(message, _avviso=_conta(service_id, data, settings))
+            _riuscito(service, reasons)
             return service_id, service.nome, message
         except Exception as exc:
-            reasons.append(service.nome + ": " + _motivo(exc))
+            _salta(reasons, service, _motivo(exc))
     return None, None, reasons
 
 
