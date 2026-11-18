@@ -217,6 +217,8 @@ Una domanda breve («ciao») non deve mandare migliaia di token online. Proposta
 - «approfondisci»: in chat compare come messaggio TU il testo lungo mandato online («Domanda dell'utente: … Spiega meglio…»). In chat deve restare «approfondisci» o niente.
 - Il contesto del modello in uso resta 1024: è il profilo già salvato (valori nuovi solo per i modelli nuovi, come deciso). Da chiedere all'utente se applicare 896/550/256 anche ai modelli esistenti.
 
+Decisione utente 03:45: «approfondisci» manda online SOLO l'ultima risposta del modello offline, con l'istruzione di spiegarla meglio e più a fondo, senza la domanda dell'utente. In chat non compare il testo mandato online, ma solo la nuova risposta.
+
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
 - 058, riordino:
