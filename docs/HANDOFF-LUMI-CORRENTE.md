@@ -239,6 +239,13 @@ Bug e richieste dalla foto della 058 (05:40):
 - I selettori accanto alla chat sono tagliati: «Potenza» si legge «Poten» e la casella di testo è stretta. La formattazione non è riuscita.
 - Prove 058: nessun servizio online risulta spuntato (da capire se le spunte sono andate perse) e «chi ha scritto Harry Potter?» non ha avuto risposta, nemmeno offline (da indagare).
 
+Da correggere nella prossima build (prove 058 delle 05:44, approvato):
+- in chat si usa l'attesa di 90 s invece di 30 (Gemini ha fatto aspettare 91 s);
+- le risposte online sono tagliate (Groq si ferma a metà frase): va alzato MAX_RISPOSTA online;
+- la prova di Gemini deve dire DOVE si blocca: DNS, connessione TLS o risposta;
+- pop-up dei risultati con «Chiudo la finestra?», colonne del meteo, selettori in chat non tagliati.
+Gemini spostato in fondo all'ordine da Claude (05:45, con l'ok dell'utente) perché da questo PC va sempre in timeout.
+
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
 - 058, riordino:
