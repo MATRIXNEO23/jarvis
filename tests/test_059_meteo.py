@@ -55,7 +55,7 @@ class RispostaTest(unittest.TestCase):
         self.assertIn("Venerdì 20", dettagli.per_data("Roma", self.dati, "+2"))   # 20/11/2026 è venerdì
         self.assertIn("probabilità di pioggia 40 per cento", dettagli.per_data("Roma", self.dati, "+3"))
         self.assertIn("Mercoledì 25", dettagli.per_data("Roma", self.dati, "#25"))
-        self.assertIn("Venerdì 4", dettagli.per_data("Roma", self.dati, "#4/12"))
+        self.assertIn("Giovedì 3", dettagli.per_data("Roma", self.dati, "#3/12"))
 
     def test_oltre_16_giorni_lo_dice(self):
         with self.assertRaises(dettagli.OltreLimite) as ctx:

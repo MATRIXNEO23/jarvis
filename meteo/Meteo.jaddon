@@ -25,7 +25,7 @@
     },
     {
       "id": "addon.meteo.dettagli",
-      "description": "Giorno preciso o data (dopodomani, il 25, tra 3 giorni, fino a 16 giorni), parte del giorno, dettagli, domande e meteo completo.",
+      "description": "Giorno o data fino a 16 giorni, parte del giorno, dettagli, domande, completo.",
       "example": "meteo completo",
       "core_action": "weather.local"
     },

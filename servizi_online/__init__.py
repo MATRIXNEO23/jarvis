@@ -697,7 +697,7 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
             name, answer = chiedi(messaggi("Rispondi solo: ok"), settings=one, keys=keys,
                                   post=post, timeout=30)
             notify("ONLINE > Prova " + service.nome + ": " + rete + (
-                "risposta ok in %.1f s." % (time.monotonic() - inizio) if name else
+                "risposta ok in %.1f s: funziona." % (time.monotonic() - inizio) if name else
                 "il servizio risponde male: " + "; ".join(answer)))
         save()
         run_async(work)

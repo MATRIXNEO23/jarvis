@@ -104,7 +104,7 @@ class RispostaTests(unittest.TestCase):
     def test_completo_breve_a_voce_e_tutto_nella_finestra(self):
         voce, elenco = _servizio().risposta_estesa("completo:tutto")
         self.assertLess(len(voce), 330)
-        etichette = [riga[1] for riga in elenco["items"]]
+        etichette = [riga[0] for riga in elenco["items"]]   # 059: colonne Dato, Valore
         for voce_attesa in ("Vento", "Umidità", "Alba", "Tramonto", "Probabilità di pioggia"):
             self.assertIn(voce_attesa, etichette)
 
