@@ -17,7 +17,7 @@ def service():
     return _STATE["service"]
 
 
-def handle_text(spoken: str, write_line, speak) -> bool:
+def handle_text(spoken: str, write_line, speak, show_listing=None) -> bool:
     current = _STATE["service"]
     if current is None or not current.is_enabled():
         return False
@@ -29,13 +29,27 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     post = _STATE["post"] or (lambda fn: fn())
 
     def work():
+        listing = None
         try:
-            text = (current.risposta_domani if request[0] == "domani" else current.risposta)(request[1])
+            if request[0] == "settimana":          # 058: riassunto a voce, 7 giorni nella finestra
+                text, listing = current.risposta_settimana(request[1])
+            elif ":" in request[0] or request[0] == "riepilogo":
+                text, listing = current.risposta_estesa(request[0], request[1])
+            else:
+                text = (current.risposta_domani if request[0] == "domani" else current.risposta)(request[1])
         except ErroreMeteo as exc:
             text = str(exc)
         except Exception as exc:                       # mai silenzio
             text = "Il meteo ha dato un errore (" + type(exc).__name__ + ")."
-        post(lambda: (write_line("METEO > " + text), speak(text)))
+        def done():
+            write_line("METEO > " + text)
+            if listing is not None and show_listing is not None:
+                try:
+                    show_listing(listing)
+                except Exception:                  # la finestra non deve fermare la voce
+                    write_line("METEO > Finestra dei risultati non disponibile.")
+            speak(text)
+        post(done)
 
     threading.Thread(target=work, daemon=True, name="lumi-meteo").start()
     return True

@@ -50,11 +50,19 @@ def help_sections(engine):
             'La sveglia richiede la relativa add-on attiva. Se l’orario è passato, vale per domani. '
             'Per evitare ambiguità puoi usare il formato 24 ore. Gli elenchi di questa guida non vengono letti a voce.',
         'Meteo':
-            'che tempo fa a Roma\nmeteo Milano\ncom\u2019è il tempo a Tokyo\nmeteo (senza città: la tua)\n'
-            'meteo domani\nmeteo domani a Roma\nche tempo farà domani\n\n'
+            'che tempo fa\nche tempo fa a Roma\nmeteo a Milano\nmeteo Milano\ncom\u2019è il tempo a Tokyo\nmeteo (senza città: la tua)\n'
+            'meteo domani\nmeteo domani a Roma\nche tempo farà domani\nmeteo settimana\n\n'
+            'COME USARE IL METEO\n'
+            'Giorno preciso: che tempo farà sabato / meteo giovedì / meteo weekend\n'
+            'Parte del giorno: meteo stasera / meteo stanotte / meteo domattina\n'
+            'Dettagli: temperatura adesso / vento / umidità / alba e tramonto\n'
+            'Tutto insieme: meteo completo / dettagli meteo / meteo completo a Roma (breve a voce, tutto nella finestra dei risultati)\n'
+            'Domande: pioverà domani? / serve l\u2019ombrello? / fa freddo?\n'
+            'Riepilogo del mattino: buongiorno Lumi / com\u2019è la giornata (giorno e data, meteo, minima e massima, pioggia, consiglio)\n'
+            'Ogni comando accetta «a <città>» e le tue parole si aggiungono in Impostazioni > Voce > Personalizzazione comandi > Meteo.\n\n'
             'Serve l\u2019add-on Meteo acceso (Gestisci add-on). L\u2019icona con la temperatura compare in basso '
             'nell\u2019HUD, sopra DISCO C e RETE. «Domani» dà minima, massima e cielo del giorno dopo. «Online» e «clima» restano ricerche. '
-            'Dopodomani e la settimana non ci sono ancora.\n\n'
+            '«Settimana» dice a voce un riassunto breve e mostra i 7 giorni nella finestra dei risultati. Dopodomani non c\u2019è ancora.\n\n'
             'Gli elenchi di questa guida non vengono letti a voce.',
         'Controllo PC':
             'Add-on Controllo PC (spento finché non lo attivi in Gestisci add-on). Tutto offline, '

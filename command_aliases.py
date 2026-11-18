@@ -137,6 +137,11 @@ _FIXED = {
         "torna alla conversazione generale"),
     "Memoria": ("cancella le chat", "cancella i ricordi", "cancella i progetti", "cancella tutto"),
     "Sveglia": ("imposta sveglia alle {testo}", "ferma la sveglia"),
+    "Meteo": ("che tempo fa", "che tempo fa a {testo}", "meteo a {testo}", "meteo domani",
+              "meteo settimana", "che tempo farà sabato", "meteo weekend", "meteo stasera",
+              "meteo stanotte", "meteo domattina", "temperatura adesso", "vento", "umidità",
+              "alba e tramonto", "pioverà domani", "serve l'ombrello", "fa freddo",
+              "buongiorno Lumi", "meteo completo", "meteo completo a {testo}"),
     "Musica": (
         "metti {testo}", "aggiungi in coda {testo}", "metti la playlist {testo}",
         "pausa", "riprendi", "ferma la musica", "avanti", "indietro",
@@ -189,6 +194,26 @@ DESCRIPTIONS = {
     "cancella tutto": "Cancella chat, ricordi e progetti (chiede sì/no).",
     "imposta sveglia alle {testo}": "Imposta la sveglia (es. «alle 7:30»).",
     "ferma la sveglia": "Spegne la sveglia che suona.",
+    "che tempo fa": "Dice il meteo della tua città (serve l'add-on Meteo).",
+    "che tempo fa a {testo}": "Dice il meteo di una città qualsiasi.",
+    "meteo a {testo}": "Dice il meteo di una città qualsiasi.",
+    "meteo domani": "Dice il meteo di domani (minima, massima, cielo).",
+    "che tempo farà sabato": "Meteo di un giorno preciso (anche «meteo giovedì»).",
+    "meteo weekend": "Meteo di sabato e domenica.",
+    "meteo stasera": "Meteo della sera (anche stanotte, domattina).",
+    "meteo stanotte": "Meteo della notte.",
+    "meteo domattina": "Meteo di domani mattina.",
+    "temperatura adesso": "Dice la temperatura di adesso.",
+    "vento": "Dice la velocità del vento.",
+    "umidità": "Dice l'umidità.",
+    "alba e tramonto": "Dice a che ora sorge e tramonta il sole.",
+    "pioverà domani": "Risponde sì o no: pioverà domani?",
+    "serve l'ombrello": "Risponde se serve l'ombrello nelle prossime ore.",
+    "fa freddo": "Risponde se fa freddo (anche «fa caldo»).",
+    "buongiorno Lumi": "Riepilogo del mattino: giorno e data, meteo di oggi, minima e massima, pioggia e consiglio (anche «com'è la giornata»).",
+    "meteo completo": "Tutti i dettagli insieme: breve a voce, tutto nella finestra dei risultati (anche «dettagli meteo»).",
+    "meteo completo a {testo}": "Come «meteo completo», per una città.",
+    "meteo settimana": "Riassunto a voce dei 7 giorni; l'elenco completo è nella finestra dei risultati.",
     "metti {testo}": "Suona un brano o un video (cartelle o YouTube).",
     "aggiungi in coda {testo}": "Aggiunge un brano dopo quello in corso.",
     "metti la playlist {testo}": "Suona una tua playlist.",
@@ -269,9 +294,9 @@ def describe(command: str) -> str:
 
 
 # Comandi di base (Impostazioni > Personalizzazione comandi).
-BASE_SECTIONS = ("Comandi locali", "Timer", "Modelli e GPT", "Progetti e Telegram", "Memoria")
+BASE_SECTIONS = ("Comandi locali", "Timer", "Meteo", "Modelli e GPT", "Progetti e Telegram", "Memoria")
 # Comandi di un add-on (Gestisci add-on > sezione dell'add-on).
-ADDON_SECTIONS = {"sveglia": "Sveglia", "musica": "Musica", "programmi_app": "Programmi e app",
+ADDON_SECTIONS = {"sveglia": "Sveglia", "meteo": "Meteo", "musica": "Musica", "programmi_app": "Programmi e app",
                   "accesso_file": "Accesso file", "controllo_pc": "Controllo PC"}
 
 

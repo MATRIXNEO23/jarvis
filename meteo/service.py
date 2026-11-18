@@ -16,6 +16,17 @@ PREVISIONE = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={
 PREVISIONE_DOMANI = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
                      "&daily=weathercode,temperature_2m_max,temperature_2m_min"
                      "&forecast_days=2&timezone=auto")
+PREVISIONE_SETTIMANA = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
+                        "&daily=weathercode,temperature_2m_max,temperature_2m_min"
+                        "&forecast_days=7&timezone=auto")
+PREVISIONE_COMPLETA = ("https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
+                       "&current_weather=true"
+                       "&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,"
+                       "weathercode,windspeed_10m"
+                       "&daily=weathercode,temperature_2m_max,temperature_2m_min,"
+                       "precipitation_probability_max,sunrise,sunset"
+                       "&forecast_days=7&timezone=auto")
+GIORNI = ("lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica")
 INTERVALLO = 30 * 60          # secondi: massimo un aggiornamento ogni 30 minuti
 
 
@@ -97,6 +108,54 @@ def frase_domani(citta: str, massima: float, minima: float, code) -> str:
         citta, _TESTO[categoria(code, True)], round(minima), round(massima))
 
 
+def settimana(lat: float, lon: float, get=_get) -> list:
+    """058: i 7 giorni (Open-Meteo daily): [{"data", "max", "min", "code"}]."""
+    try:
+        daily = get(PREVISIONE_SETTIMANA.format(lat=lat, lon=lon))["daily"]
+        giorni = [{"data": str(d), "max": float(a), "min": float(b), "code": int(c)}
+                  for d, a, b, c in zip(daily["time"], daily["temperature_2m_max"],
+                                        daily["temperature_2m_min"], daily["weathercode"])]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise ErroreMeteo("Non riesco a leggere le previsioni della settimana.") from exc
+    if not giorni:
+        raise ErroreMeteo("Non riesco a leggere le previsioni della settimana.")
+    return giorni
+
+
+def nome_giorno(data: str) -> str:
+    """«2026-11-19» -> «giovedì 19»; testo grezzo se la data non è leggibile."""
+    from datetime import date
+    try:
+        d = date.fromisoformat(data[:10])
+    except ValueError:
+        return data
+    return "%s %d" % (GIORNI[d.weekday()], d.day)
+
+
+def frase_settimana(citta: str, giorni: list) -> str:
+    """Riassunto breve a voce: temperature, cielo più frequente, giorni di pioggia o neve."""
+    categorie = [categoria(g["code"], True) for g in giorni]
+    prevalente = max(set(categorie), key=categorie.count)
+    brutti = [nome_giorno(g["data"]).split()[0] for g, c in zip(giorni, categorie)
+              if c in ("pioggia", "neve", "temporale")]
+    testo = "Settimana a %s: da %d a %d gradi, per lo più %s" % (
+        citta, round(min(g["min"] for g in giorni)), round(max(g["max"] for g in giorni)),
+        _TESTO[prevalente])
+    if brutti:
+        testo += "; pioggia o maltempo " + ", ".join(brutti[:4])
+    return testo + ". I sette giorni sono nella finestra dei risultati."
+
+
+def elenco_settimana(citta: str, giorni: list) -> dict:
+    """Voci per la finestra dei risultati (Tipo, Nome, Percorso): un giorno per riga."""
+    return {"token": "meteo-" + str(time.monotonic()),
+            "items": [("Giorno", nome_giorno(g["data"]),
+                       "%s, minima %d, massima %d" % (_TESTO[categoria(g["code"], True)],
+                                                       round(g["min"]), round(g["max"])))
+                      for g in giorni],
+            "summary": "Meteo dei prossimi 7 giorni a %s." % citta}
+
+
 class ServizioMeteo:
     def __init__(self, abilitato, *, citta=lambda: None, get=_get, orologio=time.monotonic):
         self._abilitato, self._citta, self._get, self._ora = abilitato, citta, get, orologio
@@ -120,6 +179,41 @@ class ServizioMeteo:
             raise ErroreMeteo("Scegli la città predefinita nella pagina dell'add-on Meteo.")
         d = domani(city["lat"], city["lon"], self._get)
         return frase_domani(city["nome"], d["max"], d["min"], d["code"])
+
+    def risposta_settimana(self, nome=None):
+        """(frase a voce, elenco per la finestra dei risultati) dei prossimi 7 giorni."""
+        city = cerca_citta(nome, self._get) if nome else self._citta()
+        if not city:
+            raise ErroreMeteo("Scegli la città predefinita nella pagina dell'add-on Meteo.")
+        giorni = settimana(city["lat"], city["lon"], self._get)
+        return frase_settimana(city["nome"], giorni), elenco_settimana(city["nome"], giorni)
+
+    def risposta_estesa(self, kind: str, nome=None):
+        """058: giorno preciso, parte del giorno, dettagli, domande, riepilogo, «completo».
+        `kind` = «tipo:valore» (es. «giorno:sabato»). Ritorna (frase, elenco o None)."""
+        from . import dettagli
+        city = cerca_citta(nome, self._get) if nome else self._citta()
+        if not city:
+            raise ErroreMeteo("Scegli la città predefinita nella pagina dell'add-on Meteo.")
+        try:
+            dati = self._get(PREVISIONE_COMPLETA.format(lat=city["lat"], lon=city["lon"]))
+        except (OSError, ValueError) as exc:
+            raise ErroreMeteo("Non riesco a leggere le previsioni adesso.") from exc
+        tipo, _, valore = kind.partition(":")
+        try:
+            if tipo == "giorno":
+                return dettagli.giorno(city["nome"], dati, valore), None
+            if tipo == "parte":
+                return dettagli.parte_del_giorno(city["nome"], dati, valore), None
+            if tipo == "dettaglio":
+                return dettagli.dettaglio(city["nome"], dati, valore), None
+            if tipo == "domanda":
+                return dettagli.domanda(city["nome"], dati, valore), None
+            if tipo == "completo":
+                return dettagli.completo(city["nome"], dati)
+            return dettagli.riepilogo(city["nome"], dati), None
+        except (KeyError, IndexError, ValueError, TypeError) as exc:
+            raise ErroreMeteo("Il servizio meteo non ha questo dato adesso.") from exc
 
     def aggiorna(self, forza: bool = False):
         """Dati per l'HUD (città predefinita). None se spento, senza città o errore di rete;

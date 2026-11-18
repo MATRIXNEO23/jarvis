@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "meteo",
   "name": "Meteo",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Meteo a voce per qualsiasi città e icona nell'HUD (Open-Meteo, gratis).",
   "actions": [
     {
@@ -15,6 +15,24 @@
       "id": "addon.meteo.domani",
       "description": "Dice il meteo di domani per una città.",
       "example": "meteo domani a Roma",
+      "core_action": "weather.local"
+    },
+    {
+      "id": "addon.meteo.settimana",
+      "description": "Meteo dei 7 giorni: riassunto a voce, elenco nella finestra dei risultati.",
+      "example": "meteo settimana",
+      "core_action": "weather.local"
+    },
+    {
+      "id": "addon.meteo.dettagli",
+      "description": "Giorno preciso, parte del giorno, dettagli, domande e meteo completo.",
+      "example": "meteo completo",
+      "core_action": "weather.local"
+    },
+    {
+      "id": "addon.meteo.riepilogo",
+      "description": "Riepilogo del mattino con meteo e consiglio.",
+      "example": "buongiorno Lumi",
       "core_action": "weather.local"
     }
   ]
