@@ -231,6 +231,8 @@ Requisito dell'utente (05:27): TUTTO quello che si può chiamare a voce deve ess
 
 Decisione utente (05:30), per la build dopo le prove della 058: se una frase breve (fino a 8 parole circa) contiene una parola di comando ma non corrisponde esattamente a un comando, prima di passarla al modello Lumi chiede «Intendevi: <comando>? Sì o no». Con il sì esegue il comando, con il no passa al modello. Vale soprattutto per verbi d'azione come «metti», «apri», «chiudi», «avvia», «cerca», «suona» e per parole come «meteo», «timer», «musica». Lo scopo è evitare che il modello si pianti e che l'utente debba dire «fermati». Le frasi che corrispondono esattamente a un comando vengono eseguite subito; quelle senza parole di comando vanno al modello.
 
+Richiesta utente (05:33), dalla prossima build: un solo zip da estrarre. Oggi l'artifact di GitHub (già zippato da GitHub) contiene un altro zip, Lumi-0NN-PROVA.zip, più una cartella vuota e un .json. Nel workflow f5n l'artifact deve caricare direttamente la CARTELLA del programma (Lumi-0NN-PROVA/), così il download contiene subito quella cartella. Il .json con gli hash va dentro la cartella. Lo zip resta solo per Download/ se serve, non nell'artifact.
+
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
 - 058, riordino:
