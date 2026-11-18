@@ -1351,3 +1351,11 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Lezione: «buongiorno» da solo è un saluto: il riepilogo del mattino si attiva solo con «buongiorno Lumi» o «com'è la giornata», per non rubare i saluti.
 - Lezione: i riordini (unire, spostare, togliere file) sono proposte da approvare, non lavoro da fare: vedi `docs/PROPOSTA-RIORDINO-058.md`.
 
+
+
+## 059 (18/11, correzioni urgenti e meteo)
+- Telegram: lezione, quando un tasto diventa un Frame con figli (057), ogni controllo «clic sul tasto» fatto con `event.widget is button` va esteso ai discendenti; altrimenti un `bind_all` lo chiude subito. Prova: `test_059_telegram_clic.py` (solo CI Windows).
+- Attese online: la chat passa dall'orchestratore; l'attesa lunga (90 s) vale solo dopo il primo passo con strumenti, la risposta di chat resta a 30 s. Limite di risposta 8000 token (si paga solo ciò che il modello scrive); rischio: quote al minuto di Groq (da verificare dal vivo).
+- Selettori: la larghezza della colonna chat (360 px) è un dato dimostrato dal codice; tasti e casella sulla stessa riga non ci stanno. Scelta minima: riga propria sopra la casella (da confermare).
+- Meteo: 16 giorni è il massimo di Open-Meteo (`forecast_days=16`); oltre, messaggio esplicito, nessuna previsione inventata. Probabilità di pioggia omessa solo se il dato manca.
+- Pacchetto: l'artifact è già uno zip; per estrarre una volta sola si carica la cartella (`dist/artifact`, radice = `Lumi-059-PROVA/`).
