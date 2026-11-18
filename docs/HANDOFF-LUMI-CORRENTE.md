@@ -213,6 +213,10 @@ Regola dell'utente (19:04): la BASE è quella funzionante a modello singolo (nat
 ## Richiesta utente 17/11 19:01: contesto online proporzionato
 Una domanda breve («ciao») non deve mandare migliaia di token online. Proposta (da approvare): il contesto cresce con la richiesta. Domanda breve = solo istruzioni minime e l'ultimo scambio; «approfondisci» e richieste lunghe = fino a 6 scambi; allegati e scheda di Lumi solo se servono. Nel log e nella diagnostica, i token mandati per ogni richiesta. Restano valide le soglie del 15/11: 80% della quota e conferma oltre ~8.000 token.
 
+## Bug 057 dal vivo (18/11)
+- «approfondisci»: in chat compare come messaggio TU il testo lungo mandato online («Domanda dell'utente: … Spiega meglio…»). In chat deve restare «approfondisci» o niente.
+- Il contesto del modello in uso resta 1024: è il profilo già salvato (valori nuovi solo per i modelli nuovi, come deciso). Da chiedere all'utente se applicare 896/550/256 anche ai modelli esistenti.
+
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
 - 058, riordino:
