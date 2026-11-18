@@ -173,7 +173,10 @@ class Telegram:
         if self.popup is None:
             return
         try:
-            inside = str(event.widget).startswith(str(self.popup)) or event.widget is self.button
+            name = str(event.widget)
+            # 059: il tasto è un Frame con il simbolo (Canvas figlio): il clic arriva dal figlio.
+            inside = (name.startswith(str(self.popup)) or event.widget is self.button
+                      or name.startswith(str(self.button) + "."))
         except Exception:
             inside = False
         if not inside:
