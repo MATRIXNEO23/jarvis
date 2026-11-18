@@ -213,6 +213,14 @@ Regola dell'utente (19:04): la BASE è quella funzionante a modello singolo (nat
 ## Richiesta utente 17/11 19:01: contesto online proporzionato
 Una domanda breve («ciao») non deve mandare migliaia di token online. Proposta (da approvare): il contesto cresce con la richiesta. Domanda breve = solo istruzioni minime e l'ultimo scambio; «approfondisci» e richieste lunghe = fino a 6 scambi; allegati e scheda di Lumi solo se servono. Nel log e nella diagnostica, i token mandati per ogni richiesta. Restano valide le soglie del 15/11: 80% della quota e conferma oltre ~8.000 token.
 
+## Decisioni 18/11 notte (a voce) per la 058 e oltre
+- Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
+- 058, riordino:
+  1. file inutili via; file che fanno la stessa cosa uniti, senza creare file troppo lunghi. Per OGNI unione, spostamento o rimozione: prima spiegare all'utente cosa fa il file e con cosa si unirebbe, poi aspettare il suo ok;
+  2. ogni add-on nella sua cartella dentro «addon». Uno alla volta: prima l'elenco di tutti i punti che lo richiamano, poi lo spostamento, poi la correzione di quei punti, infine la build vera controllando che l'add-on si carichi. Telegram per ultimo;
+  3. finestre e impostazioni con tasti e campi sempre visibili anche senza schermo intero (dimensioni giuste e scorrimento), più un controllo automatico che niente esca dal bordo.
+- Alla fine di tutto: restyling completo e coerente delle finestre, poi Lumi.exe (processo unico che Windows vede come «Lumi», non Python, così «passa a Lumi» non si confonde).
+
 ## Dopo la 056: pulizia e riordino (richiesta utente 17/11, 16:42)
 Da fare prima di nuove funzioni (navigazione autonoma inclusa):
 - Riordinare menu e impostazioni per sezioni, in modo intuitivo, veloce e completo, senza duplicati né incoerenze.
