@@ -469,7 +469,7 @@ def main() -> None:
             lambda: bool(addon_manager and any(
                 item["id"] == "meteo" and item["enabled"] for item in addon_manager.list_installed())),
             citta=lambda: meteo_config.load()["citta"])
-        register_meteo(meteo_service, lambda fn: root.after(0, fn))
+        register_meteo(meteo_service, lambda fn: root.after(0, fn), lambda listing: meteo_show_week(listing))
     except (ImportError, OSError, ValueError, AttributeError) as exc:
         addon_setup_error = (addon_setup_error or "") + " Meteo: " + str(exc)[:80]
         meteo_service = None
@@ -3347,7 +3347,7 @@ def main() -> None:
             # provata solo dopo timer e sveglia, e solo con l'add-on attivo.
             from musica.runtime import handle_text as music_handle_text
             from meteo.runtime import handle_text as meteo_handle_text
-            if meteo_handle_text(spoken, write_line, speak_result, meteo_show_week):
+            if meteo_handle_text(spoken, write_line, speak_result):
                 return True              # 056 C: «che tempo fa a Roma», senza modello né quota
             from controllo_pc.runtime import (claims_first as pc_claims_first,
                                               handle_text as pc_handle_text)

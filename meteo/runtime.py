@@ -6,11 +6,12 @@ from __future__ import annotations
 
 import threading
 
-_STATE = {"service": None, "post": None}
+_STATE = {"service": None, "post": None, "show": None}
 
 
-def register(service, post) -> None:
-    _STATE.update(service=service, post=post)
+def register(service, post, show=None) -> None:
+    """`show(elenco)`: apre la finestra dei risultati (058, «meteo settimana» e «meteo completo»)."""
+    _STATE.update(service=service, post=post, show=show)
 
 
 def service():
@@ -43,9 +44,10 @@ def handle_text(spoken: str, write_line, speak, show_listing=None) -> bool:
             text = "Il meteo ha dato un errore (" + type(exc).__name__ + ")."
         def done():
             write_line("METEO > " + text)
-            if listing is not None and show_listing is not None:
+            mostra = show_listing or _STATE["show"]
+            if listing is not None and mostra is not None:
                 try:
-                    show_listing(listing)
+                    mostra(listing)
                 except Exception:                  # la finestra non deve fermare la voce
                     write_line("METEO > Finestra dei risultati non disponibile.")
             speak(text)
