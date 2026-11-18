@@ -229,6 +229,8 @@ Memoria (utente 04:36): da RIPROGETTARE con calma dopo la 058. Non recupera i ri
 
 Requisito dell'utente (05:27): TUTTO quello che si può chiamare a voce deve essere personalizzabile in «Personalizzazione comandi», diviso per sezioni (Meteo, Musica, Modelli, Online, Ricerca, Telegram, Controllo PC, File, Programmi, Memoria, Timer/Sveglia, Lumi…), per vederlo facilmente. Da fare nel riordino 058-B: prima l'inventario dei comandi vocali che mancano dalla personalizzazione.
 
+Decisione utente (05:30), per la build dopo le prove della 058: se una frase breve (fino a 8 parole circa) contiene una parola di comando ma non corrisponde esattamente a un comando, prima di passarla al modello Lumi chiede «Intendevi: <comando>? Sì o no». Con il sì esegue il comando, con il no passa al modello. Vale soprattutto per verbi d'azione come «metti», «apri», «chiudi», «avvia», «cerca», «suona» e per parole come «meteo», «timer», «musica». Lo scopo è evitare che il modello si pianti e che l'utente debba dire «fermati». Le frasi che corrispondono esattamente a un comando vengono eseguite subito; quelle senza parole di comando vanno al modello.
+
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
 - 058, riordino:
