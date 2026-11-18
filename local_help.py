@@ -54,6 +54,7 @@ def help_sections(engine):
             'meteo domani\nmeteo domani a Roma\nche tempo farà domani\nmeteo settimana\n\n'
             'COME USARE IL METEO\n'
             'Giorno preciso: che tempo farà sabato / meteo giovedì / meteo weekend\n'
+            'Qualsiasi giorno entro 16 giorni, anche con la città: meteo giovedì a Roma / meteo il 25 / meteo il 25 dicembre / meteo tra 3 giorni / meteo tra una settimana / meteo dopodomani a Milano. Oltre i 16 giorni Lumi lo dice. Ogni risposta include la probabilità di pioggia.\n'
             'Parte del giorno: meteo stasera / meteo stanotte / meteo domattina\n'
             'Dettagli: temperatura adesso / vento / umidità / alba e tramonto\n'
             'Tutto insieme: meteo completo / dettagli meteo / meteo completo a Roma (breve a voce, tutto nella finestra dei risultati)\n'

@@ -132,6 +132,14 @@ def build(engine_dir, number, out_dir, piper_dir=None, video_dir=None, uia_dir=N
                    sha256=hashlib.sha256(out.read_bytes()).hexdigest(),
                    files=len(entries), source_commit=source)
     out.with_suffix(".json").write_text(json.dumps(details, indent=2), encoding="utf-8")
+    # 059: l'artifact di GitHub è già uno zip: carica direttamente la CARTELLA del programma
+    # (Lumi-NNN-PROVA/, con il .json degli hash dentro), così si estrae una volta sola.
+    cartella = Path(out_dir) / "artifact" / f"Lumi-{label}-PROVA"
+    for name, data in entries.items():
+        target = cartella / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+    (cartella / out.with_suffix(".json").name).write_text(json.dumps(details, indent=2), encoding="utf-8")
     return out, details
 
 

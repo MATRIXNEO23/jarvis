@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "meteo",
   "name": "Meteo",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Meteo a voce per qualsiasi città e icona nell'HUD (Open-Meteo, gratis).",
   "actions": [
     {
@@ -25,7 +25,7 @@
     },
     {
       "id": "addon.meteo.dettagli",
-      "description": "Giorno preciso, parte del giorno, dettagli, domande e meteo completo.",
+      "description": "Giorno preciso o data (dopodomani, il 25, tra 3 giorni, fino a 16 giorni), parte del giorno, dettagli, domande e meteo completo.",
       "example": "meteo completo",
       "core_action": "weather.local"
     },
