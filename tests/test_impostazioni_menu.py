@@ -33,7 +33,7 @@ class NavigazioneTest(unittest.TestCase):
                 self.boxes[text] = box
 
         page("Voce", ["Risposte vocali offline — voci di Windows"], ["Voce e ascolto"])
-        page("GPT e memoria", ["Modelli offline", "Connessione ChatGPT",
+        page("GPT e memoria", ["Modelli offline",
                                "Memoria generale", "Servizi online (API ufficiali)",
                                "Riquadro sconosciuto"])
         page("Progetti e servizi", ["La mia voce", "Add-on — installazione locale e permessi",
@@ -49,7 +49,7 @@ class NavigazioneTest(unittest.TestCase):
         voci = self.nav.voci()
         self.assertEqual(list(voci), ["Interfaccia", "Voce", "Memoria", "Modelli", "Add-on"])
         self.assertEqual(voci["Voce"], ["Microfono e ascolto", "Voci", "La mia voce"])
-        self.assertEqual(voci["Modelli"], ["Modelli offline", "GPT dal browser", "Servizi online", "Altro"])
+        self.assertEqual(voci["Modelli"], ["Modelli offline", "Servizi online", "Altro"])
         self.assertIn("⏰ Timer e sveglia", voci["Add-on"])
         self.assertIn("🐙 GitHub", voci["Add-on"])
         self.assertEqual(voci["Memoria"], ["Second Brain"])
@@ -58,7 +58,6 @@ class NavigazioneTest(unittest.TestCase):
         self.nav.apri_categoria("Modelli")
         self.nav.mostra("Modelli", "Servizi online")
         self.assertTrue(self.boxes["Servizi online (API ufficiali)"].winfo_manager())
-        self.assertFalse(self.boxes["Connessione ChatGPT"].winfo_manager())
         self.assertEqual(self.nb.select(), str(self.pages["GPT e memoria"]))
         self.nav.mostra("Voce", "La mia voce")
         self.assertTrue(self.boxes["La mia voce"].winfo_manager())

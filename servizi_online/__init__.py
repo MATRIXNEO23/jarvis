@@ -45,7 +45,7 @@ PER_ID = {s.id: s for s in SERVIZI}
 
 # ChatGPT col tuo account (16/11): jarvis.py collega qui il ponte GPT.
 # chiedi(testo, timeout) -> testo; pronto() -> True se il collegamento GPT è acceso e autorizzato.
-ACCOUNT = {"chiedi": None, "pronto": lambda: False}
+ACCOUNT = {"chiedi": None, "pronto": lambda: False, "collega": None}
 
 
 def _account_pronto() -> bool:
@@ -578,8 +578,12 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
             ttk.Button(line, text="Prova", width=6, command=lambda s=service: test(s)).pack(side="left")
             ttk.Button(line, text="↑", width=2, command=lambda i=service_id: move(i, -1)).pack(side="left")
             ttk.Button(line, text="↓", width=2, command=lambda i=service_id: move(i, 1)).pack(side="left")
-            ttk.Button(line, text="Prendi la chiave", command=lambda u=service.chiavi: open_url(u)
-                       ).pack(side="left", padx=2)
+            if service.tipo == "account":      # 058: nessuna chiave, solo il collegamento
+                ttk.Button(line, text="Collega", command=lambda: ACCOUNT.get("collega") and ACCOUNT["collega"]()
+                           ).pack(side="left", padx=2)
+            else:
+                ttk.Button(line, text="Prendi la chiave", command=lambda u=service.chiavi: open_url(u)
+                           ).pack(side="left", padx=2)
             # Seconda riga: cosa offre gratis e un limite al giorno scritto da te (per i
             # servizi che non lo pubblicano), usato dalle barre della quota.
             info = ttk.Frame(rows)
@@ -613,6 +617,7 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
     ttk.Label(box, text="($) = a consumo: costa, non usarlo se vuoi restare a costo zero.",
               foreground="#888").pack(anchor="w", padx=8, pady=(0, 6))
     box.redraw = draw
+    box.rows = rows                  # 058: il collegamento GPT si aggancia sotto l'elenco
     return box
 
 
@@ -622,7 +627,8 @@ def aiuto_chiavi() -> str:
            "Le chiavi restano cifrate solo su questo PC. Gratis = con limiti; ($) = a pagamento.", ""]
     for service in SERVIZI:
         out.append(service.nome.upper() + ("" if service.gratis else " ($)"))
-        out.append("Pagina della chiave: " + service.chiavi)
+        if service.tipo != "account":
+            out.append("Pagina della chiave: " + service.chiavi)
         out += ["%d. %s" % (n + 1, step) for n, step in enumerate(service.passi)]
         if service.uso:
             out.append("A cosa serve: " + service.uso)

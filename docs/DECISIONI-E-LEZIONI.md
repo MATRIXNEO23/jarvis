@@ -1344,3 +1344,10 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Lezione: un campo aggiunto a memory.json rompe le versioni vecchie (schema rigido): i campi nuovi vanno nel file accanto `memory.native.json`.
 - Decisione utente (17/11 21:26): valori di partenza dei modelli nuovi 896 / 550 / 256 (contesto, tetto prompt, risposta); salvataggio bloccato se prompt + risposta > contesto.
 - Decisione utente (17/11 21:56): niente lettere nelle versioni: questa build è la 057 e il riordino di menu e file diventa la 058.
+
+## 058 (18/11, fase A)
+- Decisioni utente (03:45-03:59): «approfondisci» manda online solo la risposta offline e non mostra il testo; motore a priorità alta mentre elabora; contesto del profilo al caricamento; meteo esteso (settimana, giorni, parti del giorno, dettagli, domande, riepilogo del mattino, completo) personalizzabile in Voce; finestre sempre dentro lo schermo.
+- Lezione: il «TU >» lungo veniva scritto da `submit_gemma_voice`; il chiamante alza `TU_SCRITTO` (stesso meccanismo di `chain_typed_once`) invece di duplicare la scrittura.
+- Lezione: «buongiorno» da solo è un saluto: il riepilogo del mattino si attiva solo con «buongiorno Lumi» o «com'è la giornata», per non rubare i saluti.
+- Lezione: i riordini (unire, spostare, togliere file) sono proposte da approvare, non lavoro da fare: vedi `docs/PROPOSTA-RIORDINO-058.md`.
+

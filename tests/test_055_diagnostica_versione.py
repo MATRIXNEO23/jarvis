@@ -15,7 +15,7 @@ class VersioneTests(unittest.TestCase):
         self.assertIn('"versione"', online)
 
     def test_build_number_is_056(self):          # 056: portato da 055
-        self.assertIn("--number 057", WORKFLOW)
+        self.assertIn("--number 058", WORKFLOW)
         self.assertNotIn("--number 055", WORKFLOW)
 
     def test_diagnostic_tools_cover_new_features(self):

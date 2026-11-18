@@ -22,7 +22,8 @@ class ServiziInFileSeparatiTest(unittest.TestCase):
         self.assertEqual(files, {s.id for s in so.SERVIZI})
         self.assertEqual(so.SERVIZI[0].id, "gemini")
         for service in so.SERVIZI:
-            self.assertTrue(service.chiavi.startswith("https://"), service.id)
+            if service.tipo != "account":        # 058: il GPT dal browser non ha pagina delle chiavi
+                self.assertTrue(service.chiavi.startswith("https://"), service.id)
             self.assertTrue(service.limite, service.id)
             self.assertGreaterEqual(len(service.passi), 3, service.id)
 

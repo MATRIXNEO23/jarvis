@@ -14,22 +14,26 @@ import tkinter as tk
 BG, PANEL, TEXT, MUTED, CYAN = "#020d17", "#06192a", "#bfeeff", "#6f8fa3", "#46ccfa"
 
 
-def servizio_in_uso(settings, keys):
-    """Il primo servizio spuntato con la chiave, nell'ordine scelto (o None)."""
+def servizio_in_uso(settings, keys, account_pronto=None):
+    """Il primo servizio spuntato con la chiave (o, per il GPT dal browser, collegato), nell'ordine
+    scelto (o None)."""
     for service_id in settings["ordine"]:
-        if service_id in settings["attivi"] and keys.presente(service_id):
+        if service_id not in settings["attivi"]:
+            continue
+        if keys.presente(service_id) or (account_pronto is not None and account_pronto(service_id)):
             return service_id
     return None
 
 
 class MenuModelli:
     def __init__(self, root, button, *, open_settings, open_url=None, keys=None,
-                 settings_path=None, notify=None):
+                 settings_path=None, notify=None, on_connect=None):
         import servizi_online
         self.so = servizi_online
         self.root = root
         self.button = button
         self.open_settings = open_settings
+        self.on_connect = on_connect or open_settings      # 058: «Collega» del GPT dal browser
         self.open_url = open_url or __import__("webbrowser").open
         self.keys = keys or servizi_online.Chiavi()
         self.settings_path = settings_path
@@ -49,9 +53,16 @@ class MenuModelli:
             self.notify("ONLINE / ERRORE > Scelta non salvata: " + str(exc)[:120])
         self.refresh_button()
 
+    def _account_pronto(self, service_id):
+        service = self.so.PER_ID.get(service_id)
+        return bool(service is not None and service.tipo == "account" and self.so._account_pronto())
+
+    def _in_uso(self, settings):
+        return servizio_in_uso(settings, self.keys, self._account_pronto)
+
     def refresh_button(self):
         settings = self._settings()
-        active = servizio_in_uso(settings, self.keys)
+        active = self._in_uso(settings)
         name = self.so.PER_ID[active].nome.split()[0] if active else ""
         try:
             self.button.configure(text="Online ▾")
@@ -110,7 +121,7 @@ class MenuModelli:
     def _fill(self, popup, settings):
         tk.Label(popup, text="Servizi online", bg=PANEL, fg=TEXT, font=("Segoe UI", 10, "bold"),
                  anchor="w").pack(fill="x", padx=10, pady=(8, 4))
-        active = servizio_in_uso(settings, self.keys)
+        active = self._in_uso(settings)
         quote = __import__("servizi_online.quote", fromlist=["stato"])
         for service_id in settings["ordine"]:
             service = self.so.PER_ID[service_id]
@@ -127,7 +138,17 @@ class MenuModelli:
                            ).pack(fill="x", padx=2)
             line = tk.Frame(row, bg=row["bg"])
             line.pack(fill="x", padx=26, pady=(0, 3))
-            if self.keys.presente(service_id):
+            if service.tipo == "account":
+                # 058: GPT dal browser, non un servizio a chiave: collegato / non collegato.
+                pronto = self._account_pronto(service_id)
+                tk.Label(line, text="collegato" if pronto else "non collegato", bg=row["bg"],
+                         fg="#3ddc97" if pronto else "#f2a33a", font=("Segoe UI", 8)).pack(side="left")
+                if not pronto:
+                    link = tk.Label(line, text="Collega", bg=row["bg"], fg=CYAN,
+                                    font=("Segoe UI", 8, "underline"), cursor="hand2")
+                    link.pack(side="left", padx=8)
+                    link.bind("<Button-1>", lambda _e: (self.close(), self.on_connect()))
+            elif self.keys.presente(service_id):
                 info = quote.stato(service_id, limite_utente=settings["limiti"].get(service_id))
                 bar = tk.Canvas(line, width=110, height=8, bg="#10293a", highlightthickness=0)
                 bar.pack(side="left", pady=2)

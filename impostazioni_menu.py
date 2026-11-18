@@ -28,7 +28,6 @@ MAPPA = (
     ("Progetti", ("Memoria", "Progetti")),
     ("Spazio su disco", ("Memoria", "Pulizia dati")),
     ("Modelli offline", ("Modelli", "Modelli offline")),
-    ("Connessione ChatGPT", ("Modelli", "GPT dal browser")),
     ("Servizi online", ("Modelli", "Servizi online")),
     ("Servizi di ricerca", ("Modelli", "Servizi di ricerca")),
     ("Orchestratore online", ("Modelli", "Orchestratore")),

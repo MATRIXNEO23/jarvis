@@ -231,6 +231,15 @@ Bug segnalato dall'utente 04:04 (foto della tendina Online): «ChatGPT (tuo acco
   3. finestre e impostazioni con tasti e campi sempre visibili anche senza schermo intero (dimensioni giuste e scorrimento), più un controllo automatico che niente esca dal bordo.
 - Alla fine di tutto: restyling completo e coerente delle finestre, poi Lumi.exe (processo unico che Windows vede come «Lumi», non Python, così «passa a Lumi» non si confonde).
 
+## Ripresa 18/11 — build 058, fase A implementata (solo py_compile su Linux)
+- «approfondisci» (comando e pulsante): online va SOLO l'ultima risposta offline («Spiegala meglio e più a fondo»); in chat resta «approfondisci» (flag `TU_SCRITTO` alzato da `submit_deepen`); senza risposta offline «Cosa vuoi approfondire?».
+- Motore: `local_model/motore_processo.imposta_priorita` (ctypes, SetPriorityClass) alta durante `call`, normale a riposo. Contesto: `NativeGemmaBridge._apply_context` riafferma `maxctx`/`args.contextsize` del profilo prima di `load_model`. NOT_TESTED dal vivo: se la KV cache resta 1024 con contesto 800, la causa è nella DLL (arrotondamento) e va riferito all'utente.
+- Meteo: `meteo settimana` (voce breve + 7 giorni in `show_results`), giorno preciso e weekend, stasera/stanotte/domattina, temperatura/vento/umidità/alba e tramonto, pioverà domani?/ombrello/freddo-caldo, «buongiorno Lumi»/«com'è la giornata», «meteo completo»/«dettagli meteo» (anche «a <città>»). Codice: `meteo/dettagli.py`, `service.risposta_estesa`, `commands.parse_command` (tipi «tipo:valore»). Aiuto con «COME USARE IL METEO»; «Meteo» in `command_aliases` (BASE_SECTIONS e ADDON_SECTIONS, quindi in Voce > Personalizzazione comandi e nella pagina dell'add-on); registro: `Meteo.jaddon` 1.1.0 con 5 azioni e controllo identità in `addon_manager`.
+- Finestre: `finestra_adatta.adatta` (agganciata in `window_chrome` alla mappatura di ogni Toplevel): mai oltre l'area utile, minimo = misura del contenuto, tutta nello schermo; le pagine delle impostazioni sono già in tele scorrevoli (canvas). Test `tests/test_058_finestre.py` (1366x768, rilevatore `fuori_area`).
+- GPT (richieste 17/11 05:04 e 04:06): `chatgpt_account` è il GPT dal browser (ponte `gpt_client`), non un servizio a chiave. Tendina Online: «collegato / non collegato» + «Collega» (`MenuModelli(on_connect=…)`, `collega_gpt` in jarvis.py), niente chiave né testo Codex. La pagina «Connessione ChatGPT» è sparita: il riquadro (stato, Connetti/Scollega, Autorizzazioni per funzione) è dentro «Servizi online» (`servizi_online_box.rows`); `impostazioni_menu.MAPPA` senza la voce «GPT dal browser». Test: `test_058_gpt_nella_tendina.py`.
+- Fase B: `docs/PROPOSTA-RIORDINO-058.md` (21 proposte, nessuna applicata). Domande aperte 057 riproposte in c).
+- Test nuovi: `tests/test_058_*.py`; adeguati `test_054_catena_gpt`, `test_056_catena`, `test_055_diagnostica_versione`, `test_056_diagnostica` (build 058).
+
 ## Dopo la 056: pulizia e riordino (richiesta utente 17/11, 16:42)
 Da fare prima di nuove funzioni (navigazione autonoma inclusa):
 - Riordinare menu e impostazioni per sezioni, in modo intuitivo, veloce e completo, senza duplicati né incoerenze.

@@ -17,8 +17,8 @@ class DiagnosticaTests(unittest.TestCase):
             self.assertIn(chiave, corpo)
 
     def test_build_056_nel_workflow_e_nella_descrizione_del_server(self):
-        self.assertIn("--number 057", WORKFLOW)
-        self.assertIn("Lumi-057-PROVA.zip", WORKFLOW)
+        self.assertIn("--number 058", WORKFLOW)
+        self.assertIn("Lumi-058-PROVA.zip", WORKFLOW)
         server = (ROOT / "diagnostica_claude" / "server_mcp.py").read_text(encoding="utf-8")
         self.assertIn("modalità", server)
         self.assertIn("meteo", (ROOT / "diagnostica_claude" / "LEGGIMI.md").read_text(encoding="utf-8"))
