@@ -225,6 +225,8 @@ Bug segnalato dall'utente 04:04 (foto della tendina Online): «ChatGPT (tuo acco
 
 Decisione utente 04:22: accanto alla casella della chat i tasti «Modello ▾» (Automatico + servizi online spuntati) e «Potenza ▾» (Auto/Bassa/Media/Alta, per tutti i servizi online), ben formattati. La catena resta SEMPRE comandi → offline → online con la conferma: il selettore sceglie solo quale servizio usare quando si va online. Niente ragionamento per singolo servizio. Gemini: 30 s in chat, 90 s per l'orchestratore.
 
+Memoria (utente 04:36): da RIPROGETTARE con calma dopo la 058. Non recupera i ricordi e non salva come dovrebbe. Caso visto: i servizi online hanno ripresentato il ricordo «Il mio gatto si chiama Fuffi» (in memoria dal 15/11, frase identica a un test). Idee da discutere, non approvate: l'online salva solo fatti detti dall'utente; un comando «dimentica …» utilizzabile in qualsiasi momento.
+
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
 - 058, riordino:
