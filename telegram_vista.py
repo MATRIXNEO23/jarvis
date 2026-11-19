@@ -8,9 +8,9 @@
   Torna azzurrina quando apri la chat di quel contatto.
 - Clic sull'icona: tendina verticale con i contatti già caricati, ognuno con la sua spunta
   (autorizzato o no, senza ricaricare tutti i contatti), messaggi nuovi e «apri chat»;
-  sotto «Risposte automatiche» e «Gestisci contatti…».
+  «Risposte online» per contatto (spenta di serie), sotto «Risposte automatiche» e «Gestisci contatti…».
 - Nel menu laterale una voce per ogni contatto autorizzato: apre la conversazione a bolle
-  (solo i messaggi passati da Lumi con quel contatto) con «Manda un vocale a …».
+  (solo i messaggi passati da Lumi con quel contatto) e, con la chat aperta, si scrive con Invio dalla casella in basso (invio diretto, senza conferma).
 Le chat personali complete restano fuori (pesanti e accesso a tutto l'account).
 """
 from __future__ import annotations
@@ -65,7 +65,7 @@ class Telegram:
     """Collega icona, tendina e conversazioni a bolle. Tutto sul thread di Tk."""
 
     def __init__(self, root, button, *, workspace, settings, auto_var, contacts,
-                 save_contacts, toggle_auto, open_manager, show_chat, send_voice, ask_text,
+                 save_contacts, toggle_auto, open_manager, show_chat, send_voice, set_online=None,
                  period_ms: int = 5000):
         self.root = root
         self.button = button
@@ -78,7 +78,8 @@ class Telegram:
         self.open_manager = open_manager
         self.show_chat = show_chat          # (titolo, [(intestazione, ruolo, testo)], azione)
         self.send_voice = send_voice        # (peer, nome, testo) -> bool
-        self.ask_text = ask_text
+        self.set_online = set_online        # (peer, bool) -> bool: «Risposte online» del contatto
+        self.aperta = None                  # 061: contatto la cui chat è aperta (invio diretto)
         self.period_ms = period_ms
         self.popup = None
         try:
@@ -140,15 +141,25 @@ class Telegram:
                 ws.mark_telegram_read(contact["id"])
             except Exception:
                 pass
-        self.show_chat("✈ " + contact["name"], items,
-                       ("✎ Manda un vocale a " + contact["name"], lambda: self.scrivi(contact)))
+        self.aperta = contact
+        self.show_chat("✈ " + contact["name"], items, None)
         self.aggiorna(repeat=False)
 
-    def scrivi(self, contact):
-        text = self.ask_text("Telegram", "Messaggio per %s (Lumi lo manda come vocale):" % contact["name"])
-        if text and text.strip():
-            if self.send_voice(contact["id"], contact["name"], text.strip()):
-                self.root.after(4000, lambda: self.apri_chat(contact))
+    def contatto_aperto(self, titolo_attuale: str):
+        """061: il contatto la cui chat è sul video adesso (titolo «✈ nome»), altrimenti None."""
+        c = self.aperta
+        if c is not None and titolo_attuale == "✈ " + c["name"]:
+            return c
+        return None
+
+    def invia_diretto(self, testo: str) -> bool:
+        """061: Invio dalla casella con la chat aperta: parte subito, senza conferma."""
+        c = self.aperta
+        if c is None or not testo.strip():
+            return False
+        if self.send_voice(c["id"], c["name"], testo.strip()):
+            self.root.after(4000, lambda: self.apri_chat(c))
+        return True
 
     def voci_menu(self):
         """Voci per il menu laterale: una per contatto autorizzato."""
@@ -216,6 +227,12 @@ class Telegram:
                            bg=PANEL, fg=TEXT, selectcolor=BG, activebackground=PANEL,
                            anchor="w", font=("Segoe UI", 9)).pack(side="left", fill="x", expand=True)
             if contact.get("enabled"):
+                if self.set_online is not None:
+                    online = tk.BooleanVar(value=contact["id"] in self.settings().get("telegram_online_contacts", ()))
+                    tk.Checkbutton(line, text="Risposte online", variable=online,
+                                   command=lambda c=contact, v=online: self.set_online(c["id"], bool(v.get())),
+                                   bg=PANEL, fg=MUTED, selectcolor=BG, activebackground=PANEL,
+                                   font=("Segoe UI", 8)).pack(side="right")
                 link = tk.Label(line, text="apri chat", bg=PANEL, fg=CYAN, cursor="hand2",
                                 font=("Segoe UI", 8, "underline"))
                 link.pack(side="right", padx=6)

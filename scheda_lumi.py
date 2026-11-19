@@ -17,7 +17,7 @@ PRESENTAZIONE = (
     "Sono Lumi, un'assistente vocale per Windows. Lavoro soprattutto sul tuo PC: capisco i "
     "comandi a voce con un riconoscitore offline, apro e controllo programmi e finestre, "
     "cerco file, metto musica, timer e sveglie, e converso con un modello locale sul PC o, "
-    "se lo colleghi, con GPT. Le azioni le esegue sempre Lumi sul PC, il modello propone.")
+    "con i servizi online che spunti. Le azioni le esegue sempre Lumi sul PC, il modello propone.")
 
 _DOMANDA = re.compile(
     r"\b(?:chi\s+sei|come\s+ti\s+chiami|presentati|parlami\s+di\s+te|cosa\s+sei|che\s+cosa\s+sei|"
@@ -104,7 +104,9 @@ def scheda(info: dict) -> str:
         lines.append("Modello locale: " + (info["modello"] or "scelto nelle impostazioni") + ".")
     else:
         lines.append("Modello locale: spento.")
-    lines.append("GPT: " + ("collegato." if info["online"] else "non collegato."))
+    lines.append("Servizi online: " + ("pronti." if info["online"] else "nessuno pronto (spunta e collega nella lista Online)."))
+    lines.append("Comandi sui modelli: «passa online», «passa offline», «modalità veloce», "
+                 "«modalità basso consumo», «cambia modello»; «aiuto» apre la guida (F1).")
     if info["microfono"]:
         lines.append("Microfono: " + info["microfono"] + ".")
     return "\n".join(lines)[:1500]
@@ -118,7 +120,7 @@ def scheda_breve(info: dict) -> str:
                  if info["locale"] else "Modello locale: spento.")
     if info["addons"]:
         parts.append("Add-on accesi: " + ", ".join(info["addons"][:6]) + ".")
-    parts.append("GPT: " + ("collegato." if info["online"] else "non collegato."))
+    parts.append("Servizi online: " + ("pronti." if info["online"] else "nessuno pronto (spunta e collega nella lista Online)."))
     return " ".join(parts)[:400]
 
 
@@ -173,11 +175,11 @@ def fatti_da(d) -> dict:
                    "conversazione_gpt": "serve «Lumi» prima di ogni comando"}.get(mode.get(), "")
         except Exception:
             mic = ""
-    info = fatti(addons=addons, local_model=model, local_on=local_on,
-                 online=bool(get("active_gpt", False)), mic=mic)
-    info["ids"] = ids
     try:
-        info["servizi_online"] = bool(__import__("servizi_online").disponibili())
+        online = bool(__import__("servizi_online").disponibili())     # 061: solo le spunte della lista Online
     except Exception:
-        info["servizi_online"] = False
+        online = False
+    info = fatti(addons=addons, local_model=model, local_on=local_on, online=online, mic=mic)
+    info["ids"] = ids
+    info["servizi_online"] = online
     return info

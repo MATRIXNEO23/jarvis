@@ -33,7 +33,7 @@ class NativeHudActivityTests(unittest.TestCase):
         self.addCleanup(self.callbacks.doCleanups)
         self.env, _, self.provider = self.callbacks.environment(permissions=False)
         self.env['gemma_session'][0] = self.session
-        self.env['gpt_enabled'].set(False)
+        self.env['gpt_spuntato'].set(False)
 
     def snapshot(self, *, busy):
         # If a future property takes the inference lock, fail in a bounded
@@ -92,7 +92,7 @@ class NativeHudActivityTests(unittest.TestCase):
         self.env.update(get_gemma_session=Mock(return_value=self.session),
                         ask_telegram_gpt=Mock(), telegram_assistant_prompt=telegram_assistant_prompt,
                         telegram_local_prompt=telegram_local_prompt,
-                        telegram_local_messages=telegram_local_messages, settings={"gpt_enabled": False})
+                        telegram_local_messages=telegram_local_messages, settings={})
         reply = self.callbacks.callback('ask_telegram_reply', self.env)
         bridge = SimpleNamespace(is_enabled=lambda: True)
         job = self.active(lambda: reply('Ciao', '', bridge, 123))
@@ -252,7 +252,7 @@ class NativeHudActivityTests(unittest.TestCase):
         self.assertTrue(state['thinking'])
         self.assertTrue(state['reasoning'])
         self.env['gemma_trial_busy'][0] = False
-        self.env['gpt_enabled'].set(True)
+        self.env['gpt_spuntato'].set(True)
         self.env.update(busy_gpt=True, gpt_request_action='typed_conversation')
         self.assertTrue(self.provider()['reasoning'])
         self.env['busy_gpt'] = False

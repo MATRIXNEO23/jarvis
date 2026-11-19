@@ -61,9 +61,9 @@ class LumiCommandsTests(unittest.TestCase):
         done.clear()
         done.append("wake")
         for text, key in (("attiva cervello locale", "brain_local_on"),
-                          ("Lumi, spegni il cervello online", "brain_online_off"),
+                          ("Lumi, spegni il cervello online", "mode_low"),
                           ("cervello locale off", "brain_local_off"),
-                          ("il cervello online on", "brain_online_on")):
+                          ("il cervello online on", "mode_fast")):
             self.assertEqual(l.parse(text), key)
         self.assertTrue(l.handle_text("spegni il computer", lines.append, lines.append))
         self.assertEqual(done, ["wake"])                                 # prima chiede

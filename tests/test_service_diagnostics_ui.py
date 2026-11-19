@@ -55,14 +55,14 @@ class ServiceDiagnosticsUITests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             env=dict(snapshot_runtime_evidence=lambda:collect_runtime_evidence(
-                gpt_enabled=False,gpt_connected=False,sdk_installed=False,node_available=False,
+                gpt_spuntato=False,gpt_connected=False,sdk_installed=False,node_available=False,
                 bridge_file_present=False,bridge_running=False,voice_present=False,
                 voice_mode='standby',voice_listening=False,voice_model_present=False,
                 local_engine_present=False,local_store_present=False,workspace_present=False,
                 workspace_store_present=False,counters=RuntimeEventCounters()),
                 format_runtime_evidence=format_runtime_evidence,Path=Path,
                 gemma_session=[None],memory_enabled=SimpleNamespace(get=lambda:False),
-                gpt_enabled=SimpleNamespace(get=lambda:False),telegram_auto=SimpleNamespace(get=lambda:True),
+                gpt_spuntato=lambda:False,telegram_auto=SimpleNamespace(get=lambda:True),
                 telegram_bridge=None,selected_telegram_contacts=lambda:[],credentials_present=lambda:False,
                 get_gemma_session=Mock(side_effect=AssertionError('must not start model')))
             exec(compile(ast.Module(body=[callback],type_ignores=[]),'settings-report','exec'),env)

@@ -89,6 +89,15 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
                 "ultimo_contesto_online": dict(__import__("contesto_online").ULTIMO),
                 "conferma_token": settings.get("conferma_token"), "servizi": services}
 
+    def prova_servizio(args):
+        """061: prova di UN servizio online nelle tre fasi. Parte in un thread: chiamare di nuovo per l'esito."""
+        import servizi_online
+        ident = str(args.get("servizio", ""))
+        if not ident:
+            return {"ok": False, "errore": "manca «servizio»", "servizi": list(servizi_online.PER_ID)}
+        stato = servizi_online.avvia_prova(ident)
+        return {"ok": stato.get("ok", True), "servizio": ident, **stato}
+
     def ricerca(args):
         """Servizi di ricerca (052): spuntati, con chiave, collegati. Mai la chiave."""
         import servizi_ricerca
@@ -136,5 +145,5 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
                 "risposte_automatiche": bool(view.auto_var.get())}
 
     return {"impostazioni": impostazioni, "addon": addon, "ricordi": ricordi, "chat": chat,
-            "prompt": prompt, "online": online, "telegram": telegram_,
+            "prompt": prompt, "online": online, "prova_servizio": prova_servizio, "telegram": telegram_,
             "ricerca": ricerca, "modelli": modelli}

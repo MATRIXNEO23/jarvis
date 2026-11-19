@@ -33,8 +33,8 @@ def refused(text: str) -> str:
 
 
 # --- «cervello locale» a voce (Gemma/KoboldCpp sul PC) -----------------------------------
-# Come MODELLO: non salvato, a ogni avvio riparte acceso. Il cervello online (GPT e i
-# futuri gratuiti) usa l'interruttore GPT già esistente.
+# Come MODELLO: non salvato, a ogni avvio riparte acceso. Il cervello online segue le spunte
+# della lista Online e la slide Veloce/Basso consumo.
 # Add-on «Modello locale» (Gestisci add-on): jarvis.py registra chi dice se è acceso.
 _ADDON = {"on": lambda: True}
 

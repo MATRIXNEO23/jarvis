@@ -24,7 +24,7 @@ def _funzioni(*names):
 def _env(**extra):
     env = dict(closing=False, voice_mode=SimpleNamespace(get=lambda: "conversation"),
                GPT_CONVERSATION="conversation", CONTINUOUS="continuous",
-               PUSH_TO_TALK="premi_per_parlare", gpt_enabled=SimpleNamespace(get=lambda: True),
+               PUSH_TO_TALK="premi_per_parlare", gpt_spuntato=lambda: True,
                active_gpt=False, busy_gpt=False, try_self_diagnostic=mock.Mock(return_value=False),
                submit_gemma_voice=mock.Mock(return_value=True), run_gpt=mock.Mock(return_value=True),
                documents=SimpleNamespace(current=None), conversation_epoch=1,

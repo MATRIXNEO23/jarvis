@@ -47,7 +47,7 @@ with tempfile.TemporaryDirectory(prefix='jarvis-package-') as temporary:
 from settings import load_settings,save_settings
 with tempfile.TemporaryDirectory() as profile:
  os.environ['JARVIS_TRIAL_HOME']=profile
- settings=load_settings();settings.update(auto_listen=False,gpt_enabled=False,telegram_enabled=False,tts_enabled=False)
+ settings=load_settings();settings.update(auto_listen=False,telegram_enabled=False,tts_enabled=False)
  save_settings(settings)
  original=tk.Tk
  def create(*args,**kwargs):

@@ -146,7 +146,7 @@ class SchedaTest(unittest.TestCase):
 
     def test_scheda_con_dati_veri(self):
         card = scheda_lumi.scheda(self.INFO)
-        for part in ("Controllo PC, Musica", "gemma-3-4b.gguf", "GPT: non collegato", "ascolto continuo"):
+        for part in ("Controllo PC, Musica", "gemma-3-4b.gguf", "Servizi online: nessuno pronto", "ascolto continuo"):
             self.assertIn(part, card)
 
     def test_frasi_pronte_variano_e_dicono_modello_spento(self):

@@ -67,15 +67,14 @@ class ProvaReteTest(unittest.TestCase):
     def test_la_prova_dell_impostazione_usa_le_tre_fasi(self):
         src = (ROOT / "servizi_online" / "__init__.py").read_text(encoding="utf-8")
         corpo = src[src.index("    def test(service):"):src.index("    def move(")]
-        self.assertIn("prova_rete(service)", corpo)
-        self.assertIn("risposta ok in", corpo)
+        self.assertIn("prova_servizio(service.id", corpo)
 
 
 class PacchettoTest(unittest.TestCase):
     def test_l_artifact_carica_la_cartella(self):
         wf = (ROOT / ".github" / "workflows" / "f5n-koboldcpp-native-dll-windows.yml").read_text(encoding="utf-8")
-        self.assertIn("--number 060", wf)
-        self.assertIn("name: lumi-060-prova-candidate", wf)
+        self.assertIn("--number 061", wf)
+        self.assertIn("name: lumi-061-prova-candidate", wf)
         self.assertIn("path: dist/artifact", wf)
         builder = (ROOT / "tools" / "build_jarvis_f5_candidate.py").read_text(encoding="utf-8")
         self.assertIn('"artifact" / f"Lumi-{label}-PROVA"', builder)

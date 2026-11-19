@@ -24,7 +24,7 @@ class ProgramIntegrationTests(unittest.TestCase):
         code="""import os,sys,tkinter as tk
 os.environ['JARVIS_TRIAL_HOME']=sys.argv[1]
 from settings import load_settings,save_settings
-settings=load_settings();settings.update(auto_listen=False,gpt_enabled=False,telegram_enabled=False,tts_enabled=False)
+settings=load_settings();settings.update(auto_listen=False,telegram_enabled=False,tts_enabled=False)
 save_settings(settings)
 original=tk.Tk
 def create(*args,**kwargs):

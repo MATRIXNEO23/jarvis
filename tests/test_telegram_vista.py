@@ -86,7 +86,7 @@ class VistaTest(unittest.TestCase):
             open_manager=lambda: None,
             show_chat=lambda title, items, action: (self.shown.append(title),
                                                     self.bolle.messaggi(title, items, action)),
-            send_voice=lambda *a: True, ask_text=lambda *a: None, period_ms=10 ** 7)
+            send_voice=lambda *a: True, period_ms=10 ** 7)
 
     def tearDown(self):
         self.view.close()

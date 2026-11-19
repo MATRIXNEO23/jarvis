@@ -282,7 +282,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             handle_unanchored_short_reply=lambda _: False,
             maybe_queue_telegram_note=lambda _: False,
             speech_to_local_command=speech_to_local_command, busy_local=False,
-            gpt_enabled=Value(True), active_gpt=True, busy_gpt=False,
+            gpt_spuntato=lambda: True, active_gpt=True, busy_gpt=False,
             gemma_trial_busy=[False],
             start_conversation_gpt=Mock(), submit_local=Mock(),
         )

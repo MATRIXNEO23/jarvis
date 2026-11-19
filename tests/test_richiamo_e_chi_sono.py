@@ -85,7 +85,7 @@ class ChiSonoTest(unittest.TestCase):
                                  local_on=True, online=False)
         text = scheda_lumi.scheda_breve(info)
         self.assertLessEqual(len(text), 400)
-        for part in ("Lumi", "Alberto", "gemma-2-2b.gguf", "Musica", "GPT: non collegato"):
+        for part in ("Lumi", "Alberto", "gemma-2-2b.gguf", "Musica", "Servizi online: nessuno pronto"):
             self.assertIn(part, text)
 
     def test_comandi_resta_l_elenco(self):

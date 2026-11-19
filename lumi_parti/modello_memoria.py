@@ -84,7 +84,7 @@ from sveglia.service import Alarm, parse_command as parse_alarm_clock_command
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
-NOMI = ('draw_diagnostic_meter', 'current_capability_snapshot', 'lumi_brain_local', 'lumi_brain_online')
+NOMI = ('draw_diagnostic_meter', 'current_capability_snapshot', 'lumi_brain_local')
 
 
 def installa(d):
@@ -119,15 +119,6 @@ def installa(d):
             registry=d.addon_capability_registry)
     def lumi_brain_local(value: bool) -> None:
         text = __import__("model_gate").set_local(value)
-        d.write_line("LUMI > " + text)
-        d.speak_result(text)
-    def lumi_brain_online(value: bool) -> None:
-        # Stesso interruttore GPT delle Impostazioni (ChatGPT ora, gratuiti in futuro).
-        if bool(d.gpt_enabled.get()) != value:
-            d.gpt_toggle.invoke()
-        text = "Cervello online " + ("acceso." if d.gpt_enabled.get() else "spento.")
-        if value and not d.gpt_enabled.get():
-            text = "Non riesco ad accendere il cervello online: controlla il collegamento GPT."
         d.write_line("LUMI > " + text)
         d.speak_result(text)
     funzioni = locals()

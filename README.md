@@ -43,7 +43,7 @@ Questa sezione descrive una prova vocale storica. Nel ramo di audit attuale il m
 ## Stato di questa prima base
 
 - [x] Interfaccia minimale delle impostazioni e salvataggio locale.
-- [x] Interruttore GPT acceso di default e spento/riacceso manualmente, con stato persistente.
+- [x] ChatGPT dal browser si usa solo se è spuntato nella lista Online (061: tolto l'interruttore GPT a parte).
 - [x] Modalità standby disponibile e controllabile; **in questo ramo** la preferenza predefinita è ascolto attivo all'avvio.
 - [x] Motore locale a comandi consentiti, con registro attività SQLite (`local_engine.py`). Comandi supportati: `aiuto`, `stato sistema`, `mostra download`, `cerca file NOME` (ricerca limitata a Download), `apri blocco note`, `apri calcolatrice`, `apri esplora file`, `apri download`, `ultimi comandi`. Nessun comando shell arbitrario.
 - [x] Campo comandi testuale integrato nella finestra, con lavoro su thread separato per non bloccare la GUI.
@@ -63,7 +63,7 @@ Questa sezione descrive una prova vocale storica. Nel ramo di audit attuale il m
 3. Verifica che GPT sia connesso. Premi **Pianifica attività**, quindi scrivi, per esempio: `Apri la calcolatrice e controlla quanta RAM ho disponibile`.
 4. Esamina l'anteprima. Premi **Approva ed esegui** solo se i passi corrispondono a ciò che desideri. Puoi usare **Annulla** per scartare il piano prima dell'esecuzione.
 5. Il programma non elimina, scrive o modifica file e non esegue comandi shell attraverso questo pianificatore. Sono supportati solo i comandi già implementati dall'esecutore locale.
-6. Per provare l'arresto: approva un piano innocuo di più passi e premi «Annulla», oppure disattiva GPT o chiudi Jarvis durante l'esecuzione. Verifica che non partano passi successivi. La singola operazione già iniziata può terminare prima che il blocco abbia effetto.
+6. Per provare l'arresto: approva un piano innocuo di più passi e premi «Annulla», oppure togli la spunta a ChatGPT nella lista Online o chiudi Jarvis durante l'esecuzione. Verifica che non partano passi successivi. La singola operazione già iniziata può terminare prima che il blocco abbia effetto.
 
 ## Uso della versione alpha
 

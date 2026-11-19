@@ -65,7 +65,7 @@ class FileRefinementTests(unittest.TestCase):
         def thread(*,target,**kwargs):
             return SimpleNamespace(start=lambda:workers.append(target))
         env=dict(gpt_conversation_session_grant=None,busy_gpt=False,busy_local=False,closing=False,active_gpt=True,
-            gpt_enabled=Value(True),gpt_request_action='',gpt_status=Value(''),
+            gpt_spuntato=lambda: True,gpt_request_action='',gpt_status=Value(''),
             addon_manager=self.manager,engine=self.engine,active_project_id=None,
             documents=SimpleNamespace(current=None),conversation_epoch=7,
             voice_mode=Value(GPT_CONVERSATION),GPT_CONVERSATION=GPT_CONVERSATION,

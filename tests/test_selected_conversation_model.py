@@ -18,7 +18,7 @@ class SelectedConversationModelTests(unittest.TestCase):
         online = Mock(return_value=True)
         env = dict(closing=False, voice_mode=SimpleNamespace(get=lambda: 'conversation'),
                    GPT_CONVERSATION='conversation', CONTINUOUS='continuous', PUSH_TO_TALK='premi_per_parlare',
-                   gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=True,
+                   gpt_spuntato=lambda: True, active_gpt=True,
                    busy_gpt=False, try_self_diagnostic=Mock(return_value=False),
                    submit_gemma_voice=gemma, run_gpt=online, offer_gpt=online,
                    documents=SimpleNamespace(current=None), conversation_epoch=7,
@@ -35,17 +35,6 @@ class SelectedConversationModelTests(unittest.TestCase):
         with __import__('unittest').mock.patch('servizi_online.disponibili', return_value=False):
             env['start_conversation_gpt']('Parliamo della giornata')
         gemma.assert_called_once_with('Parliamo della giornata', typed=False, route='locale')   # 055: nessun «Uso GPT?»
-
-    def test_console_selected_gpt_wins_over_configured_gemma(self):
-        import test_typed_timer_routing as fixture
-        harness = fixture.TypedTimerTests()
-        self.addCleanup(harness.doCleanups)
-        env = harness.environment('Parliamo della giornata')
-        env.update(gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=True,
-                   busy_gpt=False, submit_gpt=Mock())
-        env['send_console_input']()
-        env['submit_gemma_trial'].assert_not_called()
-        env['submit_gpt'].assert_called_once()
 
     def test_conversation_consent_reused_but_other_functions_stay_separate(self):
         import test_activity_status as fixture
@@ -67,68 +56,19 @@ class SelectedConversationModelTests(unittest.TestCase):
         self.assertFalse(run('conversation', prompt='Non inviare'))
         self.assertEqual(workers, [])
 
-    def test_telegram_selected_but_disconnected_does_not_use_local_model(self):
+    def test_telegram_online_contact_does_not_use_local_model(self):
         import test_activity_status as fixture
         fixture.ActivityStatusTests.setUpClass()
         harness = fixture.ActivityStatusTests()
         self.addCleanup(harness.doCleanups)
         env, _, _ = harness.environment()
         env.update(get_gemma_session=Mock(), ask_telegram_gpt=Mock(),
-                   telegram_assistant_prompt=lambda *a: 'prompt', settings={'gpt_enabled': True})
+                   telegram_assistant_prompt=lambda *a: 'prompt', settings={'telegram_online_contacts': [5]},
+                   ask_telegram_online=Mock(return_value=''))
         reply = harness.callback('ask_telegram_reply', env)
-        self.assertEqual(reply('Ciao', '', SimpleNamespace(is_enabled=lambda: True)), '')
+        self.assertEqual(reply('Ciao', '', SimpleNamespace(is_enabled=lambda: True), 5), '')
         env['get_gemma_session'].assert_not_called()
-
-    def test_switch_synonyms_change_existing_toggle_without_model_inference(self):
-        import test_typed_timer_routing as fixture
-        for phrase, selected in [('passa a GPT', True), ('torna a Gemma', False),
-                                 ('usa GPT', True), ('avvia Gemma', False)]:
-            with self.subTest(phrase=phrase):
-                harness = fixture.TypedTimerTests()
-                self.addCleanup(harness.doCleanups)
-                env = harness.environment(phrase)
-                import test_activity_status as callbacks
-                callbacks.ActivityStatusTests.setUpClass()
-                env.update(gpt_enabled=callbacks.Value(not selected), toggle_gpt=Mock(),
-                           closing=False, document_busy=False,
-                           telegram_voice_dialog=SimpleNamespace(pending=False))
-                # Compile new handler only when present, so the baseline really
-                # follows the old console routing instead of a missing symbol.
-                main = next(n for n in ast.parse(Path('jarvis.py').read_text(encoding='utf-8')).body
-                            if isinstance(n, ast.FunctionDef) and n.name == 'main')
-                from test_activity_status import GlobalCallbacks, find_main_function
-                try:
-                    handler = ast.fix_missing_locations(GlobalCallbacks().visit(
-                        find_main_function(main, 'try_model_switch')))
-                except KeyError:
-                    handler = None
-                if handler:
-                    exec(compile(ast.Module(body=[handler],type_ignores=[]),'model-switch','exec'),env)
-                env['send_console_input']()
-                env['toggle_gpt'].assert_called_once()
-                self.assertEqual(env['gpt_enabled'].get(), selected)
-                env['submit_gemma_trial'].assert_not_called()
-
-    def test_switch_mentions_and_negations_do_not_change_selection(self):
-        from voice_control import model_switch_target
-        for text in ('non usare GPT', 'come si attiva GPT?', 'se dico usa Gemma',
-                     'GPT è interessante', 'attiva GPT e apri browser'):
-            self.assertIsNone(model_switch_target(text), text)
-        self.assertTrue(model_switch_target('Lumi, passa a GPT'))
-        self.assertFalse(model_switch_target('Lumi torna a Gemma'))
-
-    def test_console_disconnected_gpt_keeps_selection_and_does_not_use_gemma(self):
-        import test_typed_timer_routing as fixture
-        harness = fixture.TypedTimerTests()
-        self.addCleanup(harness.doCleanups)
-        env = harness.environment('Parliamo ancora')
-        env.update(gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=False,
-                   busy_gpt=False, submit_gpt=Mock())
-        env['send_console_input']()
-        env['submit_gemma_trial'].assert_not_called()
-        env['submit_gpt'].assert_not_called()
-        self.assertTrue(env['gpt_enabled'].get())
-        self.assertIn('non connesso', env['write_line'].call_args.args[0])
+        env['ask_telegram_online'].assert_called_once()
 
     def test_queued_ask_result_and_error_are_discarded_after_model_switch(self):
         import test_activity_status as fixture
@@ -151,27 +91,13 @@ class SelectedConversationModelTests(unittest.TestCase):
                 env['remember_exchange'].assert_not_called()
                 self.assertFalse(env['active_gpt'])
 
-    def test_pending_telegram_dialog_keeps_model_phrase_as_message(self):
-        import test_activity_status as fixture
-        fixture.ActivityStatusTests.setUpClass()
-        harness = fixture.ActivityStatusTests()
-        env = dict(closing=False, document_busy=False, save_only_waiting=False,
-                   doc_dialog=SimpleNamespace(phase='idle'), pending_project_name=False,
-                   pending_project_rename_id=None, pending_project_trash_id=None,
-                   telegram_voice_dialog=SimpleNamespace(pending=True),
-                   gpt_enabled=fixture.Value(False), toggle_gpt=Mock())
-        callback = harness.callback('try_model_switch', env)
-        for text in ('usa GPT', 'torna a Gemma'):
-            self.assertFalse(callback(text))
-        env['toggle_gpt'].assert_not_called()
-
     def test_push_to_talk_can_start_selected_gpt_conversation(self):
         tree = ast.parse(Path('jarvis.py').read_text(encoding='utf-8'))
         main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'main')
         callback = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'start_conversation_gpt')
         env = dict(closing=False, voice_mode=SimpleNamespace(get=lambda: 'premi_per_parlare'),
                    GPT_CONVERSATION='conversation', CONTINUOUS='continuous', PUSH_TO_TALK='premi_per_parlare',
-                   gpt_enabled=SimpleNamespace(get=lambda: True), active_gpt=False,
+                   gpt_spuntato=lambda: True, active_gpt=False,
                    try_self_diagnostic=Mock(return_value=False), submit_gemma_voice=Mock(),
                    offer_gpt=Mock(), write_line=Mock(), speak_result=Mock())
         chain = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == 'conversation_chain')
@@ -219,13 +145,11 @@ class SelectedConversationModelTests(unittest.TestCase):
                 env.update(closing=False, document_busy=False, pending_project_name=False,
                            pending_project_rename_id=None, pending_project_trash_id=None,
                            telegram_voice_dialog=SimpleNamespace(pending=True),
-                           gpt_enabled=callbacks.Value(False), toggle_gpt=Mock(),
                            try_telegram_voice_send=Mock(return_value=True))
-                callbacks.ActivityStatusTests().callback('try_model_switch',env)
                 if channel == 'console':
                     env['send_console_input']()
                 else:
                     harness.receive_voice('Lumi usa GPT')
                 env['try_telegram_voice_send'].assert_called_once_with(
                     'usa GPT' if channel == 'console' else 'usa gpt')
-                env['toggle_gpt'].assert_not_called()
+

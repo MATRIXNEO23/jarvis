@@ -130,8 +130,9 @@ _FIXED = {
     "Timer": (
         "imposta timer {testo}", "timer", "pausa timer", "riprendi timer",
         "quanto manca al timer", "ferma timer", "reset timer", "che ore sono"),
-    "Modelli e GPT": ("passa a GPT", "torna a Gemma", "attiva cervello locale",
-                      "spegni cervello locale", "attiva cervello online", "riavvia il modello", "spegni cervello online"),
+    "Modelli e modalità": ("passa online", "passa offline", "modalità basso consumo", "modalità veloce",
+                           "cambia modello", "attiva cervello locale", "spegni cervello locale",
+                           "riavvia il modello"),
     "Progetti e Telegram": (
         "crea progetto {testo}", "apri progetto {testo}", "elenca progetti",
         "torna alla conversazione generale"),
@@ -183,8 +184,11 @@ DESCRIPTIONS = {
     "ferma timer": "Ferma il timer.",
     "reset timer": "Azzera il timer.",
     "che ore sono": "Dice l'ora.",
-    "passa a GPT": "Usa GPT per voce e chat.",
-    "torna a Gemma": "Usa il modello locale.",
+    "passa online": "Modalità Veloce: risponde il primo servizio online spuntato, il locale è di riserva.",
+    "passa offline": "Modalità Basso consumo: risponde il modello sul PC; online solo se dici sì.",
+    "modalità basso consumo": "Muove la slide su Basso consumo (offline).",
+    "modalità veloce": "Muove la slide su Veloce (online in ordine).",
+    "cambia modello": "Propone i modelli offline delle caselle 1, 2 e 3.",
     "crea progetto {testo}": "Crea un progetto con quel nome.",
     "apri progetto {testo}": "Apre un progetto (anche «progetto Casa»; serve la parola progetto).",
     "elenca progetti": "Mostra i progetti.",
@@ -254,10 +258,8 @@ DESCRIPTIONS = {
     "ingrandisci": "Ingrandisce la finestra in uso.",
     "cosa posso fare qui": "Suggerisce i comandi per questa finestra.",
     "attiva cervello locale": "Le frasi non capite tornano al modello sul PC (Gemma).",
-    "spegni cervello locale": "Niente modello sul PC: solo comandi interni (o GPT se acceso).",
-    "attiva cervello online": "Accende GPT (e in futuro i servizi online gratuiti).",
+    "spegni cervello locale": "Niente modello sul PC: solo comandi interni (o i servizi online spuntati).",
     "riavvia il modello": "Chiude e ricarica il modello locale senza chiudere Lumi (motore separato).",
-    "spegni cervello online": "Spegne GPT: nessuna richiesta online.",
     "riproduci": "Preme Riproduci/Play (scritta, pulsante tondo o Invio).",
     "file successivo": "Elemento dopo (a destra nelle copertine, sotto negli elenchi).",
     "file precedente": "Elemento prima.",
@@ -299,7 +301,7 @@ def describe(command: str) -> str:
 
 
 # Comandi di base (Impostazioni > Personalizzazione comandi).
-BASE_SECTIONS = ("Comandi locali", "Timer", "Meteo", "Modelli e GPT", "Progetti e Telegram", "Memoria")
+BASE_SECTIONS = ("Comandi locali", "Timer", "Meteo", "Modelli e modalità", "Progetti e Telegram", "Memoria")
 # Comandi di un add-on (Gestisci add-on > sezione dell'add-on).
 ADDON_SECTIONS = {"sveglia": "Sveglia", "meteo": "Meteo", "musica": "Musica", "programmi_app": "Programmi e app",
                   "accesso_file": "Accesso file", "controllo_pc": "Controllo PC"}

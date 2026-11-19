@@ -181,11 +181,14 @@ def installa(d):
             d.write_line("MODELLO LOCALE > Add-on spento: il cervello locale non risponde. Se il "
                          "modello era già caricato, la sua memoria si libera al prossimo avvio di Lumi.")
     def refresh_buttons() -> None:
-        can_gpt = d.gpt_enabled.get() and not d.busy_gpt and not d.closing
-        d.connect.configure(state="normal" if can_gpt else "disabled")
-        d.disconnect.configure(state="normal" if can_gpt and d.active_gpt else "disabled")
-        d.ask_button.configure(state="normal" if can_gpt and d.active_gpt else "disabled")
-        d.plan_button.configure(state="normal" if can_gpt and d.active_gpt else "disabled")
+        libero = not d.busy_gpt and not d.closing
+        # 061: collegare/scollegare il ponte non dipende dalla spunta; «Chiedi» e «Piano» usano
+        # il primo servizio online spuntato (qualunque sia).
+        online = libero and bool(__import__("servizi_online").spuntati())
+        d.connect.configure(state="normal" if libero else "disabled")
+        d.disconnect.configure(state="normal" if libero and d.active_gpt else "disabled")
+        d.ask_button.configure(state="normal" if online else "disabled")
+        d.plan_button.configure(state="normal" if online else "disabled")
         d.local_button.configure(state="disabled" if d.busy_local or d.closing else "normal")
     def save_dock_settings() -> None:
         from lumi_avatar import _dock_file, save_dock_options
@@ -199,9 +202,6 @@ def installa(d):
                      ", sempre visibile anche col mouse fermo."))
     def run_understood_command(text: str) -> None:
         # Comando capito dal motore interno: stessi gestori dei comandi diretti.
-        from voice_control import model_switch_target
-        if model_switch_target(text) is not None and d.try_model_switch(text):
-            return
         if d.try_file_command(text) or d.try_program_command(text) or d.try_timer_command(text):
             return
         command = speech_to_local_command(text)

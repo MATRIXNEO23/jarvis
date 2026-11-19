@@ -836,7 +836,7 @@ function New-Object {
              'parse_simple_save':lambda s:None,'project_voice_command':lambda s:projects.append(s) or True,
              'preference_command':lambda s:False,'memory_wipe_command':lambda s:False,'handle_project_reference':lambda s:False,
              'handle_unanchored_short_reply':lambda s:False,'try_self_diagnostic':lambda s:False,
-             'maybe_queue_telegram_note':lambda s:False,'gpt_enabled':SimpleNamespace(get=lambda:False)}
+             'maybe_queue_telegram_note':lambda s:False,'gpt_spuntato':lambda:False}
         exec(compile(ast.Module(body=callbacks,type_ignores=[]),'real-explorer-console-gate','exec'),env)
         env['send_console_input']()
         self.assertEqual(calls[0]['file_call'],('open',{'target':'Foto','scope':'current'}))

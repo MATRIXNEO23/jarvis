@@ -16,7 +16,7 @@ class ClicSimboloTest(unittest.TestCase):
                                  auto_var=tk.BooleanVar(self.root, value=True), contacts=lambda: [],
                                  save_contacts=lambda r: True, toggle_auto=lambda: None,
                                  open_manager=lambda: None, show_chat=lambda *a: None,
-                                 send_voice=lambda *a: True, ask_text=lambda *a: "")
+                                 send_voice=lambda *a: True)
 
     def tearDown(self):
         self.vista.close()

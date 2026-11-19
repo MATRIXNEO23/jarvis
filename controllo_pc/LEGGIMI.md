@@ -16,7 +16,7 @@ nessun servizio residente. Si installa **spento**: Impostazioni > Gestisci add-o
 - «chiama questa finestra lavoro»: dai un nome tuo alla finestra (anche in Configura).
 
 Se la frase non corrisponde a nessuna finestra o elemento aperto, Lumi la lascia
-agli altri comandi (es. «passa a GPT» resta il cambio di modello).
+agli altri comandi (es. «passa online» resta il cambio di modalità).
 
 ## Conferme
 Le prime volte (2, modificabile in Configura) Lumi chiede «sì»; poi ricorda quell'azione

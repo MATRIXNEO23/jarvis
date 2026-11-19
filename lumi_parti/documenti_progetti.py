@@ -217,12 +217,13 @@ def installa(d):
             # interrupted. Nothing will be silently replayed on restart.
             d.finish_project_work(ticket,"interrupted","Piano terminato: "+reason)
     def submit_plan() -> None:
-        if not d.gpt_enabled.get() or not d.active_gpt or d.busy_gpt or d.closing:
+        so = __import__("servizi_online")
+        if not so.spuntati() or d.busy_gpt or d.closing:
             return
         from local_model.online_permissions import authorize_online_request
         open_planner(
-            d.root, d.service, d.engine,
-            lambda: bool(d.gpt_enabled.get() and d.active_gpt and not d.busy_gpt and not d.closing),
+            d.root, so.PonteTesto(), d.engine,
+            lambda: bool(so.spuntati() and not d.busy_gpt and not d.closing),
             d.local_execution_lock, d.planner_abort_event,
             on_approved=journal_plan_approved,
             on_step=journal_plan_step,

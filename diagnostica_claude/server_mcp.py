@@ -53,6 +53,10 @@ STRUMENTI = [
     {"name": "lumi_online",
      "description": "Servizi online in ordine (GPT dal browser compreso): posizione, spunta, chiave o collegamento GPT, quota di oggi e soglie.",
      "op": "online", "props": {}},
+    {"name": "lumi_prova_servizio",
+     "description": ("Prova UN servizio online nelle tre fasi (DNS, connessione/TLS, risposta). Parte in "
+                     "background: richiamare dopo qualche secondo per l'esito."),
+     "op": "prova_servizio", "props": {"servizio": {"type": "string", "description": "id del servizio (vedi lumi_online)"}}},
     {"name": "lumi_ricerca",
      "description": "Servizi di ricerca online (Tavily, Exa, Firecrawl, Linkup): spunta, chiave presente, pronto.",
      "op": "ricerca", "props": {}},

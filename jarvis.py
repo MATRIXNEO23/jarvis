@@ -121,6 +121,18 @@ def main() -> None:
     style.configure("TCombobox", fieldbackground=PANEL, foreground=WHITE)
     style.configure("Vertical.TScrollbar", background=PANEL,
                     troughcolor=BG)
+    # 061: tema Lumi su TUTTE le finestre (meteo, risultati, dialoghi): niente schermate bianche.
+    for _classe in ("Toplevel", "Frame"):
+        root.option_add("*" + _classe + ".background", BG)
+    root.option_add("*Label.background", BG)
+    root.option_add("*Label.foreground", WHITE)
+    style.configure("Treeview", background=PANEL, fieldbackground=PANEL, foreground=WHITE,
+                    bordercolor="#0b4a6b")
+    style.configure("Treeview.Heading", background="#0b344a", foreground=CYAN)
+    style.map("Treeview", background=[("selected", "#124058")], foreground=[("selected", WHITE)])
+    style.map("Treeview.Heading", background=[("active", "#124058")])
+    style.configure("Horizontal.TScrollbar", background=PANEL, troughcolor=BG)
+    style.configure("TSeparator", background="#0b4a6b")
     style.configure("TNotebook", background=BG, borderwidth=0)
     style.configure("TNotebook.Tab", background=PANEL, foreground=CYAN,
                     padding=(13, 8))
@@ -168,7 +180,7 @@ def main() -> None:
         engine=lambda: engine,
         gemma_trial_busy=lambda: gemma_trial_busy,
         goodbye_started=lambda: goodbye_started,
-        gpt_enabled=lambda: gpt_enabled,
+        gpt_spuntato=lambda: gpt_spuntato,
         keep_awake=lambda: keep_awake,
         local_button=lambda: local_button,
         open_project_manager=lambda: open_project_manager,
@@ -199,7 +211,6 @@ def main() -> None:
         timer_volume=lambda: timer_volume,
         toggle_telegram_automatic=lambda: toggle_telegram_automatic,
         try_file_command=lambda: try_file_command,
-        try_model_switch=lambda: try_model_switch,
         try_program_command=lambda: try_program_command,
         try_timer_command=lambda: try_timer_command,
         write_line=lambda: write_line))
@@ -335,14 +346,13 @@ def main() -> None:
         diagnostic_meter=lambda: diagnostic_meter,
         diagnostic_percent=lambda: diagnostic_percent,
         get_gemma_session=lambda: get_gemma_session,
-        gpt_enabled=lambda: gpt_enabled,
-        gpt_toggle=lambda: gpt_toggle,
+        gpt_spuntato=lambda: gpt_spuntato,
         settings=lambda: settings,
         settings_window=lambda: settings_window,
         speak_result=lambda: speak_result,
         voice=lambda: voice,
         write_line=lambda: write_line))
-    (draw_diagnostic_meter, current_capability_snapshot, lumi_brain_local, lumi_brain_online,) = (
+    (draw_diagnostic_meter, current_capability_snapshot, lumi_brain_local,) = (
         _lumi_parti_modello_memoria[n] for n in _lumi_parti_modello_memoria_installa.__globals__['NOMI'])
 
     # 056b: memoria e autorizzazioni GPT stanno UNA sola volta (Memoria generale e Connessione ChatGPT).
@@ -792,8 +802,10 @@ def main() -> None:
             raise RuntimeError("Gemma locale non ancora attivato.")
     chat_transport = ChatTransport(service, _UnavailableNative())
     output_queue: queue.Queue[tuple] = queue.Queue()
-    gpt_enabled = tk.BooleanVar(value=settings["gpt_enabled"])
-    gpt_status = tk.StringVar(value="GPT: inizializzazione" if gpt_enabled.get() else "GPT: disattivato")
+    def gpt_spuntato() -> bool:
+        """061: UNICA fonte = la spunta «ChatGPT dal browser» nella lista Online."""
+        return __import__("servizi_online").spuntato("chatgpt_account")
+    gpt_status = tk.StringVar(value="GPT: inizializzazione" if gpt_spuntato() else "GPT: non spuntato nella lista Online")
     busy_local = False
     busy_gpt = False
     online_consent_pending = False
@@ -808,7 +820,7 @@ def main() -> None:
     __import__("servizi_online").ACCOUNT.update(
         chiedi=lambda prompt, timeout: str(service.call(
             "ask", prompt=prompt, timeout=max(float(timeout), 60.0)).get("text", "")),
-        pronto=lambda: bool(active_gpt) and bool(gpt_enabled.get()),
+        pronto=lambda: bool(active_gpt) and bool(gpt_spuntato()),
         collega=lambda: collega_gpt())
     # 058: un servizio online saltato non è più silenzioso: la riga arriva in chat, console e lumi_errori.
     __import__("servizi_online").AVVISO["scrivi"] = lambda text: root.after(0, lambda: write_line(text))
@@ -987,7 +999,7 @@ def main() -> None:
         document_topic=lambda: document_topic,
         engine=lambda: engine,
         finish_project_work=lambda: finish_project_work,
-        gpt_enabled=lambda: gpt_enabled,
+        gpt_spuntato=lambda: gpt_spuntato,
         handle_document_confirmation=lambda: handle_document_confirmation,
         hud_save_file_button=lambda: hud_save_file_button,
         input_row=lambda: input_row,
@@ -1451,7 +1463,7 @@ def main() -> None:
                     pending_project_reference.reset()
                     return True
                 write_line("LUMI > Riferimento risolto: progetto "+match["name"]+".")
-                if gpt_enabled.get() and active_gpt and not busy_gpt:
+                if gpt_spuntato() and active_gpt and not busy_gpt:
                     # Resume the previous READ-ONLY question in *chat* mode,
                     # never via the executor or an old capability intent.
                     try:
@@ -1590,7 +1602,7 @@ def main() -> None:
         Source inspection stays on its existing isolated worker.
         """
         return collect_runtime_evidence(
-            gpt_enabled=bool(gpt_enabled.get()),
+            gpt_spuntato=bool(gpt_spuntato()),
             gpt_connected=bool(active_gpt),
             sdk_installed=service.installed_sdk().is_file(),
             node_available=bool(shutil.which("node")),
@@ -1637,7 +1649,9 @@ def main() -> None:
         report = format_service_report(evidence, telegram=telegram,
             automatic=bool(telegram_auto.get()), credentials=credentials_present(),
             contacts=len(selected_telegram_contacts()),
-            selected="GPT" if gpt_enabled.get() else "Gemma", gemma=state,
+            online=[__import__("servizi_online").PER_ID[i].nome
+                    for i in __import__("servizi_online").spuntati()
+                    if i in __import__("servizi_online").PER_ID], gemma=state,
             memory=bool(memory_enabled.get()),
             telethon=telethon,
             ffmpeg=shutil.which("ffmpeg") is not None)
@@ -1662,9 +1676,9 @@ def main() -> None:
             write_line("DIAGNOSTICA > Prima esegui l'autodiagnosi locale.")
             speak_result("Prima devo eseguire l'autodiagnosi locale.")
             return True
-        if not gpt_enabled.get() or not active_gpt:
+        if not gpt_spuntato() or not active_gpt:
             write_line("DIAGNOSTICA > Rapporto locale disponibile. "
-                       "Per la valutazione esterna devi collegare GPT.")
+                       "Per la valutazione esterna spunta e collega ChatGPT dal browser nella lista Online.")
             speak_result("Il rapporto locale è pronto, ma GPT non è collegato.")
             return True
         if busy_gpt:
@@ -2044,7 +2058,7 @@ def main() -> None:
 
     def set_telegram_gpt_session(enabled: bool) -> None:
         nonlocal telegram_gpt_session_token
-        telegram_gpt_session_token = object() if enabled and gpt_enabled.get() else None
+        telegram_gpt_session_token = object() if enabled and gpt_spuntato() else None
         telegram_gpt_session_choice.set(telegram_gpt_session_token is not None)
 
     def ask_telegram_gpt(prompt: str, bridge: TelegramBridge) -> str:
@@ -2085,15 +2099,27 @@ def main() -> None:
         except (GPTUnavailable, OSError, RuntimeError):
             return ""
 
+    def ask_telegram_online(prompt: str, bridge: TelegramBridge) -> str:
+        """061: «Risposte online» del contatto: il primo servizio online spuntato nella lista."""
+        from local_model.online_permissions import authorize_online_request
+        so = __import__("servizi_online")
+        if not so.disponibili():
+            output_queue.put(("telegram_status", "Telegram: risposte online accese per questo "
+                              "contatto, ma nessun servizio online è pronto (lista Online)."))
+            return ""
+        if authorize_online_request("telegram.compose", confirmed=True) is None:
+            return ""
+        nome, testo = so.chiedi([{"role": "user", "content": prompt}])
+        if nome is None or not bridge.is_enabled():
+            return ""
+        return str(testo)
+
     def ask_telegram_reply(message, context, bridge, peer_id=None):
         if not bridge.is_enabled():
             return ""
-        if settings["gpt_enabled"]:
-            if not telegram_gpt_ready.is_set():
-                output_queue.put(("telegram_status",
-                                  "Telegram: GPT selezionato ma non connesso. Nessuna risposta locale sostitutiva."))
-                return ""
-            return ask_telegram_gpt(telegram_assistant_prompt(message, context), bridge)
+        # 061: di serie le risposte automatiche sono OFFLINE; online solo per i contatti spuntati.
+        if peer_id in settings.get("telegram_online_contacts", ()):
+            return ask_telegram_online(telegram_assistant_prompt(message, context), bridge)
         local_epoch = conversation_epoch
         try:
             session = get_gemma_session()
@@ -2102,7 +2128,7 @@ def main() -> None:
             # 9/11: last 3 exchanges as real turns, short replies.
             answer = session.ask_isolated_messages(
                 lambda pairs: telegram_local_messages(message, context, profile, pairs))
-            return answer if (bridge.is_enabled() and not settings["gpt_enabled"]
+            return answer if (bridge.is_enabled()
                               and local_epoch == conversation_epoch) else ""
         except (OSError, ValueError, RuntimeError) as exc:
             if bridge.is_enabled():
@@ -2203,7 +2229,7 @@ def main() -> None:
         nonlocal active_gpt, conversation_epoch
         connected = state.get("status") == "connected" and state.get("sharing") is True
         active_gpt = connected
-        if connected and gpt_enabled.get():
+        if connected and gpt_spuntato():
             telegram_gpt_ready.set()
         else:
             telegram_gpt_ready.clear()
@@ -2212,11 +2238,10 @@ def main() -> None:
             pending_conversation.clear()
             doc_dialog.revoke_pending()
             planner_abort_event.set()
-        if not gpt_enabled.get():
-            gpt_status.set("GPT: disattivato manualmente")
-        elif connected:
+        if connected:
             label = state.get("profileLabel") or "account ChatGPT"
-            gpt_status.set(f"GPT: connesso ({str(label)[:50]})")
+            gpt_status.set(f"GPT: connesso ({str(label)[:50]})"
+                           + ("" if gpt_spuntato() else "; spuntalo nella lista Online per usarlo"))
         elif state.get("status") == "reauth_required":
             gpt_status.set("GPT: autenticazione scaduta. Effettua nuovamente il login.")
         else:
@@ -2227,7 +2252,7 @@ def main() -> None:
     def confirm_gpt_inference(detail: str) -> bool:
         """055: niente finestra Sì/No. Il consenso si chiede a voce e in chat («sì»/«no» senza
         «Lumi»); con il consenso già dato in questa conversazione risponde True subito."""
-        if closing or busy_gpt or not gpt_enabled.get() or not active_gpt:
+        if closing or busy_gpt or not __import__("servizi_online").spuntati():
             return False
         # 055: epoca del consenso a voce, tenuta sulla funzione (nessuna variabile condivisa)
         if getattr(confirm_gpt_inference, "consent_epoch", None) == conversation_epoch:
@@ -2249,7 +2274,9 @@ def main() -> None:
                 consent_detail="La richiesta e il contesto disponibile.", **params) -> bool:
         nonlocal busy_gpt, gpt_request_action, active_gpt, conversation_epoch
         nonlocal gpt_conversation_session_grant
-        if busy_gpt or not gpt_enabled.get() or closing:
+        # 061: il collegamento (status/sign_in/disconnect) non dipende dalla spunta; le domande sì.
+        if busy_gpt or closing or (action in ("ask", "conversation", "typed_conversation")
+                                   and not gpt_spuntato()):
             return False
         from model_gate import enabled as model_enabled
         if not model_enabled():
@@ -2370,11 +2397,6 @@ def main() -> None:
             chat_is_visible = chat_notebook.select() == str(chat_local_tab)
         except NameError:
             chat_is_visible = False
-        if chat_is_visible and gpt_enabled.get():
-            chat_sessions_panel.report_error(
-                "GPT online non è collegato alle chat isolate F2. Disattiva GPT.")
-            write_line("CHAT > Non ho inviato il messaggio a GPT: istanza locale isolata.")
-            return
         # 056: una sola catena (Basso consumo: offline subito; Veloce: online in ordine).
         conversation_chain(spoken, False)
 
@@ -2471,39 +2493,10 @@ def main() -> None:
             write_line("LUMI > " + text)
             speak_result(text)
 
-    def toggle_gpt() -> None:
-        nonlocal active_gpt, conversation_epoch, gpt_conversation_session_grant
-        previous = settings["gpt_enabled"]
-        try:
-            settings["gpt_enabled"] = bool(gpt_enabled.get())
-            save_settings(settings)
-        except (OSError, ValueError) as exc:
-            settings["gpt_enabled"] = previous
-            gpt_enabled.set(previous)
-            messagebox.showerror("Impossibile salvare", str(exc), parent=root)
-            return
-        # Revoke queued replies from the previous selected model on either switch.
-        conversation_epoch += 1
-        pending_conversation.clear()
-        if gpt_enabled.get():
-            gpt_status.set("GPT: attivo nelle impostazioni; controllo collegamento...")
-            run_gpt("status")
-        else:
-            gpt_conversation_session_grant = None
-            set_telegram_gpt_session(False)
-            doc_dialog.revoke_pending()
-            planner_abort_event.set()
-            active_gpt = False
-            telegram_gpt_ready.clear()
-            gpt_status.set("GPT: disattivato manualmente")
-            threading.Thread(target=service.stop, daemon=True).start()
-            refresh_buttons()
-
     def collega_gpt() -> None:
-        """058: «Collega» della tendina Online: accende il GPT dal browser (stesso ponte di prima)."""
-        gpt_enabled.set(True)
+        """«Collega» della lista Online: controlla il collegamento del ponte del browser (come prima)."""
         write_line("GPT > Collego il tuo account ChatGPT dal browser…")
-        toggle_gpt()
+        run_gpt("status")
 
     # Conversazione con il modello locale (Gemma/KoboldCpp): spostato in local_model/conversazione_lumi.py (divisione di jarvis.py).
     from local_model.conversazione_lumi import installa as _local_model_conversazione_lumi_installa
@@ -2534,7 +2527,7 @@ def main() -> None:
         gemma_source=lambda: gemma_source,
         gemma_trial_busy=lambda: gemma_trial_busy,
         gemma_trial_queue=lambda: gemma_trial_queue,
-        gpt_enabled=lambda: gpt_enabled,
+        gpt_spuntato=lambda: gpt_spuntato,
         memory_enabled=lambda: memory_enabled,
         pending_project_name=lambda: pending_project_name,
         pending_project_reference=lambda: pending_project_reference,
@@ -2548,12 +2541,11 @@ def main() -> None:
         speak_result=lambda: speak_result,
         submit_local=lambda: submit_local,
         telegram_voice_dialog=lambda: telegram_voice_dialog,
-        toggle_gpt=lambda: toggle_gpt,
         try_program_command=lambda: try_program_command,
         try_telegram_voice_send=lambda: try_telegram_voice_send,
         workspace=lambda: workspace,
         write_line=lambda: write_line))
-    (try_model_switch, dispatch_model_capability, get_gemma_session, try_gemma_app_followup, native_memory_request, submit_gemma_voice, submit_gemma_trial, poll_gemma_trial,) = (
+    (dispatch_model_capability, get_gemma_session, try_gemma_app_followup, native_memory_request, submit_gemma_voice, submit_gemma_trial, poll_gemma_trial,) = (
         _local_model_conversazione_lumi[n] for n in _local_model_conversazione_lumi_installa.__globals__['NOMI'])
 
     def toggle_memory() -> None:
@@ -2705,11 +2697,6 @@ def main() -> None:
     gpt_panel = ttk.LabelFrame(servizi_online_box,
                                 text="ChatGPT dal browser: collegamento", padding=8)
     gpt_panel.pack(fill="x", padx=8, pady=(4, 6), after=servizi_online_box.rows)
-    gpt_toggle = ttk.Checkbutton(
-        gpt_panel, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
-        variable=gpt_enabled, command=toggle_gpt
-    )
-    gpt_toggle.pack(anchor="w")
     ttk.Label(gpt_panel, textvariable=gpt_status, wraplength=630).pack(anchor="w", pady=(5, 6))
 
     gpt_buttons = ttk.Frame(gpt_panel)
@@ -2836,7 +2823,7 @@ def main() -> None:
             speaking=speaker.is_speaking(),
             busy=busy_local or document_busy,
             thinking=bool(gemma_trial_busy[0] or (session is not None and session.is_busy)
-                          or (busy_gpt and gpt_enabled.get())),
+                          or (busy_gpt and gpt_spuntato())),
             mic_on=voice.is_listening(),
             always_listening=voice_mode.get() in (CONTINUOUS, PUSH_TO_TALK),
             armed=time.monotonic() < wake_gate.armed_until)
@@ -3396,7 +3383,7 @@ def main() -> None:
 
     def start_file_refinement(token, original, *, answer='') -> bool:
         """One model interpretation of an unresolved, locally scoped request."""
-        if (closing or busy_gpt or not gpt_enabled.get() or not active_gpt
+        if (closing or busy_gpt or not gpt_spuntato() or not active_gpt
                 or addon_manager is None or not addon_manager.files_enabled()):
             write_line("FILE > Nessun risultato utile; raffinamento GPT non disponibile. Puoi precisare la ricerca.")
             return False
@@ -3626,7 +3613,7 @@ def main() -> None:
         if try_self_diagnostic(message):
             request.set("")
             return
-        if not gpt_enabled.get() or busy_gpt:
+        if busy_gpt:
             return
         reconcile_document_session(force=True)
         if project_voice_command(message):
@@ -3914,9 +3901,6 @@ def main() -> None:
                         if route_type == "dictation":
                             sync_dictation_ui(dictation.insert(spoken))
                             continue
-                        from voice_control import model_switch_target
-                        if model_switch_target(spoken) is not None and try_model_switch(spoken):
-                            continue
                         if voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
                             write_line("TU > " + spoken)
                             __import__("richiamo").registra(spoken)
@@ -3996,7 +3980,7 @@ def main() -> None:
                                 else:
                                     write_line("Motore locale occupato: riprova.")
                             else:
-                                if not gpt_enabled.get() and gemma_trial_busy[0]:
+                                if gemma_trial_busy[0]:
                                     write_line("LUMI > Sto ancora elaborando. "
                                                "Ripeti la frase al termine.")
                                 else:
@@ -4118,7 +4102,7 @@ def main() -> None:
                             write_line("ACCESSO FILE > Vista non disponibile: "+str(exc)+
                                        ". Reinstalla file_access/ui.py dal pacchetto completo.")
                         if result.explain:
-                            if gpt_enabled.get() and active_gpt and not busy_gpt:
+                            if gpt_spuntato() and active_gpt and not busy_gpt:
                                 from file_access.service import explanation_prompt
                                 run_gpt("ask",prompt=explanation_prompt(result.preview),
                                         source="Spiega il file letto su mia richiesta",
@@ -4278,7 +4262,7 @@ def main() -> None:
                     if (epoch == conversation_epoch and
                             (channel=="typed_conversation" or
                              voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK)) and
-                            gpt_enabled.get() and active_gpt):
+                            gpt_spuntato() and active_gpt):
                         try:
                             latest=current_capability_snapshot(documents.current is not None)
                             intent = parse_conversation_intent(
@@ -4377,7 +4361,7 @@ def main() -> None:
                     busy_gpt = False
                     if action == "ask" and len(rest) > 1 and rest[1] != conversation_epoch:
                         continue
-                    if gpt_enabled.get():
+                    if gpt_spuntato():
                         if action == "ask":
                             # Ricordi decisi da GPT (riga [[RICORDO|…]]): tolti e salvati.
                             result["text"], found_memories = __import__("ricordi").estrai(
@@ -4431,7 +4415,7 @@ def main() -> None:
                     if action == "ask" and request_epoch and request_epoch[0] != conversation_epoch:
                         continue
                     active_gpt = False if action != "ask" else active_gpt
-                    if gpt_enabled.get():
+                    if gpt_spuntato():
                         gpt_status.set("GPT: collegamento non disponibile o richiesta fallita.")
                         write_line("GPT: " + str(reason))
                 refresh_buttons()
@@ -4456,10 +4440,10 @@ def main() -> None:
                     active_gpt = False
                     telegram_gpt_ready.clear()
                     planner_abort_event.set()
-                    if gpt_enabled.get():
+                    if gpt_spuntato():
                         gpt_status.set("GPT: modulo non pronto.")
                         write_line("GPT: " + str(event.get("error", "errore")))
-                elif event.get("event") == "stopped" and gpt_enabled.get() and not busy_gpt:
+                elif event.get("event") == "stopped" and gpt_spuntato() and not busy_gpt:
                     conversation_epoch += 1
                     planner_abort_event.set()
                     active_gpt = False
@@ -4472,7 +4456,7 @@ def main() -> None:
         # while GPT is processing. Do not forward it after mode/logout changes,
         # and never process it during a pending document-save decision.
         if (voice_mode.get() != GPT_CONVERSATION or not active_gpt
-                or not gpt_enabled.get()):
+                or not gpt_spuntato()):
             pending_conversation.clear()
         elif (pending_conversation and not busy_gpt and not busy_local
               and not document_busy
@@ -4503,6 +4487,12 @@ def main() -> None:
         message=request.get().strip()
         if not message:
             return
+        # 061: con la chat di un contatto Telegram aperta, Invio manda subito il messaggio a lui.
+        _aperto = (telegram_view.contatto_aperto(chat_menu.title.get())
+                   if chat_menu is not None else None)
+        if _aperto is not None and telegram_view.invia_diretto(message):
+            request.set("")
+            return "break"
         __import__("richiamo").registra(message)
         try:
             chat_is_visible = chat_notebook.select() == str(chat_local_tab)
@@ -4513,10 +4503,6 @@ def main() -> None:
             show_help()
             request.set("")
             return "break"
-        from voice_control import model_switch_target
-        if model_switch_target(message) is not None and try_model_switch(message):
-            request.set("")
-            return
         reconcile_document_session(force=True)
         if try_telegram_voice_send(message):
             request.set("")
@@ -4605,27 +4591,11 @@ def main() -> None:
             speak_result(own_reply[1])
             request.set("")
             return
-        # «Ragiona online» va ai servizi online anche col GPT acceso (prova 16/11).
-        if gpt_enabled.get() and __import__("servizi_online").forza_online(message)[0]:
+        # «Ragiona online» va ai servizi online (prova 16/11).
+        if __import__("servizi_online").forza_online(message)[0]:
             submit_gemma_trial()
             return
-        # F2 chat instances are Gemma-only. Never transmit their private
-        # message to GPT silently; other existing console routes stay intact.
-        if chat_is_visible and gpt_enabled.get():
-            chat_sessions_panel.report_error(
-                "Chat isolate F2: disattiva GPT per usare il modello offline.")
-            write_line("CHAT > Chat isolate: disattiva GPT per parlare con Gemma.")
-            return
-        # Selection is distinct from connection and local model configuration.
-        if gpt_enabled.get():
-            if not active_gpt:
-                write_line("GPT > GPT selezionato ma non connesso. Connetti ChatGPT nelle impostazioni.")
-            elif busy_gpt:
-                write_line("GPT > Sto già elaborando. Attendi la risposta.")
-            else:
-                submit_gpt()
-            return
-        # GPT is explicitly off: use the configured local model.
+        # 061: niente interruttore GPT/Gemma: la chat segue sempre la catena (spunte della lista Online).
         from local_model.native_config import NativeModelConfig
         from local_model.native_settings import default_native_settings_path
         native_path = default_native_settings_path()
@@ -4643,7 +4613,7 @@ def main() -> None:
                 "Nessun GGUF locale pronto. Scegli un modello in Impostazioni > Modelli.")
             write_line("CHAT > Nessun modello locale configurato.")
             return
-        if gpt_enabled.get() and active_gpt:
+        if __import__("servizi_online").disponibili():
             if busy_gpt:
                 write_line("LUMI > Sto già elaborando. Attendi la risposta.")
                 return
@@ -4685,6 +4655,15 @@ def main() -> None:
         return True
 
     hud.set_mode_handler(save_mode)
+
+    def imposta_modalita(modo: str) -> None:
+        """061: «passa online/offline», «modalità veloce/basso consumo»: muovono la slide."""
+        nome = "Veloce" if modo == "veloce" else "Basso consumo"
+        if settings.get("modalita") != modo:
+            hud.mode_slide.scegli(modo)
+        text = ("Modalità " + nome + ".") if settings.get("modalita") == modo else "Non riesco a cambiare modalità."
+        write_line("LUMI > " + text)
+        speak_result(text)
     hud.mode_slide.imposta(settings.get("modalita", "basso_consumo"))
     # Menu «ONLINE ▾» accanto a GPT (15/11 sera): servizi online, spunte e quote.
     # 055: al posto dell'interruttore RICERCA ON/OFF, tendina «RICERCA ▾» con i servizi di
@@ -4709,6 +4688,19 @@ def main() -> None:
     # voce per contatto nel menu laterale.
     telegram_button = hud.add_quick_button("telegram", "Telegram", lambda: None, after="memory", simbolo="telegram")
 
+    def set_telegram_online(peer_id: int, value: bool) -> bool:
+        """061: «Risposte online» per contatto, spenta di serie; salvata senza fermare le risposte."""
+        elenco = set(settings.get("telegram_online_contacts", ()))
+        (elenco.add if value else elenco.discard)(peer_id)
+        nuovo = sorted(elenco)
+        try:
+            save_settings({**settings, "telegram_online_contacts": nuovo})
+        except (OSError, ValueError) as exc:
+            write_line("TELEGRAM > Impostazione non salvata: " + str(exc)[:120])
+            return False
+        settings["telegram_online_contacts"] = nuovo
+        return True
+
     def show_telegram_chat(title, items, action) -> None:
         chat_bubbles.messaggi(title, items, action)
         if chat_menu is not None:
@@ -4719,8 +4711,7 @@ def main() -> None:
         auto_var=telegram_auto, contacts=selected_telegram_contacts,
         save_contacts=save_telegram_contact_selection, toggle_auto=toggle_telegram_automatic,
         open_manager=open_telegram_contact_list, show_chat=show_telegram_chat,
-        send_voice=send_owner_telegram_voice,
-        ask_text=lambda title, prompt: simpledialog.askstring(title, prompt, parent=root))
+        send_voice=send_owner_telegram_voice, set_online=set_telegram_online)
     if chat_menu is not None:
         chat_menu.extra = telegram_view.voci_menu
 
@@ -4938,17 +4929,16 @@ def main() -> None:
         "mic_enabled": voice.is_listening(),
         "mic_selected": voice_mode.get() != STANDBY,
         "mic_push_to_talk": voice_mode.get() == PUSH_TO_TALK,
-        "gpt_enabled": gpt_enabled.get(),
         "reasoning": (gemma_trial_busy[0] or
                       (gemma_session[0] is not None and gemma_session[0].is_busy) or
-                      (busy_gpt and gpt_enabled.get() and
+                      (busy_gpt and gpt_spuntato() and
                        gpt_request_action in ("ask", "conversation", "typed_conversation"))),
         "searching": (busy_local and engine.file_access is not None and
                       engine.file_access._progress_active and
                       not engine.file_access.cancelled.is_set()),
         "thinking": (gemma_trial_busy[0] or
                      (gemma_session[0] is not None and gemma_session[0].is_busy) or
-                     (busy_gpt and gpt_enabled.get()) or busy_local or document_busy),
+                     (busy_gpt and gpt_spuntato()) or busy_local or document_busy),
         "connected": active_gpt,
         "memory": memory_enabled.get(),
         "orbit_nodes": orbit_nodes_cache,
@@ -5130,7 +5120,7 @@ def main() -> None:
         nonlocal conversation_epoch
         session = gemma_session[0]
         model_busy = bool(gemma_trial_busy[0] or (session is not None and session.is_busy))
-        gpt_waiting = bool(busy_gpt and gpt_enabled.get())
+        gpt_waiting = bool(busy_gpt and gpt_spuntato())
         if not (speaker.is_speaking() or model_busy or gpt_waiting):
             return False
         speaker.interrupt()
@@ -5266,7 +5256,7 @@ def main() -> None:
          # Orchestratore: «uso l'online per questa richiesta?» e permessi dei passi.
          "orch_once": lambda: resume_orchestrated("online"),
          "orch_always": lambda: (__import__("orchestratore").SESSIONE.update(sempre=True),
-                                 write_line("ONLINE > Online attivo finché non spegni il cervello online."),
+                                 write_line("ONLINE > Online attivo finché non dici «passa offline»."),
                                  resume_orchestrated("online")),
          "orch_local": lambda: resume_orchestrated("locale"),
          "ricerca_yes": lambda: resume_ricerca(True),
@@ -5287,8 +5277,9 @@ def main() -> None:
              else "Non ci sono allegati.")),
          "brain_local_on": lambda: lumi_brain_local(True),
          "brain_local_off": lambda: lumi_brain_local(False),
-         "brain_online_on": lambda: lumi_brain_online(True),
-         "brain_online_off": lambda: lumi_brain_online(False)},
+         "mode_fast": lambda: imposta_modalita("veloce"),
+         "mode_low": lambda: imposta_modalita("basso_consumo"),
+         "help_open": lambda: show_help()},
         lambda: root.state() == "iconic" or avatar_dock.user_hidden)
     settings_window.bind("<Escape>", lambda _event: settings_window.withdraw())
     root.bind("<Control-comma>", lambda _event: show_settings())
@@ -5343,7 +5334,7 @@ def main() -> None:
     root.after(700, flush_internal_console)
     if telegram_auto.get():
         root.after(1400,toggle_telegram_automatic)
-    if gpt_enabled.get():
+    if gpt_spuntato():
         root.after(200, lambda: run_gpt("status"))
     power.start()
     try:

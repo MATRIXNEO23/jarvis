@@ -14,7 +14,7 @@ Dal 15/11 sera (`strumenti.py`): vedere e aprire le impostazioni in una categori
 (`lumi_impostazioni`), vedere e accendere/spegnere gli add-on (`lumi_addon`), leggere i
 ricordi (`lumi_ricordi`) e le chat con i simboli 🤖/📡 e gli ultimi scambi (`lumi_chat`).
 In più: `lumi_prova_comando` con «attendi» aspetta e restituisce la risposta; `lumi_prompt`
-cattura il prossimo prompt di Gemma (sezioni e token); `lumi_online` (servizi, chiavi, quote);
+cattura il prossimo prompt di Gemma (sezioni e token); `lumi_online` (servizi, chiavi, quote); `lumi_prova_servizio` (prova un servizio in DNS, connessione/TLS e risposta; parte in background, richiamarla per l'esito);
 `lumi_telegram` (icona, colore, risposte automatiche).
 Dal 17/11 (052): `lumi_ricerca` (servizi di ricerca: spunta, chiave presente, pronto; mai la chiave) e
 `lumi_modelli` (i .gguf che «cambia modello» elenca e quello in uso). «cerca online …», «chiudi i

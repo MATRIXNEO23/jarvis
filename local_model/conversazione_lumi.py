@@ -84,7 +84,7 @@ from sveglia.service import Alarm, parse_command as parse_alarm_clock_command
 from voice_control import (VoiceController, WakeWordGate, STANDBY, PUSH_TO_TALK, CONTINUOUS,
                            GPT_CONVERSATION, speech_to_local_command)
 
-NOMI = ('try_model_switch', 'dispatch_model_capability', 'get_gemma_session', 'try_gemma_app_followup', 'native_memory_request', 'submit_gemma_voice', 'submit_gemma_trial', 'poll_gemma_trial')
+NOMI = ('dispatch_model_capability', 'get_gemma_session', 'try_gemma_app_followup', 'native_memory_request', 'submit_gemma_voice', 'submit_gemma_trial', 'poll_gemma_trial')
 
 
 # 056b: il chiamante che ha già mostrato il messaggio scritto alza il flag mentre
@@ -96,25 +96,6 @@ def installa(d):
     """Crea le funzioni per questa esecuzione di Lumi; restituisce {nome: funzione}."""
     # «Cosa puoi fare?»: dati veri (add-on accesi, servizi online) letti al momento.
     __import__("scheda_lumi").FONTE["fatti"] = lambda: __import__("scheda_lumi").fatti_da(d)
-    def try_model_switch(spoken: str) -> bool:
-        from voice_control import model_switch_target
-        selected = model_switch_target(spoken)
-        if (selected is None or d.closing or d.document_busy or d.save_only_waiting
-                or d.doc_dialog.phase.startswith("awaiting_")
-                or d.doc_dialog.phase == "executing" or d.pending_project_name
-                or d.pending_project_rename_id is not None
-                or d.pending_project_trash_id is not None
-                or d.telegram_voice_dialog.pending):
-            return False
-        if bool(d.gpt_enabled.get()) != selected:
-            d.gpt_enabled.set(selected)
-            d.toggle_gpt()
-        # toggle_gpt restores the old setting if persistence fails.
-        model = "GPT" if d.gpt_enabled.get() else "Gemma"
-        message = "Modello selezionato: " + model + "."
-        d.write_line("LUMI > " + message)
-        d.speak_result(message)
-        return True
     def dispatch_model_capability(cap, original_phrase, doc_snapshot, refinement_token=None):
         """Shared validated capability dispatch for online and native replies."""
         current_id = (d.documents.current.ident

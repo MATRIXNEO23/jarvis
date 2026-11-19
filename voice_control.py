@@ -452,14 +452,3 @@ class VoiceController:
                            and self._generation != generation)
             if restart:
                 self._start_continuous()
-
-
-
-def model_switch_target(text: str):
-    """Explicit full-phrase model selection; mentions/negations do not switch."""
-    text = ' '.join(str(text).casefold().strip(' .!?').split())
-    text = re.sub(r'^(?:(?:ehi|hey|ok)\s+)?lumi[\s,:;-]+', '', text)
-    match = re.fullmatch(
-        r'(?:passa(?:mi)?\s+a|torna\s+a|usa|utilizza|attiva|avvia)\s+'
-        r'(?:il\s+modello\s+)?(gpt|chat\s*gpt|gemma)(?:\s+per favore)?', text)
-    return None if match is None else match.group(1) != 'gemma'

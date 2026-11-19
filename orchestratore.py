@@ -2,7 +2,7 @@
 
 Quando si accende:
 - I comandi base restano a Lumi, offline, come sempre (le regole vengono prima).
-- Con il «cervello online» acceso (comando che c'è già) e almeno un servizio online con
+- Con il «cervello online» acceso e almeno un servizio online con
   la chiave, una richiesta che le regole non capiscono fa chiedere a Lumi: «Uso l'online
   per questa richiesta? Di' sì, no, oppure "sempre"». «Sempre» vale finché non spegni il
   cervello online (o chiudi Lumi).
@@ -449,7 +449,7 @@ def costruisci_sezione(parent, notify, *, ask_folder=None, path: Path | None = N
     box = ttk.LabelFrame(parent, text="Orchestratore online: cartelle sicure")
     box.pack(fill="x", padx=8, pady=8)
     ttk.Label(box, wraplength=540, text=(
-        "Con il cervello online acceso Lumi può far fare al modello online richieste a più "
+        "Con almeno un servizio online spuntato Lumi può far fare al modello online richieste a più "
         "passi. Qui dentro può leggere e scrivere da solo; altrove e per i comandi chiede il "
         "tuo sì. Il codice Python gira solo nella prima cartella, dopo che hai visto lo "
         "script e detto sì. Non cancella mai file.")).pack(anchor="w", padx=8, pady=5)

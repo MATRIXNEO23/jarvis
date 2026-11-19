@@ -57,6 +57,23 @@ def _account_pronto() -> bool:
         return False
 
 
+class PonteTesto:
+    """061: Piano e perfezionamenti usano il primo servizio online spuntato. Ha la stessa
+    forma del ponte GPT (call("ask", prompt=…, authorize_send=…) -> {"text": …})."""
+
+    def call(self, action, *, prompt="", timeout=180, authorize_send=None, **_ignorati):
+        def ok():
+            return authorize_send is None or authorize_send()
+        if not ok():
+            raise PermissionError("Autorizzazione revocata.")
+        nome, testo = chiedi([{"role": "user", "content": prompt}], timeout=float(timeout))
+        if nome is None:
+            raise RuntimeError("Nessun servizio online ha risposto: " + "; ".join(map(str, testo))[:200])
+        if not ok():
+            raise PermissionError("Autorizzazione revocata.")
+        return {"text": testo, "servizio": nome}
+
+
 def _testo_unico(messages) -> str:
     """Il ponte GPT riceve un testo solo: istruzioni, cronologia e domanda in fila."""
     names = {"system": "ISTRUZIONI", "user": "UTENTE", "assistant": "LUMI", "tool": "STRUMENTO"}
@@ -153,6 +170,27 @@ def carica_impostazioni(path: Path | None = None) -> dict:
     if not 500 <= data["conferma_token"] <= 1_000_000:
         data["conferma_token"] = 8000
     return data
+
+
+_SPUNTE = {"firma": None, "attivi": ()}
+
+
+def spuntati(path: Path | None = None) -> tuple:
+    """061: l'UNICA fonte per sapere quali servizi online sono in uso = le spunte nella lista
+    Online. Rilegge il file solo se è cambiato (si chiama spesso, anche a ogni giro dell'interfaccia)."""
+    path = path or _cartella() / "servizi_online.json"
+    try:
+        stato = path.stat()
+        firma = (str(path), stato.st_mtime_ns, stato.st_size)
+    except OSError:
+        firma = (str(path), None, None)
+    if _SPUNTE["firma"] != firma:
+        _SPUNTE.update(firma=firma, attivi=tuple(carica_impostazioni(path)["attivi"]))
+    return _SPUNTE["attivi"]
+
+
+def spuntato(ident: str, path: Path | None = None) -> bool:
+    return ident in spuntati(path)
 
 
 def unisci_attivi(salvati, ordine, voluti: dict, base) -> list:
@@ -302,6 +340,51 @@ def prova_rete(service, *, dns=None, connetti=None, attesa: float = 8.0) -> tupl
     return True, "DNS ok (%.1f s); connessione e TLS ok (%.1f s)" % (t_dns, time.monotonic() - start)
 
 
+PROVE: dict[str, dict] = {}     # 061: id servizio -> esito dell'ultima prova (per la diagnostica)
+
+
+def prova_servizio(service_id: str, *, settings: dict | None = None, keys: Chiavi | None = None,
+                   post=_post) -> tuple[bool, str]:
+    """061: prova UN servizio nelle tre fasi (DNS, connessione+TLS, risposta). Usata dal «Prova»
+    delle impostazioni e dallo strumento della diagnostica. (ok, testo con la fase)."""
+    import time
+    service = PER_ID[service_id]
+    settings = settings or carica_impostazioni()
+    keys = keys or Chiavi()
+    rete = ""
+    if service.tipo != "account":
+        bene, rete = prova_rete(service)
+        if not bene:
+            return False, rete
+        rete += "; "
+    one = dict(settings, attivi=[service.id], ordine=[service.id])
+    inizio = time.monotonic()
+    nome, risposta = chiedi(messaggi("Rispondi solo: ok"), settings=one, keys=keys, post=post, timeout=30)
+    if nome:
+        return True, rete + "risposta ok in %.1f s: funziona." % (time.monotonic() - inizio)
+    return False, rete + "fase risposta: il servizio risponde male: " + "; ".join(risposta)
+
+
+def avvia_prova(service_id: str) -> dict:
+    """061: avvia la prova in un thread (la diagnostica gira sul thread di Tk e non deve bloccarsi);
+    PROVE[id] dice «in corso» o l'esito."""
+    import threading
+    if service_id not in PER_ID:
+        return {"ok": False, "errore": "servizio sconosciuto", "servizi": list(PER_ID)}
+    if PROVE.get(service_id, {}).get("in_corso"):
+        return PROVE[service_id]
+    PROVE[service_id] = {"in_corso": True}
+
+    def lavoro():
+        try:
+            bene, testo = prova_servizio(service_id)
+            PROVE[service_id] = {"in_corso": False, "riuscita": bene, "esito": testo}
+        except Exception as exc:
+            PROVE[service_id] = {"in_corso": False, "riuscita": False, "esito": "fase risposta: " + _breve(exc)}
+    threading.Thread(target=lavoro, daemon=True, name="lumi-prova-servizio").start()
+    return PROVE[service_id]
+
+
 def _breve(exc: Exception) -> str:
     return (type(exc).__name__ + ": " + str(getattr(exc, "reason", exc)))[:100]
 
@@ -409,16 +492,34 @@ def _con_modello(service, settings, key, call, *, get=None):
         return call(other)
 
 
+def fase_errore(exc: Exception) -> str:
+    """061: in quale fase si è fermato un servizio: «DNS», «TLS», «connessione» o «risposta»."""
+    import socket
+    import ssl
+    causa = getattr(exc, "reason", exc)
+    if isinstance(causa, socket.gaierror):
+        return "DNS"
+    if isinstance(causa, ssl.SSLError) or "CERTIFICATE" in str(causa).upper():
+        return "TLS"
+    if isinstance(exc, (urllib.error.HTTPError, ServizioErrore)):
+        return "risposta"
+    if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError)):
+        return "connessione"
+    return "risposta"
+
+
 def _motivo(exc: Exception) -> str:
+    """Il motivo breve, sempre con la fase (061): «chiave non valida (fase: risposta)»."""
+    fase = " (fase: %s)" % fase_errore(exc)
     if isinstance(exc, urllib.error.HTTPError):
         return {401: "chiave non valida", 403: "accesso negato", 402: "credito finito",
                 404: "modello non trovato", 429: "quota finita o troppe richieste"}.get(
-            exc.code, "errore %d" % exc.code)
+            exc.code, "errore %d" % exc.code) + fase
     if isinstance(exc, (urllib.error.URLError, TimeoutError, OSError)):
-        return "nessuna risposta (rete?): " + type(getattr(exc, "reason", exc)).__name__
+        return "nessuna risposta (rete?): " + type(getattr(exc, "reason", exc)).__name__ + fase
     if isinstance(exc, ServizioErrore) and str(exc) not in ("", "vuota"):
-        return str(exc)
-    return "risposta non valida"
+        return str(exc) + fase
+    return "risposta non valida" + fase
 
 
 ULTIMO_ERRORE: dict[str, str] = {}      # 058: id servizio -> ultimo motivo breve (finché non risponde)
@@ -685,20 +786,8 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
 
     def test(service):
         def work():
-            one = dict(settings, attivi=[service.id], ordine=[service.id])
-            rete = ""
-            if service.tipo != "account":       # 059: dire DOVE si blocca (DNS, TLS, risposta)
-                bene, rete = prova_rete(service)
-                if not bene:
-                    notify("ONLINE > Prova " + service.nome + ": " + rete)
-                    return
-                rete += "; "
-            inizio = time.monotonic()
-            name, answer = chiedi(messaggi("Rispondi solo: ok"), settings=one, keys=keys,
-                                  post=post, timeout=30)
-            notify("ONLINE > Prova " + service.nome + ": " + rete + (
-                "risposta ok in %.1f s: funziona." % (time.monotonic() - inizio) if name else
-                "il servizio risponde male: " + "; ".join(answer)))
+            bene, testo = prova_servizio(service.id, settings=settings, keys=keys, post=post)
+            notify("ONLINE > Prova " + service.nome + ": " + testo)
         save()
         run_async(work)
 

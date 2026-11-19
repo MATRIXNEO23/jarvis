@@ -9,7 +9,7 @@ provare il percorso run_gpt -> invio. La conferma a voce vera è provata in test
 def installa(env):
     def confirm_gpt_inference(detail):
         if (env["online_consent_pending"] or env["closing"] or env["busy_gpt"]
-                or not env["gpt_enabled"].get() or not env["active_gpt"]):
+                or not env["gpt_spuntato"]() or not env["active_gpt"]):
             return False
         epoch = env["conversation_epoch"]
         env["online_consent_pending"] = True
@@ -20,6 +20,6 @@ def installa(env):
         finally:
             env["online_consent_pending"] = False
         return bool(approved and epoch == env["conversation_epoch"] and not env["closing"]
-                    and env["gpt_enabled"].get() and env["active_gpt"] and not env["busy_gpt"])
+                    and env["gpt_spuntato"]() and env["active_gpt"] and not env["busy_gpt"])
     env["confirm_gpt_inference"] = confirm_gpt_inference
     return env

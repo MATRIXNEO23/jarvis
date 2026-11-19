@@ -68,7 +68,7 @@ class SelfReviewTests(unittest.TestCase):
         source=(Path(__file__).resolve().parent.parent/"jarvis.py"
                 ).read_text(encoding="utf-8")
         start=source.split("    def start_conversation_gpt(spoken: str) -> None:",1)[1]
-        start=start.split("    def toggle_gpt(",1)[0]
+        start=start.split("    def collega_gpt(",1)[0]
         self.assertLess(start.index("try_self_diagnostic(spoken)"),
                         start.index("submit_gemma_voice(spoken, typed=typed, route="))
         self.assertLess(start.index("try_self_diagnostic(spoken)"), start.index("conversation_chain(spoken, False)"))   # 055
@@ -77,7 +77,7 @@ class SelfReviewTests(unittest.TestCase):
         self.assertLess(ask.index("try_self_diagnostic(message)"),
                         ask.index("chain_typed_once(message)"))   # 056: sempre la catena
         self.assertLess(ask.index("try_self_diagnostic(message)"),
-                        ask.index("not gpt_enabled.get()"))
+                        ask.index("if busy_gpt:"))
         self.assertIn('text="Autodiagnosi Lumi"',source)
         self.assertIn("diagnostic_button.configure(",source)
         self.assertIn("command=lambda: try_self_diagnostic(",source)

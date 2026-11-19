@@ -211,7 +211,7 @@ def parse_command(text: str):
         window = values.get("window")
         if (isinstance(window, str) and RESERVED.match(" ".join(window.lower().split()))
                 and not (action == "force_close" and window.lower() in ("lumi", "jarvis"))):
-            return None                       # «passa a GPT», «chiudi la musica»…: non è una finestra
+            return None                       # «passa online», «chiudi la musica»…: non è una finestra
         if action == "click":
             values["double"] = bool(values.get("double"))
             if number_of(values["target"]) is not None or values["target"].lower().startswith(

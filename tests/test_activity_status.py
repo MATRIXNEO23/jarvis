@@ -32,6 +32,12 @@ class Value:
         self.value = value
 
 
+class Spunta(Value):
+    """061: la spunta «ChatGPT dal browser» della lista Online: si legge chiamandola."""
+    def __call__(self):
+        return self.value
+
+
 class GlobalCallbacks(ast.NodeTransformer):
     def visit_Nonlocal(self, node):
         return ast.copy_location(ast.Global(names=node.names), node)
@@ -100,7 +106,7 @@ class ActivityStatusTests(unittest.TestCase):
         env = dict(busy_gpt=False, busy_local=False, document_busy=False,
                    gemma_session=[None], gemma_trial_busy=[False],
                    gpt_request_action="", closing=False, active_gpt=True,
-                   gpt_enabled=Value(True), memory_enabled=Value(True),
+                   gpt_spuntato=Spunta(True), memory_enabled=Value(True),
                    speaker=SimpleNamespace(is_speaking=lambda: False),
                    voice=SimpleNamespace(is_user_speaking=lambda: False, is_listening=lambda: False),
                    engine=SimpleNamespace(file_access=None), orbit_nodes_cache=(),
@@ -179,7 +185,7 @@ class ActivityStatusTests(unittest.TestCase):
                 self.assertTrue(env["busy_gpt"])
                 self.assertEqual(provider()["reasoning"], action in ("ask", "conversation", "typed_conversation"))
                 self.assertEqual(len(workers), 1)
-                env["gpt_enabled"].set(False)
+                env["gpt_spuntato"].set(False)
                 self.assertFalse(provider()["reasoning"])
                 self.assertFalse(provider()["thinking"])
 
@@ -288,11 +294,11 @@ class ActivityStatusTests(unittest.TestCase):
             return "Ciao, come posso aiutarti?"
         session.ask_isolated_messages.side_effect = ask_local
         env.update(get_gemma_session=Mock(return_value=session),
-                   ask_telegram_gpt=Mock(return_value=""),
+                   ask_telegram_online=Mock(return_value=""),
                    telegram_assistant_prompt=telegram_assistant_prompt,
                    telegram_local_prompt=telegram_local_prompt,
                    telegram_local_messages=telegram_local_messages,
-                   settings={"gpt_enabled": False, "telegram_contact_profiles": {"123": "Usa il tu", "456": "Usa il lei"}})
+                   settings={"telegram_contact_profiles": {"123": "Usa il tu", "456": "Usa il lei"}})
         reply = self.callback("ask_telegram_reply", env)
         self.assertEqual(reply("Ciao", "Contesto privato", bridge, 123),
                          "Ciao, come posso aiutarti?")
@@ -305,13 +311,13 @@ class ActivityStatusTests(unittest.TestCase):
         reply("Ciao", "", bridge, 123)
         self.assertIn("Tono cordiale", prompts[2])
         self.assertNotIn("Usa il tu", prompts[2])
-        env["ask_telegram_gpt"].assert_not_called()
+        env["ask_telegram_online"].assert_not_called()
 
-        env["settings"]["gpt_enabled"] = True
+        env["settings"]["telegram_online_contacts"] = [123]
         ready.set()
         self.assertEqual(reply("Ciao", "", bridge, 123), "")
-        env["ask_telegram_gpt"].assert_called_once()
-        self.assertNotIn("Tono cordiale", env["ask_telegram_gpt"].call_args.args[0])
+        env["ask_telegram_online"].assert_called_once()
+        self.assertNotIn("Tono cordiale", env["ask_telegram_online"].call_args.args[0])
         self.assertEqual(session.ask_isolated_messages.call_count, 3)
 
     def test_actual_gpt_timeout_clears_phase_and_reports_reason_in_chat(self):

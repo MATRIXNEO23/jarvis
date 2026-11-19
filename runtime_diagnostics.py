@@ -33,7 +33,7 @@ CHECK_CODES = {
     )),
 }
 CODE_DESCRIPTIONS = {
-    "gpt_disabled": "ChatGPT disattivato nelle impostazioni",
+    "gpt_disabled": "ChatGPT non spuntato nella lista Online",
     "sdk_missing": "SDK Sign in with ChatGPT non trovato",
     "node_missing": "Node.js non trovato nel PATH",
     "bridge_missing": "File bridge GPT assente",
@@ -79,7 +79,7 @@ class RuntimeEvidence:
 
 
 def collect_runtime_evidence(
-    *, gpt_enabled: bool, gpt_connected: bool,
+    *, gpt_spuntato: bool, gpt_connected: bool,
     sdk_installed: bool, node_available: bool, bridge_file_present: bool,
     bridge_running: bool, voice_present: bool, voice_mode: str,
     voice_listening: bool, voice_model_present: bool,
@@ -92,7 +92,7 @@ def collect_runtime_evidence(
     A connected or initialized component is NOT a successful end-to-end test.
     No side-effectful checks (e.g. a GPT request or mic open) are performed.
     """
-    if not gpt_enabled:
+    if not gpt_spuntato:
         gpt = ("idle", "gpt_disabled")
     elif not sdk_installed:
         gpt = ("attention", "sdk_missing")
@@ -271,7 +271,7 @@ class ServiceEventLog:
 
 
 def format_service_report(evidence, *, telegram=None, automatic=False,
-                          credentials=False, contacts=0, selected='Gemma',
+                          credentials=False, contacts=0, online=(),
                           gemma='non_loaded', memory=False, telethon=None, ffmpeg=None):
     """Format only whitelisted observations. This report stays on the PC."""
     import time
@@ -281,7 +281,7 @@ def format_service_report(evidence, *, telegram=None, automatic=False,
                     'ready': 'sessione presente, inferenza non testata qui',
                     'busy': 'sessione impegnata', 'unavailable': 'stato non disponibile'}
     lines = ['DIAGNOSTICA SERVIZI — osservazione locale, non un collaudo completo',
-             'Modello selezionato: ' + ('GPT' if selected == 'GPT' else 'Gemma'),
+             'Servizi online spuntati (lista Online): ' + (', '.join(online) or 'nessuno'),
              'Gemma: ' + gemma_states.get(gemma, gemma_states['unavailable']),
              'Memoria generale: ' + ('attiva' if memory else 'disattivata')]
     for name, state, code in evidence.checks:

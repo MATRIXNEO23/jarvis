@@ -34,7 +34,7 @@ class TypedTimerTests(unittest.TestCase):
             try_self_diagnostic=lambda _:False,maybe_queue_telegram_note=lambda _:False,
             parse_alarm_clock_command=parse_command,parse_timer_command=parse_timer_command,
             timer=Mock(),alarm=Mock(),write_line=Mock(),speak_result=Mock(),
-            submit_gemma_trial=Mock(),gpt_enabled=SimpleNamespace(get=lambda:False),active_gpt=False,submit_local=Mock())
+            submit_gemma_trial=Mock(),gpt_spuntato=lambda:False,active_gpt=False,submit_local=Mock())
         env['alarm'].arm.return_value='Sveglia impostata.'
         env['timer'].remaining_text.return_value='06:00'
         exec(compile(ast.Module(body=nodes,type_ignores=[]),'actual-console-timer','exec'),env)

@@ -13,7 +13,7 @@ from self_diagnostics import SourceAudit
 
 def capture(counters=None, **changes):
     data = dict(
-        gpt_enabled=True, gpt_connected=True, sdk_installed=True,
+        gpt_spuntato=True, gpt_connected=True, sdk_installed=True,
         node_available=True, bridge_file_present=True, bridge_running=True,
         voice_present=True, voice_mode="conversazione_gpt",
         voice_listening=True, voice_model_present=True,
@@ -58,7 +58,7 @@ class RuntimeEvidenceTests(unittest.TestCase):
         disconnected = capture(gpt_connected=False, bridge_running=False)
         self.assertEqual(disconnected.checks[0], (
             "gpt_link", "idle", "gpt_not_connected"))
-        disabled = capture(gpt_enabled=False, gpt_connected=False)
+        disabled = capture(gpt_spuntato=False, gpt_connected=False)
         self.assertEqual(disabled.checks[0], (
             "gpt_link", "idle", "gpt_disabled"))
         stopped = capture(gpt_connected=True, bridge_running=False)

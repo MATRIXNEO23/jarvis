@@ -717,7 +717,6 @@ class JarvisHUD:
         if self.state_text.get()!=title:
             self.state_text.set(title)
         mic_selected = bool(state.get("mic_selected", mic_enabled))
-        gpt_enabled = bool(state.get("gpt_enabled", connected))
         mic_label = "Mic"      # 057: come l'anteprima; lo stato lo dà il ⏻ (azzurro/arancione)
         from model_gate import enabled as model_enabled
         model_on = bool(state.get("model_enabled", model_enabled()))

@@ -30,12 +30,16 @@ _PATTERNS = (
     ("brain_local_off", re.compile(
         r"^(?:(?:spegni|disattiva|disabilita)\s+(?:il\s+)?cervello\s+locale|"
         r"(?:il\s+)?cervello\s+locale\s+(?:off|spento))" + _END, re.I)),
-    ("brain_online_on", re.compile(
-        r"^(?:(?:attiva|accendi|riattiva|abilita)\s+(?:il\s+)?cervello\s+online|"
-        r"(?:il\s+)?cervello\s+online\s+(?:on|acceso|attivo))" + _END, re.I)),
-    ("brain_online_off", re.compile(
-        r"^(?:(?:spegni|disattiva|disabilita)\s+(?:il\s+)?cervello\s+online|"
-        r"(?:il\s+)?cervello\s+online\s+(?:off|spento))" + _END, re.I)),
+    # 061: «passa online/offline» e «cervello online acceso/spento» sono sinonimi delle due modalità
+    # (la slide): veloce = online in ordine, basso consumo = offline.
+    ("mode_fast", re.compile(
+        r"^(?:passa\s+online|(?:(?:attiva|accendi|riattiva|abilita)\s+(?:il\s+)?cervello\s+online|"
+        r"(?:il\s+)?cervello\s+online\s+(?:on|acceso|attivo))|modalit[àa]\s+veloce)" + _END, re.I)),
+    ("mode_low", re.compile(
+        r"^(?:passa\s+offline|(?:(?:spegni|disattiva|disabilita)\s+(?:il\s+)?cervello\s+online|"
+        r"(?:il\s+)?cervello\s+online\s+(?:off|spento))|modalit[àa]\s+basso\s+consumo)" + _END, re.I)),
+    # 061: «aiuto» apre l'aiuto F1 (stessa finestra del tasto), mai più l'elenco scritto in chat.
+    ("help_open", re.compile(r"^(?:aiuto|help|comandi|apri\s+(?:l'\s*|la\s+)?(?:aiuto|guida))" + _END, re.I)),
     ("model_restart", re.compile(
         r"^(?:riavvia|ricarica)\s+(?:il\s+)?(?:modello(?:\s+locale)?|cervello\s+locale|motore)"
         + _END, re.I)),
