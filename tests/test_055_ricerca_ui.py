@@ -4,9 +4,9 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-import servizi_ricerca as sr
-from servizi_ricerca import quota
-from servizi_ricerca.servizi import exa, firecrawl, linkup, tavily
+from online import servizi_ricerca as sr
+from online.servizi_ricerca import quota
+from online.servizi_ricerca.servizi import exa, firecrawl, linkup, tavily
 
 ROOT = Path(__file__).resolve().parents[1]
 JARVIS = (ROOT / "jarvis.py").read_text(encoding="utf-8")

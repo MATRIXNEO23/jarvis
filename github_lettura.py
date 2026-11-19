@@ -52,7 +52,7 @@ class Configurazione:
     def __init__(self, folder: Path | None = None, protect=None):
         self.folder = folder
         if protect is None:
-            from servizi_online import _dpapi
+            from online.servizi_online import _dpapi
             protect = _dpapi
         self.protect = protect
 

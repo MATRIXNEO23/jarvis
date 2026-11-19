@@ -146,7 +146,7 @@ class SavedPolicyIntegrationTests(unittest.TestCase):
 
     def test_policy_revoked_during_bridge_start_prevents_pipe_write(self):
         import io
-        from gpt_client import GPTClient, GPTUnavailable
+        from online.gpt_client import GPTClient, GPTUnavailable
         self.policy(**{"chat.conversation": "allowed"})
         grant = authorize_online_request("chat.conversation")
         client = GPTClient()

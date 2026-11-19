@@ -9,9 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import lumi_comandi
-import servizi_online as so
-
-
+from online import servizi_online as so
 def fake_protect(value, encrypt):
     return bytes(b ^ 0x5A for b in value)
 
@@ -195,7 +193,7 @@ class SezioneTest(BaseTest):
 
 class RispostaTagliataTest(unittest.TestCase):
     def test_avviso_se_tagliata_e_limite_alto(self):
-        import servizi_online
+        from online import servizi_online
         self.assertGreaterEqual(servizi_online.MAX_RISPOSTA, 4000)
         self.assertIn("tagliata", servizi_online._tagliata({"choices": [{"finish_reason": "length"}]}))
         self.assertEqual(servizi_online._tagliata({"choices": [{"finish_reason": "stop"}]}), "")
@@ -204,7 +202,7 @@ class RispostaTagliataTest(unittest.TestCase):
 
 class ChatGPTAccountTest(unittest.TestCase):
     def setUp(self):
-        import servizi_online
+        from online import servizi_online
         self.so = servizi_online
         self.saved = dict(servizi_online.ACCOUNT)
         self.sent = []
@@ -246,7 +244,7 @@ class ChatGPTAccountTest(unittest.TestCase):
 
 class ModelloSceltoTest(unittest.TestCase):
     def setUp(self):
-        import servizi_online
+        from online import servizi_online
         self.so = servizi_online
         self.so.SCELTI.clear()
 

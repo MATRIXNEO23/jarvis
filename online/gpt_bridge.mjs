@@ -103,7 +103,7 @@ const inferenceRequests = new Map();
 async function initialize() {
   if (process.platform !== "win32") throw new Error("Jarvis GPT supporta per ora Windows.");
   if (!existsSync(sdkEntry)) {
-    throw new Error("SDK Sign in with ChatGPT non installato. Esegui installa_gpt.ps1.");
+    throw new Error("SDK Sign in with ChatGPT non installato. Esegui online\\installa_gpt.bat.");
   }
   const { createChatGPT } = await import(pathToFileURL(sdkEntry).href);
   sdk = createChatGPT({

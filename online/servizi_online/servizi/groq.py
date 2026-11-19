@@ -1,5 +1,5 @@
 """Groq (con la Q): modelli aperti velocissimi, API compatibile OpenAI."""
-from servizi_online.base import Servizio
+from online.servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     preferiti=("openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b"),

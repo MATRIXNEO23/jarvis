@@ -273,7 +273,7 @@ def inspect_jarvis(*,source_root: Path | None=None,
                  ". Segnalazioni statiche: "+str(len(findings))+
                  ". Miglioramenti da valutare: "+str(len(recommendations))+".")
         important=("jarvis.py","workspace_memory.py","project_voice.py",
-                   "managed_documents.py","telegram_bridge.py","gpt_client.py",
+                   "managed_documents.py","telegram_bridge.py","online/gpt_client.py",
                    "voice_control.py")
         found={m[0] for m in modules}
         absent=[p for p in important if p not in found]

@@ -1,5 +1,5 @@
 """Anthropic Claude tramite API (compatibilità OpenAI): a consumo."""
-from servizi_online.base import Servizio
+from online.servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     uso="Claude con chiave: testi e codice molto curati, lavori a più passi. A pagamento.",

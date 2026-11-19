@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const bridge = join(root, "gpt_bridge.mjs");
+const bridge = join(root, "online", "gpt_bridge.mjs");
 const child = spawn(process.execPath, [bridge], {
   cwd: root,
   stdio: ["pipe", "pipe", "pipe"],

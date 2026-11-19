@@ -17,7 +17,7 @@ BOLLA = {"utente": "bolla_utente", "jarvis": "bolla_jarvis"}
 
 def _e_approfondisci(text: str) -> bool:
     try:
-        return bool(__import__("servizi_ricerca").approfondisci_locale(text))
+        return bool(__import__("online").servizi_ricerca.approfondisci_locale(text))
     except Exception:
         return False
 

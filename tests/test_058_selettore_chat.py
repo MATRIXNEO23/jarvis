@@ -7,8 +7,7 @@ import urllib.error
 from pathlib import Path
 from tkinter import ttk
 
-import servizi_online as so
-
+from online import servizi_online as so
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -147,7 +146,7 @@ class SalvataggioTests(unittest.TestCase):
         self.assertEqual((data["modello_chat"], data["potenza"]), ("auto", "auto"))
 
     def test_il_pannello_non_cancella_le_scelte_dei_selettori(self):
-        src = (ROOT / "servizi_online" / "__init__.py").read_text(encoding="utf-8")
+        src = (ROOT / "online" / "servizi_online" / "__init__.py").read_text(encoding="utf-8")
         self.assertIn('settings["modello_chat"], settings["potenza"] = fresh["modello_chat"], fresh["potenza"]', src)
 
 

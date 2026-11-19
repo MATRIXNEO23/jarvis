@@ -67,8 +67,8 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
                 **({} if report else {"errore": "nessun prompt catturato: usa arma=true"})}
 
     def online(args):
-        import servizi_online
-        from servizi_online import quote
+        from online import servizi_online
+        from online.servizi_online import quote
         settings = servizi_online.carica_impostazioni()
         keys = servizi_online.Chiavi()
         services = []
@@ -91,7 +91,7 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
 
     def prova_servizio(args):
         """061: prova di UN servizio online nelle tre fasi. Parte in un thread: chiamare di nuovo per l'esito."""
-        import servizi_online
+        from online import servizi_online
         ident = str(args.get("servizio", ""))
         if not ident:
             return {"ok": False, "errore": "manca «servizio»", "servizi": list(servizi_online.PER_ID)}
@@ -100,7 +100,7 @@ def crea(*, navigazione, apri_impostazioni, addon_manager, cambia_addon, cervell
 
     def ricerca(args):
         """Servizi di ricerca (052): spuntati, con chiave, collegati. Mai la chiave."""
-        import servizi_ricerca
+        from online import servizi_ricerca
         settings = servizi_ricerca.carica_impostazioni()
         keys = servizi_ricerca.chiavi()
         pronti = {s.id for s in servizi_ricerca.pronti(settings, keys)}

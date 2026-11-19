@@ -73,7 +73,7 @@ from document_language import classify_document_choice
 from document_store import destination_from_voice
 from managed_documents import ManagedDocuments
 from document_recovery import release_closed_document
-from gpt_client import GPTClient, GPTUnavailable
+from online.gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner

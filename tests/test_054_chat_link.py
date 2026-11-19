@@ -3,9 +3,7 @@ import unittest
 from unittest import mock
 
 import chat_testo as chat_link
-import servizi_ricerca as sr
-
-
+from online import servizi_ricerca as sr
 class SegmentTests(unittest.TestCase):
     def test_markdown_and_bare_links_are_recognised_with_the_right_url(self):
         body = "Sintesi.\n1. [Meteo Roma](https://m.example/roma?a=1)\n   anteprima\n2. [Altro](http://x.it/p)\nVedi https://z.org/a, grazie."

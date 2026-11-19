@@ -7,7 +7,7 @@ Installa da dentro Lumi quello che serve in più sul PC, senza lanciare i `.bat`
   «Salva link», «Apri link», «Installa») e le sue chiavi API («Crea la chiave»).
 - Ogni installazione chiede conferma. Pacchetti Python con `pip --user` (stesso Python di Lumi),
   programmi con Gestione pacchetti di Windows (`winget`, fonti ufficiali), script inclusi
-  (`installa_modello_voce.py`, `installa_gpt.ps1`). Senza winget resta il link.
+  (`installa_modello_voce.py`, `online/installa_gpt.ps1`). Senza winget resta il link.
 
 ## File
 - `catalog.py`: elenco componenti/chiavi, controllo «presente», comandi d'installazione,

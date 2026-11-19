@@ -1,5 +1,5 @@
 """xAI Grok (con la K): a consumo."""
-from servizi_online.base import Servizio
+from online.servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     uso="Grok: risposte e lavori a più passi. A pagamento.",

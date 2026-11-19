@@ -4,8 +4,7 @@ import unittest
 from pathlib import Path
 
 import orchestratore as orch
-import servizi_online as so
-
+from online import servizi_online as so
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -65,7 +64,7 @@ class ProvaReteTest(unittest.TestCase):
         self.assertIn("connessione o al TLS", testo)
 
     def test_la_prova_dell_impostazione_usa_le_tre_fasi(self):
-        src = (ROOT / "servizi_online" / "__init__.py").read_text(encoding="utf-8")
+        src = (ROOT / "online" / "servizi_online" / "__init__.py").read_text(encoding="utf-8")
         corpo = src[src.index("    def test(service):"):src.index("    def move(")]
         self.assertIn("prova_servizio(service.id", corpo)
 

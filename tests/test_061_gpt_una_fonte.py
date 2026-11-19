@@ -9,7 +9,7 @@ import urllib.error
 from pathlib import Path
 from unittest import mock
 
-import servizi_online as so
+from online import servizi_online as so
 import settings as settings_module
 
 ROOT = Path(__file__).resolve().parents[1]

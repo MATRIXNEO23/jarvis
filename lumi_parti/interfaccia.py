@@ -73,7 +73,7 @@ from document_language import classify_document_choice
 from document_store import destination_from_voice
 from managed_documents import ManagedDocuments
 from document_recovery import release_closed_document
-from gpt_client import GPTClient, GPTUnavailable
+from online.gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
@@ -184,7 +184,7 @@ def installa(d):
         libero = not d.busy_gpt and not d.closing
         # 061: collegare/scollegare il ponte non dipende dalla spunta; «Chiedi» e «Piano» usano
         # il primo servizio online spuntato (qualunque sia).
-        online = libero and bool(__import__("servizi_online").spuntati())
+        online = libero and bool(__import__("online").servizi_online.spuntati())
         d.connect.configure(state="normal" if libero else "disabled")
         d.disconnect.configure(state="normal" if libero and d.active_gpt else "disabled")
         d.ask_button.configure(state="normal" if online else "disabled")

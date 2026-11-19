@@ -1,5 +1,5 @@
 """Google Gemini: API compatibile OpenAI (ai.google.dev/gemini-api/docs/openai)."""
-from servizi_online.base import Servizio
+from online.servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     preferiti=("gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"),

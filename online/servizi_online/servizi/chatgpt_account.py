@@ -5,7 +5,7 @@ ponte del pulsante GPT (gpt_bridge.mjs / gpt_client). Nella lista mostra «colle
 collegato» con il pulsante «Collega»; niente chiave e niente pagina delle chiavi.
 Riceve testo e restituisce testo: niente strumenti, quindi niente lavori a più passi sul PC.
 """
-from servizi_online.base import Servizio
+from online.servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     uso="Domande difficili, spiegazioni e testi lunghi col tuo account ChatGPT; niente lavori a più passi sul PC.",

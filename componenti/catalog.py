@@ -90,7 +90,7 @@ COMPONENTS = (
      "online": False, "restart": True},
     {"id": "gpt_sdk", "name": "Modulo GPT (SDK ufficiale OpenAI)", "addon": "base",
      "purpose": "Collegamento a ChatGPT con il tuo account (facoltativo).", "check": _gpt_sdk,
-     "kind": "powershell", "script": ["installa_gpt.ps1"], "needs": ["nodejs"],
+     "kind": "powershell", "script": ["online/installa_gpt.ps1"], "needs": ["nodejs"],
      "link": "https://github.com/openai/sign-in-with-chatgpt-devkit", "online": True},
 )
 

@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 import risposte
-import servizi_online as so
+from online import servizi_online as so
 import settings as settings_module
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +35,7 @@ def _env(modalita, last="", **extra):
 class BassoConsumoTests(unittest.TestCase):
     def test_domanda_normale_va_all_offline_anche_con_online_pronto(self):
         env = _env("basso_consumo")
-        with mock.patch("servizi_online.disponibili", return_value=True), \
+        with mock.patch("online.servizi_online.disponibili", return_value=True), \
                 mock.patch("lumi_comandi.chiedi") as chiedi:
             env["conversation_chain"]("chi ha scritto i Promessi sposi?", False)
         env["submit_gemma_voice"].assert_called_once_with(
@@ -44,7 +44,7 @@ class BassoConsumoTests(unittest.TestCase):
 
     def test_script_chiede_prima_di_andare_online(self):
         env = _env("basso_consumo")
-        with mock.patch("servizi_online.disponibili", return_value=True), \
+        with mock.patch("online.servizi_online.disponibili", return_value=True), \
                 mock.patch("lumi_comandi.chiedi") as chiedi:
             env["conversation_chain"]("scrivimi uno script che rinomina i file", True)
         self.assertEqual(chiedi.call_args.args[0], "online_yes")
@@ -55,7 +55,7 @@ class BassoConsumoTests(unittest.TestCase):
 
     def test_approfondisci_chiede_conferma_e_usa_l_ultima_domanda(self):
         env = _env("basso_consumo", last="la fotosintesi")
-        with mock.patch("servizi_online.disponibili", return_value=True), \
+        with mock.patch("online.servizi_online.disponibili", return_value=True), \
                 mock.patch("lumi_comandi.chiedi") as chiedi:
             env["conversation_chain"]("approfondisci", False)
         self.assertEqual(chiedi.call_args.args[0], "online_yes")
@@ -75,7 +75,7 @@ class BassoConsumoTests(unittest.TestCase):
 
     def test_senza_servizi_online_lo_dice_e_non_chiede(self):
         env = _env("basso_consumo", last="x")
-        with mock.patch("servizi_online.disponibili", return_value=False), \
+        with mock.patch("online.servizi_online.disponibili", return_value=False), \
                 mock.patch("lumi_comandi.chiedi") as chiedi:
             env["conversation_chain"]("approfondisci", False)
         chiedi.assert_not_called()
@@ -85,13 +85,13 @@ class BassoConsumoTests(unittest.TestCase):
 class VeloceTests(unittest.TestCase):
     def test_veloce_va_online_senza_conferma_e_il_locale_e_di_riserva(self):
         env = _env("veloce")
-        with mock.patch("servizi_online.disponibili", return_value=True), \
+        with mock.patch("online.servizi_online.disponibili", return_value=True), \
                 mock.patch("lumi_comandi.chiedi") as chiedi:
             env["conversation_chain"]("spiegami la relatività", False)
         env["submit_gemma_voice"].assert_called_once_with("spiegami la relatività", typed=False, route="online")
         chiedi.assert_not_called()
         env = _env("veloce")
-        with mock.patch("servizi_online.disponibili", return_value=False):
+        with mock.patch("online.servizi_online.disponibili", return_value=False):
             env["conversation_chain"]("spiegami la relatività", False)
         env["submit_gemma_voice"].assert_called_once_with("spiegami la relatività", typed=False, route="locale")
 
@@ -120,7 +120,7 @@ class RispostaNoTests(unittest.TestCase):
 
     def test_il_motore_non_forza_piu_l_online_con_route_esplicita(self):
         source = (ROOT / "local_model" / "conversazione_lumi.py").read_text(encoding="utf-8")
-        self.assertIn('if orig_route is None and __import__("servizi_online").richiesta_codice(spoken):', source)
+        self.assertIn('if orig_route is None and __import__("online").servizi_online.richiesta_codice(spoken):', source)
         self.assertNotIn("Catena 17/11", source)
 
     def test_pulsante_approfondisci_sotto_la_risposta(self):
@@ -169,7 +169,7 @@ class SpuntaNonSiPerdeTests(unittest.TestCase):
 
     def test_il_salvataggio_del_pannello_rilegge_il_file(self):
         for modulo in ("servizi_online", "servizi_ricerca"):
-            testo = (ROOT / modulo / "__init__.py").read_text(encoding="utf-8")
+            testo = (ROOT / "online" / modulo / "__init__.py").read_text(encoding="utf-8")
             self.assertIn("fresh = carica_impostazioni()", testo, modulo)
 
     def test_errore_di_salvataggio_della_tendina_non_e_nascosto(self):

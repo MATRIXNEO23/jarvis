@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import menu_tendine as menu_modelli
 import orchestratore
-import servizi_online as so
-from servizi_online import quote
+from online import servizi_online as so
+from online.servizi_online import quote
 
 
 def fake_protect(value, encrypt):

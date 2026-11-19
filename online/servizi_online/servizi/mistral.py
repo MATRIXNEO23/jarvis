@@ -1,5 +1,5 @@
 """Mistral: piano gratuito «Experiment», API compatibile OpenAI."""
-from servizi_online.base import Servizio
+from online.servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     uso="Buono in italiano e nei testi; sa fare i lavori a più passi.",

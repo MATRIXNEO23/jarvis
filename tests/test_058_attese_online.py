@@ -3,9 +3,7 @@ La potenza è provata in test_058_selettore_chat.py."""
 import inspect
 import unittest
 
-import servizi_online as so
-
-
+from online import servizi_online as so
 class AtteseTests(unittest.TestCase):
     def test_chat_30_secondi_lavori_90(self):
         self.assertEqual(so.TIMEOUT, 30)

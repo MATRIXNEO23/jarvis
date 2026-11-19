@@ -255,7 +255,7 @@ FULL_TITLES = {
 
 def _chiavi_servizi():
     try:
-        import servizi_online
+        from online import servizi_online
         return servizi_online.aiuto_chiavi()
     except Exception:            # l'aiuto si apre comunque
         return ''

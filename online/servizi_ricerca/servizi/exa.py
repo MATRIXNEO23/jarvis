@@ -1,7 +1,7 @@
 """Exa: ricerca web semantica. API verificata sulla documentazione ufficiale (17/11):
 POST https://api.exa.ai/search, intestazione Authorization: Bearer (o x-api-key),
 corpo {query, numResults, contents:{highlights:true}}, risposta results[].title/url/highlights."""
-from servizi_ricerca.base import Ricerca, Risultato
+from online.servizi_ricerca.base import Ricerca, Risultato
 
 URL = "https://api.exa.ai/search"
 

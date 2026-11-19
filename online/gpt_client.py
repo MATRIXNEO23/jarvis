@@ -48,13 +48,13 @@ class GPTClient:
                 if os.name != "nt":
                     raise GPTUnavailable("Il collegamento GPT richiede Windows 10/11.")
                 if not self.installed_sdk().is_file():
-                    raise GPTUnavailable("SDK GPT non installato. Esegui installa_gpt.ps1.")
+                    raise GPTUnavailable("SDK GPT non installato. Esegui online\\installa_gpt.bat.")
                 node = shutil.which("node")
                 if not node:
                     raise GPTUnavailable("Node.js 22 o successivo non trovato nel PATH.")
                 script = self.app_dir / "gpt_bridge.mjs"
                 if not script.is_file():
-                    raise GPTUnavailable("Manca il modulo gpt_bridge.mjs.")
+                    raise GPTUnavailable("Manca il modulo online/gpt_bridge.mjs.")
                 flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
                 self._startup_error = None
                 self._ready_signal = threading.Event()

@@ -1,5 +1,5 @@
 """NVIDIA (build.nvidia.com): modelli aperti come DeepSeek e Llama."""
-from servizi_online.base import Servizio
+from online.servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     uso="Modelli grandi (DeepSeek, Llama) per ragionamenti difficili; lavori a più passi.",

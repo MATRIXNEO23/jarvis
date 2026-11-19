@@ -129,7 +129,7 @@ def handle_text(spoken: str, write_line, speak) -> bool:
     # 052: «cerca online …» / «approfondisci online …» (servizi di ricerca): prima di
     # qualunque altro «cerca» (file) e mai a Gemma; «approfondisci» senza «online» non entra.
     ricerca = actions.get("ricerca")
-    if ricerca is not None and __import__("servizi_ricerca").parse(spoken) and ricerca(spoken):
+    if ricerca is not None and __import__("online").servizi_ricerca.parse(spoken) and ricerca(spoken):
         return True
     stop_all = actions.get("stop_all")
     if stop_all is not None and __import__("stato_lumi").is_stop(spoken) and stop_all():

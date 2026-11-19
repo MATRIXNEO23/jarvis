@@ -88,7 +88,7 @@ def registra(service_id: str, tokens=None, headers=None, *, soglia: float = 0.8,
 
 def stato(service_id: str, *, limite_utente=None, data=None, path: Path | None = None) -> dict:
     """{'richieste', 'token', 'limite', 'usato' (0..1 o None), 'colore', 'testo'}."""
-    import servizi_online
+    from online import servizi_online
     data = data if data is not None else carica(path)
     item = dict(data.get(service_id, {}))
     if item.get("giorno") != _oggi():

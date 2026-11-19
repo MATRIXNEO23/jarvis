@@ -374,7 +374,7 @@ def codice_pericoloso(code: str) -> str:
 # --- ciclo a più passi ------------------------------------------------------------------------
 def rispondi(question: str, *, tools: Strumenti, history=(), pieces=(), call=None, notify=None):
     """(nome servizio, risposta) oppure (None, motivi). notify(testo) per i passi in chat."""
-    import servizi_online
+    from online import servizi_online
     lavoro = [False]      # 059: l'attesa lunga (90 s) solo dopo il primo passo con strumenti
 
     def chiama_con_attesa(messages, tools=None, only=None):
@@ -389,7 +389,7 @@ def rispondi(question: str, *, tools: Strumenti, history=(), pieces=(), call=Non
     # Quote (15/11 sera): quando il testo da mandare supera la soglia di token (anche a
     # metà lavoro, con i file letti) Lumi chiede una volta prima di continuare.
     limit = servizi_online.carica_impostazioni().get("conferma_token", 8000)
-    estimate = __import__("servizi_online.quote", fromlist=["stima_token"]).stima_token
+    estimate = __import__("online.servizi_online.quote", fromlist=["stima_token"]).stima_token
     confirmed = False
     service_id = name = None
     for _step in range(MAX_PASSI):

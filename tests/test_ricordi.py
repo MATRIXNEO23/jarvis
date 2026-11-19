@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 import ricordi
-import servizi_online
+from online import servizi_online
 from preference_voice import parse_preference_intent
 from second_brain import SecondBrain
 

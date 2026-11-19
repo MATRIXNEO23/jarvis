@@ -158,9 +158,9 @@
    "kind": "service",
    "summary": "Collegamenti a ChatGPT, ai servizi di intelligenza artificiale e di ricerca sul web.",
    "paths": [
-    "gpt_client.py",
-    "gpt_bridge.mjs",
-    "installa_gpt.ps1",
+    "online/gpt_client.py",
+    "online/gpt_bridge.mjs",
+    "online/installa_gpt.ps1",
     "github_lettura.py",
     "model_gate.py"
    ]
@@ -172,7 +172,7 @@
    "kind": "feature",
    "summary": "Collegamenti ai vari servizi che rispondono alle domande.",
    "paths": [
-    "servizi_online"
+    "online/servizi_online"
    ]
   },
   {
@@ -182,7 +182,7 @@
    "kind": "feature",
    "summary": "Collegamenti ai servizi che cercano informazioni su internet.",
    "paths": [
-    "servizi_ricerca"
+    "online/servizi_ricerca"
    ]
   },
   {

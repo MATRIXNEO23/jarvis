@@ -59,8 +59,7 @@ class TendineTests(unittest.TestCase):
 
 class SpunteTests(unittest.TestCase):
     def test_spunta_vecchia_non_riaccende_un_servizio_spento_altrove(self):
-        import servizi_online as so
-
+        from online import servizi_online as so
         class Var:
             def __init__(self, v):
                 self.v = v

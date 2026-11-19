@@ -11,9 +11,9 @@ from pathlib import Path
 from unittest import mock
 
 import lumi_comandi
-import servizi_online
-import servizi_ricerca as sr
-from servizi_ricerca.base import Ricerca, Risultato
+from online import servizi_online
+from online import servizi_ricerca as sr
+from online.servizi_ricerca.base import Ricerca, Risultato
 
 
 def protect(value, encrypt):          # al posto di DPAPI (solo Windows): il file non è in chiaro
@@ -128,7 +128,7 @@ class SearchTests(unittest.TestCase):
             servizi_online.Chiavi(path=self.folder / "o.keys", protect=protect).salva("tavily", "x")
 
     def test_tavily_adapter_maps_answer_and_links_and_falls_back_to_snippets(self):
-        from servizi_ricerca.servizi import tavily
+        from online.servizi_ricerca.servizi import tavily
         seen = {}
 
         def post(url, key, body, timeout):

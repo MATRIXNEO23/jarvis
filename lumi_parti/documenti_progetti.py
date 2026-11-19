@@ -73,7 +73,7 @@ from document_language import classify_document_choice
 from document_store import destination_from_voice
 from managed_documents import ManagedDocuments
 from document_recovery import release_closed_document
-from gpt_client import GPTClient, GPTUnavailable
+from online.gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
@@ -217,7 +217,7 @@ def installa(d):
             # interrupted. Nothing will be silently replayed on restart.
             d.finish_project_work(ticket,"interrupted","Piano terminato: "+reason)
     def submit_plan() -> None:
-        so = __import__("servizi_online")
+        so = __import__("online").servizi_online
         if not so.spuntati() or d.busy_gpt or d.closing:
             return
         from local_model.online_permissions import authorize_online_request

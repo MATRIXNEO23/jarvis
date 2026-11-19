@@ -1,5 +1,5 @@
 """Tavily: ricerca web pensata per gli assistenti (risposta breve + fonti)."""
-from servizi_ricerca.base import Ricerca, Risultato
+from online.servizi_ricerca.base import Ricerca, Risultato
 
 URL = "https://api.tavily.com/search"
 

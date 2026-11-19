@@ -17,7 +17,7 @@ import re
 import urllib.error
 from pathlib import Path
 
-from servizi_online import Chiavi, _post
+from online.servizi_online import Chiavi, _post
 
 from . import quota
 from .base import Ricerca, Risultato
@@ -249,11 +249,11 @@ def costruisci_sezione(parent, notify, *, ask_key=None, open_url=None, keys: Chi
 
     def save(*_):
         fresh = carica_impostazioni()          # 056 E: mai riscrivere spunte vecchie
-        settings["attivi"] = __import__("servizi_online").unisci_attivi(
+        settings["attivi"] = __import__("online").servizi_online.unisci_attivi(
             fresh["attivi"], settings["ordine"], {i: v.get() for i, v in state["vars"].items()},
             state["base"])
         state["base"] = set(settings["attivi"])
-        __import__("servizi_online").allinea_spunte(state["vars"], settings["attivi"])
+        __import__("online").servizi_online.allinea_spunte(state["vars"], settings["attivi"])
         try:
             salva_impostazioni(settings)
         except (OSError, RuntimeError) as exc:

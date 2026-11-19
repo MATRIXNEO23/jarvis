@@ -3,7 +3,7 @@ JARVIS — BUILD 005 / CANDIDATA PER WINDOWS 10 x64
 Estrai questo ZIP in una cartella NUOVA. Avvia soltanto avvia_jarvis.bat.
 La precedente cartella di Jarvis resta disponibile per tornare alla base.
 Serve Python 3.11/3.12 x64 con Tk (incluso nell'installer ufficiale).
-GPT esterno: stessa connessione/account, installa_gpt.bat se ancora assente.
+GPT esterno: stessa connessione/account, online\installa_gpt.bat se ancora assente.
 Voce: installa_voce.bat se non già predisposta. Telegram: installa_telegram.bat
 solo se usato. Le funzioni locali file non richiedono GPT o nuove librerie.
 

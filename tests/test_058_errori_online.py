@@ -5,8 +5,7 @@ import unittest
 import urllib.error
 from pathlib import Path
 
-import servizi_online as so
-
+from online import servizi_online as so
 ROOT = Path(__file__).resolve().parents[1]
 SEGRETO = "AIza-SEGRETISSIMA"
 

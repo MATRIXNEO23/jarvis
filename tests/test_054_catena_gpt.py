@@ -7,9 +7,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-import servizi_online
-import servizi_ricerca as sr
-
+from online import servizi_online
+from online import servizi_ricerca as sr
 ROOT = Path(__file__).resolve().parents[1]
 CATENA = ("start_conversation_gpt", "conversation_chain", "local_after_gpt",
           "fast_mode", "ask_online", "deepen_prompt", "submit_deepen", "deepen_last")   # 056: Basso consumo / Veloce, conferma online
@@ -43,7 +42,7 @@ def _env(**extra):
 
 
 def _avvia(env, testo, online):
-    with mock.patch("servizi_online.disponibili", return_value=online), \
+    with mock.patch("online.servizi_online.disponibili", return_value=online), \
             mock.patch("intent_normalizer.before_model", return_value=False), \
             mock.patch("richiamo.risposta_di_lumi", return_value=None), \
             mock.patch("model_gate.enabled", return_value=True):
@@ -60,7 +59,7 @@ class GptNonCollegatoTests(unittest.TestCase):
 
     def test_without_online_and_without_gpt_the_question_goes_to_the_local_model_with_a_notice(self):
         env = _env(active_gpt=False)
-        with mock.patch("servizi_online.carica_impostazioni", return_value={"attivi": ["chatgpt_account"]}):
+        with mock.patch("online.servizi_online.carica_impostazioni", return_value={"attivi": ["chatgpt_account"]}):
             _avvia(env, "che cos'è la fotosintesi", False)
         env["submit_gemma_voice"].assert_called_once_with(
             "che cos'è la fotosintesi", typed=False, route="locale")

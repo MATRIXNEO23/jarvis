@@ -37,7 +37,7 @@ def servizio_in_uso(settings, keys, account_pronto=None):
 class MenuModelli:
     def __init__(self, root, button, *, open_settings, open_url=None, keys=None,
                  settings_path=None, notify=None, on_connect=None):
-        import servizi_online
+        from online import servizi_online
         self.so = servizi_online
         self.root = root
         self.button = button
@@ -131,7 +131,7 @@ class MenuModelli:
         tk.Label(popup, text="Servizi online", bg=PANEL, fg=TEXT, font=("Segoe UI", 10, "bold"),
                  anchor="w").pack(fill="x", padx=10, pady=(8, 4))
         active = self._in_uso(settings)
-        quote = __import__("servizi_online.quote", fromlist=["stato"])
+        quote = __import__("online.servizi_online.quote", fromlist=["stato"])
         for service_id in settings["ordine"]:
             service = self.so.PER_ID[service_id]
             if not service.gratis:
@@ -238,7 +238,7 @@ def servizio_attivo(settings, keys, sr):
 
 class MenuRicerca(MenuModelli):
     def __init__(self, root, button, *, open_settings, open_url=None, keys=None, settings_path=None, notify=None):
-        self.sr = __import__("servizi_ricerca")
+        self.sr = __import__("online").servizi_ricerca
         super().__init__(root, button, open_settings=open_settings, open_url=open_url,
                          keys=keys or self.sr.chiavi(), settings_path=settings_path, notify=notify)
 

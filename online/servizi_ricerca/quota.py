@@ -93,7 +93,7 @@ def reale(service_id: str, key: str, *, get=None, adesso: float | None = None) -
     if cached is not None and adesso - cached[0] < _VALIDITA:
         return cached[1]
     if get is None:
-        from servizi_online import _get as get
+        from online.servizi_online import _get as get
     try:
         uso = _leggi_uso(service_id, key, get)
     except Exception:                                   # rete, chiave, formato: mai bloccare la UI

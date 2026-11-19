@@ -6,8 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-import servizi_online as so
-
+from online import servizi_online as so
 ROOT = Path(__file__).resolve().parents[1]
 SRC = (ROOT / "jarvis.py").read_text(encoding="utf-8")
 GPT = "chatgpt_account"

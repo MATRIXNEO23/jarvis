@@ -1,7 +1,7 @@
 """Linkup: ricerca web con risposta e fonti. API verificata sulla documentazione ufficiale (17/11):
 POST https://api.linkup.so/v1/search, Authorization: Bearer, corpo {q, depth, outputType,
 maxResults}, risposta sourcedAnswer {answer, sources:[{name, url, snippet}]}."""
-from servizi_ricerca.base import Ricerca, Risultato
+from online.servizi_ricerca.base import Ricerca, Risultato
 
 URL = "https://api.linkup.so/v1/search"
 

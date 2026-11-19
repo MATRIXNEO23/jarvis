@@ -5,8 +5,8 @@ on:
     branches: [main, 'feature/file-access-20261101']
     paths:
       - '.github/workflows/gpt-smoke.yml'
-      - 'installa_gpt.ps1'
-      - 'gpt_bridge.mjs'
+      - 'online/installa_gpt.ps1'
+      - 'online/gpt_bridge.mjs'
       - 'tools/probe_siwc_web_contract.mjs'
   workflow_dispatch:
 
@@ -23,7 +23,7 @@ jobs:
           node-version: '22.12'
       - name: Install pinned official SDK (no sign-in)
         shell: powershell
-        run: .\installa_gpt.ps1
+        run: .\online\installa_gpt.ps1
       - name: Load SDK module without credentials
         shell: powershell
         run: |

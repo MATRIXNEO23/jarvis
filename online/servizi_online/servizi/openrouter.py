@@ -1,5 +1,5 @@
 """OpenRouter: tanti modelli, quelli che finiscono con «:free» sono gratis."""
-from servizi_online.base import Servizio
+from online.servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     preferiti=("openai/gpt-oss-120b:free", "qwen/qwen3-next-80b-a3b-instruct:free", "meta-llama/llama-3.3-70b-instruct:free"),

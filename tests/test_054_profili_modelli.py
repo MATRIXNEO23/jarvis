@@ -8,7 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-import servizi_ricerca as sr
+from online import servizi_ricerca as sr
 from local_model import miei_modelli, profili_famiglia as pf, scelta_modello
 from local_model.native_config import NativeModelConfig
 

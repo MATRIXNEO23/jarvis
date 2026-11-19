@@ -1,7 +1,7 @@
 """Firecrawl: ricerca web. API verificata sulla documentazione ufficiale (17/11):
 POST https://api.firecrawl.dev/v2/search, Authorization: Bearer, corpo {query, limit},
 risposta {success, data:{web:[{title, url, description}]}}."""
-from servizi_ricerca.base import Ricerca, Risultato
+from online.servizi_ricerca.base import Ricerca, Risultato
 
 URL = "https://api.firecrawl.dev/v2/search"
 

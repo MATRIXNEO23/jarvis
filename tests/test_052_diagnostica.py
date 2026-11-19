@@ -4,8 +4,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-import servizi_online
-import servizi_ricerca
+from online import servizi_online
+from online import servizi_ricerca
 from diagnostica_claude import server_mcp, strumenti
 from local_model import scelta_modello
 from local_model.native_config import NativeModelConfig

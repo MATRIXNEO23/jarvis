@@ -76,7 +76,7 @@ from document_language import classify_document_choice
 from document_store import destination_from_voice
 from managed_documents import ManagedDocuments
 from document_recovery import release_closed_document
-from gpt_client import GPTClient, GPTUnavailable
+from online.gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
@@ -327,10 +327,10 @@ def main() -> None:
     __import__("github_lettura").costruisci_sezione(
         assistant_settings_frame, lambda text: write_line(text))
     # Servizi online con caselle e chiavi API (passo 8, servizi_online.py).
-    servizi_online_box = __import__("servizi_online").costruisci_sezione(
+    servizi_online_box = __import__("online").servizi_online.costruisci_sezione(
         assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
     # Servizi di ricerca (052): Tavily, Exa, Firecrawl, Linkup, con chiave e link.
-    __import__("servizi_ricerca").costruisci_sezione(
+    __import__("online").servizi_ricerca.costruisci_sezione(
         assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
     # Orchestratore online: cartelle sicure (lavoro a più passi, orchestratore.py).
     __import__("orchestratore").costruisci_sezione(
@@ -804,7 +804,7 @@ def main() -> None:
     output_queue: queue.Queue[tuple] = queue.Queue()
     def gpt_spuntato() -> bool:
         """061: UNICA fonte = la spunta «ChatGPT dal browser» nella lista Online."""
-        return __import__("servizi_online").spuntato("chatgpt_account")
+        return __import__("online").servizi_online.spuntato("chatgpt_account")
     gpt_status = tk.StringVar(value="GPT: inizializzazione" if gpt_spuntato() else "GPT: non spuntato nella lista Online")
     busy_local = False
     busy_gpt = False
@@ -817,13 +817,13 @@ def main() -> None:
     active_gpt = False
     # ChatGPT dal browser tra i servizi online (16/11): stesso ponte del pulsante GPT,
     # pronto solo quando il collegamento GPT è acceso e attivo.
-    __import__("servizi_online").ACCOUNT.update(
+    __import__("online").servizi_online.ACCOUNT.update(
         chiedi=lambda prompt, timeout: str(service.call(
             "ask", prompt=prompt, timeout=max(float(timeout), 60.0)).get("text", "")),
         pronto=lambda: bool(active_gpt) and bool(gpt_spuntato()),
         collega=lambda: collega_gpt())
     # 058: un servizio online saltato non è più silenzioso: la riga arriva in chat, console e lumi_errori.
-    __import__("servizi_online").AVVISO["scrivi"] = lambda text: root.after(0, lambda: write_line(text))
+    __import__("online").servizi_online.AVVISO["scrivi"] = lambda text: root.after(0, lambda: write_line(text))
     conversation_epoch = 0
     document_busy = False
     documents = ManagedDocuments()
@@ -1607,7 +1607,7 @@ def main() -> None:
             sdk_installed=service.installed_sdk().is_file(),
             node_available=bool(shutil.which("node")),
             bridge_file_present=(Path(__file__).resolve().parent
-                                 / "gpt_bridge.mjs").is_file(),
+                                 / "online" / "gpt_bridge.mjs").is_file(),
             bridge_running=service.bridge_running(),
             voice_present=voice is not None,
             voice_mode=voice_mode.get(),
@@ -1649,9 +1649,9 @@ def main() -> None:
         report = format_service_report(evidence, telegram=telegram,
             automatic=bool(telegram_auto.get()), credentials=credentials_present(),
             contacts=len(selected_telegram_contacts()),
-            online=[__import__("servizi_online").PER_ID[i].nome
-                    for i in __import__("servizi_online").spuntati()
-                    if i in __import__("servizi_online").PER_ID], gemma=state,
+            online=[__import__("online").servizi_online.PER_ID[i].nome
+                    for i in __import__("online").servizi_online.spuntati()
+                    if i in __import__("online").servizi_online.PER_ID], gemma=state,
             memory=bool(memory_enabled.get()),
             telethon=telethon,
             ffmpeg=shutil.which("ffmpeg") is not None)
@@ -2102,7 +2102,7 @@ def main() -> None:
     def ask_telegram_online(prompt: str, bridge: TelegramBridge) -> str:
         """061: «Risposte online» del contatto: il primo servizio online spuntato nella lista."""
         from local_model.online_permissions import authorize_online_request
-        so = __import__("servizi_online")
+        so = __import__("online").servizi_online
         if not so.disponibili():
             output_queue.put(("telegram_status", "Telegram: risposte online accese per questo "
                               "contatto, ma nessun servizio online è pronto (lista Online)."))
@@ -2252,7 +2252,7 @@ def main() -> None:
     def confirm_gpt_inference(detail: str) -> bool:
         """055: niente finestra Sì/No. Il consenso si chiede a voce e in chat («sì»/«no» senza
         «Lumi»); con il consenso già dato in questa conversazione risponde True subito."""
-        if closing or busy_gpt or not __import__("servizi_online").spuntati():
+        if closing or busy_gpt or not __import__("online").servizi_online.spuntati():
             return False
         # 055: epoca del consenso a voce, tenuta sulla funzione (nessuna variabile condivisa)
         if getattr(confirm_gpt_inference, "consent_epoch", None) == conversation_epoch:
@@ -2408,7 +2408,7 @@ def main() -> None:
     def ask_online(question: str, typed: bool, deepen: bool = False) -> None:
         """056 A.3: online solo con il «sì». Domanda a voce e in chat, risposta «sì»/«no» senza
         «Lumi»; riusa online_yes/online_no e servizi_online.IN_ATTESA (nessuna finestra)."""
-        so = __import__("servizi_online")
+        so = __import__("online").servizi_online
         if not so.disponibili():
             text = ("Non c'è nessun servizio online pronto: spuntalo e metti la chiave in "
                     "ONLINE ▾, oppure collega ChatGPT.")
@@ -2458,12 +2458,12 @@ def main() -> None:
         """056: voce e testo con UNA catena. Il motore dei comandi è già passato. Basso consumo:
         tutto va subito al modello offline; l'online solo con il «sì». Veloce: il primo servizio
         online, con il locale di riserva. Niente classificatore."""
-        if __import__("servizi_ricerca").parse(spoken) and lumi_ricerca(spoken):
+        if __import__("online").servizi_ricerca.parse(spoken) and lumi_ricerca(spoken):
             return                       # «cerca/approfondisci online …» anche scritto
-        if __import__("servizi_ricerca").approfondisci_locale(spoken):
+        if __import__("online").servizi_ricerca.approfondisci_locale(spoken):
             deepen_last(typed)
             return
-        so = __import__("servizi_online")
+        so = __import__("online").servizi_online
         if fast_mode():
             last_question[0] = spoken
             if so.disponibili():
@@ -2482,7 +2482,7 @@ def main() -> None:
 
     def local_after_gpt(spoken: str, typed: bool) -> None:
         """Ultimo anello: modello locale, oppure messaggio chiaro (il codice non va a Gemma)."""
-        if __import__("servizi_online").richiesta_codice(spoken):
+        if __import__("online").servizi_online.richiesta_codice(spoken):
             text = ("Per lo script servono i servizi online o GPT, e adesso nessuno ha risposto. "
                     "Controlla Servizi online o collega GPT.")
             write_line("LUMI > " + text)
@@ -4592,7 +4592,7 @@ def main() -> None:
             request.set("")
             return
         # «Ragiona online» va ai servizi online (prova 16/11).
-        if __import__("servizi_online").forza_online(message)[0]:
+        if __import__("online").servizi_online.forza_online(message)[0]:
             submit_gemma_trial()
             return
         # 061: niente interruttore GPT/Gemma: la chat segue sempre la catena (spunte della lista Online).
@@ -4613,7 +4613,7 @@ def main() -> None:
                 "Nessun GGUF locale pronto. Scegli un modello in Impostazioni > Modelli.")
             write_line("CHAT > Nessun modello locale configurato.")
             return
-        if __import__("servizi_online").disponibili():
+        if __import__("online").servizi_online.disponibili():
             if busy_gpt:
                 write_line("LUMI > Sto già elaborando. Attendi la risposta.")
                 return
@@ -5014,7 +5014,7 @@ def main() -> None:
         """«cerca online …» / «approfondisci online …»: primo servizio di ricerca pronto
         (poi i successivi); riassunto e link nella finestra risultati, browser chiuso.
         056: prima si chiede «Vado online?» (sì/no senza «Lumi»): niente quota senza il sì."""
-        ricerca = __import__("servizi_ricerca")
+        ricerca = __import__("online").servizi_ricerca
         parsed = ricerca.parse(spoken)
         if parsed is None:
             return False
@@ -5101,7 +5101,7 @@ def main() -> None:
         submit_gemma_voice(pending[0], typed=pending[1], route=route)
 
     def resume_online_question(route: str) -> None:
-        waiting = __import__("servizi_online").IN_ATTESA
+        waiting = __import__("online").servizi_online.IN_ATTESA
         pending, waiting["domanda"] = waiting["domanda"], None
         if pending is None:
             return

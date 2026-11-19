@@ -176,7 +176,7 @@ def fatti_da(d) -> dict:
         except Exception:
             mic = ""
     try:
-        online = bool(__import__("servizi_online").disponibili())     # 061: solo le spunte della lista Online
+        online = bool(__import__("online").servizi_online.disponibili())     # 061: solo le spunte della lista Online
     except Exception:
         online = False
     info = fatti(addons=addons, local_model=model, local_on=local_on, online=online, mic=mic)

@@ -1,5 +1,5 @@
 """OpenAI GPT tramite API: a consumo, separato dall'abbonamento ChatGPT."""
-from servizi_online.base import Servizio
+from online.servizi_online.base import Servizio
 
 SERVIZIO = Servizio(
     uso="GPT con la TUA CHIAVE OpenAI (diverso da «ChatGPT dal browser», che usa il tuo account senza chiave): bravo in tutto, anche nei lavori a più passi. A pagamento.",

@@ -5,8 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-import servizi_online
-
+from online import servizi_online
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -47,7 +46,7 @@ class CodeRequestTests(unittest.TestCase):
 
     def test_failed_online_for_code_does_not_fall_back_to_local_model(self):
         source = (ROOT / "local_model" / "conversazione_lumi.py").read_text(encoding="utf-8")
-        self.assertIn('if not local_ok or __import__("servizi_online").richiesta_codice(spoken):',
+        self.assertIn('if not local_ok or __import__("online").servizi_online.richiesta_codice(spoken):',
                       source)
 
 

@@ -73,7 +73,7 @@ from document_language import classify_document_choice
 from document_store import destination_from_voice
 from managed_documents import ManagedDocuments
 from document_recovery import release_closed_document
-from gpt_client import GPTClient, GPTUnavailable
+from online.gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
@@ -316,11 +316,11 @@ def installa(d):
                 d.write_line, d.speak_result, no_action="nlu_no")
             return True
         # Passo 8: servizi online (forzati con «ragiona online», sempre, o proposti).
-        asked_online = __import__("servizi_online").forza_online(spoken)[0]
-        route, spoken = __import__("servizi_online").percorso(spoken, route)
-        if orig_route is None and __import__("servizi_online").richiesta_codice(spoken):
+        asked_online = __import__("online").servizi_online.forza_online(spoken)[0]
+        route, spoken = __import__("online").servizi_online.percorso(spoken, route)
+        if orig_route is None and __import__("online").servizi_online.richiesta_codice(spoken):
             # Script e codice: online. Con route esplicita decide la catena (056: prima il «sì»).
-            if __import__("servizi_online").disponibili():
+            if __import__("online").servizi_online.disponibili():
                 route = "online"
             else:
                 text = ("Per scrivere codice serve un servizio online, e adesso nessuno è pronto. "
@@ -333,7 +333,7 @@ def installa(d):
             d.write_line("ONLINE > Nessun servizio online pronto (spunta e chiave in ONLINE ▾): "
                          "rispondo col modello locale.")
         if route == "proponi":
-            __import__("servizi_online").IN_ATTESA["domanda"] = (spoken, typed)
+            __import__("online").servizi_online.IN_ATTESA["domanda"] = (spoken, typed)
             __import__("lumi_comandi").chiedi(
                 "online_yes", __import__("frasi_lumi").say("proponi_online"),
                 d.write_line, d.speak_result, no_action="online_no")
@@ -464,7 +464,7 @@ def installa(d):
                         d.gemma_trial_queue.put(("online_ok", (spoken, name, answer), voice_epoch))
                         return
                     note = "Servizi online non disponibili: " + "; ".join(answer)[:300]
-                    if not local_ok or __import__("servizi_online").richiesta_codice(spoken):
+                    if not local_ok or __import__("online").servizi_online.richiesta_codice(spoken):
                         # Codice: mai Gemma (decisione 17/11); messaggio breve e chiaro.
                         d.gemma_trial_queue.put(("online_fail", note + (
                             ". Per il codice serve l'online: riprova tra poco." if local_ok else ""),
