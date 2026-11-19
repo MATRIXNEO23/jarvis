@@ -252,6 +252,21 @@ Da correggere nella prossima build (prove 058 delle 05:44, approvato):
 - pop-up dei risultati con «Chiudo la finestra?», colonne del meteo, selettori in chat non tagliati.
 Gemini spostato in fondo all'ordine da Claude (05:45, con l'ok dell'utente) perché da questo PC va sempre in timeout.
 
+## Build 061: contenuto deciso (19/11, 08:00-08:17, a voce)
+1. GPT solo nella lista Online (opzione B): via settings["gpt_enabled"] ovunque, via la casella «Abilita collegamento ChatGPT» (Collega/Scollega restano), via tutti i doppioni. La chat segue sempre la catena. Piano GPT e perfezionamento dei documenti usano il primo servizio online spuntato.
+2. Comandi a voce: via «passa a GPT» e «passa a Gemma». Restano o si aggiungono «passa online», «passa offline», «cambia modello», «modalità basso consumo» e «modalità veloce» (che muovono lo slide). «Cervello online acceso/spento» diventa sinonimo di passa online/offline. Le frasi restano personalizzabili.
+3. Telegram:
+   - risposte automatiche OFFLINE;
+   - spunta «Risposte online» PER CONTATTO, spenta di serie;
+   - invio diretto con Invio dalla chat aperta, senza conferma, togliendo il vecchio «invia messaggio»;
+   - il comando a voce «scrivi a…» resta.
+   La spunta «Comandi» per contatto (meteo, ora, in futuro l'agenda; mai comandi sul PC) è DA DEFINIRE più avanti: non nella 061.
+4. Errori dei servizi online sempre con la fase (DNS, TLS o risposta), anche in chat e in diagnostica, con uno strumento di prova del servizio nella diagnostica.
+5. Tema Lumi su tutte le finestre, finestra del meteo compresa: niente schermate bianche.
+6. Riordino, passo 2: cartella online/ (gpt_client, gpt_bridge.mjs e installa_gpt, servizi_online, servizi_ricerca).
+7. «Intendevi…? Sì o no» per le frasi brevi con parole di comando (vedi la decisione delle 05:30).
+Dopo (build «comprensione»): pagina «Parole e comandi» unica con menu verticale delle sezioni, senza finestre in più; aiuto completo con tutti i comandi. Restyling: timer stile cronometro Casio (Windows 11, angoli arrotondati) con l'add-on sveglia; temi dell'HUD tra cui scegliere, anche minimale.
+
 ## Telegram, 19/11 07:45-07:50
 - BUG: Telegram risponde con ChatGPT dal browser (online) perché guarda il vecchio settings["gpt_enabled"], tolto dalla barra nella 056 ma rimasto acceso e invisibile, anche se nella lista «ChatGPT dal browser» NON è spuntato. Correzione proposta: eliminare gpt_enabled ovunque; tutto segue solo le spunte della lista, con un test anti-richiamo.
 - DECISO (07:52): le risposte automatiche di Telegram sono OFFLINE. Nelle impostazioni di Telegram c'è l'opzione «Risposte online» (spenta di serie): se l'utente la attiva, si usano i servizi online spuntati nella lista. Da verificare dal vivo.
