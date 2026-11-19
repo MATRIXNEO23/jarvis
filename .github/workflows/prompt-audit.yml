@@ -22,7 +22,7 @@ jobs:
           from conversation_router import build_conversation_prompt
           from conversation_memory import ConversationMemory
           from jarvis_persona import PERSONA, BRIEF_CONTEXT_RULE, CONTEXT_RULE, compact_memory, prompt_units, build_chat_prompt
-          from dialogue_style import style_instruction
+          from dialogue import style_instruction
           from capability_registry import capability_prompt
           from live_capabilities import AddonBinding, LiveCapabilityRegistry, snapshot_capabilities, capability_status_prompt
           registry = LiveCapabilityRegistry()

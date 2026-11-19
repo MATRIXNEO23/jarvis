@@ -197,9 +197,9 @@ class FileAccessTests(unittest.TestCase):
     def test_chat_does_not_parse_as_command_precise_and_aliases(self):
         for chat in ('ieri ho letto un file','Netflix è interessante','stasera voglio guardare un film'):
             self.assertIsNone(self.files.parse_command(chat))
-        self.assertEqual(self.files.parse_command('Jarvis cerca file preventivo')[0], 'search')
+        self.assertEqual(self.files.parse_command('Lumi cerca file preventivo')[0], 'search')
         self.assertEqual(self.files.parse_command('spiegami file 1'), ('read', {'target':'1','kind':'file','explain':True}))
-        self.assertIn('Accesso file attivo', self.engine.execute('cosa puoi fare?').message)
+        self.assertIn('Accesso file attivo', self.engine.execute('comandi').message)
         self.assertIn('apri calcolatrice', self.engine.execute('aiuto').message)
 
     def test_ui_checkbox_inheritance_and_viewer_real_tk(self):
@@ -271,7 +271,7 @@ class FileAccessTests(unittest.TestCase):
              'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,
              'try_telegram_voice_send':lambda x:False,'save_only_waiting':False,
              'doc_dialog':types.SimpleNamespace(phase='idle'),'parse_simple_save':lambda x:None,
-             'project_voice_command':lambda x:False,'preference_command':lambda x:False,
+             'project_voice_command':lambda x:False,'preference_command':lambda x:False,'memory_wipe_command':lambda x:False,
              'handle_project_reference':lambda x:False,
              'handle_unanchored_short_reply':lambda x:self.fail('file choice reached generic guard'),
              'try_file_command':lambda text:calls.append(self.files.parse_command(text)) or True}
@@ -505,13 +505,13 @@ class FileAccessTests(unittest.TestCase):
     def test_store_rows_still_obey_local_policy(self):
         from file_access.windows import installed_locations
         with patch('file_access.windows.shell_query',return_value={'status':'ok','rows':[
-                {'path':str(self.docs),'name':'Jarvis Test Store App'},
-                {'path':str(self.hidden),'name':'Jarvis Test Store App'}]}):
-            rows=installed_locations('Jarvis Test Store App')
+                {'path':str(self.docs),'name':'Lumi Test Store App'},
+                {'path':str(self.hidden),'name':'Lumi Test Store App'}]}):
+            rows=installed_locations('Lumi Test Store App')
         self.assertTrue(any(os.path.samefile(path,self.docs) and
-            why=='Registrazione Windows: Jarvis Test Store App' for path,why in rows))
+            why=='Registrazione Windows: Lumi Test Store App' for path,why in rows))
         with patch('file_access.service.installed_locations',return_value=rows),patch.object(self.files,'index',side_effect=AssertionError('No scan')):
-            result=self.files.execute('locate',{'query':'Jarvis Test Store App'})
+            result=self.files.execute('locate',{'query':'Lumi Test Store App'})
         self.assertEqual(len(result.listing['items']),1)
         self.assertTrue(os.path.samefile(result.listing['items'][0][2],self.docs))
         self.assertFalse(any(os.path.samefile(row[2],self.hidden) for row in result.listing['items']))
@@ -834,9 +834,9 @@ function New-Object {
              'pending_project_name':False,'pending_project_rename_id':None,'pending_project_trash_id':None,
              'save_only_waiting':False,'doc_dialog':SimpleNamespace(phase='idle'),
              'parse_simple_save':lambda s:None,'project_voice_command':lambda s:projects.append(s) or True,
-             'preference_command':lambda s:False,'handle_project_reference':lambda s:False,
+             'preference_command':lambda s:False,'memory_wipe_command':lambda s:False,'handle_project_reference':lambda s:False,
              'handle_unanchored_short_reply':lambda s:False,'try_self_diagnostic':lambda s:False,
-             'maybe_queue_telegram_note':lambda s:False,'gpt_enabled':SimpleNamespace(get=lambda:False)}
+             'maybe_queue_telegram_note':lambda s:False,'gpt_spuntato':lambda:False}
         exec(compile(ast.Module(body=callbacks,type_ignores=[]),'real-explorer-console-gate','exec'),env)
         env['send_console_input']()
         self.assertEqual(calls[0]['file_call'],('open',{'target':'Foto','scope':'current'}))
@@ -1059,6 +1059,7 @@ function New-Object {
         root.update()
         self.assertFalse(view.in_progress)
         self.assertIn('interrotta',view.status.get())
+        self.assertFalse(view.window.winfo_viewable())      # 16/11: niente finestra vuota
         report=self.engine.execute('elenca cartella '+str(self.docs))
         again=show_results(root,report.file_listing,lambda *a:None,self.files.mark_view_selection)
         root.update()

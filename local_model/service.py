@@ -6,7 +6,7 @@ in-flight results; an already submitted inference cannot be un-sent.
 """
 import queue
 import threading
-from gpt_client import GPTUnavailable
+from online.gpt_client import GPTUnavailable
 
 
 class ModelService:

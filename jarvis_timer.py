@@ -1,4 +1,4 @@
-"""Standalone, lightweight Jarvis countdown pop-up and offline Windows alarms."""
+"""Standalone, lightweight Lumi countdown pop-up and offline Windows alarms."""
 from __future__ import annotations
 
 import io
@@ -36,7 +36,7 @@ def parse_timer_command(text: str) -> TimerCommand | None:
     if not isinstance(text, str) or not (0 < len(text) <= 200):
         return None
     value = " ".join(text.casefold().strip(" .,!?").split())
-    value = re.sub(r"^(?:ehi\s+)?jarvis\s*[,.:]?\s*", "", value)
+    value = re.sub(r"^(?:ehi\s+)?lumi\s*[,.:]?\s*", "", value)
     if not re.search(r"\btimer\b", value):
         return None
     # Import only while parsing: sveglia already imports this module for audio.
@@ -215,7 +215,7 @@ def play_alarm(sound: str, volume: int, stop: threading.Event,
 
 
 class TimerPopup:
-    """One Tk toplevel, created only on demand; main Jarvis HUD is untouched."""
+    """One Tk toplevel, created only on demand; main Lumi HUD is untouched."""
 
     def __init__(self, root: tk.Misc, get_preferences: Callable[[], dict]):
         self.root = root
@@ -247,7 +247,7 @@ class TimerPopup:
             return
         window = tk.Toplevel(self.root)
         self.window = window
-        window.title("JARVIS // TIMER")
+        window.title("LUMI // TIMER")
         window.geometry("390x324")
         window.resizable(False, False)
         window.configure(bg=BG)

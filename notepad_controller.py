@@ -1,4 +1,4 @@
-"""Controls ONLY a new classic Windows 10 Notepad process owned by Jarvis.
+"""Controls ONLY a new classic Windows 10 Notepad process owned by Lumi.
 
 Conservative Win32 API: no global keystrokes, clipboard, generic window closing,
 taskkill, arbitrary process enumeration for actions or shell. Modern Notepad

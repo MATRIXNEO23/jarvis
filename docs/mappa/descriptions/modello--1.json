@@ -1,0 +1,164 @@
+{
+ "files": {
+  "local_model/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "local_model/chat_context.py": {
+   "name": "Memoria della chat",
+   "description": "Legge la memoria per una singola chat del modello locale."
+  },
+  "local_model/chat_sessions.py": {
+   "name": "Sessioni di chat",
+   "description": "Chat locali separate, da attivare a scelta."
+  },
+  "local_model/chat_templates.py": {
+   "name": "Formato dei messaggi",
+   "description": "Dà a ogni famiglia di modelli il formato di messaggio giusto."
+  },
+  "local_model/chat_transport.py": {
+   "name": "Percorso delle richieste",
+   "description": "Sceglie dove mandare le richieste in base alla scelta esplicita."
+  },
+  "local_model/chat_ui.py": {
+   "name": "Chat del modello",
+   "description": "Chat e scelta dell'istanza nella schermata di Lumi."
+  },
+  "local_model/compact_context.py": {
+   "name": "Contesto compatto",
+   "description": "Tiene un riassunto duraturo della conversazione per un modello piccolo."
+  },
+  "local_model/context_window.py": {
+   "name": "Scambio precedente",
+   "description": "Sceglie l'ultimo scambio utile da ricordare."
+  },
+  "local_model/conversazione_lumi.py": {
+   "name": "Conversazione locale",
+   "description": "Conversazione con il modello sul PC."
+  },
+  "local_model/idle_memory_gate.py": {
+   "name": "Memoria a riposo",
+   "description": "Decide quando elaborare la memoria senza disturbare."
+  },
+  "local_model/kobold_server_canary.py": {
+   "name": "Prova server",
+   "description": "Prova opzionale di un server locale già acceso."
+  },
+  "local_model/memory_preferences.py": {
+   "name": "Preferenze memoria",
+   "description": "Salva le scelte sulla memoria a riposo."
+  },
+  "local_model/memory_ui.py": {
+   "name": "Impostazioni memoria",
+   "description": "Finestra per la memoria a riposo, senza avviare nulla."
+  },
+  "local_model/miei_modelli.py": {
+   "name": "I miei modelli",
+   "description": "Tre caselle fisse e l'elenco completo dei modelli."
+  },
+  "local_model/model_availability_f5.py": {
+   "name": "Modelli disponibili",
+   "description": "Controlla in sola lettura quali modelli ci sono."
+  },
+  "local_model/model_profiles_f5.py": {
+   "name": "Profili dei modelli",
+   "description": "Controlla che i profili dei modelli siano validi."
+  },
+  "local_model/model_switch_gate_f5.py": {
+   "name": "Cambio modello sicuro",
+   "description": "Controlla se il cambio di modello è sicuro; per ora non carica nulla."
+  },
+  "local_model/motore_processo.py": {
+   "name": "Motore separato",
+   "description": "Avvia il modello locale in un processo a parte dentro Lumi."
+  },
+  "local_model/multimodel_ui_f5.py": {
+   "name": "Più modelli",
+   "description": "Pannello sperimentale per usare più modelli."
+  },
+  "local_model/native_bridge.py": {
+   "name": "Ponte nativo",
+   "description": "Collega il modello Gemma direttamente dentro il programma."
+  },
+  "local_model/native_chat_adapter.py": {
+   "name": "Adattatore chat nativo",
+   "description": "Fa rispondere il modello nativo, senza ripiego sulla rete."
+  },
+  "local_model/native_config.py": {
+   "name": "Impostazioni nativo",
+   "description": "Controlla le impostazioni del modello nativo sul processore."
+  },
+  "local_model/native_conversation_session.py": {
+   "name": "Conversazione nativa",
+   "description": "Chat riutilizzabile con storia limitata."
+  },
+  "local_model/native_factory.py": {
+   "name": "Creazione nativo",
+   "description": "Prepara il modello Gemma senza cambiare le scelte di Lumi."
+  },
+  "local_model/native_initializer.py": {
+   "name": "Avvio nativo",
+   "description": "Prepara la libreria del motore del modello."
+  },
+  "local_model/native_provider.py": {
+   "name": "Fornitore locale",
+   "description": "Risponde con il modello sul PC, senza internet."
+  },
+  "local_model/native_settings.py": {
+   "name": "Impostazioni modificabili",
+   "description": "Impostazioni sicure del modello nativo."
+  },
+  "local_model/native_ui.py": {
+   "name": "Finestra modello nativo",
+   "description": "Finestra delle impostazioni, senza caricare il modello."
+  },
+  "local_model/online_permissions_ui.py": {
+   "name": "Finestra permessi",
+   "description": "Dove l'utente autorizza ogni funzione online."
+  },
+  "local_model/online_permissions.py": {
+   "name": "Permessi online",
+   "description": "Permesso esplicito per ogni funzione online, mai dedotto."
+  },
+  "local_model/owned_kobold_lab_f5.py": {
+   "name": "Prova processo proprio",
+   "description": "Controllo sperimentale di un processo del modello avviato da Lumi."
+  },
+  "local_model/owned_process_f5.py": {
+   "name": "Processo del modello",
+   "description": "Gestisce un processo del modello avviato esplicitamente da Lumi."
+  },
+  "local_model/persona.py": {
+   "name": "Carattere e lunghezza",
+   "description": "Dà a Lumi il carattere e risposte brevi e semplici."
+  },
+  "local_model/profili_famiglia.py": {
+   "name": "Profili dei modelli",
+   "description": "Tre posti di impostazioni per ogni modello."
+  },
+  "local_model/prompt_breve.py": {
+   "name": "Saluti brevi",
+   "description": "Evita di ripetere la risposta precedente a saluti e domande brevi."
+  },
+  "local_model/prompt_diagnostics.py": {
+   "name": "Spiega la richiesta",
+   "description": "Spiega in memoria una richiesta esatta, a richiesta."
+  },
+  "local_model/qwen25_template_f5.py": {
+   "name": "Formato Qwen 2.5",
+   "description": "Formato dei messaggi sperimentale per Qwen 2.5."
+  },
+  "local_model/qwen3_template_f5.py": {
+   "name": "Formato Qwen 3",
+   "description": "Formato dei messaggi sperimentale per Qwen 3."
+  },
+  "local_model/registro_modelli.py": {
+   "name": "Registro modelli",
+   "description": "Elenco dei modelli aggiunti e delle tre caselle fisse."
+  },
+  "local_model/runtime.py": {
+   "name": "Compatibilità vecchia",
+   "description": "Mantiene la compatibilità con la vecchia configurazione."
+  }
+ }
+}

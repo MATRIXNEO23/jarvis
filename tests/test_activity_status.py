@@ -32,9 +32,45 @@ class Value:
         self.value = value
 
 
+class Spunta(Value):
+    """061: la spunta «ChatGPT dal browser» della lista Online: si legge chiamandola."""
+    def __call__(self):
+        return self.value
+
+
 class GlobalCallbacks(ast.NodeTransformer):
     def visit_Nonlocal(self, node):
         return ast.copy_location(ast.Global(names=node.names), node)
+
+    def visit_Attribute(self, node):
+        # Funzioni spostate fuori da jarvis.py: «d.nome» (lumi_contesto.Vivo) torna «nome»,
+        # così il test fornisce i valori nello stesso dizionario di prima.
+        self.generic_visit(node)
+        if isinstance(node.value, ast.Name) and node.value.id == "d":
+            return ast.copy_location(ast.Name(id=node.attr, ctx=node.ctx), node)
+        return node
+
+
+def moved_functions():
+    """Funzioni annidate di main() spostate in moduli (docs/PIANO-DIVISIONE-JARVIS.md)."""
+    root = Path(__file__).resolve().parents[1]
+    found = {}
+    for path in [*sorted(root.glob("lumi_parti/*.py")), *sorted(root.glob("*/lumi_*.py")),
+                 *sorted(root.glob("local_model/conversazione_lumi.py"))]:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in tree.body:
+            if isinstance(node, ast.FunctionDef) and node.name == "installa":
+                for fn in node.body:
+                    if isinstance(fn, ast.FunctionDef):
+                        found[fn.name] = fn
+    return found
+
+
+def find_main_function(main, name):
+    for node in main.body:
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return node
+    return moved_functions()[name]
 
 
 @unittest.skipUnless(os.name == "nt", "User requires Windows-only runtime tests")
@@ -70,14 +106,14 @@ class ActivityStatusTests(unittest.TestCase):
         env = dict(busy_gpt=False, busy_local=False, document_busy=False,
                    gemma_session=[None], gemma_trial_busy=[False],
                    gpt_request_action="", closing=False, active_gpt=True,
-                   gpt_enabled=Value(True), memory_enabled=Value(True),
+                   gpt_spuntato=Spunta(True), memory_enabled=Value(True),
                    speaker=SimpleNamespace(is_speaking=lambda: False),
                    voice=SimpleNamespace(is_user_speaking=lambda: False, is_listening=lambda: False),
                    engine=SimpleNamespace(file_access=None), orbit_nodes_cache=(),
                    refresh_buttons=Mock(), gpt_status=Value("GPT: connesso"),
                    threading=SimpleNamespace(Thread=thread), service=Mock(),
                    output_queue=queue.Queue(), write_line=Mock(), speak_result=Mock(),
-                   remember_exchange=Mock(), runtime_events=Mock(),
+                   remember_exchange=Mock(), local_after_gpt=Mock(), runtime_events=Mock(),
                    conversation_epoch=7, voice_mode=Value(GPT_CONVERSATION),
                    GPT_CONVERSATION=GPT_CONVERSATION, CONTINUOUS="ascolto_continuo", STANDBY=STANDBY,
                    PUSH_TO_TALK=PUSH_TO_TALK)
@@ -87,12 +123,12 @@ class ActivityStatusTests(unittest.TestCase):
                    telegram_gpt_session_token=None, telegram_gpt_session_choice=Value(False),
                    messagebox=SimpleNamespace(askyesno=Mock(return_value=True)))
         self.callback("confirm_gpt_inference", env)
+        __import__("consenso_finestra").installa(env)   # 055: consenso con finestra simulata
         self.callback("set_telegram_gpt_session", env)
         return env, workers, eval(self.provider_code, env)
 
     def callback(self, name, env):
-        node = copy.deepcopy(next(n for n in self.main.body
-                                  if isinstance(n, ast.FunctionDef) and n.name == name))
+        node = copy.deepcopy(find_main_function(self.main, name))
         node = GlobalCallbacks().visit(node)
         code = ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[]))
         exec(compile(code, "real-"+name, "exec"), env)
@@ -124,9 +160,9 @@ class ActivityStatusTests(unittest.TestCase):
         hud.set_state_provider(lambda: state)
         try:
             for flags, expected in (
-                ({"thinking": True, "reasoning": True}, "JARVIS STA RAGIONANDO"),
+                ({"thinking": True, "reasoning": True}, "LUMI STA RAGIONANDO"),
                 ({"thinking": True, "searching": True}, "RICERCA SUL PC IN CORSO"),
-                ({"thinking": True, "reasoning": True, "speaking": True}, "JARVIS STA PARLANDO"),
+                ({"thinking": True, "reasoning": True, "speaking": True}, "LUMI STA PARLANDO"),
                 ({"thinking": True, "reasoning": True, "listening": True}, "LA TUA VOCE È RILEVATA"),
                 ({"thinking": True}, "ELABORAZIONE IN CORSO"),
                 ({}, "MICROFONO SPENTO"),
@@ -136,7 +172,7 @@ class ActivityStatusTests(unittest.TestCase):
                 hud._advance()
                 root.update_idletasks()
                 self.assertIn(expected, hud.chat_info.get())
-            self.assertEqual(hud.visual_status.get(), "JARVIS // STANDBY")
+            self.assertEqual(hud.visual_status.get(), "LUMI // STANDBY")
         finally:
             hud.close()
             root.destroy()
@@ -149,7 +185,7 @@ class ActivityStatusTests(unittest.TestCase):
                 self.assertTrue(env["busy_gpt"])
                 self.assertEqual(provider()["reasoning"], action in ("ask", "conversation", "typed_conversation"))
                 self.assertEqual(len(workers), 1)
-                env["gpt_enabled"].set(False)
+                env["gpt_spuntato"].set(False)
                 self.assertFalse(provider()["reasoning"])
                 self.assertFalse(provider()["thinking"])
 
@@ -246,21 +282,23 @@ class ActivityStatusTests(unittest.TestCase):
         self.assertEqual(env["service"].call.call_count, 3)
 
     def test_telegram_uses_gemma_only_when_gpt_is_switched_off(self):
-        from telegram_bridge import telegram_assistant_prompt, telegram_local_prompt
+        from telegram_bridge import (telegram_assistant_prompt, telegram_local_messages,
+                                     telegram_local_prompt)
         env, _, _ = self.environment()
         ready = env["telegram_gpt_ready"]
         bridge = SimpleNamespace(is_enabled=Mock(return_value=True))
         session = Mock()
         prompts = []
-        def ask_local(build_prompt):
-            prompts.append(build_prompt(512))
+        def ask_local(build_messages):
+            prompts.append(str(build_messages(3)))
             return "Ciao, come posso aiutarti?"
-        session.ask_isolated.side_effect = ask_local
+        session.ask_isolated_messages.side_effect = ask_local
         env.update(get_gemma_session=Mock(return_value=session),
-                   ask_telegram_gpt=Mock(return_value=""),
+                   ask_telegram_online=Mock(return_value=""),
                    telegram_assistant_prompt=telegram_assistant_prompt,
                    telegram_local_prompt=telegram_local_prompt,
-                   settings={"gpt_enabled": False, "telegram_contact_profiles": {"123": "Usa il tu", "456": "Usa il lei"}})
+                   telegram_local_messages=telegram_local_messages,
+                   settings={"telegram_contact_profiles": {"123": "Usa il tu", "456": "Usa il lei"}})
         reply = self.callback("ask_telegram_reply", env)
         self.assertEqual(reply("Ciao", "Contesto privato", bridge, 123),
                          "Ciao, come posso aiutarti?")
@@ -273,14 +311,14 @@ class ActivityStatusTests(unittest.TestCase):
         reply("Ciao", "", bridge, 123)
         self.assertIn("Tono cordiale", prompts[2])
         self.assertNotIn("Usa il tu", prompts[2])
-        env["ask_telegram_gpt"].assert_not_called()
+        env["ask_telegram_online"].assert_not_called()
 
-        env["settings"]["gpt_enabled"] = True
+        env["settings"]["telegram_online_contacts"] = [123]
         ready.set()
         self.assertEqual(reply("Ciao", "", bridge, 123), "")
-        env["ask_telegram_gpt"].assert_called_once()
-        self.assertNotIn("Tono cordiale", env["ask_telegram_gpt"].call_args.args[0])
-        self.assertEqual(session.ask_isolated.call_count, 3)
+        env["ask_telegram_online"].assert_called_once()
+        self.assertNotIn("Tono cordiale", env["ask_telegram_online"].call_args.args[0])
+        self.assertEqual(session.ask_isolated_messages.call_count, 3)
 
     def test_actual_gpt_timeout_clears_phase_and_reports_reason_in_chat(self):
         env, workers, provider = self.environment()

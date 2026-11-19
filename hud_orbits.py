@@ -2,7 +2,7 @@
 
 Single Tk Canvas, zero extra background threads. Markers move at the existing
 HUD tick rate and use the current ReactorArt geometry. Mouse hover shows
-a label; click opens a handler supplied by Jarvis, never runs code from memory.
+a label; click opens a handler supplied by Lumi, never runs code from memory.
 """
 from __future__ import annotations
 

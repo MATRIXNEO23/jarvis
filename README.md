@@ -2,7 +2,7 @@
 > [Scarica la ZIP di prova con le correzioni](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/audit/full-jarvis-fixes-20261031.zip).  
 > Estrai in una cartella nuova e avvia **avvia_jarvis.bat**: crea un profilo dati separato.  
 > **Nuova scelta dell'utente:** microfono ATTIVO all'avvio (se Vosk e il dispositivo sono disponibili); resta disattivabile manualmente dalle impostazioni. Risposte Telegram automatiche OFF nel nuovo profilo.  
-> Le sezioni seguenti descrivono anche fasi storiche precedenti: fanno fede le istruzioni aggiornate in **LEGGIMI_PROVA_TELEGRAM_50.txt** e **docs/AUDIT_COMPLETO_20261031.md**.
+> Le sezioni seguenti descrivono anche fasi storiche precedenti: fanno fede le istruzioni aggiornate in **docs/LEGGIMI_PROVA_TELEGRAM_50.txt** e **docs/AUDIT_COMPLETO_20261031.md**.
 
 # Jarvis — Windows 10 (64 bit)
 
@@ -12,7 +12,7 @@ Assistente locale progettato per HP Pavilion i3-2100, 10 GB RAM, con obiettivo *
 
 **[SCARICA JARVIS — ZIP COMPLETO (versione aggiornata)](https://github.com/MATRIXNEO23/jarvis/archive/refs/heads/main.zip)**
 
-[Cartella Download con istruzioni semplici](Download/README.md). Non serve cercare gli artifact di GitHub Actions: lo ZIP contiene tutta la repository e i file `installa_gpt.bat` e `avvia_jarvis.bat`. Versione **alpha**; il primo login e una risposta GPT sono stati provati sul Pavilion il 30/10/2026. Le altre funzioni richiedono collaudi specifici.
+[Cartella Download con istruzioni semplici](Download/README.md). Non serve cercare gli artifact di GitHub Actions: lo ZIP contiene tutta la repository e i file `online/installa_gpt.bat` e `avvia_jarvis.bat`. Versione **alpha**; il primo login e una risposta GPT sono stati provati sul Pavilion il 30/10/2026. Le altre funzioni richiedono collaudi specifici.
 
 ## Architettura e roadmap
 
@@ -43,13 +43,13 @@ Questa sezione descrive una prova vocale storica. Nel ramo di audit attuale il m
 ## Stato di questa prima base
 
 - [x] Interfaccia minimale delle impostazioni e salvataggio locale.
-- [x] Interruttore GPT acceso di default e spento/riacceso manualmente, con stato persistente.
+- [x] ChatGPT dal browser si usa solo se è spuntato nella lista Online (061: tolto l'interruttore GPT a parte).
 - [x] Modalità standby disponibile e controllabile; **in questo ramo** la preferenza predefinita è ascolto attivo all'avvio.
 - [x] Motore locale a comandi consentiti, con registro attività SQLite (`local_engine.py`). Comandi supportati: `aiuto`, `stato sistema`, `mostra download`, `cerca file NOME` (ricerca limitata a Download), `apri blocco note`, `apri calcolatrice`, `apri esplora file`, `apri download`, `ultimi comandi`. Nessun comando shell arbitrario.
 - [x] Campo comandi testuale integrato nella finestra, con lavoro su thread separato per non bloccare la GUI.
 - [x] Test unitari e sintassi **superati sui runner GitHub Actions Windows e Linux** ([esecuzione riuscita](https://github.com/MATRIXNEO23/jarvis/actions/runs/41084817158)). **Primo avvio e prima risposta GPT confermati dall'utente sul Pavilion il 30/10/2026; collaudo delle altre funzioni ancora necessario**.
 
-- [x] **Codice di integrazione GPT presente:** adapter Node `gpt_bridge.mjs` basato sul [DevKit ufficiale](https://github.com/openai/sign-in-with-chatgpt-devkit), client Python via pipe, cifratura DPAPI per utente Windows e installer su richiesta con SDK fissato a commit specifico.
+- [x] **Codice di integrazione GPT presente:** adapter Node `online/gpt_bridge.mjs` basato sul [DevKit ufficiale](https://github.com/openai/sign-in-with-chatgpt-devkit), client Python via pipe, cifratura DPAPI per utente Windows e installer su richiesta con SDK fissato a commit specifico.
 - [x] **Interfaccia GPT:** Connetti ChatGPT, Scollega account, Chiedi a GPT, interruttore ON/OFF manuale; il tasto ON **non** equivale a una sessione OAuth connessa.
 - [x] **Verifiche statiche e protocollo:** test Windows/Linux Python, sintassi Node e PowerShell; [smoke test Windows del kit GPT e del dialogo con il processo superato](https://github.com/MATRIXNEO23/jarvis/actions/runs/41087321055). Questo **non** verifica un login reale al piano ChatGPT.
 - [x] **Primo login e risposta GPT sul Pavilion (30/10/2026):** l'utente ha confermato SDK installato, stato «connesso» e risposta pertinente ricevuta. Restano da testare riavvio, riconnessione, quote e consumi.
@@ -63,13 +63,13 @@ Questa sezione descrive una prova vocale storica. Nel ramo di audit attuale il m
 3. Verifica che GPT sia connesso. Premi **Pianifica attività**, quindi scrivi, per esempio: `Apri la calcolatrice e controlla quanta RAM ho disponibile`.
 4. Esamina l'anteprima. Premi **Approva ed esegui** solo se i passi corrispondono a ciò che desideri. Puoi usare **Annulla** per scartare il piano prima dell'esecuzione.
 5. Il programma non elimina, scrive o modifica file e non esegue comandi shell attraverso questo pianificatore. Sono supportati solo i comandi già implementati dall'esecutore locale.
-6. Per provare l'arresto: approva un piano innocuo di più passi e premi «Annulla», oppure disattiva GPT o chiudi Jarvis durante l'esecuzione. Verifica che non partano passi successivi. La singola operazione già iniziata può terminare prima che il blocco abbia effetto.
+6. Per provare l'arresto: approva un piano innocuo di più passi e premi «Annulla», oppure togli la spunta a ChatGPT nella lista Online o chiudi Jarvis durante l'esecuzione. Verifica che non partano passi successivi. La singola operazione già iniziata può terminare prima che il blocco abbia effetto.
 
 ## Uso della versione alpha
 
 Con Python 3.12 (presente sul Pavilion) e Tkinter: doppio clic su `avvia_jarvis.bat` oppure `py -3 jarvis.py`. Per testare: `py -3 -m unittest discover -s tests -v`.
 - I comandi locali **non richiedono Node**.
-- Per abilitare davvero il collegamento GPT: segui [docs/GPT_SETUP.md](docs/GPT_SETUP.md), installa Node 22.12+, lancia `installa_gpt.bat`, poi **Connetti ChatGPT** nella finestra.
+- Per abilitare davvero il collegamento GPT: segui [docs/GPT_SETUP.md](docs/GPT_SETUP.md), installa Node 22.12+, lancia `online/installa_gpt.bat`, poi **Connetti ChatGPT** nella finestra.
 - GPT resta **abilitato per scelta predefinita** ma richiede autenticazione. Non avviene alcuna richiesta AI senza comando esplicito.
 - **Nota storica:** il riconoscimento vocale descritto qui era ancora in sviluppo. Nel ramo di audit il componente Vosk è presente, ma richiede l'installazione del modello e un collaudo reale; il microfono è predisposto attivo all'avvio.
 

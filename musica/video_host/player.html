@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+html,body{margin:0;height:100%;background:#020b15;overflow:hidden}
+#yt,#vid{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#000}
+</style></head>
+<body>
+<div id="yt"></div>
+<video id="vid" playsinline></video>
+<script>
+// Lumi <-> pagina: window.chrome.webview.postMessage / addEventListener("message").
+const host = window.chrome.webview;
+const vid = document.getElementById("vid");
+let yt = null, ytReady = false, pendingId = null, mode = null, volume = 70;
+function send(o){ host.postMessage(JSON.stringify(o)); }
+function show(which){
+  document.getElementById("yt").style.display = which === "yt" ? "block" : "none";
+  vid.style.display = which === "vid" ? "block" : "none";
+}
+window.onYouTubeIframeAPIReady = function(){
+  ytReady = true;
+  if (pendingId) { loadYt(pendingId); pendingId = null; }
+};
+function loadYt(id){
+  if (!ytReady) { pendingId = id; return; }
+  if (!yt) {
+    yt = new YT.Player("yt", {videoId:id, width:"100%", height:"100%",
+      playerVars:{autoplay:1, playsinline:1, rel:0, modestbranding:1},
+      events:{
+        onReady:e=>{ e.target.setVolume(volume); e.target.playVideo(); },
+        onStateChange:e=>{
+          const s={0:"ended",1:"playing",2:"paused"}[e.data];
+          if (s) send({ev:"state", state:s});
+        },
+        onError:e=>send({ev:"error", code:e.data})
+      }});
+    document.getElementById("yt").style.display="block";
+  } else { yt.loadVideoById(id); yt.setVolume(volume); }
+}
+vid.addEventListener("playing",()=>send({ev:"state",state:"playing"}));
+vid.addEventListener("pause",()=>{ if(!vid.ended) send({ev:"state",state:"paused"}); });
+vid.addEventListener("ended",()=>send({ev:"state",state:"ended"}));
+vid.addEventListener("error",()=>send({ev:"error",code:"file",
+  detail:(vid.error && vid.error.code) || 0}));
+host.addEventListener("message", ev => {
+  const c = typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data;
+  if (c.cmd === "youtube") { mode="yt"; vid.pause(); show("yt"); loadYt(c.id); }
+  else if (c.cmd === "file") { mode="vid"; if (yt) yt.stopVideo(); show("vid");
+      vid.src = c.url; vid.volume = volume/100;
+      vid.play().catch(e=>send({ev:"error",code:(e && e.name==="NotAllowedError") ? "autoplay" : "play"})); }
+  else if (c.cmd === "pause") { mode==="yt" ? yt && yt.pauseVideo() : vid.pause(); }
+  else if (c.cmd === "resume") { mode==="yt" ? yt && yt.playVideo() : vid.play(); }
+  else if (c.cmd === "stop") { if (yt) yt.stopVideo(); vid.pause(); vid.removeAttribute("src"); vid.load(); show(null); mode=null; }
+  else if (c.cmd === "restart") { mode==="yt" ? yt && yt.seekTo(0,true) : (vid.currentTime=0); }
+  else if (c.cmd === "position") {
+      const t = mode==="yt" ? (yt && yt.getCurrentTime ? yt.getCurrentTime() : 0) : vid.currentTime;
+      send({ev:"position", seconds:t||0}); }
+  else if (c.cmd === "volume") { volume = Math.max(0,Math.min(100,c.value|0));
+      if (yt && yt.setVolume) yt.setVolume(volume); vid.volume = volume/100; }
+});
+const tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
+tag.onerror = ()=>send({ev:"error",code:"api"});
+document.head.appendChild(tag);
+send({ev:"page"});
+</script>
+</body></html>

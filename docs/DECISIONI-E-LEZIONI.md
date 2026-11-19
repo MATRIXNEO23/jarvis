@@ -1212,3 +1212,162 @@ Prove: la suite Windows deve controllare persistenza, rimozione, isolamento tra 
 
 ### Checkpoint API grandi — lezione009
 Un tentativo di serializzare insieme jarvis.py e tutti i documenti di continuità ha prodotto stdout troncato, quindi JSON non valido; nessun commit è stato creato da quel tentativo. Leggere i file a gruppi piccoli, verificare parse/exitcode, poi creare un solo albero/commit coerente e verificare i blob remoti. Non ripetere upload ciechi o interpretare output troncato come salvataggio riuscito.
+
+
+## 2026-11-09 — ARCH-01 F5.0: profili locali, non ancora selettore
+**Decisione:** partendo dal ramo F4.2 isolato (PR #66), creato F5.0 (PR #67) come solo contratto immutabile Gemma/Qwen in `local_model/model_profiles_f5.py`, con test di limiti e campi sconosciuti. Nessun runtime, UI, backend o memoria modificati. Il cambio di modello reale va implementato solo dopo discovery dei punti di integrazione e test Windows; le misure Pavilion F4.2 restano da eseguire.
+**Motivo:** evitare di introdurre la complessità di un secondo GGUF e cambio backend prima di accertare velocità, template e rollback. Profilo validato non significa modello installato.
+**Prove e limiti:** file e PR presenti sul remoto; CI F5.0 non ancora attestata, nessuna esecuzione Windows o Pavilion provata. Primo test di isolamento reso indipendente dall'ordine di import della suite con commit `c1190b0414d68086f225a33601797226a2f65c7c`. Nessun ZIP pubblicato; 014 resta base utente.
+**Ripresa:** gate Windows CI e audit del diff, poi F5.1 rilevamento disponibilità/modello reale e F5.2 selettore configurabile. F8 API gratuite resta pianificata, non aggiunta.
+
+## 2026-11-09 — ARCH-01 F5.1: discovery conservativa senza selezione
+**Decisione:** usare il percorso GGUF/DLL già richiesto dalla bridge embedded e il probe read-only già disponibile nella F4.1. Il nuovo modulo `model_availability_f5.py` non deduce identità del GGUF dal filename; informa solo che i file esistono. Per KoboldCpp richiede `expected_model` e uguaglianza esatta con `probe()`, senza inviare prompt. Conflitti/mancanze producono stati sicuri, nessun fallback.
+**Motivo e limite:** evitare di scambiare un'etichetta Qwen per conferma del modello, avviare due GGUF in 10 GB RAM o integrare prematuramente il server senza benchmark Pavilion. Qwen non dispone ancora di template chat convalidato in Jarvis. **Test:** nuovi casi mock/local filesystem `tests/test_model_availability_f5.py`, CI Windows al momento in corso [42539072431](https://github.com/MATRIXNEO23/jarvis/actions/runs/42539072431); non dichiarare verde fino a esito. Second Brain/Telegram/profili storici non modificati, nessuna release. Rollback 014.
+
+## 2026-11-09 — ARCH-01 F5.2: editor in anteprima prima del vero cambio modello
+**Decisione:** piccolo pulsante lazy import in Impostazioni/GPT e memoria richiama un dialog di prova che valida bozze Gemma/Qwen in memoria e non scrive né applica alcun profilo. Salvataggio permanente, selezione backend effettiva e compatibilità Qwen richiedono ulteriori prove e verranno implementati in una fase successiva con rollback. Il pannello Gemma esistente rimane invariato. **Verifiche:** test unitari aggiunti; esito CI e prova GUI Windows reali ancora pendenti. Nessuna release nuova; ZIP014 inalterato.
+
+## 2026-11-09 — ARCH-01 F5.3a: blocco hot-switch finché manca unload garantito
+**Osservazione dal codice:** `NativeChatAdapter.stop()` usa arresto cooperativo; `NativeGemmaBridge` non dimostra release del GGUF. La sessione formatta Gemma, non Qwen. **Scelta:** costruire solo gate testabile, senza connetterlo alla chat; negare transizione finché busy/release/template/startup non risultino confermati. In caso di impossibilità a scaricare la DLL in sicurezza, valutare cambio a riavvio separato e conservazione DB anziché hot-switch. **Stato:** nuova implementazione e test mock pubblicati su PR #67; CI Windows ancora da verificare, nessuna build; 014 resta rollback.
+
+## 2026-11-09 — ARCH-01 F5.3b.1: isolare il processo proprietario prima del collegamento
+**Ragione:** in-process DLL Gemma non dispone di unload verificabile. **Decisione:** gestore opzionale del solo figlio avviato direttamente, chiusura con `terminate()` e conferma `wait()`, non riavviare se il precedente è incerto. Non termina processi estranei e non esegue automaticamente KoboldCpp. **Limiti:** i mock non dimostrano RAM liberata sul Pavilion, né discendenza processi, performance, template Qwen o validità dei comandi. Non integrare in Jarvis senza validazioni esplicite e collaudo Windows. PR #67, test nuovi CI pendenti, ZIP014 conservata.
+
+## 2026-11-09 — ARCH-01 F5.3b.2: laboratorio prima del cambio provider
+**Decisione:** usare il già esistente `OwnedModelProcess` e `KoboldServerCanary` con un controller di lifecycle esplicito, soltanto in laboratorio. Per ridurre collisioni con server estranei fare preflight porta con bind su 127.0.0.1 e verifica `probe()` su nome esatto. Un processo non chiuso in modo certo blocca il riavvio; nessuna azione distruttiva su altri PID. **Limiti:** race tra bind e ascolto server; probe HTTP non conferma proprietà del listener, né memoria deallocata da eventuali figli. Non connettere a chat né inserire credenziali/prompt privati fino a prova più robusta. **Test:** nuovi mock, Windows CI da confermare, F4.2 Pavilion assente. Jarvis 014 e cronologie preservati.
+
+## 2026-11-09 — F5.3b.2: failure della suite e fix del test
+I workflow Windows 42543240218 (3.11/3.12) hanno riscontrato cinque errori tutti nel nuovo test controller: il mock diceva `is_running=True` prima dell'avvio, causando blocco corretto del gate. Corretto soltanto fixture con stato `False` prima di `start`; mantenuto il rifiuto di sovrapporre processi. Nuovo esito CI da verificare. Separatamente i log evidenziano eccezione Tk `window_chrome.py:158` che non è tra i cinque errori finali e richiede audit indipendente.
+
+## 2026-11-09 — F5.3b.3: una sola app e famiglia Qwen esplicita
+Utente conferma **non due programmi separati**: una sola UI Jarvis, processo del motore eventualmente figlio e invisibile gestito dall'app. La prova Python F5.3b.2 è verde dopo correzioni alle simulazioni (`6a693e23...`, run 42544915058), non dimostra rendimento o GGUF reale. Serializer separato Qwen2.5 Instruct text-only testabile con fixture; NON riusarlo automaticamente con Qwen3. Nessun avvio autonomo del motore né modifica della memoria. I test e metadata modello reale restano gate prima di integrare.
+
+## 2026-11-09 — Rettifica F5: equivalenza KoboldCpp dalla sorgente, non server esterno
+Interpretazione precedente non aderente: l'utente non chiede un frontend Jarvis del KoboldCpp standalone. Richiede le stesse funzioni del motore ufficiale tramite integrazione nativa in Jarvis, eventualmente DLL ricompilata/patch minima mantenuta allineata a upstream. Stop alla promozione del prototipo subprocess/server a soluzione principale; codice laboratorio isolato soltanto. Fare audit ABI e sorgente upstream, mappatura impostazioni e template, test Windows no AVX2, prestazioni Pavilion e verifica della licenza AGPL/attribuzioni prima di affermare parità o pubblicare.
+
+## 2026-11-09 — Audit F5N.0: riusare ABI nativa già in Jarvis
+**Prova:** `native_factory.py` e `native_initializer.py` importano `koboldcpp.py` e caricano in-process `koboldcpp_noavx2.dll`, senza richiedere server; il bridge ha `load/generate/abort`, ma no unload attestato. Sul `koboldcpp.py` ufficiale esaminato compare `get_chat_template` e non un binding `handle.unload_model`; bisogna ancora verificare C/C++ prima di dichiarare impossibile scaricare. La build DLL Windows no-AVX2 è supportata dal Makefile upstream. **Decisione:** pin sorgente e confronto ABI, compilazione riproducibile, parità dei parametri, test Windows e Pavilion, senza duplicare un engine o introdurre server. Matrice dettagliata in `docs/ARCH-01-F5N-AUDIT-DLL-KOBOLDCPP.md`; nessuna modifica alla 014 o dati.
+
+## 2026-11-09 — F5N.1: impossibile certificare unload dalla sola API corrente
+Sul commit upstream `6d2fedf...`, `kcpp_src/expose.cpp` non esporta unload del modello, mentre `kcpp_src/gpttype_adapter.cpp` in `gpttype_load_model` contiene allocazione `new kcpp_params()` con commento esplicito `yes this leaks memory`. I `llama_free` presenti riguardano anche percorsi secondari, non attestano release completa del GGUF principale. Non introdurre unload ABI inventato: inventariare tutte le allocazioni e verificare distruttori/riavvio in test reali Windows. Creato strumento di checksum e inventario sorgenti statico (F5N.1), non una prova runtime. Nessun cambio a Jarvis 014, server esterno non è il prodotto richiesto.
+
+## 2026-11-09 — ARCH-01 F5N.2: bundle upstream non monolitico
+Il Makefile ufficiale al commit `6d2fedf...` usa DLL comune, variante default, noavx2 e forwarder per Windows. Di conseguenza una semplice sostituzione di `koboldcpp_noavx2.dll` potrebbe rompere l'integrazione. Decisione: workflow manuale di compilazione isolato con revisione bloccata e verifica di tutti gli artefatti, senza modifica della DLL installata o release. La verifica statica dei binari non attesta parità ABI, ISA o velocità. Attendere compilazione vera su Windows, licenza/sorgente corrispondente e prova Pavilion prima di distribuire.
+
+## 2026-11-09 — F5N.2: come collaudare un workflow nuovo su ramo feature
+`workflow_dispatch` di un nuovo workflow non necessariamente appare prima che il workflow esista su default branch; per testarne la compilazione senza cambiare `main`, aggiunto `pull_request` filtrato solo su workflow/tool/test F5N.2. Non confondere configurazione CI con la prova effettiva: il run va osservato e i suoi errori corretti prima di attestare successo.
+
+## 2026-11-09 — F5N.2: toolchain MinGW e Win8+ SDK
+La build upstream fissata fallisce nella compilazione di `gpttype_adapter_default.o`: tipi `PWIN32_MEMORY_RANGE_ENTRY` e `WIN32_MEMORY_RANGE_ENTRY` non dichiarati, non regressione Jarvis. Tentato fix nel solo workflow `CFLAGS`/`CXXFLAGS` con `_WIN32_WINNT=0x0602` e `WINVER=0x0602`, senza cambiare sorgente ufficiale o DLL distribuita. CI nuova da verificare; non dichiarare compilazione riuscita senza esito.
+
+## 2026-11-09 — F5N.2: il Makefile azzera le variabili di ambiente
+Le variabili `CFLAGS` e `CXXFLAGS` esportate dal workflow non funzionavano: Makefile upstream le reimposta con `=`, quindi nessuna macro Win8 raggiungeva `g++`. Correzione circoscritta: specificare i wrapper `CC`/`CXX` come argomenti `make` con `-D_WIN32_WINNT=0x0602 -DWINVER=0x0602`; si conservano i flag upstream (inclusi no-AVX2), non si modifica il motore. Attendere nuova prova CI Windows run 42555705472. Non confondere test Jarvis verdi con build DLL riuscita.
+
+## 2026-11-09 — F5N.3: la DLL comune è l'ABI della build split
+Dal `koboldcpp.py` ufficiale fissato emerge che Windows apre prima il forwarder del backend selezionato tramite directory dedicata, poi la DLL comune con l'API ctypes. La vecchia DLL monolitica non può essere sostituita da una singola DLL del bundle nuovo. Aggiunto controllo PE puramente statico con export `load_model/generate/abort_generate/token_count/get_chat_template`, import backend route e prove mock. Le esportazioni non certificano layout ctypes, caricabilità DLL o inferenza; gate bootstrap Windows futuro e prova Pavilion obbligatori. Nessuna modifica runtime o release.
+
+## 2026-11-09 — F5N.3: separare build verde da gate ABI rosso
+Due workflow (42557729052, 42557848456) hanno prodotto le quattro DLL e validato il bundle, ma sono falliti al gate PE per nomi richiesti non trovati nella DLL comune. Non ammorbidire la barriera né affermare che l'ABI è compatibile; prima leggere i nomi PE effettivi. Aggiunta diagnostica fail-closed con conteggio/primi simboli, run 42559582501. Rischio possibile di export mancanti nella nuova disposizione split DLL. Nessun cambiamento alla chat Jarvis o DLL 014.
+
+## 2026-11-09 — F5N.3: non interpretare un parser troncato come ABI assente
+Il gate statico segnala cinque exports mancanti, ma i log enumeravano esattamente 8192 simboli, coincidenti col limite predefinito del parser pefile `0x2000`. Quindi non modificare upstream/linker o disabilitare il controllo. Passare cap esplicito a `PE(max_symbol_exports=65536)` e verificare `NumberOfNames`; testare in CI Windows. La diagnosi del parser non prova ancora la presenza di tutte le funzioni: attendere esito. Nessuna modifica Jarvis 014.
+
+## 2026-11-09 — Un test fallito in Windows non prova difetto del motore
+Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perché la fixture normalizzava il percorso con `replace` su due separatori consecutivi. Corretta esclusivamente la fixture usando `chr(92)`, mantenendo invariati i gate PE di produzione. Workflow unit e build devono essere controllati separatamente. Prima di modificare runtime o linker leggere sempre traceback esatto e non interpretare warnings laterali come root cause.
+
+## 2026-11-17 — Build 052: decisioni dell'utente e correzioni dell'audit FIX-051-01
+**Decisioni dell'utente (17/11)**: «chiudi i risultati» sempre locale e immediato; script e codice sempre ai servizi online (mai Gemma), con messaggio breve se l'online non c'è; sì/no e numeri senza dire «Lumi» quando Lumi aspetta una risposta; «cambia modello» con elenco numerato, scelta salvata e riavvio del motore; sezione «Servizi di ricerca» (Tavily, Exa, Firecrawl, Linkup) e comandi «cerca online» / «approfondisci online» soltanto; altri comandi di ricerca solo dopo proposta approvata.
+**Scelte tecniche**: (1) le finestre di Lumi si distinguono per `ruolo` (titolo della principale), non per il nome detto dall'utente: una finestra secondaria si chiude da sola, la principale solo con conferma e `close()` controllato. (2) `clear_all()` non toccato: il testo mostrato non promette di cancellare i ricordi, che hanno una pagina propria; dubbio passato all'utente (handoff). (3) Risposta senza «Lumi»: riuso di `risposte.py` (finestra sì/no e numeri della griglia già esistenti); aggiunta la sola scelta numerata `expect_choice`, perché la griglia accetta anche parole del mouse e non serve a un elenco; la scelta non consuma «stop»/«niente». (4) Cambio modello: riuso di `NativeModelConfig`/`update_native_settings` e di `lumi_model_restart`; il modello si ricarica alla prossima domanda (RAM del Pavilion). (5) Ricerca online: stesso schema di `servizi_online` (descrittore per servizio, `Chiavi` DPAPI con file separato); solo Tavily collegato perché le altre API non sono verificabili da qui senza chiavi.
+**Alternative scartate**: aggiungere in `lumi_comandi` un'azione con argomenti (si è usato lo schema già presente dell'hook `github`/`ricerca`); un nuovo contenitore per i risultati della ricerca (si riusa la finestra risultati file, `show_results`, con `on_select` sempre valido); adattatori Exa/Firecrawl/Linkup scritti a memoria.
+**Lezioni**: (a) i test di funzioni annidate in `jarvis.py` si fanno estraendo la funzione con AST e dandole un ambiente minimo (per le variabili `nonlocal` basta una funzione contenitore); (b) prima di creare un meccanismo cercare quello esistente: «sì senza Lumi» c'era già, mancava solo in un punto (preferenze); (c) un comando locale va in `lumi_comandi.handle_text`, che è il primo gestore, altrimenti la frase arriva a Gemma; (d) nessun test eseguito in locale: la verifica è la CI Windows e la prova dal vivo.
+
+
+## 17/11/2026 — Cancellazione della memoria a sezioni
+- Problema: clear_all() cancellava solo chat e ricevute (non i ricordi), ma il pulsante prometteva «memoria generale» (FIX-051-01, P1).
+- Decisione utente: sezioni separate chat / ricordi / progetti / tutto, ciascuna con conferma sì/no in parole semplici, anche a voce.
+- Scelta tecnica: nessun sistema parallelo; clear_all resta «chat», si aggiunge clear_ricordi (tabella e indice FTS nella stessa transazione) e la cancellazione progetti esistente (menu_laterale) è stata generalizzata. Le frasi a voce stanno nel catalogo comandi (sezione «Memoria»).
+- Prove: test su DB e cartelle temporanee; il collaudo vale solo sulla CI Windows. Lezione: il testo del pulsante deve dire esattamente che cosa cancella.
+
+## 17/11/2026 — Build 054: catena GPT/online, «cerca online» senza chiave, «approfondisci»
+- Causa 1 (prove 052): con GPT attivo ma non collegato (o rifiutato) la catena si fermava su GPT: `start_conversation_gpt` terminava con un messaggio, e il «no» all'orchestratore tornava a GPT; la richiesta non arrivava a online né a Gemma, e in alcuni rami `submit_gemma_voice` tornava False senza dire nulla.
+- Decisione utente: ordine servizi online gratuiti, poi GPT solo dopo «Uso GPT? sì/no» (risposta senza «Lumi», domanda in chat e a voce, nessuna finestra: stesso meccanismo `lumi_comandi.chiedi`), poi gli altri modelli. Se tutti falliscono, messaggio chiaro in chat e a voce. Il codice non va mai a Gemma.
+- Correzione: `start_conversation_gpt` -> online se pronto; `offer_gpt` (collegato: domanda; non collegato: avviso e passo oltre); `resume_gpt`; `local_after_gpt` (ultimo anello, con messaggio). Online fallito -> evento `online_gpt` -> `gpt_offer`. Errore di GPT dopo l'invio -> modello locale. Tolta la domanda «uso l'online?» per GPT attivo.
+- «cerca online»: la chiave deve esistere e decifrarsi; senza, messaggio con il link Tavily subito; errori del thread di ricerca o della finestra vanno in chat.
+- «approfondisci X» senza «online»: Gemma offline (`servizi_ricerca.approfondisci_locale`), anche con l'online pronto.
+- Lezione: ogni ramo che «gestisce» una richiesta deve dire qualcosa; un return False silenzioso è un difetto. Test: tests/test_054_catena_gpt.py.
+- Aggiunte 054: profili a 3 slot per famiglia (ordine di scelta: metadati GGUF, poi nome file; famiglia ignota = «generico», segnalato), «I miei modelli», quota stimata e interruttore RICERCA. Scelta: native.json resta la sola fonte letta dal motore e contiene sempre lo slot attivo; i profili sono copie salvate a richiesta. Scartato: leggere l'uso Tavily da API a memoria. Da fare: pagina add-on, spostamento _ □ X.
+- Correzione utente 054: i risultati della ricerca online vanno in chat come in ChatGPT (riassunto, fonti cliccabili con anteprima), non in una finestra a parte. Riusato il Text della chat con tag e binding (la chat non rende markdown, quindi `chat_link.py` converte `[titolo](url)`).
+
+## 17/11 — Build 055 (approvata dall'utente alle 04:09)
+- Catena unica: `conversation_chain` in jarvis.py serve voce e testo (ricerca online scritta, «approfondisci» a Gemma, servizi online gratuiti, «Uso GPT?», modello locale). Causa del ko 054: `submit_gpt` (testo) chiamava `run_gpt` diretto, senza catena. Anche «approfondisci online …» scritto non passava da `lumi_comandi`: ora lo prende la catena.
+- Finestra Sì/No tolta: `confirm_gpt_inference` chiede a voce e in chat («sì»/«no» senza Lumi, azioni `gpt_consent_yes/no`); con consenso dato vale per l'epoca di conversazione; il primo giro risponde False e chiede di ripetere la richiesta. Scartato: attendere la risposta nel thread Tk (bloccherebbe l'interfaccia).
+- Modelli: «Aggiungi» non copia, registra il percorso (`registro_modelli.py`, modelli_aggiunti.json, scrittura atomica); `mancanti()` segnala i file spariti; «Rimuovi» di un modello aggiunto lo toglie solo dall'elenco (mai il file dell'utente). Caselle 1/2/3 nello stesso registro, preassegnate (in uso in casella 1); a voce i numeri seguono l'ordine caselle poi altri, e si dice solo «Ne ho N» (FIX 6; riconoscimento numeri fino a 9). In RAM un modello solo.
+- Profili: 3 per OGNI modello (chiave = percorso), migrati dai profili di famiglia 054 senza perdere valori; slot letto prima del refresh (FIX 1); `_salva` scrive profili.json e native.json con temporanei e rollback di profili.json se native.json fallisce (FIX 3). GGUF: lettura delle coppie chiave/valore senza buffer fisso (FIX 5), «famiglia incerta» se non si capisce.
+- Ricerca: Tavily quota letta da GET https://api.tavily.com/usage (verificata sulla documentazione ufficiale, cache 5 min), altrimenti «ricerche rilevate» (FIX 4). Exa (POST api.exa.ai/search), Firecrawl (POST api.firecrawl.dev/v2/search) e Linkup (POST api.linkup.so/v1/search, sourcedAnswer) collegati dopo verifica sulle pagine ufficiali; da provare con chiavi vere. Link in chat con dominio accanto al titolo (FIX 7). Tendina «RICERCA ▾» (menu_ricerca.py, riusa MenuModelli) al posto di RICERCA ON/OFF; «ricerca spenta» ora significa nessun servizio spuntato.
+- UI: sezione «Modelli» inline in Impostazioni > Modelli; pagina add-on con solo attiva/disattiva e «Apri impostazioni modelli»; _ □ X esistevano già (window_chrome.py, solo Windows): ora stanno nell'angolo, a destra dell'ingranaggio (non sopra: proposta se serve impilarli).
+- Versione 055 in lumi_stato e lumi_online (impostazioni_menu.versione da VERSIONE.json); workflow con --number 055.
+- Lezione: un canale (testo) che salta la catena del canale gemello (voce) è il difetto tipico: far passare ogni ingresso dalla stessa funzione. Test: tests/test_055_*.py (non eseguiti su Linux, vale la CI Windows).
+- NOT_TESTED (FIX 8): catena dal vivo con GPT sì/no e timeout, Exa/Firecrawl/Linkup con chiavi reali, lettura /usage Tavily dal vivo, aspetto di tendina RICERCA e caselle, posizione _ □ X, cambio modello con RAM del Pavilion, GGUF reali di grandi dimensioni, microfono.
+
+## 17/11 — Correzione CI 055 (run 44009240767)
+- Lezione: una variabile `nonlocal` aggiunta a una funzione annidata rompe i test che la estraggono con ast; per stato piccolo usare un attributo della funzione. File di testo scritti con `mode="w"` su Windows convertono \n: usare newline="\n" quando il contenuto si confronta o si ripristina. Un `isinstance` su classi Tk va fatto con classi fissate all'import (test con tkinter.Tk simulato).
+- Test cambiati solo dove il comportamento 055 è deciso (ordine elenco, profili per modello, servizi collegati, catena unica). Proposta non implementata: dopo il sì a «Uso GPT?» inviare subito la domanda in attesa a GPT (serve approvazione utente).
+
+## 055: GPT nella lista dei servizi online, pulsanti sopra l'ingranaggio — 2026-11-17
+- Decisione utente (17/11 05:05): GPT dal browser è una voce della lista con spunta e ordine, come Gemini, Groq e OpenRouter; «Uso GPT?» sparisce, il locale è l'ultimo ripiego. Codice e script restano sempre online. Pulsanti _ □ X in alto a destra sopra l'ingranaggio.
+- Lezione: la voce GPT esisteva già (chatgpt_account, tipo account); bastava togliere il passaggio separato nella catena invece di crearne un'altra. Un GPT spuntato ma non collegato non blocca: `chiedi` annota il motivo e passa al successivo.
+- Pulsanti: l'header ha una colonna `_jarvis_window_corner`; window_chrome vi impila i pulsanti (compatti) sopra l'ingranaggio. Altre finestre senza colonna restano come prima.
+- 17/11 05:13: «Copia configurazione per Codex» sostituisce la copia a mano del blocco TOML; il percorso di config.toml è preso dal profilo reale (Path.home()), apici singoli per le barre di Windows.
+
+## 17/11 — Build 056: Basso consumo / Veloce, meteo add-on, barra in alto (approvata 16:38)
+- Problema: la catena 055 provava l'online prima del locale, senza che l'utente l'avesse deciso; GPT ON e «INTERFACCIA NEURALE» occupavano la barra; Mistral risultava spuntato dopo averlo spento.
+- Decisione utente: Basso consumo = comandi, poi offline, online solo col «sì» (anche per script, «approfondisci» e «cerca online»); Veloce = primo modello online, offline di riserva; slide al posto della scritta; meteo come add-on Open-Meteo con icone senza riquadro; «apri il N»; tendina MODELLO con un solo on/off.
+- Motivazione tecnica: l'ordine è fissato in un solo punto (`conversation_chain`) con `route` esplicita, così il motore (`submit_gemma_voice`) non la sovrascrive; la conferma riusa `chiedi` e `IN_ATTESA` (nessun doppione); il meteo segue lo schema di musica/sveglia (add-on con core action locale, runtime e service separati).
+- Causa del bug Mistral (dimostrata dal codice, non dal vivo): il `save()` dei pannelli teneva una copia di `settings` e riscriveva `attivi` dalle spunte aperte prima; ora applica solo le differenze sopra il file riletto. Regola: un pannello che salva un file condiviso deve rileggerlo e scrivere solo ciò che ha cambiato.
+- Lezione: chi sostituisce un ordine di catena deve cercare anche i rami «automatici» nei moduli sottostanti (qui due blocchi in conversazione_lumi.py forzavano online/locale) e i test AST che citano le vecchie stringhe.
+- Lezione: un editing con indice di stringa trovato troppo presto ha duplicato un blocco di jarvis.py; riparato con confronto e py_compile. Usare ancoraggi univoci.
+- Stato prove: solo py_compile su Linux; test 056 e adeguamenti vanno verificati dalla CI Windows. NOT_TESTED dal vivo: slide, conferma sì/no a voce, meteo reale e icone, «apri il 2», tendina MODELLO.
+
+## 056b (17/11 notte)
+- Decisione utente (18:55): il tetto del prompt offline è 600 token sempre, anche col catalogo; il contesto predefinito è 1024; la chat continua è accesa di serie solo per l'offline.
+- Lezione: un tetto che esiste ma viene ricalcolato altrove (8192 col catalogo, contatore esatto) non è un tetto. Un solo punto calcola il budget e ogni parte (catalogo, cronologia, ricordi) deve starci dentro.
+- Lezione: se due livelli scrivono lo stesso messaggio (chiamante e funzione interna), il proprietario è uno solo; qui il chiamante alza un flag durante la catena.
+- Lezione: prima di cercare «chi aggiunge /nothink» grep su tutto il repo: non lo aggiungeva nessuno, andava solo filtrato.
+- 056b (17/11, pagina Modelli unica): la base è native.json; profili e memoria del prompt si AGGIUNGONO (profili.json `memoria`, memory.json resta il file letto). Un solo Salva. Lezione: per non avere due fonti si incorpora il modulo esistente (`embed=True`) invece di riscriverlo.
+- Lezione HUD: quello che deve restare sempre visibile si impacchetta per primo (side=bottom) e a cedere è il globo.
+- Lezione prompt: separare la conversazione precedente dall'ultimo messaggio e non dare ricordi ai saluti.
+
+## 057 (17/11 notte, già 056c)
+- Decisione utente (21:21): cronologia ridotta per tutte le domande brevi (casella accesa), 768/500 per i modelli nuovi, blocco unico Contesto+Memoria, meteo domani, barra come l'anteprima, icone meteo a contorno con città, temperatura e ora.
+- Lezione: il glifo ⏻ non esiste nel font di Windows (esce come quadratino): i simboli di stato si disegnano sul Canvas.
+- Lezione: un nuovo valore predefinito si applica solo ai modelli nuovi; i profili salvati si leggono dal loro file e non vanno riscritti.
+- Lezione: un campo aggiunto a memory.json rompe le versioni vecchie (schema rigido): i campi nuovi vanno nel file accanto `memory.native.json`.
+- Decisione utente (17/11 21:26): valori di partenza dei modelli nuovi 896 / 550 / 256 (contesto, tetto prompt, risposta); salvataggio bloccato se prompt + risposta > contesto.
+- Decisione utente (17/11 21:56): niente lettere nelle versioni: questa build è la 057 e il riordino di menu e file diventa la 058.
+
+## 058 (18/11, fase A)
+- Decisioni utente (03:45-03:59): «approfondisci» manda online solo la risposta offline e non mostra il testo; motore a priorità alta mentre elabora; contesto del profilo al caricamento; meteo esteso (settimana, giorni, parti del giorno, dettagli, domande, riepilogo del mattino, completo) personalizzabile in Voce; finestre sempre dentro lo schermo.
+- Lezione: il «TU >» lungo veniva scritto da `submit_gemma_voice`; il chiamante alza `TU_SCRITTO` (stesso meccanismo di `chain_typed_once`) invece di duplicare la scrittura.
+- Lezione: «buongiorno» da solo è un saluto: il riepilogo del mattino si attiva solo con «buongiorno Lumi» o «com'è la giornata», per non rubare i saluti.
+- Lezione: i riordini (unire, spostare, togliere file) sono proposte da approvare, non lavoro da fare: vedi `docs/PROPOSTA-RIORDINO-058.md`.
+
+
+
+## 059 (18/11, correzioni urgenti e meteo)
+- Telegram: lezione, quando un tasto diventa un Frame con figli (057), ogni controllo «clic sul tasto» fatto con `event.widget is button` va esteso ai discendenti; altrimenti un `bind_all` lo chiude subito. Prova: `test_059_telegram_clic.py` (solo CI Windows).
+- Attese online: la chat passa dall'orchestratore; l'attesa lunga (90 s) vale solo dopo il primo passo con strumenti, la risposta di chat resta a 30 s. Limite di risposta 8000 token (si paga solo ciò che il modello scrive); rischio: quote al minuto di Groq (da verificare dal vivo).
+- Selettori: la larghezza della colonna chat (360 px) è un dato dimostrato dal codice; tasti e casella sulla stessa riga non ci stanno. Scelta minima: riga propria sopra la casella (da confermare).
+- Meteo: 16 giorni è il massimo di Open-Meteo (`forecast_days=16`); oltre, messaggio esplicito, nessuna previsione inventata. Probabilità di pioggia omessa solo se il dato manca.
+- Pacchetto: l'artifact è già uno zip; per estrarre una volta sola si carica la cartella (`dist/artifact`, radice = `Lumi-059-PROVA/`).
+
+## 18/11 — Riordino 060 (passo 1)
+- Prima di spostare un file «da sviluppatore» cercare anche i .bat: prepara_test_telegram50.py sembrava usato solo da 3 test, ma lo lancia avvia_lumi.bat e tools/ non va nel pacchetto. Lasciato in radice, domanda all'utente.
+- Unire moduli: elencare richiami (import, __import__("nome"), stringhe e letture del file nei test, workflow), unire senza file ponte, e un test che importa ogni nome pubblico spostato (tests/test_060_riordino.py).
+- Il glob della mappa «dialogue_*.py» non prendeva dialogue.py: dopo ogni unione controllare «0 unassigned» in build.mjs.
+
+## 061, 19/11: una sola fonte per GPT, comandi di modalità, Telegram offline, cartella online/
+- Decisione utente (08:17): GPT solo nella lista Online. Causa del bug: Telegram guardava `settings["gpt_enabled"]`, tolto dalla barra nella 056 ma rimasto acceso e invisibile. Correzione: eliminato `gpt_enabled` ovunque; `gpt_spuntato()` legge la spunta di «ChatGPT dal browser». Lezione: un interruttore tolto dall'interfaccia va tolto anche dal codice e dai file salvati (il vecchio campo ora si ignora); test anti-richiamo `test_061_gpt_una_fonte.py`.
+- Lezione: `__import__("a.b")` restituisce `a`, non `a.b`: spostando un modulo in un pacchetto i richiami dinamici vanno cercati a parte (grep di `__import__`); `online/__init__.py` carica i sotto-pacchetti per `__import__("online").servizi_online`.
+- Lezione: un elenco di comandi nell'aiuto va confrontato con i comandi davvero riconosciuti (test_061_comandi.py), altrimenti l'aiuto mente.
+- Telegram: risposte automatiche offline di serie; online solo per i contatti spuntati (`telegram_online_contacts`); invio diretto con la chat aperta, senza conferma.
+- Errori online: sempre con la fase (DNS, TLS, connessione, risposta); `lumi_prova_servizio` in diagnostica.

@@ -1,7 +1,7 @@
 """JRV-AUD-018: temporary Windows profiles, actual settings/owner callbacks.
 
 No live settings, credentials, microphone or account is touched. Manual recovery
-below is fixture setup, not an automatic reset feature of Jarvis.
+below is fixture setup, not an automatic reset feature of Lumi.
 """
 import ast
 import copy
@@ -26,7 +26,7 @@ class SettingsRecoveryTests(unittest.TestCase):
         self.path = self.root / "settings.json"
 
     def assert_prudent(self, data):
-        for flag in ("gpt_enabled", "auto_listen", "tts_enabled", "memory_enabled",
+        for flag in ("auto_listen", "tts_enabled", "memory_enabled",
                      "telegram_enabled", "keep_awake_fullscreen"):
             self.assertIs(data[flag], False, flag)
 
@@ -66,7 +66,7 @@ class SettingsRecoveryTests(unittest.TestCase):
                 self.assert_prudent(load_settings(self.path))
 
     def test_invalid_present_mic_or_gpt_flags_fail_prudently(self):
-        for flag in ("gpt_enabled", "auto_listen"):
+        for flag in ("auto_listen",):
             for value in ("false", 0, 1, None, []):
                 with self.subTest(flag=flag, invalid_value=value):
                     payload = dict(DEFAULTS, tts_enabled=True, memory_enabled=True,
@@ -93,9 +93,9 @@ class SettingsRecoveryTests(unittest.TestCase):
         self.assertFalse(self.path.exists())
 
     def test_valid_and_legacy_profiles_retain_preferences_without_warnings_or_writes(self):
-        for payload in ({}, {"auto_listen":False}, {"gpt_enabled":False},
-                        {"gpt_enabled":True,"auto_listen":True},
-                        {"gpt_enabled":False,"auto_listen":False,"tts_enabled":True,
+        for payload in ({}, {"auto_listen":False},
+                        {"auto_listen":True},
+                        {"auto_listen":False,"tts_enabled":True,
                          "tts_voice":"Fixture voice","timer_volume":35}):
             with self.subTest(payload=payload):
                 raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -120,7 +120,7 @@ class SettingsRecoveryTests(unittest.TestCase):
                 self.assertFalse(self.path.with_suffix(".tmp").exists())
 
     def test_corruption_after_valid_load_is_checked_again_before_save(self):
-        save_settings(dict(DEFAULTS, gpt_enabled=False, auto_listen=False), self.path)
+        save_settings(dict(DEFAULTS, auto_listen=False), self.path)
         value = load_settings(self.path)
         raw = b'{"gpt_enabled":false,"auto_listen":'
         self.path.write_bytes(raw)
@@ -129,7 +129,7 @@ class SettingsRecoveryTests(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), raw)
 
     def test_save_rejects_existing_wrong_shape_flag_or_encoding(self):
-        for raw in (b'[]', b'{"gpt_enabled":"false"}', b'{"auto_listen":null}', b'\xff'):
+        for raw in (b'[]', b'{"auto_listen":"false"}', b'{"auto_listen":null}', b'\xff'):
             with self.subTest(raw=raw):
                 self.path.write_bytes(raw)
                 with self.assertRaises(OSError):
@@ -182,7 +182,6 @@ class SettingsRecoveryTests(unittest.TestCase):
         value["timer_volume"] = 25
         save_settings(value, self.path)
         restored = load_settings(self.path)
-        self.assertFalse(restored["gpt_enabled"])
         self.assertFalse(restored["auto_listen"])
         self.assertEqual(restored["timer_volume"],25)
         self.assertEqual(backup.read_bytes(),raw)
@@ -201,7 +200,7 @@ class SettingsRecoveryOwnerTests(unittest.TestCase):
         self.enterContext(patch("settings.default_path",return_value=self.path))
         self.harness = callbacks.ActivityStatusTests()
 
-    def startup(self):
+    def startup(self, spuntato=False):
         env = {"load_settings":load_settings}
         prefix = []
         for node in callbacks.ActivityStatusTests.main.body:
@@ -215,22 +214,21 @@ class SettingsRecoveryOwnerTests(unittest.TestCase):
                    change_voice_mode=Mock(), voice_mode=callbacks.Value("standby"),
                    GPT_CONVERSATION="conversazione_gpt", startup_greeting=lambda:"Pronto",
                    write_line=Mock(), speaker=Mock(), selected_voice=Mock(),
-                   root=SimpleNamespace(after=Mock()), run_gpt=Mock())
+                   root=SimpleNamespace(after=Mock()), run_gpt=Mock(), gpt_spuntato=lambda: spuntato)
         variables = []
         for node in callbacks.ActivityStatusTests.main.body:
             if isinstance(node,ast.Assign) and any(isinstance(t,ast.Name) and t.id in
-                    ("gpt_enabled","auto_listen_enabled","spoken_enabled") for t in node.targets):
+                    ("auto_listen_enabled","spoken_enabled") for t in node.targets):
                 variables.append(copy.deepcopy(node))
-        self.assertEqual(len(variables),3)
+        self.assertEqual(len(variables),2)
         exec(compile(ast.fix_missing_locations(ast.Module(body=variables,type_ignores=[])),
                      "real-settings-UI-values","exec"),env)
         self.harness.callback("speak_result",env)
         self.harness.callback("initial_launch",env)
         schedule = next(node for node in callbacks.ActivityStatusTests.main.body
                         if isinstance(node,ast.If) and isinstance(node.test,ast.Call)
-                        and isinstance(node.test.func,ast.Attribute)
-                        and isinstance(node.test.func.value,ast.Name)
-                        and node.test.func.value.id=="gpt_enabled")
+                        and isinstance(node.test.func,ast.Name)
+                        and node.test.func.id=="gpt_spuntato")
         exec(compile(ast.fix_missing_locations(ast.Module(body=[copy.deepcopy(schedule)],type_ignores=[])),
                      "real-GPT-startup-schedule","exec"),env)
         return env
@@ -239,7 +237,6 @@ class SettingsRecoveryOwnerTests(unittest.TestCase):
         raw = b'{"gpt_enabled":false,"auto_listen":'
         self.path.write_bytes(raw)
         env = self.startup()
-        self.assertFalse(env["gpt_enabled"].get())
         self.assertFalse(env["auto_listen_enabled"].get())
         env["root"].after.assert_not_called()
         env["initial_launch"]()
@@ -254,8 +251,7 @@ class SettingsRecoveryOwnerTests(unittest.TestCase):
 
     def test_valid_opt_in_startup_keeps_existing_microphone_and_gpt_behavior(self):
         save_settings(dict(DEFAULTS), self.path)
-        env = self.startup()
-        self.assertTrue(env["gpt_enabled"].get())
+        env = self.startup(True)
         self.assertTrue(env["auto_listen_enabled"].get())
         env["root"].after.assert_called_once()
         env["initial_launch"]()

@@ -17,7 +17,7 @@ class ContextWindowTests(unittest.TestCase):
         adapter = CountingAdapter()
         session = NativeConversationSession(
             adapter, config_loader=lambda: NativeModelConfig(context_size=1024, max_output=128),
-            memory_loader=MemoryPreferences)
+            memory_loader=lambda: MemoryPreferences(cronologia_ridotta=False))   # 057: prova del ripristino
         return session, adapter
 
     def test_real_token_budget_keeps_recent_exchange_larger_than_legacy_char_cap(self):

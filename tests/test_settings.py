@@ -19,76 +19,87 @@ class SettingsTests(unittest.TestCase):
             save_settings(settings, path)
             self.assertEqual(load_settings(path)["telegram_contact_profiles"], {"456": "Usa il lei"})
 
-    def test_default_chatgpt_enabled(self):
+    def test_default_settings(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
-            self.assertEqual(load_settings(path), {"gpt_enabled": True, "tts_enabled": False, "tts_voice": "",
-                                                         "memory_enabled": False,
+            self.assertEqual(load_settings(path), {"tts_enabled": False, "tts_voice": "", "tts_effect": 25, "tts_rate": 0, "tts_pitch": 0, "tts_volume": 100,
+                                                         "memory_enabled": False, "modalita": "basso_consumo",
                                                          "auto_listen": True, "keep_awake_fullscreen": False, "telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": [], "timer_sound": "digital", "timer_volume": 80, "timer_repeat": True, "timer_audio_mode": "auto"})
+
+    def test_voice_style_persists_and_is_validated(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "settings.json"
+            data = load_settings(path)
+            data.update(tts_effect=40, tts_rate=20, tts_pitch=-10, tts_volume=80)
+            save_settings(data, path)
+            loaded = load_settings(path)
+            self.assertEqual((loaded["tts_effect"], loaded["tts_rate"], loaded["tts_pitch"],
+                              loaded["tts_volume"]), (40, 20, -10, 80))
+            data["tts_rate"] = 99
+            with self.assertRaises(ValueError):
+                save_settings(data, path)
 
     def test_disable_then_reenable_persists(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
-            save_settings({"gpt_enabled": False}, path)
-            self.assertFalse(load_settings(path)["gpt_enabled"])
-            save_settings({"gpt_enabled": True}, path)
-            self.assertTrue(load_settings(path)["gpt_enabled"])
+            save_settings({"memory_enabled": False}, path)
+            self.assertFalse(load_settings(path)["memory_enabled"])
+            save_settings({"memory_enabled": True}, path)
+            self.assertTrue(load_settings(path)["memory_enabled"])
 
     def test_keep_awake_is_an_explicit_persistent_opt_in(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
             self.assertFalse(load_settings(path)["keep_awake_fullscreen"])
             for enabled in (True, False):
-                save_settings({"gpt_enabled": True, "keep_awake_fullscreen": enabled}, path)
+                save_settings({"keep_awake_fullscreen": enabled}, path)
                 self.assertIs(load_settings(path)["keep_awake_fullscreen"], enabled)
 
     def test_invalid_critical_flag_is_prudent_and_preserves_original(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
-            path.write_text('{"gpt_enabled": "no"}', encoding="utf-8")
+            path.write_text('{"auto_listen": "no"}', encoding="utf-8")
             current = load_settings(path)
-            self.assertFalse(current["gpt_enabled"])
             self.assertFalse(current["auto_listen"])
-            self.assertEqual(path.read_text(encoding="utf-8"), '{"gpt_enabled": "no"}')
+            self.assertEqual(path.read_text(encoding="utf-8"), '{"auto_listen": "no"}')
 
     def test_tts_preferences_persist_without_losing_gpt(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
-            save_settings({"gpt_enabled": False, "tts_enabled": True,
+            save_settings({"tts_enabled": True,
                            "tts_voice": "Voce italiana"}, path)
             self.assertEqual(load_settings(path),
-                             {"gpt_enabled": False, "tts_enabled": True,
-                              "tts_voice": "Voce italiana", "memory_enabled": False,
+                             {"tts_enabled": True,
+                              "tts_voice": "Voce italiana", "tts_effect": 25, "tts_rate": 0, "tts_pitch": 0, "tts_volume": 100, "memory_enabled": False, "modalita": "basso_consumo",
                               "auto_listen": True, "keep_awake_fullscreen": False, "telegram_enabled": False,"telegram_peer_id": 0,"telegram_contact_name": "", "telegram_contacts": [], "timer_sound": "digital", "timer_volume": 80, "timer_repeat": True, "timer_audio_mode": "auto"})
 
     def test_memory_opt_in_is_persistent_and_independent(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
             self.assertFalse(load_settings(path)["memory_enabled"])
-            save_settings({"gpt_enabled": True, "memory_enabled": True}, path)
+            save_settings({"memory_enabled": True}, path)
             self.assertTrue(load_settings(path)["memory_enabled"])
-            save_settings({"gpt_enabled": False, "memory_enabled": False}, path)
+            save_settings({"memory_enabled": False}, path)
             self.assertFalse(load_settings(path)["memory_enabled"])
             with self.assertRaises(ValueError):
-                save_settings({"gpt_enabled": True,
-                               "memory_enabled": "enabled"}, path)
+                save_settings({"memory_enabled": "enabled"}, path)
 
     def test_auto_listening_default_and_explicit_opt_out(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
             self.assertTrue(load_settings(path)["auto_listen"])
-            save_settings({"gpt_enabled": True, "auto_listen": False}, path)
+            save_settings({"auto_listen": False}, path)
             self.assertFalse(load_settings(path)["auto_listen"])
-            save_settings({"gpt_enabled": True, "auto_listen": True}, path)
+            save_settings({"auto_listen": True}, path)
             self.assertTrue(load_settings(path)["auto_listen"])
             with self.assertRaises(ValueError):
-                save_settings({"gpt_enabled": True, "auto_listen": "no"}, path)
+                save_settings({"auto_listen": "no"}, path)
 
     def test_existing_settings_are_migrated(self):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "settings.json"
-            path.write_text('{"gpt_enabled": false}', encoding="utf-8")
-            self.assertEqual(load_settings(path)["gpt_enabled"], False)
+            path.write_text('{"gpt_enabled": false}', encoding="utf-8")      # 061: il vecchio campo si ignora
+            self.assertNotIn("gpt_enabled", load_settings(path))
             self.assertEqual(load_settings(path)["tts_enabled"], False)
 
     def test_timer_preferences_round_trip_and_validation(self):
@@ -117,7 +128,7 @@ class SettingsTests(unittest.TestCase):
     def test_reject_non_bool(self):
         with TemporaryDirectory() as folder:
             with self.assertRaises(ValueError):
-                save_settings({"gpt_enabled": "yes"}, Path(folder) / "settings.json")
+                save_settings({"auto_listen": "yes"}, Path(folder) / "settings.json")
 
 
 if __name__ == "__main__":

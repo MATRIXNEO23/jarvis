@@ -53,12 +53,12 @@ jobs:
           files=[p for p in files if not (len(p.parts)>1 and p.parts[0]=="Download"
                  and p.suffix.casefold()==".zip")]
           required={
-              "jarvis.py", "gpt_client.py", "gpt_bridge.mjs", "workspace_memory.py",
+              "jarvis.py", "online/gpt_client.py", "online/gpt_bridge.mjs", "workspace_memory.py",
               "telegram_bridge.py", "voice_control.py", "managed_documents.py",
               "prepara_test_telegram50.py", "animated_hud.py", "jarvis_timer.py",
               "hud_reference.py", "hud_raster.py",
               "docs/TIMER_E_IMPOSTAZIONI_20261031.md",
-              "avvia_jarvis.bat", "LEGGIMI_PROVA_TELEGRAM_50.txt",
+              "avvia_jarvis.bat", "docs/LEGGIMI_PROVA_TELEGRAM_50.txt",
           }
           found={p.as_posix() for p in files}
           assert required.issubset(found), "Missing critical Jarvis components"

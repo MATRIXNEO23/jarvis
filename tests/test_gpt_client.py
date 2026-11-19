@@ -14,7 +14,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from gpt_client import GPTClient, GPTUnavailable
+from online.gpt_client import GPTClient, GPTUnavailable
 
 
 FAKE_CHILD = r"""

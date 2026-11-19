@@ -12,8 +12,11 @@ from .native_config import NativeModelConfig
 EDITABLE_FIELDS = (
     "model", "threads", "batch_threads", "context_size", "max_output",
     "temperature", "top_k", "top_p", "seed", "personality",
+    "fast_forward", "character_main", "character_extra", "reply_length",
+    "explain_sentences", "user_notes",
 )
-RELOAD_FIELDS = frozenset(("model", "threads", "batch_threads", "context_size"))
+# fast_forward is a load option of the native engine: changing it needs a reload.
+RELOAD_FIELDS = frozenset(("model", "threads", "batch_threads", "context_size", "fast_forward"))
 
 
 def update_native_settings(current, changes):

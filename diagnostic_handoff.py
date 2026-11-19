@@ -111,7 +111,7 @@ def is_external_review_request(phrase: str) -> bool:
     if not isinstance(phrase,str) or len(phrase)>220:
         return False
     text=" ".join(phrase.casefold().strip(" \n\t,;:.?!").split())
-    text=re.sub(r"^(?:jarvis[, ]+|ehi jarvis[, ]+)", "", text)
+    text=re.sub(r"^(?:lumi[, ]+|ehi lumi[, ]+)", "", text)
     return bool(re.fullmatch(
         r"(?:valuta|analizza|commenta|esamina)\s+"
         r"(?:(?:il|la|l['’])\s*)?"
@@ -143,7 +143,7 @@ def build_external_review_prompt(audit: SourceAudit,
     """
     payload=safe_audit_payload(audit,runtime,operation_counts,runtime_evidence)
     preamble=(
-        "Sei il revisore tecnico di JARVIS Windows. Il suo modello lavora "
+        "Sei il revisore tecnico di LUMI Windows. Il suo modello lavora "
         "ESTERNAMENTE e non vede direttamente il PC. Il piccolo motore "
         "locale ha raccolto metadati statici, contatori anonimi delle "
         "ultime operazioni, e osservazioni passive dei componenti locali. "

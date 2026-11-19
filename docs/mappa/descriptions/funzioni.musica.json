@@ -1,0 +1,56 @@
+{
+ "files": {
+  "musica/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "musica/bar.py": {
+   "name": "Barra musica",
+   "description": "Barra della musica, elenco brani e riquadro video."
+  },
+  "musica/commands.py": {
+   "name": "Frasi della musica",
+   "description": "Capisce i comandi musicali, senza modello e senza rete."
+  },
+  "musica/config.py": {
+   "name": "Impostazioni musica",
+   "description": "Salva le impostazioni della musica nel profilo dati."
+  },
+  "musica/library.py": {
+   "name": "Raccolta musicale",
+   "description": "Elenca i brani e li cerca per nome."
+  },
+  "musica/player.py": {
+   "name": "Lettore musica",
+   "description": "Riproduce i brani del PC con Windows."
+  },
+  "musica/runtime.py": {
+   "name": "Ingresso musica",
+   "description": "Punto unico con cui Lumi usa la musica."
+  },
+  "musica/service.py": {
+   "name": "Logica musica",
+   "description": "Fa funzionare la musica."
+  },
+  "musica/ui.py": {
+   "name": "Pagina musica",
+   "description": "Sceglie cartelle e chiave YouTube facoltativa."
+  },
+  "musica/video_host/player.html": {
+   "name": "Pagina del lettore video",
+   "description": "Pagina web che riproduce il video."
+  },
+  "musica/video_host/Program.cs": {
+   "name": "Programma video",
+   "description": "Piccolo programma Windows che mostra i video."
+  },
+  "musica/video.py": {
+   "name": "Riquadro video",
+   "description": "Mostra i video dentro Lumi."
+  },
+  "musica/youtube.py": {
+   "name": "YouTube",
+   "description": "Apre YouTube nel browser con i risultati o il primo video."
+  }
+ }
+}

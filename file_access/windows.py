@@ -264,7 +264,7 @@ def shell_query(request: dict, *, timeout=6) -> dict:
 
 
 def explorer_view() -> dict:
-    """On demand: foreground Explorer, or the sole Explorer view if Jarvis has focus."""
+    """On demand: foreground Explorer, or the sole Explorer view if Lumi has focus."""
     require_windows()
     user = ctypes.WinDLL('user32',use_last_error=True)
     user.GetForegroundWindow.restype = wintypes.HWND

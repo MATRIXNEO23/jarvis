@@ -1,4 +1,4 @@
-"""Small, ephemeral voice-dialogue memory for Jarvis's GPT conversation mode.
+"""Small, ephemeral voice-dialogue memory for Lumi's GPT conversation mode.
 
 This is contextual recall, not an authority store, command queue, knowledge base
 or persistent profile. Only the last few completed user/assistant exchanges are

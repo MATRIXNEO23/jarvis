@@ -18,14 +18,14 @@ class SelfReviewTests(unittest.TestCase):
 
     def test_voice_and_text_requests_are_explicit(self):
         cases=(
-            "Jarvis, fai un'autodiagnosi",
-            "Jarvis, come potresti migliorarti?",
-            "Jarvis, suggerisci miglioramenti al tuo codice",
-            "Jarvis, analizza te stesso",
-            "Jarvis, controlla i tuoi file e suggerisci miglioramenti",
-            "Jarvis, prepara un rapporto di autodiagnosi",
-            "Jarvis, autoanalizzati",
-            "Jarvis, consigliami come potresti migliorarti",
+            "Lumi, fai un'autodiagnosi",
+            "Lumi, come potresti migliorarti?",
+            "Lumi, suggerisci miglioramenti al tuo codice",
+            "Lumi, analizza te stesso",
+            "Lumi, controlla i tuoi file e suggerisci miglioramenti",
+            "Lumi, prepara un rapporto di autodiagnosi",
+            "Lumi, autoanalizzati",
+            "Lumi, consigliami come potresti migliorarti",
         )
         for phrase in cases:
             with self.subTest(phrase=phrase):
@@ -41,13 +41,13 @@ class SelfReviewTests(unittest.TestCase):
         # autodiagnosis *and* possible fixes, but GPT replied that it could
         # not read Jarvis's code or logs. The local AST reviewer can.
         direct=(
-            "Jarvis, fai un'autodiagnosi del tuo funzionamento e proponi eventuali fix",
-            "Jarvis, fatti un'autodiagnosi del tuo funzionamento e proponi eventuali fix",
+            "Lumi, fai un'autodiagnosi del tuo funzionamento e proponi eventuali fix",
+            "Lumi, fatti un'autodiagnosi del tuo funzionamento e proponi eventuali fix",
             "Esegui una diagnosi del tuo codice e suggerisci possibili correzioni",
-            "Jarvis, analizza il tuo funzionamento e proponi dei miglioramenti",
-            "Jarvis, controlla i tuoi file e suggerisci eventuali fix",
-            "Jarvis, puoi fare un'autodiagnosi del tuo funzionamento e suggerisci soluzioni?",
-            "Jarvis, fai un'autodiagnosi del tuo funzionamento e proponi eventuali fix.",
+            "Lumi, analizza il tuo funzionamento e proponi dei miglioramenti",
+            "Lumi, controlla i tuoi file e suggerisci eventuali fix",
+            "Lumi, puoi fare un'autodiagnosi del tuo funzionamento e suggerisci soluzioni?",
+            "Lumi, fai un'autodiagnosi del tuo funzionamento e proponi eventuali fix.",
         )
         for request in direct:
             with self.subTest(request=request):
@@ -56,8 +56,8 @@ class SelfReviewTests(unittest.TestCase):
             "Non fare un'autodiagnosi",
             "Domani fai un'autodiagnosi",
             "Mi hai detto che avevi fatto un'autodiagnosi",
-            "Jarvis, elimina i file e fai un'autodiagnosi",
-            "Jarvis, come va? Non ho accesso al codice e ai log",
+            "Lumi, elimina i file e fai un'autodiagnosi",
+            "Lumi, come va? Non ho accesso al codice e ai log",
         )
         for request in unrelated:
             with self.subTest(request=request):
@@ -68,17 +68,17 @@ class SelfReviewTests(unittest.TestCase):
         source=(Path(__file__).resolve().parent.parent/"jarvis.py"
                 ).read_text(encoding="utf-8")
         start=source.split("    def start_conversation_gpt(spoken: str) -> None:",1)[1]
-        start=start.split("    def toggle_gpt(",1)[0]
+        start=start.split("    def collega_gpt(",1)[0]
         self.assertLess(start.index("try_self_diagnostic(spoken)"),
-                        start.index("submit_gemma_voice(spoken)"))
-        self.assertLess(start.index("try_self_diagnostic(spoken)"), start.index("run_gpt("))
+                        start.index("submit_gemma_voice(spoken, typed=typed, route="))
+        self.assertLess(start.index("try_self_diagnostic(spoken)"), start.index("conversation_chain(spoken, False)"))   # 055
         ask=source.split("    def submit_gpt() -> None:",1)[1]
         ask=ask.split("    def poll() -> None:",1)[0]
         self.assertLess(ask.index("try_self_diagnostic(message)"),
-                        ask.index('run_gpt("ask"'))
+                        ask.index("chain_typed_once(message)"))   # 056: sempre la catena
         self.assertLess(ask.index("try_self_diagnostic(message)"),
-                        ask.index("not gpt_enabled.get()"))
-        self.assertIn('text="Autodiagnosi Jarvis"',source)
+                        ask.index("if busy_gpt:"))
+        self.assertIn('text="Autodiagnosi Lumi"',source)
         self.assertIn("diagnostic_button.configure(",source)
         self.assertIn("command=lambda: try_self_diagnostic(",source)
         self.assertIn('if try_self_diagnostic(message):',source)
@@ -116,7 +116,7 @@ class SelfReviewTests(unittest.TestCase):
         self.assertTrue(any("Funzione massive" in i.observation
                             for i in review.recommendations))
         self.assertIn("Valutare",format_audit(review))
-        self.assertLessEqual(len(review.recommendations),8)
+        self.assertLessEqual(len(review.recommendations),12)
 
     def test_untrusted_source_is_not_imported_or_executed(self):
         secret="VERY_PRIVATE_TOKEN_9324"
@@ -160,13 +160,13 @@ class SelfReviewTests(unittest.TestCase):
                 self.root,[outside],module=""),())
 
     def test_many_signals_are_bounded_and_across_modules(self):
-        for n in range(12):
+        for n in range(16):
             (self.root/f"module_{n:02}.py").write_text(
                 "def run():\n    subprocess.run('x', shell=True)\n"
                 "    try:\n        work()\n    except Exception:\n"
                 "        pass\n",encoding="utf-8")
         audit=inspect_jarvis(source_root=self.root)
-        self.assertEqual(len(audit.recommendations),8)
+        self.assertEqual(len(audit.recommendations),12)
         names={r.file for r in audit.recommendations}
         self.assertGreaterEqual(len(names),4)
         self.assertTrue(all(r.priority in ("alta","media","bassa")

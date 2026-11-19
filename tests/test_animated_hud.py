@@ -97,6 +97,18 @@ class AnimatedHUDGeometryTests(unittest.TestCase):
             self.assertTrue(bool(console.tag_cget("utente","elide")))
             hud.select_tab("CONSOLE")
             self.assertFalse(bool(int(console.tag_cget("utente","elide"))))
+            self.assertTrue(bool(int(console.tag_cget("sistema","elide"))))   # interni nascosti
+            # Un solo livello (15/11): DIAGNOSTICA apre una copia filtrabile.
+            console.configure(state="normal")   # select_tab lascia la console disabilitata
+            console.insert("end","TU > ciao\n","utente")
+            console.insert("end","PROGRAMMI > interno\n","sistema")
+            hud.open_diagnostics()
+            copy=hud._diagnostics["text"]
+            self.assertIn("PROGRAMMI > interno",copy.get("1.0","end"))
+            hud._diagnostics["buttons"]["SISTEMA"].invoke()
+            self.assertTrue(bool(int(copy.tag_cget("utente","elide"))))
+            self.assertFalse(bool(int(console.tag_cget("utente","elide"))))   # chat intatta
+            hud._diagnostics["window"].destroy()
             hud.core_art.build(hud.core_canvas)
             hud.earth_art.build(hud.earth_canvas)
             hud.core_art.tick(.5,"listening",listening=True)

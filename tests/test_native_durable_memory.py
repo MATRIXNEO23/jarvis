@@ -53,8 +53,9 @@ class NativeDurableMemoryTests(unittest.TestCase):
         self.env["messagebox"].askyesno.return_value = True
         # Compile existing callbacks now. The optional new helper is wired only
         # once it exists; original callbacks never reference it in Red source.
+        from test_activity_status import moved_functions
         names = {node.name for node in self.fixture.harness.main.body
-                 if hasattr(node, "name")}
+                 if hasattr(node, "name")} | set(moved_functions())
         for name in ("remember_exchange", "toggle_memory", "clear_saved_memory",
                      "native_memory_request"):
             if name in names:
@@ -65,7 +66,7 @@ class NativeDurableMemoryTests(unittest.TestCase):
         self.fixture.session = NativeConversationSession(
             self.fixture.adapter,
             config_loader=lambda: NativeModelConfig(context_size=2048, max_output=128),
-            memory_loader=lambda: MemoryPreferences(prompt_max_tokens=1200))
+            memory_loader=lambda: MemoryPreferences(prompt_max_tokens=1200, cronologia_ridotta=False))
         self.env.update(get_gemma_session=lambda: self.fixture.session,
                         gemma_session=[self.fixture.session],
                         conversation_memory=ConversationMemory(),
@@ -140,7 +141,7 @@ class NativeDurableMemoryTests(unittest.TestCase):
         for number in range(12):
             workspace.add_turn("project", a, "Altro tema " + str(number) + "x" * 70,
                                "Testo recente " + "r" * 95)
-        self.fixture.session.memory_loader = lambda: MemoryPreferences(prompt_max_tokens=520)
+        self.fixture.session.memory_loader = lambda: MemoryPreferences(prompt_max_tokens=520, cronologia_ridotta=False)
         self.fixture.switch(a)
         self.assertIn("AMETISTA_ANTICA", self.ask("Qual è il colore della nebulosa?"))
 

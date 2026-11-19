@@ -1,3 +1,5 @@
+# >>> Ripresa corrente: leggere prima AGENTS.md e [docs/HANDOFF-LUMI-CORRENTE.md](docs/HANDOFF-LUMI-CORRENTE.md) (stato, regole, CI, prossimi passi). Le sezioni sotto sono storiche.
+
 Correzione prompt Gemma verificata nei sorgenti: [docs/CORREZIONE-PROMPT-GEMMA-20261108.md](docs/CORREZIONE-PROMPT-GEMMA-20261108.md). Budget configurabile250/128–600, ultimo riferimento preservato. Tutti i controlli Windows conclusi; nessuna build nuova autorizzata o pubblicata. Handoff/stato riportano commit, run e prossimo passo.
 
 Audit latenza012 concluso: [docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md](docs/AUDIT-PRESTAZIONI-GEMMA-20261108.md). Nessuna modifica runtime o nuova build. Proposta minima da concordare, prova Windows reale completata.

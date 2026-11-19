@@ -88,12 +88,20 @@ class NativePromptPolicyTests(unittest.TestCase):
             path.write_text(json.dumps(legacy), encoding='utf-8')
             before = path.read_bytes()
             prefs = MemoryPreferences.load(path)
-            self.assertEqual(prefs.history_max_tokens, 250)
+            self.assertEqual(prefs.history_max_tokens, 200)
             self.assertEqual(path.read_bytes(), before)
             replace(prefs, history_max_tokens=400).save(path)
             self.assertEqual(json.loads(path.read_text()), legacy)
             self.assertEqual(MemoryPreferences.load(path).history_max_tokens, 400)
             self.assertEqual(MemoryPreferences.load(path).prompt_max_tokens, 700)
+
+    def test_untouched_old_default_follows_lighter_default(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'memory.json'
+            MemoryPreferences(history_max_tokens=250).save(path)
+            self.assertEqual(MemoryPreferences.load(path).history_max_tokens, 200)
+            MemoryPreferences(history_max_tokens=300).save(path)
+            self.assertEqual(MemoryPreferences.load(path).history_max_tokens, 300)
 
     def test_invalid_native_budget_never_overwrites_either_preference_file(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -129,8 +137,8 @@ class NativePromptPolicyTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), before)
             self.assertEqual(MemoryPreferences.load(path).history_max_tokens, 400)
             window.reset()
-            self.assertEqual(int(window.values['history_max_tokens'].get()), 250)
+            self.assertEqual(int(window.values['history_max_tokens'].get()), 200)
             self.assertEqual(MemoryPreferences.load(path).history_max_tokens, 400)
             window.save()
-            self.assertEqual(MemoryPreferences.load(path).history_max_tokens, 250)
+            self.assertEqual(MemoryPreferences.load(path).history_max_tokens, 200)
             window.window.destroy()

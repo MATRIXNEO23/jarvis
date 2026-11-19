@@ -1,1 +1,1 @@
-"""Optional resident local model, using the existing Jarvis executors."""
+"""Optional resident local model, using the existing Lumi executors."""

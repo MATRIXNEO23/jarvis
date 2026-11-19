@@ -1,4 +1,4 @@
-"""Tiny energy-based voice activity indicator for the JARVIS reactor.
+"""Tiny energy-based voice activity indicator for the LUMI reactor.
 
 The recognizer still uses Vosk. This module is ONLY a status light:
 it never opens the microphone, changes listening modes, stores audio, or

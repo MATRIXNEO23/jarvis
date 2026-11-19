@@ -1,4 +1,4 @@
-"""Regression tests: a document bridge error never strands Jarvis's work state."""
+"""Regression tests: a document bridge error never strands Lumi's work state."""
 from pathlib import Path
 import unittest
 from types import SimpleNamespace

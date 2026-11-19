@@ -1,12 +1,23 @@
-"""Integrated window controls for Jarvis's Tk windows on Windows."""
+"""Integrated window controls for Lumi's Tk windows on Windows.
+
+Riordino 060: contiene anche la regola «finestra sempre dentro lo schermo» (era finestra_adatta.py),
+che non usa nulla di Windows e si prova anche su Linux; le parti Windows (ctypes.wintypes, user32)
+si caricano solo quando servono."""
 import ctypes
-from ctypes import wintypes
 import sys
 import tkinter as tk
 from tkinter import ttk
 
 
+# Classi reali fissate all'import: i callback Tk restano legati a finestre vere anche se un
+# test sostituisce tkinter.Tk con un finto (isinstance con un Mock dava TypeError).
+_FINESTRE = (tk.Tk, tk.Toplevel)
+_SUPERFICI = (tk.Tk, tk.Toplevel, tk.Frame, tk.Label, tk.Canvas, ttk.Frame, ttk.Label)
+
 GWL_STYLE = -16
+GWL_EXSTYLE = -20
+WS_EX_APPWINDOW = 0x00040000
+WS_EX_TOOLWINDOW = 0x00000080
 WS_CAPTION = 0x00C00000
 WS_THICKFRAME = 0x00040000
 GA_ROOT = 2
@@ -17,6 +28,7 @@ FRAME_CHANGED = 0x0037  # FRAMECHANGED | NOACTIVATE | NOZORDER | NOMOVE | NOSIZE
 
 class _WindowApi:
     def __init__(self):
+        from ctypes import wintypes      # parti Windows caricate solo all'uso (060)
         user = ctypes.WinDLL("user32", use_last_error=True)
 
         def bind(name, result, *args):
@@ -38,6 +50,18 @@ class _WindowApi:
 
     def hwnd(self, window):
         return self.ancestor(window.winfo_id(), GA_ROOT)
+
+    def ensure_taskbar_button(self, hwnd):
+        """Keep a taskbar entry for a captionless main window (9/11 fix).
+
+        Without it, minimizing the stripped root could leave no visible way
+        back, so the app looked closed while still running.
+        """
+        original = self.get_style(hwnd, GWL_EXSTYLE)
+        style = (original | WS_EX_APPWINDOW) & ~WS_EX_TOOLWINDOW
+        if style != original:
+            self.set_style(hwnd, GWL_EXSTYLE, style)
+            self.set_position(hwnd, None, 0, 0, 0, 0, FRAME_CHANGED)
 
     def strip_frame(self, hwnd):
         original = self.get_style(hwnd, GWL_STYLE)
@@ -71,6 +95,8 @@ def install_window_chrome(root):
             return
         if getattr(window, "_jarvis_window_buttons", None) is not None:
             return
+        if not window.transient():
+            api.ensure_taskbar_button(hwnd)
 
         header = getattr(window, "_jarvis_window_header", None)
         children = window.pack_slaves()
@@ -85,17 +111,36 @@ def install_window_chrome(root):
                 background = content.cget("background")
             window.configure(background=background)
 
-        buttons = tk.Frame(host, bg=background, name="jarvis_window_buttons")
+        # 055 (decisione 17/11 05:05): _ □ X in alto a destra, SOPRA l'ingranaggio. L'header
+        # offre una colonna (_jarvis_window_corner) che contiene pulsanti e ingranaggio.
+        corner = getattr(window, "_jarvis_window_corner", None) if header is not None else None
+        buttons = tk.Frame(corner if corner is not None else host, bg=background,
+                           name="jarvis_window_buttons")
         window._jarvis_window_buttons = buttons
-        if header is not None:
-            buttons.pack(side="right")
+        if corner is not None:
+            anchor = getattr(window, "_jarvis_window_anchor", None)
+            try:
+                buttons.pack(side="top", anchor="e", before=anchor) if anchor is not None else buttons.pack(side="top", anchor="e")
+            except tk.TclError:
+                buttons.pack(side="top", anchor="e")
+        elif header is not None:
+            anchor = getattr(window, "_jarvis_window_anchor", None)
+            try:
+                buttons.pack(side="right", before=anchor) if anchor is not None else buttons.pack(side="right")
+            except tk.TclError:
+                buttons.pack(side="right")
         else:
             buttons.pack(side="top", anchor="e", **({"before": children[0]} if children else {}))
 
         def minimize():
             owner = window.transient()
             target = window.nametowidget(owner) if owner else window
-            api.show(api.hwnd(target), 6)  # SW_MINIMIZE
+            # Tk-managed iconify keeps Tk's state consistent and restorable
+            # from the taskbar; raw ShowWindow is only a fallback.
+            try:
+                target.iconify()
+            except tk.TclError:
+                api.show(api.hwnd(target), 6)  # SW_MINIMIZE
 
         def toggle_maximize():
             handle = api.hwnd(window)
@@ -114,11 +159,12 @@ def install_window_chrome(root):
         for label, name, action in (("×", "close", close),
                                     ("□", "maximize", toggle_maximize),
                                     ("–", "minimize", minimize)):
-            button = tk.Button(buttons, text=label, name=name, command=action, width=4,
+            compact = {"font": ("Segoe UI", 8), "width": 3} if corner is not None else {"width": 4}
+            button = tk.Button(buttons, text=label, name=name, command=action, **compact,
                                bg=background, fg="#000000" if sum(window.winfo_rgb(background)) > 98000
                                else "#d9f3ff", activebackground="#16415a",
                                activeforeground="#ffffff", bd=0, highlightthickness=0)
-            button.pack(side="right", ipady=3)
+            button.pack(side="right", ipady=0 if corner is not None else 3)
 
         drag_origin = None
 
@@ -127,11 +173,11 @@ def install_window_chrome(root):
             drag_origin = None
             if not anywhere:
                 on_edge = (0 <= event.y_root - window.winfo_rooty() < DRAG_EDGE_HEIGHT
-                           and isinstance(event.widget, (tk.Tk, tk.Toplevel, tk.Frame,
-                                                         tk.Label, tk.Canvas, ttk.Frame, ttk.Label)))
+                           and isinstance(event.widget, _SUPERFICI))
                 if event.widget is not header and not on_edge:
                     return
             handle = api.hwnd(window)
+            from ctypes import wintypes
             rect = wintypes.RECT()
             if handle and not api.zoomed(handle) and api.get_rect(handle, ctypes.byref(rect)):
                 drag_origin = (handle, rect.left - event.x_root, rect.top - event.y_root)
@@ -155,7 +201,56 @@ def install_window_chrome(root):
         window.bind("<Unmap>", end_drag, add="+")
 
     def on_map(event):
-        if isinstance(event.widget, (tk.Tk, tk.Toplevel)):
+        if isinstance(event.widget, _FINESTRE):
             root.after_idle(attach, event.widget)
+            if isinstance(event.widget, tk.Toplevel):       # 058: sempre dentro lo schermo
+                root.after(60, adatta, event.widget)
 
     root.bind_all("<Map>", on_map, add="+")
+
+
+# ======================================================================
+# 058: finestre e pagine con tasti e campi sempre visibili anche senza schermo intero.
+# 
+# Regola unica per ogni finestra secondaria (Toplevel) di Lumi, applicata alla prima apertura:
+# - non è mai più grande dell'area utile dello schermo (schermo meno barra delle applicazioni);
+# - la dimensione minima è quella che serve al contenuto (mai oltre l'area utile), così tasti e
+#   campi non vengono tagliati rimpicciolendo la finestra;
+# - sta tutta dentro lo schermo.
+# Il contenuto più alto dell'area utile resta raggiungibile con lo scorrimento già presente nelle
+# pagine (tela con barra); `fuori_area` serve al test automatico a 1366x768.
+# ======================================================================
+
+MARGINE_X = 16          # pixel lasciati ai lati
+MARGINE_Y = 72          # barra di Windows + barra del titolo
+MINIMO = (320, 200)
+
+
+def area_utile(window, schermo=None):
+    larghezza, altezza = schermo or (window.winfo_screenwidth(), window.winfo_screenheight())
+    return max(MINIMO[0], larghezza - MARGINE_X), max(MINIMO[1], altezza - MARGINE_Y)
+
+
+def adatta(window, schermo=None) -> bool:
+    """Applica la regola; True se ha cambiato qualcosa. Sicura da richiamare più volte."""
+    if getattr(window, "_lumi_adattata", False) or isinstance(window, tk.Tk):
+        return False
+    try:
+        if window.overrideredirect():
+            return False
+        window.update_idletasks()
+        utile_l, utile_a = area_utile(window, schermo)
+        richiesta = (window.winfo_reqwidth(), window.winfo_reqheight())
+        minimo = (min(utile_l, max(MINIMO[0], richiesta[0])),
+                  min(utile_a, max(MINIMO[1], richiesta[1])))
+        window.minsize(*minimo)
+        larghezza = min(utile_l, max(window.winfo_width(), minimo[0]))
+        altezza = min(utile_a, max(window.winfo_height(), minimo[1]))
+        schermo_l, schermo_a = schermo or (window.winfo_screenwidth(), window.winfo_screenheight())
+        x = min(max(0, window.winfo_x()), max(0, schermo_l - larghezza))
+        y = min(max(0, window.winfo_y()), max(0, schermo_a - MARGINE_Y // 2 - altezza))
+        window.geometry("%dx%d+%d+%d" % (larghezza, altezza, x, y))
+        window._lumi_adattata = True
+        return True
+    except tk.TclError:
+        return False

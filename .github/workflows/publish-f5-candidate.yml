@@ -1,0 +1,76 @@
+name: "Publish verified F5 test candidate to Download"
+on:
+  push:
+    branches: [feature/jarvis-kobold-f5-profiles-20261109]
+    paths: ['tools/publish_request.json']
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read publish request
+        id: req
+        run: |
+          echo "run_id=$(jq -r .run_id tools/publish_request.json)" >> "$GITHUB_OUTPUT"
+          echo "artifact=$(jq -r .artifact tools/publish_request.json)" >> "$GITHUB_OUTPUT"
+      - name: Download the exact verified artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.req.outputs.artifact }}
+          run-id: ${{ steps.req.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: candidate
+      - name: Verify bytes and SHA-256 against request and build report
+        run: |
+          set -euo pipefail
+          f=$(jq -r .file tools/publish_request.json)
+          test "$(stat -c %s candidate/$f)" = "$(jq -r .bytes tools/publish_request.json)"
+          test "$(sha256sum candidate/$f | cut -d' ' -f1)" = "$(jq -r .sha256 tools/publish_request.json)"
+          test "$(jq -r .verification.boot "candidate/${f%.zip}.json")" != "null"
+          test "$(jq -r .verification.initializer "candidate/${f%.zip}.json")" = "true"
+      - name: Publish on top of Download in main (014 and older untouched)
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git worktree add publish-main origin/main
+          cd publish-main
+          f=$(jq -r .file ../tools/publish_request.json)
+          test ! -e "Download/$f"
+          cp "../candidate/$f" Download/
+          sha=$(jq -r .sha256 ../tools/publish_request.json)
+          run=$(jq -r .run_id ../tools/publish_request.json)
+          {
+            echo "## $(jq -r .title ../tools/publish_request.json)"
+            echo
+            echo "[Scarica $f](https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/$f)"
+            echo
+            jq -r .description ../tools/publish_request.json
+            echo
+            echo "[Verifiche Windows](https://github.com/MATRIXNEO23/jarvis/actions/runs/$run). SHA-256: \`$sha\`."
+            echo
+            cat Download/README.md
+          } > /tmp/README.md
+          mv /tmp/README.md Download/README.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "Download/$f" Download/README.md
+          git commit -m "Publish $f test candidate (verified run $run)"
+          git push origin HEAD:main
+      - name: Re-download public link and verify (retry for CDN cache)
+        run: |
+          set -euo pipefail
+          f=$(jq -r .file tools/publish_request.json)
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            sleep 30
+            if curl -fsSL -o check.zip "https://raw.githubusercontent.com/MATRIXNEO23/jarvis/main/Download/$f" \
+               && [ "$(sha256sum check.zip | cut -d' ' -f1)" = "$(jq -r .sha256 tools/publish_request.json)" ]; then
+              echo PUBLIC_DOWNLOAD_VERIFIED; exit 0
+            fi
+          done
+          echo "Public link not yet serving the expected file"; exit 1

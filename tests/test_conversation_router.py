@@ -77,7 +77,7 @@ class ConversationRouterTests(unittest.TestCase):
                               ('tool','open_browser',{})):
             key='action_id' if kind=='capability' else 'tool_id'
             response=encode({'kind':kind,key:aid,'arguments':args})
-            for text in ('cerca Netflix','Jarvis, cercami Netflix','trova Google Chrome'):
+            for text in ('cerca Netflix','Lumi, cercami Netflix','trova Google Chrome'):
                 with self.subTest(action=aid,text=text):
                     intent=parse_conversation_intent(response,utterance=text)
                     self.assertEqual(intent.kind,'clarify')

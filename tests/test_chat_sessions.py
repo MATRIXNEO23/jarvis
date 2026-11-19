@@ -1,6 +1,6 @@
 """ARCH-01 F1: independent, explicit, durable chat instances.
 
-This suite must not touch the real Jarvis profile, model, Second Brain or
+This suite must not touch the real Lumi profile, model, Second Brain or
 workspace DB. Uses a temporary SQLite file on each test.
 """
 import tempfile
@@ -78,7 +78,8 @@ class ChatSessionStoreTests(unittest.TestCase):
         saved = ChatSessionStore(self.path)
         self.assertEqual(saved.get_chat(chat.id).title, "Titolo aggiornato")
         self.assertEqual(len(saved.recent_pairs(chat.id)), 1)
-        self.assertFalse(hasattr(saved, "delete_chat"))
+        # 15/11: l'utente vuole poter eliminare una chat, ma solo con un'azione esplicita.
+        self.assertEqual(len(saved.recent_pairs(chat.id)), 1)
         self.assertFalse(hasattr(saved, "clear_all"))
 
     def test_invalid_inputs_fail_closed_and_do_not_create_partial_exchange(self):

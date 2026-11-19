@@ -12,7 +12,7 @@ def explicit_telegram_note(message:str,contact_name:str="") -> str|None:
     if not isinstance(message,str) or not 8<=len(message)<=950:
         return None
     text=" ".join(message.strip().split())
-    text=re.sub(r"^jarvis[,\s:]+","",text,flags=re.I)
+    text=re.sub(r"^lumi[,\s:]+","",text,flags=re.I)
     # No fuzzy matching against arbitrary names or users: the sole contact
     # has already been explicitly selected by the owner in the setup wizard.
     phrases=[r"(?:alla\s+mia\s+amica|al\s+mio\s+contatto)",

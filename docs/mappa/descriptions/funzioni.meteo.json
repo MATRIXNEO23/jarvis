@@ -1,0 +1,36 @@
+{
+ "files": {
+  "meteo/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "meteo/commands.py": {
+   "name": "Frasi del meteo",
+   "description": "Capisce domande come che tempo fa a Roma."
+  },
+  "meteo/config.py": {
+   "name": "Città predefinita",
+   "description": "Salva la città usata di solito per il meteo."
+  },
+  "meteo/dettagli.py": {
+   "name": "Meteo esteso",
+   "description": "Dà previsioni per ora e per giorno senza usare l'IA."
+  },
+  "meteo/icone.py": {
+   "name": "Icone del meteo",
+   "description": "Disegna le icone del tempo sulla schermata."
+  },
+  "meteo/runtime.py": {
+   "name": "Ingresso meteo",
+   "description": "Punto unico con cui Lumi usa il meteo."
+  },
+  "meteo/service.py": {
+   "name": "Previsioni",
+   "description": "Chiede a Open-Meteo il tempo attuale, senza chiavi."
+  },
+  "meteo/ui.py": {
+   "name": "Pagina meteo",
+   "description": "Pagina delle Impostazioni per il meteo."
+  }
+ }
+}

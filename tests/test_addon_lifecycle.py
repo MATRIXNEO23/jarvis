@@ -190,7 +190,7 @@ class AddonLifecycleTests(unittest.TestCase):
             telethon_installed=False)
         self.assertIn("tramite_gateway_locale",capability_status_prompt(info))
         prompt=build_conversation_prompt(
-            "Jarvis, dimmi lo stato del computer",
+            "Lumi, dimmi lo stato del computer",
             runtime_info=capability_status_prompt(info),
             addon_actions=self.manager.active_actions())
         self.assertIn(self.action,prompt)
@@ -216,7 +216,7 @@ class AddonLifecycleTests(unittest.TestCase):
         start=source.index("    def submit_gpt() -> None:")
         stop=source.index("    def diagnostic_heartbeat() -> None:",start)
         typed=source[start:stop]
-        self.assertIn('run_gpt("typed_conversation"',typed)
+        self.assertIn("chain_typed_once(message)",typed)  # 055: catena unica (056b: helper)
         self.assertIn("addon_actions=active_addon_actions()",typed)
         self.assertIn("build_conversation_prompt(",typed)
         self.assertIn("build_chat_prompt(",typed)  # long text remains chat only

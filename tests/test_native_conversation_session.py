@@ -35,12 +35,12 @@ class SessionTests(unittest.TestCase):
         session = NativeConversationSession(
             adapter, config_loader=lambda: config, memory_loader=MemoryPreferences)
         session.ask("Presentati")
-        self.assertIn("Stile di risposta: Ironia secca", adapter.calls[-1])
+        self.assertIn("Stile: Ironia secca", adapter.calls[-1])
         session.ask_isolated(lambda budget: "Messaggio Telegram")
         self.assertEqual(adapter.calls[-1], "Messaggio Telegram")
         config = NativeModelConfig(context_size=512, max_output=128, personality="Tono serio")
         session.ask("Come va?")
-        self.assertIn("Stile di risposta: Tono serio", adapter.calls[-1])
+        self.assertIn("Stile: Tono serio", adapter.calls[-1])
         self.assertNotIn("Ironia secca", adapter.calls[-1])
         self.assertEqual(adapter.prepares, 1)
         config = NativeModelConfig(context_size=512, max_output=128, personality="x" * 240)
@@ -57,7 +57,7 @@ class SessionTests(unittest.TestCase):
     def test_internal_notes_never_reach_spoken_answer(self):
         raw = ("Va bene, ti rispondo.\n\n"
                "**What's Going Right:**\n"
-               "Conversation Flow: instructions to Jarvis")
+               "Conversation Flow: instructions to Lumi")
         self.assertEqual(clean_native_answer(raw), "Va bene, ti rispondo.")
 
     def test_think_block_is_not_spoken(self):
@@ -107,7 +107,7 @@ class SessionTests(unittest.TestCase):
         from telegram_bridge import telegram_local_prompt
         adapter = FakeAdapter()
         session = self.make_session(adapter)
-        session.ask("Nota privata di Jarvis")
+        session.ask("Nota privata di Lumi")
         previous = list(session.history)
         session.ask_isolated(lambda budget: "Telegram: Ciao")
         self.assertEqual(adapter.calls[-1], "Telegram: Ciao")

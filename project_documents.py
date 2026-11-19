@@ -78,7 +78,7 @@ def parse_simple_save(utterance: str) -> str | None:
     if not isinstance(utterance,str) or len(utterance)>220:
         return None
     text=unicodedata.normalize("NFKC",utterance).strip(" ,.!?;:")
-    text=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]+","",text,flags=re.I)
+    text=re.sub(r"^(?:(?:ehi|hey|ok)\s+)?lumi[\s,.:;-]+","",text,flags=re.I)
     match=_SAVE.fullmatch(text)
     return match.group(1).strip(" ,.!?;:") if match and match.group(1) else (
         "" if match else None)

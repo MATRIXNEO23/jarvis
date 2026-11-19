@@ -1,6 +1,6 @@
-"""Prepare a separate local test profile for the Telegram-50 Jarvis trial.
+"""Prepare a separate local test profile for the Telegram-50 Lumi trial.
 
-Only READ the owner's original Jarvis profile. Copy the SQLite workspace via
+Only READ the owner's original Lumi profile. Copy the SQLite workspace via
 the online backup API, never with a raw file copy while connections may be open.
 All writes stay inside the dedicated test directory.
 """
@@ -69,7 +69,7 @@ def prepare_trial(original_home: Path, trial_home: Path) -> list[str]:
     elif trial_db.exists():
         notes.append("Database di test gia presente: conservato con i suoi messaggi.")
     else:
-        notes.append("Nessun database originale: Jarvis creera un archivio di test vuoto.")
+        notes.append("Nessun database originale: Lumi creera un archivio di test vuoto.")
     # Keep ordinary work and preference databases in the trial profile too.
     # They are NEVER written back to the original installation.
     for filename in ("second_brain.sqlite3", "jarvis_preferences.sqlite3",
@@ -121,15 +121,15 @@ def main():
     appdata = os.environ.get("LOCALAPPDATA")
     test_dir = os.environ.get("JARVIS_TRIAL_HOME")
     if not appdata or not test_dir:
-        raise RuntimeError("Avvia tramite avvia_jarvis.bat della ZIP sperimentale.")
+        raise RuntimeError("Avvia tramite avvia_lumi.bat della ZIP sperimentale.")
     original = Path(os.environ["JARVIS_TRIAL_SOURCE"]) if os.environ.get("JARVIS_TRIAL_SOURCE") else Path(appdata) / "Jarvis"
     trial = Path(test_dir)
-    print("JARVIS // PROVA TELEGRAM 50")
+    print("LUMI // PROVA TELEGRAM 50")
     print("Profilo originale (sola lettura):", original)
     print("Profilo di prova:", trial)
     for line in prepare_trial(original, trial):
         print("-", line)
-    print("La vecchia cartella di Jarvis non viene modificata dallo script.")
+    print("La vecchia cartella di Lumi non viene modificata dallo script.")
 
 
 if __name__ == "__main__":

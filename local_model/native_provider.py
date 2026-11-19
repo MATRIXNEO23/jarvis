@@ -1,6 +1,6 @@
 """ModelService-compatible local inference adapter, no online or HTTP access.
 
-This is an opt-in component; existing Jarvis routing is unchanged.
+This is an opt-in component; existing Lumi routing is unchanged.
 """
 import threading
 
@@ -40,12 +40,15 @@ class NativeLocalProvider:
             if prompt is not None and messages is not None:
                 raise RuntimeError("Specificare prompt oppure messaggi.")
             if prompt is None:
-                prompt = format_gemma_messages(messages)
+                pass
             elif isinstance(prompt, str) and prompt.strip():
-                prompt = format_gemma_messages([{"role": "user", "content": prompt}])
+                messages = [{"role": "user", "content": prompt}]
             else:
                 raise RuntimeError("Prompt locale non valido.")
             self.bridge.load()
+            from .chat_templates import format_messages
+            family = getattr(self.bridge, "family", None)
+            prompt = format_messages(messages, family if isinstance(family, str) else "gemma2")
             return self.bridge.generate(prompt, timeout=timeout)
 
     def count_tokens(self, prompt):

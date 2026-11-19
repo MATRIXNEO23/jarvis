@@ -26,6 +26,10 @@ class NativeChatAdapter:
             provider.bridge.update_generation_settings(config)
             self.config = config
             return
+        if provider is not None and getattr(provider.bridge, "loaded", False):
+            # Keep the working model; native reload needs a restart (F5N.7).
+            from .native_bridge import NativeRestartRequired, RESTART_MESSAGE
+            raise NativeRestartRequired(RESTART_MESSAGE)
         # Validate/create first; do not stop a working provider for a missing
         # file. The session lock serializes replacement with every inference.
         provider = create_native_provider(config, upstream_source=self.source)
@@ -60,14 +64,14 @@ class NativeChatAdapter:
             budget = prompt_budget
         counter = self.context_token_counter()
         measure = counter if counter is not None else len
+        from .chat_templates import format_messages, model_family
+        family = model_family(self.config.model)
         if arguments.get("messages") is not None:
-            from .native_provider import format_gemma_messages
-            if measure(format_gemma_messages(arguments["messages"])) > budget:
+            if measure(format_messages(arguments["messages"], family)) > budget:
                 raise ValueError("Messaggi oltre il budget locale configurato.")
         prompt = arguments.get("prompt")
         if isinstance(prompt, str):
-            from .native_provider import format_gemma_messages
-            if measure(format_gemma_messages([{"role": "user", "content": prompt}])) > budget:
+            if measure(format_messages([{"role": "user", "content": prompt}], family)) > budget:
                 raise ValueError("Prompt oltre il budget locale configurato.")
         result = provider.ask(timeout=timeout, **arguments)
         bridge = getattr(provider, "bridge", None)

@@ -37,7 +37,7 @@ class OwnedEditWindow:
         self.u = self.bridge._user32()
         self.note = NotepadSession(
             "test-owned", os.getpid(), self.hwnd, self.edit,
-            SimpleNamespace(poll=lambda: None), original_title="Jarvis test")
+            SimpleNamespace(poll=lambda: None), original_title="Lumi test")
         return self
 
     def _run(self):
@@ -88,7 +88,7 @@ class OwnedEditWindow:
         try:
             if not atom:
                 raise ctypes.WinError(ctypes.get_last_error())
-            hwnd = u.CreateWindowExW(0, "Notepad", "Jarvis test", 0x00CF0000,
+            hwnd = u.CreateWindowExW(0, "Notepad", "Lumi test", 0x00CF0000,
                                     0, 0, 300, 200, None, None, instance, None)
             edit = u.CreateWindowExW(0, "Edit", "", 0x50000044,
                                     0, 0, 280, 180, hwnd, None, instance, None)

@@ -10,8 +10,8 @@ from desktop_dictation import DesktopDictation, FocusedWindow, dictation_voice_a
 
 class DictationCommandTests(unittest.TestCase):
     def test_exact_start_and_stop(self):
-        self.assertEqual(dictation_voice_action("Jarvis, attiva dettatura vocale"), "start")
-        self.assertEqual(dictation_voice_action("Jarvis interrompi dettatura"), "stop")
+        self.assertEqual(dictation_voice_action("Lumi, attiva dettatura vocale"), "start")
+        self.assertEqual(dictation_voice_action("Lumi interrompi dettatura"), "stop")
         self.assertEqual(dictation_voice_action("disattiva dettatura"), "stop")
 
     def test_ordinary_speech_never_toggles(self):

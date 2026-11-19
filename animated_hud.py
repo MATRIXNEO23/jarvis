@@ -1,4 +1,4 @@
-"""Reference-inspired animated JARVIS HUD, lightweight Tkinter edition.
+"""Reference-inspired animated LUMI HUD, lightweight Tkinter edition.
 
 Faithful layout and layered vector artwork without false live telemetry.
 Appearance never controls the microphone, GPT, executable tools or documents.
@@ -15,6 +15,7 @@ import tkinter as tk
 
 from network_telemetry import NetworkTelemetry, friendly_rate
 from hud_orbits import OrbitMarkers
+from slide_modalita import SlideModalita
 from hud_reference import (
     AMBER, BG as REF_BG, CYAN as REF_CYAN, GREEN as REF_GREEN,
     LAND, ReactorArt, GlobeArt, projected_earth_point,
@@ -63,6 +64,23 @@ def memory_usage_windows() -> tuple[int, int] | None:
     except (AttributeError, OSError, ValueError):
         return None
     return None
+
+
+def draw_lumi_wordmark(canvas, color, background, scale=0.62):
+    """Disegna «LUMI» (rombo, lettere a linee spesse con taglio, righe sottili)."""
+    def p(points):
+        return [v*scale for v in points]
+    canvas.create_polygon(p([4,24, 13,15, 22,24, 13,33]),outline=color,fill="",width=2)
+    thick=max(3,round(7*scale))
+    for points in ((44,6, 44,42, 70,42),
+                   (88,6, 88,36, 94,42, 112,42, 118,36, 118,6),
+                   (138,42, 138,6, 154,28, 170,6, 170,42),
+                   (192,6, 192,42)):
+        canvas.create_line(*p(points),fill=color,width=thick,capstyle="projecting",
+                           joinstyle="miter")
+    canvas.create_line(*p([38,24, 198,24]),fill=background,width=2)
+    for points in ((40,54, 68,54),(80,54, 196,54),(206,8, 218,8),(201,40, 226,40)):
+        canvas.create_line(*p(points),fill=color,width=1)
 
 
 class WindowsCPU:
@@ -202,7 +220,7 @@ class MetricTile:
 
 
 class JarvisHUD:
-    """Chat left, animated JARVIS nucleus center, rotating Earth right."""
+    """Chat left, animated LUMI nucleus center, rotating Earth right."""
 
     def __init__(self,parent,on_settings):
         self.parent=parent
@@ -255,13 +273,19 @@ class JarvisHUD:
                     x-1.5,y-1.5,x+1.5,y+1.5,
                     fill="#1d9bc4",outline="")
         header.bind("<Configure>",draw_header)
-        tk.Label(header,text="◈  J A R V I S",
-                 bg=BG,fg=CYAN,
-                 font=("Segoe UI",15,"bold")).pack(
-                     side="left",padx=(5,12))
-        tk.Label(header,text="//  INTERFACCIA NEURALE",
-                 bg=BG,fg="#4985a7",
-                 font=("Consolas",9)).pack(side="left")
+        # Scritta LUMI disegnata a linee (stile «B» scelto dall'utente il 12/11):
+        # rombo, lettere squadrate di tratto medio, taglio orizzontale e righe
+        # sottili. Non dipende da caratteri installati sul PC.
+        self.wordmark=tk.Canvas(header,width=168,height=40,bg=BG,
+                                highlightthickness=0,bd=0)
+        self.wordmark.pack(side="left",padx=(5,12))
+        draw_lumi_wordmark(self.wordmark,CYAN,BG)
+        # 056 B: al posto di «INTERFACCIA NEURALE», slide Basso consumo / Veloce.
+        self._mode_handler=None
+        self.mode_slide=SlideModalita(
+            header,bg=BG,on_change=lambda mode:(self._mode_handler(mode)
+                                                if self._mode_handler else True))
+        self.mode_slide.pack(side="left")
         self.exit_button=tk.Button(
             header,text="×",command=lambda:None,
             fg=MUTED,bg=BG,activeforeground=WHITE,
@@ -269,33 +293,36 @@ class JarvisHUD:
             bd=0,relief="flat",cursor="hand2")
         if self.frame.tk.call("tk", "windowingsystem") != "win32":
             self.exit_button.pack(side="right",padx=(5,4))
+        # 055: colonna a destra = pulsanti _ □ X (aggiunti da window_chrome) sopra l'ingranaggio.
+        corner=tk.Frame(header,bg=BG)
+        corner.pack(side="right")
+        parent._jarvis_window_corner=corner
         self.gear=tk.Button(
-            header,text="⚙",command=on_settings,
+            corner,text="⚙",command=on_settings,
             fg=CYAN,bg=BG,activeforeground=WHITE,
-            activebackground=BG,font=("Segoe UI Symbol",21),
+            activebackground=BG,font=("Segoe UI Symbol",17),
             bd=0,relief="flat",cursor="hand2")
-        self.gear.pack(side="right",padx=(8,12))
+        self.gear.pack(side="top",anchor="e",padx=(8,12))
+        parent._jarvis_window_anchor=self.gear     # 055: _ □ X sopra l'ingranaggio
         self.state_text=tk.StringVar(
             value="MIC  OFF    /    GPT  OFF    /    MEMORIA  OFF")
         self._quick_toggle_handlers = {}
         self._quick_state_cache = None
         quick_controls = tk.Frame(header, bg=BG)
         quick_controls.pack(side="right", padx=(0, 12))
-        for index, (key, label) in enumerate((
-                ("mic", "MIC OFF"), ("gpt", "GPT OFF"), ("memory", "MEMORIA OFF"))):
-            if index:
-                tk.Label(quick_controls, text="/", bg=BG, fg=MUTED,
-                         font=("Consolas", 9)).pack(side="left", padx=3)
-            button = tk.Button(quick_controls, text=label,
-                command=lambda name=key: self._invoke_quick_toggle(name),
-                state="disabled", bg=BG, fg=MUTED,
-                activebackground="#092238", activeforeground=CYAN,
-                disabledforeground=MUTED, font=("Consolas", 9),
-                bd=0, relief="flat", highlightthickness=1,
-                highlightbackground="#164257", highlightcolor=CYAN,
-                padx=5, pady=4, cursor="hand2", takefocus=True)
-            button.pack(side="left")
+        # 056b: ogni voce è un tasto con lo stesso stile (barra_tasti.TastoBarra). «Modello ▾»
+        # ha il ⏻ nello stesso tasto; Mic e Memoria sono tasti con ⏻. Online, Ricerca e
+        # Telegram si aggiungono con add_quick_button (Online e Ricerca vicini).
+        from barra_tasti import TastoBarra
+        for key, label, has_menu in (("mic", "Mic", False), ("model", "Modello ▾", True),
+                                     ("memory", "Memoria", False)):
+            button = TastoBarra(
+                quick_controls, label, None, power=True,
+                power_command=lambda name=key: self._invoke_quick_toggle(name))
+            button.configure(state="disabled")
+            button.pack(side="left", padx=(0, 5))
             setattr(self, key + "_toggle_button", button)
+        self.quick_controls = quick_controls
 
         # Reference's full-height console. Fixed min to preserve readability.
         layout=tk.Frame(self.frame,bg=BG)
@@ -310,14 +337,17 @@ class JarvisHUD:
             x=0,y=19,relheight=.89)
         nav=tk.Frame(self.left,bg=PANEL,height=45)
         nav.pack(fill="x",padx=9,pady=(8,4))
-        for name in ("CONSOLE","ATTIVITÀ","SISTEMA"):
-            button=tk.Button(
-                nav,text=name,command=lambda tab=name:self.select_tab(tab),
-                bg=PANEL,fg=MUTED,activeforeground=WHITE,
-                activebackground="#0b3650",font=("Consolas",9),
-                bd=0,relief="flat",padx=9,pady=8,cursor="hand2")
-            button.pack(side="left",fill="x",expand=True)
-            self._tabs[name]=button
+        # Un solo livello (15/11): la chat resta qui; attività e messaggi di
+        # sistema si aprono quando servono dal pulsantino DIAGNOSTICA.
+        tk.Label(nav,text="CHAT",bg=PANEL,fg=CYAN,font=("Consolas",9),
+                 padx=9,pady=8).pack(side="left")
+        self.diagnostics_button=tk.Button(
+            nav,text="DIAGNOSTICA ▸",command=self.open_diagnostics,
+            bg=PANEL,fg=MUTED,activeforeground=WHITE,
+            activebackground="#0b3650",font=("Consolas",8),
+            bd=0,relief="flat",padx=7,pady=6,cursor="hand2")
+        self.diagnostics_button.pack(side="right")
+        self._diagnostics=None
         tk.Frame(self.left,height=1,bg="#12608a").pack(
             fill="x",padx=11,pady=(0,8))
         self.console_host=tk.Frame(self.left,bg=PANEL)
@@ -351,19 +381,25 @@ class JarvisHUD:
         self.orbit_markers=OrbitMarkers(
             self.core_canvas,lambda ident:self._orbit_click(ident))
 
-        self.visual_status=tk.StringVar(value="JARVIS  //  STANDBY")
-        tk.Label(self.visual,textvariable=self.visual_status,
+        self.visual_status=tk.StringVar(value="LUMI  //  STANDBY")
+        self.status_label=tk.Label(self.visual,textvariable=self.visual_status,
                  bg=BG,fg="#60abc5",
-                 font=("Consolas",9),pady=3).pack(fill="x")
+                 font=("Consolas",9),pady=3)
+        self.status_label.pack(fill="x")
 
         footer=tk.Frame(self.visual,bg=BG,height=102)
-        footer.pack(fill="x",pady=(8,4))
+        footer.pack(fill="x",pady=(8,4))     # posizione definitiva: _layout_bottom()
         # Tk pack gave each Canvas a different requested natural width:
         # at narrower sizes DISCO C became visibly smaller than CPU/RAM.
         # A uniform weighted grid guarantees equal panel proportions.
         for column in range(4):
             footer.grid_columnconfigure(column,weight=1,uniform="telemetry")
         footer.grid_rowconfigure(0,weight=1)
+        self.footer=footer
+        # 056 C2: meteo sotto il globo e sopra DISCO C / RETE, senza riquadro; compare solo con dati.
+        self.weather_canvas=tk.Canvas(self.visual,height=34,width=260,bg=BG,
+                                      highlightthickness=0,bd=0)
+        self._weather=None
         self.cpu_tile=MetricTile(footer,"CPU",0)
         self.ram_tile=MetricTile(footer,"RAM",1)
         self.disk_tile=MetricTile(footer,"DISCO C",2)
@@ -375,16 +411,111 @@ class JarvisHUD:
         self.disk_text=tk.StringVar(value="DISCO C --")
         self.clock_text=tk.StringVar(value="--:--")
         clock_row = tk.Frame(self.visual, bg=BG)
-        clock_row.pack(anchor="e", padx=10)
+        clock_row.pack(anchor="e", padx=10)   # posizione definitiva: _layout_bottom()
+        self.clock_row=clock_row
         self.alarm_stop_button = tk.Button(clock_row, text="⏰ Ferma", bg=BG, fg=CYAN,
                                            activebackground=PANEL, activeforeground=WHITE,
                                            bd=0, highlightthickness=0)
         tk.Label(clock_row, textvariable=self.clock_text, bg=BG, fg=CYAN,
                  font=("Consolas", 11)).pack(side="right")
+        self._layout_bottom()
         self._update_metrics()
         self.last_metrics=time.monotonic()
         self.select_tab("CONSOLE")
         self.parent.after(TICK_MS,self._tick)
+
+    def _layout_bottom(self):
+        """056b: ora, sveglia, meteo, DISCO C e RETE hanno ciascuno il proprio posto in basso.
+        Le parti in basso si impacchettano PRIMA del globo (side=bottom): se manca spazio si
+        stringe il globo, mai l'ora o la sveglia (regressione 056: sparivano sotto il meteo)."""
+        for widget in (self.clock_row,self.footer,self.weather_canvas,self.status_label,self.main_visuals):
+            widget.pack_forget()
+        self.clock_row.pack(side="bottom",anchor="e",padx=10)
+        self.footer.pack(side="bottom",fill="x",pady=(8,4))
+        if self._weather:
+            self.weather_canvas.pack(side="bottom",anchor="e",padx=14)
+        self.status_label.pack(side="bottom",fill="x")
+        self.main_visuals.pack(side="top",fill="both",expand=True)
+
+    def open_diagnostics(self):
+        """Finestra separata con tutti i messaggi (Tutto / Attività / Sistema).
+        È una copia di sola lettura della console: la chat non cambia."""
+        if self._diagnostics is not None:
+            try:
+                self._diagnostics["window"].deiconify()
+                self._diagnostics["window"].lift()
+                return
+            except tk.TclError:
+                self._diagnostics=None
+        window=tk.Toplevel(self.parent)
+        window.title("Lumi - Diagnostica")
+        window.geometry("620x460")
+        window.configure(bg=BG)
+        bar=tk.Frame(window,bg=PANEL)
+        bar.pack(fill="x")
+        text=tk.Text(window,bg=PANEL,fg=WHITE,font=("Consolas",9),wrap="word",
+                     bd=0,highlightthickness=0,state="disabled")
+        text.pack(fill="both",expand=True,padx=6,pady=6)
+        state={"window":window,"text":text,"filter":"TUTTO","buttons":{}}
+        roles=("utente","jarvis","comando","azione","errore","sistema")
+        colors={"utente":CYAN,"jarvis":WHITE,"comando":"#9fe3c8","azione":"#7fe0a0",
+                "errore":"#ff7a7a","sistema":MUTED}
+        for role in roles:
+            text.tag_configure(role,foreground=colors[role])
+
+        def apply(name):
+            state["filter"]=name
+            visible=(set(roles) if name=="TUTTO" else
+                     {"comando","azione","errore"} if name=="ATTIVITÀ" else {"sistema","errore"})
+            for role in roles:
+                text.tag_configure(role,elide=(role not in visible))
+            for key,button in state["buttons"].items():
+                button.configure(bg="#0b2c43" if key==name else PANEL,
+                                 fg=CYAN if key==name else MUTED)
+            text.see("end")
+
+        def refresh():
+            if self._diagnostics is not state:
+                return
+            source=self._console
+            try:
+                if not window.winfo_exists():
+                    return
+                end=source.index("end-1c") if source is not None else None
+                if source is not None and end!=state.get("end"):
+                    # Ricopia solo se la console è cambiata (leggero sull'i3).
+                    state["end"]=end
+                    dump=source.dump("1.0","end-1c",text=True,tag=True)
+                    text.configure(state="normal")
+                    text.delete("1.0","end")
+                    active=[]
+                    for kind,value,_index in dump:
+                        if kind=="tagon":
+                            active.append(value)
+                        elif kind=="tagoff" and value in active:
+                            active.remove(value)
+                        elif kind=="text":
+                            text.insert("end",value,tuple(t for t in active if t in roles))
+                    text.configure(state="disabled")
+                    apply(state["filter"])
+                window.after(2000,refresh)
+            except tk.TclError:
+                pass
+
+        for name in ("TUTTO","ATTIVITÀ","SISTEMA"):
+            button=tk.Button(bar,text=name,command=lambda n=name:apply(n),bg=PANEL,fg=MUTED,
+                             activebackground="#0b3650",activeforeground=WHITE,
+                             font=("Consolas",9),bd=0,relief="flat",padx=9,pady=7)
+            button.pack(side="left")
+            state["buttons"][name]=button
+
+        def close():
+            self._diagnostics=None
+            window.destroy()
+
+        window.protocol("WM_DELETE_WINDOW",close)
+        self._diagnostics=state
+        refresh()
 
     def attach_console(self,console):
         """Bind existing history without changing its content or commands."""
@@ -403,10 +534,12 @@ class JarvisHUD:
         if self._console is None:
             return
         # Tk's elide tags filter existing text in place. Nothing is deleted.
-        roles=("utente","jarvis","azione","errore","sistema")
+        roles=("utente","jarvis","comando","azione","errore","sistema")
+        # 15/11 passo 2a: in chat i messaggi interni («sistema») non si vedono;
+        # restano in DIAGNOSTICA.
         visible=(
-            set(roles) if tab=="CONSOLE" else
-            {"azione","errore"} if tab=="ATTIVITÀ" else
+            set(roles)-{"sistema"} if tab=="CONSOLE" else
+            {"comando","azione","errore"} if tab=="ATTIVITÀ" else
             {"sistema","errore"}
         )
         try:
@@ -422,14 +555,61 @@ class JarvisHUD:
     def set_state_provider(self,callback):
         self.state_provider=callback
 
-    def set_quick_toggle_handlers(self, *, microphone, gpt, memory):
+    def set_weather(self, data):
+        """data = {"citta", "temp", "categoria"} oppure None (add-on spento: sparisce)."""
+        if data==self._weather:
+            return
+        self._weather=data
+        if not data:
+            self.weather_canvas.delete("all")
+            self.weather_canvas.pack_forget()
+            return
+        self._draw_weather()
+        self._layout_bottom()
+
+    def _draw_weather(self):
+        """Icona + città + temperatura + ora (anteprima 057); l'ora segue il tick del clock."""
+        data, canvas = self._weather, self.weather_canvas
+        canvas.delete("all")
+        if not data:
+            return
+        from meteo.icone import disegna
+        disegna(canvas,22,17,data["categoria"],CYAN)
+        ora=datetime.now().strftime("%H:%M")
+        canvas.create_text(46,17,anchor="w",fill=CYAN,font=("Consolas",10,"bold"),
+                           text="%s %d°   %s"%(str(data["citta"])[:16],round(data["temp"]),ora))
+        self._weather_ora=ora
+        self._layout_bottom()
+
+    def set_mode_handler(self, callback):
+        """056 B: callback(modalita) -> bool (True se salvata); la slide scorre solo se salva."""
+        self._mode_handler=callback
+
+    def set_quick_toggle_handlers(self, *, microphone, memory, model=None, gpt=None):
         """Bind trusted existing controls; this HUD owns no setting state."""
-        handlers = {"mic": microphone, "gpt": gpt, "memory": memory}
+        handlers = {"mic": microphone, "memory": memory}
+        if model is not None:
+            handlers["model"] = model
         if not all(callable(callback) for callback in handlers.values()):
             raise TypeError("Quick controls require callable handlers.")
         self._quick_toggle_handlers = handlers
         for key in handlers:
             getattr(self, key + "_toggle_button").configure(state="normal")
+
+    def add_quick_button(self, key, text, command, *, after=None, power=False, simbolo=None):
+        """Tasto in più nella fila in alto (Online ▾, Ricerca ▾, Telegram), dopo `after`."""
+        from barra_tasti import TastoBarra
+        anchor = None
+        if after:
+            anchor = (getattr(self, after + "_toggle_button", None)
+                      or getattr(self, after + "_extra_button", None))
+        button = TastoBarra(self.quick_controls, text, command, power=power, simbolo=simbolo)
+        if anchor is not None:
+            button.pack(side="left", padx=(0, 5), after=anchor)
+        else:
+            button.pack(side="left", padx=(0, 5))
+        setattr(self, key + "_extra_button", button)
+        return button
 
     def _invoke_quick_toggle(self, name):
         callback = self._quick_toggle_handlers.get(name)
@@ -480,6 +660,8 @@ class JarvisHUD:
             self.disk_tile.update(None)
             self.disk_text.set("DISCO C --")
         self.clock_text.set(datetime.now().strftime("%H:%M"))
+        if self._weather and getattr(self,"_weather_ora","")!=self.clock_text.get():
+            self._draw_weather()
         # Slow, read-only network polling occurs off the UI thread.
         measured=self._network.result()
         self.network_tile.update(measured)
@@ -513,20 +695,21 @@ class JarvisHUD:
         memory=bool(state.get("memory",False))
         mic_enabled=bool(state.get("mic_enabled",listening))
         mode=core_mode(speaking=speaking,listening=listening)
+        self._last_mode=mode
         title=(
             f"MIC  {'ATTIVO' if mic_enabled else 'OFF'}    /    "
             f"GPT  {'ON' if connected else 'OFF'}    /    "
             f"MEMORIA  {'ON' if memory else 'OFF'}")
-        status=("JARVIS // TRASMISSIONE VOCALE" if speaking else
-                "JARVIS // VOCE RILEVATA" if listening else
-                "JARVIS // STA RAGIONANDO" if reasoning else
-                "JARVIS // RICERCA SUL PC" if searching else
-                "JARVIS // ELABORAZIONE" if thinking else
-                "JARVIS // MICROFONO ATTIVO - IN ATTESA" if mic_enabled else
-                "JARVIS // STANDBY")
-        info=("JARVIS STA PARLANDO" if speaking else
+        status=("LUMI // TRASMISSIONE VOCALE" if speaking else
+                "LUMI // VOCE RILEVATA" if listening else
+                "LUMI // STA RAGIONANDO" if reasoning else
+                "LUMI // RICERCA SUL PC" if searching else
+                "LUMI // ELABORAZIONE" if thinking else
+                "LUMI // MICROFONO ATTIVO - IN ATTESA" if mic_enabled else
+                "LUMI // STANDBY")
+        info=("LUMI STA PARLANDO" if speaking else
               "LA TUA VOCE È RILEVATA" if listening else
-              "JARVIS STA RAGIONANDO" if reasoning else
+              "LUMI STA RAGIONANDO" if reasoning else
               "RICERCA SUL PC IN CORSO" if searching else
               "ELABORAZIONE IN CORSO" if thinking else
               "MICROFONO ATTIVO  •  ATTESA VOCE" if mic_enabled else
@@ -534,20 +717,22 @@ class JarvisHUD:
         if self.state_text.get()!=title:
             self.state_text.set(title)
         mic_selected = bool(state.get("mic_selected", mic_enabled))
-        gpt_enabled = bool(state.get("gpt_enabled", connected))
-        mic_label = ("MIC ATTIVO" if mic_enabled else
-                     "MIC PTT" if state.get("mic_push_to_talk") else
-                     "MIC NON ATTIVO" if mic_selected else "MIC OFF")
-        gpt_label = ("GPT ON" if connected and gpt_enabled else
-                     "GPT NON CONNESSO" if gpt_enabled else "GPT OFF")
+        mic_label = "Mic"      # 057: come l'anteprima; lo stato lo dà il ⏻ (azzurro/arancione)
+        from model_gate import enabled as model_enabled
+        model_on = bool(state.get("model_enabled", model_enabled()))
         controls = (("mic", mic_label, mic_enabled or mic_selected),
-                    ("gpt", gpt_label, gpt_enabled),
-                    ("memory", "MEMORIA ON" if memory else "MEMORIA OFF", memory))
+                    ("model", None, model_on),
+                    ("memory", "Memoria", memory))
         if controls != self._quick_state_cache:
             for key, label, enabled in controls:
-                getattr(self, key + "_toggle_button").configure(
-                    text=label, fg=CYAN if enabled else MUTED)
+                button = getattr(self, key + "_toggle_button")
+                if label is None:
+                    button.configure(power_on=enabled)
+                else:
+                    button.configure(text=label, power_on=enabled)
             self._quick_state_cache = controls
+        if state.get("modalita") in ("basso_consumo","veloce"):
+            self.mode_slide.imposta(state["modalita"])
         if self.visual_status.get()!=status:
             self.visual_status.set(status)
         if self.chat_info.get()!=info:

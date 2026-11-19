@@ -1,0 +1,28 @@
+{
+ "files": {
+  "addon_manager.py": {
+   "name": "Gestione add-on",
+   "description": "Gestisce gli add-on: pacchetti di dati ed esecuzione locale controllata."
+  },
+  "addon_ui.py": {
+   "name": "Pannello add-on",
+   "description": "Pannello che si apre quando serve per gestire gli add-on."
+  },
+  "componenti/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "componenti/catalog.py": {
+   "name": "Catalogo componenti",
+   "description": "Elenca componenti esterni e chiavi: cosa serve e come installarlo."
+  },
+  "componenti/ui.py": {
+   "name": "Installa componenti",
+   "description": "Finestre per installare i componenti da dentro Lumi."
+  },
+  "sveglia/service.py": {
+   "name": "Sveglia",
+   "description": "Imposta una sveglia singola con il suono del timer."
+  }
+ }
+}

@@ -67,7 +67,7 @@ class ProgramLocationTests(unittest.TestCase):
         self.files.index=Mock(side_effect=AssertionError('No name scan needed for native evidence'))
         env,workers=self.environment()
         with patch('file_access.windows.shell_query',return_value={'status':'ok','rows':rows}):
-            env['output_queue'].put(('voice_text','Jarvis dove è installato '+name))
+            env['output_queue'].put(('voice_text','Lumi dove è installato '+name))
             self.receive('voice_text',env)
             workers.pop(0)()
             with patch('file_access.ui.show_results'):

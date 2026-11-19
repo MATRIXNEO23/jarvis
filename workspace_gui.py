@@ -1,4 +1,4 @@
-"""Simple local workspace manager for the Windows Tkinter JARVIS HUD.
+"""Simple local workspace manager for the Windows Tkinter LUMI HUD.
 
 No unrelated data is read or written; a project's summary is explicitly
 edited and saved by the owner, while its last turns are automatically copied
@@ -35,7 +35,7 @@ class ProjectManagerWindow:
             return
         w=tk.Toplevel(self.parent)
         self.window=w
-        w.title("JARVIS // Memoria e progetti")
+        w.title("LUMI // Memoria e progetti")
         w.geometry("820x620")
         w.minsize(570,450)
         w.configure(bg="#020b14")
@@ -184,7 +184,7 @@ class ProjectManagerWindow:
             return
         if not messagebox.askyesno(
                 "Elimina progetto",
-                "Spostare '"+project["name"]+"' nel cestino di Jarvis?\n"
+                "Spostare '"+project["name"]+"' nel cestino di Lumi?\n"
                 "Memoria, documenti e cartella NON saranno cancellati.",
                 parent=self.window):
             return

@@ -1,4 +1,4 @@
-"""Bounded GPT intent translation for Jarvis's future conversation voice mode.
+"""Bounded GPT intent translation for Lumi's future conversation voice mode.
 
 Never performs Windows actions. A GPT proposal can only become a validated
 intent, using the same immutable allowlist as the existing safe planner.
@@ -11,8 +11,8 @@ import json
 import re
 
 from action_planner import ApprovedPlan, PlanRejected, parse_plan
-from dialogue_focus import single_question, normalized_utterance
-from dialogue_style import style_instruction
+from dialogue import single_question, normalized_utterance
+from dialogue import style_instruction
 from jarvis_persona import PERSONA, BRIEF_CONTEXT_RULE, compact_memory, prompt_units
 from capability_registry import (
     CapabilityRejected, ResolvedCapability, capability_prompt,
@@ -66,6 +66,30 @@ def build_native_intent_context(*, has_document=False, addon_actions=()):
     return instructions, tuple(ids)
 
 
+_ESSENTIAL_IDS = 6
+
+
+def reduce_intent_context(context, question, *, essential_only=False):
+    """056b: catalogo ridotto alle azioni pertinenti alla domanda (o alle prime
+    essenziali), per restare nel tetto di token. Stesso formato (testo, ids)."""
+    text, ids = context
+    marker = 'ID consentiti: '
+    start = text.find(marker)
+    end = text.find('. ', start) if start >= 0 else -1
+    if start < 0 or end < 0:
+        return context
+    words = {w for w in re.findall(r'[a-zà-ù]{4,}', question.lower())}
+    keep = list(ids[:_ESSENTIAL_IDS])
+    if not essential_only:
+        for aid in ids[_ESSENTIAL_IDS:]:
+            parts = set(re.split(r'[._]', aid))
+            if any(w[:5] in p or p[:5] in w for w in words for p in parts if len(p) >= 4):
+                keep.append(aid)
+    if len(keep) >= len(ids):
+        return context
+    return text[:start + len(marker)] + ','.join(keep) + text[end:], tuple(keep)
+
+
 # Only unambiguously conversational requests skip the expensive native action
 # catalog.  Everything else continues through the original validated router.
 # This is not a permission classifier: it only removes executable proposals.
@@ -100,6 +124,23 @@ _NATIVE_FOLLOWING_ACTION = re.compile(
 )
 
 
+# 9/11 (chat leggera, passo 1): the action catalog costs prompt tokens that
+# the Pavilion processes at ~18 tok/s. Attach it only when the sentence hints
+# at an action; plain conversation goes to natural chat without it. Exact
+# local commands are already handled before the model and are unchanged.
+_NATIVE_ACTION_CUE = re.compile(
+    r"\b(?:apr\w*|avvi\w*|lanc\w*|chiud\w*|cerc\w*|trov\w*|scriv\w*|salv\w*|"
+    r"invi\w*|mand\w*|elenc\w*|legg\w*|esegu\w*|cancell\w*|rimuov\w*|"
+    r"spost\w*|rinomin\w*|mett\w*|impost\w*|accend\w*|spegn\w*|alz\w*|"
+    r"abbass\w*|riproduc\w*|suon\w*|guard\w*|ascolt\w*|vedere|mostr\w*|"
+    r"visualizz\w*|crea\w*|fammi|ricordami|volume|timer|sveglia|promemoria|"
+    r"film|serie|musica|canzon\w*|video|programm\w*|app|applicazion\w*|"
+    r"cartell\w*|file|document\w*|telegram|messaggi\w*|finestr\w*|"
+    r"sistema|cpu|ram|batteria|disco|controll\w*|pc|computer|portatile)\b",
+    re.I,
+)
+
+
 def native_intent_context_for_request(
     utterance: str, *, has_document: bool = False, addon_actions=()
 ):
@@ -113,9 +154,11 @@ def native_intent_context_for_request(
     if not isinstance(utterance, str) or not utterance.strip():
         raise ConversationRejected("Richiesta Gemma vuota o non valida.")
     text = " ".join(utterance.replace("\u2019", "'").casefold().split())
-    text = re.sub(r"^(?:ehi\s+|ok\s+)?jarvis[,:\s]+", "", text)
+    text = re.sub(r"^(?:ehi\s+|ok\s+)?lumi[,:\s]+", "", text)
     if (_NATIVE_INFORMATION_START.match(text)
             and not _NATIVE_FOLLOWING_ACTION.search(text)):
+        return None
+    if not has_document and not _NATIVE_ACTION_CUE.search(text):
         return None
     return build_native_intent_context(
         has_document=has_document, addon_actions=addon_actions)
@@ -153,7 +196,7 @@ def build_conversation_prompt(
     else:
         prompt = (
             PERSONA
-            + "Interpreta la frase corrente per Jarvis Windows. Rispondi SOLO con UN oggetto JSON: "
+            + "Interpreta la frase corrente per Lumi Windows. Rispondi SOLO con UN oggetto JSON: "
             '{"kind":"chat","reply":"risposta italiana"}, '
             '{"kind":"clarify","reply":"una sola domanda concreta"} oppure '
             '{"kind":"capability","action_id":"ID del catalogo","arguments":{}}. '
@@ -169,7 +212,7 @@ def build_conversation_prompt(
             "browser.search/downloads.find: arguments.query. telegram.voice.start: arguments.recipient "
             "col nome richiesto, mai inventato; testo e conferma nel dialogo locale. "
             "Altri comandi semplici: arguments={}. Se mancano capacità o dati, chiarisci o spiega il limite. "
-            "Documento Blocco note gestito da Jarvis: "
+            "Documento Blocco note gestito da Lumi: "
             + ("SÌ. " if has_document else "NO. ")
             + "Se NO, non chiudere né modificare documenti non identificati. "
             "Catalogo delle azioni CONSENTITE: "

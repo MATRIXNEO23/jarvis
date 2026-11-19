@@ -1,4 +1,4 @@
-"""Read-only runtime observations for the local Jarvis executor.
+"""Read-only runtime observations for the local Lumi executor.
 
 No models, networking, subprocesses, test execution, log reading or file writes.
 This captures *observed states*, not promises of functionality. Only fixed
@@ -33,7 +33,7 @@ CHECK_CODES = {
     )),
 }
 CODE_DESCRIPTIONS = {
-    "gpt_disabled": "ChatGPT disattivato nelle impostazioni",
+    "gpt_disabled": "ChatGPT non spuntato nella lista Online",
     "sdk_missing": "SDK Sign in with ChatGPT non trovato",
     "node_missing": "Node.js non trovato nel PATH",
     "bridge_missing": "File bridge GPT assente",
@@ -79,7 +79,7 @@ class RuntimeEvidence:
 
 
 def collect_runtime_evidence(
-    *, gpt_enabled: bool, gpt_connected: bool,
+    *, gpt_spuntato: bool, gpt_connected: bool,
     sdk_installed: bool, node_available: bool, bridge_file_present: bool,
     bridge_running: bool, voice_present: bool, voice_mode: str,
     voice_listening: bool, voice_model_present: bool,
@@ -92,7 +92,7 @@ def collect_runtime_evidence(
     A connected or initialized component is NOT a successful end-to-end test.
     No side-effectful checks (e.g. a GPT request or mic open) are performed.
     """
-    if not gpt_enabled:
+    if not gpt_spuntato:
         gpt = ("idle", "gpt_disabled")
     elif not sdk_installed:
         gpt = ("attention", "sdk_missing")
@@ -197,6 +197,9 @@ SERVICE_EVENTS = {
     'listening': ('listening', 'Handler registrati, ricezione non ancora provata'),
     'update': (None, 'Aggiornamento grezzo osservato'),
     'message_update': (None, 'Aggiornamento di nuovo messaggio osservato'),
+    'handler_called': (None, 'Gestore messaggi chiamato'),
+    'handler_error': (None, 'Errore interno del gestore messaggi'),
+    'raw_fallback': (None, 'Messaggio recuperato dall\'aggiornamento grezzo'),
     'filtered_contact': (None, 'Messaggio escluso: contatto non autorizzato'),
     'filtered_non_private': (None, 'Messaggio escluso: chat non privata'),
     'filtered_outgoing': (None, 'Messaggio uscente escluso'),
@@ -268,7 +271,7 @@ class ServiceEventLog:
 
 
 def format_service_report(evidence, *, telegram=None, automatic=False,
-                          credentials=False, contacts=0, selected='Gemma',
+                          credentials=False, contacts=0, online=(),
                           gemma='non_loaded', memory=False, telethon=None, ffmpeg=None):
     """Format only whitelisted observations. This report stays on the PC."""
     import time
@@ -278,7 +281,7 @@ def format_service_report(evidence, *, telegram=None, automatic=False,
                     'ready': 'sessione presente, inferenza non testata qui',
                     'busy': 'sessione impegnata', 'unavailable': 'stato non disponibile'}
     lines = ['DIAGNOSTICA SERVIZI — osservazione locale, non un collaudo completo',
-             'Modello selezionato: ' + ('GPT' if selected == 'GPT' else 'Gemma'),
+             'Servizi online spuntati (lista Online): ' + (', '.join(online) or 'nessuno'),
              'Gemma: ' + gemma_states.get(gemma, gemma_states['unavailable']),
              'Memoria generale: ' + ('attiva' if memory else 'disattivata')]
     for name, state, code in evidence.checks:
@@ -319,5 +322,5 @@ def format_service_report(evidence, *, telegram=None, automatic=False,
             if type(stamp) is int and 0 <= stamp <= 4102444800 and code in SERVICE_EVENTS:
                 lines.append(time.strftime('%H:%M:%S',time.localtime(stamp))+' — '+SERVICE_EVENTS[code][1])
     lines += ['', 'Aggiorna per rileggere lo stato. Nessuna richiesta a GPT/Gemma, apertura del microfono o invio di prova.',
-              'Registro solo in RAM: si azzera riavviando Jarvis o sostituendo il listener. Nessuna conversazione esportata.']
+              'Registro solo in RAM: si azzera riavviando Lumi o sostituendo il listener. Nessuna conversazione esportata.']
     return '\n'.join(lines)

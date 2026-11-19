@@ -1,4 +1,4 @@
-"""Bounded, offline and read-only static suggestions for JARVIS source code.
+"""Bounded, offline and read-only static suggestions for LUMI source code.
 
 All observations are heuristics. This module NEVER imports or executes the
 files it inspects, runs tests, accesses personal data or makes network calls.
@@ -47,7 +47,7 @@ class Improvement:
 
 
 _SEVERITY = {"alta": 0, "media": 1, "bassa": 2}
-_MAX_RECOMMENDATIONS = 8
+_MAX_RECOMMENDATIONS = 12
 _MIN_LARGE_FUNCTION = 150
 _MIN_COMPLEX_BRANCHES = 25
 _MIN_LARGE_MODULE = 850

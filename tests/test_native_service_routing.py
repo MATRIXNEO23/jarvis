@@ -3,7 +3,7 @@ import os
 import unittest
 from local_model.native_provider import NativeLocalProvider
 from local_model.service import ModelService
-from gpt_client import GPTUnavailable
+from online.gpt_client import GPTUnavailable
 
 
 class FakeBridge:

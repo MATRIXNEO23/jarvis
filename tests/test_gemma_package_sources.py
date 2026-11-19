@@ -27,7 +27,7 @@ def build_workflow_script():
 class PackageSourceParityTests(unittest.TestCase):
     def test_builder_failure_before_archive_does_not_mutate_verified_python(self):
         builder = Path('tools/build_gemma_clean_trial.py').read_text(encoding='utf-8')
-        names = ('jarvis.py', 'avvia_jarvis.bat', 'local_model/native_ui.py', 'local_model/native_factory.py',
+        names = ('jarvis.py', 'avvia_lumi.bat', 'local_model/native_ui.py', 'local_model/native_factory.py',
                  'docs/VOCE_OFFLINE.md', 'docs/RECUPERO-IMPOSTAZIONI.md',
                  'file_access/LEGGIMI.md', 'program_apps/LEGGIMI.md')
         sources = {name: Path(name).read_bytes() for name in names}

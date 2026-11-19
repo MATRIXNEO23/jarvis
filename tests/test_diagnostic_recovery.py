@@ -119,18 +119,18 @@ class LocalAuditProgressTests(unittest.TestCase):
 
     def test_recognizes_italian_speech_recognition_variants(self):
         phrases=(
-            "Jarvis fai un'auto diagnosi",
-            "Jarvis, fammi l'autodiagnosi",
-            "Jarvis fai una auto diagnosi",
-            "Jarvis esegui una auto-diagnosi del tuo codice",
-            "Jarvis, fai un'auto diagnosi del tuo funzionamento e proponi eventuali fix",
-            "Jarvis, fai l'autodiagnosi del tuo funzionamento e suggerisci correzioni",
+            "Lumi fai un'auto diagnosi",
+            "Lumi, fammi l'autodiagnosi",
+            "Lumi fai una auto diagnosi",
+            "Lumi esegui una auto-diagnosi del tuo codice",
+            "Lumi, fai un'auto diagnosi del tuo funzionamento e proponi eventuali fix",
+            "Lumi, fai l'autodiagnosi del tuo funzionamento e suggerisci correzioni",
         )
         for phrase in phrases:
             with self.subTest(phrase=phrase):
                 self.assertIsNotNone(diagnostic_request(phrase))
         for negative in (
-            "Jarvis non fare un'auto diagnosi",
+            "Lumi non fare un'auto diagnosi",
             "Domani fai un'auto diagnosi",
             "Mi hai chiesto di fare un'auto diagnosi",
         ):
@@ -140,7 +140,7 @@ class LocalAuditProgressTests(unittest.TestCase):
     def test_all_voice_and_button_paths_are_handled_locally(self):
         src=(Path(__file__).resolve().parent.parent/"jarvis.py"
              ).read_text(encoding="utf-8")
-        self.assertIn('text="Autodiagnosi Jarvis"',src)
+        self.assertIn('text="Autodiagnosi Lumi"',src)
         self.assertIn('diagnostic_status = tk.StringVar',src)
         self.assertIn('diagnostic_percent = tk.IntVar',src)
         # Visual-only change: keep a working cancel button, but use a tiny

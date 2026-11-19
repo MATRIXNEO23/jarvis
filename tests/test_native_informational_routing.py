@@ -1,4 +1,4 @@
-"""Regression contract for conversational Jarvis requests versus executable intents.
+"""Regression contract for conversational Lumi requests versus executable intents.
 
 Uses an injected native adapter, never Windows actions, accounts, microphones or GGUF.
 The decision must happen before sending the action catalog to Gemma.
@@ -59,7 +59,7 @@ class NativeInformationRoutingTests(unittest.TestCase):
             "stato sistema",
             "mostrami lo stato del sistema",
             "apri Netflix",
-            "Jarvis, apri Netflix",
+            "Lumi, apri Netflix",
             "avvia la calcolatrice",
             "mi apri blocco note?",
             "cerca sul PC il file",

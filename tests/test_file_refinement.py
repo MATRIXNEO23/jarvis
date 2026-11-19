@@ -1,4 +1,4 @@
-"""Windows filesystem and actual Jarvis callbacks; controlled model replies only."""
+"""Windows filesystem and actual Lumi callbacks; controlled model replies only."""
 import ast
 import copy
 import json
@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch
 import test_file_access as file_access_tests
 from test_activity_status import Value, GlobalCallbacks
 from conversation_router import build_conversation_prompt, parse_conversation_intent, ConversationRejected
-from dialogue_focus import is_ambiguous_short_reply
+from dialogue import is_ambiguous_short_reply
 from local_engine import TaskResult
 from local_model.chat_transport import ChatTransport
 from voice_control import CONTINUOUS, GPT_CONVERSATION, STANDBY, WakeWordGate
@@ -32,7 +32,8 @@ class FileRefinementTests(unittest.TestCase):
         cls.poll=next(n for n in cls.main.body if isinstance(n,ast.FunctionDef) and n.name=='poll')
 
     def callback(self,name,env):
-        node=copy.deepcopy(next(n for n in self.main.body if isinstance(n,ast.FunctionDef) and n.name==name))
+        node=copy.deepcopy(__import__('test_activity_status').find_main_function(self.main,name))
+        node=__import__('test_activity_status').GlobalCallbacks().visit(node)
         node=GlobalCallbacks().visit(node)
         exec(compile(ast.fix_missing_locations(ast.Module(body=[node],type_ignores=[])),name,'exec'),env)
         return env[name]
@@ -64,7 +65,7 @@ class FileRefinementTests(unittest.TestCase):
         def thread(*,target,**kwargs):
             return SimpleNamespace(start=lambda:workers.append(target))
         env=dict(gpt_conversation_session_grant=None,busy_gpt=False,busy_local=False,closing=False,active_gpt=True,
-            gpt_enabled=Value(True),gpt_request_action='',gpt_status=Value(''),
+            gpt_spuntato=lambda: True,gpt_request_action='',gpt_status=Value(''),
             addon_manager=self.manager,engine=self.engine,active_project_id=None,
             documents=SimpleNamespace(current=None),conversation_epoch=7,
             voice_mode=Value(GPT_CONVERSATION),GPT_CONVERSATION=GPT_CONVERSATION,
@@ -72,7 +73,7 @@ class FileRefinementTests(unittest.TestCase):
             speaker=SimpleNamespace(is_audible=lambda:False),speech_lexicon=None,
             memory_enabled=Value(True),last_voice_sample=Value(''),wake_gate=WakeWordGate(),
             refresh_buttons=Mock(),write_line=Mock(),speak_result=Mock(),
-            remember_exchange=Mock(),remember_completed_action=Mock(),
+            remember_exchange=Mock(),local_after_gpt=Mock(),remember_completed_action=Mock(),
             observed_local_result=lambda r:False,runtime_events=Mock(),
             request=Value(''),try_timer_command=lambda _:False,
             begin_project_work=lambda *a:None,finish_project_work=Mock(),
@@ -92,6 +93,7 @@ class FileRefinementTests(unittest.TestCase):
         env['chat_transport'] = ChatTransport(env['service'], native=None)
         for name in ('confirm_gpt_inference','run_gpt','start_file_refinement','accept_file_refinement','submit_local','try_file_command','dispatch_model_capability','submit_gpt'):
             self.callback(name,env)
+        __import__('consenso_finestra').installa(env)   # 055: consenso con finestra simulata
         return env,workers
 
     def empty(self,operation='search',**args):
@@ -148,7 +150,7 @@ class FileRefinementTests(unittest.TestCase):
             with self.subTest(channel=channel):
                 env,workers=self.environment()
                 if channel=='voice':
-                    env['output_queue'].put(('voice_text','Jarvis cerca file preventivo'))
+                    env['output_queue'].put(('voice_text','Lumi cerca file preventivo'))
                     self.receive('voice_text',env)
                 else:
                     env['request'].set('cerca file preventivo')
@@ -274,7 +276,7 @@ class FileRefinementTests(unittest.TestCase):
         for channel in ('voice','text'):
             env,workers=self.environment()
             if channel=='voice':
-                env['output_queue'].put(('voice_text','Jarvis cercami un file'))
+                env['output_queue'].put(('voice_text','Lumi cercami un file'))
                 self.receive('voice_text',env)
             else:
                 env['request'].set('cercami un file')

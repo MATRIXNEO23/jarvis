@@ -1,4 +1,4 @@
-"""Regression tests for continuity and JARVIS's restrained personality."""
+"""Regression tests for continuity and LUMI's restrained personality."""
 import json
 import unittest
 
@@ -41,7 +41,7 @@ class DialogueContinuityTests(unittest.TestCase):
 
     def test_responds_as_jarvis_not_generic_literal_command_parser(self):
         prompt=build_conversation_prompt("E tu cosa ne pensi?")
-        self.assertIn("Sei JARVIS",prompt)
+        self.assertIn("Sei LUMI",prompt)
         self.assertIn("ironia",prompt)
         self.assertIn("Segui il filo del discorso",prompt)
         self.assertIn('"kind":"chat"',prompt)
@@ -66,7 +66,7 @@ class DialogueContinuityTests(unittest.TestCase):
                         "Vuoi concentrarti sulla scienza o sulla storia?",
                         "clarify")
         prompt=build_chat_prompt("Sulla storia",memory.context(850))
-        self.assertIn("Sei JARVIS",prompt)
+        self.assertIn("Sei LUMI",prompt)
         self.assertIn("Marte",prompt)
         self.assertIn("Sulla storia",prompt)
         self.assertTrue(prompt.endswith('"Sulla storia"'))

@@ -1,4 +1,4 @@
-"""Static cinematic background for the JARVIS Tkinter canvases.
+"""Static cinematic background for the LUMI Tkinter canvases.
 
 The approved reference is almost black with sparse PCB-like circuit traces,
 small cyan junctions and a few fine sightlines. It is *not* a bright uniform

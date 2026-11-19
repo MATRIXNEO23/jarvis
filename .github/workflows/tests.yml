@@ -53,7 +53,7 @@ jobs:
       - name: Python syntax
         run: python -m compileall -q .
       - name: GPT JavaScript syntax
-        run: node --check gpt_bridge.mjs
+        run: node --check online/gpt_bridge.mjs
       - name: Unit tests (no external login)
         run: python -m unittest discover -s tests -v
       - name: PowerShell setup syntax (Windows)
@@ -62,7 +62,7 @@ jobs:
         run: |
           $tokens = $null
           $errors = $null
-          foreach ($script in @('installa_gpt.ps1','program_apps/windows_apps.ps1')) {
+          foreach ($script in @('online/installa_gpt.ps1','program_apps/windows_apps.ps1')) {
           [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD $script), [ref]$tokens, [ref]$errors) | Out-Null
           if ($errors.Count -gt 0) {
             $errors | Out-String | Write-Host

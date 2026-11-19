@@ -46,7 +46,7 @@ class FakeNotepadBridge:
 class ProjectVoiceTests(unittest.TestCase):
     def test_create_and_open_by_voice_without_gpt(self):
         for phrase in (
-                "Jarvis, crea un progetto chiamato Minecraft",
+                "Lumi, crea un progetto chiamato Minecraft",
                 "creami un nuovo progetto Minecraft",
                 "vorrei creare un progetto chiamato Minecraft"):
             with self.subTest(phrase=phrase):
@@ -55,7 +55,7 @@ class ProjectVoiceTests(unittest.TestCase):
                 self.assertEqual(action.name,"Minecraft")
         self.assertEqual(parse_project_voice("crea un progetto").name,"")
         self.assertEqual(parse_project_voice(
-            "Ehi Jarvis apri il progetto Minecraft").action,"open")
+            "Ehi Lumi apri il progetto Minecraft").action,"open")
         self.assertEqual(parse_project_voice(
             "torniamo alla conversazione generale").action,"general")
         self.assertEqual(parse_project_voice(
@@ -162,7 +162,7 @@ class ProjectDocumentTests(unittest.TestCase):
         self.assertEqual(dest.read_text(encoding="utf-8"),"Già presente")
 
     def test_save_words_do_not_close_and_do_not_parse_unrelated_commands(self):
-        self.assertEqual(parse_simple_save("Jarvis salva"),"")
+        self.assertEqual(parse_simple_save("Lumi salva"),"")
         self.assertEqual(parse_simple_save("salva il documento"),"")
         self.assertEqual(parse_simple_save("salva come testo delle idee"),"testo delle idee")
         self.assertIsNone(parse_simple_save("salva e chiudi"))

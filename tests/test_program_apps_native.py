@@ -72,7 +72,7 @@ class NativeProgramTests(unittest.TestCase):
         from program_apps.native import _find_process_window
         root = tk.Tk()
         self.addCleanup(root.destroy)
-        root.title('Jarvis native launch observation')
+        root.title('Lumi native launch observation')
         root.update()
         self.assertTrue(_find_process_window(os.getpid()))
 
@@ -89,7 +89,7 @@ class NativeProgramTests(unittest.TestCase):
         from program_apps.native import entry,launch
         # Exercise the actual COM boundary without launching a personal app.
         with self.assertRaises(OSError):
-            launch(entry('Jarvis missing app','store','JarvisMissingPackage_123456!NoApp'))
+            launch(entry('Lumi missing app','store','JarvisMissingPackage_123456!NoApp'))
 
     @unittest.skipUnless(os.environ.get('CI')=='true','Live activation restricted to isolated CI')
     def test_available_known_store_app_activation_in_isolated_runner(self):

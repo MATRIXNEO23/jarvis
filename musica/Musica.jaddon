@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "musica",
+  "name": "Musica",
+  "version": "1.0.0",
+  "description": "Brani dalla tua cartella musica o ricerca su YouTube nel browser, con barra sotto il nucleo.",
+  "actions": [
+    {
+      "id": "addon.musica.riproduci",
+      "description": "Riproduce un brano dalla cartella musica o lo cerca su YouTube.",
+      "example": "metti Bohemian Rhapsody",
+      "core_action": "music.local"
+    }
+  ]
+}

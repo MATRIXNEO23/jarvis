@@ -112,10 +112,51 @@ class ListenerTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(len(client.sent),1)
             self.assertTrue(client.sent[0][1])
             self.assertEqual(sum(e[0]=='telegram_received' for e in self.events),1)
+            ignored=[e[1] for e in self.events if e[0]=='telegram_status' and 'ignorato' in e[1]]
+            self.assertEqual(len(ignored),1)          # una volta sola per mittente
+            self.assertIn('[ID 99]',ignored[0])
         finally:
             self.bridge.stop()
             await asyncio.wait_for(task,2)
         self.assertTrue(client.closed)
+
+    async def test_raw_update_is_processed_when_newmessage_handler_never_fires(self):
+        """026: sul PC i nuovi messaggi arrivavano come aggiornamenti grezzi ma
+        il gestore NewMessage non veniva chiamato: ora si recuperano per ID."""
+        client = Client(self.bridge)
+        fetched = []
+        async def get_messages(user_id, ids):
+            fetched.append((user_id, ids))
+            return SimpleNamespace(id=ids, out=False, voice=False, message='Ciao da raw')
+        client.get_messages = get_messages
+        self.boundary(client)
+        task = asyncio.create_task(self.bridge._run())
+        try:
+            for _ in range(20):
+                if hasattr(client,'raw_callback'):
+                    break
+                await asyncio.sleep(0)
+            UpdateShortMessage = type('UpdateShortMessage', (), {})
+            update = UpdateShortMessage()
+            update.out, update.user_id, update.id = False, 44, 77
+            other = UpdateShortMessage()
+            other.out, other.user_id, other.id = False, 99, 78     # non autorizzato
+            real_sleep = asyncio.sleep
+            async def quick(_seconds):
+                await real_sleep(0)
+            with patch('telegram_bridge.asyncio.sleep', new=quick):
+                await client.raw_callback(update)
+                await client.raw_callback(other)
+                for _ in range(50):
+                    if client.sent:
+                        break
+                    await real_sleep(0.01)
+            self.assertEqual(fetched, [(44, 77)])
+            self.assertEqual(len(client.sent), 1)
+            self.assertEqual(sum(e[0]=='telegram_received' for e in self.events),1)
+        finally:
+            self.bridge.stop()
+            await asyncio.wait_for(task,2)
 
     async def test_terminal_disconnect_clears_enabled_flag_and_reports_stop(self):
         client = Client(self.bridge)

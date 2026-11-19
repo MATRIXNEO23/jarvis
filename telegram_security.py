@@ -51,6 +51,14 @@ def _windows_dpapi(value:bytes,encrypt:bool):
         ctypes.windll.kernel32.LocalFree(destination.pbData)
 
 
+# File header is a data format, not a visible name: 014-018 wrote JARVIS-TG1.
+# The 019-022 rename changed it to LUMI-TG1 and made saved logins unreadable
+# ("Formato credenziali non riconosciuto"). Write the original header again
+# (also readable by older builds) and accept both.
+_HEADER = b"JARVIS-TG1\n"
+_HEADERS = (b"JARVIS-TG1\n", b"LUMI-TG1\n")
+
+
 def credential_path():
     return default_path().with_name("telegram-auth.dpapi")
 
@@ -69,7 +77,7 @@ def save_credentials(api_id:int,api_hash:str,session:str,
     # A .dpapi blob is unreadable outside this Windows account.
     tmp=target.with_suffix(".tmp")
     try:
-        tmp.write_bytes(b"JARVIS-TG1\n"+base64.b64encode(encrypted))
+        tmp.write_bytes(_HEADER+base64.b64encode(encrypted))
         os.replace(tmp,target)
     finally:
         if tmp.exists():
@@ -80,7 +88,7 @@ def load_credentials(path:Path|None=None,protect=_windows_dpapi):
     target=Path(path) if path is not None else credential_path()
     try:
         raw=target.read_bytes()
-        if not raw.startswith(b"JARVIS-TG1\n"):
+        if not raw.startswith(_HEADERS):
             raise TelegramAuthError("Formato credenziali non riconosciuto.")
         plain=protect(base64.b64decode(raw.split(b"\n",1)[1],
                                        validate=True),False)

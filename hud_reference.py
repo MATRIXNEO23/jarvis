@@ -1,4 +1,4 @@
-"""Vector HUD art modelled after Jarvis's approved cinematic reference.
+"""Vector HUD art modelled after Lumi's approved cinematic reference.
 
 All drawing uses stock Tk Canvas. Nothing here controls Windows, audio,
 microphone state, files or model tools. Real-time values come from the host UI.
@@ -175,6 +175,7 @@ class ReactorArt:
         self.arc_items=[]
         self.pulse_items=[]
         self.core_name=None
+        self.avatar=None
         self.core_fill=[]
         self.rim=None
         self.system_lamps=[]
@@ -281,9 +282,25 @@ class ReactorArt:
             _ellipse(c,cx,cy,r*.31,outline="#165f83",width=2),
             _ellipse(c,cx,cy,r*.35,outline="#165f83",width=2)]
         self.core_name=c.create_text(cx,cy-1,
-                                     text="JARVIS",
+                                     text="LUMI",
                                      fill="#d9f8ff",
                                      font=("Segoe UI",max(16,int(r*.24)),"bold"))
+        # LUMI a figura intera sopra il nucleo (capelli e busto escono dal
+        # cerchio); la scritta
+        # resta solo se le immagini dell'avatar non sono disponibili.
+        try:
+            from lumi_avatar import AvatarFace
+            if self.avatar is not None:
+                self.avatar.stop()
+            face=AvatarFace()
+            if face.attach(c,cx,cy,r*1.3):
+                c.itemconfigure(self.core_name,state="hidden")
+                face.start(lambda:getattr(self,"last_mode","idle"))
+                self.avatar=face
+            else:
+                self.avatar=None
+        except Exception:
+            self.avatar=None
         # Tiny status lines below the reactor (never "ASCOLTO" inside it).
         c.create_text(cx,cy+r*.61,text="◈  ARCHITETTURA VOCALE",
                       fill="#4093b8",font=("Consolas",max(7,int(r*.052))))

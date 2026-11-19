@@ -82,7 +82,7 @@ class WorkspaceMemoryTests(unittest.TestCase):
         self.assertEqual(self.hub.pending_for_contact(a),())
         self.assertTrue(self.hub.telegram_event(a,"incoming",100,"text","Ciao"))
         self.assertFalse(self.hub.telegram_event(a,"incoming",100,"text","Ciao"))
-        self.hub.telegram_event(a,"outgoing",101,"voice","Sono Jarvis.")
+        self.hub.telegram_event(a,"outgoing",101,"voice","Sono Lumi.")
         self.hub.telegram_event(a,"incoming",102,"voice","")
         self.assertTrue(self.hub.telegram_transcript(a,102,"Appuntamento domani"))
         self.assertEqual(self.hub.telegram_activity(a)[0]["text"],

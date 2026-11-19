@@ -1,0 +1,164 @@
+"""Server MCP (stdio) «Diagnostica per Claude»: lo avvia Claude desktop.
+
+Non tocca il PC: inoltra le richieste al ponte di Lumi (127.0.0.1, chiave nel file
+%LOCALAPPDATA%\\Jarvis\\diagnostica_claude.json, presente solo con l'add-on acceso).
+Nessuna dipendenza: JSON-RPC 2.0 una riga per messaggio, come da specifica MCP stdio.
+"""
+from __future__ import annotations
+
+import json
+import os
+import socket
+import sys
+from pathlib import Path
+
+VERSIONE_PROTOCOLLO = "2025-06-18"
+
+STRUMENTI = [
+    {"name": "lumi_stato", "description": "Stato di Lumi: versione, modalità (Basso consumo/Veloce), meteo, microfono, modello, GPT, occupato.",
+     "op": "stato", "props": {}},
+    {"name": "lumi_console", "description": "Ultime righe della console/chat di Lumi.",
+     "op": "console", "props": {"righe": {"type": "integer", "description": "quante (max 400)"}}},
+    {"name": "lumi_errori", "description": "Ultimi errori mostrati da Lumi.",
+     "op": "errori", "props": {"righe": {"type": "integer"}}},
+    {"name": "lumi_log_motore", "description": "Coda di motore.log del modello locale.",
+     "op": "log_motore", "props": {"righe": {"type": "integer"}}},
+    {"name": "lumi_scrivi_in_chat", "description": "Scrive un messaggio nella chat di Lumi.",
+     "op": "scrivi_in_chat", "props": {"testo": {"type": "string"}}, "required": ["testo"]},
+    {"name": "lumi_prova_comando",
+     "description": ("Prova qualsiasi comando come se l'utente l'avesse scritto in Lumi (mouse, "
+                     "finestre, programmi, file, messaggi). Rifiutati solo spegnere/riavviare "
+                     "il PC. Con «attendi» "
+                     "(secondi, max 180) aspetta e restituisce le righe della risposta."),
+     "op": "prova_comando", "props": {"testo": {"type": "string"},
+                                      "attendi": {"type": "number"}}, "required": ["testo"]},
+    {"name": "lumi_riavvia_modello", "description": "Riavvia il modello locale di Lumi.",
+     "op": "riavvia_modello", "props": {}},
+    # 15/11 sera: strumenti per le novità (regola: diagnostica sempre aggiornata).
+    {"name": "lumi_impostazioni",
+     "description": ("Impostazioni di Lumi: senza argomenti elenca categorie e voci; con "
+                     "categoria (e voce) apre la finestra delle impostazioni in quel punto."),
+     "op": "impostazioni", "props": {"categoria": {"type": "string"}, "voce": {"type": "string"}}},
+    {"name": "lumi_addon",
+     "description": ("Add-on di Lumi: elenco con stato acceso/spento; con id e acceso "
+                     "(true/false) li accende o spegne come l'interruttore nelle impostazioni."),
+     "op": "addon", "props": {"id": {"type": "string"}, "acceso": {"type": "boolean"}}},
+    {"name": "lumi_ricordi", "description": "Ricordi salvati da Lumi (sola lettura), con ricerca.",
+     "op": "ricordi", "props": {"cerca": {"type": "string"},
+                                "categoria": {"type": "string"}}},
+    {"name": "lumi_prompt",
+     "description": ("Prompt del modello locale: con arma=true cattura il prossimo turno di "
+                     "Gemma; senza argomenti restituisce l'ultimo catturato (sezioni e token)."),
+     "op": "prompt", "props": {"arma": {"type": "boolean"}}},
+    {"name": "lumi_online",
+     "description": "Servizi online in ordine (GPT dal browser compreso): posizione, spunta, chiave o collegamento GPT, quota di oggi e soglie.",
+     "op": "online", "props": {}},
+    {"name": "lumi_prova_servizio",
+     "description": ("Prova UN servizio online nelle tre fasi (DNS, connessione/TLS, risposta). Parte in "
+                     "background: richiamare dopo qualche secondo per l'esito."),
+     "op": "prova_servizio", "props": {"servizio": {"type": "string", "description": "id del servizio (vedi lumi_online)"}}},
+    {"name": "lumi_ricerca",
+     "description": "Servizi di ricerca online (Tavily, Exa, Firecrawl, Linkup): spunta, chiave presente, pronto.",
+     "op": "ricerca", "props": {}},
+    {"name": "lumi_modelli",
+     "description": "Modelli locali .gguf trovati (come «cambia modello») e modello in uso.",
+     "op": "modelli", "props": {}},
+    {"name": "lumi_telegram",
+     "description": "Icona Telegram: colore, messaggi nuovi e stato delle risposte automatiche.",
+     "op": "telegram", "props": {}},
+    {"name": "lumi_chat",
+     "description": ("Chat del menu laterale con i simboli dei modelli (🤖 offline, 📡 online) e "
+                     "gli ultimi scambi della chat aperta (sola lettura)."),
+     "op": "chat", "props": {"scambi": {"type": "integer", "description": "quanti (max 32)"}}},
+]
+PER_NOME = {t["name"]: t for t in STRUMENTI}
+
+
+def percorso_porta() -> Path:
+    local = os.environ.get("LOCALAPPDATA") or str(Path.home())
+    return Path(local) / "Jarvis" / "diagnostica_claude.json"
+
+
+def chiedi_al_ponte(op: str, args: dict, path: Path | None = None, timeout: float = 15) -> dict:
+    if op == "prova_comando" and isinstance(args, dict):
+        try:                                   # aspettare la risposta richiede più tempo
+            timeout = max(timeout, min(float(args.get("attendi") or 0), 180.0) + 10)
+        except (TypeError, ValueError):
+            pass
+    try:
+        info = json.loads((path or percorso_porta()).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"ok": False, "errore": "Lumi non è aperta o l'add-on Diagnostica per Claude è spento."}
+    try:
+        # Collegamento separato dalla risposta: se non si collega, il file è vecchio (chiusura
+        # brusca) e Lumi non è aperta. Su Windows una porta chiusa può dare anche un timeout.
+        conn = socket.create_connection(("127.0.0.1", int(info["port"])), timeout=min(timeout, 3))
+    except (OSError, ValueError, KeyError, TypeError):
+        return {"ok": False, "errore": "Lumi non è aperta o la Diagnostica per Claude è spenta "
+                                       "(c'è un collegamento vecchio, di una chiusura brusca)."}
+    try:
+        with conn:
+            conn.settimeout(timeout)
+            conn.sendall(json.dumps({"token": info["token"], "op": op, "args": args}).encode("utf-8") + b"\n")
+            data = b""
+            while b"\n" not in data:
+                chunk = conn.recv(65536)
+                if not chunk:
+                    break
+                data += chunk
+        return json.loads(data.split(b"\n", 1)[0].decode("utf-8"))
+    except (OSError, ValueError, KeyError, TypeError):
+        return {"ok": False, "errore": "Lumi non risponde."}
+
+
+def gestisci(message: dict, ask=chiedi_al_ponte):
+    """Risposta JSON-RPC (dict) oppure None per le notifiche."""
+    method, ident = message.get("method"), message.get("id")
+    if ident is None:
+        return None
+    if method == "initialize":
+        version = (message.get("params") or {}).get("protocolVersion") or VERSIONE_PROTOCOLLO
+        result = {"protocolVersion": version, "capabilities": {"tools": {}},
+                  "serverInfo": {"name": "lumi-diagnostica", "version": "1.1"}}
+    elif method == "ping":
+        result = {}
+    elif method == "tools/list":
+        result = {"tools": [{"name": t["name"], "description": t["description"],
+                             "inputSchema": {"type": "object", "properties": t["props"],
+                                             "required": t.get("required", [])}}
+                            for t in STRUMENTI]}
+    elif method == "tools/call":
+        params = message.get("params") or {}
+        tool = PER_NOME.get(params.get("name"))
+        if tool is None:
+            return {"jsonrpc": "2.0", "id": ident,
+                    "error": {"code": -32602, "message": "Strumento sconosciuto"}}
+        reply = ask(tool["op"], params.get("arguments") or {})
+        ok = bool(reply.get("ok"))
+        text = json.dumps({k: v for k, v in reply.items() if k != "ok"}, ensure_ascii=False, indent=1)
+        result = {"content": [{"type": "text", "text": text if ok else reply.get("errore", text)}],
+                  "isError": not ok}
+    else:
+        return {"jsonrpc": "2.0", "id": ident, "error": {"code": -32601, "message": "Metodo non supportato"}}
+    return {"jsonrpc": "2.0", "id": ident, "result": result}
+
+
+def main(stdin=sys.stdin, stdout=sys.stdout) -> None:
+    for line in stdin:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            message = json.loads(line)
+        except ValueError:
+            continue
+        reply = gestisci(message) if isinstance(message, dict) else None
+        if reply is not None:
+            stdout.write(json.dumps(reply, ensure_ascii=False) + "\n")
+            stdout.flush()
+
+
+if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stdin.reconfigure(encoding="utf-8")
+    main()

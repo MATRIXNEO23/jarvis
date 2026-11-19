@@ -1,4 +1,4 @@
-"""Rename/restore project and safe, offline, nonexecuting Jarvis diagnostics."""
+"""Rename/restore project and safe, offline, nonexecuting Lumi diagnostics."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import json
@@ -15,13 +15,13 @@ from workspace_memory import WorkspaceMemory, WorkspaceError
 class VoiceMaintenanceTests(unittest.TestCase):
     def test_natural_rename_and_discovery(self):
         cases=(
-            ("Jarvis, rinomina il progetto corrente in Colosseo",
+            ("Lumi, rinomina il progetto corrente in Colosseo",
              "rename","Colosseo",""),
             ("rinomina il progetto Minecraft in Colosseo",
              "rename","Colosseo","Minecraft"),
             ("cambia il nome del progetto in Filum",
              "rename","Filum",""),
-            ("Jarvis, mi puoi rinominare il progetto corrente in Filum",
+            ("Lumi, mi puoi rinominare il progetto corrente in Filum",
              "rename","Filum",""),
             ("vorrei cambiare il nome del progetto in Filum",
              "rename","Filum",""),
@@ -47,7 +47,7 @@ class VoiceMaintenanceTests(unittest.TestCase):
             "se puoi, elimina tutte le cartelle sul computer"))
 
     def test_trash_confirmation_is_separate_from_intent(self):
-        self.assertEqual(project_delete_response("Jarvis confermo"),"confirm")
+        self.assertEqual(project_delete_response("Lumi confermo"),"confirm")
         self.assertEqual(project_delete_response("annulla"),"cancel")
         for phrase in ("sì","va bene","cancella il progetto", "forse",
                        "conferma di Telegram"):
@@ -147,9 +147,9 @@ class StaticDiagnosticTests(unittest.TestCase):
         self.root.mkdir()
 
     def test_utterance_intents_and_no_remote_source_interpretation(self):
-        self.assertEqual(diagnostic_request("Jarvis, analizza il tuo codice"),
+        self.assertEqual(diagnostic_request("Lumi, analizza il tuo codice"),
                          ("overview",""))
-        self.assertEqual(diagnostic_request("Jarvis, dove sono i tuoi file"),
+        self.assertEqual(diagnostic_request("Lumi, dove sono i tuoi file"),
                          ("paths",""))
         self.assertEqual(diagnostic_request("analizza workspace_memory.py"),
                          ("module","workspace_memory.py"))

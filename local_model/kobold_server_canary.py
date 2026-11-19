@@ -1,6 +1,6 @@
 """ARCH-01 F4: optional probe of an already-running LOCAL KoboldCpp server.
 
-This module is deliberately NOT imported by Jarvis or NativeChatAdapter.
+This module is deliberately NOT imported by Lumi or NativeChatAdapter.
 Construction never connects; generation requires an explicit caller, a pinned
 model name and a preformatted raw prompt. No model loading, background
 worker, data persistence, code execution, actions, external network or retry.

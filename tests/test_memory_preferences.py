@@ -37,7 +37,7 @@ class MemoryPreferencesTests(unittest.TestCase):
 
     def test_model_window_reservation(self):
         prefs = MemoryPreferences()
-        self.assertEqual(prefs.available_prompt_tokens(2048, 128), 600)
+        self.assertEqual(prefs.available_prompt_tokens(2048, 128), 550)
         self.assertEqual(prefs.available_prompt_tokens(512, 128), 256)
         with self.assertRaises(ValueError):
             prefs.available_prompt_tokens(256, 200)

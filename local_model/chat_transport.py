@@ -1,4 +1,4 @@
-"""Transport routing for Jarvis requests; explicit caller-supplied selection.
+"""Transport routing for Lumi requests; explicit caller-supplied selection.
 
 Never automatically sends a local prompt to the online transport.
 """

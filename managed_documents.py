@@ -30,12 +30,12 @@ class ManagedDocuments:
         self.forget_if_closed()
         if self.current is not None:
             raise NotepadUnavailable(
-                "C'è già un Blocco note gestito da Jarvis. "
+                "C'è già un Blocco note gestito da Lumi. "
                 "Chiudilo prima di aprirne uno nuovo.")
         note = self.bridge.open_blank()
         self.current = note
         return DocumentOperation(
-            "opened", "Ho aperto un nuovo Blocco note gestito da Jarvis.",
+            "opened", "Ho aperto un nuovo Blocco note gestito da Lumi.",
             note.ident)
 
     def compose(self, text: str, target: str) -> DocumentOperation:
@@ -45,7 +45,7 @@ class ManagedDocuments:
             self.forget_if_closed()
             if self.current is not None:
                 raise NotepadUnavailable(
-                    "Un documento di Jarvis è già aperto. Chiedi di aggiungere "
+                    "Un documento di Lumi è già aperto. Chiedi di aggiungere "
                     "il testo a quel documento oppure chiudilo prima.")
             self.open_blank()
             note = self._note()
@@ -63,14 +63,14 @@ class ManagedDocuments:
                 raise ValueError("Il documento non può superare i 64.000 caratteri.")
             self.bridge.write(note, combined)
             return DocumentOperation(
-                "appended", "Ho aggiunto il testo nel Blocco note gestito da Jarvis. "
+                "appended", "Ho aggiunto il testo nel Blocco note gestito da Lumi. "
                 "Le modifiche non sono ancora salvate.", note.ident)
         raise ValueError("Destinazione documento sconosciuta.")
 
     def _note(self, ident: str | None = None) -> NotepadSession:
         note = self.current
         if note is None or (ident is not None and note.ident != ident):
-            raise NotepadUnavailable("Nessun documento di Jarvis corrispondente.")
+            raise NotepadUnavailable("Nessun documento di Lumi corrispondente.")
         return note
 
     def save_only(self, ident: str, path: Path) -> DocumentOperation:

@@ -21,7 +21,7 @@ class FolderSettings:
         self.events = queue.Queue()
         self.alive = True
         self.window = tk.Toplevel(parent)
-        self.window.title('Jarvis — Accesso file / cartelle consentite')
+        self.window.title('Lumi — Accesso file / cartelle consentite')
         self.window.geometry('780x540')
         box = ttk.Frame(self.window, padding=12)
         box.pack(fill='both', expand=True)
@@ -174,8 +174,15 @@ class ResultWindow:
     """One bounded, nonmodal result view; all actions return to the existing worker."""
     def __init__(self,parent,listing,on_open,on_select):
         self.window=tk.Toplevel(parent)
-        self.window.title('Jarvis — risultati file e cartelle')
-        self.window.geometry('900x460')
+        self.window.title('Lumi — risultati file e cartelle')
+        # 059: pop-up separato (mai a tutto schermo): misura propria, al centro dello schermo,
+        # portato davanti alla finestra di Lumi.
+        self.window.geometry(self._geometria(900,460))
+        try:
+            self.window.attributes('-topmost',True)
+            self.window.after(400,lambda:self.window.attributes('-topmost',False))
+        except tk.TclError:
+            pass
         box=ttk.Frame(self.window,padding=10)
         box.pack(fill='both',expand=True)
         self.status=tk.StringVar()
@@ -202,13 +209,39 @@ class ResultWindow:
         self.tree.bind('<Return>',self.open_selected)
         self.update(listing,on_open,on_select)
 
+    def _geometria(self,larghezza,altezza):
+        schermo_l,schermo_a=self.window.winfo_screenwidth(),self.window.winfo_screenheight()
+        larghezza=min(larghezza,max(320,schermo_l-80))
+        altezza=min(altezza,max(200,schermo_a-120))
+        return '%dx%d+%d+%d'%(larghezza,altezza,max(0,(schermo_l-larghezza)//2),max(0,(schermo_a-altezza)//3))
+
+    def _colonne(self,listing):
+        """059: elenchi con colonne proprie (listing['colonne']=[(nome,larghezza),…], ad es. il
+        meteo); gli altri restano N./Tipo/Nome/Percorso."""
+        proprie=listing.get('colonne')
+        if proprie:
+            chiavi=tuple('c%d'%i for i in range(len(proprie)))
+            self.tree.configure(columns=chiavi,displaycolumns=chiavi)
+            for chiave,(nome,larghezza) in zip(chiavi,proprie):
+                self.tree.heading(chiave,text=nome)
+                self.tree.column(chiave,width=larghezza,minwidth=40,stretch=chiave==chiavi[-1],anchor='w')
+        else:
+            chiavi=('number','kind','name','path')
+            self.tree.configure(columns=chiavi,displaycolumns=chiavi)
+            for key,label,width in (('number','N.',45),('kind','Tipo',80),('name','Nome',210),('path','Percorso',500)):
+                self.tree.heading(key,text=label)
+                self.tree.column(key,width=width,minwidth=40,stretch=key=='path')
+        self.window.title(listing.get('titolo') or 'Lumi — risultati file e cartelle')
+
     def update(self,listing,on_open,on_select):
         self.in_progress=False
         self.listing=listing
+        self._colonne(listing)
         self.on_open=on_open; self.on_select=on_select
         self.tree.delete(*self.tree.get_children())
         for number,item in enumerate(listing['items'],1):
-            self.tree.insert('', 'end',iid=str(number),values=(number,*item))
+            self.tree.insert('', 'end',iid=str(number),
+                             values=tuple(item) if listing.get('colonne') else (number,*item))
         self.status.set(listing['summary'])
         self.open_button.configure(state='disabled')
         self.window.update_idletasks()
@@ -267,6 +300,25 @@ def finish_result_progress(parent,message):
         view.tree.delete(*view.tree.get_children())
         view.open_button.configure(state='disabled')
         view.status.set(message)
+        # Prova 16/11: senza risultati la finestra restava aperta e vuota. Il messaggio è
+        # già in chat; se poi arrivano risultati, show_results la riapre.
+        view.window.withdraw()
+
+
+def chiudi_risultati(parent):
+    """«Chiudi i risultati»: chiude solo questa finestra (mai Lumi). True se era visibile."""
+    view=getattr(parent,'_jarvis_file_results',None)
+    if view is None:
+        return False
+    parent._jarvis_file_results=None
+    try:
+        if not view.window.winfo_exists():
+            return False
+        visible=view.window.state()!='withdrawn'
+        view.window.destroy()
+        return visible
+    except tk.TclError:
+        return False
 
 
 def sync_result_selection(parent,service):
@@ -284,7 +336,7 @@ def sync_result_selection(parent,service):
 
 def show_preview(parent, path, text):
     window = tk.Toplevel(parent)
-    window.title('Jarvis — lettura senza modifica: '+Path(path).name)
+    window.title('Lumi — lettura senza modifica: '+Path(path).name)
     window.geometry('780x550')
     ttk.Label(window, text=path, wraplength=750).pack(fill='x', padx=10, pady=8)
     area = tk.Text(window, wrap='word')

@@ -1,4 +1,4 @@
-"""Opt-in factory for native Gemma. Never changes existing Jarvis defaults."""
+"""Opt-in factory for native Gemma. Never changes existing Lumi defaults."""
 import importlib.util
 from dataclasses import replace
 from pathlib import Path

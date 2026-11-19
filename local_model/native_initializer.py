@@ -5,6 +5,7 @@ Gemma proof. Upstream revision must be pinned and verified by the caller.
 """
 import ast
 from pathlib import Path
+import sys
 
 
 def initialize_kobold_cpu(upstream, config, source_path):
@@ -29,16 +30,28 @@ def initialize_kobold_cpu(upstream, config, source_path):
             and last.value.func.id == "main"):
         raise RuntimeError("Inizializzazione upstream cambiata.")
     # The upstream proof uses this initialization path; no server is started.
-    exec(compile(ast.Module(body=block.body[:-1], type_ignores=[]),
-                 str(source), "exec"), upstream.__dict__)
+    # Since 6d2fedf the block also calls parser.parse_args(): it must never
+    # see the host process command line (Jarvis or a probe with arguments).
+    host_argv = sys.argv
+    sys.argv = [str(source)]
+    try:
+        exec(compile(ast.Module(body=block.body[:-1], type_ignores=[]),
+                     str(source), "exec"), upstream.__dict__)
+    finally:
+        sys.argv = host_argv
     if not hasattr(upstream, "parser"):
         raise RuntimeError("Parser upstream non inizializzato dopo il bootstrap.")
-    args = upstream.parser.parse_args([
+    options = [
         "--usecpu", "--noavx2", "--gpulayers", "0",
         "--threads", str(config.threads),
         "--blasthreads", str(config.batch_threads),
         "--contextsize", str(config.context_size), "--quiet",
-    ])
+    ]
+    # Fast forwarding (default ON upstream): reuses the part of the previous
+    # prompt that is identical. Off = always reprocess (also disables shift).
+    if getattr(config, "fast_forward", True) is False:
+        options.append("--nofastforward")
+    args = upstream.parser.parse_args(options)
     args.usemmap = True
     args.ropeconfig = [0.0, 10000.0]
     upstream.args = args

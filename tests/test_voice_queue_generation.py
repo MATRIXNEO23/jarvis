@@ -108,7 +108,7 @@ class VoiceQueueGenerationTests(unittest.TestCase):
         for mode in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
             with self.subTest(mode=mode):
                 self.configure(mode)
-                old = self.report("voice_text", "Jarvis apri browser")
+                old = self.report("voice_text", "Lumi apri browser")
                 sample_before = self.env["last_voice_sample"].get()
                 self.off_on(mode)
                 self.assertFalse(self.control._is_current(old))
@@ -122,7 +122,7 @@ class VoiceQueueGenerationTests(unittest.TestCase):
         for mode in (GPT_CONVERSATION, CONTINUOUS):
             with self.subTest(mode=mode):
                 self.configure(mode)
-                old = self.report("voice_text", "Jarvis spiegami la gravita")
+                old = self.report("voice_text", "Lumi spiegami la gravita")
                 self.off_on(mode)
                 self.drain()
                 self.trace("old_model_off_on", old)
@@ -157,7 +157,7 @@ class VoiceQueueGenerationTests(unittest.TestCase):
 
     def test_standby_without_reactivation_blocks_queued_command(self):
         self.configure(GPT_CONVERSATION)
-        old = self.report("voice_text", "Jarvis apri browser")
+        old = self.report("voice_text", "Lumi apri browser")
         self.switch(STANDBY)
         self.clear_observations()
         self.drain()
@@ -171,9 +171,9 @@ class VoiceQueueGenerationTests(unittest.TestCase):
                 self.configure(mode)
                 old = self.control._generation
                 self.off_on(mode)
-                self.control._report("voice_text", "Jarvis apri browser", old)
+                self.control._report("voice_text", "Lumi apri browser", old)
                 self.assertTrue(self.events.empty())
-                current = self.report("voice_text", "Jarvis apri browser")
+                current = self.report("voice_text", "Lumi apri browser")
                 self.drain()
                 self.trace("fresh_control", current)
                 self.env["submit_local"].assert_called_once()
@@ -185,7 +185,7 @@ class VoiceQueueGenerationTests(unittest.TestCase):
         for mode in (GPT_CONVERSATION, CONTINUOUS):
             with self.subTest(mode=mode):
                 self.configure(mode)
-                current = self.report("voice_text", "Jarvis spiegami la gravita")
+                current = self.report("voice_text", "Lumi spiegami la gravita")
                 self.drain()
                 self.trace("fresh_model_control", current)
                 self.env["start_conversation_gpt"].assert_called_once_with(
@@ -193,7 +193,7 @@ class VoiceQueueGenerationTests(unittest.TestCase):
                 self.env["submit_local"].assert_not_called()
 
     def test_stale_events_have_no_ui_memory_or_dictation_effects(self):
-        for kind, value in (("voice_text", "Jarvis apri browser"),
+        for kind, value in (("voice_text", "Lumi apri browser"),
                             ("voice_status", "Voce non disponibile: errore vecchio")):
             with self.subTest(kind=kind):
                 self.configure(CONTINUOUS)
@@ -216,9 +216,9 @@ class VoiceQueueGenerationTests(unittest.TestCase):
 
     def test_stale_then_fresh_event_keeps_current_command(self):
         self.configure(GPT_CONVERSATION)
-        self.report("voice_text", "Jarvis spiegami la gravita")
+        self.report("voice_text", "Lumi spiegami la gravita")
         self.off_on(GPT_CONVERSATION)
-        self.control._report("voice_text", "Jarvis apri browser", self.control._generation)
+        self.control._report("voice_text", "Lumi apri browser", self.control._generation)
         self.drain()
         self.env["submit_local"].assert_called_once_with(
             message_override="apri browser", source_utterance="apri browser")
@@ -228,10 +228,10 @@ class VoiceQueueGenerationTests(unittest.TestCase):
     def test_nonvoice_result_between_stale_and_fresh_voice_is_preserved(self):
         self.configure(GPT_CONVERSATION)
         self.env.update(spoken_status=voice_fixture.Value(""), refresh_voices_button=Mock())
-        self.report("voice_text", "Jarvis spiegami la gravita")
+        self.report("voice_text", "Lumi spiegami la gravita")
         self.off_on(GPT_CONVERSATION)
         self.events.put(("tts_error", "Errore TTS controllato"))
-        self.control._report("voice_text", "Jarvis apri browser", self.control._generation)
+        self.control._report("voice_text", "Lumi apri browser", self.control._generation)
         self.drain()
         self.assertIn("Errore TTS controllato", self.env["spoken_status"].get())
         self.env["refresh_voices_button"].configure.assert_called_once_with(state="normal")
@@ -241,13 +241,13 @@ class VoiceQueueGenerationTests(unittest.TestCase):
     def test_invalid_voice_payloads_do_not_dispatch_or_block_next_event(self):
         # True/1.0 compare equal to integer1: they are not session identities.
         payloads = [
-            lambda g: ("voice_text", "Jarvis spiegami la gravita", True),
-            lambda g: ("voice_text", "Jarvis spiegami la gravita", float(g)),
-            lambda g: ("voice_text", "Jarvis spiegami la gravita", str(g)),
-            lambda g: ("voice_text", "Jarvis spiegami la gravita", None),
-            lambda g: ("voice_text", "Jarvis spiegami la gravita"),
+            lambda g: ("voice_text", "Lumi spiegami la gravita", True),
+            lambda g: ("voice_text", "Lumi spiegami la gravita", float(g)),
+            lambda g: ("voice_text", "Lumi spiegami la gravita", str(g)),
+            lambda g: ("voice_text", "Lumi spiegami la gravita", None),
+            lambda g: ("voice_text", "Lumi spiegami la gravita"),
             lambda g: ("voice_text",),
-            lambda g: ("voice_text", "Jarvis spiegami la gravita", g, "extra"),
+            lambda g: ("voice_text", "Lumi spiegami la gravita", g, "extra"),
             lambda g: ("voice_text", None, g),
             lambda g: ("voice_status", "Voce non disponibile: payload senza sessione"),
             lambda g: ("voice_status",),
@@ -262,7 +262,7 @@ class VoiceQueueGenerationTests(unittest.TestCase):
                 self.configure(GPT_CONVERSATION)
                 status = self.env["mic_status"].get()
                 self.events.put(payload(self.control._generation))
-                self.control._report("voice_text", "Jarvis apri browser", self.control._generation)
+                self.control._report("voice_text", "Lumi apri browser", self.control._generation)
                 try:
                     self.drain()
                 except (IndexError, ValueError, TypeError) as exc:
@@ -277,7 +277,7 @@ class VoiceQueueGenerationTests(unittest.TestCase):
 
     def test_close_revokes_already_queued_voice(self):
         self.configure(GPT_CONVERSATION)
-        self.report("voice_text", "Jarvis apri browser")
+        self.report("voice_text", "Lumi apri browser")
         self.control.close()
         self.drain()
         self.env["submit_local"].assert_not_called()

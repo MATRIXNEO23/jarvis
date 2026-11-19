@@ -218,6 +218,8 @@ class ProgramServiceTests(unittest.TestCase):
         self.assertFalse(protected('apri Netflix'))
         self.assertFalse(protected('apri la posta'))
         self.assertTrue(protected('apri il progetto Netflix'))
-        self.assertTrue(protected('riprendi Netflix'))
+        # 15/11: i progetti vogliono la parola «progetto» (riprendi Netflix non è un progetto).
+        self.assertFalse(protected('riprendi Netflix'))
+        self.assertTrue(protected('riprendi progetto Netflix'))
         self.assertIsNone(self.apps.parse_command('apri C:\\Cartella con spazi'))
         self.assertIsNone(self.apps.parse_command('apri '+'parola '*40))

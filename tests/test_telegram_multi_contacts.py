@@ -90,10 +90,10 @@ class TelegramContactTests(unittest.TestCase):
 
 class TelegramVoiceDialogTests(unittest.TestCase):
     def test_recognizes_requested_speech_and_text(self):
-        for value in ("Jarvis, manda un messaggio a Nico",
+        for value in ("Lumi, manda un messaggio a Nico",
                       "manda un messaggio vocale a Nico",
                       "invia audio a Nico",
-                      "Ok Jarvis manda vocale a Nico"):
+                      "Ok Lumi manda vocale a Nico"):
             self.assertEqual(parse_telegram_send_intent(value),"Nico")
         for value in ("rispondi a Nico", "manda un messaggio",
                       "manda un messaggio a", "fai un'autodiagnosi"):
@@ -151,8 +151,11 @@ class TelegramVoiceDialogTests(unittest.TestCase):
         body=source[start:end]
         self.assertLess(body.index("try_telegram_voice_send(message)"),
                         body.index("submit_gpt()"))
-        self.assertIn("telegram_contacts_button.configure(command=open_telegram_contact_list)",source)
-        self.assertIn("telegram_send_button.configure(command=open_telegram_manual_send)",source)
+        # Pulsanti della sezione Telegram: spostata in telegram_addon/lumi_ui.py (divisione
+        # di jarvis.py, passo 2a); il collegamento deve restare uguale.
+        ui=(Path(__file__).resolve().parent.parent/"telegram_addon"/"lumi_ui.py").read_text(encoding="utf8")
+        self.assertIn("telegram_contacts_button.configure(command=d.open_telegram_contact_list)",ui)
+        self.assertIn("telegram_send_button.configure(command=open_telegram_manual_send)",ui)
         self.assertIn("telegram_owner_sent",source)
         self.assertIn("telegram_owner_error",source)
 

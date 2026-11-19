@@ -6,18 +6,31 @@ from pathlib import Path
 import tempfile
 
 
+_OLD_DEFAULT_HISTORY = 250
+# Chiavi del file accanto (memory.native.json): le vecchie versioni rifiutano chiavi in più in memory.json.
+NATIVE_KEYS = ("history_max_tokens", "cronologia_ridotta", "chat_continua", "ricordi_locale")
+_RICORDI = ("mai", "pertinenti", "sempre")
+
+
 @dataclass(frozen=True)
 class MemoryPreferences:
     idle_seconds: int = 60
     recent_messages: int = 8
     summarize_every: int = 8
     summary_max_tokens: int = 150
-    prompt_max_tokens: int = 600
+    prompt_max_tokens: int = 550        # 057 (21:26): valore di partenza dei modelli nuovi
     max_background_jobs: int = 1
     conversation_priority: bool = True
     pause_on_heavy_load: bool = True
     background_summaries: bool = True
-    history_max_tokens: int = 250
+    # 021: 250 -> 200 to shorten the prompt a little on the Pavilion; the
+    # newest exchange is always protected, so the dialogue stays coherent.
+    history_max_tokens: int = 200
+    # 057: «Cronologia ridotta per domande brevi» (accesa) e il vecchio blocco «Contesto»
+    # (chat continua, ricordi): ora nello stesso posto della memoria del prompt, cioè nel profilo.
+    cronologia_ridotta: bool = True
+    chat_continua: bool = True
+    ricordi_locale: str = "pertinenti"
 
     def validate(self):
         for key, minimum, maximum in (
@@ -32,8 +45,10 @@ class MemoryPreferences:
             value = getattr(self, key)
             if type(value) is not int or not minimum <= value <= maximum:
                 raise ValueError("Valore non valido: " + key)
+        if self.ricordi_locale not in _RICORDI:
+            raise ValueError("Valore non valido: ricordi_locale")
         for key in ("conversation_priority", "pause_on_heavy_load",
-                    "background_summaries"):
+                    "background_summaries", "cronologia_ridotta", "chat_continua"):
             if type(getattr(self, key)) is not bool:
                 raise ValueError("Valore non valido: " + key)
         if self.summary_max_tokens >= self.prompt_max_tokens:
@@ -47,7 +62,7 @@ class MemoryPreferences:
             return cls()
         try:
             obj = json.loads(path.read_text(encoding="utf-8"))
-            legacy_keys = set(cls.__dataclass_fields__) - {"history_max_tokens"}
+            legacy_keys = set(cls.__dataclass_fields__) - set(NATIVE_KEYS)
             if not isinstance(obj, dict) or set(obj) != legacy_keys:
                 raise ValueError("Schema memoria non valido.")
             # Older releases reject additional keys in memory.json. Keep the
@@ -56,8 +71,12 @@ class MemoryPreferences:
             native = {}
             if native_path.exists():
                 native = json.loads(native_path.read_text(encoding="utf-8"))
-                if not isinstance(native, dict) or set(native) != {"history_max_tokens"}:
+                if (not isinstance(native, dict) or "history_max_tokens" not in native
+                        or not set(native) <= set(NATIVE_KEYS)):
                     raise ValueError("Schema budget cronologia non valido.")
+                if native["history_max_tokens"] == _OLD_DEFAULT_HISTORY:
+                    # Untouched old default follows the new, lighter default.
+                    native = dict(native, history_max_tokens=cls.history_max_tokens)
             return cls(**obj, **native).validate()
         except (OSError, UnicodeError, TypeError, json.JSONDecodeError) as exc:
             raise ValueError("Impostazioni memoria danneggiate.") from exc
@@ -83,7 +102,7 @@ class MemoryPreferences:
         self.validate()
         path = Path(path)
         legacy = asdict(self)
-        native = {"history_max_tokens": legacy.pop("history_max_tokens")}
+        native = {key: legacy.pop(key) for key in NATIVE_KEYS}
         _save_json(path, legacy)
         _save_json(path.with_suffix(".native.json"), native)
 

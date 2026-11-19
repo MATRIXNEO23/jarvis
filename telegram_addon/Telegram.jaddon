@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "telegram",
+  "name": "Telegram",
+  "version": "1.0.0",
+  "description": "Messaggi e note vocali Telegram dei contatti che spunti, con risposte automatiche facoltative. Account configurato dentro Lumi.",
+  "actions": [
+    {
+      "id": "addon.telegram.messaggi",
+      "description": "Riceve i messaggi dei contatti spuntati e risponde con note vocali, solo se attivo.",
+      "example": "invia un vocale a Marco",
+      "core_action": "telegram.local"
+    }
+  ]
+}

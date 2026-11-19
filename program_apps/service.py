@@ -29,7 +29,7 @@ def blocked(text):
 
 def launch_query(text):
     value = normalized(text)
-    value = re.sub(r'^(?:(?:ehi|hey) )?jarvis\s+', '', value)
+    value = re.sub(r'^(?:(?:ehi|hey) )?lumi\s+', '', value)
     value = value.removesuffix(' per favore')
     match = re.fullmatch(r'(?:(?:per favore|gentilmente) )?'
         r'(?:(?:mi )?(?:puoi|potresti|vorrei|voglio)(?: che tu)? )?(?:mi )?'
@@ -285,7 +285,7 @@ class ProgramService:
                 if not pending['query']:
                     if any(key in pending['ids'] for key in self._matches(text) or self._similar(text)):
                         return 'launch', {'query':text}
-                if pending['query'] and len(pending['ids']) == 1 and value in ('sì', 'si', 'confermo'):
+                if pending['query'] and len(pending['ids']) == 1 and _is_yes(text):
                     return 'select', {'query': '1', 'token': pending['token']}
                 number = re.fullmatch(r'(?:il |la |numero )?(\d+)', value)
                 ordinal = {'il primo':1, 'il secondo':2, 'il terzo':3, 'il quarto':4}
@@ -329,6 +329,7 @@ class ProgramService:
                 self.reset(self._context)
                 if not allowed:
                     return ProgramResult('rejected', 'Abilita almeno un programma in Programmi e app.')
+                _expect_answer()
                 self._pending = dict(token=uuid.uuid4().hex, ids=allowed, revision=self._revision,
                                      expires=self.clock()+120, query='')
                 return ProgramResult('completed', 'Quale programma vuoi aprire?')
@@ -361,6 +362,7 @@ class ProgramService:
                 return ProgramResult('rejected', 'Programma presente ma non autorizzato: abilitalo in Programmi e app.')
             if operation == 'suggest_id' or len(allowed)>1 or (operation=='launch' and len(allowed)==1 and not self._exact(query,allowed[0])):
                 token = uuid.uuid4().hex
+                _expect_answer()
                 self._pending = dict(token=token, ids=allowed, revision=self._revision,
                                      expires=self.clock()+120, query=query)
                 message = ('Intendevi '+self._apps[allowed[0]].name+'? Di’ sì o annulla.'
@@ -396,3 +398,20 @@ class ProgramService:
         chosen = [row for row in self.entries() if row['enabled'] and row['available']]
         return ('Programmi e app: apri/aprimi/avvia/avviami/lancia NOME, oppure il comando personalizzato.\n'
                 + '\n'.join(row['name']+(' — '+row['phrase'] if row['phrase'] else '') for row in chosen))
+
+
+def _is_yes(text) -> bool:
+    try:
+        import risposte
+        return risposte.is_yes(text)
+    except ImportError:
+        return normalized(text) in ('sì', 'si', 'confermo')
+
+
+def _expect_answer() -> None:
+    """La risposta (sì / numero) vale anche senza dire «Lumi»."""
+    try:
+        import risposte
+        risposte.expect_answer()
+    except ImportError:
+        pass

@@ -4,7 +4,7 @@ import unittest
 
 from conversation_memory import ConversationMemory
 from conversation_router import build_conversation_prompt, parse_conversation_intent
-from dialogue_focus import (
+from dialogue import (
     PendingProjectReference,focus_hint,is_short_followup,
     is_ambiguous_short_reply,is_unusable_project_name,mentions_current_project,
     needs_project_clarification,single_question,
@@ -84,7 +84,7 @@ class ProjectReferenceTests(unittest.TestCase):
         self.assertIsNone(pending.parse_answer("Minecraft Builder"))
 
     def test_project_management_deixis_does_not_create_other_project(self):
-        rename=parse_project_voice("Jarvis, rinomina questo progetto in Colosseo")
+        rename=parse_project_voice("Lumi, rinomina questo progetto in Colosseo")
         self.assertEqual(rename.action,"rename")
         self.assertEqual(rename.name,"Colosseo")
         self.assertEqual(rename.target,"")

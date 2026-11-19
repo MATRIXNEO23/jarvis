@@ -11,7 +11,7 @@ class PreferenceIntent:
     value: str = ""
 
 
-_PREFIX = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?jarvis[\s,.:;-]*",re.I)
+_PREFIX = re.compile(r"^(?:(?:ehi|hey|ok)\s+)?lumi[\s,.:;-]*",re.I)
 _SET = re.compile(r"^(?:ricorda(?:ti)?\s+(?:la\s+preferenza\s+)?(?:che\s+)?|"
                   r"salva\s+(?:la\s+)?preferenza\s+)(.+)$",re.I)
 _LIST = re.compile(r"^(?:quali\s+sono\s+le\s+mie\s+preferenze|"
@@ -30,6 +30,19 @@ _VALUES={
     "preferisco risposte in inglese": ("language","en"),
     "preferisco risposte in spagnolo": ("language","es"),
 }
+# Parole semplici per le conferme (prova 16/11: Lumi diceva «response_length=brief»).
+NOMI={("response_length","brief"):"risposte brevi",("response_length","balanced"):"risposte equilibrate",
+      ("response_length","detailed"):"risposte dettagliate",("interaction","voice"):"rispondere a voce",
+      ("interaction","text"):"rispondere scrivendo",("interaction","both"):"voce e testo insieme",
+      ("language","it"):"risposte in italiano",("language","en"):"risposte in inglese",
+      ("language","es"):"risposte in spagnolo",("response_length",""):"lunghezza delle risposte",
+      ("language",""):"lingua",("interaction",""):"voce o testo"}
+
+
+def descrivi(key,value="")->str:
+    return NOMI.get((key,value or ""),NOMI.get((key,""),key))
+
+
 _FORGET_KEYS={"risposte":"response_length","lingua":"language",
               "interazione":"interaction"}
 
@@ -46,6 +59,10 @@ def parse_preference_intent(text: str) -> PreferenceIntent | None:
     match=_SET.fullmatch(text)
     if match:
         result=_VALUES.get(" ".join(match.group(1).casefold().split()))
-        return (PreferenceIntent("set",*result) if result else
-                PreferenceIntent("unsupported"))
+        if result:
+            return PreferenceIntent("set",*result)
+        # «Ricordati che …» con una frase libera (15/11 sera): diventa un ricordo.
+        if text.casefold().startswith("ricorda"):
+            return PreferenceIntent("ricordo",value=" ".join(match.group(1).split())[:300])
+        return PreferenceIntent("unsupported")
     return None

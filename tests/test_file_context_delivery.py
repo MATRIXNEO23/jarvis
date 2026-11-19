@@ -12,7 +12,7 @@ import test_file_refinement as refinement_tests
 from test_activity_status import Value
 from conversation_memory import ConversationMemory
 from conversation_router import build_conversation_prompt
-from dialogue_focus import focus_hint
+from dialogue import focus_hint
 from jarvis_persona import compact_memory
 from live_capabilities import snapshot_capabilities, capability_status_prompt
 

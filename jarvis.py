@@ -1,4 +1,4 @@
-"""Jarvis alpha — local commands, GPT conversation and offline voice.
+"""Lumi alpha — local commands, GPT conversation and offline voice.
 
 App startup may automatically enable the locally configured Vosk microphone.
 A visible settings switch can disable auto-listening for future launches; all
@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import os
 import queue
+import subprocess
+import sys
 import shutil
 from collections import deque
 from concurrent.futures import Future
@@ -21,7 +23,7 @@ from workspace_memory import WorkspaceMemory, WorkspaceError
 from workspace_gui import ProjectManagerWindow
 from project_voice import (parse_project_voice, safe_project_name,
                            find_existing_project, project_delete_response)
-from dialogue_focus import (focus_hint, PendingProjectReference,
+from dialogue import (focus_hint, PendingProjectReference,
                             normalized_utterance,is_ambiguous_short_reply)
 from project_documents import parse_simple_save, project_save_destination
 from self_diagnostics import diagnostic_request, inspect_jarvis, format_audit
@@ -40,7 +42,8 @@ from telegram_ui import (TelegramContactsWindow, edit_telegram_context,
 from telegram_outbound_flow import (
     VoiceSendDialog, parse_telegram_send_intent, resolve_selected_recipient,
 )
-from telegram_bridge import TelegramBridge, telegram_assistant_prompt, telegram_local_prompt
+from telegram_bridge import (TelegramBridge, telegram_assistant_prompt, telegram_local_messages,
+                             telegram_local_prompt)
 from live_capabilities import (LiveCapabilityRegistry, snapshot_capabilities,
                                capability_status_prompt)
 from addon_manager import AddonManager, AddonError
@@ -73,7 +76,7 @@ from document_language import classify_document_choice
 from document_store import destination_from_voice
 from managed_documents import ManagedDocuments
 from document_recovery import release_closed_document
-from gpt_client import GPTClient, GPTUnavailable
+from online.gpt_client import GPTClient, GPTUnavailable
 from local_engine import LocalEngine, TaskResult
 from offline_tts import OfflineSpeaker, installed_voices
 from planner_ui import open_planner
@@ -91,7 +94,7 @@ def main() -> None:
     root = tk.Tk()
     from window_chrome import install_window_chrome
     install_window_chrome(root)
-    root.title("JARVIS // Interfaccia")
+    root.title("LUMI // Interfaccia")
     root.geometry("1200x670")
     root.minsize(940, 580)
     root.configure(bg=BG)
@@ -118,6 +121,18 @@ def main() -> None:
     style.configure("TCombobox", fieldbackground=PANEL, foreground=WHITE)
     style.configure("Vertical.TScrollbar", background=PANEL,
                     troughcolor=BG)
+    # 061: tema Lumi su TUTTE le finestre (meteo, risultati, dialoghi): niente schermate bianche.
+    for _classe in ("Toplevel", "Frame"):
+        root.option_add("*" + _classe + ".background", BG)
+    root.option_add("*Label.background", BG)
+    root.option_add("*Label.foreground", WHITE)
+    style.configure("Treeview", background=PANEL, fieldbackground=PANEL, foreground=WHITE,
+                    bordercolor="#0b4a6b")
+    style.configure("Treeview.Heading", background="#0b344a", foreground=CYAN)
+    style.map("Treeview", background=[("selected", "#124058")], foreground=[("selected", WHITE)])
+    style.map("Treeview.Heading", background=[("active", "#124058")])
+    style.configure("Horizontal.TScrollbar", background=PANEL, troughcolor=BG)
+    style.configure("TSeparator", background="#0b4a6b")
     style.configure("TNotebook", background=BG, borderwidth=0)
     style.configure("TNotebook.Tab", background=PANEL, foreground=CYAN,
                     padding=(13, 8))
@@ -128,7 +143,7 @@ def main() -> None:
     # Every existing setting remains available without crowding the main HUD.
     # The settings window is created once, hidden until the user presses ⚙.
     settings_window = tk.Toplevel(root)
-    settings_window.title("JARVIS // Impostazioni")
+    settings_window.title("LUMI // Impostazioni")
     settings_window.geometry("820x650")
     settings_window.minsize(650, 480)
     settings_window.withdraw()
@@ -138,21 +153,69 @@ def main() -> None:
     settings_tabs = ttk.Notebook(settings_window)
     settings_tabs.pack(fill="both", expand=True, padx=8, pady=8)
 
-    def settings_page(title: str) -> ttk.Frame:
-        host = ttk.Frame(settings_tabs)
-        settings_tabs.add(host, text=title)
-        canvas = tk.Canvas(host, bg=BG, highlightthickness=0)
-        scroll = ttk.Scrollbar(host, orient="vertical", command=canvas.yview)
-        scroll.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
-        canvas.configure(yscrollcommand=scroll.set)
-        inner = ttk.Frame(canvas, padding=15)
-        item = canvas.create_window((0, 0), window=inner, anchor="nw")
-        inner.bind("<Configure>", lambda event: canvas.configure(
-            scrollregion=canvas.bbox("all")))
-        canvas.bind("<Configure>", lambda event: canvas.itemconfigure(
-            item, width=event.width))
-        return inner
+    # Interfaccia: impostazioni, chat, comandi su Lumi: spostato in lumi_parti/interfaccia.py (divisione di jarvis.py).
+    from lumi_parti.interfaccia import installa as _lumi_parti_interfaccia_installa
+    _lumi_parti_interfaccia = _lumi_parti_interfaccia_installa(__import__("lumi_contesto").Vivo(
+        active_gpt=lambda: active_gpt,
+        active_project_id=lambda: active_project_id,
+        ask_button=lambda: ask_button,
+        avatar_dock=lambda: avatar_dock,
+        busy_gpt=lambda: busy_gpt,
+        busy_local=lambda: busy_local,
+        changing_chat_tab=lambda: changing_chat_tab,
+        chat_console_tab=lambda: chat_console_tab,
+        chat_local_tab=lambda: chat_local_tab,
+        chat_notebook=lambda: chat_notebook,
+        chat_selection_changed=lambda: chat_selection_changed,
+        chat_sessions_panel=lambda: chat_sessions_panel,
+        close=lambda: close,
+        closing=lambda: closing,
+        connect=lambda: connect,
+        disconnect=lambda: disconnect,
+        doc_dialog=lambda: doc_dialog,
+        dock_idle_var=lambda: dock_idle_var,
+        dock_show_var=lambda: dock_show_var,
+        document_busy=lambda: document_busy,
+        document_operation=lambda: document_operation,
+        engine=lambda: engine,
+        gemma_trial_busy=lambda: gemma_trial_busy,
+        goodbye_started=lambda: goodbye_started,
+        gpt_spuntato=lambda: gpt_spuntato,
+        keep_awake=lambda: keep_awake,
+        local_button=lambda: local_button,
+        open_project_manager=lambda: open_project_manager,
+        pending_conversation=lambda: pending_conversation,
+        pending_project_name=lambda: pending_project_name,
+        pending_project_rename_id=lambda: pending_project_rename_id,
+        pending_project_trash_id=lambda: pending_project_trash_id,
+        plan_button=lambda: plan_button,
+        previous_chat_tab=lambda: previous_chat_tab,
+        root=lambda: root,
+        save_only_waiting=lambda: save_only_waiting,
+        save_speech_preferences=lambda: save_speech_preferences,
+        settings=lambda: settings,
+        settings_tabs=lambda: settings_tabs,
+        settings_window=lambda: settings_window,
+        speak_result=lambda: speak_result,
+        spoken_enabled=lambda: spoken_enabled,
+        style_save_job=lambda: style_save_job,
+        submit_local=lambda: submit_local,
+        switch_context=lambda: switch_context,
+        telegram_activity_window=lambda: telegram_activity_window,
+        telegram_addon_enabled=lambda: telegram_addon_enabled,
+        telegram_auto=lambda: telegram_auto,
+        timer_audio_beep=lambda: timer_audio_beep,
+        timer_audio_status=lambda: timer_audio_status,
+        timer_repeat=lambda: timer_repeat,
+        timer_sound_label=lambda: timer_sound_label,
+        timer_volume=lambda: timer_volume,
+        toggle_telegram_automatic=lambda: toggle_telegram_automatic,
+        try_file_command=lambda: try_file_command,
+        try_program_command=lambda: try_program_command,
+        try_timer_command=lambda: try_timer_command,
+        write_line=lambda: write_line))
+    (settings_page, save_keep_awake, open_online_permissions, show_settings, save_timer_preferences, preview_timer_sound, orbit_open, addon_changed, refresh_buttons, save_dock_settings, run_understood_command, understood_catalog, understanding_output, chat_navigation_possible, on_chat_tab_change, selected_chat_target, schedule_style_save, close_with_goodbye, lumi_restart, lumi_shutdown_pc, lumi_cancel_shutdown, lumi_say, lumi_minimize, lumi_hide, lumi_wake, first_run_components,) = (
+        _lumi_parti_interfaccia[n] for n in _lumi_parti_interfaccia_installa.__globals__['NOMI'])
 
     frame = settings_page("Voce")
     assistant_settings_frame = settings_page("GPT e memoria")
@@ -162,66 +225,139 @@ def main() -> None:
     keep_awake = tk.BooleanVar(value=settings["keep_awake_fullscreen"])
     power = ForegroundPower(root, keep_awake.get)
 
-    def save_keep_awake():
-        previous = settings["keep_awake_fullscreen"]
-        settings["keep_awake_fullscreen"] = keep_awake.get()
-        try:
-            save_settings(settings)
-        except (OSError, ValueError) as exc:
-            settings["keep_awake_fullscreen"] = previous
-            keep_awake.set(previous)
-            messagebox.showerror("Impostazioni", str(exc), parent=settings_window)
 
     ttk.Checkbutton(interface_settings_frame,
-                    text="Tieni acceso il PC con Jarvis massimizzato in primo piano",
+                    text="Tieni acceso il PC con Lumi massimizzato in primo piano",
                     variable=keep_awake, command=save_keep_awake).pack(anchor="w")
     ttk.Label(interface_settings_frame, wraplength=540,
               text="Sospende lo standby automatico e lo spegnimento dello schermo "
-                   "finché la finestra principale di Jarvis è massimizzata e in primo piano."
+                   "finché la finestra principale di Lumi è massimizzata e in primo piano."
               ).pack(anchor="w", pady=(6, 0))
 
-    # Optional native settings editor. No model initialization or provider switch.
+    # 056b: UNA pagina «Modelli offline» (caselle, elenco, profili e impostazioni del modello scelto,
+    # base native.json, un solo Salva). Niente finestre annidate.
     def open_native_model_settings():
-        try:
-            from local_model.native_ui import NativeSettingsWindow
-            NativeSettingsWindow(settings_window, get_session=get_gemma_session)
-        except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Jarvis / Gemma", str(exc), parent=settings_window)
+        show_settings()
+        settings_navigation.mostra("Modelli", "Modelli offline")
 
-    native_settings_box = ttk.LabelFrame(assistant_settings_frame,
-                                         text="Modello locale Gemma (sperimentale)")
-    native_settings_box.pack(fill="x", padx=8, pady=8)
-    ttk.Label(native_settings_box,
-              text="Configurazione separata; non attiva il modello e non cambia GPT.",
-              wraplength=540).pack(anchor="w", padx=8, pady=5)
-    ttk.Button(native_settings_box, text="Configura Gemma locale...",
-               command=open_native_model_settings).pack(anchor="w", padx=8, pady=6)
+    def build_native_panel(frame):
+        from local_model.native_ui import NativeSettingsWindow
+        return NativeSettingsWindow(frame, get_session=lambda: get_gemma_session(), embed=True)
 
-    def open_memory_preferences():
-        try:
-            from local_model.memory_ui import MemoryPreferencesWindow
-            MemoryPreferencesWindow(settings_window, get_session=get_gemma_session)
-        except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Jarvis / Memoria", str(exc), parent=settings_window)
+    try:
+        __import__("local_model.miei_modelli", fromlist=["costruisci_sezione"]).costruisci_sezione(
+            assistant_settings_frame, lambda text: write_line(text),
+            on_use=lambda target: lumi_model_use(target), impostazioni=build_native_panel)
+    except (OSError, ValueError, RuntimeError, ImportError, tk.TclError) as exc:
+        ttk.Label(assistant_settings_frame, text="Modelli non disponibili: " + str(exc)[:80]).pack(anchor="w")
+    # Il motore gira sempre in un processo a parte (decisione 15/11 sera): niente casella.
+    # Pulizia dati su disco (passo 6): cartelle, spazio, ascolto, Cestino.
+    def open_data_cleanup() -> None:
+        __import__("pulizia_dati").PuliziaWindow(
+            root, notify=lambda text: write_line(text),
+            play_audio=lambda path: __import__("audio_player").play(path),
+            stop_audio=lambda: __import__("audio_player").stop())
 
-    ttk.Button(native_settings_box, text="Configura memoria e inattivita...",
-               command=open_memory_preferences).pack(anchor="w", padx=8, pady=6)
+    cleanup_box = ttk.LabelFrame(assistant_settings_frame, text="Spazio su disco")
+    cleanup_box.pack(fill="x", padx=8, pady=8)
+    ttk.Button(cleanup_box, text="Pulizia dati… (anche a voce: «pulizia dati»)",
+               command=open_data_cleanup).pack(anchor="w", padx=8, pady=6)
+    # Aiuto comandi (passo 7): riquadro per modalità e tutorial.
+    help_settings_box = ttk.LabelFrame(assistant_settings_frame, text="Aiuto comandi")
+    help_settings_box.pack(fill="x", padx=8, pady=8)
+    help_box_var = tk.BooleanVar(value=__import__("aiuto_comandi").Aiuto().riquadro)
 
-    def open_online_permissions():
-        try:
-            from local_model.online_permissions_ui import OnlinePermissionsWindow
-            OnlinePermissionsWindow(settings_window)
-        except (OSError, ValueError, RuntimeError, ImportError) as exc:
-            messagebox.showerror("Jarvis / Permessi GPT", str(exc), parent=settings_window)
+    def current_help_box():
+        return pc_help_box or __import__("aiuto_comandi").Aiuto()
 
-    ttk.Button(native_settings_box, text="Autorizzazioni GPT per funzione...",
-               command=open_online_permissions).pack(anchor="w", padx=8, pady=6)
+    ttk.Checkbutton(help_settings_box,
+                    text="Riquadro dei comandi del Controllo PC (cambia con la finestra)",
+                    variable=help_box_var,
+                    command=lambda: current_help_box().imposta_riquadro(help_box_var.get())
+                    ).pack(anchor="w", padx=8, pady=(6, 2))
+    ttk.Button(help_settings_box, text="Rivedi i tutorial",
+               command=lambda: (current_help_box().rivedi_tutorial(),
+                                write_line("AIUTO > I tutorial ripartono alla prossima "
+                                           "modalità che usi."))
+               ).pack(anchor="w", padx=8, pady=(2, 6))
+    # Add-on «Diagnostica per Claude» (passo 9): server MCP locale, comandi solo in Lumi.
+    def make_claude_bridge():
+        from diagnostica_claude.ponte import Ponte
+
+        def engine_log() -> str:
+            try:
+                from local_model.native_settings import default_native_settings_path
+                path = default_native_settings_path().with_name("motore.log")
+                return path.read_text(encoding="utf-8", errors="replace")[-20000:]
+            except (OSError, RuntimeError):
+                return ""
+
+        def try_command(text: str) -> None:
+            write_line("CLAUDE > Prova del comando: " + text)
+            request.set(text)
+            send_console_input()
+
+        return Ponte(
+            stato=lambda: {"stato": read_lumi_state(), "microfono": voice_mode.get(),
+                           "gpt_collegato": bool(active_gpt), "occupato": bool(busy_local),
+                           "progetto": active_context_label.get(),
+                           "versione": __import__("impostazioni_menu").versione(),
+                           "modalita": settings.get("modalita", "basso_consumo"),
+                           "meteo": meteo_status()},
+            in_chat=lambda text: write_line("CLAUDE > " + text),
+            prova=try_command, riavvia_modello=lambda: lumi_model_restart(),
+            run_ui=lambda fn: root.after(0, fn), log_motore=engine_log,
+            # 15/11 sera: impostazioni, add-on, ricordi e chat visibili anche da Claude.
+            extra=__import__("diagnostica_claude.strumenti", fromlist=["crea"]).crea(
+                navigazione=lambda: settings_navigation, apri_impostazioni=show_settings,
+                addon_manager=lambda: addon_manager,
+                cambia_addon=lambda addon_id, on: addon_chosen.cambia(addon_id, on),
+                cervello=lambda: durable_brain,
+                elenco_chat=lambda: __import__("chat_elenco")._CURRENT["elenco"],
+                sessione_gemma=lambda: gemma_session[0], telegram=lambda: telegram_view))
+
+    def copy_to_clipboard(text: str) -> None:
+        root.clipboard_clear()
+        root.clipboard_append(text)
+
+    __import__("diagnostica_claude.ui", fromlist=["costruisci_sezione"]).costruisci_sezione(
+        assistant_settings_frame, lambda text: write_line(text), make_claude_bridge,
+        clipboard=copy_to_clipboard)
+    # Add-on GitHub in sola lettura (passo 9, github_lettura.py).
+    __import__("github_lettura").costruisci_sezione(
+        assistant_settings_frame, lambda text: write_line(text))
+    # Servizi online con caselle e chiavi API (passo 8, servizi_online.py).
+    servizi_online_box = __import__("online").servizi_online.costruisci_sezione(
+        assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
+    # Servizi di ricerca (052): Tavily, Exa, Firecrawl, Linkup, con chiave e link.
+    __import__("online").servizi_ricerca.costruisci_sezione(
+        assistant_settings_frame, lambda text: root.after(0, lambda: write_line(text)))
+    # Orchestratore online: cartelle sicure (lavoro a più passi, orchestratore.py).
+    __import__("orchestratore").costruisci_sezione(
+        assistant_settings_frame, lambda text: write_line(text))
+    # 057: «Contesto» e «Memoria del prompt» sono un solo blocco nella pagina Modelli (native_ui).
+
+    # F5 experimental preview: deliberately NOT connected to the active model.
+    # Modello locale, memoria, cervelli e diagnostica: spostato in lumi_parti/modello_memoria.py (divisione di jarvis.py).
+    from lumi_parti.modello_memoria import installa as _lumi_parti_modello_memoria_installa
+    _lumi_parti_modello_memoria = _lumi_parti_modello_memoria_installa(__import__("lumi_contesto").Vivo(
+        addon_capability_registry=lambda: addon_capability_registry,
+        addon_manager=lambda: addon_manager,
+        diagnostic_meter=lambda: diagnostic_meter,
+        diagnostic_percent=lambda: diagnostic_percent,
+        get_gemma_session=lambda: get_gemma_session,
+        gpt_spuntato=lambda: gpt_spuntato,
+        settings=lambda: settings,
+        settings_window=lambda: settings_window,
+        speak_result=lambda: speak_result,
+        voice=lambda: voice,
+        write_line=lambda: write_line))
+    (draw_diagnostic_meter, current_capability_snapshot, lumi_brain_local,) = (
+        _lumi_parti_modello_memoria[n] for n in _lumi_parti_modello_memoria_installa.__globals__['NOMI'])
+
+    # 056b: memoria e autorizzazioni GPT stanno UNA sola volta (Memoria generale e Connessione ChatGPT).
 
 
-    def show_settings() -> None:
-        settings_window.deiconify()
-        settings_window.lift()
-        settings_window.focus_set()
 
     hud = JarvisHUD(root, show_settings)
     timer = TimerPopup(root, lambda: settings)
@@ -257,24 +393,44 @@ def main() -> None:
     addon_capability_registry=LiveCapabilityRegistry()
     addon_manager=None
     addon_setup_error=""
+    addon_bundled_errors=[]
     try:
         addon_manager=AddonManager(addon_capability_registry)
-        if not any(item["id"]=="accesso_file" for item in addon_manager.list_installed()):
-            bundled=Path(__file__).parent/"file_access"/"AccessoFile.jaddon"
-            if bundled.is_file():
-                addon_manager.install(bundled)  # Descriptive only, remains OFF.
-        if not any(item['id']=='programmi_app' for item in addon_manager.list_installed()):
-            bundled=Path(__file__).parent/'program_apps'/'ProgrammiApp.jaddon'
-            if bundled.is_file():
-                addon_manager.install(bundled)  # No application is enabled by installation.
-
-        if not any(item["id"] == "sveglia" for item in addon_manager.list_installed()):
-            bundled = Path(__file__).parent / "sveglia" / "Sveglia.jaddon"
-            if bundled.is_file():
+        # Add-on inclusi nel pacchetto: installati SPENTI se mancano. Ognuno per
+        # conto suo: se uno viene rifiutato gli altri si installano lo stesso e
+        # l'errore compare in console all'avvio (prima veniva perso).
+        for addon_id, folder, file_name in (
+                ("accesso_file", "file_access", "AccessoFile.jaddon"),
+                ("programmi_app", "program_apps", "ProgrammiApp.jaddon"),
+                ("sveglia", "sveglia", "Sveglia.jaddon"),
+                ("musica", "musica", "Musica.jaddon"),
+                ("controllo_pc", "controllo_pc", "ControlloPC.jaddon"),
+                ("telegram", "telegram_addon", "Telegram.jaddon"),
+                ("modello_locale", "local_model", "ModelloLocale.jaddon"),
+                ("meteo", "meteo", "Meteo.jaddon")):
+            if any(item["id"] == addon_id for item in addon_manager.list_installed()):
+                continue
+            bundled = Path(__file__).parent / folder / file_name
+            if not bundled.is_file():
+                continue
+            try:
                 addon_manager.install(bundled)
-
+                # Telegram era già una funzione di Lumi: chi l'aveva configurato
+                # lo ritrova ATTIVO, così niente smette di funzionare.
+                if addon_id == "telegram" and (settings.get("telegram_enabled")
+                                               or credentials_present()):
+                    addon_manager.set_enabled("telegram", True)
+                # Il modello locale era già una funzione di Lumi: l'add-on nasce ACCESO,
+                # così chi aggiorna non perde niente; si spegne da Gestisci add-on.
+                if addon_id == "modello_locale":
+                    addon_manager.set_enabled("modello_locale", True)
+            except (AddonError, OSError, ValueError) as exc:
+                addon_bundled_errors.append(file_name + ": " + str(exc)[:120])
     except (AddonError,OSError,ValueError) as exc:
         addon_setup_error=str(exc)[:150]
+    __import__("model_gate").register_addon(lambda: addon_manager is None or any(
+        item["id"] == "modello_locale" and item["enabled"]
+        for item in addon_manager.list_installed()))
     alarm_status = tk.StringVar(value="Nessuna sveglia impostata.")
     alarm = Alarm(root, lambda: bool(addon_manager and any(
         item["id"] == "sveglia" and item["enabled"]
@@ -283,6 +439,130 @@ def main() -> None:
         lambda text: (write_line("SVEGLIA > " + text), speak_result(text)),
         hud.set_alarm_active)
     hud.alarm_stop_button.configure(command=alarm.stop)
+    # Add-on Musica (cartella musica / YouTube nel browser), solo se attivo.
+    music_service = None
+    music_bar = None
+    try:
+        from musica.service import MusicService
+        from musica import config as music_config, video as music_video
+        music_panel = (music_video.VideoPanel(music_config.data_folder() / "webview2")
+                       if music_video.available() else None)
+        music_service = MusicService(
+            lambda: bool(addon_manager and any(
+                item["id"] == "musica" and item["enabled"]
+                for item in addon_manager.list_installed())),
+            notify=lambda text: output_queue.put(("music_status", text)),
+            video_panel=music_panel)
+        if addon_manager is not None:
+            addon_manager.music_service = music_service
+        music_service.prepara()
+        from musica.runtime import register as register_music
+        register_music(music_service, lambda text: (
+            engine.program_apps.parse_command(text)
+            if getattr(engine, "program_apps", None) is not None else None))
+        from musica.bar import MusicBar
+        music_bar = MusicBar(hud.core_canvas, music_service,
+                             on_message=lambda text: write_line("MUSICA > " + text),
+                             video_host=hud.earth_canvas)
+    except (ImportError, OSError, ValueError, tk.TclError, AttributeError) as exc:
+        addon_setup_error = (addon_setup_error or "") + " Musica: " + str(exc)[:80]
+        music_service = None
+        music_bar = None
+    # Add-on Meteo (056 C2): comando a voce per qualsiasi città + icona nell'HUD, solo se attivo.
+    meteo_service = None
+    meteo_timer = [None]
+    try:
+        from meteo.service import ServizioMeteo, categoria as meteo_categoria
+        from meteo import config as meteo_config
+        from meteo.runtime import register as register_meteo
+        meteo_service = ServizioMeteo(
+            lambda: bool(addon_manager and any(
+                item["id"] == "meteo" and item["enabled"] for item in addon_manager.list_installed())),
+            citta=lambda: meteo_config.load()["citta"])
+        register_meteo(meteo_service, lambda fn: root.after(0, fn), lambda listing: meteo_show_week(listing),
+                       lambda letto: __import__("lumi_comandi").chiedi(
+                           "close_results", "Chiudo la finestra?", write_line, speak_result,
+                           seconds=90, lettura=letto))
+    except (ImportError, OSError, ValueError, AttributeError) as exc:
+        addon_setup_error = (addon_setup_error or "") + " Meteo: " + str(exc)[:80]
+        meteo_service = None
+
+    def meteo_show_week(listing: dict) -> None:
+        """058: «meteo settimana» — i 7 giorni nella finestra dei risultati."""
+        from file_access.ui import show_results
+        show_results(root, listing, on_open=lambda number, token: None, on_select=lambda *args: True)
+
+    def meteo_status() -> dict:
+        """Per lumi_stato (056): add-on acceso, città dell'HUD, temperatura e icona mostrate."""
+        if meteo_service is None:
+            return {"attivo": False, "motivo": "add-on non caricato"}
+        shown = meteo_service.ultimo or {}
+        return {"attivo": meteo_service.is_enabled(), "citta": shown.get("citta", ""),
+                "temperatura": shown.get("temp"),
+                "icona": meteo_categoria(shown["code"], shown.get("giorno", True)) if "code" in shown else ""}
+
+    def meteo_refresh(force: bool = False) -> None:
+        """Icona nell'HUD: all'avvio e poi ogni 30 minuti (un solo timer, niente polling);
+        add-on spento o senza città = niente icona e nessuna connessione."""
+        if meteo_timer[0] is not None:
+            try:
+                root.after_cancel(meteo_timer[0])
+            except tk.TclError:
+                pass
+            meteo_timer[0] = None
+        if meteo_service is None or closing:
+            return
+        meteo_timer[0] = root.after(30 * 60 * 1000, meteo_refresh)
+        if not meteo_service.is_enabled():
+            hud.set_weather(None)
+            return
+
+        def work():
+            data = meteo_service.aggiorna(force)
+            shown = None if not data else {"citta": data["citta"], "temp": data["temp"],
+                                           "categoria": meteo_categoria(data["code"], data.get("giorno", True))}
+            try:
+                root.after(0, lambda: hud.set_weather(shown))
+            except (tk.TclError, RuntimeError):
+                pass
+        threading.Thread(target=work, daemon=True, name="lumi-meteo-hud").start()
+
+    # Add-on Controllo PC (finestre, clic, tasti; offline), solo se attivo.
+    pc_help_box = None
+    try:
+        from controllo_pc.service import ControlService
+        from controllo_pc.runtime import register as register_pc
+        pc_service = ControlService(lambda: bool(addon_manager and any(
+            item["id"] == "controllo_pc" and item["enabled"]
+            for item in addon_manager.list_installed())))
+        register_pc(pc_service)
+        # Numeri sugli elementi («mostra i numeri»): finestrella trasparente.
+        from controllo_pc import overlay as pc_overlay
+        pc_service.show_overlay = lambda items: (
+            pc_overlay.show(root, items) if items else pc_overlay.hide(root))
+        pc_service.show_grid = lambda rect: pc_overlay.grid(root, rect)
+        pc_service.show_strip = lambda text: pc_overlay.strip(root, text)
+        # Riquadro dei comandi per modalità e tutorial brevi (passo 7, aiuto_comandi.py).
+        pc_help_box = __import__("aiuto_comandi").Aiuto(base_help=ControlService._HELP)
+        # Prova 16/11: niente «ti guido?» mentre il Controllo PC aspetta già un sì/no
+        # (due domande insieme: il «no» non sapeva a quale andare).
+        pc_service.on_handled = lambda action: None if pc_service.pending else pc_help_box.dopo_comando(
+            pc_service.current_mode(), action=action,
+            show=lambda text: pc_overlay.strip(root, text),
+            speak=lambda text: (write_line("AIUTO > " + text), speak_result(text)),
+            ask=lambda question, yes, no: __import__("lumi_comandi").chiedi(
+                yes, question, write_line, speak_result, no_action=no))
+
+        def pc_help_toggle(on: bool) -> None:
+            pc_help_box.imposta_riquadro(on)
+            if on:
+                pc_overlay.strip(root, pc_help_box.testo(pc_service.current_mode()))
+
+        pc_service.on_help_toggle = pc_help_toggle
+        if addon_manager is not None:
+            addon_manager.pc_service = pc_service
+    except (ImportError, OSError, ValueError) as exc:
+        addon_setup_error = (addon_setup_error or "") + " Controllo PC: " + str(exc)[:80]
     addon_settings_window=None
     telegram_owner_busy=False
     orbit_nodes_cache=()
@@ -306,22 +586,22 @@ def main() -> None:
             ("Standby (spento)", STANDBY),
             ("Premi per parlare", PUSH_TO_TALK),
             ("Ascolto continuo", CONTINUOUS),
-            ("Hey Jarvis", GPT_CONVERSATION))):
+            ("Hey Lumi", GPT_CONVERSATION))):
         button = ttk.Radiobutton(mode_row, text=label, variable=voice_mode, value=mode)
         button.grid(row=index // 2, column=index % 2, sticky="w", padx=(0, 12), pady=3)
         mode_buttons.append(button)
     auto_listen_enabled = tk.BooleanVar(value=settings["auto_listen"])
     auto_listen_switch = ttk.Checkbutton(
         audio_controls,
-        text="Avvia Jarvis con microfono attivo (richiede Jarvis prima di ogni comando)",
+        text="Avvia Lumi con microfono attivo (richiede Lumi prima di ogni comando)",
         variable=auto_listen_enabled)
     auto_listen_switch.pack(anchor="w", pady=(5, 1))
     ttk.Label(
         audio_controls,
         text="Il microfono resta acceso fino a quando scegli Standby. "
              "La voce non viene salvata: Vosk trascrive in locale; "
-             "solo le richieste precedute da Jarvis vengono elaborate; "
-             "la conversazione usa Gemma locale, senza invio automatico a GPT.",
+             "solo le richieste precedute da Lumi vengono elaborate; "
+             "la conversazione usa il modello offline, senza invio automatico a GPT.",
         wraplength=710).pack(anchor="w", pady=(0, 4))
     ptt_button = ttk.Button(audio_controls, text="Tieni premuto per parlare", state="disabled")
     ptt_button.pack(anchor="w", pady=(5, 0))
@@ -341,7 +621,7 @@ def main() -> None:
     speech_controls = ttk.LabelFrame(frame, text="Risposte vocali offline — voci di Windows", padding=8)
     speech_controls.pack(fill="x", pady=(0, 8))
     spoken_switch = ttk.Checkbutton(
-        speech_controls, text="Jarvis risponde a voce", variable=spoken_enabled)
+        speech_controls, text="Lumi risponde a voce", variable=spoken_enabled)
     spoken_switch.pack(anchor="w")
     speech_row = ttk.Frame(speech_controls)
     speech_row.pack(fill="x", pady=(4, 0))
@@ -354,6 +634,40 @@ def main() -> None:
     refresh_voices_button.pack(side="left", padx=(0, 6))
     test_voice_button = ttk.Button(speech_row, text="Prova voce")
     test_voice_button.pack(side="left")
+    # Natural voices (Piper) from the repository + digital effect (9/11).
+    natural_row = ttk.Frame(speech_controls)
+    natural_row.pack(fill="x", pady=(6, 0))
+    ttk.Label(natural_row, text="Voci naturali:").pack(side="left", padx=(0, 6))
+    download_paola_button = ttk.Button(natural_row, text="Scarica Paola")
+    download_paola_button.pack(side="left", padx=(0, 6))
+    download_serena_button = ttk.Button(natural_row, text="Scarica Serena")
+    download_serena_button.pack(side="left", padx=(0, 12))
+    ttk.Label(natural_row, text="Effetto digitale:").pack(side="left", padx=(0, 4))
+    spoken_effect = tk.IntVar(value=settings.get("tts_effect", 25))
+    ttk.Scale(natural_row, from_=0, to=100, variable=spoken_effect, length=140,
+              command=lambda _v: spoken_effect.set(int(float(_v)))).pack(side="left")
+    ttk.Label(natural_row, textvariable=spoken_effect, width=4).pack(side="left", padx=(4, 0))
+    # Velocità, tonalità e volume: valgono per tutte le voci e per Telegram.
+    style_row = ttk.Frame(speech_controls)
+    style_row.pack(fill="x", pady=(6, 0))
+    spoken_rate = tk.IntVar(value=settings.get("tts_rate", 0))
+    spoken_pitch = tk.IntVar(value=settings.get("tts_pitch", 0))
+    spoken_volume = tk.IntVar(value=settings.get("tts_volume", 100))
+    for label, variable, low, high in (("Velocità:", spoken_rate, -50, 50),
+                                       ("Tonalità:", spoken_pitch, -50, 50),
+                                       ("Volume:", spoken_volume, 10, 100)):
+        ttk.Label(style_row, text=label).pack(side="left", padx=(0, 4))
+        ttk.Scale(style_row, from_=low, to=high, variable=variable, length=110,
+                  command=lambda _v, var=variable: var.set(int(float(_v)))).pack(side="left")
+        ttk.Label(style_row, textvariable=variable, width=4).pack(side="left", padx=(2, 10))
+    ttk.Label(speech_controls, wraplength=680, foreground="#5f8aa3", text=(
+        "Paola e Serena sono voci Piper scaricate dal repository Lumi con verifica. "
+        "Serena: it_IT-serena-high by Marco Baccarani (Committa), CC BY 4.0. "
+        "Il motore voce è già incluso in Lumi (cartella voce_engine): basta scaricare la voce. "
+        "Se non funziona su questo PC si usa la voce di Windows. "
+        "Voci Edge (Isabella, Elsa, Diego, Giuseppe): gratuite ma ONLINE, il testo va al "
+        "servizio Microsoft; si attivano con installa_voce_edge.bat.")
+              ).pack(anchor="w", pady=(4, 0))
     spoken_status = tk.StringVar(value="Voci locali: da rilevare.")
     ttk.Label(speech_controls, textvariable=spoken_status, wraplength=680).pack(anchor="w")
 
@@ -385,41 +699,9 @@ def main() -> None:
                                 values=list(SOUNDS.values()), width=25)
     timer_picker.pack(side="left", padx=(0, 9))
 
-    def save_timer_preferences() -> None:
-        old = {key: settings[key] for key in
-               ("timer_sound", "timer_volume", "timer_repeat", "timer_audio_mode")}
-        selected = next((key for key, name in SOUNDS.items()
-                         if name == timer_sound_label.get()), "digital")
-        settings.update(timer_sound=selected,
-                        timer_volume=int(round(timer_volume.get())),
-                        timer_repeat=bool(timer_repeat.get()),
-                        timer_audio_mode="beep" if timer_audio_beep.get() else "auto")
-        try:
-            save_settings(settings)
-        except (OSError, ValueError) as exc:
-            settings.update(old)
-            timer_sound_label.set(SOUNDS[old["timer_sound"]])
-            timer_volume.set(old["timer_volume"])
-            timer_repeat.set(old["timer_repeat"])
-            timer_audio_beep.set(old["timer_audio_mode"] == "beep")
-            messagebox.showerror("Impostazioni timer", str(exc), parent=settings_window)
 
     timer_picker.bind("<<ComboboxSelected>>",
                       lambda event: save_timer_preferences())
-    def preview_timer_sound(force_beep: bool = False) -> None:
-        chosen = next((key for key, name in SOUNDS.items()
-                       if name == timer_sound_label.get()), "digital")
-        mode = ("beep" if force_beep else
-                ("beep" if timer_audio_beep.get() else "auto"))
-        timer_audio_status.set("Invio del suono a Windows...")
-        def audio_result(success: bool, message: str) -> None:
-            try:
-                root.after(0, lambda: timer_audio_status.set(
-                    ("Audio: " if success else "Errore: ") + message))
-            except (RuntimeError, tk.TclError):
-                pass
-        preview_sound(chosen, int(round(timer_volume.get())),
-                      mode=mode, on_status=audio_result)
 
     ttk.Button(sound_row, text="▶ Prova",
                command=preview_timer_sound).pack(side="left")
@@ -433,7 +715,7 @@ def main() -> None:
                     command=save_timer_preferences).pack(anchor="w", pady=(5, 0))
     ttk.Label(timer_box,
               text="Il bip alternativo usa il volume di Windows, "
-                   "non il cursore Jarvis.", wraplength=590).pack(anchor="w")
+                   "non il cursore Lumi.", wraplength=590).pack(anchor="w")
     volume_row = ttk.Frame(timer_box)
     volume_row.pack(fill="x", pady=(12, 5))
     ttk.Label(volume_row, text="Volume").pack(side="left", padx=(0, 8))
@@ -470,7 +752,7 @@ def main() -> None:
 
     document_controls = ttk.Frame(frame)
     document_controls.pack(fill="x", pady=(0, 6))
-    document_status = tk.StringVar(value="Documenti: nessuno aperto da Jarvis.")
+    document_status = tk.StringVar(value="Documenti: nessuno aperto da Lumi.")
     ttk.Label(document_controls, textvariable=document_status, wraplength=530).pack(
         side="left", fill="x", expand=True)
     choose_save_button = ttk.Button(document_controls, text="Scegli dove salvare",
@@ -497,14 +779,6 @@ def main() -> None:
         diagnostic_row,width=58,height=4,bg="#092438",bd=0,
         highlightthickness=0)
     diagnostic_meter.pack(side="right",padx=(6,3))
-    def draw_diagnostic_meter(_event=None):
-        diagnostic_meter.delete("progress")
-        w=max(1,diagnostic_meter.winfo_width())
-        h=max(1,diagnostic_meter.winfo_height())
-        progress=max(0,min(100,diagnostic_percent.get()))
-        diagnostic_meter.create_rectangle(
-            0,0,w*progress/100,h,fill="#17b8e5",outline="",
-            tags="progress")
     diagnostic_meter.bind("<Configure>",draw_diagnostic_meter)
     doc_choices = ttk.Frame(hud.command_host)
     doc_choices.pack(fill="x", pady=(0, 5))
@@ -528,8 +802,10 @@ def main() -> None:
             raise RuntimeError("Gemma locale non ancora attivato.")
     chat_transport = ChatTransport(service, _UnavailableNative())
     output_queue: queue.Queue[tuple] = queue.Queue()
-    gpt_enabled = tk.BooleanVar(value=settings["gpt_enabled"])
-    gpt_status = tk.StringVar(value="GPT: inizializzazione" if gpt_enabled.get() else "GPT: disattivato")
+    def gpt_spuntato() -> bool:
+        """061: UNICA fonte = la spunta «ChatGPT dal browser» nella lista Online."""
+        return __import__("online").servizi_online.spuntato("chatgpt_account")
+    gpt_status = tk.StringVar(value="GPT: inizializzazione" if gpt_spuntato() else "GPT: non spuntato nella lista Online")
     busy_local = False
     busy_gpt = False
     online_consent_pending = False
@@ -539,6 +815,15 @@ def main() -> None:
     planner_abort_event = threading.Event()
     closing = False
     active_gpt = False
+    # ChatGPT dal browser tra i servizi online (16/11): stesso ponte del pulsante GPT,
+    # pronto solo quando il collegamento GPT è acceso e attivo.
+    __import__("online").servizi_online.ACCOUNT.update(
+        chiedi=lambda prompt, timeout: str(service.call(
+            "ask", prompt=prompt, timeout=max(float(timeout), 60.0)).get("text", "")),
+        pronto=lambda: bool(active_gpt) and bool(gpt_spuntato()),
+        collega=lambda: collega_gpt())
+    # 058: un servizio online saltato non è più silenzioso: la riga arriva in chat, console e lumi_errori.
+    __import__("online").servizi_online.AVVISO["scrivi"] = lambda text: root.after(0, lambda: write_line(text))
     conversation_epoch = 0
     document_busy = False
     documents = ManagedDocuments()
@@ -559,6 +844,7 @@ def main() -> None:
     save_only_waiting = False
     conversation_memory = ConversationMemory()
     pending_preference = None
+    pending_memory_wipe = None
     local_operation_id = None
     document_operation_id = None
     last_notepad_probe = 0.0
@@ -594,44 +880,33 @@ def main() -> None:
             memory_status.set("Second Brain non disponibile: " + str(exc)[:90])
     else:
         memory_status.set("Second Brain: disattivato, conversazione breve solo in RAM.")
+    # Ricordi (15/11 sera): chi li salva o li legge usa sempre il Second Brain di adesso.
+    __import__("ricordi").CERVELLO["get"] = lambda: durable_brain
 
-    def write_line(text: str) -> None:
+    def write_line(text: str, role: str | None = None) -> None:
         # The reference design uses a conversational timeline, not raw logs.
         # All actions and errors remain visible, with timestamp and source.
+        # Chi ha scritto il messaggio: deciso in chat_testo (esplicito o per prefisso).
         label = str(text).strip()
         if not label:
             return
-        low = label.casefold()
-        role = ("utente" if low.startswith((
-                    "utente >", "tu >", "domanda a gpt >", "comando locale >"))
-                else "azione" if low.startswith((
-                    "documento >", "[completed]", "correzione voce >"))
-                else "jarvis" if low.startswith((
-                    "jarvis >", "gpt >", "lia >"))
-                else "errore" if (
-                    "[failed]" in low or "[rejected]" in low
-                    or low.startswith(("errore", "gpt: impossibile")))
-                else "sistema")
-        identity = {"utente":"●  TU",
-                    "jarvis":"◉  JARVIS",
-                    "azione":"✓  OPERAZIONE",
-                    "errore":"!  ERRORE",
-                    "sistema":"·  SISTEMA"}[role]
-        # Strip repeated provider prefixes without hiding the actual result.
-        prefixes = ("utente >", "tu >", "domanda a gpt >", "comando locale >",
-                    "jarvis >", "gpt >", "lia >", "documento >",
-                    "correzione voce >")
-        body = label
-        for prefix in prefixes:
-            if low.startswith(prefix):
-                body = label[len(prefix):].strip()
-                break
+        from chat_testo import classify as classify_message
+        role, identity, body = classify_message(label, role)
+        # Diagnostica per Claude (passo 9): copia in memoria per il ponte, niente Tk.
+        __import__("diagnostica_claude.ponte", fromlist=["registra"]).registra(role, body)
         output.configure(state="normal")
+        # Le righe «sistema» (es. la vecchia console) non contano tra i 100 messaggi della chat.
+        bubble_mark = chat_bubbles.inizio() if chat_bubbles and role != "sistema" else ""
         output.insert(
             "end", identity + "         " +
             datetime.now().strftime("%H:%M:%S") + "\n",
             (role, "message_head"))
-        output.insert("end", body + "\n\n", role)
+        if __import__("chat_testo").ha_link(body):
+            __import__("chat_testo").inserisci(output, body + "\n\n", role, webbrowser.open)
+        else:
+            output.insert("end", body + "\n\n", role)
+        if chat_bubbles and bubble_mark:
+            chat_bubbles.fine(role, body, bubble_mark)
         # Keep the UI responsive even during long voice conversations.
         # Drop only old visible console messages, never task/memory records.
         if int(output.index("end-1c").split(".")[0]) > 2200:
@@ -656,6 +931,9 @@ def main() -> None:
         if re.search(r"\b(password|passphrase|token|pin|codice otp)\b",
                      user + " " + reply, re.I):
             return False
+        if kind in ("chat", "clarify"):
+            # Chat unica (15/11): ogni scambio con un modello va nella chat selezionata.
+            __import__("chat_elenco").registra_scambio(user, reply)
         conversation_memory.remember(user, reply, kind)
         # Explicitly created project memory advances independently from
         # the general-chat Second Brain opt-in switch.
@@ -699,22 +977,41 @@ def main() -> None:
         except (OSError, sqlite3.Error, BrainError) as exc:
             memory_status.set("Ricevuta non registrata: " + str(exc)[:90])
 
-    def begin_project_work(title: str, source: str = "local",
-                           *, project_id: str | None = None,
-                           planned: bool = False):
-        """Persist a work ticket BEFORE executing a project operation."""
-        ident=project_id if project_id is not None else active_project_id
-        if ident is None:
-            return None
-        if workspace is None:
-            workspace_status.set("Memoria progetto non disponibile: azione bloccata.")
-            return False
-        try:
-            return (ident,workspace.begin_step(
-                ident,title[:240],source=source,planned=planned))
-        except (OSError,sqlite3.Error,WorkspaceError) as exc:
-            workspace_status.set("Checkpoint non scritto: "+str(exc)[:110])
-            return False
+    # Documenti, progetti e piani: spostato in lumi_parti/documenti_progetti.py (divisione di jarvis.py).
+    from lumi_parti.documenti_progetti import installa as _lumi_parti_documenti_progetti_installa
+    _lumi_parti_documenti_progetti = _lumi_parti_documenti_progetti_installa(__import__("lumi_contesto").Vivo(
+        active_gpt=lambda: active_gpt,
+        active_project_id=lambda: active_project_id,
+        announce_document=lambda: announce_document,
+        busy_gpt=lambda: busy_gpt,
+        choose_save_button=lambda: choose_save_button,
+        closing=lambda: closing,
+        confirm_gpt_inference=lambda: confirm_gpt_inference,
+        conversation_epoch=lambda: conversation_epoch,
+        doc_cancel_button=lambda: doc_cancel_button,
+        doc_choices=lambda: doc_choices,
+        doc_dialog=lambda: doc_dialog,
+        doc_discard_button=lambda: doc_discard_button,
+        doc_save_button=lambda: doc_save_button,
+        document_busy=lambda: document_busy,
+        document_operation=lambda: document_operation,
+        document_owner_project_id=lambda: document_owner_project_id,
+        document_topic=lambda: document_topic,
+        engine=lambda: engine,
+        finish_project_work=lambda: finish_project_work,
+        gpt_spuntato=lambda: gpt_spuntato,
+        handle_document_confirmation=lambda: handle_document_confirmation,
+        hud_save_file_button=lambda: hud_save_file_button,
+        input_row=lambda: input_row,
+        local_execution_lock=lambda: local_execution_lock,
+        planner_abort_event=lambda: planner_abort_event,
+        root=lambda: root,
+        save_only_waiting=lambda: save_only_waiting,
+        service=lambda: service,
+        workspace=lambda: workspace,
+        workspace_status=lambda: workspace_status))
+    (begin_project_work, update_document_buttons, automatic_document_destination, execute_document_choice, press_discard_button, journal_plan_approved, journal_plan_step, journal_plan_finished, submit_plan,) = (
+        _lumi_parti_documenti_progetti[n] for n in _lumi_parti_documenti_progetti_installa.__globals__['NOMI'])
 
     def finish_project_work(ticket, status: str, detail: str,
                             *, receipt: str = "", observed: bool = False) -> bool:
@@ -730,80 +1027,84 @@ def main() -> None:
             return False
 
     def recent_memory_for_gpt(spoken: str) -> str:
-        """Bounded recall with the *real* active project and latest question."""
-        short=conversation_memory.context(max_chars=860)
-        question=conversation_memory.last_question()
+        """056b: contesto online proporzionato alla richiesta (contesto_online)."""
+        def pieno() -> str:
+            """Bounded recall with the *real* active project and latest question."""
+            short=conversation_memory.context(max_chars=860)
+            question=conversation_memory.last_question()
 
-        def attach(raw,*,project_name=""):
-            hint=focus_hint(spoken,active_project_name=project_name,
-                            last_question=question)
-            try:
-                parsed=json.loads(raw)
-            except (ValueError,TypeError):
-                return raw
-            if isinstance(parsed,list):
-                parsed={"breve":parsed}
-            if not isinstance(parsed,dict):
-                return raw
-            if (addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None
-                    and addon_manager.programs_enabled()):
-                program_hint=addon_manager.program_service.context_hint()
-                if program_hint:
-                    hint['program_request']=program_hint
-            if (addon_manager is not None and addon_manager._file_service is not None
-                    and addon_manager.files_enabled()):
-                file_hint=addon_manager.file_service.context_hint()
-                if file_hint:
-                    hint["file_results"]=file_hint
-            if hint:
-                parsed["focus"]=hint
-            if preference_store is not None:
+            def attach(raw,*,project_name=""):
+                hint=focus_hint(spoken,active_project_name=project_name,
+                                last_question=question)
                 try:
-                    parsed["preferences"]=list(preference_store.context())
-                except (OSError,sqlite3.Error,MemoryBoundaryError):
-                    pass
-            return json.dumps(parsed,ensure_ascii=False)
+                    parsed=json.loads(raw)
+                except (ValueError,TypeError):
+                    return raw
+                if isinstance(parsed,list):
+                    parsed={"breve":parsed}
+                if not isinstance(parsed,dict):
+                    return raw
+                if (addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None
+                        and addon_manager.programs_enabled()):
+                    program_hint=addon_manager.program_service.context_hint()
+                    if program_hint:
+                        hint['program_request']=program_hint
+                if (addon_manager is not None and addon_manager._file_service is not None
+                        and addon_manager.files_enabled()):
+                    file_hint=addon_manager.file_service.context_hint()
+                    if file_hint:
+                        hint["file_results"]=file_hint
+                if hint:
+                    parsed["focus"]=hint
+                if preference_store is not None:
+                    try:
+                        parsed["preferences"]=list(preference_store.context())
+                    except (OSError,sqlite3.Error,MemoryBoundaryError):
+                        pass
+                return json.dumps(parsed,ensure_ascii=False)
 
-        if active_project_id is not None:
-            if workspace is None:
+            if active_project_id is not None:
+                if workspace is None:
+                    return attach(short)
+                try:
+                    project=workspace.project(active_project_id)
+                    saved=json.loads(workspace.prompt_context(
+                        "project",active_project_id,spoken,budget=620))
+                    evidence=saved.get("evidence",[])
+                    if project and project["summary"]:
+                        evidence.insert(0,{"source":"conversation",
+                            "when":project["updated_utc"],
+                            "fact":"Stato progetto fornito dall'utente: "
+                                    +project["summary"][:260]})
+                    history=workspace.recent("project",active_project_id,3)
+                    earlier=[{"utente":item["utente"],"lia":item["jarvis"],
+                              "tipo":item["tipo"]} for item in history]
+                    progress=[{"title":step["title"][:95],
+                               "status":step["status"],
+                               "detail":step["detail"][:110],
+                               "verified":bool(step["verified"])}
+                              for step in workspace.project_steps(active_project_id,limit=4)]
+                    return attach(json.dumps({
+                        "breve":earlier+json.loads(short),
+                        "progress":progress,
+                        "permanente":{"related":evidence},
+                    },ensure_ascii=False),
+                    project_name=project["name"] if project else "")
+                except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
+                    workspace_status.set("Ricerca progetto: "+str(exc)[:90])
+                    return attach(short)
+            if not memory_enabled.get() or durable_brain is None:
                 return attach(short)
             try:
-                project=workspace.project(active_project_id)
-                saved=json.loads(workspace.prompt_context(
-                    "project",active_project_id,spoken,budget=620))
-                evidence=saved.get("evidence",[])
-                if project and project["summary"]:
-                    evidence.insert(0,{"source":"conversation",
-                        "when":project["updated_utc"],
-                        "fact":"Stato progetto fornito dall'utente: "
-                                +project["summary"][:260]})
-                history=workspace.recent("project",active_project_id,3)
-                earlier=[{"utente":item["utente"],"lia":item["jarvis"],
-                          "tipo":item["tipo"]} for item in history]
-                progress=[{"title":step["title"][:95],
-                           "status":step["status"],
-                           "detail":step["detail"][:110],
-                           "verified":bool(step["verified"])}
-                          for step in workspace.project_steps(active_project_id,limit=4)]
-                return attach(json.dumps({
-                    "breve":earlier+json.loads(short),
-                    "progress":progress,
-                    "permanente":{"related":evidence},
-                },ensure_ascii=False),
-                project_name=project["name"] if project else "")
-            except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
-                workspace_status.set("Ricerca progetto: "+str(exc)[:90])
+                long=durable_brain.prompt_context(spoken,budget=530)
+            except (OSError,sqlite3.Error,BrainError) as exc:
+                memory_status.set("Ricerca memoria: "+str(exc)[:90])
                 return attach(short)
-        if not memory_enabled.get() or durable_brain is None:
-            return attach(short)
-        try:
-            long=durable_brain.prompt_context(spoken,budget=530)
-        except (OSError,sqlite3.Error,BrainError) as exc:
-            memory_status.set("Ricerca memoria: "+str(exc)[:90])
-            return attach(short)
-        return attach(json.dumps({
-            "breve":json.loads(short),
-            "permanente":json.loads(long)},ensure_ascii=False))
+            return attach(json.dumps({
+                "breve":json.loads(short),
+                "permanente":json.loads(long)},ensure_ascii=False))
+
+        return __import__("contesto_online").proporziona(pieno(), spoken)
 
     project_dialog=None
 
@@ -862,16 +1163,16 @@ def main() -> None:
         # chat switching is blocked during generation.
         if (busy_gpt or busy_local or document_busy
                 or (local_chat_active and gemma_trial_busy[0])):
-            write_line("JARVIS > Finisco questa operazione prima di cambiare progetto.")
+            write_line("LUMI > Finisco questa operazione prima di cambiare progetto.")
             return False
         if documents.current is not None or doc_dialog.phase != "idle":
-            write_line("JARVIS > Chiudi il documento di Blocco note prima di cambiare progetto.")
+            write_line("LUMI > Chiudi il documento di Blocco note prima di cambiare progetto.")
             speak_result("Chiudi prima il documento aperto, per non confondere i progetti.")
             return False
         if project_id is not None:
             if (workspace is None or not workspace.project(project_id)
                     or workspace.project(project_id)["trashed"]):
-                write_line("JARVIS > Progetto non trovato o nel cestino.")
+                write_line("LUMI > Progetto non trovato o nel cestino.")
                 return False
             project=workspace.project(project_id)
         if workspace is not None:
@@ -903,8 +1204,10 @@ def main() -> None:
         pending_conversation.clear()
         pending_project_reference.reset()
         pending_preference=None
+        # Chat unica: l'elenco mostra le chat del progetto appena aperto.
+        __import__("chat_elenco").progetto_cambiato()
         write_line(
-            "JARVIS > "+("Progetto aperto: "+project["name"]+"."
+            "LUMI > "+("Progetto aperto: "+project["name"]+"."
                         if project_id else "Conversazione generale ripristinata."))
         return True
 
@@ -920,7 +1223,7 @@ def main() -> None:
                 return False
             if command is not None:
                 message = "Non riesco a leggere la memoria dei progetti. Non significa che siano spariti."
-                write_line("JARVIS > "+message)
+                write_line("LUMI > "+message)
                 speak_result(message)
                 return True
             return False
@@ -930,7 +1233,7 @@ def main() -> None:
                     and documents.current is None and doc_dialog.phase=="idle")
 
         def acknowledge(message: str) -> bool:
-            write_line("JARVIS > "+message)
+            write_line("LUMI > "+message)
             speak_result(message)
             return True
 
@@ -1002,7 +1305,7 @@ def main() -> None:
                     message="Progetti salvati: "+names+(
                         ". E altri "+str(remaining)+" nell'elenco." if remaining else ".")
                 else:
-                    message="Nel database attuale non risultano progetti. Controlla la cartella dati di Jarvis."
+                    message="Nel database attuale non risultano progetti. Controlla la cartella dati di Lumi."
             except (OSError,sqlite3.Error,WorkspaceError):
                 message="Non riesco a consultare l'archivio dei progetti; non vuol dire che siano cancellati."
         elif command_action=="list_trash":
@@ -1130,7 +1433,7 @@ def main() -> None:
             cleaned=normalized_utterance(spoken)
             if cleaned.casefold() in ("annulla","niente","lascia stare","no"):
                 pending_project_reference.reset()
-                write_line("JARVIS > Chiarimento annullato.")
+                write_line("LUMI > Chiarimento annullato.")
                 speak_result("Chiarimento annullato.")
                 return True
             # A fresh full command supersedes the old question; never replay it.
@@ -1151,7 +1454,7 @@ def main() -> None:
                 if match is None:
                     message=("Non trovo un progetto salvato con quel nome. "
                              "Quale progetto esistente intendi?")
-                    write_line("JARVIS > "+message)
+                    write_line("LUMI > "+message)
                     speak_result(message)
                     return True
                 # The answer explicitly chooses the target requested by Jarvis.
@@ -1159,8 +1462,8 @@ def main() -> None:
                 if not switch_context(match["id"]):
                     pending_project_reference.reset()
                     return True
-                write_line("JARVIS > Riferimento risolto: progetto "+match["name"]+".")
-                if gpt_enabled.get() and active_gpt and not busy_gpt:
+                write_line("LUMI > Riferimento risolto: progetto "+match["name"]+".")
+                if gpt_spuntato() and active_gpt and not busy_gpt:
                     # Resume the previous READ-ONLY question in *chat* mode,
                     # never via the executor or an old capability intent.
                     try:
@@ -1176,19 +1479,19 @@ def main() -> None:
                       ", stato "+steps[0]["status"]+".") if steps else (
                       " Nessuna attività ancora registrata.")
                 message="Progetto "+match["name"]+" selezionato."+last
-                write_line("JARVIS > "+message)
+                write_line("LUMI > "+message)
                 speak_result(message)
                 return True
             except (OSError,sqlite3.Error,WorkspaceError,ValueError) as exc:
                 pending_project_reference.reset()
                 message="Non riesco a consultare il progetto: "+str(exc)[:100]
-                write_line("JARVIS > "+message)
+                write_line("LUMI > "+message)
                 speak_result(message)
                 return True
         if pending_project_reference.start_if_needed(
                 spoken,selected=active_project_id is not None):
             message="Quale progetto salvato vuoi aprire per risponderti?"
-            write_line("JARVIS > "+message)
+            write_line("LUMI > "+message)
             speak_result(message)
             return True
         return False
@@ -1201,9 +1504,37 @@ def main() -> None:
                 or conversation_memory.last_question()):
             return False
         message="A quale domanda ti riferisci?"
-        write_line("JARVIS > "+message)
+        write_line("LUMI > "+message)
         speak_result(message)
         remember_exchange(spoken,message,"clarify")
+        return True
+
+    def memory_wipe_command(spoken: str) -> bool:
+        """«Cancella i ricordi / le chat / i progetti / tutto»: chiede sì/no a voce."""
+        nonlocal pending_memory_wipe
+        cancella = __import__("cancella_memoria")
+        if pending_memory_wipe is not None:
+            section = pending_memory_wipe
+            pending_memory_wipe = None
+            answer = normalized_utterance(spoken).casefold().strip(" .!")
+            if answer in ("confermo", "sì", "si", "ok", "va bene", "certo"):
+                clear_saved_memory(section, confirmed=True)
+                message = memory_status.get()
+            elif answer in ("annulla", "no", "lascia stare"):
+                message = "Non cancello niente."
+            else:
+                return False                    # altro argomento: la richiesta decade
+            write_line("LUMI > " + message)
+            speak_result(message)
+            return True
+        section = cancella.parse(spoken)
+        if section is None:
+            return False
+        pending_memory_wipe = section
+        message = cancella.domanda(section)
+        __import__("risposte").expect_answer(speech_text=message)
+        write_line("LUMI > " + message)
+        speak_result(message)
         return True
 
     def preference_command(spoken: str) -> bool:
@@ -1213,7 +1544,7 @@ def main() -> None:
             answer=normalized_utterance(spoken).casefold()
             intent=pending_preference
             pending_preference=None
-            if answer=="confermo":
+            if answer.strip(" .!") in ("confermo","sì","si","ok","va bene","certo"):
                 if preference_store is None:
                     message="Preferenze non disponibili; nessuna modifica."
                 else:
@@ -1227,11 +1558,11 @@ def main() -> None:
                             message="Preferenza confermata e salvata."
                     except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
                         message="Preferenza non salvata: "+str(exc)[:90]
-                write_line("JARVIS > "+message)
+                write_line("LUMI > "+message)
                 speak_result(message)
                 return True
             if answer in ("annulla","no","lascia stare","non salvare"):
-                write_line("JARVIS > Preferenza non salvata.")
+                write_line("LUMI > Preferenza non salvata.")
                 speak_result("Preferenza non salvata.")
                 return True
             # A new topic cancels stale pending consent.
@@ -1250,13 +1581,17 @@ def main() -> None:
                 message="Impossibile leggere le preferenze."
         elif intent.kind=="unsupported":
             message="Posso ricordare solo preferenze su risposte, lingua o interazione."
+        elif intent.kind=="ricordo":
+            # «Ricordati che …» con frase libera (15/11 sera): ricordo salvato subito.
+            message=__import__("ricordi").da_utente(
+                __import__("ricordi").cervello(),intent.value)
         else:
             pending_preference=intent
-            message=("Vuoi "+("rimuovere" if intent.kind=="remove" else "salvare")+
-                     " la preferenza "+intent.key+
-                     ("="+intent.value if intent.value else "")+
-                     "? Di' confermo oppure annulla.")
-        write_line("JARVIS > "+message)
+            message=("Vuoi che "+("dimentichi" if intent.kind=="remove" else "ricordi")+
+                     " la preferenza «"+__import__("preference_voice").descrivi(
+                         intent.key,intent.value)+"»? Di' sì o no.")
+            __import__("risposte").expect_answer(speech_text=message)
+        write_line("LUMI > "+message)
         speak_result(message)
         return True
 
@@ -1267,12 +1602,12 @@ def main() -> None:
         Source inspection stays on its existing isolated worker.
         """
         return collect_runtime_evidence(
-            gpt_enabled=bool(gpt_enabled.get()),
+            gpt_spuntato=bool(gpt_spuntato()),
             gpt_connected=bool(active_gpt),
             sdk_installed=service.installed_sdk().is_file(),
             node_available=bool(shutil.which("node")),
             bridge_file_present=(Path(__file__).resolve().parent
-                                 / "gpt_bridge.mjs").is_file(),
+                                 / "online" / "gpt_bridge.mjs").is_file(),
             bridge_running=service.bridge_running(),
             voice_present=voice is not None,
             voice_mode=voice_mode.get(),
@@ -1314,7 +1649,9 @@ def main() -> None:
         report = format_service_report(evidence, telegram=telegram,
             automatic=bool(telegram_auto.get()), credentials=credentials_present(),
             contacts=len(selected_telegram_contacts()),
-            selected="GPT" if gpt_enabled.get() else "Gemma", gemma=state,
+            online=[__import__("online").servizi_online.PER_ID[i].nome
+                    for i in __import__("online").servizi_online.spuntati()
+                    if i in __import__("online").servizi_online.PER_ID], gemma=state,
             memory=bool(memory_enabled.get()),
             telethon=telethon,
             ffmpeg=shutil.which("ffmpeg") is not None)
@@ -1339,9 +1676,9 @@ def main() -> None:
             write_line("DIAGNOSTICA > Prima esegui l'autodiagnosi locale.")
             speak_result("Prima devo eseguire l'autodiagnosi locale.")
             return True
-        if not gpt_enabled.get() or not active_gpt:
+        if not gpt_spuntato() or not active_gpt:
             write_line("DIAGNOSTICA > Rapporto locale disponibile. "
-                       "Per la valutazione esterna devi collegare GPT.")
+                       "Per la valutazione esterna spunta e collega ChatGPT dal browser nella lista Online.")
             speak_result("Il rapporto locale è pronto, ma GPT non è collegato.")
             return True
         if busy_gpt:
@@ -1352,7 +1689,7 @@ def main() -> None:
         from local_model.online_permissions import authorize_online_request
         def confirm_review():
             return messagebox.askyesno(
-                "JARVIS — valutazione esterna",
+                "LUMI — valutazione esterna",
                 "Vuoi inviare al GPT collegato soltanto un rapporto tecnico "
                 "ridotto dell'autodiagnosi?\n\n"
                 "Contiene: file sorgenti RELATIVI, righe, segnali statici, "
@@ -1467,7 +1804,7 @@ def main() -> None:
         diagnostic_threads[:]=[t for t in diagnostic_threads if t.is_alive()]
         if len(diagnostic_threads)>=2:
             message=("Due analisi precedenti non rispondono ancora. "
-                     "Non avvio altri controlli; chiudi e riapri Jarvis.")
+                     "Non avvio altri controlli; chiudi e riapri Lumi.")
             diagnostic_status.set("Autodiagnosi: processi non responsivi")
             write_line("DIAGNOSTICA > "+message)
             speak_result(message)
@@ -1541,74 +1878,15 @@ def main() -> None:
                 on_renamed=renamed_project,on_trashed=trashed_project)
         project_dialog.show()
 
-    def telegram_activity_window(peer_id:int=0) -> None:
-        allowed={c["id"]:c["name"] for c in selected_telegram_contacts()}
-        if workspace is None or peer_id not in allowed:
-            return
-        win=tk.Toplevel(root)
-        win.title("JARVIS // Telegram — "+allowed[peer_id])
-        win.geometry("640x420")
-        log=tk.Text(win,wrap="word",bg="#031522",fg="#d7f6ff",
-                    padx=12,pady=8)
-        log.pack(fill="both",expand=True)
-        try:
-            records=workspace.telegram_activity(peer_id,limit=50)
-            for item in reversed(records):
-                direction=("RICEVUTO" if item["direction"]=="incoming"
-                           else "JARVIS HA RISPOSTO")
-                log.insert("end",item["when"]+"  "+direction
-                           +" ["+item["kind"]+"]\n"
-                           +item["text"]+"\n\n")
-            displayed_ids=[item["message_id"] for item in records
-                           if item["direction"]=="incoming"]
-            workspace.mark_telegram_read(peer_id, displayed_ids)
-            refresh_orbit_nodes(reschedule=False)
-        except (OSError,sqlite3.Error,WorkspaceError) as exc:
-            log.insert("end","Archivio Telegram non leggibile: "+str(exc)[:100])
-        log.configure(state="disabled")
+    # Interfaccia Telegram spostata in telegram_addon/lumi_ui.py (divisione, passo 2a).
+    from telegram_addon.lumi_ui import installa as installa_telegram_ui
+    _telegram_ui = installa_telegram_ui(__import__("lumi_contesto").Vivo(
+        addon_manager=lambda: addon_manager, open_telegram_contact_list=lambda: open_telegram_contact_list, output_queue=lambda: output_queue, refresh_orbit_nodes=lambda: refresh_orbit_nodes, root=lambda: root, send_owner_telegram_voice=lambda: send_owner_telegram_voice, set_telegram_gpt_session=lambda: set_telegram_gpt_session, settings=lambda: settings, telegram_auto=lambda: telegram_auto, telegram_bridge=lambda: telegram_bridge, telegram_gpt_session_choice=lambda: telegram_gpt_session_choice, telegram_reconfigure=lambda: telegram_reconfigure, telegram_status=lambda: telegram_status, toggle_telegram_automatic=lambda: toggle_telegram_automatic, workspace=lambda: workspace, write_line=lambda: write_line))
+    (telegram_activity_window, queue_telegram_note, leave_telegram_note_dialog, selected_telegram_contacts, load_telegram_contacts_for_ui, open_telegram_history, clear_telegram_history, edit_telegram_contact_profile, open_telegram_manual_send, telegram_addon_enabled, telegram_open_setup, build_telegram_section) = (
+        _telegram_ui[n] for n in ('telegram_activity_window', 'queue_telegram_note', 'leave_telegram_note_dialog', 'selected_telegram_contacts', 'load_telegram_contacts_for_ui', 'open_telegram_history', 'clear_telegram_history', 'edit_telegram_contact_profile', 'open_telegram_manual_send', 'telegram_addon_enabled', 'telegram_open_setup', 'build_telegram_section'))
 
-    def orbit_open(identifier:str) -> None:
-        if identifier.startswith("telegram:"):
-            parts=identifier.split(":")
-            if len(parts)==3 and parts[1]=="pending":
-                write_line("TELEGRAM > Messaggi da riferire ancora in attesa.")
-            try:
-                peer_id=int(parts[-1])
-            except ValueError:
-                return
-            telegram_activity_window(peer_id)
-        elif identifier=="projects:more":
-            open_project_manager()
-        else:
-            switch_context(identifier)
 
-    def queue_telegram_note(message:str) -> bool:
-        chosen=selected_telegram_contacts()
-        if len(chosen)!=1 or workspace is None:
-            write_line("TELEGRAM > Il vecchio promemoria usa un solo destinatario. "
-                       "Per scegliere tra più contatti usa 'Invia messaggio vocale'.")
-            return False
-        peer_id=chosen[0]["id"]
-        try:
-            workspace.note_for_contact(peer_id,message)
-        except (OSError,sqlite3.Error,WorkspaceError) as exc:
-            write_line("JARVIS > Non posso salvare il messaggio: "+str(exc)[:100])
-            return False
-        write_line("JARVIS > Messaggio memorizzato per "
-                   +chosen[0]["name"]
-                   +". Lo riferirò al prossimo contatto, se Telegram è attivo.")
-        return True
 
-    def leave_telegram_note_dialog() -> None:
-        if not settings.get("telegram_peer_id"):
-            telegram_status.set("Configura prima il contatto autorizzato.")
-            return
-        message=simpledialog.askstring(
-            "JARVIS / Telegram",
-            "Che cosa devo riferire al contatto autorizzato?",
-            parent=root)
-        if message:
-            queue_telegram_note(message)
 
     def maybe_queue_telegram_note(message:str) -> bool:
         chosen=selected_telegram_contacts()
@@ -1620,36 +1898,13 @@ def main() -> None:
         queue_telegram_note(parsed)
         return True
 
-    def selected_telegram_contacts() -> list[dict]:
-        return [c for c in settings.get("telegram_contacts", [])
-                if c.get("enabled") is True]
 
-    def current_capability_snapshot(has_document:bool=False) -> dict:
-        """Re-evaluate runtime permissions on every external GPT request."""
-        if addon_manager is not None:
-            try:
-                addon_manager.refresh()
-            except (AddonError,OSError,ValueError):
-                # Fail closed: do not claim stale addon actions are available.
-                for binding in addon_capability_registry.available_addons():
-                    addon_capability_registry.unregister(binding["id"])
-        try:
-            stream=voice.is_listening()
-        except (AttributeError,RuntimeError,OSError):
-            stream=False
-        return snapshot_capabilities(
-            settings=settings,
-            has_document=has_document,
-            telegram_credentials=credentials_present(),
-            telegram_voice_dependencies=(not missing_voice_dependencies()),
-            voice_stream_open=stream,
-            registry=addon_capability_registry)
 
     def open_addon_settings() -> None:
         nonlocal addon_settings_window
         if addon_manager is None:
             messagebox.showerror(
-                "Add-on Jarvis",
+                "Add-on Lumi",
                 "Archivio add-on non disponibile: "+addon_setup_error,parent=root)
             return
         if (addon_settings_window is not None
@@ -1658,9 +1913,9 @@ def main() -> None:
             return
         addon_settings_window=AddonSettingsWindow(
             root,addon_manager,
-            on_change=lambda: write_line(
-                "ADD-ON > Registro aggiornato. Le capacità attive saranno "
-                "comunicate al GPT alla prossima richiesta."))
+            on_change=addon_changed,
+            engine=engine,
+            section_builders={"telegram": build_telegram_section})
 
     def active_addon_actions() -> tuple[dict,...]:
         if addon_manager is None:
@@ -1673,20 +1928,6 @@ def main() -> None:
                 addon_capability_registry.unregister(item["id"])
             return ()
 
-    def load_telegram_contacts_for_ui() -> None:
-        """Read real Telegram private users on a worker, never on Tk."""
-        if not credentials_present():
-            output_queue.put(("telegram_contacts_error",
-                              "Prima configura l'account Telegram."))
-            return
-        def worker() -> None:
-            try:
-                rows=list_telegram_contacts()
-                output_queue.put(("telegram_contacts_loaded",rows))
-            except Exception as exc:
-                output_queue.put(("telegram_contacts_error",type(exc).__name__))
-        threading.Thread(target=worker,daemon=True,
-                         name="jarvis-telegram-contact-list").start()
 
     def save_telegram_contact_selection(rows:list[dict]) -> bool:
         """Explicit checklist save; disable old auto listener before switching."""
@@ -1719,83 +1960,8 @@ def main() -> None:
                    "risposte automatiche disattivate per sicurezza.")
         return True
 
-    def open_telegram_history(peer_id:int) -> None:
-        allowed={c["id"]:c["name"] for c in selected_telegram_contacts()}
-        if workspace is None or peer_id not in allowed:
-            messagebox.showwarning("Telegram","Contatto non autorizzato.",
-                                   parent=root)
-            return
-        try:
-            path=workspace.telegram_export_history(peer_id,allowed[peer_id])
-            if os.name=="nt":
-                os.startfile(str(path))
-            else:
-                webbrowser.open(path.as_uri())
-        except (OSError,sqlite3.Error,WorkspaceError) as exc:
-            messagebox.showerror("Telegram",
-                "Non posso aprire la conversazione: "+str(exc)[:150],parent=root)
 
-    def clear_telegram_history(peer_id:int) -> None:
-        allowed={c["id"]:c["name"] for c in selected_telegram_contacts()}
-        if workspace is None or peer_id not in allowed:
-            messagebox.showwarning("Telegram","Contatto non autorizzato.",
-                                   parent=root)
-            return
-        if not messagebox.askyesno(
-                "Telegram — cancella cronologia",
-                "Cancellare i messaggi Telegram salvati di "+
-                allowed[peer_id]+"?\n\n"
-                "Non verranno cancellati contatto, autorizzazioni, "
-                "messaggi in attesa né lo stato della presentazione. "
-                "Le risposte automatiche saranno disattivate prima della pulizia, "
-                "se attive. Un invio già partito potrebbe ancora arrivare. "
-                "I messaggi eliminati non potranno essere recuperati "
-                "dall'archivio attivo.",
-                parent=root,default="no"):
-            return
-        # Never delete a peer's active events while the listener is still
-        # handling that contact. User explicitly approved disabling Telegram.
-        if telegram_bridge and telegram_bridge.is_enabled():
-            telegram_auto.set(False)
-            toggle_telegram_automatic()
-        try:
-            workspace.telegram_clear_history(peer_id)
-        except (OSError,sqlite3.Error,WorkspaceError) as exc:
-            messagebox.showerror("Telegram",
-                "Non posso cancellare la cronologia: "+str(exc)[:150],
-                parent=root)
-            return
-        messagebox.showinfo("Telegram",
-                            "Cronologia locale cancellata per "+
-                            allowed[peer_id]+".",parent=root)
 
-    def edit_telegram_contact_profile(parent, peer_id: int) -> None:
-        contact = next((row for row in selected_telegram_contacts()
-                        if row["id"] == peer_id), None)
-        if contact is None:
-            messagebox.showwarning("Telegram", "Contatto non autorizzato.", parent=parent)
-            return
-        key = str(peer_id)
-        profiles = settings.get("telegram_contact_profiles", {}).copy()
-        profile = edit_telegram_context(
-            parent, contact["name"], profiles.get(key, ""), TELEGRAM_PROFILE_LIMIT)
-        if profile is None:
-            return
-        profile = profile.strip()
-        if len(profile) > TELEGRAM_PROFILE_LIMIT:
-            messagebox.showwarning("Telegram", "Contesto troppo lungo. Nessuna modifica salvata.",
-                                   parent=parent)
-            return
-        if profile:
-            profiles[key] = profile
-        else:
-            profiles.pop(key, None)
-        try:
-            save_settings({**settings, "telegram_contact_profiles": profiles})
-        except (OSError, ValueError):
-            messagebox.showerror("Telegram", "Impossibile salvare il contesto.", parent=parent)
-            return
-        settings["telegram_contact_profiles"] = profiles
 
     def open_telegram_contact_list() -> None:
         nonlocal telegram_contacts_dialog
@@ -1814,7 +1980,7 @@ def main() -> None:
         """Explicit owner-initiated, one-shot OGG/Opus send; no GPT needed."""
         nonlocal telegram_owner_busy
         if closing or telegram_owner_busy:
-            write_line("TELEGRAM > Invio già in corso oppure Jarvis in chiusura.")
+            write_line("TELEGRAM > Invio già in corso oppure Lumi in chiusura.")
             speak_result("Invio Telegram già in corso.")
             return False
         contact=next((c for c in selected_telegram_contacts()
@@ -1852,9 +2018,6 @@ def main() -> None:
                    "; attendo la ricevuta effettiva.")
         return True
 
-    def open_telegram_manual_send() -> None:
-        show_telegram_manual_send(root,selected_telegram_contacts(),
-                                  send_owner_telegram_voice)
 
     def try_telegram_voice_send(spoken:str) -> bool:
         """Owner-only, local two-turn command; Telegram incoming never reaches here."""
@@ -1878,7 +2041,7 @@ def main() -> None:
             return False
         if action.kind=="ask_message":
             message="Che messaggio vuoi mandare a "+action.name+"?"
-            write_line("JARVIS > "+message)
+            write_line("LUMI > "+message)
             speak_result(message)
         elif action.kind=="ask_confirm":
             write_line("TELEGRAM > Bozza per "+action.name+": "+action.message)
@@ -1895,7 +2058,7 @@ def main() -> None:
 
     def set_telegram_gpt_session(enabled: bool) -> None:
         nonlocal telegram_gpt_session_token
-        telegram_gpt_session_token = object() if enabled and gpt_enabled.get() else None
+        telegram_gpt_session_token = object() if enabled and gpt_spuntato() else None
         telegram_gpt_session_choice.set(telegram_gpt_session_token is not None)
 
     def ask_telegram_gpt(prompt: str, bridge: TelegramBridge) -> str:
@@ -1936,28 +2099,44 @@ def main() -> None:
         except (GPTUnavailable, OSError, RuntimeError):
             return ""
 
+    def ask_telegram_online(prompt: str, bridge: TelegramBridge) -> str:
+        """061: «Risposte online» del contatto: il primo servizio online spuntato nella lista."""
+        from local_model.online_permissions import authorize_online_request
+        so = __import__("online").servizi_online
+        if not so.disponibili():
+            output_queue.put(("telegram_status", "Telegram: risposte online accese per questo "
+                              "contatto, ma nessun servizio online è pronto (lista Online)."))
+            return ""
+        if authorize_online_request("telegram.compose", confirmed=True) is None:
+            return ""
+        nome, testo = so.chiedi([{"role": "user", "content": prompt}])
+        if nome is None or not bridge.is_enabled():
+            return ""
+        return str(testo)
+
     def ask_telegram_reply(message, context, bridge, peer_id=None):
         if not bridge.is_enabled():
             return ""
-        if settings["gpt_enabled"]:
-            if not telegram_gpt_ready.is_set():
-                output_queue.put(("telegram_status",
-                                  "Telegram: GPT selezionato ma non connesso. Nessuna risposta locale sostitutiva."))
-                return ""
-            return ask_telegram_gpt(telegram_assistant_prompt(message, context), bridge)
+        # 061: di serie le risposte automatiche sono OFFLINE; online solo per i contatti spuntati.
+        if peer_id in settings.get("telegram_online_contacts", ()):
+            return ask_telegram_online(telegram_assistant_prompt(message, context), bridge)
         local_epoch = conversation_epoch
         try:
             session = get_gemma_session()
             profile = (settings.get("telegram_contact_profiles", {}).get(str(peer_id), "")
                        if peer_id is not None else "")
-            answer = session.ask_isolated(
-                lambda budget: telegram_local_prompt(message, context, budget, profile))
-            return answer if (bridge.is_enabled() and not settings["gpt_enabled"]
+            # 9/11: last 3 exchanges as real turns, short replies.
+            answer = session.ask_isolated_messages(
+                lambda pairs: telegram_local_messages(message, context, profile, pairs))
+            return answer if (bridge.is_enabled()
                               and local_epoch == conversation_epoch) else ""
-        except (OSError, ValueError, RuntimeError):
+        except (OSError, ValueError, RuntimeError) as exc:
             if bridge.is_enabled():
+                # Show the real cause (short, no prompt or private data).
+                reason = " ".join(str(exc).split())[:160] or type(exc).__name__
                 output_queue.put(("telegram_status",
-                                  "Telegram: risposta locale non disponibile. Controlla le impostazioni Gemma."))
+                                  "Telegram: risposta locale non disponibile ("
+                                  + type(exc).__name__ + ": " + reason + ")."))
             return ""
 
     def resolve_telegram_gpt_consent(bridge, approval) -> None:
@@ -1972,6 +2151,8 @@ def main() -> None:
         finally:
             approval.set_result(approved_epoch)
 
+
+
     def toggle_telegram_automatic() -> None:
         nonlocal telegram_bridge
         enabled=telegram_auto.get()
@@ -1982,6 +2163,12 @@ def main() -> None:
             settings["telegram_enabled"]=False
             telegram_status.set("Telegram: risposte automatiche disattivate.")
         else:
+            if not telegram_addon_enabled():
+                telegram_auto.set(False)
+                settings["telegram_enabled"]=False
+                telegram_status.set(
+                    "Telegram: attiva prima l'add-on in Gestisci add-on > Telegram.")
+                return
             chosen=selected_telegram_contacts()
             if not chosen or not credentials_present() or workspace is None:
                 telegram_auto.set(False)
@@ -2037,24 +2224,12 @@ def main() -> None:
         except (OSError, ValueError) as exc:
             telegram_status.set("Impossibile salvare Telegram: " + str(exc)[:130])
 
-    def telegram_open_setup():
-        if os.name!="nt":
-            telegram_status.set("Configurazione disponibile solo su Windows.")
-            return
-        script=Path(__file__).resolve().parent/"configura_telegram.bat"
-        try:
-            os.startfile(str(script))
-            telegram_status.set(
-                "Completa la configurazione nella finestra aperta, "
-                "poi premi Rileggi contatto autorizzato.")
-        except OSError as exc:
-            telegram_status.set("Configurazione non avviata: "+str(exc)[:100])
 
     def display_status(state: dict) -> None:
         nonlocal active_gpt, conversation_epoch
         connected = state.get("status") == "connected" and state.get("sharing") is True
         active_gpt = connected
-        if connected and gpt_enabled.get():
+        if connected and gpt_spuntato():
             telegram_gpt_ready.set()
         else:
             telegram_gpt_ready.clear()
@@ -2063,47 +2238,49 @@ def main() -> None:
             pending_conversation.clear()
             doc_dialog.revoke_pending()
             planner_abort_event.set()
-        if not gpt_enabled.get():
-            gpt_status.set("GPT: disattivato manualmente")
-        elif connected:
+        if connected:
             label = state.get("profileLabel") or "account ChatGPT"
-            gpt_status.set(f"GPT: connesso ({str(label)[:50]})")
+            gpt_status.set(f"GPT: connesso ({str(label)[:50]})"
+                           + ("" if gpt_spuntato() else "; spuntalo nella lista Online per usarlo"))
         elif state.get("status") == "reauth_required":
             gpt_status.set("GPT: autenticazione scaduta. Effettua nuovamente il login.")
         else:
             gpt_status.set("GPT: non connesso. Premi 'Connetti ChatGPT' per accedere.")
         refresh_buttons()
 
-    def refresh_buttons() -> None:
-        can_gpt = gpt_enabled.get() and not busy_gpt and not closing
-        connect.configure(state="normal" if can_gpt else "disabled")
-        disconnect.configure(state="normal" if can_gpt and active_gpt else "disabled")
-        ask_button.configure(state="normal" if can_gpt and active_gpt else "disabled")
-        plan_button.configure(state="normal" if can_gpt and active_gpt else "disabled")
-        local_button.configure(state="disabled" if busy_local or closing else "normal")
 
     def confirm_gpt_inference(detail: str) -> bool:
-        nonlocal online_consent_pending
-        if online_consent_pending or closing or busy_gpt or not gpt_enabled.get() or not active_gpt:
+        """055: niente finestra Sì/No. Il consenso si chiede a voce e in chat («sì»/«no» senza
+        «Lumi»); con il consenso già dato in questa conversazione risponde True subito."""
+        if closing or busy_gpt or not __import__("online").servizi_online.spuntati():
             return False
-        epoch = conversation_epoch
-        online_consent_pending = True
-        try:
-            approved = messagebox.askyesno(
-                "Conferma GPT online",
-                "Inviare a GPT online per questa richiesta?\n\n" + detail,
-                parent=root, default="no")
-        finally:
-            online_consent_pending = False
-        return (approved and epoch == conversation_epoch and not closing
-                and gpt_enabled.get() and active_gpt and not busy_gpt)
+        # 055: epoca del consenso a voce, tenuta sulla funzione (nessuna variabile condivisa)
+        if getattr(confirm_gpt_inference, "consent_epoch", None) == conversation_epoch:
+            return True
+        __import__("lumi_comandi").chiedi(
+            "gpt_consent_yes", "Posso usare GPT online per questa richiesta? Di' sì o no, "
+            "poi ripeti la richiesta.", write_line, speak_result, no_action="gpt_consent_no")
+        return False
+
+    def grant_gpt_voice_consent(accepted: bool) -> None:
+        if accepted:
+            confirm_gpt_inference.consent_epoch = conversation_epoch
+            write_line("GPT > Ok, uso GPT in questa conversazione: ripeti la richiesta.")
+        else:
+            write_line("GPT > Va bene, non uso GPT.")
 
     def run_gpt(action: str, *, consent_granted=False,
                 capability="chat.conversation", permission=None,
                 consent_detail="La richiesta e il contesto disponibile.", **params) -> bool:
         nonlocal busy_gpt, gpt_request_action, active_gpt, conversation_epoch
         nonlocal gpt_conversation_session_grant
-        if busy_gpt or not gpt_enabled.get() or closing:
+        # 061: il collegamento (status/sign_in/disconnect) non dipende dalla spunta; le domande sì.
+        if busy_gpt or closing or (action in ("ask", "conversation", "typed_conversation")
+                                   and not gpt_spuntato()):
+            return False
+        from model_gate import enabled as model_enabled
+        if not model_enabled():
+            write_line("MODELLO OFF > Richiesta GPT non inviata: modello escluso.")
             return False
         if action in ("ask", "conversation", "typed_conversation"):
             if not active_gpt:
@@ -2120,7 +2297,7 @@ def main() -> None:
                     candidate = authorize_online_request(capability, confirmed=True)
                     if candidate is not None and (consent_granted or confirm_gpt_inference(
                             "Conversazione GPT per questa sessione, da voce e chat. "
-                            "Il consenso termina scegliendo Gemma o chiudendo Jarvis.\n\n"
+                            "Il consenso termina scegliendo Gemma o chiudendo Lumi.\n\n"
                             + consent_detail)):
                         permission = candidate
             else:
@@ -2129,6 +2306,17 @@ def main() -> None:
                     confirm=lambda: confirm_gpt_inference(consent_detail))
             if (permission is None or permission.capability != capability
                     or not permission()):
+                fallback_text = params.get("utterance")
+                if capability == "chat.conversation" and fallback_text:
+                    # Catena (17/11): i servizi online gratuiti sono già stati provati;
+                    # se GPT non è autorizzato si passa agli altri modelli, mai al silenzio.
+                    try:
+                        write_line("GPT > Non mando a GPT: passo al modello locale.")
+                        root.after(0, lambda: local_after_gpt(
+                            fallback_text, action == "typed_conversation"))
+                        return False
+                    except NameError:
+                        pass
                 write_line("GPT > Invio non autorizzato. Controlla Autorizzazioni GPT per funzione.")
                 return False
             if capability == "chat.conversation":
@@ -2193,87 +2381,172 @@ def main() -> None:
             return
         if try_self_diagnostic(spoken):
             return
+        from intent_normalizer import before_model
+        if before_model(spoken):
+            return
+        own_reply = __import__("richiamo").risposta_di_lumi(spoken)
+        if own_reply:                      # prima di GPT: chi sei, cosa puoi fare, ricordi…
+            write_line("LUMI > " + own_reply[0])
+            speak_result(own_reply[1])
+            return
+        from model_gate import enabled as model_enabled, refused as model_refused
+        if not model_enabled():
+            write_line(model_refused(spoken))
+            return
         try:
             chat_is_visible = chat_notebook.select() == str(chat_local_tab)
         except NameError:
             chat_is_visible = False
-        if chat_is_visible and gpt_enabled.get():
-            chat_sessions_panel.report_error(
-                "GPT online non è collegato alle chat isolate F2. Disattiva GPT.")
-            write_line("CHAT > Non ho inviato il messaggio a GPT: istanza locale isolata.")
-            return
-        if not gpt_enabled.get():
-            submit_gemma_voice(spoken)
-            return
-        if not active_gpt:
-            write_line("GPT > GPT selezionato ma non connesso. Connetti ChatGPT nelle impostazioni.")
-            speak_result("GPT non è connesso. La scelta del modello resta GPT.")
-            return
-        if busy_gpt:
-            write_line("GPT > Sto già elaborando. Attendi la risposta.")
-            return
-        snapshot = documents.current.ident if documents.current else None
-        try:
-            live = current_capability_snapshot(snapshot is not None)
-            prompt = build_conversation_prompt(
-                spoken, has_document=snapshot is not None,
-                memory_context=recent_memory_for_gpt(spoken),
-                telegram_send_ready=live["telegram_voice_send"],
-                runtime_info=capability_status_prompt(live),
-                addon_actions=active_addon_actions())
-        except (ValueError, ConversationRejected) as exc:
-            write_line("GPT > " + str(exc))
-            return
-        run_gpt("conversation", prompt=prompt, epoch=conversation_epoch,
-                document_id=snapshot, utterance=spoken)
+        # 056: una sola catena (Basso consumo: offline subito; Veloce: online in ordine).
+        conversation_chain(spoken, False)
 
-    def toggle_gpt() -> None:
-        nonlocal active_gpt, conversation_epoch, gpt_conversation_session_grant
-        previous = settings["gpt_enabled"]
-        try:
-            settings["gpt_enabled"] = bool(gpt_enabled.get())
-            save_settings(settings)
-        except (OSError, ValueError) as exc:
-            settings["gpt_enabled"] = previous
-            gpt_enabled.set(previous)
-            messagebox.showerror("Impossibile salvare", str(exc), parent=root)
+    last_question = [""]          # 056: l'ultima domanda a un modello, per «approfondisci»
+
+    def fast_mode() -> bool:
+        return settings.get("modalita") == "veloce"
+
+    def ask_online(question: str, typed: bool, deepen: bool = False) -> None:
+        """056 A.3: online solo con il «sì». Domanda a voce e in chat, risposta «sì»/«no» senza
+        «Lumi»; riusa online_yes/online_no e servizi_online.IN_ATTESA (nessuna finestra)."""
+        so = __import__("online").servizi_online
+        if not so.disponibili():
+            text = ("Non c'è nessun servizio online pronto: spuntalo e metti la chiave in "
+                    "ONLINE ▾, oppure collega ChatGPT.")
+            write_line("ONLINE > " + text)
+            speak_result(text)
             return
-        # Revoke queued replies from the previous selected model on either switch.
-        conversation_epoch += 1
-        pending_conversation.clear()
-        if gpt_enabled.get():
-            gpt_status.set("GPT: attivo nelle impostazioni; controllo collegamento...")
-            run_gpt("status")
+        so.IN_ATTESA["domanda"] = (question, typed, deepen)
+        __import__("lumi_comandi").chiedi(
+            "online_yes", "Vado online? Di' sì o no.", write_line, speak_result,
+            no_action="online_no")
+
+    def deepen_prompt(answer: str) -> str:
+        """058: «approfondisci» manda online SOLO l'ultima risposta del modello offline."""
+        return ("Questa è la risposta di un modello offline:\n" + answer.strip() + "\n"
+                "Spiegala meglio e più a fondo, in italiano.")
+
+    def submit_deepen(prompt: str) -> None:
+        """058: in chat resta «approfondisci»: il testo mandato online non compare come messaggio TU."""
+        from local_model import conversazione_lumi as _cl
+        _cl.TU_SCRITTO[0] = True
+        try:
+            submit_gemma_voice(prompt, typed=True, route="online")
+        finally:
+            _cl.TU_SCRITTO[0] = False
+
+    def deepen_last(typed: bool = False, question: str | None = None, answer: str | None = None) -> None:
+        """«approfondisci» e pulsante «Approfondisci» (con la risposta di quella bolla): online con
+        conferma in Basso consumo, diretto in Veloce. Senza risposta offline chiede
+        «Cosa vuoi approfondire?»."""
+        from_button = bool(answer)
+        if not answer:
+            question, answer = (chat_bubbles.ultimo_scambio or ("", ""))
+        if not answer:
+            text = "Cosa vuoi approfondire?"
+            write_line("LUMI > " + text)
+            speak_result(text)
+            return
+        if from_button:
+            write_line("TU > approfondisci")      # il pulsante non passa dalla casella di testo
+        prompt = deepen_prompt(answer)
+        if fast_mode():
+            submit_deepen(prompt)
         else:
-            gpt_conversation_session_grant = None
-            set_telegram_gpt_session(False)
-            doc_dialog.revoke_pending()
-            planner_abort_event.set()
-            active_gpt = False
-            telegram_gpt_ready.clear()
-            gpt_status.set("GPT: disattivato manualmente")
-            threading.Thread(target=service.stop, daemon=True).start()
-            refresh_buttons()
+            ask_online(prompt, True, True)
 
-    def try_model_switch(spoken: str) -> bool:
-        from voice_control import model_switch_target
-        selected = model_switch_target(spoken)
-        if (selected is None or closing or document_busy or save_only_waiting
-                or doc_dialog.phase.startswith("awaiting_")
-                or doc_dialog.phase == "executing" or pending_project_name
-                or pending_project_rename_id is not None
-                or pending_project_trash_id is not None
-                or telegram_voice_dialog.pending):
-            return False
-        if bool(gpt_enabled.get()) != selected:
-            gpt_enabled.set(selected)
-            toggle_gpt()
-        # toggle_gpt restores the old setting if persistence fails.
-        model = "GPT" if gpt_enabled.get() else "Gemma"
-        message = "Modello selezionato: " + model + "."
-        write_line("JARVIS > " + message)
-        speak_result(message)
-        return True
+    def conversation_chain(spoken: str, typed: bool) -> None:
+        """056: voce e testo con UNA catena. Il motore dei comandi è già passato. Basso consumo:
+        tutto va subito al modello offline; l'online solo con il «sì». Veloce: il primo servizio
+        online, con il locale di riserva. Niente classificatore."""
+        if __import__("online").servizi_ricerca.parse(spoken) and lumi_ricerca(spoken):
+            return                       # «cerca/approfondisci online …» anche scritto
+        if __import__("online").servizi_ricerca.approfondisci_locale(spoken):
+            deepen_last(typed)
+            return
+        so = __import__("online").servizi_online
+        if fast_mode():
+            last_question[0] = spoken
+            if so.disponibili():
+                submit_gemma_voice(spoken, typed=typed, route="online")
+            else:
+                local_after_gpt(spoken, typed)
+            return
+        last_question[0] = spoken
+        if so.richiesta_codice(spoken):
+            ask_online(spoken, typed)    # codice e script: sempre online, ma prima il «sì»
+            return
+        if submit_gemma_voice(spoken, typed=typed, route="locale") is False:
+            text = "Non riesco a rispondere adesso: riprova tra poco."
+            write_line("LUMI > " + text)
+            speak_result(text)
+
+    def local_after_gpt(spoken: str, typed: bool) -> None:
+        """Ultimo anello: modello locale, oppure messaggio chiaro (il codice non va a Gemma)."""
+        if __import__("online").servizi_online.richiesta_codice(spoken):
+            text = ("Per lo script servono i servizi online o GPT, e adesso nessuno ha risposto. "
+                    "Controlla Servizi online o collega GPT.")
+            write_line("LUMI > " + text)
+            speak_result(text)
+            return
+        if submit_gemma_voice(spoken, typed=typed, route="locale") is False:
+            text = "Non riesco a rispondere adesso: riprova tra poco."
+            write_line("LUMI > " + text)
+            speak_result(text)
+
+    def collega_gpt() -> None:
+        """«Collega» della lista Online: controlla il collegamento del ponte del browser (come prima)."""
+        write_line("GPT > Collego il tuo account ChatGPT dal browser…")
+        run_gpt("status")
+
+    # Conversazione con il modello locale (Gemma/KoboldCpp): spostato in local_model/conversazione_lumi.py (divisione di jarvis.py).
+    from local_model.conversazione_lumi import installa as _local_model_conversazione_lumi_installa
+    _local_model_conversazione_lumi = _local_model_conversazione_lumi_installa(__import__("lumi_contesto").Vivo(
+        active_addon_actions=lambda: active_addon_actions,
+        active_project_id=lambda: active_project_id,
+        addon_manager=lambda: addon_manager,
+        announce_document=lambda: announce_document,
+        ask_to_close_document=lambda: ask_to_close_document,
+        busy_local=lambda: busy_local,
+        chat_local_tab=lambda: chat_local_tab,
+        chat_notebook=lambda: chat_notebook,
+        chat_sessions_panel=lambda: chat_sessions_panel,
+        chat_transport=lambda: chat_transport,
+        closing=lambda: closing,
+        conversation_epoch=lambda: conversation_epoch,
+        doc_dialog=lambda: doc_dialog,
+        document_busy=lambda: document_busy,
+        document_operation=lambda: document_operation,
+        documents=lambda: documents,
+        durable_brain=lambda: durable_brain,
+        engine=lambda: engine,
+        gemma_button=lambda: gemma_button,
+        gemma_memory_revision=lambda: gemma_memory_revision,
+        gemma_recent_reply=lambda: gemma_recent_reply,
+        gemma_session=lambda: gemma_session,
+        gemma_session_lock=lambda: gemma_session_lock,
+        gemma_source=lambda: gemma_source,
+        gemma_trial_busy=lambda: gemma_trial_busy,
+        gemma_trial_queue=lambda: gemma_trial_queue,
+        gpt_spuntato=lambda: gpt_spuntato,
+        memory_enabled=lambda: memory_enabled,
+        pending_project_name=lambda: pending_project_name,
+        pending_project_reference=lambda: pending_project_reference,
+        pending_project_rename_id=lambda: pending_project_rename_id,
+        pending_project_trash_id=lambda: pending_project_trash_id,
+        remember_exchange=lambda: remember_exchange,
+        request=lambda: request,
+        root=lambda: root,
+        save_only_waiting=lambda: save_only_waiting,
+        selected_chat_target=lambda: selected_chat_target,
+        speak_result=lambda: speak_result,
+        submit_local=lambda: submit_local,
+        telegram_voice_dialog=lambda: telegram_voice_dialog,
+        try_program_command=lambda: try_program_command,
+        try_telegram_voice_send=lambda: try_telegram_voice_send,
+        workspace=lambda: workspace,
+        write_line=lambda: write_line))
+    (dispatch_model_capability, get_gemma_session, try_gemma_app_followup, native_memory_request, submit_gemma_voice, submit_gemma_trial, poll_gemma_trial,) = (
+        _local_model_conversazione_lumi[n] for n in _local_model_conversazione_lumi_installa.__globals__['NOMI'])
 
     def toggle_memory() -> None:
         nonlocal durable_brain, speech_lexicon
@@ -2305,30 +2578,40 @@ def main() -> None:
             "La memoria già salvata resta sul PC fino a cancellazione esplicita."
             if not desired else "Memoria attiva anche dopo il prossimo riavvio.")
 
-    def clear_saved_memory() -> None:
+    def clear_saved_memory(section: str = "chat", confirmed: bool = False) -> bool:
+        """Cancellazione a sezioni (chat, ricordi, progetti, tutto), solo su richiesta
+        esplicita dell'utente e dopo conferma sì/no (pulsante o voce)."""
         nonlocal gemma_memory_revision
-        if not messagebox.askyesno(
-            "Cancella il Second Brain",
-            "Eliminare scambi, operazioni e correzioni vocali archiviate da Lia? "
-            "Questa operazione non può essere annullata. "
-            "La cronologia delle attività del motore locale resta separata.",
-            parent=root,
+        cancella = __import__("cancella_memoria")
+        if not confirmed and not messagebox.askyesno(
+            cancella.ETICHETTE[section], cancella.domanda(section), parent=root,
         ):
-            return
+            return False
         try:
             # A post-commit cleanup (e.g. VACUUM) can fail after DELETE. Revoke
             # pending turns/RAM on confirmation, before any fallible disk I/O.
-            gemma_memory_revision += 1
-            conversation_memory.clear()
-            if gemma_session[0] is not None:
-                gemma_session[0].forget_context(None)
+            if section in ("chat", "tutto"):
+                gemma_memory_revision += 1
+                conversation_memory.clear()
+                if gemma_session[0] is not None:
+                    gemma_session[0].forget_context(None)
+            if section in ("progetti", "tutto") and active_project_id is not None:
+                switch_context(None)
             target = durable_brain if durable_brain is not None else SecondBrain()
-            target.clear_all()
-            if speech_lexicon is not None:
+            progetti = section in ("progetti", "tutto")
+            message = cancella.esegui(
+                section, target, workspace if progetti else None,
+                chat_archive.store if progetti else None,
+                trash_folders=lambda folders: __import__("pulizia_dati").al_cestino(folders))
+            if section in ("chat", "tutto") and speech_lexicon is not None:
                 speech_lexicon.reload()
-            memory_status_refresh("Memoria e correzioni vocali eliminate su richiesta.")
+            if section in ("progetti", "tutto"):
+                chat_archive.refresh(show=True)
+            memory_status_refresh(message)
+            return True
         except (OSError, sqlite3.Error, ValueError) as exc:
-            memory_status.set("Cancellazione memoria non riuscita: " + str(exc)[:100])
+            memory_status.set("Cancellazione non riuscita: " + str(exc)[:100])
+            return False
 
     def show_voice_corrections() -> None:
         """User must explicitly review both sentences before saving a rule."""
@@ -2408,14 +2691,12 @@ def main() -> None:
             side="right")
         entry.focus_set()
 
-    gpt_panel = ttk.LabelFrame(assistant_settings_frame,
-                                text="Connessione ChatGPT", padding=12)
-    gpt_panel.pack(fill="x", pady=(0, 10))
-    gpt_toggle = ttk.Checkbutton(
-        gpt_panel, text="Abilita collegamento ChatGPT (attivo di default, spegnimento manuale)",
-        variable=gpt_enabled, command=toggle_gpt
-    )
-    gpt_toggle.pack(anchor="w")
+    # 058 (decisione utente 04:06): tutti i servizi online stanno in UN posto. Il collegamento del
+    # GPT dal browser (stato, collega/scollega, autorizzazioni) sta DENTRO «Servizi online»,
+    # sotto l'elenco, non in una pagina a parte.
+    gpt_panel = ttk.LabelFrame(servizi_online_box,
+                                text="ChatGPT dal browser: collegamento", padding=8)
+    gpt_panel.pack(fill="x", padx=8, pady=(4, 6), after=servizi_online_box.rows)
     ttk.Label(gpt_panel, textvariable=gpt_status, wraplength=630).pack(anchor="w", pady=(5, 6))
 
     gpt_buttons = ttk.Frame(gpt_panel)
@@ -2425,6 +2706,8 @@ def main() -> None:
     disconnect = ttk.Button(gpt_buttons, text="Scollega account", command=lambda: run_gpt("disconnect"))
     disconnect.pack(side="left")
     ttk.Label(gpt_panel, text="Il login usa il browser ufficiale; nessuna chiave API e nessuna fatturazione a consumo.", wraplength=630).pack(anchor="w")
+    ttk.Button(gpt_panel, text="Autorizzazioni GPT per funzione...",
+               command=open_online_permissions).pack(anchor="w", pady=(6, 0))
 
     brain_controls = ttk.LabelFrame(assistant_settings_frame, text="Memoria generale", padding=12)
     brain_controls.pack(fill="x", pady=(5, 3))
@@ -2432,9 +2715,14 @@ def main() -> None:
         brain_controls, text="Second Brain locale (ricorda conversazioni e attività)",
         variable=memory_enabled, command=toggle_memory)
     memory_toggle.pack(side="left", padx=(0, 10))
-    memory_clear_button = ttk.Button(
-        brain_controls, text="Cancella memoria generale (non progetti)", command=clear_saved_memory)
-    memory_clear_button.pack(side="right")
+    memory_clear_buttons = []
+    for _sezione in ("tutto", "progetti", "ricordi", "chat"):
+        _bottone = ttk.Button(
+            brain_controls, text=__import__("cancella_memoria").ETICHETTE[_sezione],
+            command=lambda s=_sezione: clear_saved_memory(s))
+        _bottone.pack(side="right", padx=(4, 0))
+        memory_clear_buttons.append(_bottone)
+    memory_clear_button = memory_clear_buttons[-1]
     ttk.Label(assistant_settings_frame, textvariable=memory_status, wraplength=630).pack(
         anchor="w", pady=(0, 2))
     ttk.Label(
@@ -2444,6 +2732,10 @@ def main() -> None:
              "non vengono salvati i corpi completi delle email.",
         wraplength=710
     ).pack(anchor="w", pady=(0, 4))
+    # Pagina «Ricordi» (15/11 sera): ricerca, categorie come cartelle, cancella.
+    memory_page = __import__("ricordi_ui").PaginaRicordi(
+        assistant_settings_frame, lambda: durable_brain,
+        confirm=lambda title, text: messagebox.askyesno(title, text, parent=settings_window))
 
     workspace_panel=ttk.LabelFrame(
         integrations_settings_frame,text="Progetti — contesto indipendente e continuità",padding=8)
@@ -2459,56 +2751,9 @@ def main() -> None:
     ttk.Label(workspace_panel,textvariable=workspace_status,
               wraplength=420).pack(side="left",fill="x",expand=True)
 
-    telegram_panel=ttk.LabelFrame(
-        integrations_settings_frame,text="Telegram — contatti selezionati e messaggi vocali",padding=8)
-    telegram_panel.pack(fill="x",pady=(3,10))
-    telegram_toggle=ttk.Checkbutton(
-        telegram_panel,text="Risposte vocali automatiche ON / OFF",
-        variable=telegram_auto)
-    telegram_toggle.pack(anchor="w")
-    telegram_consent_row=ttk.Frame(telegram_panel)
-    telegram_consent_row.pack(fill="x",pady=(4,0))
-    ttk.Label(telegram_consent_row,text="Consenso GPT online").pack(side="left",padx=(0,8))
-    ttk.Radiobutton(telegram_consent_row,text="Chiedi ogni volta",
-                    variable=telegram_gpt_session_choice,value=False,
-                    command=lambda: set_telegram_gpt_session(False)).pack(side="left")
-    ttk.Radiobutton(telegram_consent_row,text="Consenti per questa sessione",
-                    variable=telegram_gpt_session_choice,value=True,
-                    command=lambda: set_telegram_gpt_session(True)).pack(side="left",padx=(8,0))
-    ttk.Label(telegram_panel,wraplength=690,
-              text="Il consenso per questa sessione permette di inviare a GPT online "
-                   "i messaggi e il contesto recente delle chat Telegram dei contatti "
-                   "spuntati. Si azzera quando spegni o disconnetti GPT o chiudi Jarvis."
-              ).pack(anchor="w",pady=(2,0))
-    telegram_row=ttk.Frame(telegram_panel)
-    telegram_row.pack(fill="x",pady=(4,3))
-    telegram_configure_button=ttk.Button(
-        telegram_row,text="Configura Telegram (accesso sicuro)")
-    telegram_configure_button.pack(side="left",padx=(0,8))
-    telegram_reload_button=ttk.Button(
-        telegram_row,text="Rileggi configurazione Telegram")
-    telegram_reload_button.pack(side="left",padx=(0,8))
-    telegram_note_button=ttk.Button(
-        telegram_row,text="Messaggio da riferire (legacy)")
-    telegram_note_button.pack(side="left")
-    telegram_actions=ttk.Frame(telegram_panel)
-    telegram_actions.pack(fill="x",pady=(4,3))
-    telegram_contacts_button=ttk.Button(
-        telegram_actions,text="Gestisci contatti Telegram (spunta)")
-    telegram_contacts_button.pack(side="left",padx=(0,8))
-    telegram_send_button=ttk.Button(
-        telegram_actions,text="Invia messaggio vocale")
-    telegram_send_button.pack(side="left")
-    ttk.Label(
-        telegram_panel,textvariable=telegram_status,wraplength=690
-    ).pack(anchor="w",pady=(3,0))
-    ttk.Label(
-        telegram_panel,
-        text="I contatti si scelgono dall'elenco Telegram con una spunta. "
-             "Le risposte automatiche si attivano separatamente dall'invio "
-             "manuale, che richiede conferma. I vocali usano Windows SAPI "
-             "e OGG/Opus, senza GPT per trasformare il testo in audio.",
-        wraplength=690).pack(anchor="w",pady=(3,0))
+    # Telegram è un add-on: i suoi comandi e la configurazione stanno nella sua
+    # sezione in Gestisci add-on (non più in Impostazioni > Integrazioni).
+    # I widget si ricreano ogni volta che si apre la sezione.
 
     addon_panel=ttk.LabelFrame(
         integrations_settings_frame,text="Add-on — installazione locale e permessi",padding=8)
@@ -2521,6 +2766,46 @@ def main() -> None:
                    "viene eseguito automaticamente.",
               wraplength=455).pack(side="left",fill="x",expand=True)
 
+    # Personalizzazione comandi di base (i comandi degli add-on stanno nella
+    # sezione di ciascun add-on, in Gestisci add-on). F1 resta solo una guida.
+    command_words_panel=ttk.LabelFrame(
+        integrations_settings_frame,text="Personalizzazione comandi",padding=8)
+    command_words_panel.pack(fill="x",pady=(3,9))
+    ttk.Button(
+        command_words_panel,text="Le mie parole per i comandi di base...",
+        command=lambda: __import__("command_words_ui").CommandWordsWindow(
+            settings_window,engine)).pack(side="left",padx=(0,10))
+    ttk.Label(command_words_panel,
+              text="Timer, comandi locali, modelli, progetti: scegli tu le parole.",
+              wraplength=455).pack(side="left",fill="x",expand=True)
+
+    # «La mia voce»: frasi da leggere per correggere il riconoscimento e pausa tra le parole.
+    my_voice_panel=ttk.LabelFrame(integrations_settings_frame,text="La mia voce",padding=8)
+    my_voice_panel.pack(fill="x",pady=(3,9))
+    ttk.Button(my_voice_panel,text="La mia voce...",
+               command=lambda: __import__("la_mia_voce").VoiceWindow(settings_window)
+               ).pack(side="left",padx=(0,10))
+    ttk.Label(my_voice_panel,
+              text="Leggi parole e frasi: Lumi impara come ti capisce. Pausa tra le parole.",
+              wraplength=455).pack(side="left",fill="x",expand=True)
+
+    # Mini avatar quando Lumi è ridotta a icona: mostra/nascondi e trasparenza
+    # dopo N secondi di mouse fermo (0 = mai). Salvati in avatar-dock.json.
+    dock_panel=ttk.LabelFrame(
+        integrations_settings_frame,text="Mini avatar (Lumi ridotta a icona)",padding=8)
+    dock_panel.pack(fill="x",pady=(3,9))
+
+
+    from lumi_avatar import _dock_file as _dock_options_file, load_dock_options
+    _dock_options=load_dock_options(_dock_options_file())
+    dock_show_var=tk.BooleanVar(value=_dock_options["show"])
+    dock_idle_var=tk.IntVar(value=_dock_options["idle"])
+    ttk.Checkbutton(dock_panel,text="Mostra il mini avatar",variable=dock_show_var).pack(side="left")
+    ttk.Label(dock_panel,text="  Trasparente dopo").pack(side="left")
+    ttk.Spinbox(dock_panel,from_=0,to=600,width=5,textvariable=dock_idle_var).pack(side="left",padx=4)
+    ttk.Label(dock_panel,text="s di mouse fermo (0 = mai)").pack(side="left")
+    ttk.Button(dock_panel,text="Salva",command=save_dock_settings).pack(side="right")
+
     # Conversation is always visible at the left of the animated HUD.
     # The console composer follows the supplied reference: a circular mic,
     # one conversation field and a send arrow. The previous explicit tools
@@ -2530,7 +2815,23 @@ def main() -> None:
     ttk.Label(scope_row,textvariable=active_context_label,
               font=("Consolas",8)).pack(side="left",fill="x",expand=True)
     scope_button=ttk.Button(scope_row,text="Progetti")
-    scope_button.pack(side="right")
+    # I progetti ora stanno nel menu laterale (☰): il vecchio pulsante non si mostra più.
+    # Riga di stato a 5 colori con «■ Ferma» (passo 3, stato_lumi.py).
+    def read_lumi_state() -> str:
+        session = gemma_session[0]
+        return __import__("stato_lumi").stato(
+            speaking=speaker.is_speaking(),
+            busy=busy_local or document_busy,
+            thinking=bool(gemma_trial_busy[0] or (session is not None and session.is_busy)
+                          or (busy_gpt and gpt_spuntato())),
+            mic_on=voice.is_listening(),
+            always_listening=voice_mode.get() in (CONTINUOUS, PUSH_TO_TALK),
+            armed=time.monotonic() < wake_gate.armed_until)
+
+    lumi_status_line = __import__("stato_lumi").RigaStato(
+        hud.command_host, read_state=read_lumi_state,
+        on_stop=lambda: lumi_stop_all(), bg=PANEL)
+    lumi_status_line.frame.pack(fill="x", pady=(0, 4))
     input_row = tk.Frame(hud.command_host, bg=PANEL)
     input_row.pack(fill="x")
     request = tk.StringVar()
@@ -2545,6 +2846,13 @@ def main() -> None:
         input_row, textvariable=request, font=("Segoe UI", 10))
     input_box.pack(side="left", fill="x", expand=True, padx=(0, 5),
                    ipady=6)
+    # 058: «Modello ▾» e «Potenza ▾» accanto alla casella, alla sua stessa altezza.
+    # 059: la colonna della chat è larga 360 px: accanto alla casella i due tasti venivano tagliati
+    # («Poten») e la casella restava stretta. Stanno su una riga propria, appena sopra la casella,
+    # a metà larghezza ciascuno.
+    selettore_riga = tk.Frame(hud.command_host, bg=PANEL)
+    selettore_riga.pack(fill="x", pady=(0, 4), before=input_row)
+    selettore_tasti = __import__("selettore_chat").crea_tasti(selettore_riga, espandi=True)
     hud_send_button = tk.Button(
         input_row, text="➤", width=2,
         font=("Segoe UI Symbol", 15),
@@ -2558,6 +2866,12 @@ def main() -> None:
         activebackground="#0b344b", activeforeground=WHITE,
         bd=0, relief="flat", cursor="hand2")
     tools_button.pack(side="left")
+    # Allegati (passo 5): 📎, Ctrl+V e trascinamento sulla finestra.
+    attachments_view = __import__("allegati").AllegatiView(
+        hud.command_host, input_row, input_row, input_box,
+        notify=lambda text: write_line(text), bg=PANEL,
+        ask_files=lambda: filedialog.askopenfilenames(
+            parent=root, title="Lumi: allega file"))
     help_button = tk.Button(
         input_row, text="?", width=2, font=("Segoe UI", 14),
         bg=PANEL, fg=CYAN, activebackground="#0b344b",
@@ -2569,11 +2883,11 @@ def main() -> None:
     local_button.pack(side="left", padx=(0, 4))
     ask_button = ttk.Button(buttons_row, text="Chiedi a GPT")
     ask_button.pack(side="left", padx=(0, 4))
-    gemma_button = ttk.Button(buttons_row, text="Prova Gemma locale")
+    gemma_button = ttk.Button(buttons_row, text="Prova modello offline")
     gemma_button.pack(side="left", padx=(0, 4))
     plan_button = ttk.Button(buttons_row, text="Pianifica attività")
     plan_button.pack(side="left", padx=(0, 4))
-    diagnostic_button = ttk.Button(buttons_row, text="Autodiagnosi Jarvis")
+    diagnostic_button = ttk.Button(buttons_row, text="Autodiagnosi Lumi")
     diagnostic_button.pack(side="left")
 
     # Native Tk text with a dark ttk scrollbar matches the concept's
@@ -2587,6 +2901,12 @@ def main() -> None:
     chat_notebook.add(chat_local_tab, text="Chat locali")
     chat_notebook.add(chat_console_tab, text="Console")
     chat_notebook.select(chat_console_tab)
+    # Chat unica (scelta A, 15/11): niente più doppia scheda «Chat locali / Console»;
+    # la vecchia scheda resta nel codice ma non si vede (le linguette sono nascoste).
+    ttk.Style(root).layout("LumiNoTabs.TNotebook.Tab", [])
+    chat_notebook.configure(style="LumiNoTabs.TNotebook")
+    chat_header = ttk.Frame(chat_console_tab)
+    chat_header.pack(fill="x", pady=(0, 3))
     chat_panel = ttk.Frame(chat_console_tab)
     chat_panel.pack(fill="both", expand=True)
     output = tk.Text(
@@ -2605,10 +2925,68 @@ def main() -> None:
     output.tag_configure("azione", foreground=GREEN, spacing3=9)
     output.tag_configure("errore", foreground=AMBER, spacing3=9)
     output.tag_configure("sistema", foreground="#83a8ba", spacing3=9)
+    output.tag_configure("comando", foreground="#9fe3c8", spacing3=9)
     output.tag_configure("message_head",
                          font=("Segoe UI", 10, "bold"),
                          spacing1=9)
     hud.attach_console(output)
+
+    def copy_chat_text(value: str) -> None:
+        root.clipboard_clear()
+        root.clipboard_append(value)
+
+    # Bolle della chat (passo 2c): copia / leggi / rigenera sotto le risposte.
+    chat_bubbles = __import__("chat_bolle").Bolle(
+        output, copy=copy_chat_text,
+        read=lambda value: speaker.speak(value, selected_voice()),
+        regenerate=lambda question: submit_local(message_override=question),
+        deepen=lambda question=None, answer=None: deepen_last(True, question, answer))
+
+    def show_chat_history(title: str, pairs) -> None:
+        """Chat aperta dall'elenco: la cronologia salvata al posto dei messaggi di prima."""
+        from chat_testo import IDENTITY
+        chat_bubbles.cronologia(title, pairs, IDENTITY)
+        __import__("allegati").ATTUALI.togli()      # gli allegati valgono per una chat
+
+    output.tag_configure("sistema_titolo", foreground="#729bb3", justify="center")
+    import chat_elenco
+    from local_model.chat_sessions import ChatSessionStore
+    chat_menu = None
+    try:
+        chat_archive = chat_elenco.ElencoChat(
+            ChatSessionStore(default_path().with_name("jarvis_chat_sessions.sqlite3")),
+            lambda: active_project_id, show_chat_history, notify=write_line)
+        # Menu laterale come ChatGPT (15/11 sera): progetti come cartelle, chat dentro.
+        menu_side = __import__("menu_laterale")
+        chat_tree = menu_side.Albero(
+            chat_archive.store,
+            projects=lambda: ([(p["id"], p["name"]) for p in workspace.projects(limit=200)]
+                              if workspace is not None else []),
+            create_project=lambda name: workspace.create_project(name),
+            rename_project=lambda ident, name: workspace.rename_project(ident, name),
+            trash_project=lambda ident: workspace.trash_project(ident),
+            current_project=lambda: active_project_id,
+            switch=lambda ident: switch_context(ident),
+            after_change=lambda: chat_archive.refresh(show=True),
+            notify=write_line)
+        chat_menu = menu_side.MenuView(
+            chat_header, chat_panel, chat_panel.winfo_children()[0], chat_tree,
+            ask_text=lambda title, prompt: simpledialog.askstring(title, prompt, parent=root),
+            confirm=lambda title, prompt: messagebox.askyesno(title, prompt, parent=root),
+            ask_file=lambda: filedialog.askopenfilename(
+                parent=root, title="Export di ChatGPT o Claude (conversations.json o .zip)",
+                filetypes=[("Export chat", "*.json *.zip"), ("Tutti i file", "*.*")]),
+            import_chat=lambda path: chat_archive.importa(
+                path, lambda items: __import__("chat_import").scegli_dialogo(root, items)),
+            ask_save=lambda title: filedialog.asksaveasfilename(
+                parent=root, title="Esporta la chat", defaultextension=".json",
+                initialfile="".join(c for c in title if c.isalnum() or c in " -_")[:60] or "chat",
+                filetypes=[("JSON", "*.json")]),
+            notify=write_line)
+        chat_archive.view = chat_menu
+        chat_archive.refresh(show=False)
+    except (OSError, sqlite3.Error, ValueError) as exc:
+        write_line("CHAT > Archivio chat non disponibile: " + type(exc).__name__)
     from local_model.chat_ui import ChatSessionsPanel
     chat_sessions_panel = ChatSessionsPanel(
         chat_local_tab,
@@ -2618,7 +2996,10 @@ def main() -> None:
         on_change=lambda old, new: chat_selection_changed(old, new),
         on_settings=open_native_model_settings)
     chat_sessions_panel.frame.pack(fill="both", expand=True)
-    write_line("Jarvis locale pronto. Scrivi 'aiuto' o premi F1 per la guida e i comandi.")
+    write_line("Lumi locale pronto. Scrivi 'aiuto' o premi F1 per la guida e i comandi.")
+    for problem in addon_bundled_errors:
+        write_line("ADD-ON > Non installato: " + problem +
+                   " Reinstalla il pacchetto completo o segnala l'errore.")
 
     try:
         engine = LocalEngine()
@@ -2634,68 +3015,64 @@ def main() -> None:
             except (ImportError,OSError,ValueError) as exc:
                 engine.file_access_blocked = True
                 write_line("ACCESSO FILE > Componente incompleto: "+str(exc)+
-                           ". Reinstalla il pacchetto completo (cartella file_access), poi riavvia Jarvis.")
+                           ". Reinstalla il pacchetto completo (cartella file_access), poi riavvia Lumi.")
     except (OSError, ValueError) as exc:
         messagebox.showerror("Motore locale non disponibile", str(exc), parent=root)
         root.destroy()
         return
 
     speaker = OfflineSpeaker(notify_error=lambda reason: output_queue.put(("tts_error", reason)))
+    speaker.effect = settings.get("tts_effect", 25) / 100
+    import voice_style
+    voice_style.update(rate=settings.get("tts_rate", 0), pitch=settings.get("tts_pitch", 0),
+                       volume=settings.get("tts_volume", 100))
+    # Avatar LUMI: lip sync dalla curva del volume della voce naturale e
+    # mini avatar in basso a destra quando la finestra e' ridotta a icona.
+    from lumi_avatar import LIPSYNC, PLAYBACK_LATENCY, AvatarDock
+    speaker.on_envelope = lambda envelope: LIPSYNC.push(envelope, delay=PLAYBACK_LATENCY, grace=0.8)
+    import audio_player
+    audio_player.POSITION_LISTENER = LIPSYNC.update_position
+    avatar_dock = AvatarDock(root, lambda: getattr(hud, "_last_mode", "idle"))
     voice = VoiceController(output_queue.put, ignore_audio=speaker.is_audible)
     wake_gate = WakeWordGate()
     dictation = DesktopDictation()
 
-    def selected_voice() -> str:
-        choice = spoken_voice.get()
-        return "" if choice == DEFAULT_VOICE_LABEL else choice
+    # Voce: voci, dettatura, ascolto: spostato in lumi_parti/voce.py (divisione di jarvis.py).
+    from lumi_parti.voce import installa as _lumi_parti_voce_installa
+    _lumi_parti_voce = _lumi_parti_voce_installa(__import__("lumi_contesto").Vivo(
+        DEFAULT_VOICE_LABEL=lambda: DEFAULT_VOICE_LABEL,
+        auto_listen_enabled=lambda: auto_listen_enabled,
+        dictation=lambda: dictation,
+        download_paola_button=lambda: download_paola_button,
+        download_serena_button=lambda: download_serena_button,
+        mic_status=lambda: mic_status,
+        output_queue=lambda: output_queue,
+        refresh_voices_button=lambda: refresh_voices_button,
+        root=lambda: root,
+        settings=lambda: settings,
+        speaker=lambda: speaker,
+        spoken_effect=lambda: spoken_effect,
+        spoken_enabled=lambda: spoken_enabled,
+        spoken_pitch=lambda: spoken_pitch,
+        spoken_rate=lambda: spoken_rate,
+        spoken_status=lambda: spoken_status,
+        spoken_voice=lambda: spoken_voice,
+        spoken_volume=lambda: spoken_volume,
+        sync_dictation_ui=lambda: sync_dictation_ui,
+        voice=lambda: voice,
+        voice_mode=lambda: voice_mode,
+        write_line=lambda: write_line))
+    (selected_voice, save_speech_preferences, refresh_voices, download_natural_voice, test_speech, toggle_dictation, save_auto_listen_preference, ptt_press, ptt_release,) = (
+        _lumi_parti_voce[n] for n in _lumi_parti_voce_installa.__globals__['NOMI'])
 
-    def save_speech_preferences() -> None:
-        settings["tts_enabled"] = bool(spoken_enabled.get())
-        settings["tts_voice"] = selected_voice()
-        try:
-            save_settings(settings)
-            spoken_status.set("Risposte vocali salvate; nessun servizio a pagamento.")
-        except (OSError, ValueError) as exc:
-            spoken_status.set("Impossibile salvare le preferenze vocali: " + str(exc)[:130])
 
-    def refresh_voices() -> None:
-        spoken_status.set("Rilevamento delle voci già installate in Windows...")
-        refresh_voices_button.configure(state="disabled")
 
-        def worker() -> None:
-            try:
-                output_queue.put(("tts_voices", installed_voices()))
-            except (OSError, ValueError, TimeoutError) as exc:
-                output_queue.put(("tts_error", str(exc)[:140]))
 
-        threading.Thread(target=worker, daemon=True, name="jarvis-voices-list").start()
-
-    def test_speech() -> None:
-        if not speaker.speak("Pronto. Questa è la voce di Jarvis.", selected_voice()):
-            spoken_status.set("Sintesi vocale occupata: riprova.")
 
     def speak_result(message: str) -> None:
         if spoken_enabled.get() and message:
             speaker.speak(message, selected_voice())
 
-    def update_document_buttons() -> None:
-        pending = (doc_dialog.phase.startswith("awaiting_") or save_only_waiting) and not document_busy
-        can_choose = doc_dialog.phase == "awaiting_close_choice" and not document_busy
-        doc_save_button.configure(state="normal" if can_choose else "disabled")
-        doc_discard_button.configure(
-            state="normal" if can_choose else "disabled")
-        doc_cancel_button.configure(state="normal" if pending else "disabled")
-        destination_ready = (
-            (doc_dialog.phase == "awaiting_save_destination" or save_only_waiting)
-            and not document_busy)
-        choose_save_button.configure(
-            state="normal" if destination_ready else "disabled")
-        hud_save_file_button.configure(
-            state="normal" if destination_ready else "disabled")
-        if pending and not doc_choices.winfo_manager():
-            doc_choices.pack(fill="x", pady=(0, 5), before=input_row)
-        elif not pending and doc_choices.winfo_manager():
-            doc_choices.pack_forget()
 
     def reconcile_document_session(*, force: bool = False) -> bool:
         """Reconcile a manually closed owned Notepad with the UI state.
@@ -2800,7 +3177,7 @@ def main() -> None:
             announce_document("Attendi la fine della scrittura prima di chiudere.")
             return
         if doc_dialog.phase != "editing" or doc_dialog.document_id is None:
-            announce_document("Non ho un documento Blocco note gestito da Jarvis da chiudere.")
+            announce_document("Non ho un documento Blocco note gestito da Lumi da chiudere.")
             return
         decision = doc_dialog.request_close()
         if decision.kind == "close_clean":
@@ -2817,13 +3194,6 @@ def main() -> None:
             if source_utterance:
                 remember_exchange(source_utterance, decision.message, "clarify")
 
-    def automatic_document_destination(*, explicit_name: str = "") -> Path | None:
-        """Use this document's original project, never a newly selected one."""
-        if workspace is None or document_owner_project_id is None:
-            return None
-        return project_save_destination(
-            workspace,document_owner_project_id,document_topic,
-            explicit_name=explicit_name)
 
     def save_document_now(spoken: str, *, explicit_name: str = "") -> None:
         nonlocal save_only_waiting
@@ -2863,54 +3233,6 @@ def main() -> None:
         document_operation("save_only",document_id=doc_dialog.document_id,
                            path=path,source_utterance=spoken)
 
-    def execute_document_choice(decision, *, path: Path | None = None) -> None:
-        if decision.kind == "ask_destination":
-            try:
-                path=automatic_document_destination()
-            except (OSError,ValueError,WorkspaceError) as exc:
-                announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
-                return
-            if path is not None:
-                selected=doc_dialog.provide_destination(str(path))
-                execute_document_choice(selected,path=path)
-                return
-        if decision.kind in ("save_then_close", "save_as_then_close"):
-            destination = path if path is not None else (
-                Path(doc_dialog.saved_path) if doc_dialog.saved_path else None)
-            if (path is None and doc_dialog.saved_path and
-                    document_owner_project_id is not None):
-                # Fresh version if the editor changed since the last save.
-                # ManagedDocuments will reuse the old file if unchanged.
-                try:
-                    destination=automatic_document_destination()
-                except (OSError,ValueError,WorkspaceError) as exc:
-                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
-                    return
-            if destination is None:
-                try:
-                    destination=automatic_document_destination()
-                except (OSError,ValueError,WorkspaceError) as exc:
-                    announce_document("Cartella progetto non disponibile: "+str(exc)[:100])
-                    return
-                if destination is None:
-                    doc_dialog.phase = "awaiting_save_destination"
-                    announce_document("Dove vuoi salvare? Per esempio: "
-                                      "sul desktop come storia di Venezia.")
-                    choose_save_button.configure(state="normal")
-                    return
-                if doc_dialog.phase=="awaiting_save_destination":
-                    doc_dialog.provide_destination(str(destination))
-            choose_save_button.configure(state="disabled")
-            document_operation("save", document_id=decision.document_id,
-                               path=destination)
-        elif decision.kind == "discard_then_close":
-            choose_save_button.configure(state="disabled")
-            document_operation("discard", document_id=decision.document_id)
-        else:
-            announce_document(decision.message)
-            choose_save_button.configure(
-                state="normal" if doc_dialog.phase == "awaiting_save_destination"
-                else "disabled")
 
     def handle_document_confirmation(spoken: str) -> None:
         nonlocal last_user_for_document
@@ -2929,11 +3251,6 @@ def main() -> None:
                 return
         execute_document_choice(doc_dialog.reply(spoken))
 
-    def press_discard_button() -> None:
-        if doc_dialog.phase == "awaiting_close_choice":
-            # The named button itself is an explicit decision after Jarvis
-            # requested a choice; no extra spoken magic phrase.
-            handle_document_confirmation("chiudi senza salvare")
 
     def choose_save_destination() -> None:
         nonlocal save_only_waiting
@@ -2959,34 +3276,9 @@ def main() -> None:
         if not closing:
             write_line(message)
 
-    def toggle_dictation() -> None:
-        if dictation.enabled:
-            sync_dictation_ui(dictation.disable())
-        elif voice_mode.get() == CONTINUOUS:
-            sync_dictation_ui(dictation.enable())
-        else:
-            sync_dictation_ui("Seleziona prima Ascolto continuo per dettare.")
 
 
 
-    def save_auto_listen_preference() -> None:
-        """Only changes NEXT app launch, never the current listening mode."""
-        desired = bool(auto_listen_enabled.get())
-        previous = settings["auto_listen"]
-        settings["auto_listen"] = desired
-        try:
-            save_settings(settings)
-        except (OSError, ValueError) as exc:
-            settings["auto_listen"] = previous
-            auto_listen_enabled.set(previous)
-            messagebox.showerror(
-                "Impossibile salvare l'avvio automatico",
-                str(exc)[:160], parent=root)
-            return
-        write_line(
-            "SISTEMA > Al prossimo avvio microfono "
-            + ("in conversazione locale con hotword Jarvis." if desired
-               else "in standby, come selezionato nelle impostazioni."))
 
     def change_voice_mode() -> None:
         nonlocal conversation_epoch
@@ -3009,76 +3301,28 @@ def main() -> None:
         elif selected == PUSH_TO_TALK:
             mic_status.set("Premi per parlare: microfono spento finché non tieni premuto.")
         elif selected == GPT_CONVERSATION:
-            mic_status.set("Microfono attivo: inizia ogni richiesta con Jarvis, "
-                           "per esempio ‘Jarvis, apri Netflix’. Il resto viene ignorato.")
+            mic_status.set("Microfono attivo: inizia ogni richiesta con Lumi, "
+                           "per esempio ‘Lumi, apri Netflix’. Il resto viene ignorato.")
             if not spoken_enabled.get():
                 spoken_enabled.set(True)
                 save_speech_preferences()
-            write_line("Modalità Hey Jarvis. Inizia ogni richiesta con Jarvis.")
+            write_line("Modalità Hey Lumi. Inizia ogni richiesta con Lumi.")
         else:
             mic_status.set("Ascolto continuo: parla direttamente. "
                            "La dettatura richiede l’attivazione manuale.")
 
-    def ptt_press(event=None) -> None:
-        if voice.press():
-            mic_status.set("Premi per parlare: attivazione del microfono...")
 
-    def ptt_release(event=None) -> None:
-        voice.release()
 
-    def journal_plan_approved(plan):
-        """Capture the project identity before the plan's worker starts."""
-        if active_project_id is None:
-            return None
-        tickets=[]
-        project_id=active_project_id
-        for step in plan.steps:
-            ticket=begin_project_work(step.description,"planner",
-                                      project_id=project_id,planned=True)
-            if ticket is False:
-                for prior in tickets:
-                    finish_project_work(prior,"interrupted","Avvio piano non riuscito.")
-                raise WorkspaceError("Impossibile memorizzare i passi: nessuna esecuzione.")
-            tickets.append(ticket)
-        return tuple(tickets)
 
-    def journal_plan_step(tickets,index,status,message,receipt):
-        if not tickets:
-            return
-        if not 1 <= index <= len(tickets):
-            raise WorkspaceError("Indice passo fuori piano.")
-        result=finish_project_work(
-            tickets[index-1],
-            "completed" if status=="completed" else "failed",
-            message,receipt=receipt if status=="completed" else "")
-        if not result:
-            raise WorkspaceError("Esito del piano non registrato.")
 
-    def journal_plan_finished(tickets,reason):
-        if not tickets:
-            return
-        for ticket in tickets:
-            # Completed steps are immutable; remaining planned steps are
-            # interrupted. Nothing will be silently replayed on restart.
-            finish_project_work(ticket,"interrupted","Piano terminato: "+reason)
 
-    def submit_plan() -> None:
-        if not gpt_enabled.get() or not active_gpt or busy_gpt or closing:
-            return
-        from local_model.online_permissions import authorize_online_request
-        open_planner(
-            root, service, engine,
-            lambda: bool(gpt_enabled.get() and active_gpt and not busy_gpt and not closing),
-            local_execution_lock, planner_abort_event,
-            on_approved=journal_plan_approved,
-            on_step=journal_plan_step,
-            on_finished=journal_plan_finished,
-            confirm_inference=lambda detail: authorize_online_request(
-                "planner.create", confirm=lambda: confirm_gpt_inference(detail)),
-            consent_generation=lambda: conversation_epoch,
-        )
 
     def try_timer_command(spoken: str) -> bool:
+        # Comandi su Lumi stessa (riduci, chiudi, riavvia, nascondi/sveglia):
+        # prima di tutto, così «sveglia» con Lumi nascosta la riapre.
+        from lumi_comandi import handle_text as lumi_handle_text
+        if lumi_handle_text(spoken, write_line, speak_result):
+            return True
         alarm_request = parse_alarm_clock_command(spoken)
         if alarm_request:
             action, value = alarm_request
@@ -3096,7 +3340,22 @@ def main() -> None:
             return True
         parsed = parse_timer_command(spoken)
         if parsed is None:
-            return False
+            # Stesso punto d'ingresso dei comandi locali: la musica viene
+            # provata solo dopo timer e sveglia, e solo con l'add-on attivo.
+            from musica.runtime import handle_text as music_handle_text
+            from meteo.runtime import handle_text as meteo_handle_text
+            if meteo_handle_text(spoken, write_line, speak_result):
+                return True              # 056 C: «che tempo fa a Roma», senza modello né quota
+            from controllo_pc.runtime import (claims_first as pc_claims_first,
+                                              handle_text as pc_handle_text)
+            # Parole corte del Controllo PC in uso («indietro», «giù», «il 3»): prima
+            # della musica; altrimenti la musica ha la precedenza come prima.
+            if pc_claims_first(spoken) and pc_handle_text(spoken, write_line, speak_result):
+                return True
+            if music_handle_text(spoken, write_line, speak_result):
+                return True
+            # Poi il Controllo PC (finestre, clic, tasti), solo se attivo.
+            return pc_handle_text(spoken, write_line, speak_result)
         action = parsed.action
         if action == "start":
             if timer.start(parsed.seconds):
@@ -3124,7 +3383,7 @@ def main() -> None:
 
     def start_file_refinement(token, original, *, answer='') -> bool:
         """One model interpretation of an unresolved, locally scoped request."""
-        if (closing or busy_gpt or not gpt_enabled.get() or not active_gpt
+        if (closing or busy_gpt or not gpt_spuntato() or not active_gpt
                 or addon_manager is None or not addon_manager.files_enabled()):
             write_line("FILE > Nessun risultato utile; raffinamento GPT non disponibile. Puoi precisare la ricerca.")
             return False
@@ -3271,13 +3530,13 @@ def main() -> None:
         last_user_for_action = source_utterance or message
         project_local_ticket = begin_project_work(last_user_for_action,"local")
         if project_local_ticket is False:
-            write_line("JARVIS > Impossibile salvare il checkpoint: comando non eseguito.")
+            write_line("LUMI > Impossibile salvare il checkpoint: comando non eseguito.")
             return
         if operation_ledger is None:
             finish_project_work(project_local_ticket,"interrupted",
                                 "Registro operativo non disponibile.")
             project_local_ticket=None
-            write_line("JARVIS > Registro operativo non disponibile: non eseguo.")
+            write_line("LUMI > Registro operativo non disponibile: non eseguo.")
             return
         try:
             local_operation_id=operation_ledger.begin(
@@ -3287,7 +3546,7 @@ def main() -> None:
             finish_project_work(project_local_ticket,"interrupted",
                                 "Impossibile registrare l'operazione.")
             project_local_ticket=None
-            write_line("JARVIS > Operazione bloccata: "+str(exc)[:95])
+            write_line("LUMI > Operazione bloccata: "+str(exc)[:95])
             return
         busy_local = True
         refresh_buttons()
@@ -3310,96 +3569,17 @@ def main() -> None:
                     "Errore locale ("+type(exc).__name__+"): operazione non completata.")))
         threading.Thread(target=worker, daemon=True).start()
 
-    def dispatch_model_capability(cap, original_phrase, doc_snapshot, refinement_token=None):
-        """Shared validated capability dispatch for online and native replies."""
-        current_id = (documents.current.ident
-                      if documents.current else None)
-        if cap is None:
-            announce_document("Azione non disponibile.")
-        elif cap.handler == 'program_apps':
-            from program_apps.service import blocked, protected
-            if (blocked(original_phrase) or protected(original_phrase)
-                    or save_only_waiting or document_busy
-                    or doc_dialog.phase.startswith('awaiting_')
-                    or doc_dialog.phase=='executing'):
-                speak_result('Nessuna app avviata: richiesta negata o altro dialogo in corso.')
-            elif addon_manager is None or not addon_manager.is_active(cap.action_id):
-                speak_result('Programmi e app non è più attivo.')
-            elif not busy_local:
-                submit_local(message_override=original_phrase,
-                    source_utterance=original_phrase,addon_action_id=cap.action_id,
-                    program_call=('launch',{'query':cap.target}))
-            else:
-                speak_result('Operazione locale in corso, riprova.')
-        elif cap.handler == "file_access":
-            if (addon_manager is None or not addon_manager.is_active(cap.action_id)):
-                speak_result("Accesso file non è più attivo.")
-            elif not busy_local:
-                submit_local(message_override=original_phrase,
-                    source_utterance=original_phrase,addon_action_id=cap.action_id,
-                    file_call=(cap.file_operation,
-                        addon_manager.file_service.arguments_for_utterance(
-                            cap.file_operation,dict(cap.file_arguments),original_phrase),
-                        refinement_token) if refinement_token else (cap.file_operation,
-                        addon_manager.file_service.arguments_for_utterance(
-                            cap.file_operation,dict(cap.file_arguments),original_phrase)))
-            else:
-                speak_result("Operazione file già in corso.")
-        elif cap.handler == "local" and cap.plan is not None:
-            # A GPT proposal cannot retain permission after
-            # a local add-on is disabled or uninstalled.
-            if (cap.action_id.startswith("addon.") and
-                    (addon_manager is None or not
-                     addon_manager.is_active(cap.action_id))):
-                speak_result("L'add-on non è più attivo.")
-            elif not busy_local:
-                submit_local(
-                    message_override=cap.plan.steps[0].command,
-                    source_utterance=original_phrase,
-                    addon_action_id=(cap.action_id if
-                        cap.action_id.startswith("addon.")
-                        else ""))
-            else:
-                speak_result("Operazione in corso, riprova.")
-        elif cap.handler == "telegram_voice_dialog":
-            # GPT proposes a name, it never authorizes
-            # a contact or sends audio. Local selection
-            # and two-step owner confirmation are final.
-            try_telegram_voice_send(
-                "manda un messaggio a "+cap.recipient)
-        elif cap.handler == "document_open":
-            if current_id is None:
-                document_operation(
-                    "open", source_utterance=original_phrase)
-            else:
-                announce_document(
-                    "C'è già un Blocco note gestito da Jarvis. "
-                    "Dimmi cosa vuoi scriverci.")
-        elif cap.handler == "document_close":
-            if (doc_snapshot is not None
-                    and current_id == doc_snapshot):
-                ask_to_close_document(original_phrase)
-            else:
-                announce_document(
-                    "Il documento è cambiato; non chiudo nulla.")
-        elif cap.handler == "document_write":
-            if cap.target == "selected_document" and (
-                    doc_snapshot is None
-                    or current_id != doc_snapshot):
-                announce_document(
-                    "La finestra è cambiata: nessun testo inserito.")
-            elif cap.target == "new_notepad" and current_id:
-                announce_document(
-                    "C'è già un documento aperto. "
-                    "Vuoi aggiungere il testo a quello?")
-            else:
-                document_operation(
-                    "compose", content=cap.content,
-                    target=cap.target,
-                    close_after=cap.close_after,
-                    source_utterance=original_phrase)
-        else:
-            announce_document("Azione del catalogo non attiva.")
+
+    def chain_typed_once(message: str) -> None:
+        """056b: il «TU >» è già in chat; la catena non lo riscrive (un invio = una richiesta)."""
+        from local_model import conversazione_lumi as _cl
+        _cl.TU_SCRITTO[0] = True
+        try:
+            conversation_chain(message, True)
+        finally:
+            _cl.TU_SCRITTO[0] = False
+
+    __import__("contesto_online").LOG = lambda text: write_line(text)
 
     def submit_gpt() -> None:
         if closing:
@@ -3416,6 +3596,11 @@ def main() -> None:
         message = request.get().strip()
         if not message:
             return
+        from command_aliases import rewrite as alias_rewrite
+        aliased = alias_rewrite(message)
+        if aliased != message:
+            write_line("COMANDO PERSONALE > " + aliased)
+            message = aliased
         if try_file_command(message):
             request.set("")
             return
@@ -3428,13 +3613,13 @@ def main() -> None:
         if try_self_diagnostic(message):
             request.set("")
             return
-        if not gpt_enabled.get() or not active_gpt or busy_gpt:
+        if busy_gpt:
             return
         reconcile_document_session(force=True)
         if project_voice_command(message):
             request.set("")
             return
-        if preference_command(message):
+        if memory_wipe_command(message) or preference_command(message):
             request.set("")
             return
         if handle_project_reference(message):
@@ -3458,11 +3643,10 @@ def main() -> None:
                     telegram_send_ready=live["telegram_voice_send"],
                     runtime_info=capability_status_prompt(live),
                     addon_actions=active_addon_actions())
-                if run_gpt("typed_conversation",prompt=prompt,
-                           epoch=conversation_epoch,
-                           document_id=document_snapshot,utterance=message):
-                    request.set("")
-                    write_line("DOMANDA A GPT > " + message)
+                # 055: stessa catena della voce (servizi online in ordine, GPT compreso, poi locale).
+                request.set("")
+                write_line("TU > " + message)
+                chain_typed_once(message)
                 return
             # Longer free-form questions are conversational only; never
             # interpret a 5000-character document as an executable action.
@@ -3471,11 +3655,11 @@ def main() -> None:
                 runtime_info=capability_status_prompt(live))
         except (ValueError,ConversationRejected) as exc:
             request.set(message)
-            write_line("JARVIS > " + str(exc))
+            write_line("LUMI > " + str(exc))
             return
-        if run_gpt("ask", prompt=prompt, source=message):
-            request.set("")
-            write_line("DOMANDA A GPT > " + message)
+        request.set("")
+        write_line("TU > " + message)
+        chain_typed_once(message)      # 056: sempre la catena, anche i testi lunghi
 
     def diagnostic_heartbeat() -> None:
         """Independent watchdog: runs even if another event handler fails."""
@@ -3566,7 +3750,7 @@ def main() -> None:
                     write_line("DIAGNOSTICA > "+format_audit(audit))
                     write_line("DIAGNOSTICA > Se vuoi un parere del modello "
                                "esterno, puoi chiedere: "
-                               "'Jarvis, valuta la diagnosi con GPT'. "
+                               "'Lumi, valuta la diagnosi con GPT'. "
                                "Prima di inviare dati chiederò il consenso.")
                     if audit.recommendations:
                         first=audit.recommendations[0]
@@ -3691,7 +3875,9 @@ def main() -> None:
                             route_type = "command"
                         if route_type == "wake":
                             if voice_mode.get() == GPT_CONVERSATION:
-                                mic_status.set("Dì Jarvis seguito dalla richiesta nella stessa frase.")
+                                # «Lumi» da solo: resta in ascolto della frase successiva.
+                                mic_status.set("Ti ascolto: dimmi il comando.")
+                                write_line("LUMI > Ti ascolto…")
                         if route_type not in ("command", "dictation"):
                             continue
                     if raw_spoken and voice_mode.get() != STANDBY:
@@ -3703,15 +3889,21 @@ def main() -> None:
                             spoken = speech_lexicon.correct(uncorrected)
                             if spoken != uncorrected:
                                 write_line("VOCABOLARIO LIA > " + spoken)
+                    if raw_spoken and spoken and route_type != "dictation":
+                        # Comandi personalizzati (Aiuto > sezione > Le mie parole):
+                        # la frase diventa il comando scelto, poi i soliti controlli.
+                        from command_aliases import rewrite as alias_rewrite
+                        aliased = alias_rewrite(spoken)
+                        if aliased != spoken:
+                            write_line("COMANDO PERSONALE > " + aliased)
+                            spoken = aliased
                     if voice_mode.get() != STANDBY and spoken and not speaker.is_audible():
                         if route_type == "dictation":
                             sync_dictation_ui(dictation.insert(spoken))
                             continue
-                        from voice_control import model_switch_target
-                        if model_switch_target(spoken) is not None and try_model_switch(spoken):
-                            continue
                         if voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK):
                             write_line("TU > " + spoken)
+                            __import__("richiamo").registra(spoken)
                             if try_file_command(spoken):
                                 continue
                             if try_timer_command(spoken):
@@ -3767,7 +3959,7 @@ def main() -> None:
                                     continue
                             if project_voice_command(spoken):
                                 continue
-                            if preference_command(spoken):
+                            if memory_wipe_command(spoken) or preference_command(spoken):
                                 continue
                             if handle_project_reference(spoken):
                                 continue
@@ -3788,8 +3980,8 @@ def main() -> None:
                                 else:
                                     write_line("Motore locale occupato: riprova.")
                             else:
-                                if not gpt_enabled.get() and gemma_trial_busy[0]:
-                                    write_line("GEMMA > Sto ancora elaborando. "
+                                if gemma_trial_busy[0]:
+                                    write_line("LUMI > Sto ancora elaborando. "
                                                "Ripeti la frase al termine.")
                                 else:
                                     start_conversation_gpt(spoken)
@@ -3819,7 +4011,7 @@ def main() -> None:
                             receive_save_only_destination(spoken)
                         elif project_voice_command(spoken):
                             pass
-                        elif preference_command(spoken):
+                        elif memory_wipe_command(spoken) or preference_command(spoken):
                             pass
                         elif handle_project_reference(spoken):
                             pass
@@ -3879,12 +4071,19 @@ def main() -> None:
                         result=replace(result,message=listing['summary'])
                         try:
                             from file_access.ui import show_results
+                            open_result=lambda number,token:submit_local(
+                                message_override='Apri risultato '+str(number),
+                                source_utterance='Risultato scelto nella finestra file',
+                                file_call=('select',{'target':str(number),'selection_id':token,'open':True}))
                             show_results(root,listing,
-                                on_open=lambda number,token:submit_local(
-                                    message_override='Apri risultato '+str(number),
-                                    source_utterance='Risultato scelto nella finestra file',
-                                    file_call=('select',{'target':str(number),'selection_id':token,'open':True})),
+                                on_open=open_result,
                                 on_select=lambda number,token,hwnd:addon_manager.file_service.mark_view_selection(number,token,hwnd))
+                            if 1<=len(listing['items'])<=9:
+                                # 052: «il 2», «due», «il secondo» valgono anche senza «Lumi».
+                                __import__("risposte").expect_choice(
+                                    len(listing['items']),
+                                    lambda number,token=listing['token']:open_result(number,token),
+                                    seconds=45.0)
                         except (ImportError,OSError,ValueError,tk.TclError) as exc:
                             write_line("ACCESSO FILE > Finestra risultati non disponibile: "+str(exc)[:140]+
                                        ". Reinstalla file_access/ui.py dal pacchetto completo.")
@@ -3903,7 +4102,7 @@ def main() -> None:
                             write_line("ACCESSO FILE > Vista non disponibile: "+str(exc)+
                                        ". Reinstalla file_access/ui.py dal pacchetto completo.")
                         if result.explain:
-                            if gpt_enabled.get() and active_gpt and not busy_gpt:
+                            if gpt_spuntato() and active_gpt and not busy_gpt:
                                 from file_access.service import explanation_prompt
                                 run_gpt("ask",prompt=explanation_prompt(result.preview),
                                         source="Spiega il file letto su mia richiesta",
@@ -3926,7 +4125,7 @@ def main() -> None:
                                 observed=observed,action=result.action
                                 if result.action!="internal" else "local_error")
                         except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
-                            write_line("JARVIS > Registro operazioni: "+str(exc)[:90])
+                            write_line("LUMI > Registro operazioni: "+str(exc)[:90])
                     local_operation_id=None
                     finish_project_work(project_local_ticket,
                         "completed" if result.status=="completed" else "failed",
@@ -3993,7 +4192,7 @@ def main() -> None:
                                 if observed_file else "",observed=observed_file,
                                 action="notepad."+operation)
                         except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
-                            write_line("JARVIS > Registro documento: "+str(exc)[:90])
+                            write_line("LUMI > Registro documento: "+str(exc)[:90])
                     document_operation_id=None
                     finish_project_work(project_document_ticket,"completed",result.message,
                                         receipt=str(result.document_id)+":"+result.kind,
@@ -4048,7 +4247,7 @@ def main() -> None:
                             operation_ledger.finish(document_operation_id,"failed",
                                                     action="notepad."+operation)
                         except (OSError,sqlite3.Error,MemoryBoundaryError) as exc:
-                            write_line("JARVIS > Registro documento: "+str(exc)[:90])
+                            write_line("LUMI > Registro documento: "+str(exc)[:90])
                     document_operation_id=None
                     finish_project_work(project_document_ticket,"failed",error_message)
                     project_document_ticket = None
@@ -4063,7 +4262,7 @@ def main() -> None:
                     if (epoch == conversation_epoch and
                             (channel=="typed_conversation" or
                              voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK)) and
-                            gpt_enabled.get() and active_gpt):
+                            gpt_spuntato() and active_gpt):
                         try:
                             latest=current_capability_snapshot(documents.current is not None)
                             intent = parse_conversation_intent(
@@ -4087,7 +4286,7 @@ def main() -> None:
                                     and intent.kind not in ("chat","clarify")):
                                 message=("Per eseguire un'azione, dimmi "
                                          "esplicitamente cosa vuoi fare.")
-                                write_line("JARVIS > "+message)
+                                write_line("LUMI > "+message)
                                 speak_result(message)
                                 remember_exchange(original_phrase,message,"clarify")
                                 continue
@@ -4095,8 +4294,9 @@ def main() -> None:
                                 if (not refinement_token and intent.kind=="clarify" and addon_manager is not None
                                         and addon_manager.files_enabled()):
                                     addon_manager.file_service.remember_file_clarification(original_phrase)
-                                write_line("JARVIS > " + intent.reply)
+                                write_line("LUMI > " + intent.reply)
                                 speak_result(intent.reply)
+                                __import__("chat_elenco").segna_modello("online")
                                 remember_exchange(original_phrase, intent.reply,
                                                   intent.kind)
                             elif intent.kind == "capability":
@@ -4118,10 +4318,10 @@ def main() -> None:
                                         current_id is None or current_id != doc_snapshot):
                                     announce_document(
                                         "Il documento selezionato è cambiato o non è gestito "
-                                        "da Jarvis. Non ho inserito il testo.")
+                                        "da Lumi. Non ho inserito il testo.")
                                 elif current_id is not None and intent.target == "new_notepad":
                                     announce_document(
-                                        "C'è già un documento aperto da Jarvis. "
+                                        "C'è già un documento aperto da Lumi. "
                                         "Per aggiungere testo a quello, chiedimi di scriverci.")
                                 else:
                                     document_operation(
@@ -4151,29 +4351,39 @@ def main() -> None:
                             channel=="typed_conversation" or
                             voice_mode.get() in (GPT_CONVERSATION, CONTINUOUS, PUSH_TO_TALK))):
                         write_line("Conversazione GPT: " + reason)
-                        speak_result("GPT non è disponibile. Puoi riprovare.")
+                        speak_result("GPT non è disponibile: provo con il modello locale.")
                         remember_exchange(original_phrase, "GPT non disponibile, riprova.",
                                           "error")
+                        if not failed_refinement:
+                            local_after_gpt(original_phrase, channel == "typed_conversation")
                 elif kind == "gpt_ok":
                     action, result, *rest = data
                     busy_gpt = False
                     if action == "ask" and len(rest) > 1 and rest[1] != conversation_epoch:
                         continue
-                    if gpt_enabled.get():
+                    if gpt_spuntato():
                         if action == "ask":
-                            write_line("GPT > " + result.get("text", "(nessuna risposta)"))
-                            speak_result(result.get("text", ""))
+                            # Ricordi decisi da GPT (riga [[RICORDO|…]]): tolti e salvati.
+                            result["text"], found_memories = __import__("ricordi").estrai(
+                                result.get("text", ""))
+                            write_line("GPT > " + (result["text"] or "(nessuna risposta)"))
+                            speak_result(result["text"])
+                            saved_memories = __import__("ricordi").salva(
+                                __import__("ricordi").cervello(), found_memories, fonte="online")
+                            if saved_memories:
+                                write_line("MEMORIA > " + __import__("ricordi").avviso(saved_memories))
                             if rest and rest[0]:
                                 answer=result.get("text", "")
                                 kind=("clarify" if isinstance(answer,str)
                                       and answer.strip().endswith("?")
                                       and answer.count("?")==1 else "chat")
+                                __import__("chat_elenco").segna_modello("online")
                                 remember_exchange(rest[0],answer,kind)
                             gpt_status.set("GPT: connesso")
                             active_gpt = True
                         elif action == "disconnect":
                             display_status({"status": "disconnected", "sharing": False})
-                            write_line("Account scollegato da Jarvis.")
+                            write_line("Account scollegato da Lumi.")
                         else:
                             display_status(result)
                     else:
@@ -4187,8 +4397,17 @@ def main() -> None:
                     spoken_status.set(f"Voci offline disponibili: {len(names)}.")
                     refresh_voices_button.configure(state="normal")
                 elif kind == "tts_error":
-                    spoken_status.set("Voci Windows non disponibili: " + str(data[0]))
+                    message = str(data[0])
+                    spoken_status.set(message if message.startswith(("Voce naturale", "Download voce"))
+                                      else "Voci Windows non disponibili: " + message)
                     refresh_voices_button.configure(state="normal")
+                elif kind == "tts_status":
+                    spoken_status.set(str(data[0]))
+                elif kind == "music_status":
+                    write_line("MUSICA > " + str(data[0])[:160])
+                elif kind == "tts_download_done":
+                    for button in (download_paola_button, download_serena_button):
+                        button.configure(state="normal")
                 elif kind == "gpt_error":
                     runtime_events.record("gpt_failure")
                     action, reason, *request_epoch = data
@@ -4196,7 +4415,7 @@ def main() -> None:
                     if action == "ask" and request_epoch and request_epoch[0] != conversation_epoch:
                         continue
                     active_gpt = False if action != "ask" else active_gpt
-                    if gpt_enabled.get():
+                    if gpt_spuntato():
                         gpt_status.set("GPT: collegamento non disponibile o richiesta fallita.")
                         write_line("GPT: " + str(reason))
                 refresh_buttons()
@@ -4221,10 +4440,10 @@ def main() -> None:
                     active_gpt = False
                     telegram_gpt_ready.clear()
                     planner_abort_event.set()
-                    if gpt_enabled.get():
+                    if gpt_spuntato():
                         gpt_status.set("GPT: modulo non pronto.")
                         write_line("GPT: " + str(event.get("error", "errore")))
-                elif event.get("event") == "stopped" and gpt_enabled.get() and not busy_gpt:
+                elif event.get("event") == "stopped" and gpt_spuntato() and not busy_gpt:
                     conversation_epoch += 1
                     planner_abort_event.set()
                     active_gpt = False
@@ -4237,7 +4456,7 @@ def main() -> None:
         # while GPT is processing. Do not forward it after mode/logout changes,
         # and never process it during a pending document-save decision.
         if (voice_mode.get() != GPT_CONVERSATION or not active_gpt
-                or not gpt_enabled.get()):
+                or not gpt_spuntato()):
             pending_conversation.clear()
         elif (pending_conversation and not busy_gpt and not busy_local
               and not document_busy
@@ -4268,19 +4487,20 @@ def main() -> None:
         message=request.get().strip()
         if not message:
             return
+        # 061: con la chat di un contatto Telegram aperta, Invio manda subito il messaggio a lui.
+        if __import__("telegram_vista").invia_dalla_casella(message):
+            request.set("")
+            return "break"
+        __import__("richiamo").registra(message)
         try:
             chat_is_visible = chat_notebook.select() == str(chat_local_tab)
         except NameError:
             chat_is_visible = False  # Standalone legacy router tests.
         if " ".join(message.casefold().strip(" .!?").split()) in (
-                "aiuto", "help", "comandi", "cosa puoi fare", "cosa sai fare"):
+                "aiuto", "help", "comandi"):
             show_help()
             request.set("")
             return "break"
-        from voice_control import model_switch_target
-        if model_switch_target(message) is not None and try_model_switch(message):
-            request.set("")
-            return
         reconcile_document_session(force=True)
         if try_telegram_voice_send(message):
             request.set("")
@@ -4346,7 +4566,7 @@ def main() -> None:
         if project_voice_command(message):
             request.set("")
             return
-        if preference_command(message):
+        if memory_wipe_command(message) or preference_command(message):
             request.set("")
             return
         if handle_project_reference(message):
@@ -4361,23 +4581,19 @@ def main() -> None:
         if maybe_queue_telegram_note(message):
             request.set("")
             return
-        # F2 chat instances are Gemma-only. Never transmit their private
-        # message to GPT silently; other existing console routes stay intact.
-        if chat_is_visible and gpt_enabled.get():
-            chat_sessions_panel.report_error(
-                "Chat isolate F2: disattiva GPT per usare Gemma locale.")
-            write_line("CHAT > Chat isolate: disattiva GPT per parlare con Gemma.")
+        # Prova 16/11: con GPT acceso anche le risposte di Lumi finivano a GPT.
+        own_reply = __import__("richiamo").risposta_di_lumi(message)
+        if own_reply:
+            write_line("TU > " + message)
+            write_line("LUMI > " + own_reply[0])
+            speak_result(own_reply[1])
+            request.set("")
             return
-        # Selection is distinct from connection and local model configuration.
-        if gpt_enabled.get():
-            if not active_gpt:
-                write_line("GPT > GPT selezionato ma non connesso. Connetti ChatGPT nelle impostazioni.")
-            elif busy_gpt:
-                write_line("GPT > Sto già elaborando. Attendi la risposta.")
-            else:
-                submit_gpt()
+        # «Ragiona online» va ai servizi online (prova 16/11).
+        if __import__("online").servizi_online.forza_online(message)[0]:
+            submit_gemma_trial()
             return
-        # GPT is explicitly off: use the configured local model.
+        # 061: niente interruttore GPT/Gemma: la chat segue sempre la catena (spunte della lista Online).
         from local_model.native_config import NativeModelConfig
         from local_model.native_settings import default_native_settings_path
         native_path = default_native_settings_path()
@@ -4392,12 +4608,12 @@ def main() -> None:
                 return
         if chat_is_visible:
             chat_sessions_panel.report_error(
-                "Nessun GGUF locale pronto. Configura Gemma nelle impostazioni.")
+                "Nessun GGUF locale pronto. Scegli un modello in Impostazioni > Modelli.")
             write_line("CHAT > Nessun modello locale configurato.")
             return
-        if gpt_enabled.get() and active_gpt:
+        if __import__("online").servizi_online.disponibili():
             if busy_gpt:
-                write_line("JARVIS > Sto già elaborando. Attendi la risposta.")
+                write_line("LUMI > Sto già elaborando. Attendi la risposta.")
                 return
             submit_gpt()
         else:
@@ -4411,12 +4627,6 @@ def main() -> None:
 
     workspace_button.configure(command=open_project_manager)
     scope_button.configure(command=open_project_manager)
-    telegram_toggle.configure(command=toggle_telegram_automatic)
-    telegram_configure_button.configure(command=telegram_open_setup)
-    telegram_reload_button.configure(command=telegram_reconfigure)
-    telegram_note_button.configure(command=leave_telegram_note_dialog)
-    telegram_contacts_button.configure(command=open_telegram_contact_list)
-    telegram_send_button.configure(command=open_telegram_manual_send)
     addon_settings_button.configure(command=open_addon_settings)
     hud.set_orbit_open_handler(orbit_open)
     hud_send_button.configure(command=send_console_input)
@@ -4424,13 +4634,106 @@ def main() -> None:
     hud_mic_button.configure(command=toggle_hud_microphone)
     hud.set_quick_toggle_handlers(
         microphone=hud_mic_button.invoke,
-        gpt=gpt_toggle.invoke,
-        memory=memory_toggle.invoke)
+        memory=memory_toggle.invoke,
+        model=lambda: write_line(__import__("model_gate").toggle_message()))
+    def save_mode(mode: str) -> bool:
+        """056 B: slide Basso consumo / Veloce, salvata nelle impostazioni (annullata se fallisce)."""
+        previous = settings.get("modalita", "basso_consumo")
+        settings["modalita"] = mode
+        try:
+            save_settings(settings)
+        except (OSError, ValueError) as exc:
+            settings["modalita"] = previous
+            write_line("MODALITÀ > Non salvata: " + str(exc)[:120])
+            return False
+        write_line("MODALITÀ > " + ("Veloce: risponde subito il primo modello online, "
+                                    "il locale resta di riserva." if mode == "veloce" else
+                                    "Basso consumo: risponde il modello offline; online solo "
+                                    "se dici sì."))
+        return True
+
+    hud.set_mode_handler(save_mode)
+
+    def imposta_modalita(modo: str) -> None:
+        """061: «passa online/offline», «modalità veloce/basso consumo»: muovono la slide."""
+        nome = "Veloce" if modo == "veloce" else "Basso consumo"
+        if settings.get("modalita") != modo:
+            hud.mode_slide.scegli(modo)
+        text = ("Modalità " + nome + ".") if settings.get("modalita") == modo else "Non riesco a cambiare modalità."
+        write_line("LUMI > " + text)
+        speak_result(text)
+    hud.mode_slide.imposta(settings.get("modalita", "basso_consumo"))
+    # Menu «ONLINE ▾» accanto a GPT (15/11 sera): servizi online, spunte e quote.
+    # 055: al posto dell'interruttore RICERCA ON/OFF, tendina «RICERCA ▾» con i servizi di
+    # ricerca, ciascuno con la sua spunta e la sua barra di quota (menu_tendine.py).
+    modello_button = hud.model_toggle_button      # 056b: nome ▾ e ⏻ nello stesso tasto
+    modello_menu = __import__("menu_tendine").MenuModello(      # 056 D: le 3 caselle al volo
+        root, modello_button, on_use=lambda target: lumi_model_use(target),
+        open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modelli offline")),
+        notify=lambda text: write_line(text))
+    online_menu_button = hud.add_quick_button("online", "Online ▾", lambda: None, after="model")
+    ricerca_button = hud.add_quick_button("ricerca", "Ricerca ▾", lambda: None, after="online")
+    ricerca_menu = __import__("menu_tendine").MenuRicerca(
+        root, ricerca_button,
+        open_settings=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Servizi di ricerca")),
+        notify=lambda text: write_line(text))
+    models_menu = __import__("menu_tendine").MenuModelli(
+        root, online_menu_button, open_settings=lambda: show_settings(),
+        notify=lambda text: write_line(text), on_connect=lambda: collega_gpt())
+    selettore_tendine = __import__("selettore_chat").collega(
+        root, selettore_tasti, notify=lambda text: write_line(text), finestra=root)
+    # Telegram (15/11 sera): icona ✈ con i colori dello stato, tendina dei contatti e una
+    # voce per contatto nel menu laterale.
+    telegram_button = hud.add_quick_button("telegram", "Telegram", lambda: None, after="memory", simbolo="telegram")
+
+    def set_telegram_online(peer_id: int, value: bool) -> bool:
+        """061: «Risposte online» per contatto, spenta di serie; salvata senza fermare le risposte."""
+        elenco = set(settings.get("telegram_online_contacts", ()))
+        (elenco.add if value else elenco.discard)(peer_id)
+        nuovo = sorted(elenco)
+        try:
+            save_settings({**settings, "telegram_online_contacts": nuovo})
+        except (OSError, ValueError) as exc:
+            write_line("TELEGRAM > Impostazione non salvata: " + str(exc)[:120])
+            return False
+        settings["telegram_online_contacts"] = nuovo
+        return True
+
+    def show_telegram_chat(title, items, action) -> None:
+        chat_bubbles.messaggi(title, items, action)
+        if chat_menu is not None:
+            chat_menu.title.set(title)
+
+    telegram_view = __import__("telegram_vista").Telegram(
+        root, telegram_button, workspace=lambda: workspace, settings=lambda: settings,
+        auto_var=telegram_auto, contacts=selected_telegram_contacts,
+        save_contacts=save_telegram_contact_selection, toggle_auto=toggle_telegram_automatic,
+        open_manager=open_telegram_contact_list, show_chat=show_telegram_chat,
+        send_voice=send_owner_telegram_voice, set_online=set_telegram_online)
+    __import__("telegram_vista").ATTIVA.update(
+        vista=telegram_view, titolo=lambda: chat_menu.title.get() if chat_menu is not None else "")
+    if chat_menu is not None:
+        chat_menu.extra = telegram_view.voci_menu
+
+
+
+    from intent_normalizer import register as register_understanding
+
+    register_understanding(
+        run_understood_command, understood_catalog, understanding_output,
+        to_model=lambda text: conversation_chain(text, True))
     tools_button.configure(command=toggle_console_tools)
     local_button.configure(command=submit_local)
     ask_button.configure(command=submit_gpt)
     # Manual, isolated native test. No automatic online fallback or PC actions.
     gemma_trial_queue = queue.Queue()
+    # Streaming: partial chat text while the local model is still generating,
+    # and voice that starts from the first complete sentence (chat_testo.py).
+    from chat_testo import STREAM as _chat_stream
+    _chat_stream.configure(
+        output=output,
+        speak=lambda text: speaker.speak(text, selected_voice()),
+        voice_enabled=lambda: bool(spoken_enabled.get()))
     gemma_trial_busy = [False]
     # Prefer the pinned native source packaged beside Jarvis.
     gemma_source = [str(Path(__file__).resolve().parent / "native_engine" / "koboldcpp.py")
@@ -4439,29 +4742,9 @@ def main() -> None:
     gemma_session = [None]
     gemma_session_lock = threading.Lock()
 
-    def get_gemma_session():
-        with gemma_session_lock:
-            if closing:
-                raise RuntimeError("Jarvis in chiusura: richiesta Gemma annullata.")
-            if gemma_session[0] is None:
-                from local_model.native_chat_adapter import NativeChatAdapter
-                from local_model.native_conversation_session import NativeConversationSession
-                source = gemma_source[0]
-                if not source or not Path(source).is_file():
-                    raise ValueError("Sorgente Gemma non configurata.")
-                gemma_session[0] = NativeConversationSession(NativeChatAdapter(source))
-            return gemma_session[0]
 
     gemma_recent_reply = [None]
 
-    def chat_navigation_possible():
-        return not (
-            closing or busy_gpt or busy_local or gemma_trial_busy[0]
-            or document_busy or save_only_waiting
-            or doc_dialog.phase.startswith("awaiting_")
-            or pending_project_name or pending_project_rename_id is not None
-            or pending_project_trash_id is not None
-            or bool(pending_conversation))
 
     def chat_selection_changed(_old, _new):
         nonlocal conversation_epoch
@@ -4475,375 +4758,21 @@ def main() -> None:
     previous_chat_tab = [str(chat_console_tab)]
     changing_chat_tab = [False]
 
-    def on_chat_tab_change(_event=None):
-        if changing_chat_tab[0]:
-            return
-        selected = chat_notebook.select()
-        if selected == previous_chat_tab[0]:
-            return
-        if not chat_navigation_possible():
-            changing_chat_tab[0] = True
-            chat_notebook.select(previous_chat_tab[0])
-            changing_chat_tab[0] = False
-            write_line("CHAT > Termina la richiesta corrente prima di cambiare vista.")
-            return
-        if selected == str(chat_local_tab):
-            if not chat_sessions_panel.activate():
-                changing_chat_tab[0] = True
-                chat_notebook.select(chat_console_tab)
-                changing_chat_tab[0] = False
-                return
-        else:
-            chat_selection_changed(None, None)
-        previous_chat_tab[0] = selected
 
     chat_notebook.bind("<<NotebookTabChanged>>", on_chat_tab_change)
 
-    def selected_chat_target():
-        if chat_notebook.select() != str(chat_local_tab):
-            return None
-        target = chat_sessions_panel.current_target()
-        if target is None or target[1] != active_project_id:
-            return None
-        return target
 
-    def try_gemma_app_followup(utterance):
-        from program_apps.service import normalized
-        if normalized(utterance) not in (
-            "me lo apri", "me la apri", "puoi aprirlo", "puoi aprirla",
-            "aprilo", "aprila", "avvialo", "avviala", "fallo",
-        ):
-            return False
-        recent = gemma_recent_reply[0]
-        provider = getattr(engine, "program_apps", None)
-        if (recent is None or recent[0] != conversation_epoch
-                or time.monotonic() - recent[1] > 120
-                or provider is None or not provider.available()
-                or closing or busy_local or gemma_trial_busy[0]
-                or save_only_waiting or document_busy or doc_dialog.phase != "idle"
-                or pending_project_name or pending_project_rename_id is not None
-                or pending_project_trash_id is not None):
-            return False
-        context = normalized(recent[2])
-        matches = [
-            row["id"] for row in provider.entries()
-            if row["enabled"] and row["available"]
-            and re.search(r"(?<!\w)" + re.escape(normalized(row["name"])) + r"(?!\w)", context)
-        ]
-        gemma_recent_reply[0] = None
-        if len(matches) != 1:
-            return False
-        submit_local(message_override=utterance, source_utterance=utterance,
-                     addon_action_id="addon.programmi_app.avvia",
-                     program_call=("suggest_id", {"query": matches[0]}))
-        return True
 
-    def native_memory_request(context_id, spoken):
-        """Capture UI authorization; only the returned worker reader does I/O."""
-        revision = gemma_memory_revision
-        wanted = context_id is not None or memory_enabled.get()
-        owner = workspace if context_id is not None else (durable_brain if wanted else None)
-        warnings = []
-        if wanted and owner is None:
-            warnings.append("Archivio dei ricordi non disponibile.")
 
-        def read(budget):
-            if closing or owner is None:
-                return ""
-            try:
-                if context_id is None:
-                    if owner is not durable_brain or revision != gemma_memory_revision:
-                        return ""
-                    raw = owner.prompt_context(spoken[:180], budget=budget)
-                else:
-                    if owner is not workspace or budget < 160:
-                        return ""
-                    project = owner.project(context_id)
-                    if project is None or project["trashed"]:
-                        return ""
-                    raw = owner.prompt_context("project", context_id, spoken,
-                                               budget=budget, prefer_related=True)
-                value = json.loads(raw)
-                if not isinstance(value, dict) or not any(value.values()):
-                    return ""
-                if len(raw) > budget:
-                    raise ValueError("Memoria oltre il budget.")
-                return raw
-            except (OSError, sqlite3.Error, ValueError) as exc:
-                warnings.append("Ricordi precedenti non disponibili ("
-                                + type(exc).__name__ + ").")
-                return ""
 
-        def recent_pairs(count):
-            if closing or owner is None:
-                return ()
-            try:
-                if context_id is None:
-                    if owner is not durable_brain or revision != gemma_memory_revision:
-                        return ()
-                    pairs = owner.dialogue_pairs(count)
-                    if closing or owner is not durable_brain or revision != gemma_memory_revision:
-                        return ()
-                    return pairs
-                if owner is not workspace:
-                    return ()
-                pairs = owner.dialogue_pairs("project", context_id, count)
-                return () if closing or owner is not workspace else pairs
-            except (OSError, sqlite3.Error, ValueError) as exc:
-                warnings.append("Scambi recenti non disponibili (" + type(exc).__name__ + ").")
-                return ()
 
-        read.recent_pairs = recent_pairs
-        return (read if owner is not None else None), owner, revision, warnings
-
-    def submit_gemma_voice(spoken, *, typed=False):
-        if closing or gemma_trial_busy[0]:
-            return False
-        try:
-            chat_tab_active = chat_notebook.select() == str(chat_local_tab)
-        except NameError:
-            chat_tab_active = False
-        chat_target = selected_chat_target() if chat_tab_active else None
-        if chat_tab_active and chat_target is None:
-            write_line("CHAT > Impossibile identificare la conversazione corrente.")
-            return False
-        explicit = re.match(r"^con gemma(?:[ ,:]+)(.+)$", spoken, re.I)
-        candidates = ()
-        if explicit:
-            from program_apps.service import blocked
-            provider = engine.program_apps
-            question = explicit.group(1).strip()
-            if blocked(question):
-                write_line("GEMMA > Per scegliere un’app indica un obiettivo da svolgere.")
-                return False
-            if provider is not None and provider.available():
-                candidates = tuple(row for row in provider.entries()
-                                   if row["enabled"] and row["available"])
-            if not 1 <= len(candidates) <= 12:
-                write_line("GEMMA > Per la prova abilita da 1 a 12 app in Programmi e app.")
-                return False
-        if gemma_source[0] is None or not Path(gemma_source[0]).is_file():
-            source = filedialog.askopenfilename(
-                parent=root, title="Configura Gemma: seleziona koboldcpp.py",
-                filetypes=[("Sorgente KoboldCpp", "koboldcpp.py"), ("Python", "*.py")])
-            if not source:
-                write_line("GEMMA > Configurazione locale mancante. Nessun invio online.")
-                return False
-            if Path(source).name.lower() != "koboldcpp.py":
-                write_line("GEMMA > File sorgente non valido. Nessun invio online.")
-                return False
-            gemma_source[0] = source
-        native_context = chat_target[0] if chat_target is not None else active_project_id
-        native_document = documents.current.ident if documents.current else None
-        native_actions = () if explicit else active_addon_actions()
-        if explicit:
-            reader, memory_owner, memory_revision, memory_warnings = (
-                None, None, gemma_memory_revision, [])
-        elif chat_target is not None:
-            from local_model.chat_context import make_chat_history_reader
-            try:
-                reader = make_chat_history_reader(
-                    chat_sessions_panel.store, chat_target[0],
-                    project_id=chat_target[1])
-            except (OSError, sqlite3.Error, ValueError) as exc:
-                write_line("CHAT > Archivio locale non disponibile: " + type(exc).__name__)
-                chat_sessions_panel.report_error(
-                    "Archivio chat non accessibile. Nessuna richiesta inviata.")
-                return False
-            # The sole memory source of a chat instance is its own history.
-            # No automatic global/project Second Brain recall in F2.
-            memory_owner, memory_revision, memory_warnings = (
-                None, gemma_memory_revision, [])
-        else:
-            reader, memory_owner, memory_revision, memory_warnings = (
-                native_memory_request(active_project_id, spoken))
-        # Make the session busy only after the selected chat and its reader
-        # are valid: errors cannot strand the Gemma UI in a busy state.
-        gemma_trial_busy[0] = True
-        gemma_recent_reply[0] = None
-        gemma_button.configure(state="disabled")
-        write_line(("GEMMA / DOMANDA > " if typed else "UTENTE / VOCE > ") + spoken)
-        voice_epoch = conversation_epoch
-
-        def voice_worker():
-            try:
-                session = get_gemma_session()
-                if explicit:
-                    index = session.pick_program(
-                        question, tuple(row["name"] for row in candidates))
-                    app_id = candidates[index]["id"] if index is not None else None
-                    gemma_trial_queue.put(("program_choice", (spoken, app_id), voice_epoch))
-                else:
-                    from conversation_router import native_intent_context_for_request
-                    # Informational questions use ordinary Gemma chat: no Windows
-                    # catalog and no JSON action parser. Executable requests keep
-                    # the existing strict validated-intent path.
-                    intent_context = native_intent_context_for_request(
-                        spoken, has_document=native_document is not None,
-                        addon_actions=native_actions)
-                    turn = chat_transport.ask_local_first(
-                        spoken, session=session, timeout=180,
-                        context_id=native_context, defer_history=True,
-                        memory_context=reader, intent_context=intent_context)
-                    from local_model.native_conversation_session import NativeChatTurn
-                    if isinstance(turn, NativeChatTurn):
-                        turn.memory_owner = memory_owner
-                        turn.memory_revision = memory_revision
-                        turn.memory_warning = " ".join(memory_warnings)
-                        turn.document_snapshot = native_document
-                        turn.chat_target = chat_target
-                        turn.project_snapshot = active_project_id
-                    gemma_trial_queue.put(("ok" if typed else "voice_ok", turn, voice_epoch))
-            except Exception as exc:
-                gemma_trial_queue.put(("error" if typed else "voice_error", str(exc)[:350], voice_epoch))
-        threading.Thread(target=voice_worker, daemon=True,
-                         name="jarvis-gemma").start()
-        return True
-
-    def submit_gemma_trial():
-        if closing or gemma_trial_busy[0]:
-            return
-        question = request.get().strip()
-        if not question:
-            write_line("GEMMA > Scrivi una domanda prima di avviare la prova.")
-            return
-        if (try_program_command(question) or try_gemma_app_followup(question)
-                or submit_gemma_voice(question, typed=True)):
-            request.set("")
-
-    def poll_gemma_trial():
-        try:
-            while True:
-                kind, value, voice_epoch = gemma_trial_queue.get_nowait()
-                gemma_trial_busy[0] = False
-                gemma_button.configure(state="normal")
-                if voice_epoch is not None and voice_epoch != conversation_epoch:
-                    continue
-                if kind in ("ok", "voice_ok"):
-                    from local_model.native_conversation_session import NativeChatTurn
-                    if isinstance(value, NativeChatTurn):
-                        chat_target = getattr(value, "chat_target", None)
-                        if closing or getattr(value, "project_snapshot", active_project_id) != active_project_id:
-                            continue
-                        if chat_target is not None:
-                            if (value.context_id != chat_target[0]
-                                    or selected_chat_target() != chat_target):
-                                continue
-                        elif value.context_id != active_project_id:
-                            continue
-                        if (value.context_id is None and value.memory_revision is not None
-                                and value.memory_revision != gemma_memory_revision):
-                            continue
-                        if value.allowed_actions is not None:
-                            from conversation_router import parse_native_conversation_intent, ConversationRejected
-                            from dialogue_focus import is_ambiguous_short_reply
-                            try:
-                                intent = parse_native_conversation_intent(
-                                    value.text, utterance=value.question,
-                                    has_document=value.document_snapshot is not None,
-                                    addon_resolver=(addon_manager.resolve if addon_manager is not None else None))
-                                if intent.kind == 'capability':
-                                    from program_apps.service import blocked
-                                    if (intent.capability is None or
-                                            intent.capability.action_id not in value.allowed_actions
-                                            or is_ambiguous_short_reply(value.question)
-                                            or blocked(value.question)):
-                                        raise ConversationRejected('Richiesta di azione non identificata.')
-                                    if (save_only_waiting or document_busy or doc_dialog.phase.startswith('awaiting_')
-                                            or pending_project_name or pending_project_rename_id is not None
-                                            or pending_project_trash_id is not None
-                                            or pending_project_reference.question or telegram_voice_dialog.pending):
-                                        raise ConversationRejected('Un altro dialogo richiede la tua risposta.')
-                                    if value.accept_action():
-                                        dispatch_model_capability(intent.capability, value.question,
-                                                                  value.document_snapshot)
-                                    continue
-                                if intent.kind not in ('chat', 'clarify'):
-                                    raise ConversationRejected('Formato di risposta locale non supportato.')
-                                value.text = intent.reply
-                            except ConversationRejected as exc:
-                                if value.finish_reason == 'length':
-                                    write_line('GEMMA > Risposta incompleta: limite Max Output raggiunto; '
-                                               'azione non eseguita. ' + str(exc))
-                                    speak_result('La risposta di Gemma è stata interrotta dal limite di output. '
-                                                 'Non ho eseguito alcuna azione.')
-                                else:
-                                    write_line('GEMMA > Risposta non interpretabile: ' + str(exc))
-                                    speak_result('Non riesco a interpretare la risposta di Gemma. Puoi riprovare?')
-                                continue
-                        # UI context/epoch cannot change during this synchronous
-                        # acceptance. The metadata commit never waits for native inference.
-                        # A memory switch preserves the current live dialogue,
-                        # but must not newly hydrate a revoked durable owner.
-                        if (value.context_id is None and value.memory_owner is not None
-                                and (value.memory_owner is not durable_brain or not memory_enabled.get())):
-                            value.restored_history = ()
-                        if not value.commit():
-                            continue
-                        # Distinct transcripts are stored only in the opted-in
-                        # chat DB, never in the general Second Brain.
-                        context_state = (value.intent_warning, value.context_note)
-                        if getattr(value._session, "_last_context_notice", None) != context_state:
-                            value._session._last_context_notice = context_state
-                            for notice in context_state:
-                                if notice:
-                                    write_line('GEMMA > ' + notice)
-                        if value.memory_warning:
-                            write_line("MEMORIA > " + value.memory_warning)
-                        owner = value.memory_owner
-                        can_save = owner is not None and (
-                            owner is workspace if value.context_id is not None else
-                            owner is durable_brain and memory_enabled.get())
-                        if chat_target is not None:
-                            try:
-                                chat_sessions_panel.persist_answer(
-                                    chat_target[0], value.question, value.text,
-                                    project_id=chat_target[1])
-                            except (OSError, sqlite3.Error, ValueError) as exc:
-                                write_line("CHAT > Risposta non archiviata: "
-                                           + type(exc).__name__)
-                                chat_sessions_panel.report_error(
-                                    "Errore di salvataggio chat. Non chiudere prima del recupero.")
-                        elif can_save and remember_exchange(value.question, value.text, "chat") is False:
-                            write_line("MEMORIA > Scambio non archiviato.")
-                        gemma_recent_reply[0] = (
-                            voice_epoch, time.monotonic(),
-                            value.question[:500] + " " + value.text[:500])
-                        value = value.text
-                if kind == "program_choice":
-                    spoken, app_id = value
-                    if app_id is None:
-                        message = "Quale programma vuoi aprire?"
-                        write_line("GEMMA > " + message)
-                        speak_result(message)
-                    elif busy_local:
-                        write_line("GEMMA > Motore locale occupato. Riprova.")
-                    else:
-                        submit_local(message_override=spoken, source_utterance=spoken,
-                                     addon_action_id="addon.programmi_app.avvia",
-                                     program_call=("suggest_id", {"query": app_id}))
-                elif kind == "voice_ok":
-                    write_line("GEMMA > " + value)
-                    speak_result(value)
-                elif kind == "voice_error":
-                    write_line("GEMMA / ERRORE > " + value)
-                    speak_result("Gemma locale non disponibile. Controlla la configurazione.")
-                elif kind == "ok":
-                    write_line("GEMMA > " + value)
-                    speak_result(value)
-                else:
-                    write_line("GEMMA / ERRORE > " + value)
-        except queue.Empty:
-            pass
-        if not closing:
-            root.after(250, poll_gemma_trial)
 
     root.after(250, poll_gemma_trial)
     gemma_button.configure(command=submit_gemma_trial)
 
     plan_button.configure(command=submit_plan)
     diagnostic_button.configure(
-        command=lambda: try_self_diagnostic("Jarvis, fai un'autodiagnosi"))
+        command=lambda: try_self_diagnostic("Lumi, fai un'autodiagnosi"))
     diagnostic_cancel_button.configure(command=cancel_diagnostic)
     service_diagnostic_box = ttk.LabelFrame(integrations_settings_frame, text="Diagnostica servizi")
     service_diagnostic_box.pack(fill="x", padx=8, pady=8)
@@ -4863,7 +4792,16 @@ def main() -> None:
         command=lambda: handle_document_confirmation("annulla"))
     spoken_switch.configure(command=save_speech_preferences)
     spoken_picker.bind("<<ComboboxSelected>>", lambda event: save_speech_preferences())
+    # Cursori voce (effetto, velocità, tonalità, volume): salvati poco dopo
+    # l'ultimo spostamento, senza scrivere su disco a ogni pixel.
+    style_save_job = [None]
+
+
+    for style_var in (spoken_effect, spoken_rate, spoken_pitch, spoken_volume):
+        style_var.trace_add("write", schedule_style_save)
     refresh_voices_button.configure(command=refresh_voices)
+    download_paola_button.configure(command=lambda: download_natural_voice("paola"))
+    download_serena_button.configure(command=lambda: download_natural_voice("serena"))
     test_voice_button.configure(command=test_speech)
     for button in mode_buttons:
         button.configure(command=change_voice_mode)
@@ -4885,7 +4823,7 @@ def main() -> None:
             try:
                 native_owner.close()
             except Exception:
-                write_line("GEMMA > Errore nell'annullamento durante la chiusura.")
+                write_line("LUMI > Errore nell'annullamento durante la chiusura.")
         if addon_manager is not None and addon_manager._file_service is not None:
             addon_manager.file_service.reset()
         if addon_manager is not None and getattr(addon_manager,'_program_service',None) is not None:
@@ -4899,6 +4837,8 @@ def main() -> None:
             telegram_bridge.stop()
         telegram_gpt_ready.clear()
         speaker.close()
+        from musica.runtime import close as close_music
+        close_music()
         hud.close()
         alarm.stop()
         timer.close()
@@ -4908,9 +4848,79 @@ def main() -> None:
 
     ttk.Button(frame, text="Chiudi impostazioni", command=settings_window.withdraw).pack(
         anchor="e", pady=(9, 0))
+    # Impostazioni riordinate (15/11 sera): Interfaccia, Voce, Memoria, Modelli, Add-on,
+    # Tutorial, Info; voci di fianco con un clic; si chiudono cliccando nella finestra di Lumi.
+    settings_menu = __import__("impostazioni_menu")
+    tutorial_settings_frame = settings_page("Tutorial")
+    settings_menu.pagina_tutorial(
+        tutorial_settings_frame,
+        start_tutorial=lambda mode: help_box_say(lambda box: box.avvia_guida(mode)),
+        reset_tutorials=lambda: (current_help_box().rivedi_tutorial(),
+                                 write_line("AIUTO > I tutorial ripartono alla prossima modalità che usi.")),
+        open_voice_training=lambda: __import__("la_mia_voce").VoiceWindow(root))
+    info_settings_frame = settings_page("Info")
+    settings_menu.pagina_info(info_settings_frame)
+    # Add-on (15/11 sera): ogni add-on con la sua icona (azzurra acceso, arancione spento) e
+    # un interruttore a scorrimento; clic sull'icona → il suo menu a destra.
+    addon_rows = __import__("addon_righe")
+    addon_chosen_frame = settings_page("Add-on scelto")
+    addon_rows_now = [None]
+
+    def addon_rows_sync() -> None:
+        # Prova 16/11: le righe vecchie (categoria richiusa) davano TclError.
+        rows = addon_rows_now[0]
+        if rows is not None:
+            try:
+                if rows.frame.winfo_exists():
+                    rows.sincronizza()
+                else:
+                    addon_rows_now[0] = None
+            except tk.TclError:
+                addon_rows_now[0] = None
+        meteo_refresh(True)          # 056: add-on Meteo acceso/spento = icona subito
+        if addon_chosen.ident:
+            addon_chosen.mostra(addon_chosen.ident)
+
+    addon_chosen = __import__("addon_ui").SezioneAddon(
+        addon_chosen_frame, addon_manager, window=settings_window, on_change=addon_changed,
+        engine=engine, section_builders={"telegram": build_telegram_section,
+                                         "meteo": lambda box: __import__("meteo.ui", fromlist=["x"]).costruisci_sezione(
+                                             box, notify=write_line, on_change=lambda: meteo_refresh(True)),
+                                         "modello_locale": lambda box: build_model_addon_section(box)},
+        after_change=addon_rows_sync)
+
+    def build_model_addon_section(container) -> None:
+        """055: la pagina dell'add-on tiene solo attiva/disattiva e questo pulsante."""
+        ttk.Button(container, text="Apri impostazioni modelli",
+                   command=lambda: (show_settings(), settings_navigation.mostra("Modelli", "Modelli offline"))
+                   ).pack(anchor="w", pady=(0, 6))
+
+    def open_addon_menu(addon_id: str) -> None:
+        addon_chosen.mostra(addon_id)
+        settings_navigation.mostra_pagina("Add-on scelto")
+
+    def build_addon_rows(container):
+        if addon_manager is None:
+            return tk.Label(container, text="Add-on non disponibili: " + addon_setup_error[:80],
+                            bg=addon_rows.PANEL, fg=addon_rows.ARANCIONE, wraplength=220,
+                            justify="left")
+        addon_rows_now[0] = addon_rows.RigheAddon(
+            container, elenco=addon_manager.list_installed, apri=open_addon_menu,
+            cambia=lambda addon_id, on: addon_chosen.cambia(addon_id, on))
+        return addon_rows_now[0].frame
+
+    settings_navigation = settings_menu.Navigazione(
+        settings_window, settings_tabs,
+        {"Voce": frame, "GPT e memoria": assistant_settings_frame,
+         "Progetti e servizi": integrations_settings_frame, "Timer e allarmi": timer_settings_frame,
+         "Interfaccia": interface_settings_frame, "Tutorial": tutorial_settings_frame,
+         "Info": info_settings_frame, "Add-on scelto": addon_chosen_frame},
+        main_root=root, righe={"Add-on": build_addon_rows}, proprie=("Add-on scelto",))
     # Settings are intentionally hidden until the gear is pressed.
     # The normal window-close control invokes the same safe shutdown.
-    hud.set_close_handler(close)
+
+    goodbye_started = [False]
+    hud.set_close_handler(close_with_goodbye)
     hud.set_state_provider(lambda: {
         "speaking": speaker.is_speaking(),
         # Orange only if the real Vosk input stream has actually opened.
@@ -4919,17 +4929,16 @@ def main() -> None:
         "mic_enabled": voice.is_listening(),
         "mic_selected": voice_mode.get() != STANDBY,
         "mic_push_to_talk": voice_mode.get() == PUSH_TO_TALK,
-        "gpt_enabled": gpt_enabled.get(),
         "reasoning": (gemma_trial_busy[0] or
                       (gemma_session[0] is not None and gemma_session[0].is_busy) or
-                      (busy_gpt and gpt_enabled.get() and
+                      (busy_gpt and gpt_spuntato() and
                        gpt_request_action in ("ask", "conversation", "typed_conversation"))),
         "searching": (busy_local and engine.file_access is not None and
                       engine.file_access._progress_active and
                       not engine.file_access.cancelled.is_set()),
         "thinking": (gemma_trial_busy[0] or
                      (gemma_session[0] is not None and gemma_session[0].is_busy) or
-                     (busy_gpt and gpt_enabled.get()) or busy_local or document_busy),
+                     (busy_gpt and gpt_spuntato()) or busy_local or document_busy),
         "connected": active_gpt,
         "memory": memory_enabled.get(),
         "orbit_nodes": orbit_nodes_cache,
@@ -4947,24 +4956,385 @@ def main() -> None:
         # The local SAPI voice is suppressed from Vosk input by
         # ignore_audio=speaker.is_audible, also during the cooldown.
         greeting = startup_greeting()
-        write_line("JARVIS > " + greeting)
+        write_line("LUMI > " + greeting)
         speak_result(greeting)
 
-    root.protocol("WM_DELETE_WINDOW", close)
+    root.protocol("WM_DELETE_WINDOW", close_with_goodbye)
+
+
+
+
+
+
+
+
+
+
+    # Contesto comune (piano di divisione di jarvis.py, passo 1): i moduli spostati fuori
+    # da main() useranno questi riferimenti invece delle variabili interne.
+    __import__("lumi_contesto").crea(
+        root=root, write_line=write_line, speak_result=speak_result, settings=settings,
+        output_queue=output_queue, service=service, workspace=workspace,
+        addon_manager=addon_manager)
+
+    def lumi_github(spoken: str) -> bool:
+        """Add-on GitHub (sola lettura): elenco in chat, a voce solo una frase breve."""
+        github = __import__("github_lettura")
+        config = github.Configurazione()
+        if not config.attivo:
+            return False
+        kind, repo = github.parse(spoken)
+        token = config.token()
+        write_line("GITHUB > Chiedo a GitHub…")
+
+        def work():
+            text = github.esegui(kind, repo, token)
+            root.after(0, lambda: (write_line("GITHUB > " + text),
+                                   speak_result(text if "\n" not in text else
+                                                "Fatto, l'elenco è in chat.")))
+        threading.Thread(target=work, daemon=True, name="lumi-github").start()
+        return True
+
+    ricerca_risultati = [[]]      # 056 C3: indirizzi dell'ultima ricerca, per «apri il N»
+
+    def open_search_result(number: int) -> None:
+        """«apri il 2»: apre quel risultato nel browser predefinito, senza conferma (nessuna
+        quota). Solo http/https, e solo risultati dell'ultima ricerca."""
+        urls = ricerca_risultati[0]
+        if not 1 <= number <= len(urls) or not urls[number - 1].lower().startswith(("http://", "https://")):
+            write_line("RICERCA > Non c'è un risultato " + str(number) + ".")
+            return
+        __import__("webbrowser").open(urls[number - 1])
+        write_line("RICERCA > Apro il risultato " + str(number) + " nel browser.")
+        speak_result("Apro il risultato " + str(number) + ".")
+
+    ricerca_attesa = [None]       # 056 A.5: frase di ricerca in attesa del «sì»
+
+    def lumi_ricerca(spoken: str, confirmed: bool = False) -> bool:
+        """«cerca online …» / «approfondisci online …»: primo servizio di ricerca pronto
+        (poi i successivi); riassunto e link nella finestra risultati, browser chiuso.
+        056: prima si chiede «Vado online?» (sì/no senza «Lumi»): niente quota senza il sì."""
+        ricerca = __import__("online").servizi_ricerca
+        parsed = ricerca.parse(spoken)
+        if parsed is None:
+            return False
+        kind, query = parsed
+        if not ricerca.carica_impostazioni()["attivi"]:
+            text = "Nessun servizio di ricerca è spuntato: aprilo dal menu RICERCA in alto."
+            write_line("RICERCA OFF > " + text)
+            speak_result(text)
+            return True
+        if not ricerca.pronti():
+            text = ricerca.avviso_senza_chiave()
+            write_line("RICERCA > " + text)
+            speak_result("Per cercare online manca la chiave Tavily. Il link per crearla è in chat.")
+            return True
+        if not confirmed:
+            ricerca_attesa[0] = spoken
+            __import__("lumi_comandi").chiedi(
+                "ricerca_yes", "Vado online? Di' sì o no.", write_line, speak_result,
+                no_action="ricerca_no")
+            return True
+        write_line("RICERCA > Cerco online: " + query)
+
+        def work():
+            try:
+                name, result = ricerca.cerca(query, kind == "approfondisci")
+            except Exception as exc:           # mai silenzio: l'errore va in chat
+                name, result = None, [type(exc).__name__]
+
+            def show():
+                try:
+                    show_inner()
+                except Exception as exc:       # mai silenzio
+                    write_line("RICERCA > Errore nel mostrare i risultati: " + type(exc).__name__)
+                    speak_result("La ricerca ha dato un errore. I dettagli sono in chat.")
+
+            def show_inner():
+                if name is not None and result.link:
+                    ricerca_risultati[0] = [url for _title, url in result.link]
+                    __import__("risposte").expect_choice(     # 056 C3: «apri il 2»
+                        len(result.link), open_search_result, seconds=120.0)
+                if name is None:
+                    text = ("Nessun servizio di ricerca ha risposto (" + "; ".join(result)[:200] + ").")
+                    write_line("RICERCA > " + text)
+                    speak_result("Nessun servizio di ricerca ha risposto. I dettagli sono in chat.")
+                    return
+                write_line("RICERCA > " + ricerca.testo_chat(name, result))   # in chat, link cliccabili
+                speak_result(ricerca.frase_breve(result) or "Fatto, i risultati sono in chat.")
+            root.after(0, show)
+        threading.Thread(target=work, daemon=True, name="lumi-ricerca-online").start()
+        return True
+
+    def resume_ricerca(accepted: bool) -> None:
+        pending, ricerca_attesa[0] = ricerca_attesa[0], None
+        if pending is None:
+            return
+        if accepted:
+            lumi_ricerca(pending, True)
+        else:
+            write_line("LUMI > Va bene, non cerco online.")
+
+    def help_box_say(action) -> None:
+        if pc_help_box is None:
+            write_line("AIUTO > Il Controllo PC non è attivo.")
+            return
+        text = action(pc_help_box)
+        write_line("AIUTO > " + text)
+        speak_result(text)
+
+    def resume_guessed_command(accepted: bool) -> None:
+        waiting = __import__("classificatore").IN_ATTESA
+        pending, waiting["frase"] = waiting["frase"], None
+        if pending is None:
+            return
+        if accepted:
+            submit_local(message_override=pending[1], source_utterance=pending[0])
+        else:
+            submit_gemma_voice(pending[0], route="locale")
+
+    def resume_orchestrated(route: str) -> None:
+        waiting = __import__("orchestratore").IN_ATTESA
+        pending, waiting["richiesta"] = waiting["richiesta"], None
+        if pending is None:
+            return
+        submit_gemma_voice(pending[0], typed=pending[1], route=route)
+
+    def resume_online_question(route: str) -> None:
+        waiting = __import__("online").servizi_online.IN_ATTESA
+        pending, waiting["domanda"] = waiting["domanda"], None
+        if pending is None:
+            return
+        if route == "locale" and len(pending) > 2 and pending[2]:
+            write_line("LUMI > Va bene, resto offline.")      # «approfondisci» rifiutato
+            return
+        if len(pending) > 2 and pending[2]:
+            submit_deepen(pending[0])        # 058: «approfondisci» confermato, senza TU lungo
+            return
+        submit_gemma_voice(pending[0], typed=pending[1], route=route)
+
+    def lumi_stop_all() -> bool:
+        """«Lumi, fermati» e pulsante «■ Ferma»: voce, risposta del modello, GPT in attesa.
+
+        False se non c'è niente da fermare: la frase passa agli altri comandi."""
+        nonlocal conversation_epoch
+        session = gemma_session[0]
+        model_busy = bool(gemma_trial_busy[0] or (session is not None and session.is_busy))
+        gpt_waiting = bool(busy_gpt and gpt_spuntato())
+        if not (speaker.is_speaking() or model_busy or gpt_waiting):
+            return False
+        speaker.interrupt()
+        if model_busy and session is not None:
+            # Interrompe la generazione; il modello si ricarica alla prossima domanda.
+            __import__("stato_lumi").mark_model_stop()
+            threading.Thread(target=session.stop, daemon=True,
+                             name="lumi-ferma-modello").start()
+        if gpt_waiting:
+            conversation_epoch += 1      # la risposta GPT in arrivo viene scartata
+            pending_conversation.clear()
+            planner_abort_event.set()
+        write_line("LUMI > " + __import__("frasi_lumi").say("fermo"))
+        return True
+
+    def lumi_close_results() -> None:
+        """«chiudi i risultati»: gestore locale, chiude solo la finestra dei risultati."""
+        def work():
+            from file_access.ui import chiudi_risultati
+            try:
+                closed = chiudi_risultati(root)
+            except tk.TclError:
+                closed = False
+            text = ("Finestra dei risultati chiusa." if closed
+                    else "Non c'è nessuna finestra dei risultati aperta.")
+            write_line("LUMI > " + text)
+            speak_result(text)
+        root.after(0, work)
+
+    def lumi_model_use(target) -> None:
+        """Usa il modello scelto (a voce con «cambia modello» e con «Usa questo» nelle
+        impostazioni): riconosce la famiglia, carica il suo profilo, salva e riavvia il motore."""
+        sm = __import__("local_model.scelta_modello", fromlist=["elenca_modelli"])
+        try:
+            in_use = sm.modello_in_uso()
+        except (OSError, ValueError, RuntimeError):
+            in_use = ""
+        if str(target) == in_use:
+            note = "«" + sm.nome_breve(target) + "» è già il modello in uso."
+            write_line("MODELLO LOCALE > " + note)
+            speak_result(note)
+            return
+        try:
+            sm.salva_scelta(target)
+        except (OSError, ValueError, RuntimeError) as exc:
+            write_line("MODELLO LOCALE > Modello non cambiato: " + str(exc)[:120])
+            speak_result("Non sono riuscita a cambiare il modello.")
+            return
+        note = "Cambio modello: «" + sm.nome_breve(target) + "». Salvato per i prossimi avvii."
+        write_line("MODELLO LOCALE > " + note)
+        write_line("MODELLO LOCALE > " + sm.nota_famiglia(target))
+        speak_result(note)
+        lumi_model_restart()        # chiude il motore; riparte col nuovo modello
+
+    def lumi_model_choose() -> None:
+        """«cambia modello»: propone SOLO i modelli delle caselle fisse 1/2/3 (come la tendina MODELLO);
+        il numero scelto (anche senza «Lumi») salva il modello e riavvia il motore. L'elenco
+        completo sta nella pagina Modelli."""
+        sm = __import__("local_model.scelta_modello", fromlist=["elenca_modelli"])
+        try:
+            righe = __import__("menu_tendine").voci()
+        except (OSError, ValueError, RuntimeError):
+            righe = []
+        text, spoken, per_numero = sm.proposta_caselle(righe)
+        try:        # 055: un modello aggiunto il cui file è sparito si segnala, non si nasconde
+            lost = __import__("local_model.registro_modelli", fromlist=["mancanti"]).mancanti()
+        except (OSError, ValueError, RuntimeError):
+            lost = []
+        if lost:
+            text += "\nNon trovo più: " + ", ".join(p.name for p in lost[:3]) + "."
+        write_line("MODELLO LOCALE > " + text)
+        speak_result(spoken)
+        if not per_numero:
+            return
+
+        def choose(number: int) -> None:
+            if number in per_numero:
+                lumi_model_use(per_numero[number])
+            else:
+                write_line("MODELLO LOCALE > La casella %d è vuota." % number)
+                speak_result("La casella %d è vuota." % number)
+
+        __import__("risposte").expect_choice(
+            max(per_numero), choose,
+            on_cancel=lambda: write_line("LUMI > Va bene, non cambio modello."),
+            speech_text=spoken)
+
+    def lumi_model_restart() -> None:
+        """«riavvia il modello»: con il motore separato lo chiude (memoria liberata) e lo
+        ricarica alla prossima domanda, senza chiudere Lumi."""
+        motore = __import__("local_model.motore_processo", fromlist=["separate_enabled"])
+        with gemma_session_lock:
+            session = gemma_session[0]
+            in_lumi = session is not None and not isinstance(
+                getattr(session, "adapter", None), motore.ProcessChatAdapter)
+            if not motore.separate_enabled():
+                text = ("Il motore è dentro Lumi: per riavviare il modello senza chiudere Lumi "
+                        "attiva «Motore in un processo separato» in Impostazioni, GPT e memoria.")
+            else:
+                if session is not None:
+                    session.stop()
+                    gemma_session[0] = None
+                text = "Riavvio il modello: si ricarica alla prossima domanda."
+                if in_lumi:
+                    text += " Il vecchio motore dentro Lumi libera la memoria solo al prossimo avvio."
+        write_line("MODELLO LOCALE > " + text)
+        speak_result(text)
+
+    __import__("la_mia_voce").ON_LEARNED.append(
+        lambda: speech_lexicon is not None and speech_lexicon.reload())
+
+    from lumi_comandi import register as register_lumi_commands
+    register_lumi_commands(
+        {"minimize": lumi_minimize, "close": close_with_goodbye, "restart": lumi_restart,
+         "shutdown_pc": lumi_shutdown_pc, "cancel_shutdown": lumi_cancel_shutdown,
+         "hide": lumi_hide, "wake": lumi_wake,
+         "model_restart": lumi_model_restart, "stop_all": lumi_stop_all,
+         "close_results": lumi_close_results, "model_choose": lumi_model_choose,
+         "ricerca": lambda spoken: lumi_ricerca(spoken),
+         "data_cleanup": lambda: open_data_cleanup(),
+         # Tutorial guidato del Controllo PC (aiuto_comandi.PASSI).
+         "tutorial_yes": lambda: help_box_say(lambda box: box.avvia_guida()),
+         "tutorial_no": lambda: help_box_say(lambda box: (
+             setattr(box, "offerta", None) or "Va bene. I comandi restano nel riquadro.")),
+         "tutorial_skip": lambda: help_box_say(lambda box: box.salta()),
+         "tutorial_stop": lambda: help_box_say(lambda box: box.esci()),
+         "tutorial_start": lambda: help_box_say(lambda box: box.avvia_guida(
+             pc_service.current_mode())),
+         "github": lambda spoken: lumi_github(spoken),
+         # Passo 8: risposta a «la passo all'online?» per una domanda lunga.
+         "online_yes": lambda: resume_online_question("online"),
+         "online_no": lambda: resume_online_question("locale"),
+         # Orchestratore: «uso l'online per questa richiesta?» e permessi dei passi.
+         "orch_once": lambda: resume_orchestrated("online"),
+         "orch_always": lambda: (__import__("orchestratore").SESSIONE.update(sempre=True),
+                                 write_line("ONLINE > Online attivo finché non dici «passa offline»."),
+                                 resume_orchestrated("online")),
+         "orch_local": lambda: resume_orchestrated("locale"),
+         "ricerca_yes": lambda: resume_ricerca(True),
+         "ricerca_no": lambda: resume_ricerca(False),
+         "gpt_consent_yes": lambda: grant_gpt_voice_consent(True),
+         "gpt_consent_no": lambda: grant_gpt_voice_consent(False),
+         "orch_yes": lambda: __import__("orchestratore").rispondi_permesso(True),
+         "orch_no": lambda: __import__("orchestratore").rispondi_permesso(False),
+         # Passo 11: risposta a «Intendevi …?» del classificatore leggero.
+         "nlu_yes": lambda: resume_guessed_command(True),
+         "nlu_no": lambda: resume_guessed_command(False),
+         "help_off": lambda: (pc_help_box is not None and pc_help_box.imposta_riquadro(False),
+                              pc_service.show_strip(None),
+                              write_line("LUMI > Riquadro dei comandi tolto: «mostra i comandi» "
+                                         "per riaverlo.")),
+         "attachments_clear": lambda: write_line("ALLEGATI > " + (
+             "Allegati tolti." if __import__("allegati").ATTUALI.togli()
+             else "Non ci sono allegati.")),
+         "brain_local_on": lambda: lumi_brain_local(True),
+         "brain_local_off": lambda: lumi_brain_local(False),
+         "mode_fast": lambda: imposta_modalita("veloce"),
+         "mode_low": lambda: imposta_modalita("basso_consumo"),
+         "help_open": lambda: show_help()},
+        lambda: root.state() == "iconic" or avatar_dock.user_hidden)
     settings_window.bind("<Escape>", lambda _event: settings_window.withdraw())
     root.bind("<Control-comma>", lambda _event: show_settings())
     from local_help import bind_help_shortcuts
     bind_help_shortcuts(root, settings_window, show_help, focus_command_box)
     refresh_buttons()
     input_box.focus_set()
+    root.after(4000, meteo_refresh)      # 056: icona meteo all'avvio, poi ogni 30 minuti
     root.after(120, poll)
     root.after(800, diagnostic_heartbeat)
     root.after(400, refresh_voices)
     root.after(650, initial_launch)
     root.after(1100, refresh_orbit_nodes)
+
+    root.after(2500, first_run_components)
+
+    def ask_old_projects() -> None:
+        """Nuovo menu dei progetti: i vecchi si cancellano, dopo un sì (decisione 15/11 sera)."""
+        menu_side = __import__("menu_laterale")
+        flag = default_path().parent / "progetti_nuovi.json"
+        if workspace is None or not menu_side.vecchi_progetti_da_chiedere(flag):
+            return
+        try:
+            old = workspace.projects(limit=200)
+        except (OSError, sqlite3.Error, WorkspaceError):
+            return
+        if not old:
+            menu_side.segna_fatto(flag)
+            return
+        if messagebox.askyesno(
+                "Lumi // Progetti",
+                "Nuovo menu dei progetti (☰). Cancello i %d progetti vecchi e le loro chat? "
+                "Le loro cartelle vanno nel Cestino di Windows." % len(old), parent=root):
+            if active_project_id is not None:
+                switch_context(None)
+            count = menu_side.cancella_vecchi_progetti(
+                workspace, chat_archive.store, flag,
+                trash_folders=lambda folders: __import__("pulizia_dati").al_cestino(folders))
+            write_line("PROGETTI > Cancellati %d progetti vecchi. Crea i nuovi da ☰ → «＋ Nuovo progetto»." % count)
+            chat_archive.refresh(show=True)
+        else:
+            menu_side.segna_fatto(flag)
+
+    root.after(4000, ask_old_projects)
+
+    def flush_internal_console() -> None:
+        """Righe della vecchia console nera → righe «sistema» (visibili in DIAGNOSTICA)."""
+        for line in __import__("console_interna").preleva():
+            write_line("CONSOLE > " + line, role="sistema")
+        root.after(700, flush_internal_console)
+
+    root.after(700, flush_internal_console)
     if telegram_auto.get():
         root.after(1400,toggle_telegram_automatic)
-    if gpt_enabled.get():
+    if gpt_spuntato():
         root.after(200, lambda: run_gpt("status"))
     power.start()
     try:
@@ -4974,6 +5344,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # Una sola finestra (15/11 sera): l'uscita della console va in console.log e in Diagnostica.
+    __import__("console_interna").installa()
+    try:
+        main()
+    except Exception:
+        __import__("console_interna").errore_fatale()
+        raise
 
 

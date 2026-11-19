@@ -16,7 +16,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 import test_activity_status as callbacks
-from gpt_client import GPTClient, GPTUnavailable
+from online.gpt_client import GPTClient, GPTUnavailable
 
 
 @unittest.skipUnless(os.name == "nt", "Windows-only project requirement")
@@ -269,7 +269,7 @@ class GPTTimeoutNodeBridgeTests(unittest.TestCase):
         (sdk / "package.json").write_text('{"type":"module"}', encoding="utf-8")
         (sdk / "index.js").write_text(FAKE_SDK, encoding="utf-8")
         env = dict(os.environ, LOCALAPPDATA=str(home), JARVIS_TEST_CANCEL_MODE=mode)
-        self.proc = subprocess.Popen([node, str(Path("gpt_bridge.mjs").resolve())],
+        self.proc = subprocess.Popen([node, str(Path("online/gpt_bridge.mjs").resolve())],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
             text=True, encoding="utf-8", env=env,
             creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))

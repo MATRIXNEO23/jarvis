@@ -15,6 +15,20 @@ class OfflineSpeechTests(unittest.TestCase):
         with patch("offline_tts._invoke", return_value=json.dumps("Microsoft Elsa")):
             self.assertEqual(installed_voices(), ["Microsoft Elsa"])
 
+    def test_windows_voice_list_timeout_keeps_other_voices(self):
+        """15/11, Pavilion: PowerShell oltre il tempo → TimeoutExpired non gestito, nessuna voce."""
+        import subprocess
+        import offline_tts
+        with patch("offline_tts._invoke", side_effect=subprocess.TimeoutExpired("powershell", 25)), \
+                patch("piper_voice.installed_piper_voices", return_value=["Voce naturale: Paola"]), \
+                patch("edge_voice.installed_edge_voices", return_value=["Edge: Elsa (online)"]):
+            self.assertEqual(installed_voices(), ["Voce naturale: Paola", "Edge: Elsa (online)"])
+        self.assertIn("tempo scaduto", offline_tts.LAST_LIST_ERROR["text"])
+        with patch("offline_tts._invoke", return_value=json.dumps(["Microsoft Elsa"])):
+            installed_voices()
+        self.assertEqual(offline_tts.LAST_LIST_ERROR["text"], "")
+        self.assertGreaterEqual(offline_tts.LIST_TIMEOUT, 60)
+
     def test_spoken_output_is_offline_json_data_not_shell(self):
         called = []
         finished = threading.Event()

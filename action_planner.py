@@ -7,9 +7,11 @@ shell commands, network requests or filesystem writes are permitted here.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import json
 import re
+from threading import Event, Lock
 
 
 MAX_STEPS = 5
@@ -78,7 +80,7 @@ def build_planning_prompt(request: str) -> str:
                    "reason": "motivo breve"}
     # The user phrase is JSON-escaped and explicitly marked as untrusted data.
     return (
-        "Sei il pianificatore di Jarvis su Windows. NON esegui azioni. "
+        "Sei il pianificatore di Lumi su Windows. NON esegui azioni. "
         "Restituisci SOLO un oggetto JSON valido, senza markdown e senza testo extra. "
         "Formato esempio: " + json.dumps(example, ensure_ascii=False) + ". "
         "Usa esclusivamente questi tool_id: " + tools + ". "
@@ -179,3 +181,37 @@ def parse_plan(raw: str) -> ApprovedPlan:
                 risk = "apertura programma"
         validated.append(PlannedStep(tool, command, description, risk, expected))
     return ApprovedPlan(intent.strip(), tuple(validated))
+
+
+# ======================================================================
+# ESECUZIONE del piano approvato (riordino 060: era plan_runner.py)
+# ======================================================================
+
+def run_approved_plan(
+    plan: ApprovedPlan,
+    engine,
+    execution_lock: Lock,
+    cancel_event: Event,
+    abort_event: Event,
+    notify: Callable[[tuple], None],
+) -> None:
+    total = len(plan.steps)
+    for index, step in enumerate(plan.steps, start=1):
+        if cancel_event.is_set() or abort_event.is_set():
+            notify(("finished", "interrotto prima del passo successivo"))
+            return
+        try:
+            with execution_lock:
+                if cancel_event.is_set() or abort_event.is_set():
+                    notify(("finished", "annullato prima del passo successivo"))
+                    return
+                result = engine.execute(step.command)
+        except Exception:
+            notify(("finished", "errore locale interno; arresto prudenziale"))
+            return
+        notify(("step", index, total, step.description, result.status, result.message,
+                str(getattr(result, "task_id", "") or "")))
+        if result.status != "completed":
+            notify(("finished", "fermato: un passo non è riuscito"))
+            return
+    notify(("finished", "completato"))

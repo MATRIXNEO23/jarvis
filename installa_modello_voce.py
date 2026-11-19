@@ -1,6 +1,6 @@
 """Explicit, one-time download of the official Italian Vosk model.
 
-Never called during Jarvis startup. Extract only safe files into an isolated
+Never called during Lumi startup. Extract only safe files into an isolated
 temporary directory; do not overwrite an existing model or user data.
 """
 from __future__ import annotations
@@ -88,7 +88,7 @@ def install() -> Path:
 if __name__ == "__main__":
     try:
         print("Modello disponibile in:", install())
-        print("Riavvia Jarvis: verrà usata la preferenza microfono salvata.")
+        print("Riavvia Lumi: verrà usata la preferenza microfono salvata.")
     except (OSError, ValueError, zipfile.BadZipFile) as exc:
         print("Installazione modello non riuscita:", exc)
         raise SystemExit(1)

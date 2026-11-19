@@ -1,7 +1,7 @@
-"""Opt-in local chat instances for a future Kobold-style Jarvis interface.
+"""Opt-in local chat instances for a future Kobold-style Lumi interface.
 
 ARCH-01/F1 only: metadata and atomic, paired transcripts, NO runtime wiring.
-No imports from Jarvis, Second Brain, native model or internet. Instantiation
+No imports from Lumi, Second Brain, native model or internet. Instantiation
 requires an explicit file path and creates only that database.
 """
 from __future__ import annotations
@@ -102,6 +102,12 @@ class ChatSessionStore:
             db.execute(
                 """CREATE INDEX IF NOT EXISTS chat_exchanges_recent
                    ON chat_exchanges(chat_id,id DESC)""")
+            # Quali modelli hanno lavorato sulla chat (simboli nel menu, 15/11 sera).
+            db.execute(
+                """CREATE TABLE IF NOT EXISTS chat_models(
+                    chat_id TEXT NOT NULL REFERENCES chat_sessions(id),
+                    model TEXT NOT NULL CHECK(model IN ('online','offline')),
+                    PRIMARY KEY(chat_id, model))""")
             db.execute(
                 """CREATE TABLE IF NOT EXISTS chat_selection(
                     scope TEXT NOT NULL,
@@ -207,6 +213,28 @@ class ChatSessionStore:
                 "UPDATE chat_sessions SET title=?,updated_utc=? WHERE id=?",
                 (title, _timestamp(), chat_id))
 
+    def delete_chat(self, chat_id, *, project_id=None):
+        """Elimina una chat e i suoi scambi (richiesta esplicita dell'utente, 15/11)."""
+        chat_id = _id(chat_id)
+        scope, scope_id = _scope(project_id)
+        with self._db() as db:
+            self._require(db, chat_id, scope, scope_id)
+            db.execute("DELETE FROM chat_selection WHERE chat_id=?", (chat_id,))
+            db.execute("DELETE FROM chat_exchanges WHERE chat_id=?", (chat_id,))
+            db.execute("DELETE FROM chat_models WHERE chat_id=?", (chat_id,))
+            db.execute("DELETE FROM chat_sessions WHERE id=?", (chat_id,))
+
+    def move_chat(self, chat_id, *, from_project=None, to_project=None):
+        """Sposta una chat dentro un progetto o fuori (menu laterale, 15/11 sera)."""
+        chat_id = _id(chat_id)
+        old_scope, old_id = _scope(from_project)
+        new_scope, new_id = _scope(to_project)
+        with self._db() as db:
+            self._require(db, chat_id, old_scope, old_id)
+            db.execute("DELETE FROM chat_selection WHERE chat_id=?", (chat_id,))
+            db.execute("UPDATE chat_sessions SET scope=?,scope_id=?,updated_utc=? WHERE id=?",
+                       (new_scope, new_id, _timestamp(), chat_id))
+
     def append_exchange(self, chat_id, question, answer, *, project_id=None):
         """Persist one accepted user/assistant exchange atomically, never half."""
         scope, scope_id = _scope(project_id)
@@ -222,6 +250,69 @@ class ChatSessionStore:
                 "UPDATE chat_sessions SET updated_utc=? WHERE id=?",
                 (now, chat_id))
             return cursor.lastrowid
+
+    def mark_model(self, chat_id, model):
+        """Segna che un modello («online» o «offline») ha risposto qui; True se è nuovo."""
+        chat_id = _id(chat_id)
+        if model not in ("online", "offline"):
+            raise ChatSessionError("Modello non valido.")
+        with self._db() as db:
+            if db.execute("SELECT 1 FROM chat_sessions WHERE id=?", (chat_id,)).fetchone():
+                return db.execute("INSERT OR IGNORE INTO chat_models VALUES(?,?)",
+                                  (chat_id, model)).rowcount > 0
+        return False
+
+    def models(self):
+        """{chat_id: {"online", "offline"}} per tutte le chat segnate."""
+        with self._db() as db:
+            rows = db.execute("SELECT chat_id, model FROM chat_models").fetchall()
+        result = {}
+        for row in rows:
+            result.setdefault(row["chat_id"], set()).add(row["model"])
+        return result
+
+    def export_chat(self, chat_id, *, project_id=None):
+        """Tutta la chat come dizionario pronto per JSON (Esporta, 15/11 sera)."""
+        scope, scope_id = _scope(project_id)
+        chat_id = _id(chat_id)
+        with self._db() as db:
+            info = self._info(self._require(db, chat_id, scope, scope_id))
+            rows = db.execute(
+                """SELECT user_text, assistant_text, created_utc FROM chat_exchanges
+                   WHERE chat_id=? ORDER BY id""", (chat_id,)).fetchall()
+            models = sorted(r["model"] for r in db.execute(
+                "SELECT model FROM chat_models WHERE chat_id=?", (chat_id,)))
+        messages = []
+        for item in rows:
+            messages.append({"role": "user", "content": item["user_text"],
+                             "time_utc": item["created_utc"]})
+            messages.append({"role": "assistant", "content": item["assistant_text"],
+                             "time_utc": item["created_utc"]})
+        return {"format": "lumi-chat-1", "title": info.title, "created_utc": info.created_utc,
+                "updated_utc": info.updated_utc, "models": models, "messages": messages}
+
+    def display_pairs(self, chat_id, *, project_id=None, limit=500):
+        """Read-only full transcript for the chat view (never sent to a model)."""
+        scope, scope_id = _scope(project_id)
+        _id(chat_id)
+        if type(limit) is not int or not 1 <= limit <= 5000:
+            raise ChatSessionError("Numero scambi richiesti non valido.")
+        with self._db() as db:
+            self._require(db, chat_id, scope, scope_id)
+            rows = db.execute(
+                """SELECT user_text, assistant_text FROM chat_exchanges
+                   WHERE chat_id=? ORDER BY id DESC LIMIT ?""",
+                (chat_id, limit)).fetchall()
+        return tuple((row["user_text"], row["assistant_text"]) for row in reversed(rows))
+
+    def exchange_count(self, chat_id, *, project_id=None):
+        """Numero di scambi salvati nella chat (sola lettura)."""
+        scope, scope_id = _scope(project_id)
+        _id(chat_id)
+        with self._db() as db:
+            self._require(db, chat_id, scope, scope_id)
+            return int(db.execute("SELECT COUNT(*) FROM chat_exchanges WHERE chat_id=?",
+                                  (chat_id,)).fetchone()[0])
 
     def recent_pairs(self, chat_id, *, project_id=None, count=8):
         """Return last N complete exchanges, chronological, no LLM side effects.

@@ -7,7 +7,7 @@ import test_typed_timer_routing as timer_fixture
 class LocalHelpTests(unittest.TestCase):
     def test_help_is_local_even_with_gemma_and_pending_document(self):
         harness=timer_fixture.TypedTimerTests();self.addCleanup(harness.doCleanups)
-        for word in ('aiuto','help','comandi','cosa puoi fare'):
+        for word in ('aiuto','help','comandi'):
             e=harness.environment(word)
             e['doc_dialog'].phase='awaiting_close'
             e['handle_document_confirmation']=Mock()

@@ -176,12 +176,12 @@ class ManagedDocumentTests(unittest.TestCase):
         self.assertEqual(self.backend.read(self.docs.current), "Ciao da GPT")
 
     def test_append_preserves_manually_typed_text(self):
-        self.docs.compose("Testo scritto da Jarvis.", "new_notepad")
+        self.docs.compose("Testo scritto da Lumi.", "new_notepad")
         self.backend.notes[self.docs.current.ident] += "\nModifica manuale!"
         result = self.docs.compose("Un'altra frase.", "selected_document")
         self.assertEqual(result.kind, "appended")
         self.assertEqual(self.backend.read(self.docs.current),
-                         "Testo scritto da Jarvis.\nModifica manuale!\n\nUn'altra frase.")
+                         "Testo scritto da Lumi.\nModifica manuale!\n\nUn'altra frase.")
 
     def test_save_and_close_saves_actual_editor_not_stale_gpt_text(self):
         with TemporaryDirectory() as tmp:

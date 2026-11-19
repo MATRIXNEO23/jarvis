@@ -1,0 +1,60 @@
+{
+ "files": {
+  "configura_telegram.py": {
+   "name": "Configura Telegram",
+   "description": "Fa il primo accesso a Telegram; i contatti si scelgono dopo."
+  },
+  "prepara_test_telegram50.py": {
+   "name": "Prepara prova Telegram",
+   "description": "Crea un profilo di prova separato per il collaudo di Telegram."
+  },
+  "telegram_addon/__init__.py": {
+   "name": "Indice del pacchetto",
+   "description": "File di collegamento della cartella, con poco o nessun contenuto."
+  },
+  "telegram_addon/login.py": {
+   "name": "Accesso a Telegram",
+   "description": "Accesso a Telegram dalla finestra di Lumi."
+  },
+  "telegram_addon/lumi_ui.py": {
+   "name": "Parte Telegram",
+   "description": "Parte Telegram dell'interfaccia, spostata dal programma principale."
+  },
+  "telegram_bridge.py": {
+   "name": "Ascolto Telegram",
+   "description": "Riceve i messaggi dei contatti Telegram scelti."
+  },
+  "telegram_commands.py": {
+   "name": "Comandi Telegram",
+   "description": "Capisce la richiesta di lasciare un messaggio a un contatto autorizzato."
+  },
+  "telegram_directory.py": {
+   "name": "Rubrica Telegram",
+   "description": "Tiene i contatti scelti e manda note vocali."
+  },
+  "telegram_outbound_flow.py": {
+   "name": "Invio a un contatto",
+   "description": "Guida la scelta del contatto e l'invio della nota vocale."
+  },
+  "telegram_secret_dialog.py": {
+   "name": "Inserimento dati segreti",
+   "description": "Finestra che nasconde i dati segreti di Telegram mentre li incolli."
+  },
+  "telegram_security.py": {
+   "name": "Protezione Telegram",
+   "description": "Protegge i dati di accesso a Telegram con la protezione di Windows."
+  },
+  "telegram_ui.py": {
+   "name": "Finestre Telegram",
+   "description": "Piccole finestre per scegliere i contatti e inviare."
+  },
+  "telegram_vista.py": {
+   "name": "Telegram in Lumi",
+   "description": "Porta Telegram dentro la finestra di Lumi."
+  },
+  "telegram_voice.py": {
+   "name": "Note vocali",
+   "description": "Crea note vocali per Telegram con le voci di Windows."
+  }
+ }
+}

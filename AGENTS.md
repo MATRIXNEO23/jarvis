@@ -1,3 +1,82 @@
+# Regole di lavoro (Karpathy) — 2026-11-18
+Aggiunte su richiesta dell'utente da github.com/forrestchang/andrej-karpathy-skills (MIT). Valgono per Claude, i subagenti e Codex, insieme alle regole di progetto qui sotto; in caso di conflitto prevalgono le regole di progetto dell'utente.
+
+
+## 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+## 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+---
+
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Chiedere con opzioni prima di scegliere — 2026-11-17
+Richiesta esplicita dell'utente: prima di fare scelte che lui non ha già deciso (riferimenti, posizioni nell'interfaccia, valori predefiniti, cosa includere in una build), chiedere conferma con poche opzioni concrete e una raccomandazione. Non inventare e non decidere al suo posto. Vale per OGNI modifica che cambia cosa fa Lumi o come si comporta, compresi i ripristini trovati negli audit: prima si propone, poi si applica con il suo ok. Solo il codice in sé (come è scritto) resta a chi sviluppa.
+
+## Diagnostica per Claude sempre aggiornata — 2026-11-15
+Richiesta utente: il server MCP «lumi-diagnostica» (diagnostica_claude/) deve restare allineato a ogni funzione nuova: vedere lo stato e provare i comandi dentro Lumi. Ogni novità va provata anche da lì sul PC dell'utente dopo la build (oltre alla CI Windows). Se una funzione nuova non è raggiungibile dagli strumenti esistenti (es. pulsanti delle impostazioni), aggiungere lo strumento nello stesso lavoro. I blocchi attuali (Controllo PC, programmi, file rifiutati da lumi_prova_comando) restano finché l'utente non decide diversamente.
+
+## Handoff corrente — 2026-11-15
+Riprendere da docs/HANDOFF-LUMI-CORRENTE.md (stato, ramo, CI/build/pubblicazione, mappa moduli, lezioni, prossimi passi). Aggiornarlo a ogni consegna o decisione importante, così chi continua (anche Codex) non riparte da zero.
+
+## Controllo PC / Lumi 040+: decidere e provare con l'utente, sezione per sezione — 2026-11-12
+Richiesta esplicita: prima della prossima correzione studiare bene e testare insieme. Per ogni sezione (programma o funzione) chiedere all'utente comandi, parole e comportamento desiderati; non inventarli. Implementare solo dopo la sua conferma; build solo su richiesta.
+Comandi uguali in più finestre (es. play, pausa, indietro, home): definirli una sola volta come comandi comuni, con lo stesso significato ovunque; per ogni programma cambia solo il tasto/elemento usato. Verificare conflitti con musica, comandi su Lumi e altri add-on e niente duplicati.
+
 ## Portabilità e indice del PC corrente — 2026-11-01
 Precisazione utente: Jarvis deve individuare profilo/unità/cartelle e poter costruire/usare un indice autonomo sul PC Windows su cui viene eseguito, non dipendere dalla struttura del Pavilion o da percorsi insegnati a mano. Rilevare percorsi da Windows; indice/configurazione legati a PC/volumi correnti, nessun riuso autorevole dell’indice di un altro PC. Autonomia non concede accesso fuori dalle spunte/permessi. Prima valutare Windows Search e strumenti esistenti (es. Everything) per mantenere Jarvis leggero: niente nuovo indicizzatore/servizio o dipendenza installata senza progetto/review. Distinguere rilevamento Known Folders già reale da indice completo portabile ancora da realizzare.
 

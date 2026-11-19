@@ -13,7 +13,7 @@ class NativeModelConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "native.json"
             expected = NativeModelConfig(
-                dll="C:/Jarvis/koboldcpp_noavx2.dll",
+                dll="C:/Lumi/koboldcpp_noavx2.dll",
                 model="C:/Models/gemma.gguf", threads=2,
                 batch_threads=2, context_size=4096,
                 max_output=512, temperature=0.4,

@@ -1,0 +1,76 @@
+{
+ "files": {
+  "action_planner.py": {
+   "name": "Pianificatore",
+   "description": "Trasforma le risposte di GPT in piccoli compiti locali prudenti. Esegue anche il piano approvato, con permesso revocabile."
+  },
+  "capability_registry.py": {
+   "name": "Elenco delle capacità",
+   "description": "Elenca in sola lettura cosa Lumi sa fare, per GPT."
+  },
+  "classificatore.py": {
+   "name": "Classificatore",
+   "description": "Riconosce l'intenzione di una frase, opzionale e spento di serie."
+  },
+  "command_aliases.py": {
+   "name": "Comandi personalizzati",
+   "description": "Associa le parole scelte dall'utente a comandi che già esistono."
+  },
+  "contesto_online.py": {
+   "name": "Contesto online",
+   "description": "Decide quanto contesto mandare online in base alla richiesta."
+  },
+  "conversation_memory.py": {
+   "name": "Memoria breve",
+   "description": "Tiene a mente per poco la conversazione a voce."
+  },
+  "conversation_router.py": {
+   "name": "Smistamento conversazione",
+   "description": "Traduce in intenzioni le richieste parlate, con limiti precisi."
+  },
+  "foreground_power.py": {
+   "name": "Schermo acceso",
+   "description": "Tiene acceso schermo e PC mentre Lumi è in primo piano."
+  },
+  "intent_normalizer.py": {
+   "name": "Capire la richiesta",
+   "description": "Interpreta le frasi con regole fisse, prima di usare un modello."
+  },
+  "jarvis_persona.py": {
+   "name": "Carattere di Lumi",
+   "description": "Dà a Lumi un tono coerente e una memoria breve della conversazione."
+  },
+  "jarvis_timer.py": {
+   "name": "Timer e sveglia",
+   "description": "Mostra il conto alla rovescia e suona la sveglia di Windows."
+  },
+  "live_capabilities.py": {
+   "name": "Capacità in diretta",
+   "description": "Dice a GPT cosa Lumi può fare in questo momento."
+  },
+  "local_engine.py": {
+   "name": "Motore dei comandi",
+   "description": "Esegue gli strumenti locali permessi, senza lanciare comandi arbitrari."
+  },
+  "local_help.py": {
+   "name": "Aiuto locale",
+   "description": "Spiega i comandi usando i cataloghi già presenti, senza modificare nulla."
+  },
+  "lumi_comandi.py": {
+   "name": "Comandi su Lumi",
+   "description": "Comandi a voce per ridurre, chiudere, riavviare o nascondere Lumi."
+  },
+  "orchestratore.py": {
+   "name": "Orchestratore online",
+   "description": "Sceglie a quale servizio online mandare la richiesta."
+  },
+  "planner_ui.py": {
+   "name": "Finestra dei piani",
+   "description": "Finestra dove approvare i piani proposti da GPT."
+  },
+  "dialogue.py": {
+   "name": "Dialogo",
+   "description": "Capisce di cosa si sta parlando e sceglie il tono delle risposte scritte."
+  }
+ }
+}

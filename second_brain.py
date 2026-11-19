@@ -1,4 +1,4 @@
-"""Jarvis Second Brain v1: local, durable and evidence-backed continuity.
+"""Lumi Second Brain v1: local, durable and evidence-backed continuity.
 
 Stores bounded conversational episodes and *verified* task receipts in SQLite.
 No cloud database, model training, API costs, executable memories or automatic
@@ -125,6 +125,21 @@ class SecondBrain:
                 AFTER DELETE ON conversations BEGIN
                 DELETE FROM recent_dialogue WHERE turn_id=OLD.id; END""")
             db.execute("DELETE FROM recent_dialogue WHERE turn_id NOT IN (SELECT id FROM conversations)")
+            # Ricordi (15/11 sera): fatti con categoria, in due versioni: «breve» per il
+            # modello locale, «completo» per l'online. Tabella nuova, i dati vecchi restano.
+            db.execute("""CREATE TABLE IF NOT EXISTS ricordi(
+                id INTEGER PRIMARY KEY,
+                time_utc TEXT NOT NULL,
+                categoria TEXT NOT NULL,
+                breve TEXT NOT NULL,
+                completo TEXT NOT NULL,
+                fonte TEXT NOT NULL,
+                project_id TEXT)""")
+            try:
+                db.execute("CREATE VIRTUAL TABLE IF NOT EXISTS ricordi_fts USING "
+                           "fts5(breve, completo, content='ricordi', content_rowid='id')")
+            except sqlite3.OperationalError:
+                pass                     # SQLite senza FTS5: si cerca con LIKE
 
     def remember_turn(self, user: str, reply: str, kind: str = "chat") -> bool:
         """Persist brief episodes and bounded recent chat; never auto-import file bodies."""
@@ -199,7 +214,7 @@ class SecondBrain:
                           provider_message_id: str, verified: bool) -> bool:
         """Future mail adapter hook: called ONLY after real provider success.
 
-        Mail sending is NOT implemented in Jarvis yet. No email body is stored.
+        Mail sending is NOT implemented in Lumi yet. No email body is stored.
         """
         if (not recipient.strip() or not subject.strip()
                 or not provider_message_id.strip()):
@@ -280,6 +295,17 @@ class SecondBrain:
             return "{}"
         budget = min(budget, MAX_PROMPT_MEMORY)
         candidate = {"related": [], "recent": []}
+        # Ricordi brevi pertinenti (al massimo 3) per primi: a Gemma solo la versione corta.
+        try:
+            facts = ([r["breve"] for r in self.ricordi(
+                query, limit=3, progetto=__import__("ricordi").progetto())] if query.strip() else [])
+        except (sqlite3.Error, ValueError):
+            facts = []
+        for fact in facts:
+            draft = dict(candidate)
+            draft["ricordi"] = candidate.get("ricordi", []) + [fact]
+            if len(json.dumps(draft, ensure_ascii=False)) <= budget:
+                candidate = draft
         for evidence in self.search(query, limit=5):
             item = {"when": evidence.time_utc, "source": evidence.source,
                     "fact": evidence.summary}
@@ -298,6 +324,90 @@ class SecondBrain:
                 candidate = draft
         return json.dumps(candidate, ensure_ascii=False, separators=(",", ":"))
 
+    # --- ricordi -----------------------------------------------------------------------
+    CATEGORIE = ("su_di_te", "persone", "progetti", "cose_da_fare", "su_lumi", "altro")
+
+    def _fts(self, db) -> bool:
+        return db.execute("SELECT 1 FROM sqlite_master WHERE name='ricordi_fts'").fetchone() is not None
+
+    def salva_ricordo(self, breve: str, completo: str = "", *, categoria: str = "altro",
+                      fonte: str = "utente", project_id: str | None = None) -> int | None:
+        """Salva un ricordo; None se vuoto, sensibile o già presente uguale."""
+        breve = _clean(breve, 200)
+        completo = _clean(completo or breve, 1500)
+        if not breve or _SENSITIVE.search(breve + " " + completo):
+            return None
+        if categoria not in self.CATEGORIE:
+            categoria = "altro"
+        if fonte not in ("utente", "online", "gemma"):
+            fonte = "utente"
+        with self._db() as db:
+            if db.execute("SELECT 1 FROM ricordi WHERE lower(breve)=lower(?)", (breve,)).fetchone():
+                return None
+            rowid = db.execute(
+                "INSERT INTO ricordi(time_utc,categoria,breve,completo,fonte,project_id)"
+                " VALUES(?,?,?,?,?,?)", (_now(), categoria, breve, completo, fonte,
+                                         None if project_id is None else str(project_id))).lastrowid
+            if self._fts(db):
+                db.execute("INSERT INTO ricordi_fts(rowid,breve,completo) VALUES(?,?,?)",
+                           (rowid, breve, completo))
+        return rowid
+
+    def cancella_ricordo(self, ident: int) -> bool:
+        with self._db() as db:
+            row = db.execute("SELECT breve,completo FROM ricordi WHERE id=?", (int(ident),)).fetchone()
+            if row is None:
+                return False
+            if self._fts(db):
+                db.execute("INSERT INTO ricordi_fts(ricordi_fts,rowid,breve,completo) "
+                           "VALUES('delete',?,?,?)", (int(ident), row[0], row[1]))
+            db.execute("DELETE FROM ricordi WHERE id=?", (int(ident),))
+        return True
+
+    TUTTI = object()      # ricordi di tutti i progetti (pagina Ricordi, diagnostica)
+
+    def ricordi(self, query: str = "", *, categoria: str | None = None, limit: int = 200,
+                progetto=TUTTI):
+        """[{id, quando, categoria, breve, completo, fonte, progetto}] pertinenti.
+
+        progetto (FIX-049-D, 16/11): TUTTI = nessun filtro; None = solo i ricordi generali;
+        un id = i ricordi di quel progetto più quelli generali, quelli del progetto prima."""
+        limit = min(max(int(limit), 1), 1000)
+        words = [w for w in re.findall(r"\w+", str(query or "").casefold()) if len(w) > 2][:8]
+        with self._db() as db:
+            sql = "SELECT id,time_utc,categoria,breve,completo,fonte,project_id FROM ricordi"
+            where, args = [], []
+            if progetto is None:
+                where.append("project_id IS NULL")
+            elif progetto is not SecondBrain.TUTTI:
+                where.append("(project_id IS NULL OR project_id=?)")
+                args.append(str(progetto))
+            if categoria:
+                where.append("categoria=?")
+                args.append(categoria)
+            order = " ORDER BY id DESC"
+            if progetto not in (None, SecondBrain.TUTTI):
+                order = " ORDER BY (project_id IS NOT NULL) DESC, id DESC"
+            if words and self._fts(db):
+                # Prefisso: «progett» trova progetto e progetti (l'italiano non ha radici in FTS5).
+                match = " OR ".join('"%s"*' % w.replace('"', "") for w in words)
+                where.append("id IN (SELECT rowid FROM ricordi_fts WHERE ricordi_fts MATCH ?)")
+                args.append(match)
+            elif words:
+                where.append("(" + " OR ".join(["lower(breve||' '||completo) LIKE ?"] * len(words)) + ")")
+                args += ["%" + w + "%" for w in words]
+            if where:
+                sql += " WHERE " + " AND ".join(where)
+            rows = db.execute(sql + order + " LIMIT ?", (*args, limit)).fetchall()
+        result = [{"id": r[0], "quando": r[1], "categoria": r[2], "breve": r[3],
+                   "completo": r[4], "fonte": r[5], "progetto": r[6]} for r in rows]
+        own = progetto not in (None, SecondBrain.TUTTI)
+        if words or own:                  # prima il progetto aperto, poi i più pertinenti
+            result.sort(key=lambda item: (
+                -(own and item["progetto"] == str(progetto)),
+                -len(set(words) & _tokens(item["breve"] + " " + item["completo"]))))
+        return result
+
     def stats(self) -> tuple[int, int]:
         with self._db() as db:
             turns = db.execute("SELECT COUNT(*) FROM conversations").fetchone()[0]
@@ -306,8 +416,31 @@ class SecondBrain:
             ).fetchone()[0]
         return turns, actions
 
+    def clear_ricordi(self, project_ids=None) -> int:
+        """Cancella i ricordi e l'indice FTS nella stessa transazione.
+        project_ids=None: tutti; altrimenti solo quelli dei progetti indicati."""
+        with self._db() as db:
+            if project_ids is None:
+                rows = db.execute("SELECT id,breve,completo FROM ricordi").fetchall()
+            else:
+                ids = [str(i) for i in project_ids]
+                if not ids:
+                    return 0
+                rows = db.execute(
+                    "SELECT id,breve,completo FROM ricordi WHERE project_id IN (%s)"
+                    % ",".join("?" * len(ids)), ids).fetchall()
+            if self._fts(db):
+                for ident, breve, completo in rows:
+                    db.execute("INSERT INTO ricordi_fts(ricordi_fts,rowid,breve,completo) "
+                               "VALUES('delete',?,?,?)", (ident, breve, completo))
+            for ident, _b, _c in rows:
+                db.execute("DELETE FROM ricordi WHERE id=?", (ident,))
+        return len(rows)
+
     def clear_all(self) -> None:
-        """Explicit user operation, never triggered by the LLM."""
+        """Explicit user operation, never triggered by the LLM.
+        Cancella chat (conversazioni, ricevute, correzioni vocali); i ricordi hanno
+        clear_ricordi()."""
         with self._db() as db:
             db.execute("DELETE FROM conversations")
             db.execute("DELETE FROM action_receipts")
