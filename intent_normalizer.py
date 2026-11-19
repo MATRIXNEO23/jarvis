@@ -46,6 +46,11 @@ _SLOT = re.compile(r"\{([a-zA-Z_]{1,20})\}")
 ASK_THRESHOLD_MODEL_OFF = 0.6
 ASK_THRESHOLD_MODEL_ON = 0.7
 ASK_MAX_WORDS_MODEL_ON = 6
+# 061 (decisione utente 19/11 05:30): una frase breve (fino a 8 parole) con una parola di comando
+# che non è un comando esatto chiede «Intendevi: <comando>? Sì o no» invece di piantare il modello.
+PAROLE_COMANDO = ("metti", "apri", "chiudi", "avvia", "cerca", "suona", "meteo", "timer", "musica")
+ASK_MAX_WORDS_COMMAND_WORD = 8
+ASK_THRESHOLD_COMMAND_WORD = 0.4
 _cache = {"path": None, "mtime": None, "extra": {}}
 
 
@@ -133,7 +138,9 @@ def understand(text: str, commands, model_on: bool = True, extra=None):
         if match:
             return ("esatto", _fill(command, match.groupdict()))
     threshold = ASK_THRESHOLD_MODEL_ON if model_on else ASK_THRESHOLD_MODEL_OFF
-    if model_on and len(said.split()) > ASK_MAX_WORDS_MODEL_ON:
+    words = said.split()
+    command_word = len(words) <= ASK_MAX_WORDS_COMMAND_WORD and any(w in PAROLE_COMANDO for w in raw.split() + words)
+    if model_on and len(words) > ASK_MAX_WORDS_MODEL_ON and not command_word:
         return None
     best, best_score = None, 0.0
     for command in commands:
@@ -145,7 +152,10 @@ def understand(text: str, commands, model_on: bool = True, extra=None):
         score = _similarity(said.split(), literal)
         if score > best_score:
             best, best_score = command, score
-    if best is not None and best_score >= threshold and len(said.split()) <= 8:
+    too_long = model_on and len(words) > ASK_MAX_WORDS_MODEL_ON
+    if best is not None and best_score >= threshold and len(words) <= 8 and not too_long:
+        return ("simile", best, round(best_score, 2))
+    if best is not None and command_word and best_score >= ASK_THRESHOLD_COMMAND_WORD:
         return ("simile", best, round(best_score, 2))
     return None
 
