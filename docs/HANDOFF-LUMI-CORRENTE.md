@@ -254,8 +254,8 @@ Gemini spostato in fondo all'ordine da Claude (05:45, con l'ok dell'utente) perc
 
 ## Telegram, 19/11 07:45-07:50
 - BUG: Telegram risponde con ChatGPT dal browser (online) perché guarda il vecchio settings["gpt_enabled"], tolto dalla barra nella 056 ma rimasto acceso e invisibile, anche se nella lista «ChatGPT dal browser» NON è spuntato. Correzione proposta: eliminare gpt_enabled ovunque; tutto segue solo le spunte della lista, con un test anti-richiamo.
-- Modalità di risposta di Telegram: DA DECIDERE (proposta: sempre offline).
-- Richiesta: quando nella finestra Telegram è aperta la chat di un contatto, la casella in basso manda il messaggio direttamente a quel contatto (Invio), senza il passaggio «invia messaggio a…».
+- DECISO (07:52): le risposte automatiche di Telegram sono OFFLINE. Nelle impostazioni di Telegram c'è l'opzione «Risposte online» (spenta di serie): se l'utente la attiva, si usano i servizi online spuntati nella lista. Da verificare dal vivo.
+- Richiesta: quando nella finestra Telegram è aperta la chat di un contatto, la casella in basso manda il messaggio direttamente a quel contatto (Invio), senza il passaggio «invia messaggio a…». DECISO (07:51-07:52): invio immediato con Invio, senza conferma, solo quando la chat di quel contatto è aperta; il campo o pulsante «invia messaggio» attuale nella finestra va TOLTO (niente doppione). Il comando a voce «scrivi a <contatto> che…» resta, salvo indicazione contraria.
 
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
