@@ -158,7 +158,8 @@ class SchedaTest(unittest.TestCase):
     def test_fatti_da_contesto_parziale(self):
         class D:
             active_gpt = True
-        info = scheda_lumi.fatti_da(D())
+        with patch("online.servizi_online.disponibili", return_value=True):
+            info = scheda_lumi.fatti_da(D())
         self.assertTrue(info["online"])
         self.assertEqual(info["addons"], [])
 

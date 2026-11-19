@@ -101,7 +101,7 @@ class FasiErroreTest(unittest.TestCase):
     def test_ogni_motivo_porta_la_fase(self):
         for exc in (urllib.error.HTTPError("u", 401, "m", {}, None), TimeoutError(),
                     urllib.error.URLError(socket.gaierror(1, "x")), so.ServizioErrore("vuota"), ValueError("x")):
-            self.assertIn("(fase: ", so._motivo(exc))
+            self.assertIn(", fase: ", so._motivo(exc))
 
     def test_prova_servizio_ferma_al_dns(self):
         with mock.patch.object(so, "prova_rete", return_value=(False, "si ferma al DNS (h non si trova): x")):

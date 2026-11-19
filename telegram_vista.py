@@ -61,6 +61,17 @@ def stato(auto_on: bool, contacts, counts, activity, now: float | None = None):
     return AZZURRO, unread_total, ("Messaggi nuovi" if unread_total else "Attivo, niente di nuovo")
 
 
+ATTIVA = {"vista": None, "titolo": lambda: ""}     # 061: la vista in uso e il titolo della chat sul video
+
+
+def invia_dalla_casella(testo: str) -> bool:
+    """061: con la chat di un contatto aperta, il testo della casella va a lui (True se inviato)."""
+    vista = ATTIVA["vista"]
+    if vista is None or vista.contatto_aperto(ATTIVA["titolo"]()) is None:
+        return False
+    return vista.invia_diretto(testo)
+
+
 class Telegram:
     """Collega icona, tendina e conversazioni a bolle. Tutto sul thread di Tk."""
 

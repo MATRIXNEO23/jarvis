@@ -53,7 +53,7 @@ class InvioDirettoTest(unittest.TestCase):
     def test_invio_dalla_casella_prima_di_ogni_altra_cosa(self):
         src = (ROOT / "jarvis.py").read_text(encoding="utf-8")
         invio = src[src.index("    def send_console_input("):]
-        self.assertLess(invio.index("telegram_view.invia_diretto(message)"), invio.index('"richiamo").registra'))
+        self.assertLess(invio.index("invia_dalla_casella(message)"), invio.index('"richiamo").registra'))
 
 
 class RisposteOnlineTest(unittest.TestCase):

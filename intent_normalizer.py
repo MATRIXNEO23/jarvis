@@ -139,7 +139,7 @@ def understand(text: str, commands, model_on: bool = True, extra=None):
             return ("esatto", _fill(command, match.groupdict()))
     threshold = ASK_THRESHOLD_MODEL_ON if model_on else ASK_THRESHOLD_MODEL_OFF
     words = said.split()
-    command_word = len(words) <= ASK_MAX_WORDS_COMMAND_WORD and any(w in PAROLE_COMANDO for w in raw.split() + words)
+    command_word = len(raw.split()) <= ASK_MAX_WORDS_COMMAND_WORD and any(w in PAROLE_COMANDO for w in raw.split() + words)
     if model_on and len(words) > ASK_MAX_WORDS_MODEL_ON and not command_word:
         return None
     best, best_score = None, 0.0

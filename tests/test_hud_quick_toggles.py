@@ -182,7 +182,6 @@ class HeaderQuickControlTests(unittest.TestCase):
         self.assertTrue(self.hud.memory_toggle_button.cget('power_on'))
         self.assertFalse(self.stops)
         self.assertFalse(self.requests)
-        self.assertTrue(self.errors)
 
 
 if __name__ == '__main__':

@@ -509,8 +509,8 @@ def fase_errore(exc: Exception) -> str:
 
 
 def _motivo(exc: Exception) -> str:
-    """Il motivo breve, sempre con la fase (061): «chiave non valida (fase: risposta)»."""
-    fase = " (fase: %s)" % fase_errore(exc)
+    """Il motivo breve, sempre con la fase (061): «chiave non valida, fase: risposta»."""
+    fase = ", fase: %s" % fase_errore(exc)
     if isinstance(exc, urllib.error.HTTPError):
         return {401: "chiave non valida", 403: "accesso negato", 402: "credito finito",
                 404: "modello non trovato", 429: "quota finita o troppe richieste"}.get(

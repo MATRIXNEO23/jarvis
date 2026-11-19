@@ -25,7 +25,7 @@ from second_brain import SecondBrain
 from settings import default_path, load_settings, save_settings
 from voice_control import (CONTINUOUS, GPT_CONVERSATION, PUSH_TO_TALK,
                            STANDBY, WakeWordGate, speech_to_local_command)
-from test_activity_status import GlobalCallbacks, Value
+from test_activity_status import GlobalCallbacks, Spunta, Value
 
 
 @unittest.skipUnless(os.name == "nt", "Windows-only user requirement")
@@ -282,7 +282,7 @@ class VoiceCorrectionReviewTests(unittest.TestCase):
             handle_unanchored_short_reply=lambda _: False,
             maybe_queue_telegram_note=lambda _: False,
             speech_to_local_command=speech_to_local_command, busy_local=False,
-            gpt_spuntato=lambda: True, active_gpt=True, busy_gpt=False,
+            gpt_spuntato=Spunta(True), active_gpt=True, busy_gpt=False,
             gemma_trial_busy=[False],
             start_conversation_gpt=Mock(), submit_local=Mock(),
         )

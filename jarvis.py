@@ -4488,9 +4488,7 @@ def main() -> None:
         if not message:
             return
         # 061: con la chat di un contatto Telegram aperta, Invio manda subito il messaggio a lui.
-        _aperto = (telegram_view.contatto_aperto(chat_menu.title.get())
-                   if chat_menu is not None else None)
-        if _aperto is not None and telegram_view.invia_diretto(message):
+        if __import__("telegram_vista").invia_dalla_casella(message):
             request.set("")
             return "break"
         __import__("richiamo").registra(message)
@@ -4712,6 +4710,8 @@ def main() -> None:
         save_contacts=save_telegram_contact_selection, toggle_auto=toggle_telegram_automatic,
         open_manager=open_telegram_contact_list, show_chat=show_telegram_chat,
         send_voice=send_owner_telegram_voice, set_online=set_telegram_online)
+    __import__("telegram_vista").ATTIVA.update(
+        vista=telegram_view, titolo=lambda: chat_menu.title.get() if chat_menu is not None else "")
     if chat_menu is not None:
         chat_menu.extra = telegram_view.voci_menu
 

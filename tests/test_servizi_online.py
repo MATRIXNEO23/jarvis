@@ -92,7 +92,7 @@ class ChiamataTest(BaseTest):
         name, reasons = so.chiedi(so.messaggi("x"), settings=self.settings(["groq", "mistral"]),
                                   keys=self.keys, post=post)
         self.assertIsNone(name)
-        self.assertEqual(reasons, ["Groq: chiave non valida", "Mistral: manca la chiave"])
+        self.assertEqual(reasons, ["Groq: chiave non valida, fase: risposta", "Mistral: manca la chiave"])
 
     def test_messaggi_con_cronologia_e_dati(self):
         messages = so.messaggi("e poi?", [("chi era Verdi", "Un compositore.")], ["[a.txt] testo"])

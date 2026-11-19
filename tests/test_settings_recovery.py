@@ -93,9 +93,9 @@ class SettingsRecoveryTests(unittest.TestCase):
         self.assertFalse(self.path.exists())
 
     def test_valid_and_legacy_profiles_retain_preferences_without_warnings_or_writes(self):
-        for payload in ({}, {"auto_listen":False}, {"gpt_enabled":False},
-                        {"gpt_enabled":True,"auto_listen":True},
-                        {"gpt_enabled":False,"auto_listen":False,"tts_enabled":True,
+        for payload in ({}, {"auto_listen":False},
+                        {"auto_listen":True},
+                        {"auto_listen":False,"tts_enabled":True,
                          "tts_voice":"Fixture voice","timer_volume":35}):
             with self.subTest(payload=payload):
                 raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")

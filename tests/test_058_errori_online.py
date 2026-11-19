@@ -44,14 +44,14 @@ class ErroriOnlineTests(unittest.TestCase):
         self.assertEqual(name, "Groq")                           # ordine e ripiego invariati
         self.assertEqual(len(self.righe), 1)
         riga = self.righe[0]
-        self.assertIn("Google Gemini non ha risposto (chiave non valida)", riga)
+        self.assertIn("Google Gemini non ha risposto (chiave non valida, fase: risposta)", riga)
         self.assertIn("ho usato Groq", riga)
         self.assertTrue(riga.startswith("ONLINE / ERRORE >"))      # arriva anche in lumi_errori
         self.assertNotIn(SEGRETO, riga)
 
     def test_l_ultimo_errore_resta_finche_il_servizio_non_risponde(self):
         self.chiedi({"generativelanguage": 429})
-        self.assertEqual(so.ULTIMO_ERRORE["gemini"], "quota finita o troppe richieste")
+        self.assertEqual(so.ULTIMO_ERRORE["gemini"], "quota finita o troppe richieste, fase: risposta")
         self.assertNotIn("groq", so.ULTIMO_ERRORE)
         self.chiedi({})
         self.assertNotIn("gemini", so.ULTIMO_ERRORE)
