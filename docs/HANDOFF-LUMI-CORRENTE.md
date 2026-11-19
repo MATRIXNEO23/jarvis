@@ -252,6 +252,11 @@ Da correggere nella prossima build (prove 058 delle 05:44, approvato):
 - pop-up dei risultati con «Chiudo la finestra?», colonne del meteo, selettori in chat non tagliati.
 Gemini spostato in fondo all'ordine da Claude (05:45, con l'ok dell'utente) perché da questo PC va sempre in timeout.
 
+## Telegram, 19/11 07:45-07:50
+- BUG: Telegram risponde con ChatGPT dal browser (online) perché guarda il vecchio settings["gpt_enabled"], tolto dalla barra nella 056 ma rimasto acceso e invisibile, anche se nella lista «ChatGPT dal browser» NON è spuntato. Correzione proposta: eliminare gpt_enabled ovunque; tutto segue solo le spunte della lista, con un test anti-richiamo.
+- Modalità di risposta di Telegram: DA DECIDERE (proposta: sempre offline).
+- Richiesta: quando nella finestra Telegram è aperta la chat di un contatto, la casella in basso manda il messaggio direttamente a quel contatto (Invio), senza il passaggio «invia messaggio a…».
+
 ## Decisioni 18/11 notte (a voce) per la 058 e oltre
 - Meteo: i comandi («che tempo fa», «che tempo fa a <città>», «meteo a <città>», «meteo domani») vanno nell'aiuto E nella pagina di personalizzazione dei comandi; nella 057 non risultano. Nuovo «meteo settimana»: a voce un riassunto breve, i 7 giorni nella finestra dei risultati.
 - 058, riordino:
