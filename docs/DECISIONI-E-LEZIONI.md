@@ -1364,3 +1364,10 @@ Nella suite F5N.3 il solo nuovo test sintetico falliva con `StopIteration` perch
 - Prima di spostare un file «da sviluppatore» cercare anche i .bat: prepara_test_telegram50.py sembrava usato solo da 3 test, ma lo lancia avvia_lumi.bat e tools/ non va nel pacchetto. Lasciato in radice, domanda all'utente.
 - Unire moduli: elencare richiami (import, __import__("nome"), stringhe e letture del file nei test, workflow), unire senza file ponte, e un test che importa ogni nome pubblico spostato (tests/test_060_riordino.py).
 - Il glob della mappa «dialogue_*.py» non prendeva dialogue.py: dopo ogni unione controllare «0 unassigned» in build.mjs.
+
+## 061, 19/11: una sola fonte per GPT, comandi di modalità, Telegram offline, cartella online/
+- Decisione utente (08:17): GPT solo nella lista Online. Causa del bug: Telegram guardava `settings["gpt_enabled"]`, tolto dalla barra nella 056 ma rimasto acceso e invisibile. Correzione: eliminato `gpt_enabled` ovunque; `gpt_spuntato()` legge la spunta di «ChatGPT dal browser». Lezione: un interruttore tolto dall'interfaccia va tolto anche dal codice e dai file salvati (il vecchio campo ora si ignora); test anti-richiamo `test_061_gpt_una_fonte.py`.
+- Lezione: `__import__("a.b")` restituisce `a`, non `a.b`: spostando un modulo in un pacchetto i richiami dinamici vanno cercati a parte (grep di `__import__`); `online/__init__.py` carica i sotto-pacchetti per `__import__("online").servizi_online`.
+- Lezione: un elenco di comandi nell'aiuto va confrontato con i comandi davvero riconosciuti (test_061_comandi.py), altrimenti l'aiuto mente.
+- Telegram: risposte automatiche offline di serie; online solo per i contatti spuntati (`telegram_online_contacts`); invio diretto con la chat aperta, senza conferma.
+- Errori online: sempre con la fase (DNS, TLS, connessione, risposta); `lumi_prova_servizio` in diagnostica.
